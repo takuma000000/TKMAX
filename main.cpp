@@ -1328,12 +1328,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			//色を変えるImGuiの処理
 			ImGui::Begin("Setting");
-		
+
 			ImGui::Text("Camera");
 			ImGui::DragFloat3("CameraTransform", &cameraTransform.translate.x, 0.01f);
 			ImGui::DragFloat3("cameraRotate", &cameraTransform.rotate.x, 0.01f);
 			ImGui::Text("Model Transform");
-			
+
 			ImGui::Text("Model Transform");
 			ImGui::SliderFloat("Model RotateX", &transform.rotate.x, -3.14159f, 3.14159f);
 			ImGui::SliderFloat("Model RotateY", &transform.rotate.y, -3.14159f, 3.14159f);
@@ -1344,7 +1344,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::SliderFloat("Model TranslateX", &transform.translate.x, -10.0f, 10.0f);
 			ImGui::SliderFloat("Model TranslateY", &transform.translate.y, -10.0f, 10.0f);
 			ImGui::SliderFloat("Model TranslateZ", &transform.translate.z, -10.0f, 10.0f);
-		
+
 			ImGui::Text("useMonsterBall");
 			ImGui::Checkbox("useMonsterBall", &useMonsterBall);
 
