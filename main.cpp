@@ -1,5 +1,3 @@
-#include <Windows.h>
-#include <cstdint>
 #include <string>
 #include <format>
 #include <wrl.h>
@@ -15,7 +13,6 @@
 #include <cmath>
 #include <fstream>
 #include <sstream>
-#include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
 #include "externals/imgui/imgui_impl_win32.h"
 #include "externals/DirectXTex/DirectXTex.h"
@@ -24,7 +21,8 @@
 #pragma comment(lib,"dxguid.lib")
 #pragma comment(lib,"dxcompiler.lib")
 
-extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+//GE3クラス化
+#include "WindowsAPI.h"
 
 struct Vector2 {
 	float x;
@@ -725,53 +723,17 @@ bool useMonsterBall = true;
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
+	//WindowsAPI*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
-	CoInitializeEx(0, COINIT_MULTITHREADED);
+	//ポインタ
+	WindowsAPI* windowsAPI = nullptr;
+	//WindowsAPIの初期化
+	windowsAPI = new WindowsAPI();
+	windowsAPI->Initialize();
+	//WindowsAPI解放
+	delete windowsAPI;
 
-
-#pragma region Windowの生成
-	WNDCLASS wc{};
-	//ウィンドウプロシージャ
-	wc.lpfnWndProc = WindowProc;
-	//ウィンドウクラス名( なんでも良い )
-	wc.lpszClassName = L"CG2WindowClass";
-	//インスタンスハンドル
-	wc.hInstance = GetModuleHandle(nullptr);
-	//カーソル
-	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-
-	//ウィンドウクラスを登録する
-	RegisterClass(&wc);
-
-	//クライアント領域のサイズ
-	const int32_t kClientWidth = 1280;
-	const int32_t kClientHeight = 720;
-
-	//ウィンドウサイズを表す構造体にクライアント領域を入れる
-	RECT wrc = { 0,0,kClientWidth ,kClientHeight };
-
-	//クライアント領域を元に実際のサイズに wrc を変更してもらう
-	AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
-
-	//ウィンドウの生成
-	HWND hwnd = CreateWindow(
-		wc.lpszClassName,		//利用するクラス名
-		L"CG2",					//タイトルバーの文字( なんでも良い )
-		WS_OVERLAPPEDWINDOW,	//ウィンドウスタイル
-		CW_USEDEFAULT,			//表示X座標(Windowsに任せる)
-		CW_USEDEFAULT,			//表示Y座標(WindowsOSに任せる)
-		wrc.right - wrc.left,	//ウィンドウ横幅
-		wrc.bottom - wrc.top,	//ウィンドウ縦幅
-		nullptr,				//親ウィンドウハンドル
-		nullptr,				//メニューハンドル
-		wc.hInstance,			//インスタンスハンドル
-		nullptr					//オプション
-	);
-
-	//ウィンドウを表示する
-	ShowWindow(hwnd, SW_SHOW);
-
-#pragma endregion
+	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
 #ifdef _DEBUG
 
