@@ -29,7 +29,6 @@ void WindowsAPI::Initialize()
 
 
 #pragma region Windowの生成
-	WNDCLASS wc{};
 	//ウィンドウプロシージャ
 	wc.lpfnWndProc = WindowProc;
 	//ウィンドウクラス名( なんでも良い )
