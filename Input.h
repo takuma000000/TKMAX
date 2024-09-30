@@ -17,6 +17,7 @@ public://メンバ関数
 	void Update();
 	//キーの押下をチェック( 押されているか )
 	bool PushKey(BYTE keyNumber);
+
 	//キーのトリガーをチェック
 	bool TriggerKey(BYTE keyNumber);
 
