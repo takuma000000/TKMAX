@@ -11,6 +11,7 @@
 #include <math.h>
 #include <assert.h>
 #include <cmath>
+#include <memory>
 #include <fstream>
 #include <sstream>
 #include "externals/imgui/imgui_impl_dx12.h"
@@ -21,8 +22,9 @@
 #pragma comment(lib,"dxguid.lib")
 #pragma comment(lib,"dxcompiler.lib")
 
-//GE3クラス化
+// GE3クラス化(MyClass)
 #include "WindowsAPI.h"
+#include "Input.h"
 
 struct Vector2 {
 	float x;
@@ -1253,6 +1255,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
 		srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
 	);
+
+	//ポインタ
+	std::unique_ptr<Input> input = nullptr;
+	//入力の初期化
+	input = std::make_unique<Input>();
+	input->Initialize(windowsAPI->GetHInstance(), windowsAPI->GetHwnd());
 
 
 	MSG msg{};

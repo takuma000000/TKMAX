@@ -5,6 +5,7 @@ class WindowsAPI
 {
 public://getter
 	HWND GetHwnd() const { return hwnd; }
+	HINSTANCE GetHInstance() const { return wc.hInstance; }
 
 public://静的メンバ関数
 	static LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
@@ -23,5 +24,7 @@ public://定数
 private:
 	//ウィンドウハンドル
 	HWND hwnd = nullptr;
+	//ウィンドウクラスの設定
+	WNDCLASS wc{};
 };
 
