@@ -25,6 +25,7 @@
 // GE3クラス化(MyClass)
 #include "WindowsAPI.h"
 #include "Input.h"
+#include "DirectXCommon.h"
 
 struct Vector2 {
 	float x;
@@ -234,7 +235,10 @@ Matrix4x4 MakeScaleMatrix(const Vector3& scale) {
 
 	// 単位行列に設定します
 	for (int i = 0; i < 4; ++i) {
-		for (int j = 0; j < 4; ++j) {
+		for (size_t i = 0; i < length; i++)
+		{
+
+		} (int j = 0; j < 4; ++j) {
 			result.m[i][j] = (i == j) ? 1.0f : 0.0f;
 		}
 	}
@@ -1254,11 +1258,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
 	);
 
-	//ポインタ
+	//ポインタ...Input
 	std::unique_ptr<Input> input = nullptr;
 	//入力の初期化
 	input = std::make_unique<Input>();
 	input->Initialize(windowsAPI.get());
+
+	//ポインタ...DirectXCommon
+	std::unique_ptr<DirectXCommon> dxCommon = ; nullptr;
+	//DirectXの初期化
+	dxCommon = std::make_unique<DirectXCommon>();
+	dxCommon->Initialize();
 
 	//ウィンドウの×ボタンが押されるまでループ
 	while (true) {
