@@ -709,12 +709,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//WindowsAPI*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
 	//ポインタ
-	WindowsAPI* windowsAPI = nullptr;
+	std::unique_ptr<WindowsAPI> windowsAPI = nullptr;
 	//WindowsAPIの初期化
-	windowsAPI = new WindowsAPI();
+	windowsAPI = std::make_unique<WindowsAPI>();
 	windowsAPI->Initialize();
-	//WindowsAPI解放
-	delete windowsAPI;
 
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
@@ -1469,6 +1467,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 	//				解放
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
 	CloseHandle(fenceEvent);
 
 	CloseWindow(windowsAPI->GetHwnd());
