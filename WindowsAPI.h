@@ -24,6 +24,10 @@ public://定数
 	static const int32_t kClientWidth = 1280;
 	static const int32_t kClientHeight = 720;
 
+public:
+	//メッセージの処理
+	bool ProcessMessage();
+
 private:
 	//ウィンドウハンドル
 	HWND hwnd = nullptr;
