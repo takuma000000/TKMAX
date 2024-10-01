@@ -1258,7 +1258,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	std::unique_ptr<Input> input = nullptr;
 	//入力の初期化
 	input = std::make_unique<Input>();
-	input->Initialize(windowsAPI->GetHInstance(), windowsAPI->GetHwnd());
+	input->Initialize(windowsAPI.get());
 
 
 	MSG msg{};
@@ -1469,11 +1469,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 	CloseHandle(fenceEvent);
-
-	CloseWindow(windowsAPI->GetHwnd());
-
-
-	CoUninitialize();
+	//WindowsAPIの終了処理
+	windowsAPI->Finalize();
 
 	return 0;
 
