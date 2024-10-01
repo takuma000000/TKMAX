@@ -3,6 +3,7 @@
 #define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
 #include <wrl.h>
+#include "WindowsAPI.h"
 
 //入力
 class Input
@@ -12,7 +13,7 @@ public:
 
 public://メンバ関数
 	//初期化
-	void Initialize(HINSTANCE hInstance, HWND hwnd);
+	void Initialize(WindowsAPI* winApp);
 	//更新
 	void Update();
 	//キーの押下をチェック( 押されているか )
@@ -30,5 +31,7 @@ private://メンバ変数
 	BYTE keyPre[256] = {};
 	//DirectInputのインスタンス
 	ComPtr<IDirectInput8> directInput;
+	//WindowsAPI
+	WindowsAPI* winApp = nullptr;
 
 };

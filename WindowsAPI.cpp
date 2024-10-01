@@ -71,3 +71,9 @@ void WindowsAPI::Initialize()
 void WindowsAPI::Update()
 {
 }
+
+void WindowsAPI::Finalize()
+{
+	CloseWindow(hwnd);
+	CoUninitialize();
+}
