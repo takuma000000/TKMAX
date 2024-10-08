@@ -3,28 +3,41 @@
 #include <dxgi1_6.h>
 #include <wrl.h>
 #include <array>
+#include <dxcapi.h>		
 #include "WindowsAPI.h"
 
 
 class DirectXCommon
 {
-public://メンバ関数
+public://メンバ関数...初期化
 	//初期化
 	void Initialize(WindowsAPI* windowsAPI);
 	//デバイス初期化
 	void InitializeDevice();
 	//コマンド関連の初期化
 	void InitializeCommand();
+	//レンダーターゲットビューの初期化
+	void InitializeRTV();
+	//深度ステンシルビューの初期化
+	void InitializeDSV();
+	//フェンスの初期化
+	void InitializeFence();
+	//ビューポート矩形の初期化
+	void InitializeViewport();
+	//シザリング矩形の初期化
+	void InitializeScissorRect();
+	//ImGuiの初期化
+	void InitializeImGui();
+
+public://メンバ関数...生成
 	//スワップチェーンの生成
 	void GenerateSwapChain();
 	//深度バッファの生成
 	void GenerateZBuffer();
 	//各種デスクリプタヒープの生成
 	void GenerateDescpitorHeap();
-	//レンダーターゲットビューの初期化
-	void InitializeRTV();
-	//深度ステンシルビューの初期化
-	void InitializeDSV();
+	//DXCコンパイラの生成
+	void GenerateDXC();
 
 public://色々な関数
 	//指定番号のCPUディスクリプタハンドルを取得する
@@ -47,6 +60,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> swapChainResource[2] = { nullptr };
 	//device
 	Microsoft::WRL::ComPtr<ID3D12Debug1> debugController = nullptr;
+	Microsoft::WRL::ComPtr<IDXGIAdapter4> useAdapter = nullptr;
 	//command
 	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> commandAllocator = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList = nullptr;
@@ -58,8 +72,24 @@ private:
 	const uint32_t descriptorSizeSRV;
 	const uint32_t descriptorSizeRTV;
 	const uint32_t descriptorSizeDSV;
+	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource;
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap;
 	//swapChainResources
 	std::array<Microsoft::WRL::ComPtr<ID3D12Resource>, 2> swapChainResources;
+	//DSV
+	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
+	//fence
+	Microsoft::WRL::ComPtr<ID3D12Fence> fence;
+	uint64_t fenceValue;
+	HANDLE fenceEvent;
+	//viewport
+	D3D12_VIEWPORT viewport{};
+	//scissorRect
+	D3D12_RECT scissorRect{};
+	//DXC
+	Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils = nullptr;
+	Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler = nullptr;
+	Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler = nullptr;
 
 private:
 	//WindowsAPI
