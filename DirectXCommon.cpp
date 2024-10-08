@@ -3,6 +3,9 @@
 #include <format>
 #include "Logger.h"
 #include "StringUtility.h"
+#include "externals/imgui/imgui.h"
+#include "externals/imgui/imgui_impl_win32.h"
+#include "externals/imgui/imgui_impl_dx12.h"
 using namespace StringUtility;
 using namespace Logger;
 
@@ -11,41 +14,41 @@ using namespace Logger;
 
 using namespace Microsoft::WRL;
 
-//Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilTextureResource(Microsoft::WRL::ComPtr<ID3D12Device> device, int32_t width, int32_t height) {
-//	//生成するResourceの設定
-//	D3D12_RESOURCE_DESC resourceDesc{};
-//	resourceDesc.Width = width;//Textureの幅
-//	resourceDesc.Height = height;//Textureの高さ
-//	resourceDesc.MipLevels = 1;//MipMapの数
-//	resourceDesc.DepthOrArraySize = 1;//奥行き or 配列Textureの配列数
-//	resourceDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;//DepthStencilとして利用可能なフォーマット
-//	resourceDesc.SampleDesc.Count = 1;//サンプリングカウント。1固定
-//	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;//2次元
-//	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;//DepthStencilとして使う通知
-//
-//	//利用するHeapの設定
-//	D3D12_HEAP_PROPERTIES heapProperties{};
-//	heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;//VRAM上に作る
-//
-//	//深度値のクリア設定
-//	D3D12_CLEAR_VALUE depthClearValue{};
-//	depthClearValue.DepthStencil.Depth = 1.0f;//1.0f( 最大値 )でクリア
-//	depthClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;//フォーマット。Resourceと合わせる。
-//
-//	//Resourceの生成
-//	Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr;
-//	HRESULT hr = device->CreateCommittedResource(
-//		&heapProperties,//Heapの設定
-//		D3D12_HEAP_FLAG_NONE,//Heapの特殊な設定。特になし
-//		&resourceDesc,//Resourceの設定
-//		D3D12_RESOURCE_STATE_DEPTH_WRITE,//深度地を書き込む状態にしておく
-//		&depthClearValue,//Clear最適値
-//		IID_PPV_ARGS(&resource)//作成するResourceポインタへのポインタ
-//	);
-//	assert(SUCCEEDED(hr));
-//
-//	return resource;
-//}
+Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilTextureResource(Microsoft::WRL::ComPtr<ID3D12Device> device, int32_t width, int32_t height) {
+	//生成するResourceの設定
+	D3D12_RESOURCE_DESC resourceDesc{};
+	resourceDesc.Width = width;//Textureの幅
+	resourceDesc.Height = height;//Textureの高さ
+	resourceDesc.MipLevels = 1;//MipMapの数
+	resourceDesc.DepthOrArraySize = 1;//奥行き or 配列Textureの配列数
+	resourceDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;//DepthStencilとして利用可能なフォーマット
+	resourceDesc.SampleDesc.Count = 1;//サンプリングカウント。1固定
+	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;//2次元
+	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;//DepthStencilとして使う通知
+
+	//利用するHeapの設定
+	D3D12_HEAP_PROPERTIES heapProperties{};
+	heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;//VRAM上に作る
+
+	//深度値のクリア設定
+	D3D12_CLEAR_VALUE depthClearValue{};
+	depthClearValue.DepthStencil.Depth = 1.0f;//1.0f( 最大値 )でクリア
+	depthClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;//フォーマット。Resourceと合わせる。
+
+	//Resourceの生成
+	Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr;
+	HRESULT hr = device->CreateCommittedResource(
+		&heapProperties,//Heapの設定
+		D3D12_HEAP_FLAG_NONE,//Heapの特殊な設定。特になし
+		&resourceDesc,//Resourceの設定
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,//深度地を書き込む状態にしておく
+		&depthClearValue,//Clear最適値
+		IID_PPV_ARGS(&resource)//作成するResourceポインタへのポインタ
+	);
+	assert(SUCCEEDED(hr));
+
+	return resource;
+}
 
 Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(
 	ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heaptype, UINT numDescriptors, bool shaderVisible) {
@@ -68,6 +71,20 @@ void DirectXCommon::Initialize(WindowsAPI* windowsAPI)
 
 	//借りてきたWinAppのインスタンスを記録
 	this->windowsAPI = windowsAPI;
+
+	InitializeDevice();
+	InitializeCommand();
+	GenerateSwapChain();
+	GenerateZBuffer();
+	GenerateDescpitorHeap();
+	GenerateDXC();
+	InitializeRTV();
+	InitializeDSV();
+	InitializeFence();
+	InitializeViewport();
+	InitializeScissorRect();
+	InitializeImGui();
+
 }
 
 void DirectXCommon::InitializeDevice()
@@ -99,9 +116,7 @@ void DirectXCommon::InitializeDevice()
 	//どうにも出来ない場合が多いので assert にしておく
 	assert(SUCCEEDED(hr));
 
-
-	//使用するアダプタ用の変数。最初に nullptr を入れておく
-	Microsoft::WRL::ComPtr<IDXGIAdapter4> useAdapter = nullptr;
+	
 	//良い順にアダプタを頼む
 	for (UINT i = 0; dxgiFactory->EnumAdapterByGpuPreference(i, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&useAdapter)) != DXGI_ERROR_NOT_FOUND; ++i) {
 		//アダプターの情報を取得する
@@ -219,9 +234,13 @@ void DirectXCommon::GenerateSwapChain()
 
 }
 
-void DirectXCommon::GenerateZBuffer()
-{
-	//CreateDepthStencilTextureResource();
+void DirectXCommon::GenerateZBuffer() {
+	// device と width, height を正しく設定
+	int32_t width = WindowsAPI::kClientWidth;  // クライアント領域の幅
+	int32_t height = WindowsAPI::kClientHeight; // クライアント領域の高さ
+
+	// Zバッファ（深度ステンシルテクスチャ）を作成
+	depthStencilResource = CreateDepthStencilTextureResource(device, width, height);
 }
 
 void DirectXCommon::GenerateDescpitorHeap()
@@ -239,6 +258,20 @@ void DirectXCommon::GenerateDescpitorHeap()
 	srvDescriptorHeap = CreateDescriptorHeap(device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
 
 #pragma endregion
+}
+
+void DirectXCommon::GenerateDXC()
+{
+	HRESULT hr;
+
+	hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
+	assert(SUCCEEDED(hr));
+	hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
+	assert(SUCCEEDED(hr));
+
+	hr = dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
+	assert(SUCCEEDED(hr));
+
 }
 
 void DirectXCommon::InitializeRTV()
@@ -262,7 +295,7 @@ void DirectXCommon::InitializeRTV()
 	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;	//2dテスクチャとして書き込む
 	//ディスクリプタの先頭を取得する
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvStartHandle = GetCPUDescriptorHandle(rtvDescriptorHeap.Get(), descriptorSizeRTV, 0);
-	
+
 	//裏表の2つ分
 	for (uint32_t i = 0; i < 2; ++i) {
 		//RTVを2つ作るのでディスクリプタを2つ用意
@@ -279,7 +312,67 @@ void DirectXCommon::InitializeRTV()
 
 void DirectXCommon::InitializeDSV()
 {
+	//DepthStencilTextureをウィンドウのサイズで作成
+	depthStencilResource = CreateDepthStencilTextureResource(device.Get(), WindowsAPI::kClientWidth, WindowsAPI::kClientHeight);
 
+	//DSV用のHeapでDiscriptorの数は1。DSVはShader内で触るものではないので、ShaderVisibleはfalse
+	dsvDescriptorHeap = CreateDescriptorHeap(device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
+
+	//DSVの設定
+	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;//Format。基本的にはResourceに合わせる
+	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;//2dTexture
+	//DSVHeapの先頭にDSVを作る
+	device->CreateDepthStencilView(depthStencilResource.Get(), &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+}
+
+void DirectXCommon::InitializeFence()
+{
+	HRESULT hr;
+
+	//フェンスの生成
+	fence = nullptr;
+	fenceValue = 0;
+	hr = device->CreateFence(fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
+	assert(SUCCEEDED(hr));
+
+	fenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+	assert(fenceEvent != nullptr);
+}
+
+void DirectXCommon::InitializeViewport()
+{
+	//ビューポート矩形の設定
+	viewport.Width = WindowsAPI::kClientWidth;
+	viewport.Height = WindowsAPI::kClientHeight;
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+}
+
+void DirectXCommon::InitializeScissorRect()
+{
+	//シザリング矩形の設定
+	scissorRect.left = 0;
+	scissorRect.right = WindowsAPI::kClientWidth;
+	scissorRect.top = 0;
+	scissorRect.bottom = WindowsAPI::kClientHeight;
+}
+
+void DirectXCommon::InitializeImGui()
+{
+	//Imguiの初期化
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGui::StyleColorsDark();
+	ImGui_ImplWin32_Init(windowsAPI->GetHwnd());
+	ImGui_ImplDX12_Init(device.Get(),
+		swapChainDesc.BufferCount,
+		rtvDesc.Format,
+		srvDescriptorHeap.Get(),
+		srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
+		srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
+	);
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVCPUDescriptorHandle(uint32_t index)
@@ -287,13 +380,13 @@ D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVCPUDescriptorHandle(uint32_t in
 	return GetCPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, index);
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVCPUDescriptorHandle(uint32_t index)
+D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVGPUDescriptorHandle(uint32_t index)
 {
 	// GPUハンドルを取得
 	D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = GetGPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, index);
 
 	// GPUハンドルからCPUハンドルに変換するロジックを実装
-	D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle;
+	D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle{};
 	// 変換のための処理を追加する必要があります
 
 	return cpuHandle;
