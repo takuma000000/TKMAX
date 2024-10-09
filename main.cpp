@@ -819,7 +819,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 //	//コマンドキューを生成する
 //	Microsoft::WRL::ComPtr<ID3D12CommandQueue> commandQueue = nullptr;
 //	D3D12_COMMAND_QUEUE_DESC CommandQueueDesc{};
-//	hr = device->CreateCommandQueue(&CommandQueueDesc, IID_PPV_ARGS(&commandQueue));
+//	hr = device->CreateCommandQueue(&CommandQueueDes
+// c, IID_PPV_ARGS(&commandQueue));
 //	//コマンドキューの生成がうまくいかなかったので起動出来ない
 //	assert(SUCCEEDED(hr));
 //
@@ -1378,30 +1379,30 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			////実際のcommandListのImGuiの描画コマンドを積む
 			//ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.Get());
 
-			//barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-			//barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-			//commandList->ResourceBarrier(1, &barrier);
+			/*barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+			commandList->ResourceBarrier(1, &barrier);*/
 
 			////コマンドリストの内容を確定させる。全てのコマンドを積んでからCloseすること
 			//hr = commandList->Close();
 			//assert(SUCCEEDED(hr));
 
-			//ID3D12CommandList* commandLists[] = { commandList.Get() };
-			//commandQueue->ExecuteCommandLists(1, commandLists);
-			//swapChain->Present(1, 0);
+			/*ID3D12CommandList* commandLists[] = { commandList.Get() };
+			commandQueue->ExecuteCommandLists(1, commandLists);
+			swapChain->Present(1, 0);*/
 
-			//fenceValue++;
-			//commandQueue->Signal(fence.Get(), fenceValue);
+			/*fenceValue++;
+			commandQueue->Signal(fence.Get(), fenceValue);
 
-			//if (fence->GetCompletedValue() < fenceValue) {
-			//	fence->SetEventOnCompletion(fenceValue, fenceEvent);
-			//	WaitForSingleObject(fenceEvent, INFINITE);
-			//}
+			if (fence->GetCompletedValue() < fenceValue) {
+				fence->SetEventOnCompletion(fenceValue, fenceEvent);
+				WaitForSingleObject(fenceEvent, INFINITE);
+			}*/
 
-			//hr = commandAllocator->Reset();
-			//assert(SUCCEEDED(hr));
-			//hr = commandList->Reset(commandAllocator.Get(), nullptr);
-			//assert(SUCCEEDED(hr));
+			/*hr = commandAllocator->Reset();
+			assert(SUCCEEDED(hr));
+			hr = commandList->Reset(commandAllocator.Get(), nullptr);
+			assert(SUCCEEDED(hr));*/
 
 			////三角形を動かす処理
 			////transform.rotate.y += 0.01f;
@@ -1429,6 +1430,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
 
 			//transformationMatrixDataSprite->wvp = worldViewProjectionMatrixSprite;
+
+			dxCommon->PreDraw();
 
 		}
 
