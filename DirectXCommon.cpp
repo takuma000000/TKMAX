@@ -113,7 +113,7 @@ void DirectXCommon::InitializeDevice()
 
 
 	//DXGIファクトリーの生成
-	Microsoft::WRL::ComPtr<IDXGIFactory7> dxgiFactory = nullptr;
+	dxgiFactory = nullptr;
 
 	//"HRESULTはWindows系のエラーコード"であり、
 	//関数が成功したかどうかを SUCCEEDEDマクロ で判定できる	
@@ -143,7 +143,7 @@ void DirectXCommon::InitializeDevice()
 	assert(useAdapter != nullptr);
 
 
-	Microsoft::WRL::ComPtr<ID3D12Device> device = nullptr;
+	device = nullptr;
 	//機能レベルとログ出力用の文字列
 	D3D_FEATURE_LEVEL featureLevels[] = {
 		D3D_FEATURE_LEVEL_12_2,D3D_FEATURE_LEVEL_12_1,D3D_FEATURE_LEVEL_12_0
@@ -311,17 +311,16 @@ void DirectXCommon::InitializeRTV()
 	rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;	//出力結果をSRGBに変換して書き込む
 	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;	//2dテスクチャとして書き込む
 	//ディスクリプタの先頭を取得する
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvStartHandle = GetCPUDescriptorHandle(rtvDescriptorHeap.Get(), descriptorSizeRTV, 0);
+	rtvStartHandle = GetCPUDescriptorHandle(rtvDescriptorHeap.Get(), descriptorSizeRTV, 0);
 
 	//裏表の2つ分
 	for (uint32_t i = 0; i < 2; ++i) {
 		//RTVを2つ作るのでディスクリプタを2つ用意
-		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
 		//まず1つ目を作る。1つ目は最初のところに作る。作る場所をこちらで指定してあげる必要がある
 		rtvHandles[0] = rtvStartHandle;
 		device->CreateRenderTargetView(swapChainResource[0].Get(), &rtvDesc, rtvHandles[0]);
 		//2つ目のディスクリプタハンドルを得る( 自力で )
-		rtvHandles[1].ptr = rtvHandles[0].ptr + device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		rtvHandles[1].ptr = rtvHandles[0].ptr + descriptorSizeRTV;//device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 		//2つ目を作る
 		device->CreateRenderTargetView(swapChainResource[1].Get(), &rtvDesc, rtvHandles[1]);
 	}
