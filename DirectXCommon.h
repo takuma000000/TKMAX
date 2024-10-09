@@ -36,7 +36,9 @@ public://メンバ関数...生成
 	//スワップチェーンの生成
 	void GenerateSwapChain();
 	//深度バッファの生成
-	void GenerateZBuffer();
+	void GenerateZ
+	
+	();
 	//各種デスクリプタヒープの生成
 	void GenerateDescpitorHeap();
 	//DXCコンパイラの生成
@@ -53,6 +55,12 @@ public:
 	D3D12_CPU_DESCRIPTOR_HANDLE GetSRVCPUDescriptorHandle(uint32_t index);
 	//SRVの指定番号のGPUディスクリプタハンドルを取得する
 	D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index);
+
+public://描画関数
+	//描画前処理
+	void PreDraw();
+	//描画後処理
+	void PostDraw();
 
 private:
 	//DirectX12デバイス
