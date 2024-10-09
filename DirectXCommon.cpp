@@ -6,6 +6,7 @@
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_win32.h"
 #include "externals/imgui/imgui_impl_dx12.h"
+
 using namespace StringUtility;
 using namespace Logger;
 
@@ -316,11 +317,15 @@ void DirectXCommon::InitializeRTV()
 	//裏表の2つ分
 	for (uint32_t i = 0; i < 2; ++i) {
 		//RTVを2つ作るのでディスクリプタを2つ用意
-		//まず1つ目を作る。1つ目は最初のところに作る。作る場所をこちらで指定してあげる必要がある
+		// rtvHandles[0] に最初のデスクリプタハンドルを設定
 		rtvHandles[0] = rtvStartHandle;
-		device->CreateRenderTargetView(swapChainResource[0].Get(), &rtvDesc, rtvHandles[0]);
-		//2つ目のディスクリプタハンドルを得る( 自力で )
-		rtvHandles[1].ptr = rtvHandles[0].ptr + device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+		// デスクリプタのサイズを取得
+		UINT descriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+		// rtvHandles[1] に、最初のハンドルからのオフセットを設定
+		rtvHandles[1].ptr = rtvHandles[0].ptr + descriptorSize;
+
 		//2つ目を作る
 		device->CreateRenderTargetView(swapChainResource[1].Get(), &rtvDesc, rtvHandles[1]);
 	}
@@ -407,7 +412,6 @@ void DirectXCommon::PreDraw()
 	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
 
 	//TransitionBarrierの設定
-	D3D12_RESOURCE_BARRIER barrier{};
 	//今回のバリアはTransition
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	//Noneにしておく
@@ -454,5 +458,33 @@ void DirectXCommon::PreDraw()
 
 void DirectXCommon::PostDraw()
 {
+	HRESULT hr;
+
+	//これから書き込むバックバッファのインデックスを取得	
+	UINT bbIndex = swapChain->GetCurrentBackBufferIndex();
+
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+	commandList->ResourceBarrier(1, &barrier);
+
+	//コマンドリストの内容を確定させる。全てのコマンドを積んでからCloseすること
+	hr = commandList->Close();
+	assert(SUCCEEDED(hr));
+
+	ID3D12CommandList* commandLists[] = { commandList.Get() };
+	commandQueue->ExecuteCommandLists(1, commandLists);
+	swapChain->Present(1, 0);
+
+	fenceValue++;
+	commandQueue->Signal(fence.Get(), fenceValue);
+	if (fence->GetCompletedValue() < fenceValue) {
+		fence->SetEventOnCompletion(fenceValue, fenceEvent);
+		WaitForSingleObject(fenceEvent, INFINITE);
+	}
+
+	hr = commandAllocator->Reset();
+	assert(SUCCEEDED(hr));
+	hr = commandList->Reset(commandAllocator.Get(), nullptr);
+	assert(SUCCEEDED(hr));
 }
 

@@ -36,9 +36,7 @@ public://メンバ関数...生成
 	//スワップチェーンの生成
 	void GenerateSwapChain();
 	//深度バッファの生成
-	void GenerateZ
-	
-	();
+	void GenerateZBuffer();
 	//各種デスクリプタヒープの生成
 	void GenerateDescpitorHeap();
 	//DXCコンパイラの生成
@@ -103,11 +101,15 @@ private:
 	Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils = nullptr;
 	Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler = nullptr;
 	Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler = nullptr;
-	//RTV
+	//RTV	
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvStartHandle;
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
+	//barrier
+	D3D12_RESOURCE_BARRIER barrier{};
 
 private:
 	//WindowsAPI
 	WindowsAPI* windowsAPI = nullptr;
+	//fence値
+	UINT fenceVal = 0;
 };
