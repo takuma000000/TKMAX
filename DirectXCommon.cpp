@@ -320,7 +320,7 @@ void DirectXCommon::InitializeRTV()
 		rtvHandles[0] = rtvStartHandle;
 		device->CreateRenderTargetView(swapChainResource[0].Get(), &rtvDesc, rtvHandles[0]);
 		//2つ目のディスクリプタハンドルを得る( 自力で )
-		rtvHandles[1].ptr = rtvHandles[0].ptr + descriptorSizeRTV;//device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		rtvHandles[1].ptr = rtvHandles[0].ptr + device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 		//2つ目を作る
 		device->CreateRenderTargetView(swapChainResource[1].Get(), &rtvDesc, rtvHandles[1]);
 	}
