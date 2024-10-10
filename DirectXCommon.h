@@ -3,7 +3,8 @@
 #include <dxgi1_6.h>
 #include <wrl.h>
 #include <array>
-#include <dxcapi.h>		
+#include <dxcapi.h>	
+#include <d3d12.h>
 #include "WindowsAPI.h"
 
 class DirectXCommon
