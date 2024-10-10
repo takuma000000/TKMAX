@@ -318,16 +318,16 @@ void DirectXCommon::InitializeRTV()
 	for (uint32_t i = 0; i < 2; ++i) {
 		//RTVを2つ作るのでディスクリプタを2つ用意
 		// rtvHandles[0] に最初のデスクリプタハンドルを設定
-		rtvHandles[0] = rtvStartHandle;
+		rtvHandles[i] = rtvStartHandle;
 
 		// デスクリプタのサイズを取得
 		UINT descriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
 		// rtvHandles[1] に、最初のハンドルからのオフセットを設定
-		rtvHandles[1].ptr = rtvHandles[0].ptr + descriptorSize;
+		rtvHandles[i].ptr = rtvHandles[i].ptr + descriptorSize;
 
 		//2つ目を作る
-		device->CreateRenderTargetView(swapChainResource[1].Get(), &rtvDesc, rtvHandles[1]);
+		device->CreateRenderTargetView(swapChainResource[1].Get(), &rtvDesc, rtvHandles[i]);
 	}
 }
 
