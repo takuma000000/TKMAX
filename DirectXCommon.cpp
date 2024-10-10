@@ -312,23 +312,24 @@ void DirectXCommon::InitializeRTV()
 	rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;	//出力結果をSRGBに変換して書き込む
 	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;	//2dテスクチャとして書き込む
 	//ディスクリプタの先頭を取得する
-	rtvStartHandle = GetCPUDescriptorHandle(rtvDescriptorHeap.Get(), descriptorSizeRTV, 0);
+	rtvStartHandle = descriptorHeap->GetCPUDescriptorHandleForHeapStart(rtvDescriptorHeap.Get(), descriptorSizeRTV, 0);
 
 	//裏表の2つ分
-	for (uint32_t i = 0; i < 2; ++i) {
+	
 		//RTVを2つ作るのでディスクリプタを2つ用意
 		// rtvHandles[0] に最初のデスクリプタハンドルを設定
-		rtvHandles[i] = rtvStartHandle;
+		rtvHandles[0] = rtvStartHandle;
 
 		// デスクリプタのサイズを取得
 		UINT descriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
 		// rtvHandles[1] に、最初のハンドルからのオフセットを設定
-		rtvHandles[i].ptr = rtvHandles[i].ptr + descriptorSize;
+		rtvHandles[1].ptr = rtvHandles[0].ptr + descriptorSize;
 
 		//2つ目を作る
-		device->CreateRenderTargetView(swapChainResource[1].Get(), &rtvDesc, rtvHandles[i]);
-	}
+		device->CreateRenderTargetView(swapChainResource[0].Get(), &rtvDesc, rtvHandles[0]);
+		device->CreateRenderTargetView(swapChainResource[1].Get(), &rtvDesc, rtvHandles[1]);
+	
 }
 
 void DirectXCommon::InitializeDSV()
