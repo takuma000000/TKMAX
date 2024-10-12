@@ -312,7 +312,7 @@ void DirectXCommon::InitializeRTV()
 	rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;	//出力結果をSRGBに変換して書き込む
 	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;	//2dテスクチャとして書き込む
 	//ディスクリプタの先頭を取得する
-	rtvStartHandle = descriptorHeap->GetCPUDescriptorHandleForHeapStart(rtvDescriptorHeap.Get(), descriptorSizeRTV, 0);
+	rtvStartHandle = GetCPUDescriptorHandle(rtvDescriptorHeap.Get(), descriptorSizeRTV, 0);
 
 	//裏表の2つ分
 	
