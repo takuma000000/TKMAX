@@ -1431,7 +1431,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			//transformationMatrixDataSprite->wvp = worldViewProjectionMatrixSprite;
 
-			dxCommon->PreDraw();
+			dxCommon->PostDraw();
 
 		}
 
