@@ -103,6 +103,7 @@ private:
 	Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler = nullptr;
 	Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler = nullptr;
 	//RTV	
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvHeap_;
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvStartHandle;
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
 	//barrier
