@@ -6,12 +6,17 @@
 #include <dxcapi.h>	
 #include <d3d12.h>
 #include "WindowsAPI.h"
+#include "externals/DirectXTex/DirectXTex.h"//DirectX
 
 class DirectXCommon
 {
 public:
 	// コンストラク
 	DirectXCommon();
+
+public://getter
+	ID3D12Device* GetDevice() const { return device.Get(); }
+	ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
 
 public://メンバ関数...初期化
 	//初期化
@@ -42,6 +47,22 @@ public://メンバ関数...生成
 	void GenerateDescpitorHeap();
 	//DXCコンパイラの生成
 	void GenerateDXC();
+
+public://シェーダーコンパイル関数
+	//シェーダーのコンパイル
+	Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(const std::wstring& filePath, const wchar_t* profile);
+
+public://リソース生成関数
+	//バッファリソースの生成
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizeInBytes);
+	//テクスチャリソースの生成
+	ID3D12Resource* CreateTextureResource(ID3D12Device* device, const DirectX::TexMetadata& metadata);
+	//テクスチャデータの転送
+	void UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages);
+
+public://テクスチャファイル読み込み関数
+	//テクスチャファイルの読み込み
+	static DirectX::ScratchImage LoadTexture(const std::string& filePath);
 
 private://色々な関数
 	//指定番号のCPUディスクリプタハンドルを取得する
@@ -114,4 +135,9 @@ private:
 	WindowsAPI* windowsAPI = nullptr;
 	//fence値
 	UINT fenceVal = 0;
+
+private:
+	//静的メンバにする
+	static IDxcIncludeHandler* includeHandler;
+
 };
