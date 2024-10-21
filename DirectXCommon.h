@@ -3,23 +3,29 @@
 #include <dxgi1_6.h>
 #include <wrl.h>
 #include <array>
-#include <dxcapi.h>	
+#include <dxcapi.h>    
 #include <d3d12.h>
+#include <string>
 #include "WindowsAPI.h"
 #include "externals/DirectXTex/DirectXTex.h"//DirectX
 
 class DirectXCommon
 {
 public:
-	// コンストラク
+	// コンストラクタ
 	DirectXCommon();
 
-public://getter
+public: //getter
 	ID3D12Device* GetDevice() const { return device.Get(); }
 	ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
 	ID3D12DescriptorHeap* GetsrvDescriptorHeap() const { return srvDescriptorHeap.Get(); }
+	D3D12_VIEWPORT GetViewport() { return viewport; }
+	D3D12_RECT GetRect() { return scissorRect; }
+	uint32_t GetDescriptorSizeSRV() { return descriptorSizeSRV; }
+	uint32_t GetDescriptorSizeRTV() { return descriptorSizeRTV; }
+	uint32_t GetDescriptorSizeDSV() { return descriptorSizeDSV; }
 
-public://メンバ関数...初期化
+public: //メンバ関数...初期化
 	//初期化
 	void Initialize(WindowsAPI* windowsAPI);
 	//デバイス初期化
@@ -39,7 +45,7 @@ public://メンバ関数...初期化
 	//ImGuiの初期化
 	void InitializeImGui();
 
-public://メンバ関数...生成
+public: //メンバ関数...生成
 	//スワップチェーンの生成
 	void GenerateSwapChain();
 	//深度バッファの生成
@@ -49,11 +55,11 @@ public://メンバ関数...生成
 	//DXCコンパイラの生成
 	void GenerateDXC();
 
-public://シェーダーコンパイル関数
+public: //シェーダーコンパイル関数
 	//シェーダーのコンパイル
 	Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(const std::wstring& filePath, const wchar_t* profile);
 
-public://リソース生成関数
+public: //リソース生成関数
 	//バッファリソースの生成
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizeInBytes);
 	//テクスチャリソースの生成
@@ -61,11 +67,11 @@ public://リソース生成関数
 	//テクスチャデータの転送
 	void UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages);
 
-public://テクスチャファイル読み込み関数
+public: //テクスチャファイル読み込み関数
 	//テクスチャファイルの読み込み
-	static DirectX::ScratchImage LoadTexture(const std::string& filePath);
+	DirectX::ScratchImage LoadTexture(const std::string& filePath);
 
-private://色々な関数
+public: //色々な関数
 	//指定番号のCPUディスクリプタハンドルを取得する
 	static D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index);
 	//指定番号のGPUディスクリプタハンドルを取得する
@@ -77,7 +83,7 @@ public:
 	//SRVの指定番号のGPUディスクリプタハンドルを取得する
 	D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index);
 
-public://描画関数
+public: //描画関数
 	//描画前処理
 	void PreDraw();
 	//描画後処理
@@ -103,9 +109,10 @@ private:
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap;
-	const uint32_t descriptorSizeSRV;
-	const uint32_t descriptorSizeRTV;
-	const uint32_t descriptorSizeDSV;
+	//DescriptorSizeを取得しておく
+	uint32_t descriptorSizeSRV;
+	uint32_t descriptorSizeRTV;
+	uint32_t descriptorSizeDSV;
 	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap;
 	//swapChainResources
@@ -124,7 +131,7 @@ private:
 	Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils = nullptr;
 	Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler = nullptr;
 	Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler = nullptr;
-	//RTV	
+	//RTV    
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvHeap_;
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvStartHandle;
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
@@ -139,6 +146,6 @@ private:
 
 private:
 	//静的メンバにする
-	static IDxcIncludeHandler* includeHandler;
-
+	//static Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler;
 };
+
