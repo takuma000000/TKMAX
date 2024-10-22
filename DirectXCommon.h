@@ -63,7 +63,7 @@ public: //リソース生成関数
 	//バッファリソースの生成
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizeInBytes);
 	//テクスチャリソースの生成
-	ID3D12Resource* CreateTextureResource(ID3D12Device* device, const DirectX::TexMetadata& metadata);
+	ID3D12Resource* CreateTextureResource(const DirectX::TexMetadata& metadata);
 	//テクスチャデータの転送
 	void UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages);
 
