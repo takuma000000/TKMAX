@@ -833,19 +833,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	indexDataSprite[4] = 3;
 	indexDataSprite[5] = 2;
 
-	//Textureを読んで転送する
-	DirectX::ScratchImage mipImages = dxCommon->LoadTexture("resources/uvChecker.png");
-	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
-	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource = dxCommon->CreateTextureResource(metadata);
-	dxCommon->UploadTextureData(textureResource.Get(), mipImages);
-
-	//metaDataを基にSRVの設定
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-	srvDesc.Format = metadata.format;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;//2Dテクスチャ
-	srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
-
 	//2枚目のTextureを読んで転送する
 	DirectX::ScratchImage mipImage2 = dxCommon->LoadTexture(modelData.material.textureFilePath);
 	const DirectX::TexMetadata metadata2 = mipImage2.GetMetadata();
@@ -858,6 +845,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	srvDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;//2Dテクスチャ
 	srvDesc2.Texture2D.MipLevels = UINT(metadata2.mipLevels);
+
+	//Textureを読んで転送する
+	DirectX::ScratchImage mipImages = dxCommon->LoadTexture("resources/uvChecker.png");
+	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
+	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource = dxCommon->CreateTextureResource(metadata);
+	dxCommon->UploadTextureData(textureResource.Get(), mipImages);
+
+	//metaDataを基にSRVの設定
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+	srvDesc.Format = metadata.format;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;//2Dテクスチャ
+	srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
 
 	// SRVを作成するDescriptorHeapの場所を決める
 	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = dxCommon->GetsrvDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
@@ -888,8 +888,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//ゲームループを抜ける
 			break;
 		} else {
-
-			dxCommon->PreDraw();
 
 			//ゲームの処理
 			ImGui_ImplDX12_NewFrame();
@@ -948,6 +946,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			D3D12_VIEWPORT viewport = dxCommon->GetViewport();
 			D3D12_RECT scissorRect = dxCommon->GetRect();
 
+			dxCommon->PreDraw();
+
 			//描画
 			dxCommon->GetCommandList()->RSSetViewports(1, &viewport);
 			dxCommon->GetCommandList()->RSSetScissorRects(1, &scissorRect);
@@ -994,8 +994,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->ResourceBarrier(1, &barrier);*/
 
 			//コマンドリストの内容を確定させる。全てのコマンドを積んでからCloseすること
-			hr = dxCommon->GetCommandList()->Close();
-			assert(SUCCEEDED(hr));
+			//hr = dxCommon->GetCommandList()->Close();
+			//assert(SUCCEEDED(hr));
 
 			/*ID3D12CommandList* commandLists[] = { commandList.Get() };
 			commandQueue->ExecuteCommandLists(1, commandLists);
@@ -1050,18 +1050,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 
-	////ImGuiの終了処理
-	//ImGui_ImplDX12_Shutdown();
-	//ImGui_ImplWin32_Shutdown();
-	//ImGui::DestroyContext();
+	//ImGuiの終了処理
+	ImGui_ImplDX12_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
 
 	////*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 	////				解放
 	////*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 	//CloseHandle(fenceEvent);
-	////WindowsAPIの終了処理
-	//windowsAPI->Finalize();
+	//WindowsAPIの終了処理
+	windowsAPI->Finalize();
 
 	return 0;
 
