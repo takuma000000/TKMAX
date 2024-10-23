@@ -362,7 +362,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateBufferResource(size_
 	return vertexResource;
 }
 
-ID3D12Resource* DirectXCommon::CreateTextureResource(const DirectX::TexMetadata& metadata)
+Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateTextureResource(const DirectX::TexMetadata& metadata)
 {
 	//metadataを基にResourceの設定
 	D3D12_RESOURCE_DESC resourceDesc{};
@@ -391,7 +391,7 @@ ID3D12Resource* DirectXCommon::CreateTextureResource(const DirectX::TexMetadata&
 		IID_PPV_ARGS(&resource)//作成するResourceポインタへのポインタ
 	);
 	assert(SUCCEEDED(hr));
-	return resource.Get();
+	return resource;
 }
 
 void DirectXCommon::UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages)
@@ -433,12 +433,16 @@ DirectX::ScratchImage DirectXCommon::LoadTexture(const std::string& filePath)
 
 D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetCPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index)
 {
-	return D3D12_CPU_DESCRIPTOR_HANDLE();
+	D3D12_CPU_DESCRIPTOR_HANDLE handleCPU = descriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	handleCPU.ptr += (descriptorSize * index);
+	return handleCPU;
 }
 
 D3D12_GPU_DESCRIPTOR_HANDLE DirectXCommon::GetGPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index)
 {
-	return D3D12_GPU_DESCRIPTOR_HANDLE();
+	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
+	handleGPU.ptr += (descriptorSize * index);
+	return handleGPU;
 }
 
 void DirectXCommon::InitializeRTV()
@@ -560,38 +564,40 @@ D3D12_GPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVGPUDescriptorHandle(uint32_t in
 
 void DirectXCommon::PreDraw()
 {
-	//これから書き込むバックバッファのインデックスを取得	
+	//HRESULT hr;
+
+	//// 1. コマンドリストの開始（リセット）
+	//hr = commandAllocator->Reset();
+	//assert(SUCCEEDED(hr));
+	//hr = commandList->Reset(commandAllocator.Get(), nullptr);
+	//assert(SUCCEEDED(hr));
+
+	// これから書き込むバックバッファのインデックスを取得    
 	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
 
-	//TransitionBarrierの設定
-	//今回のバリアはTransition
+	// TransitionBarrierの設定 (Present -> RenderTarget)
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	//Noneにしておく
 	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	//バリアを張る対象のリソース。現在のバックバッファに対して行う
 	barrier.Transition.pResource = swapChainResource[backBufferIndex].Get();
-	//遷移前( 現在 )のResourceState
 	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-	//遷移後のResourceState
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-	//TransitionBarrierを張る
 	commandList->ResourceBarrier(1, &barrier);
 
-	//描画先のRTVとDSVを設定する
+	// 描画先のRTVとDSVを設定する
+	commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, nullptr);
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	//描画先のRTVを設定する
 	commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, &dsvHandle);
-	//指定した色で画面全体をクリアする
-	float clearColor[] = { 0.1f,0.25f,0.5f,1.0f };
-	commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
 
-	//指定した深度で画面全体をクリアする
+	// 画面全体をクリアする
+	float clearColor[] = { 0.1f, 0.25f, 0.5f, 1.0f };
+	commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
 	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
-	//描画用のDescriptorHeapの設定
+	// 描画用のDescriptorHeapを設定
 	ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap.Get() };
 	commandList->SetDescriptorHeaps(1, descriptorHeaps);
 
+	// ビューポートとシザー矩形の設定
 	D3D12_VIEWPORT viewport{};
 	viewport.Width = WindowsAPI::kClientWidth;
 	viewport.Height = WindowsAPI::kClientHeight;
@@ -599,44 +605,61 @@ void DirectXCommon::PreDraw()
 	viewport.TopLeftY = 0;
 	viewport.MinDepth = 0.0f;
 	viewport.MaxDepth = 1.0f;
-
+	commandList->RSSetViewports(1, &viewport);
 
 	D3D12_RECT scissorRect{};
 	scissorRect.left = 0;
 	scissorRect.right = WindowsAPI::kClientWidth;
 	scissorRect.top = 0;
 	scissorRect.bottom = WindowsAPI::kClientHeight;
+	commandList->RSSetScissorRects(1, &scissorRect);
 }
 
 void DirectXCommon::PostDraw()
 {
 	HRESULT hr;
 
-	//これから書き込むバックバッファのインデックスを取得	
-	UINT bbIndex = swapChain->GetCurrentBackBufferIndex();
+	// これから書き込むバックバッファのインデックスを取得    
+	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
 
+	// 1. 描画コマンドの記録 (リソースバリア設定)
+	barrier.Transition.pResource = swapChainResource[backBufferIndex].Get();
 	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 	commandList->ResourceBarrier(1, &barrier);
 
-	//コマンドリストの内容を確定させる。全てのコマンドを積んでからCloseすること
+	// 2. コマンドリストの終了
 	hr = commandList->Close();
 	assert(SUCCEEDED(hr));
 
+	// 3. コマンドリストをキューに送信
 	ID3D12CommandList* commandLists[] = { commandList.Get() };
 	commandQueue->ExecuteCommandLists(1, commandLists);
+
+	// 4. Present の呼び出し（フレームを表示）
 	swapChain->Present(1, 0);
 
+	// 5. フェンスでGPU処理が終了するまで待機
 	fenceValue++;
-	commandQueue->Signal(fence.Get(), fenceValue);
+	hr = commandQueue->Signal(fence.Get(), fenceValue);
+	assert(SUCCEEDED(hr));
+
+	// GPUがコマンドリストの実行を終了するまで待つ
 	if (fence->GetCompletedValue() < fenceValue) {
-		fence->SetEventOnCompletion(fenceValue, fenceEvent);
+		hr = fence->SetEventOnCompletion(fenceValue, fenceEvent);
+		assert(SUCCEEDED(hr));
 		WaitForSingleObject(fenceEvent, INFINITE);
 	}
 
+	// 6. アロケータのリセット（GPU完了後に実行）
 	hr = commandAllocator->Reset();
 	assert(SUCCEEDED(hr));
+
+	// 7. コマンドリストのリセット（次のフレームの準備）
 	hr = commandList->Reset(commandAllocator.Get(), nullptr);
 	assert(SUCCEEDED(hr));
 }
+
+
+
 
