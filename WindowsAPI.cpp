@@ -1,6 +1,9 @@
+#pragma comment(lib,"winmm.lib")
+
 #include "WindowsAPI.h"
 #include <cstdint>
 #include "externals/imgui/imgui.h"
+#include <iostream>
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 //ウィンドウプロシージャ
@@ -26,7 +29,8 @@ LRESULT CALLBACK WindowsAPI::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPAR
 void WindowsAPI::Initialize()
 {
 	CoInitializeEx(0, COINIT_MULTITHREADED);
-
+	//システムターマーの分解能を上げる
+	timeBeginPeriod(1);
 
 #pragma region Windowの生成
 	//ウィンドウプロシージャ

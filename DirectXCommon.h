@@ -6,6 +6,7 @@
 #include <dxcapi.h>    
 #include <d3d12.h>
 #include <string>
+#include <chrono>
 #include "WindowsAPI.h"
 #include "externals/DirectXTex/DirectXTex.h"//DirectX
 
@@ -25,7 +26,7 @@ public: //getter
 	uint32_t GetDescriptorSizeRTV() { return descriptorSizeRTV; }
 	uint32_t GetDescriptorSizeDSV() { return descriptorSizeDSV; }
 
-public: //メンバ関数...初期化
+public: //メンバ関数...初期化...public
 	//初期化
 	void Initialize(WindowsAPI* windowsAPI);
 	//デバイス初期化
@@ -44,6 +45,14 @@ public: //メンバ関数...初期化
 	void InitializeScissorRect();
 	//ImGuiの初期化
 	void InitializeImGui();
+
+private: //メンバ関数...初期化...private
+	//FPS初期化固定化
+	void InitializeFixFPS();
+
+private: //メンバ関数...更新...private
+	//FPS固定更新
+	void UpdateFixFPS();
 
 public: //メンバ関数...生成
 	//スワップチェーンの生成
@@ -137,6 +146,8 @@ private:
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
 	//barrier
 	D3D12_RESOURCE_BARRIER barrier{};
+	//記録時間( FPS固定用 )
+	std::chrono::steady_clock::time_point reference_;
 
 private:
 	//WindowsAPI
@@ -144,8 +155,5 @@ private:
 	//fence値
 	UINT fenceVal = 0;
 
-private:
-	//静的メンバにする
-	//static Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler;
 };
 
