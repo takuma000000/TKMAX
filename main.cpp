@@ -25,6 +25,8 @@
 #include "WindowsAPI.h"
 #include "Input.h"
 #include "DirectXCommon.h"
+#include "SpriteCommon.h"
+#include "Sprite.h"
 
 struct Vector2 {
 	float x;
@@ -565,15 +567,13 @@ bool useMonsterBall = true;
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
-	//WindowsAPI*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	//基盤システムの初期化*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
-	//ポインタ
+	//ポインタ...WindowsAPI
 	std::unique_ptr<WindowsAPI> windowsAPI = nullptr;
 	//WindowsAPIの初期化
 	windowsAPI = std::make_unique<WindowsAPI>();
 	windowsAPI->Initialize();
-
-	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
 	//ポインタ...Input
 	std::unique_ptr<Input> input = nullptr;
@@ -586,6 +586,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//DirectXの初期化
 	dxCommon = std::make_unique<DirectXCommon>();
 	dxCommon->Initialize(windowsAPI.get());
+
+	//ポインタ...SpriteCommon
+	std::unique_ptr<SpriteCommon> spriteCommon = nullptr;
+	//スプライト共通部の初期化
+	spriteCommon = std::make_unique<SpriteCommon>();
+	spriteCommon->Initialize();
+
+	//ポインタ...Sprite
+	std::unique_ptr<Sprite> sprite = nullptr;
+	sprite->Initialize();
+
+	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
 	//RootSignature作成
 	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
