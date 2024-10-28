@@ -22,10 +22,10 @@ private:
 	DirectXCommon* dxCommon_;
 	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicPipelineStateDesc{};
+	D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = {};
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature = nullptr;
-	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
-	Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = dxCommon_->CompileShader(L"resources/shaders/Object3D.VS.hlsl", L"vs_6_0");
-	Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = dxCommon_->CompileShader(L"resources/shaders/Object3D.PS.hlsl", L"ps_6_0");
+	Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = nullptr;
+	Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = nullptr;
 	D3D12_BLEND_DESC blendDesc{};
 	D3D12_RASTERIZER_DESC resterizerDesc{};
 	D3D12_DEPTH_STENCIL_DESC depthStencilDesc{};
