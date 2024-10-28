@@ -591,7 +591,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	std::unique_ptr<SpriteCommon> spriteCommon = nullptr;
 	//スプライト共通部の初期化
 	spriteCommon = std::make_unique<SpriteCommon>();
-	spriteCommon->Initialize();
+	spriteCommon->Initialize(dxCommon.get());
 
 	//ポインタ...Sprite
 	std::unique_ptr<Sprite> sprite = nullptr;
@@ -959,14 +959,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			D3D12_RECT scissorRect = dxCommon->GetRect();
 
 			dxCommon->PreDraw();
+			spriteCommon->DrawSetCommon();
 
 			//描画
 			dxCommon->GetCommandList()->RSSetViewports(1, &viewport);
 			dxCommon->GetCommandList()->RSSetScissorRects(1, &scissorRect);
-			dxCommon->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
-			dxCommon->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
+			//dxCommon->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
+			//dxCommon->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
 			dxCommon->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
-			dxCommon->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			//dxCommon->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 
 			dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
