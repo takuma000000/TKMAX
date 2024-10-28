@@ -24,6 +24,10 @@ class Sprite
 		float w;
 	};
 
+	struct Matrix4x4 {
+		float m[4][4];
+	};
+
 	//頂点データ
 	struct VertexData {
 		Vector4 position;
@@ -31,13 +35,12 @@ class Sprite
 		Vector3 normal;
 	};
 
-	struct MaterialData {
-		std::string textureFilePath;
-	};
-
-	struct ModelData {
-		std::vector<VertexData> vertices;
-		MaterialData material;
+	//マテリアルデータ
+	struct Material {
+		Vector4 color;
+		int32_t enableLighting;
+		float padding[3];
+		Matrix4x4 uvTransform;
 	};
 
 public://メンバ関数
@@ -48,11 +51,13 @@ private:
 	DirectXCommon* dxCommon_;
 
 	//バッファリソース
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = nullptr;;
+	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12Resource> indexResource = nullptr;
+	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource = nullptr;
 	//バッファリソース内のデータを指すポインタ
 	VertexData* vertexData = nullptr;
 	uint32_t* indexData = nullptr;
+	Material* materialData = nullptr;
 	//バッファリソースの使い道を補足するバッファビュー
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
 	D3D12_INDEX_BUFFER_VIEW indexBufferView{};
