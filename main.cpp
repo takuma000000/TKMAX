@@ -596,7 +596,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//ポインタ...Sprite
 	std::unique_ptr<Sprite> sprite = nullptr;
 	sprite = std::make_unique<Sprite>();
-	sprite->Initialize(spriteCommon.get());
+	sprite->Initialize(spriteCommon.get(), dxCommon.get());
 
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 

@@ -24,4 +24,14 @@ void Sprite::Initialize(SpriteCommon* spriteCommon,DirectXCommon* dxCommon){
 	indexBufferView.SizeInBytes = sizeof(uint32_t) * 6;
 	//インデックスはuint32_tとする
 	indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+	//
+	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
+	//
+	indexResource->Map(0, nullptr, reinterpret_cast<void**>(&indexData));
+	indexData[0] = 0;
+	indexData[1] = 1;
+	indexData[2] = 2;
+	indexData[3] = 1;
+	indexData[4] = 3;
+	indexData[5] = 2;
 }
