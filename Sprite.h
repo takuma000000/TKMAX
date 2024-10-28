@@ -43,6 +43,12 @@ class Sprite
 		Matrix4x4 uvTransform;
 	};
 
+	//座標変換行列データ
+	struct TransformationMatrix {
+		Matrix4x4 wvp;
+		Matrix4x4 World;
+	};
+
 public://メンバ関数
 	void Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon);
 
