@@ -8,6 +8,7 @@ class SpriteCommon;
 class Sprite
 {
 
+public:
 	struct Vector2 {
 		float x;
 		float y;
@@ -54,7 +55,7 @@ class Sprite
 public://メンバ関数
 	void Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon);
 	void Update();
-	void Draw();
+	void Draw(D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU);
 
 private:
 	SpriteCommon* spriteCommon = nullptr;
