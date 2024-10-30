@@ -1,5 +1,7 @@
 #pragma once
 #include "DirectXCommon.h"
+#include "Matrix4x4.h"
+#include "Vector3.h"
 
 class SpriteCommon;
 
@@ -11,12 +13,6 @@ class Sprite
 		float y;
 	};
 
-	struct Vector3 {
-		float x;
-		float y;
-		float z;
-	};
-
 	struct Vector4 {
 		float x;
 		float y;
@@ -24,9 +20,15 @@ class Sprite
 		float w;
 	};
 
-	struct Matrix4x4 {
-		float m[4][4];
+	struct Transform {
+		Vector3 scale;
+		Vector3 rotate;
+		Vector3 translate;
 	};
+
+	/*struct Matrix4x4 {
+		float m[4][4];
+	};*/
 
 	//頂点データ
 	struct VertexData {
@@ -51,6 +53,8 @@ class Sprite
 
 public://メンバ関数
 	void Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon);
+	void Update();
+	void Draw();
 
 private:
 	SpriteCommon* spriteCommon = nullptr;
@@ -60,10 +64,12 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12Resource> indexResource = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource = nullptr;
+	Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResource = nullptr;
 	//バッファリソース内のデータを指すポインタ
 	VertexData* vertexData = nullptr;
 	uint32_t* indexData = nullptr;
 	Material* materialData = nullptr;
+	TransformationMatrix* transformationMatrixData = nullptr;
 	//バッファリソースの使い道を補足するバッファビュー
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
 	D3D12_INDEX_BUFFER_VIEW indexBufferView{};
