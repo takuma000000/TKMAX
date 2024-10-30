@@ -22,6 +22,7 @@
 #pragma comment(lib,"dxcompiler.lib")
 
 #include "MyMath.h"
+#include "Vector3.h"
 
 // GE3クラス化(MyClass)
 #include "WindowsAPI.h"
@@ -35,11 +36,11 @@ struct Vector2 {
 	float y;
 };
 
-struct Vector3 {
-	float x;
-	float y;
-	float z;
-};
+//struct Vector3 {
+//	float x;
+//	float y;
+//	float z;
+//};
 
 struct Vector4 {
 	float x;
@@ -68,12 +69,12 @@ struct VertexData {
 	Vector3 normal;
 };
 
-//struct Material {
-//	Vector4 color;
-//	int32_t enableLighting;
-//	float padding[3];
-//	Matrix4x4 uvTransform;
-//};
+struct Material {
+	Vector4 color;
+	int32_t enableLighting;
+	float padding[3];
+	Matrix4x4 uvTransform;
+};
 
 struct TransformationMatrix {
 	Matrix4x4 wvp;
@@ -297,77 +298,77 @@ Matrix4x4 MakeAffineMatrix(Vector3 scale, Vector3 rotate, Vector3 translate) {
 	return affineMatrix;
 }
 
-Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip) {
-	float tanHalfFovY = tanf(fovY * 0.5f);
-	float scaleX = 1.0f / (aspectRatio * tanHalfFovY);
-	float scaleY = 1.0f / tanHalfFovY;
-	//float nearFarRange = farClip - nearClip;
+//Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip) {
+//	float tanHalfFovY = tanf(fovY * 0.5f);
+//	float scaleX = 1.0f / (aspectRatio * tanHalfFovY);
+//	float scaleY = 1.0f / tanHalfFovY;
+//	//float nearFarRange = farClip - nearClip;
+//
+//	Matrix4x4 result;
+//
+//	result.m[0][0] = scaleX;
+//	result.m[0][1] = 0.0f;
+//	result.m[0][2] = 0.0f;
+//	result.m[0][3] = 0.0f;
+//
+//	result.m[1][0] = 0.0f;
+//	result.m[1][1] = scaleY;
+//	result.m[1][2] = 0.0f;
+//	result.m[1][3] = 0.0f;
+//
+//	result.m[2][0] = 0.0f;
+//	result.m[2][1] = 0.0f;
+//	result.m[2][2] = farClip / (farClip - nearClip);
+//	result.m[2][3] = 1.0f;
+//
+//	result.m[3][0] = 0.0f;
+//	result.m[3][1] = 0.0f;
+//	result.m[3][2] = (-nearClip * farClip) / (farClip - nearClip);
+//	result.m[3][3] = 0.0f;
+//
+//	return result;
+//}
 
-	Matrix4x4 result;
+//Matrix4x4 MakeIdentity4x4() {
+//
+//	Matrix4x4 identity;
+//
+//	// 単位行列を生成する
+//	for (int i = 0; i < 4; ++i) {
+//		for (int j = 0; j < 4; ++j) {
+//			identity.m[i][j] = (i == j) ? 1.0f : 0.0f;
+//		}
+//	}
+//
+//	return identity;
+//
+//}
 
-	result.m[0][0] = scaleX;
-	result.m[0][1] = 0.0f;
-	result.m[0][2] = 0.0f;
-	result.m[0][3] = 0.0f;
-
-	result.m[1][0] = 0.0f;
-	result.m[1][1] = scaleY;
-	result.m[1][2] = 0.0f;
-	result.m[1][3] = 0.0f;
-
-	result.m[2][0] = 0.0f;
-	result.m[2][1] = 0.0f;
-	result.m[2][2] = farClip / (farClip - nearClip);
-	result.m[2][3] = 1.0f;
-
-	result.m[3][0] = 0.0f;
-	result.m[3][1] = 0.0f;
-	result.m[3][2] = (-nearClip * farClip) / (farClip - nearClip);
-	result.m[3][3] = 0.0f;
-
-	return result;
-}
-
-Matrix4x4 MakeIdentity4x4() {
-
-	Matrix4x4 identity;
-
-	// 単位行列を生成する
-	for (int i = 0; i < 4; ++i) {
-		for (int j = 0; j < 4; ++j) {
-			identity.m[i][j] = (i == j) ? 1.0f : 0.0f;
-		}
-	}
-
-	return identity;
-
-}
-
-Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip) {
-	Matrix4x4 mat;
-
-	mat.m[0][0] = 2.0f / (right - left);
-	mat.m[0][1] = 0.0f;
-	mat.m[0][2] = 0.0f;
-	mat.m[0][3] = 0.0f;
-
-	mat.m[1][0] = 0.0f;
-	mat.m[1][1] = 2.0f / (top - bottom);
-	mat.m[1][2] = 0.0f;
-	mat.m[1][3] = 0.0f;
-
-	mat.m[2][0] = 0.0f;
-	mat.m[2][1] = 0.0f;
-	mat.m[2][2] = 1.0f / (farClip - nearClip);
-	mat.m[2][3] = 0.0f;
-
-	mat.m[3][0] = -(right + left) / (right - left);
-	mat.m[3][1] = -(top + bottom) / (top - bottom);
-	mat.m[3][2] = (nearClip) / (nearClip - farClip);
-	mat.m[3][3] = 1.0f;
-
-	return mat;
-}
+//Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip) {
+//	Matrix4x4 mat;
+//
+//	mat.m[0][0] = 2.0f / (right - left);
+//	mat.m[0][1] = 0.0f;
+//	mat.m[0][2] = 0.0f;
+//	mat.m[0][3] = 0.0f;
+//
+//	mat.m[1][0] = 0.0f;
+//	mat.m[1][1] = 2.0f / (top - bottom);
+//	mat.m[1][2] = 0.0f;
+//	mat.m[1][3] = 0.0f;
+//
+//	mat.m[2][0] = 0.0f;
+//	mat.m[2][1] = 0.0f;
+//	mat.m[2][2] = 1.0f / (farClip - nearClip);
+//	mat.m[2][3] = 0.0f;
+//
+//	mat.m[3][0] = -(right + left) / (right - left);
+//	mat.m[3][1] = -(top + bottom) / (top - bottom);
+//	mat.m[3][2] = (nearClip) / (nearClip - farClip);
+//	mat.m[3][3] = 1.0f;
+//
+//	return mat;
+//}
 
 std::wstring ConvertString(const std::string& str) {
 	if (str.empty()) {
@@ -786,16 +787,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//transformationMatrixDataSprite->wvp = MakeIdentity4x4();
 
 
-	////マテリアル用のリソースを作る。今回はcolor1つ分のサイズを用意する
-	//Microsoft::WRL::ComPtr<ID3D12Resource> materialResource = dxCommon->CreateBufferResource(sizeof(Material));
-	////マテリアルにデータを書き込む
-	//Material* materialData = nullptr;
+	//マテリアル用のリソースを作る。今回はcolor1つ分のサイズを用意する
+	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource = dxCommon->CreateBufferResource(sizeof(Material));
+	//マテリアルにデータを書き込む
+	Material* materialData = nullptr;
 	//書き込むためのアドレスを取得
-	//materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
-	////今回は白を書き込んでみる
-	//materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-	//materialData->enableLighting = true;
-	//materialData->uvTransform = MakeIdentity4x4();
+	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
+	//今回は白を書き込んでみる
+	materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	materialData->enableLighting = true;
+	materialData->uvTransform = MyMath::MakeIdentity4x4();
 
 
 	//WVP用のリソースを作る。Matrix4x4 1つ分のサイズを用意する
@@ -805,7 +806,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//書き込むためのアドレスを取得
 	wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
 	//単位行列を書き込んでおく
-	wvpData->wvp = MakeIdentity4x4();
+	wvpData->wvp = MyMath::MakeIdentity4x4();
 
 
 	////Sprite用のマテリアルリソースを作る
@@ -878,15 +879,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = dxCommon->GetsrvDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
 	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = dxCommon->GetsrvDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 	// 先頭はImGuiが使っているのでその次を使う
-	textureSrvHandleCPU.ptr += dxCommon->GetDescriptorSizeSRV();
-	textureSrvHandleGPU.ptr += dxCommon->GetDescriptorSizeSRV();
+	textureSrvHandleCPU = dxCommon->GetCPUDescriptorHandle(dxCommon->GetsrvDescriptorHeap(), dxCommon->GetDescriptorSizeSRV(), 2);
+	textureSrvHandleGPU = dxCommon->GetGPUDescriptorHandle(dxCommon->GetsrvDescriptorHeap(), dxCommon->GetDescriptorSizeSRV(), 2);
 
 	// SRVの生成
 	dxCommon->GetDevice()->CreateShaderResourceView(textureResource.Get(), &srvDesc, textureSrvHandleCPU);
 
 	// SRVを作成するDescriptorHeapの場所を決める(2枚目)
-	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU2 = dxCommon->GetCPUDescriptorHandle(dxCommon->GetsrvDescriptorHeap(), dxCommon->GetDescriptorSizeSRV(), 2);
-	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU2 = dxCommon->GetGPUDescriptorHandle(dxCommon->GetsrvDescriptorHeap(), dxCommon->GetDescriptorSizeSRV(), 2);
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU2 = dxCommon->GetCPUDescriptorHandle(dxCommon->GetsrvDescriptorHeap(), dxCommon->GetDescriptorSizeSRV(), 3);
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU2 = dxCommon->GetGPUDescriptorHandle(dxCommon->GetsrvDescriptorHeap(), dxCommon->GetDescriptorSizeSRV(), 3);
 
 	// SRVの生成
 	dxCommon->GetDevice()->CreateShaderResourceView(textureResource2.Get(), &srvDesc2, textureSrvHandleCPU2);
@@ -969,36 +970,44 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			dxCommon->GetCommandList()->RSSetScissorRects(1, &scissorRect);
 			//dxCommon->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
 			//dxCommon->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
-			dxCommon->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
-			//dxCommon->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			//dxCommon->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
+			////dxCommon->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 
-			dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-			//wvp用のCBufferの場所を設定
-			dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
+			//dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+			////wvp用のCBufferの場所を設定
+			//dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 
-			//SRVを切り替える
-			dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
+			////SRVを切り替える
+			//dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
 
-			dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(3, materialResourceLight->GetGPUVirtualAddress());
+			//dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(3, materialResourceLight->GetGPUVirtualAddress());
 
-			dxCommon->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
+			////dxCommon->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
+
+
+
+
+			sprite->Draw(textureSrvHandleGPU);
+
+
+
 
 			//Spriteを常にuvCheckerにする
-			dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+			//dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
 
-			dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
+			//dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
 
 
-			//Spriteの描画。変更が必要なものだけ変更する
-			dxCommon->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);//VBVを設定
-			//TransformationMatrixCBufferの場所を設定
-			dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
-			//描画
-			dxCommon->GetCommandList()->DrawInstanced(6, 1, 0, 0);
+			////Spriteの描画。変更が必要なものだけ変更する
+			//dxCommon->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);//VBVを設定
+			////TransformationMatrixCBufferの場所を設定
+			//dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
+			////描画
+			//dxCommon->GetCommandList()->DrawInstanced(6, 1, 0, 0);
 
 			//IBVを設定
-			dxCommon->GetCommandList()->IASetIndexBuffer(&indexBufferViewSprite);
+			//dxCommon->GetCommandList()->IASetIndexBuffer(&indexBufferViewSprite);
 			//描画。6個のインデックスを使用し1つのインスタンスを描画。その他は当面0で良い
 			//commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
@@ -1040,24 +1049,24 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			////3次元的にする
 			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
 			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
-			Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(WindowsAPI::kClientWidth) / float(WindowsAPI::kClientHeight), 0.1f, 100.0f);
+			Matrix4x4 projectionMatrix = MyMath::MakePerspectiveFovMatrix(0.45f, float(WindowsAPI::kClientWidth) / float(WindowsAPI::kClientHeight), 0.1f, 100.0f);
 			//WVPMatrixを作る
 			Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
 			wvpData->wvp = worldViewProjectionMatrix;
 
-			//UVTransform用の行列
-			Matrix4x4 uvTransformMatrix = MakeScaleMatrix(uvTransformSprite.scale);
-			uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(uvTransformSprite.rotate.z));
-			uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(uvTransformSprite.translate));
-			materialDataSprite->uvTransform = uvTransformMatrix;
+			////UVTransform用の行列
+			//Matrix4x4 uvTransformMatrix = MakeScaleMatrix(uvTransformSprite.scale);
+			//uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(uvTransformSprite.rotate.z));
+			//uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(uvTransformSprite.translate));
+			//materialDataSprite->uvTransform = uvTransformMatrix;
 
 			// 行列の更新
-			Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
+			/*Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
 			Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
-			Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, float(WindowsAPI::kClientWidth), float(WindowsAPI::kClientHeight), 0.0f, 100.0f);
-			Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
+			Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, float(WindowsAPI::kClientWidth), float(WindowsAPI::kClientHeight), 0.0f, 100.0f);*/
+			//Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
 
-			transformationMatrixDataSprite->wvp = worldViewProjectionMatrixSprite;
+			//transformationMatrixDataSprite->wvp = worldViewProjectionMatrixSprite;
 
 			dxCommon->PostDraw();
 

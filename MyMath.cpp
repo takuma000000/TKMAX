@@ -365,7 +365,7 @@ Matrix4x4 MyMath::MakeRotateMatrix(Vector3 rotate) {
 Matrix4x4 MyMath::MakeAffineMatrix(Vector3 scale, Vector3 rotate, Vector3 translate) {
 	Matrix4x4 affineMatrix;
 
-	// 各変換行列を作成
+	// 各変換行列を
 	Matrix4x4 scaleMatrix = MakeScaleMatrix(scale);
 
 	Matrix4x4 rotateXMatrix = MakeRotateXMatrix(rotate.x);
@@ -419,4 +419,76 @@ Matrix4x4 MyMath::MakeViewportMatrix(
 	viewportMatrix.m[3][3] = 1.0f;
 
 	return viewportMatrix;
+}
+
+Matrix4x4  MyMath::MakeIdentity4x4() {
+
+	Matrix4x4 identity;
+
+	// 単位行列を生成する
+	for (int i = 0; i < 4; ++i) {
+		for (int j = 0; j < 4; ++j) {
+			identity.m[i][j] = (i == j) ? 1.0f : 0.0f;
+		}
+	}
+
+	return identity;
+
+}
+
+Matrix4x4  MyMath::MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip) {
+	Matrix4x4 mat;
+
+	mat.m[0][0] = 2.0f / (right - left);
+	mat.m[0][1] = 0.0f;
+	mat.m[0][2] = 0.0f;
+	mat.m[0][3] = 0.0f;
+
+	mat.m[1][0] = 0.0f;
+	mat.m[1][1] = 2.0f / (top - bottom);
+	mat.m[1][2] = 0.0f;
+	mat.m[1][3] = 0.0f;
+
+	mat.m[2][0] = 0.0f;
+	mat.m[2][1] = 0.0f;
+	mat.m[2][2] = 1.0f / (farClip - nearClip);
+	mat.m[2][3] = 0.0f;
+
+	mat.m[3][0] = -(right + left) / (right - left);
+	mat.m[3][1] = -(top + bottom) / (top - bottom);
+	mat.m[3][2] = (nearClip) / (nearClip - farClip);
+	mat.m[3][3] = 1.0f;
+
+	return mat;
+}
+
+Matrix4x4  MyMath::MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip) {
+	float tanHalfFovY = tanf(fovY * 0.5f);
+	float scaleX = 1.0f / (aspectRatio * tanHalfFovY);
+	float scaleY = 1.0f / tanHalfFovY;
+	//float nearFarRange = farClip - nearClip;
+
+	Matrix4x4 result;
+
+	result.m[0][0] = scaleX;
+	result.m[0][1] = 0.0f;
+	result.m[0][2] = 0.0f;
+	result.m[0][3] = 0.0f;
+
+	result.m[1][0] = 0.0f;
+	result.m[1][1] = scaleY;
+	result.m[1][2] = 0.0f;
+	result.m[1][3] = 0.0f;
+
+	result.m[2][0] = 0.0f;
+	result.m[2][1] = 0.0f;
+	result.m[2][2] = farClip / (farClip - nearClip);
+	result.m[2][3] = 1.0f;
+
+	result.m[3][0] = 0.0f;
+	result.m[3][1] = 0.0f;
+	result.m[3][2] = (-nearClip * farClip) / (farClip - nearClip);
+	result.m[3][3] = 0.0f;
+
+	return result;
 }
