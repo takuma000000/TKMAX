@@ -50,9 +50,9 @@ struct Vector4 {
 //	float m[3][3];
 //};
 
-struct Matrix4x4 {
-	float m[4][4];
-};
+//struct Matrix4x4 {
+//	float m[4][4];
+//};
 
 struct Transform {
 	Vector3 scale;
@@ -66,12 +66,12 @@ struct VertexData {
 	Vector3 normal;
 };
 
-struct Material {
-	Vector4 color;
-	int32_t enableLighting;
-	float padding[3];
-	Matrix4x4 uvTransform;
-};
+//struct Material {
+//	Vector4 color;
+//	int32_t enableLighting;
+//	float padding[3];
+//	Matrix4x4 uvTransform;
+//};
 
 struct TransformationMatrix {
 	Matrix4x4 wvp;
@@ -774,14 +774,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//vertexDataSprite[5].texcoord = { 1.0f,1.0f };
 	//vertexDataSprite[5].normal = { 0.0f,0.0f,-1.0f };
 
-	//Sprite用のTransformationMatrix用のResourceを作る。Matrix4x4 1つ分のサイズを用意する
-	Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResourceSprite = dxCommon->CreateBufferResource(sizeof(TransformationMatrix));
+	////Sprite用のTransformationMatrix用のResourceを作る。Matrix4x4 1つ分のサイズを用意する
+	//Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResourceSprite = dxCommon->CreateBufferResource(sizeof(TransformationMatrix));
 	//データを書き込む
-	TransformationMatrix* transformationMatrixDataSprite = nullptr;
-	//書き込むためのアドレスを取得
-	transformationMatrixResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixDataSprite));
-	//単位行列を書き込んでおく
-	transformationMatrixDataSprite->wvp = MakeIdentity4x4();
+	//TransformationMatrix* transformationMatrixDataSprite = nullptr;
+	////書き込むためのアドレスを取得
+	//transformationMatrixResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixDataSprite));
+	////単位行列を書き込んでおく
+	//transformationMatrixDataSprite->wvp = MakeIdentity4x4();
 
 
 	////マテリアル用のリソースを作る。今回はcolor1つ分のサイズを用意する
@@ -806,17 +806,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	wvpData->wvp = MakeIdentity4x4();
 
 
-	//Sprite用のマテリアルリソースを作る
-	Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceSprite = dxCommon->CreateBufferResource(sizeof(Material));
-	//Spriteにデータを書き込む
-	Material* materialDataSprite = nullptr;
-	//書き込むためのアドレスを取得
-	materialResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&materialDataSprite));
-	//色は白に設定
-	materialDataSprite->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-	//SprightはLightingしないのでfalseを設定する
-	materialDataSprite->enableLighting = false;
-	materialDataSprite->uvTransform = MakeIdentity4x4();
+	////Sprite用のマテリアルリソースを作る
+	//Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceSprite = dxCommon->CreateBufferResource(sizeof(Material));
+	////Spriteにデータを書き込む
+	//Material* materialDataSprite = nullptr;
+	////書き込むためのアドレスを取得
+	//materialResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&materialDataSprite));
+	////色は白に設定
+	//materialDataSprite->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	////SprightはLightingしないのでfalseを設定する
+	//materialDataSprite->enableLighting = false;
+	//materialDataSprite->uvTransform = MakeIdentity4x4();
 
 	//Light用のマテリアルリソースを作る
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceLight = dxCommon->CreateBufferResource(sizeof(DirectionalLight));
@@ -1028,12 +1028,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			hr = commandList->Reset(commandAllocator.Get(), nullptr);
 			assert(SUCCEEDED(hr));*/
 
+			sprite->Update();
+
 			//三角形を動かす処理
 			//transform.rotate.y += 0.01f;
 			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 			wvpData->World = worldMatrix;
 
-			//3次元的にする
+			////3次元的にする
 			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
 			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
 			Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(WindowsAPI::kClientWidth) / float(WindowsAPI::kClientHeight), 0.1f, 100.0f);
