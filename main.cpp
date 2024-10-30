@@ -21,6 +21,8 @@
 #pragma comment(lib,"dxguid.lib")
 #pragma comment(lib,"dxcompiler.lib")
 
+#include "MyMath.h"
+
 // GE3クラス化(MyClass)
 #include "WindowsAPI.h"
 #include "Input.h"
@@ -54,11 +56,11 @@ struct Vector4 {
 //	float m[4][4];
 //};
 
-//struct Transform {
-//	Vector3 scale;
-//	Vector3 rotate;
-//	Vector3 translate;
-//};
+struct Transform {
+	Vector3 scale;
+	Vector3 rotate;
+	Vector3 translate;
+};
 
 struct VertexData {
 	Vector4	position;
