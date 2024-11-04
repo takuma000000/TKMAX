@@ -965,6 +965,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			dxCommon->PreDraw();
 			spriteCommon->DrawSetCommon();
 
+			//現在の座標を変数で受け取る
+			Sprite::Vector2 position = sprite->GetPosition();
+			//座標を変更する
+			position.x += 0.1f;
+			position.y += 0.1f;
+			//変更を反映する
+			sprite->SetPosition(position);
+
 			//描画
 			dxCommon->GetCommandList()->RSSetViewports(1, &viewport);
 			dxCommon->GetCommandList()->RSSetScissorRects(1, &scissorRect);
