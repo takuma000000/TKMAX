@@ -2,64 +2,6 @@
 #include "SpriteCommon.h"
 #include "DirectXCommon.h"
 #include "MyMath.h"
-//#include "Matrix4x4.h"
-
-//Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip) {
-//	float tanHalfFovY = tanf(fovY * 0.5f);
-//	float scaleX = 1.0f / (aspectRatio * tanHalfFovY);
-//	float scaleY = 1.0f / tanHalfFovY;
-//	//float nearFarRange = farClip - nearClip;
-//
-//	Matrix4x4 result;
-//
-//	result.m[0][0] = scaleX;
-//	result.m[0][1] = 0.0f;
-//	result.m[0][2] = 0.0f;
-//	result.m[0][3] = 0.0f;
-//
-//	result.m[1][0] = 0.0f;
-//	result.m[1][1] = scaleY;
-//	result.m[1][2] = 0.0f;
-//	result.m[1][3] = 0.0f;
-//
-//	result.m[2][0] = 0.0f;
-//	result.m[2][1] = 0.0f;
-//	result.m[2][2] = farClip / (farClip - nearClip);
-//	result.m[2][3] = 1.0f;
-//
-//	result.m[3][0] = 0.0f;
-//	result.m[3][1] = 0.0f;
-//	result.m[3][2] = (-nearClip * farClip) / (farClip - nearClip);
-//	result.m[3][3] = 0.0f;
-//
-//	return result;
-//}
-
-//Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip) {
-//	Matrix4x4 mat;
-//
-//	mat.m[0][0] = 2.0f / (right - left);
-//	mat.m[0][1] = 0.0f;
-//	mat.m[0][2] = 0.0f;
-//	mat.m[0][3] = 0.0f;
-//
-//	mat.m[1][0] = 0.0f;
-//	mat.m[1][1] = 2.0f / (top - bottom);
-//	mat.m[1][2] = 0.0f;
-//	mat.m[1][3] = 0.0f;
-//
-//	mat.m[2][0] = 0.0f;
-//	mat.m[2][1] = 0.0f;
-//	mat.m[2][2] = 1.0f / (farClip - nearClip);
-//	mat.m[2][3] = 0.0f;
-//
-//	mat.m[3][0] = -(right + left) / (right - left);
-//	mat.m[3][1] = -(top + bottom) / (top - bottom);
-//	mat.m[3][2] = (nearClip) / (nearClip - farClip);
-//	mat.m[3][3] = 1.0f;
-//
-//	return mat;
-//}
 
 void Sprite::Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon) {
 	//引数で受け取ったメンバ変数に記録する
@@ -142,6 +84,9 @@ void Sprite::Update() {
 
 	transformationMatrixData->wvp = MyMath::Multiply(worldMatrixSprite, MyMath::Multiply(viewMatrixSprite, projectionMatrixSprite));
 	transformationMatrixData->World = worldMatrixSprite;
+
+	Transform transform;
+	transform.translate = { position.x,position.y,0.0f };
 
 }
 

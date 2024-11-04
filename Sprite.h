@@ -52,6 +52,11 @@ public:
 		Matrix4x4 World;
 	};
 
+	//getter
+	const Vector2& GetPosition() const { return position; }
+	//setter
+	void SetPosition(const Vector2& position) { this->position = position; }
+
 public://メンバ関数
 	void Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon);
 	void Update();
@@ -74,5 +79,7 @@ private:
 	//バッファリソースの使い道を補足するバッファビュー
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
 	D3D12_INDEX_BUFFER_VIEW indexBufferView{};
+
+	Vector2 position = { 0.0f,0.0f };
 
 };
