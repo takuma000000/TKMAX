@@ -994,7 +994,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			////dxCommon->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 
 
-
+			sprite->Update();
 
 			sprite->Draw(textureSrvHandleGPU);
 
@@ -1046,8 +1046,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			assert(SUCCEEDED(hr));
 			hr = commandList->Reset(commandAllocator.Get(), nullptr);
 			assert(SUCCEEDED(hr));*/
-
-			sprite->Update();
 
 			//三角形を動かす処理
 			//transform.rotate.y += 0.01f;
