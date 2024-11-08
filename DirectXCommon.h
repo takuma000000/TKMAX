@@ -64,6 +64,10 @@ public: //メンバ関数...生成
 	//DXCコンパイラの生成
 	void GenerateDXC();
 
+public:
+	//最大SRV数( 最大テクスチャ枚数 )
+	static const uint32_t kMaxSRVCount;
+
 public: //シェーダーコンパイル関数
 	//シェーダーのコンパイル
 	Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(const std::wstring& filePath, const wchar_t* profile);
