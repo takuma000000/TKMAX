@@ -30,6 +30,7 @@
 #include "DirectXCommon.h"
 #include "SpriteCommon.h"
 #include "Sprite.h"
+#include "TextureManager.h"
 
 struct Vector2 {
 	float x;
@@ -590,6 +591,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	dxCommon = std::make_unique<DirectXCommon>();
 	dxCommon->Initialize(windowsAPI.get());
 
+	//テクスチャマネージャの初期化
+	TextureManager::GetInstance()->Initialize();
+
 	//ポインタ...SpriteCommon
 	std::unique_ptr<SpriteCommon> spriteCommon = nullptr;
 	//スプライト共通部の初期化
@@ -1130,6 +1134,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	////*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 	//CloseHandle(fenceEvent);
+	
+	//テクスチャマネージャの終了
+	TextureManager::GetInstance()->Finalize();
+
 	//WindowsAPIの終了処理
 	windowsAPI->Finalize();
 

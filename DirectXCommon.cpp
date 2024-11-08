@@ -15,6 +15,9 @@ using namespace Logger;
 
 using namespace Microsoft::WRL;
 
+//最大テクスチャ枚数
+const uint32_t DirectXCommon::kMaxSRVCount = 512;
+
 // コンストラクタの実装
 DirectXCommon::DirectXCommon()
 	: descriptorSizeSRV(0), descriptorSizeRTV(0), descriptorSizeDSV(0), fenceValue(0), fenceEvent(nullptr), windowsAPI(nullptr)
@@ -266,7 +269,7 @@ void DirectXCommon::GenerateDescpitorHeap()
 	//RTV用のヒープでディスクリプタの数は2。RTVはShader内で触るものではないので、ShaderVisibleはfalse
 	rtvDescriptorHeap = CreateDescriptorHeap(device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
 	//SRV用のヒープでディスクリプタの数は128。SRVはShader内で触るものなので、ShaderVisibleはtrue
-	srvDescriptorHeap = CreateDescriptorHeap(device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
+	srvDescriptorHeap = CreateDescriptorHeap(device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kMaxSRVCount, true);
 
 #pragma endregion
 }
