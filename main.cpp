@@ -558,7 +558,7 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 //Transform変数を作る
 Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f} ,{0.0f,0.0f,-10.0f} };
-Transform transformSprite{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+//Transform transformSprite{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 Transform uvTransformSprite{
 	{1.0f,1.0f,1.0f},
 	{0.0f,0.0f,0.0f},
@@ -597,9 +597,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	spriteCommon->Initialize(dxCommon.get());
 
 	//ポインタ...Sprite
-	std::unique_ptr<Sprite> sprite = nullptr;
-	sprite = std::make_unique<Sprite>();
-	sprite->Initialize(spriteCommon.get(), dxCommon.get());
+	std::vector<Sprite*> sprites;
+	for (uint32_t i = 0; i < 5; ++i) {
+		Sprite* sprite = new Sprite;
+		sprite->Initialize(spriteCommon.get(), dxCommon.get());
+
+		// 座標をずらして配置
+		float x = i * 200.0f; // 間隔を50ピクセルとして設定
+		float y = 0.0f;    // y座標は固定
+		sprite->SetPosition(Sprite::Vector2(x, y));
+
+		sprite->SetSize(Sprite::Vector2(100.0f, 100.0f));
+
+		sprites.push_back(sprite);
+	}
 
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
@@ -941,6 +952,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
 			ImGui::SliderAngle("UVRotate", &uvTransformSprite.rotate.z);
 
+			/*Sprite::Transform transformSprite = sprite->GetTransform();
 			ImGui::Text("Sprite Transfom");
 			ImGui::SliderFloat("Sprite RotateX", &transformSprite.rotate.x, -3.14159f, 3.14159f);
 			ImGui::SliderFloat("Sprite RotateY", &transformSprite.rotate.y, -3.14159f, 3.14159f);
@@ -951,6 +963,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::SliderFloat("Sprite TranslateX", &transformSprite.translate.x, 0.1f, 1000.0f);
 			ImGui::SliderFloat("Sprite TranslateY", &transformSprite.translate.y, 0.1f, 1000.0f);
 			ImGui::SliderFloat("Sprite TranslateZ", &transformSprite.translate.z, 0.1f, 1000.0f);
+
+			sprite->SetTransform(transformSprite);*/
 
 			ImGui::End();
 			//開発用UIの処理。実際に開発用のUIを出す場合はここをゲーム固有の処理に置き換える
@@ -965,13 +979,36 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			dxCommon->PreDraw();
 			spriteCommon->DrawSetCommon();
 
-			//現在の座標を変数で受け取る
-			Sprite::Vector2 position = sprite->GetPosition();
-			//座標を変更する
-			position.x += 0.1f;
-			position.y += 0.1f;
-			//変更を反映する
-			sprite->SetPosition(position);
+			//---------------------------------------------------------
+
+			////現在の座標を変数で受け取る
+			//Sprite::Vector2 position = sprite->GetPosition();
+			////座標を変更する
+			//position.x += 0.1f;
+			//position.y += 0.1f;
+			////変更を反映する
+			//sprite->SetPosition(position);
+
+			////角度を変化させる
+			//float rotation = sprite->GetRotation();
+			//rotation += 0.01f;
+			//sprite->SetRotation(rotation);
+
+			////色を変化させる
+			//Sprite::Vector4 color = sprite->GetColor();
+			//color.x += 0.01f;
+			//if (color.x > 1.0f) {
+			//	color.x -= 1.0f;
+			//}
+			//sprite->SetColor(color);
+
+			//サイズを変化させる
+			/*Sprite::Vector2 size = sprite->GetSize();
+			size.x += 0.1f;
+			size.y += 0.1f;
+			sprite->SetSize(size);*/
+
+			//---------------------------------------------------------
 
 			//描画
 			dxCommon->GetCommandList()->RSSetViewports(1, &viewport);
@@ -993,12 +1030,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			////dxCommon->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 
-
-			sprite->Update();
-
-			sprite->Draw(textureSrvHandleGPU);
-
-
+			// スプライトの更新、描画 (5回だけ回す)
+			for (int i = 0; i < 5 && i < sprites.size(); ++i) {
+				Sprite* sprite = sprites[i];
+				sprite->Update();
+				sprite->Draw(textureSrvHandleGPU);  // textureSrvHandleGPU は必要に応じて設定
+			}
 
 
 			//Spriteを常にuvCheckerにする
@@ -1095,6 +1132,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//CloseHandle(fenceEvent);
 	//WindowsAPIの終了処理
 	windowsAPI->Finalize();
+
+	// スプライトの解放
+	for (Sprite* sprite : sprites) {
+		delete sprite;
+	}
+	sprites.clear();
 
 	return 0;
 
