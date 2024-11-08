@@ -47,25 +47,28 @@ void Sprite::Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon) {
 	transformationMatrixData->wvp = MyMath::MakeIdentity4x4();
 	transformationMatrixData->World = MyMath::MakeIdentity4x4();
 
+	transformSprite = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+	cameraTransform = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f} ,{0.0f,0.0f,-10.0f} };
+
 }
 
 void Sprite::Update() {
 	//左下
-	vertexData[0].position = { 0.0f,360.0f,0.0f,1.0f };
+	vertexData[0].position = { 0.0f,1.0f,0.0f,1.0f };
 	vertexData[0].texcoord = { 0.0f,1.0f };
 	vertexData[0].normal = { 0.0f,0.0f,-1.0f };
 	//左上
 	vertexData[1].position = { 0.0f,0.0f,0.0f,1.0f };
 	vertexData[1].texcoord = { 0.0f,0.0f };
 	vertexData[1].normal = { 0.0f,0.0f,-1.0f };
-	//右上
-	vertexData[3].position = { 640.0f,0.0f,0.0f,1.0f };
-	vertexData[3].texcoord = { 1.0f,1.0f };
-	vertexData[3].normal = { 0.0f,0.0f,-1.0f };
-	//2枚目の三角形
-	vertexData[2].position = { 640.0f,360.0f,0.0f,1.0f };
+	//右下
+	vertexData[2].position = { 1.0f,1.0f,0.0f,1.0f };
 	vertexData[2].texcoord = { 1.0f,1.0f };
 	vertexData[2].normal = { 0.0f,0.0f,-1.0f };
+	//右上
+	vertexData[3].position = { 1.0f,0.0f,0.0f,1.0f };
+	vertexData[3].texcoord = { 1.0f,0.0f };
+	vertexData[3].normal = { 0.0f,0.0f,-1.0f };
 
 	//
 	indexData[0] = 0;
@@ -75,9 +78,6 @@ void Sprite::Update() {
 	indexData[4] = 3;
 	indexData[5] = 2;
 
-	Transform transformSprite{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-	Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f} ,{0.0f,0.0f,-10.0f} };
-
 	Matrix4x4 worldMatrixSprite = MyMath::MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
 	Matrix4x4 viewMatrixSprite = MyMath::MakeIdentity4x4();
 	Matrix4x4 projectionMatrixSprite = MyMath::MakeOrthographicMatrix(0.0f, 0.0f, float(WindowsAPI::kClientWidth), float(WindowsAPI::kClientHeight), 0.0f, 100.0f);
@@ -85,8 +85,10 @@ void Sprite::Update() {
 	transformationMatrixData->wvp = MyMath::Multiply(worldMatrixSprite, MyMath::Multiply(viewMatrixSprite, projectionMatrixSprite));
 	transformationMatrixData->World = worldMatrixSprite;
 
-	Transform transform;
-	transform.translate = { position.x,position.y,0.0f };
+	//反映処理
+	transformSprite.translate = { position.x,position.y,0.0f };
+	transformSprite.rotate = { 0.0f,0.0f,rotation };
+	transformSprite.scale = { size.x,size.y,1.0f };
 
 }
 

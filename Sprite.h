@@ -54,8 +54,16 @@ public:
 
 	//getter
 	const Vector2& GetPosition() const { return position; }
+	const Transform& GetTransform() const { return transform; }
+	float GetRotation() const { return rotation; }
+	const Vector4& GetColor() const { return materialData->color; }
+	const Vector2& GetSize() const { return size; }
 	//setter
 	void SetPosition(const Vector2& position) { this->position = position; }
+	void SetTransform(const Transform& transform) { this->transform = transform; }
+	void SetRotation(float rotation) { this->rotation = rotation; }
+	void SetColor(const Vector4& color) { materialData->color = color; }
+	void SetSize(const Vector2& size) { this->size = size; }
 
 public://メンバ関数
 	void Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon);
@@ -81,5 +89,15 @@ private:
 	D3D12_INDEX_BUFFER_VIEW indexBufferView{};
 
 	Vector2 position = { 0.0f,0.0f };
+
+	Transform transformSprite;
+	Transform cameraTransform;
+	Transform transform;
+
+	//回転
+	float rotation = 0.0f;
+
+	//サイズ
+	Vector2 size = { 640.0f,360.0f };
 
 };
