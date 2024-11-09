@@ -34,6 +34,10 @@ public:
 	//初期化
 	void Initialize();
 
+public: //テクスチャファイル読み込み関数
+	//テクスチャファイルの読み込み
+	void LoadTexture(const std::string& filePath);
+
 public:
 	//テクスチャ1枚分のデータ
 	struct TextureData {
