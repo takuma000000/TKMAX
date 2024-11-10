@@ -60,7 +60,7 @@ public: //メンバ関数...生成
 	//深度バッファの生成
 	void GenerateZBuffer();
 	//各種デスクリプタヒープの生成
-	void GenerateDescpitorHeap();
+	//void GenerateDescpitorHeap();
 	//DXCコンパイラの生成
 	void GenerateDXC();
 
@@ -76,7 +76,7 @@ public: //リソース生成関数
 	//バッファリソースの生成
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizeInBytes);
 	//テクスチャリソースの生成
-	Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(const DirectX::TexMetadata& metadata);
+	//Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(const DirectX::TexMetadata& metadata);
 	//テクスチャデータの転送
 	void UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages);
 
@@ -84,17 +84,17 @@ public: //リソース生成関数
 //	//テクスチャファイルの読み込み
 //	DirectX::ScratchImage LoadTexture(const std::string& filePath);
 
-public: //色々な関数
-	//指定番号のCPUディスクリプタハンドルを取得する
-	static D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index);
-	//指定番号のGPUディスクリプタハンドルを取得する
-	static D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index);
+//public: //色々な関数
+//	//指定番号のCPUディスクリプタハンドルを取得する
+//	static D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index);
+//	//指定番号のGPUディスクリプタハンドルを取得する
+//	static D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index);
 
-public:
-	//SRVの指定番号のCPUディスクリプタハンドルを取得する
-	D3D12_CPU_DESCRIPTOR_HANDLE GetSRVCPUDescriptorHandle(uint32_t index);
-	//SRVの指定番号のGPUディスクリプタハンドルを取得する
-	D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index);
+//public:
+//	//SRVの指定番号のCPUディスクリプタハンドルを取得する
+//	D3D12_CPU_DESCRIPTOR_HANDLE GetSRVCPUDescriptorHandle(uint32_t index);
+//	//SRVの指定番号のGPUディスクリプタハンドルを取得する
+//	D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index);
 
 public: //描画関数
 	//描画前処理
