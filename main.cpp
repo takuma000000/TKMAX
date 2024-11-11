@@ -607,7 +607,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//ポインタ...Sprite
 	std::unique_ptr<Sprite> sprite = nullptr;
 	sprite = std::make_unique<Sprite>();
-	sprite->Initialize(spriteCommon.get(), dxCommon.get(), "./resources/pokemon.png");
+	sprite->Initialize(spriteCommon.get(), dxCommon.get(), "./resources/uvChecker.png");
 
 		
 
@@ -990,10 +990,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			////変更を反映する
 			//sprite->SetPosition(position);
 
-			//角度を変化させる
-			float rotation = sprite->GetRotation();
-			rotation += 0.01f;
-			sprite->SetRotation(rotation);
+			////角度を変化させる
+			//float rotation = sprite->GetRotation();
+			//rotation += 0.01f;
+			//sprite->SetRotation(rotation);
 
 			////色を変化させる
 			//Sprite::Vector4 color = sprite->GetColor();

@@ -108,7 +108,7 @@ private:
 	float rotation = 0.0f;
 
 	//サイズ
-	Vector2 size = { 640.0f,360.0f };
+	Vector2 size = { 360.0f,360.0f };
 
 	//テクスチャ番号
 	uint32_t textureIndex = 0;
@@ -123,6 +123,9 @@ private:
 	//テクスチャ左上座標
 	Vector2 textureLeftTop = { 0.0f,0.0f };
 	//テクスチャ切り出しサイズ
-	Vector2 textureSize = { 100.0f,100.0f };
+	Vector2 textureSize = { 64.0f,64.0f };
+
+	//テクスチャサイズをイメージに合わせる
+	void AdjustTextureSize();
 
 };
