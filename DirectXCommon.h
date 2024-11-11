@@ -64,6 +64,8 @@ public: //メンバ関数...生成
 	//DXCコンパイラの生成
 	void GenerateDXC();
 
+	void Error();
+
 public:
 	//最大SRV数( 最大テクスチャ枚数 )
 	static const uint32_t kMaxSRVCount;
@@ -152,6 +154,7 @@ private:
 	D3D12_RESOURCE_BARRIER barrier{};
 	//記録時間( FPS固定用 )
 	std::chrono::steady_clock::time_point reference_;
+	Microsoft::WRL::ComPtr<ID3D12InfoQueue> infoQueue = nullptr;
 
 private:
 	//WindowsAPI
