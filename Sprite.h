@@ -98,7 +98,7 @@ private:
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
 	D3D12_INDEX_BUFFER_VIEW indexBufferView{};
 
-	Vector2 position = { 0.0f,0.0f };
+	Vector2 position = { 650.0f,400.0f };
 
 	Transform transformSprite;
 	Transform cameraTransform;

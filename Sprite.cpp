@@ -48,7 +48,7 @@ void Sprite::Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, std
 	transformationMatrixData->wvp = MyMath::MakeIdentity4x4();
 	transformationMatrixData->World = MyMath::MakeIdentity4x4();
 
-	transformSprite = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{100.0f,100.0f,0.0f} };
+	transformSprite = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 	cameraTransform = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f} ,{0.0f,0.0f,-10.0f} };
 
 	//単位行列を書き込んでおく
