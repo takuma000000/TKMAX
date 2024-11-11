@@ -605,20 +605,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	spriteCommon->Initialize(dxCommon.get());
 
 	//ポインタ...Sprite
-	std::vector<Sprite*> sprites;
-	for (uint32_t i = 0; i < 5; ++i) {
-		Sprite* sprite = new Sprite;
-		sprite->Initialize(spriteCommon.get(), dxCommon.get(), "./resources/pokemon.png");
+	std::unique_ptr<Sprite> sprite = nullptr;
+	sprite = std::make_unique<Sprite>();
+	sprite->Initialize(spriteCommon.get(), dxCommon.get(), "./resources/pokemon.png");
 
-		// 座標をずらして配置
-		float x = i * 200.0f; // 間隔を50ピクセルとして設定
-		float y = 0.0f;    // y座標は固定
-		sprite->SetPosition(Sprite::Vector2(x, y));
-
-		sprite->SetSize(Sprite::Vector2(100.0f, 100.0f));
-
-		sprites.push_back(sprite);
-	}
+		
 
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
@@ -999,10 +990,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			////変更を反映する
 			//sprite->SetPosition(position);
 
-			////角度を変化させる
-			//float rotation = sprite->GetRotation();
-			//rotation += 0.01f;
-			//sprite->SetRotation(rotation);
+			//角度を変化させる
+			float rotation = sprite->GetRotation();
+			rotation += 0.01f;
+			sprite->SetRotation(rotation);
 
 			////色を変化させる
 			//Sprite::Vector4 color = sprite->GetColor();
@@ -1040,12 +1031,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			////dxCommon->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 
-			// スプライトの更新、描画 (5回だけ回す)
-			for (int i = 0; i < 5 && i < sprites.size(); ++i) {
-				Sprite* sprite = sprites[i];
+		
 				sprite->Update();
 				sprite->Draw();  // textureSrvHandleGPU は必要に応じて設定
-			}
 
 
 			//Spriteを常にuvCheckerにする
@@ -1146,12 +1134,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//WindowsAPIの終了処理
 	windowsAPI->Finalize();
-
-	// スプライトの解放
-	for (Sprite* sprite : sprites) {
-		delete sprite;
-	}
-	sprites.clear();
 
 	return 0;
 

@@ -58,12 +58,18 @@ public:
 	float GetRotation() const { return rotation; }
 	const Vector4& GetColor() const { return materialData->color; }
 	const Vector2& GetSize() const { return size; }
+	const Vector2& GetAnchorPoint() const { return anchorPoint; }
+	bool GetIsFlipX() const { return isFlipX_; }
+	bool GetIsFlipY() const { return isFlipY_; }
 	//setter
 	void SetPosition(const Vector2& position) { this->position = position; }
 	void SetTransform(const Transform& transform) { this->transform = transform; }
 	void SetRotation(float rotation) { this->rotation = rotation; }
 	void SetColor(const Vector4& color) { materialData->color = color; }
 	void SetSize(const Vector2& size) { this->size = size; }
+	void SetAnchorPoint(const Vector2& anchorPoint) { this->anchorPoint = anchorPoint; }
+	void SetIsFlipX(bool isFlipX) { this->isFlipX_ = isFlipX; }
+	void SetIsFlipY(bool isFlipY) { this->isFlipY_ = isFlipY; }
 
 public://メンバ関数
 	void Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, std::string textureFilePath);
@@ -102,5 +108,12 @@ private:
 
 	//テクスチャ番号
 	uint32_t textureIndex = 0;
+
+	//アンカーポイント
+	Vector2 anchorPoint = { 0.5f,0.5f };
+	//左右フリップ
+	bool isFlipX_ = false;
+	//上下フリップ
+	bool isFlipY_ = false;
 
 };
