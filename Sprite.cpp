@@ -2,8 +2,9 @@
 #include "SpriteCommon.h"
 #include "DirectXCommon.h"
 #include "MyMath.h"
+#include "TextureManager.h"
 
-void Sprite::Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon) {
+void Sprite::Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, std::string textureFilePath) {
 	//引数で受け取ったメンバ変数に記録する
 	this->spriteCommon = spriteCommon;
 	dxCommon_ = dxCommon;
@@ -50,6 +51,8 @@ void Sprite::Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon) {
 	transformSprite = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 	cameraTransform = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f} ,{0.0f,0.0f,-10.0f} };
 
+	//単位行列を書き込んでおく
+	textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
 }
 
 void Sprite::Update() {
@@ -92,7 +95,7 @@ void Sprite::Update() {
 
 }
 
-void Sprite::Draw(D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU) {
+void Sprite::Draw() {
 	//VertexBufferViewを設定
 	//Spriteの描画。変更が必要なものだけ変更する
 	dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);//VBVを設定
@@ -120,7 +123,7 @@ void Sprite::Draw(D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU) {
 	materialData->uvTransform = uvTransformMatrix;
 
 	//SRVのDescriptorTableの先頭を設定
-	dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+	dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(textureIndex));
 	//描画。6個のインデックスを使用し1つのインスタンスを描画。その他は当面0で良い
 	dxCommon_->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 }
