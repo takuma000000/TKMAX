@@ -5,13 +5,32 @@
 using namespace StringUtility;
 
 TextureManager* TextureManager::instance = nullptr;
+//ImGuiで0番を使用するため、1番から使用
+uint32_t TextureManager::kSRVIndexTop = 1;
 
-void TextureManager::Initialize(){
+void TextureManager::Initialize(DirectXCommon* dxCommon) {
+	dxCommon_ = dxCommon;
+
 	//SRVの数と同数
 	textureDatas.reserve(DirectXCommon::kMaxSRVCount);
 }
 
-void TextureManager::LoadTexture(const std::string& filePath){
+void TextureManager::LoadTexture(const std::string& filePath) {
+
+	//読み込み済みテクスチャを検索
+	auto it = std::find_if(
+		textureDatas.begin(),
+		textureDatas.end(),
+		[&](TextureData& textureData) {return textureData.filePath == filePath; }
+	);
+	if (it != textureDatas.end()) {
+		//読み込み済みなら早期return
+		return;
+	}
+
+	//テクスチャ枚数上限チェック
+	assert(textureDatas.size() + kSRVIndexTop < DirectXCommon::kMaxSRVCount);
+
 	//テクスチャファイルを読んでプログラムを扱えるようにする
 	DirectX::ScratchImage image{};
 	std::wstring filePathW = ConvertString(filePath);
@@ -31,58 +50,91 @@ void TextureManager::LoadTexture(const std::string& filePath){
 	// 画像のファイルパス、メタデータ、リソース情報を設定
 	textureData.filePath = filePath;  // ファイルパス
 	textureData.metadata = mipImages.GetMetadata();  // メタデータを取得
-	textureData.resource = CreateTextureResource(textureData.metadata);  // テクスチャリソースを生成
+	textureData.resource = dxCommon_->CreateTextureResource(textureData.metadata);  // テクスチャリソースを生成
 
-	//テクスチャデータ要素数番号をSRVのインデックスとする
-	uint32_t srvIndex = static_cast<uint32_t>(textureDatas.size());
-	textureData.srvHnadleCPU = dxCommon_->GetSRVCPUDescriptorHandle(srvIndex);
-	textureData.srvHnadleGPU = dxCommon_->GetSRVGPUDescriptorHandle(srvIndex);
+	//テクスチャデータ要素数番号をSRVのインデックスを計算する
+	uint32_t srvIndex = static_cast<uint32_t>(textureDatas.size() - 1) + kSRVIndexTop;
+	textureData.srvHnadleCPU = dxCommon_->GetCPUDescriptorHandle(dxCommon_->GetsrvDescriptorHeap(), dxCommon_->GetDescriptorSizeSRV(), srvIndex);
+	textureData.srvHnadleGPU = dxCommon_->GetGPUDescriptorHandle(dxCommon_->GetsrvDescriptorHeap(), dxCommon_->GetDescriptorSizeSRV(), srvIndex);
 
+	// metaDataを基にSRVの設定
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+	srvDesc.Format = textureData.metadata.format;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D; // 2Dテクスチャ
+	srvDesc.Texture2D.MipLevels = UINT(textureData.metadata.mipLevels);
 
-
+	// SRVの生成
+	dxCommon_->GetDevice()->CreateShaderResourceView(textureData.resource.Get(), &srvDesc, textureData.srvHnadleCPU);
 }
 
-Microsoft::WRL::ComPtr<ID3D12Resource> TextureManager::CreateTextureResource(const DirectX::TexMetadata& metadata)
+//Microsoft::WRL::ComPtr<ID3D12Resource> TextureManager::CreateTextureResource(const DirectX::TexMetadata& metadata)
+//{
+//	//metadataを基にResourceの設定
+//	D3D12_RESOURCE_DESC resourceDesc{};
+//	resourceDesc.Width = UINT(metadata.width);//Textureの幅
+//	resourceDesc.Height = UINT(metadata.height);//Textureの高さ
+//	resourceDesc.MipLevels = UINT(metadata.mipLevels);//mipmapの数
+//	resourceDesc.DepthOrArraySize = UINT(metadata.arraySize);//奥行き or 配列Textureの配列数
+//	resourceDesc.Format = metadata.format;//TextureのFormat
+//	resourceDesc.SampleDesc.Count = 1;//サンプリングカウント。1固定
+//	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION(metadata.dimension);//Textureの次元数。
+//
+//	//利用するHeapの作成。非常に特殊な運用。
+//	D3D12_HEAP_PROPERTIES heapProperties{};
+//	heapProperties.Type = D3D12_HEAP_TYPE_CUSTOM;//細かい設定を行う
+//	heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;//WriteBackポリシーでCPUアクセス可能
+//	heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;//プロセッサの近くに配置
+//
+//	//Resourceの生成
+//	Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr;
+//	HRESULT hr = dxCommon_->GetDevice()->CreateCommittedResource(
+//		&heapProperties,//Heapの設定
+//		D3D12_HEAP_FLAG_NONE,//Heapの特殊な設定。特になし
+//		&resourceDesc,//Resouceの設定
+//		D3D12_RESOURCE_STATE_GENERIC_READ,//初回のResourceState。	Textureは基本読むだけ
+//		nullptr,//Clear最適値。使わないのでnullptr
+//		IID_PPV_ARGS(&resource)//作成するResourceポインタへのポインタ
+//	);
+//	assert(SUCCEEDED(hr));
+//	return resource;
+//}
+
+uint32_t TextureManager::GetTextureIndexByFilePath(const std::string& filePath)
 {
-	//metadataを基にResourceの設定
-	D3D12_RESOURCE_DESC resourceDesc{};
-	resourceDesc.Width = UINT(metadata.width);//Textureの幅
-	resourceDesc.Height = UINT(metadata.height);//Textureの高さ
-	resourceDesc.MipLevels = UINT(metadata.mipLevels);//mipmapの数
-	resourceDesc.DepthOrArraySize = UINT(metadata.arraySize);//奥行き or 配列Textureの配列数
-	resourceDesc.Format = metadata.format;//TextureのFormat
-	resourceDesc.SampleDesc.Count = 1;//サンプリングカウント。1固定
-	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION(metadata.dimension);//Textureの次元数。
-
-	//利用するHeapの作成。非常に特殊な運用。
-	D3D12_HEAP_PROPERTIES heapProperties{};
-	heapProperties.Type = D3D12_HEAP_TYPE_CUSTOM;//細かい設定を行う
-	heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;//WriteBackポリシーでCPUアクセス可能
-	heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;//プロセッサの近くに配置
-
-	//Resourceの生成
-	Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr;
-	HRESULT hr = device->CreateCommittedResource(
-		&heapProperties,//Heapの設定
-		D3D12_HEAP_FLAG_NONE,//Heapの特殊な設定。特になし
-		&resourceDesc,//Resouceの設定
-		D3D12_RESOURCE_STATE_GENERIC_READ,//初回のResourceState。	Textureは基本読むだけ
-		nullptr,//Clear最適値。使わないのでnullptr
-		IID_PPV_ARGS(&resource)//作成するResourceポインタへのポインタ
+	//読み込み済みテクスチャを検索
+	auto it = std::find_if(
+		textureDatas.begin(),
+		textureDatas.end(),
+		[&](TextureData& textureData) {return textureData.filePath == filePath; }
 	);
-	assert(SUCCEEDED(hr));
-	return resource;
+	if (it != textureDatas.end()) {
+		//読み込み済みなら要素番号を返す
+		uint32_t textureIndex = static_cast<uint32_t>(std::distance(textureDatas.begin(), it));
+		return textureIndex;
+	}
+
+	assert(0);
+	return 0;
 }
 
-TextureManager* TextureManager::GetInstance(){
+D3D12_GPU_DESCRIPTOR_HANDLE TextureManager::GetSrvHandleGPU(uint32_t textureIndex)
+{
+	//範囲外指定違反チェック
+	assert(textureIndex < textureDatas.size());
+
+	TextureData& textureData = textureDatas[textureIndex];  //テクスチャデータの参照を取得
+	return textureData.srvHnadleGPU;
+}
+
+TextureManager* TextureManager::GetInstance() {
 	if (instance == nullptr) {
 		instance = new TextureManager;
 	}
 	return instance;
 }
 
-void TextureManager::Finalize(){
+void TextureManager::Finalize() {
 	delete instance;
 	instance = nullptr;
 }

@@ -26,10 +26,8 @@ private:
 
 	////---------------------------------------------------------
 
-	DirectXCommon* dxCommon_ = nullptr;
-
-	//DirectX12デバイス
-	Microsoft::WRL::ComPtr<ID3D12Device> device;
+	//SRVインデックスの開始番号
+	static uint32_t kSRVIndexTop;
 
 public:
 	//シングルトンインスタンスの取得
@@ -38,14 +36,13 @@ public:
 	void Finalize();
 
 	//初期化
-	void Initialize();
+	void Initialize(DirectXCommon* dxCommon);
 
 public: //テクスチャファイル読み込み関数
 	//テクスチャファイルの読み込み
 	void LoadTexture(const std::string& filePath);
 
-	//テクスチャリソースの生成
-	Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(const DirectX::TexMetadata& metadata);
+	DirectXCommon* dxCommon_ = nullptr;
 
 public:
 	//テクスチャ1枚分のデータ
@@ -61,16 +58,9 @@ public:
 	std::vector<TextureData> textureDatas;
 
 public:
-	//SRVの指定番号のCPUディスクリプタハンドルを取得する
-	D3D12_CPU_DESCRIPTOR_HANDLE GetSRVCPUDescriptorHandle(uint32_t index);
-	//SRVの指定番号のGPUディスクリプタハンドルを取得する
-	D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index);
-
-public: //色々な関数
-	//指定番号のCPUディスクリプタハンドルを取得する
-	static D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index);
-	//指定番号のGPUディスクリプタハンドルを取得する
-	static D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index);
+	uint32_t GetTextureIndexByFilePath(const std::string& filePath);
+	//テクスチャ番号からGPUハンドルを取得
+	D3D12_GPU_DESCRIPTOR_HANDLE GetSrvHandleGPU(uint32_t textureIndex);
 
 };
 
