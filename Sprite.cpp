@@ -77,11 +77,11 @@ void Sprite::Update() {
 	float tex_left = textureLeftTop.x / metadata.width;
 	float tex_right = (textureLeftTop.x + textureSize.x) / metadata.width;
 	float tex_top = textureLeftTop.y / metadata.height;
-	float tex_bottom = (textureLeftTop.y + textureSize.y) / metadata.width;
+	float tex_bottom = (textureLeftTop.y + textureSize.y) / metadata.height;
 
 	//左下
 	vertexData[0].position = { left,bottom,0.0f,1.0f };
-	vertexData[0].texcoord = { tex_left,tex_top };
+	vertexData[0].texcoord = { tex_left,tex_bottom };
 	vertexData[0].normal = { 0.0f,0.0f,-1.0f };
 	//左上
 	vertexData[1].position = { left,top,0.0f,1.0f };
@@ -116,6 +116,8 @@ void Sprite::Update() {
 	transformSprite.rotate = { 0.0f,0.0f,rotation };
 	transformSprite.scale = { size.x,size.y,1.0f };
 
+	//テクスチャサイズをイメージに合わせる
+	AdjustTextureSize();
 }
 
 void Sprite::Draw() {
@@ -149,4 +151,15 @@ void Sprite::Draw() {
 	dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(textureIndex));
 	//描画。6個のインデックスを使用し1つのインスタンスを描画。その他は当面0で良い
 	dxCommon_->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
+}
+
+void Sprite::AdjustTextureSize()
+{
+	//テクスチャデータを取得
+	const DirectX::TexMetadata& metadata = TextureManager::GetInstance()->GetMetadata(textureIndex);
+
+	textureSize.x = static_cast<float>(metadata.width);
+	textureSize.y = static_cast<float>(metadata.height);
+	//画像サイズをテクスチャサイズに合わせる
+	size = textureSize;
 }
