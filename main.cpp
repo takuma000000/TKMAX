@@ -606,7 +606,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//ポインタ...Sprite
 	std::vector<Sprite*> sprites;
-	for (uint32_t i = 0; i < 5; ++i) {
+	for (uint32_t i = 0; i < 6; ++i) {
 		Sprite* sprite = new Sprite;
 		sprite->Initialize(spriteCommon.get(), dxCommon.get(), "./resources/pokemon.png");
 
@@ -1041,7 +1041,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			////dxCommon->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 
 			// スプライトの更新、描画 (5回だけ回す)
-			for (int i = 0; i < 5 && i < sprites.size(); ++i) {
+			for (int i = 0; i < 6 && i < sprites.size(); ++i) {
 				Sprite* sprite = sprites[i];
 				sprite->Update();
 				sprite->Draw();  // textureSrvHandleGPU は必要に応じて設定

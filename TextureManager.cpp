@@ -52,6 +52,8 @@ void TextureManager::LoadTexture(const std::string& filePath) {
 	textureData.metadata = mipImages.GetMetadata();  // メタデータを取得
 	textureData.resource = dxCommon_->CreateTextureResource(textureData.metadata);  // テクスチャリソースを生成
 
+	dxCommon_->UploadTextureData(textureData.resource.Get(), mipImages);
+
 	//テクスチャデータ要素数番号をSRVのインデックスを計算する
 	uint32_t srvIndex = static_cast<uint32_t>(textureDatas.size() - 1) + kSRVIndexTop;
 	textureData.srvHnadleCPU = dxCommon_->GetSRVCPUDescriptorHandle(srvIndex);
@@ -123,7 +125,7 @@ D3D12_GPU_DESCRIPTOR_HANDLE TextureManager::GetSrvHandleGPU(uint32_t textureInde
 	//範囲外指定違反チェック
 	assert(textureIndex < textureDatas.size());
 
-	TextureData& textureData = textureDatas[textureIndex];  //テクスチャデータの参照を取得
+	TextureData& textureData = textureDatas.at(textureIndex);  //テクスチャデータの参照を取得
 	return textureData.srvHnadleGPU;
 }
 
