@@ -61,6 +61,8 @@ public:
 	const Vector2& GetAnchorPoint() const { return anchorPoint; }
 	bool GetIsFlipX() const { return isFlipX_; }
 	bool GetIsFlipY() const { return isFlipY_; }
+	const Vector2& GetTextureLeftTop() const { return textureLeftTop; }
+	const Vector2& GetTextureSize() const { return textureSize; }
 	//setter
 	void SetPosition(const Vector2& position) { this->position = position; }
 	void SetTransform(const Transform& transform) { this->transform = transform; }
@@ -70,6 +72,8 @@ public:
 	void SetAnchorPoint(const Vector2& anchorPoint) { this->anchorPoint = anchorPoint; }
 	void SetIsFlipX(bool isFlipX) { this->isFlipX_ = isFlipX; }
 	void SetIsFlipY(bool isFlipY) { this->isFlipY_ = isFlipY; }
+	void SetTextureLeftTop(const Vector2& textureLeftTop) { this->textureLeftTop = textureLeftTop; }
+	void SetTextureSize(const Vector2& textureSize) { this->textureSize = textureSize; }
 
 public://メンバ関数
 	void Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, std::string textureFilePath);
@@ -115,5 +119,10 @@ private:
 	bool isFlipX_ = false;
 	//上下フリップ
 	bool isFlipY_ = false;
+
+	//テクスチャ左上座標
+	Vector2 textureLeftTop = { 0.0f,0.0f };
+	//テクスチャ切り出しサイズ
+	Vector2 textureSize = { 100.0f,100.0f };
 
 };

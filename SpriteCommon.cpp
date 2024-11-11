@@ -84,7 +84,7 @@ void SpriteCommon::GenerateRootSignature() {
 
 	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 
-	resterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
+	resterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
 	resterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
 
 	//DepthStencilStateの設定
