@@ -54,8 +54,8 @@ void TextureManager::LoadTexture(const std::string& filePath) {
 
 	//テクスチャデータ要素数番号をSRVのインデックスを計算する
 	uint32_t srvIndex = static_cast<uint32_t>(textureDatas.size() - 1) + kSRVIndexTop;
-	textureData.srvHnadleCPU = dxCommon_->GetCPUDescriptorHandle(dxCommon_->GetsrvDescriptorHeap(), dxCommon_->GetDescriptorSizeSRV(), srvIndex);
-	textureData.srvHnadleGPU = dxCommon_->GetGPUDescriptorHandle(dxCommon_->GetsrvDescriptorHeap(), dxCommon_->GetDescriptorSizeSRV(), srvIndex);
+	textureData.srvHnadleCPU = dxCommon_->GetSRVCPUDescriptorHandle(srvIndex);
+	textureData.srvHnadleGPU = dxCommon_->GetSRVGPUDescriptorHandle(srvIndex);
 
 	// metaDataを基にSRVの設定
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
