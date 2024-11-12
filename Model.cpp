@@ -1,76 +1,11 @@
-#include "Object3d.h"
-#include "Object3dCommon.h"
+#include "Model.h"
+#include "ModelCommon.h"
 #include <fstream>
 #include <sstream>
 #include <cassert>
 #include "TextureManager.h"
-#include "Model.h"
 
-void Object3d::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommon)
-{
-	//引数で受け取ってメンバ変数に記録する
-	this->object3dCommon = object3dCommon;
-	dxCommon_ = dxCommon;
-
-	//モデル読み込み
-	modelData = LoadObjFile("resources", "plane.obj");
-
-	VertexResource(dxCommon_);
-	MaterialResource(dxCommon_);
-	WVPResource(dxCommon_);
-	Light(dxCommon_);
-
-	//.objの参照しているテクスチャファイル読み込み
-	TextureManager::GetInstance()->LoadTexture(modelData.material.textureFilePath);
-	//読み込んだテクスチャの番号を取得
-	modelData.material.textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(modelData.material.textureFilePath);
-
-	//Transform関数を作る
-	transform = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-	cameraTransform = { {1.0f,1.0f,1.0f},{0.3f,0.0f,0.0f},{0.0f,4.0f,-10.0f} };
-
-
-}
-
-void Object3d::Update()
-{
-	//TransformからWorldMatrixを作る
-	Matrix4x4 worldMatrix = MyMath::MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
-	//cameraTransformからcameraMatrixを作る
-	Matrix4x4 cameraMatrix = MyMath::MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
-	//cameraMatrixからviewMatrixを作る
-	Matrix4x4 viewMatrix = MyMath::Inverse4x4(cameraMatrix);
-	//projectionMatrixを作って投資投影行列を書き込む
-	Matrix4x4 projectionMatrix = MyMath::MakePerspectiveFovMatrix(0.45f, float(WindowsAPI::kClientWidth) / float(WindowsAPI::kClientHeight), 0.1f, 100.0f);
-
-	//worldViewProjectionMatrixを作る	[ worldMatrix * ( viewMatrix * projectionMatrix ) ]
-	Matrix4x4 worldViewProjectionMatrix = MyMath::Multiply(worldMatrix, MyMath::Multiply(viewMatrix, projectionMatrix));
-	wvpData->wvp = worldViewProjectionMatrix;
-	wvpData->World = worldMatrix;
-}
-
-void Object3d::Draw(DirectXCommon* dxCommon)
-{
-	dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);//VBVを設定
-
-	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-	//wvp用のCBufferの場所を設定
-	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
-
-	//SRVを切り替える
-	//dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
-
-	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(3, materialResourceLight->GetGPUVirtualAddress());
-
-	//3Dモデルが割り当てられていれば描画する
-	if (model) {
-		model->Draw();
-	}
-
-	dxCommon_->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
-}
-
-MaterialData Object3d::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)
+MaterialData Model::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)
 {
 	//中で必要となる変数の宣言
 	MaterialData materialData;//構築するMaterialData
@@ -93,7 +28,7 @@ MaterialData Object3d::LoadMaterialTemplateFile(const std::string& directoryPath
 	return materialData;
 }
 
-ModelData Object3d::LoadObjFile(const std::string& directoryPath, const std::string& filename)
+ModelData Model::LoadObjFile(const std::string& directoryPath, const std::string& filename)
 {
 	//必要となる変数の宣言
 	ModelData modelData;//構築するモデルデータ
@@ -163,7 +98,7 @@ ModelData Object3d::LoadObjFile(const std::string& directoryPath, const std::str
 	return modelData;
 }
 
-void Object3d::VertexResource(DirectXCommon* dxCommon)
+void Model::VertexResource(DirectXCommon* dxCommon)
 {
 	dxCommon_ = dxCommon;
 
@@ -178,7 +113,7 @@ void Object3d::VertexResource(DirectXCommon* dxCommon)
 	std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size());
 }
 
-void Object3d::MaterialResource(DirectXCommon* dxCommon)
+void Model::MaterialResource(DirectXCommon* dxCommon)
 {
 	dxCommon_ = dxCommon;
 
@@ -193,29 +128,32 @@ void Object3d::MaterialResource(DirectXCommon* dxCommon)
 	materialData->uvTransform = MyMath::MakeIdentity4x4();
 }
 
-void Object3d::WVPResource(DirectXCommon* dxCommon)
+void Model::Initialize(ModelCommon* modelCommon, DirectXCommon* dxCommon)
 {
+	//引数で受け取ってメンバ変数に記録する
+	this->modelCommon_ = modelCommon;
 	dxCommon_ = dxCommon;
 
-	//座標変換行列リソースを作る
-	wvpResource = dxCommon_->CreateBufferResource(sizeof(TransformationMatrix));
-	//書き込むためのアドレスを取得
-	wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
-	//単位行列を書き込んでおく
-	wvpData->wvp = MyMath::MakeIdentity4x4();
-	wvpData->World = MyMath::MakeIdentity4x4();
+	//モデル読み込み
+	modelData = LoadObjFile("resources", "plane.obj");
+
+	VertexResource(dxCommon_);
+	MaterialResource(dxCommon_);
+
+	//.objの参照しているテクスチャファイル読み込み
+	TextureManager::GetInstance()->LoadTexture(modelData.material.textureFilePath);
+	//読み込んだテクスチャの番号を取得
+	modelData.material.textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(modelData.material.textureFilePath);
 }
 
-void Object3d::Light(DirectXCommon* dxCommon)
+void Model::Draw()
 {
-	dxCommon_ = dxCommon;
+	dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);//VBVを設定
 
-	//並行光源リソースを作る
-	materialResourceLight = dxCommon->CreateBufferResource(sizeof(DirectionalLight));
-	//書き込むためのアドレスを取得
-	materialResourceLight->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
-	//デフォルト値を書き込んでおく
-	directionalLightData->color = { 1.0f,1.0f,1.0f,1.0f };
-	directionalLightData->direction = { 0.0f,-1.0f,0.0f };
-	directionalLightData->intensity = 1.0f;
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+
+	//SRVを切り替える
+	//dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU)
+
+	dxCommon_->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 }
