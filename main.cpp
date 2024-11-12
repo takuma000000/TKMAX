@@ -986,6 +986,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			D3D12_VIEWPORT viewport = dxCommon->GetViewport();
 			D3D12_RECT scissorRect = dxCommon->GetRect();
 
+			//Draw
 			dxCommon->PreDraw();
 			spriteCommon->DrawSetCommon();
 			object3dCommon->DrawSetCommon();
