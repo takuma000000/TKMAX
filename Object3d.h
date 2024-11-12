@@ -18,6 +18,12 @@ struct Vector4 {
 	float w;
 };
 
+struct Transform {
+	Vector3 scale;
+	Vector3 rotate;
+	Vector3 translate;
+};
+
 //頂点データ
 struct VertexData {
 	Vector4 position;
@@ -27,6 +33,8 @@ struct VertexData {
 
 struct MaterialData {
 	std::string textureFilePath;
+	//テクスチャ番号
+	uint32_t textureIndex = 0;
 };
 
 struct ModelData {
@@ -42,12 +50,26 @@ struct Material {
 	Matrix4x4 uvTransform;
 };
 
+//座標変換行列データ
+struct TransformationMatrix {
+	Matrix4x4 wvp;
+	Matrix4x4 World;
+};
+
+struct DirectionalLight {
+	Vector4 color;
+	Vector3 direction;
+	float intensity;
+};
+
 class Object3d
 {
 
 
 public://メンバ関数
 	void Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommon);
+	void Update();
+	void Draw(DirectXCommon* dxCommon);
 
 private:
 	Object3dCommon* object3dCommon = nullptr;
@@ -67,5 +89,34 @@ private:
 	//頂点バッファビューを作成する
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
 
+	//マテリアル用のリソースを作る
+	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource;
+	//マテリアルにデータを書き込む
+	Material* materialData = nullptr;
+
+	//WVP用のリソースを作る
+	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource;
+	//データを書き込む
+	TransformationMatrix* wvpData = nullptr;
+
+	//Light用のマテリアルリソースを作る
+	Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceLight;
+	//データを書き込む
+	DirectionalLight* directionalLightData = nullptr;
+
+	//VertexResource関数
+	void VertexResource(DirectXCommon* dxCommon);
+	//materialResource関数
+	void MaterialResource(DirectXCommon* dxCommon);
+	//wvpResource関数
+	void WVPResource(DirectXCommon* dxCommon);
+	//Light関数
+	void Light(DirectXCommon* dxCommon);
+
+	Transform transform;
+	Transform cameraTransform;
+
+	//SRV切り替え
+	bool useMonsterBall = true;
 };
 
