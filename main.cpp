@@ -31,6 +31,8 @@
 #include "SpriteCommon.h"
 #include "Sprite.h"
 #include "TextureManager.h"
+#include "Object3dCommon.h"
+#include "Object3d.h"
 
 struct Vector2 {
 	float x;
@@ -593,10 +595,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//テクスチャマネージャの初期化
 	TextureManager::GetInstance()->Initialize(dxCommon.get());
-
+	//ファイルパス
 	TextureManager::GetInstance()->LoadTexture("./resources/uvChecker.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/pokemon.png");
-	
 
 	//ポインタ...SpriteCommon
 	std::unique_ptr<SpriteCommon> spriteCommon = nullptr;
@@ -609,10 +610,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	sprite = std::make_unique<Sprite>();
 	sprite->Initialize(spriteCommon.get(), dxCommon.get(), "./resources/uvChecker.png");
 
-		
+	//ポインタ...Object3dCommon
+	std::unique_ptr<Object3dCommon> object3dCommon = nullptr;
+	//Object3d共通部の初期化
+	object3dCommon = std::make_unique<Object3dCommon>();
+	object3dCommon->Initialize(dxCommon.get());
+
+	//Object3dの初期化
+	Object3d* object3d = new Object3d();
+	object3d->Initialize();
 
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-
+		
 	//RootSignature作成
 	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
 	descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
@@ -979,6 +988,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			dxCommon->PreDraw();
 			spriteCommon->DrawSetCommon();
+			object3dCommon->DrawSetCommon();
 
 			//---------------------------------------------------------
 
@@ -1126,6 +1136,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	////*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 	////				解放
 	////*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+	//Object3dの解放
+	delete object3d;
 
 	//CloseHandle(fenceEvent);
 	
