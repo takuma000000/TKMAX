@@ -1,11 +1,8 @@
 #pragma once
+#include "DirectXCommon.h"
 #include "MyMath.h"
 #include <string>
 #include <vector>
-#include "DirectXCommon.h"
-
-class Object3dCommon;
-class Model;
 
 struct Vector2 {
 	float x;
@@ -51,34 +48,13 @@ struct Material {
 	Matrix4x4 uvTransform;
 };
 
-//座標変換行列データ
-struct TransformationMatrix {
-	Matrix4x4 wvp;
-	Matrix4x4 World;
-};
+class ModelCommon;
 
-struct DirectionalLight {
-	Vector4 color;
-	Vector3 direction;
-	float intensity;
-};
-
-class Object3d
+class Model
 {
-
-public://メンバ関数
-	void Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommon);
-	void Update();
-	void Draw(DirectXCommon* dxCommon);
-
-public:
-	//setter
-	void SetModel(Model* model) { this->model = model; }
-
 private:
-	Object3dCommon* object3dCommon = nullptr;
+	ModelCommon* modelCommon_ = nullptr;
 	DirectXCommon* dxCommon_;
-	Model* model = nullptr;
 
 	//Objファイルのデータ
 	ModelData modelData;
@@ -100,29 +76,17 @@ private:
 	//マテリアルにデータを書き込む
 	Material* materialData = nullptr;
 
-	//WVP用のリソースを作る
-	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource;
-	//データを書き込む
-	TransformationMatrix* wvpData = nullptr;
-
-	//Light用のマテリアルリソースを作る
-	Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceLight;
-	//データを書き込む
-	DirectionalLight* directionalLightData = nullptr;
-
 	//VertexResource関数
 	void VertexResource(DirectXCommon* dxCommon);
 	//materialResource関数
 	void MaterialResource(DirectXCommon* dxCommon);
-	//wvpResource関数
-	void WVPResource(DirectXCommon* dxCommon);
-	//Light関数
-	void Light(DirectXCommon* dxCommon);
 
-	Transform transform;
-	Transform cameraTransform;
+public://メンバ関数
+	void Initialize(ModelCommon* modelCommon, DirectXCommon* dxCommon);
+	void Draw();
 
-	//SRV切り替え
-	bool useMonsterBall = true;
+public:
+
+
 };
 
