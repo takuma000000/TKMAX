@@ -98,7 +98,7 @@ private:
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
 	D3D12_INDEX_BUFFER_VIEW indexBufferView{};
 
-	Vector2 position = { 650.0f,400.0f };
+	Vector2 position = { 0.0f,0.0f };
 
 	Transform transformSprite;
 	Transform cameraTransform;
@@ -114,7 +114,7 @@ private:
 	uint32_t textureIndex = 0;
 
 	//アンカーポイント
-	Vector2 anchorPoint = { 0.5f,0.5f };
+	Vector2 anchorPoint = { 0.0f,0.0f };
 	//左右フリップ
 	bool isFlipX_ = false;
 	//上下フリップ
