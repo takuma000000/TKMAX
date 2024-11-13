@@ -3,50 +3,7 @@
 #include "MyMath.h"
 #include <string>
 #include <vector>
-
-struct Vector2 {
-	float x;
-	float y;
-};
-
-struct Vector4 {
-	float x;
-	float y;
-	float z;
-	float w;
-};
-
-struct Transform {
-	Vector3 scale;
-	Vector3 rotate;
-	Vector3 translate;
-};
-
-//頂点データ
-struct VertexData {
-	Vector4 position;
-	Vector2 texcoord;
-	Vector3 normal;
-};
-
-struct MaterialData {
-	std::string textureFilePath;
-	//テクスチャ番号
-	uint32_t textureIndex = 0;
-};
-
-struct ModelData {
-	std::vector<VertexData> vertices;
-	MaterialData material;
-};
-
-//マテリアルデータ
-struct Material {
-	Vector4	color;
-	int32_t enableLighting;
-	float padding[3];
-	Matrix4x4 uvTransform;
-};
+#include "Object3d.h"
 
 class ModelCommon;
 
@@ -81,12 +38,22 @@ private:
 	//materialResource関数
 	void MaterialResource(DirectXCommon* dxCommon);
 
+	//Transform情報
+	Transform transform;
+
 public://メンバ関数
 	void Initialize(ModelCommon* modelCommon, DirectXCommon* dxCommon);
 	void Draw();
 
 public:
-
+	//getter
+	const Vector3& GetScale() const { return transform.scale; }
+	const Vector3& GetRotate() const { return transform.rotate; }
+	const Vector3& GetTranslate() const { return transform.translate; }
+	//setter
+	void SetScale(const Vector3& scale) { this->transform.scale = scale; }
+	void SetRotate(const Vector3& rotate) { this->transform.rotate = rotate; }
+	void SetTranslate(const Vector3& translate) { this->transform.translate = translate; }
 
 };
 

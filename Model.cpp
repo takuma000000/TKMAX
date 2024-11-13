@@ -4,6 +4,7 @@
 #include <sstream>
 #include <cassert>
 #include "TextureManager.h"
+#include "Object3d.h"
 
 MaterialData Model::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)
 {
@@ -144,6 +145,9 @@ void Model::Initialize(ModelCommon* modelCommon, DirectXCommon* dxCommon)
 	TextureManager::GetInstance()->LoadTexture(modelData.material.textureFilePath);
 	//読み込んだテクスチャの番号を取得
 	modelData.material.textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(modelData.material.textureFilePath);
+
+	//Transform関数を作る
+	//transform = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{3.0f,0.0f,0.0f} };
 }
 
 void Model::Draw()

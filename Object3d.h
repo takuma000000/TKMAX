@@ -72,13 +72,20 @@ public://メンバ関数
 	void Draw(DirectXCommon* dxCommon);
 
 public:
+	//getter
+	const Vector3& GetScale() const { return transform.scale; }
+	const Vector3& GetRotate() const { return transform.rotate; }
+	const Vector3& GetTranslate() const { return transform.translate; }
 	//setter
-	void SetModel(Model* model) { this->model = model; }
+	void SetScale(const Vector3& scale) { this->transform.scale = scale; }
+	void SetRotate(const Vector3& rotate) { this->transform.rotate = rotate; }
+	void SetTranslate(const Vector3& translate) { this->transform.translate = translate; }
+	void SetModel(Model* model) { this->model_ = model; }
 
 private:
 	Object3dCommon* object3dCommon = nullptr;
 	DirectXCommon* dxCommon_;
-	Model* model = nullptr;
+	Model* model_ = nullptr;
 
 	//Objファイルのデータ
 	ModelData modelData;
