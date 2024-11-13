@@ -33,6 +33,8 @@
 #include "TextureManager.h"
 #include "Object3dCommon.h"
 #include "Object3d.h"
+#include "Model.h"
+#include "ModelCommon.h"
 
 //struct Vector2 {
 //	float x;
@@ -616,9 +618,29 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	object3dCommon = std::make_unique<Object3dCommon>();
 	object3dCommon->Initialize(dxCommon.get());
 
+	//ポインタ...ModelCommon
+	std::unique_ptr<ModelCommon> modelCommon = nullptr;
+	//Object3d共通部の初期化
+	modelCommon = std::make_unique<ModelCommon>();
+	modelCommon->Initialize(dxCommon.get());
+
+	//Modelの初期化
+	Model* model = new Model();
+	model->Initialize(modelCommon.get(), dxCommon.get());
+
+	///--------------------------------------------
+
 	//Object3dの初期化
 	Object3d* object3d = new Object3d();
 	object3d->Initialize(object3dCommon.get(), dxCommon.get());
+	object3d->SetModel(model);
+
+	//AnotherObject3d ( もう一つのObject3d )
+	Object3d* anotherObject3d = new Object3d();
+	anotherObject3d->Initialize(object3dCommon.get(), dxCommon.get());
+	anotherObject3d->SetModel(model);
+
+	//---------------------------------------------
 
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
@@ -1020,6 +1042,40 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			size.y += 0.1f;
 			sprite->SetSize(size);*/
 
+			//Sprite::Vector2 position = sprite->GetPosition();
+			////座標を変更する
+			//position.x += 0.1f;
+			//position.y += 0.1f;
+			////変更を反映する
+			//sprite->SetPosition(position);
+
+			//object3d*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+			//translate
+			Vector3 translate = object3d->GetTranslate();
+			translate = { 2.0f,2.0f,0.0f };
+			object3d->SetTranslate(translate);
+			//rotate
+			Vector3 rotate = object3d->GetRotate();
+			rotate += { 0.0f,0.0f,0.1f };
+			object3d->SetRotate(rotate);
+
+			//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+
+			//anotherObject3d-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+			//translate
+			Vector3 anotherTranslate = anotherObject3d->GetTranslate();
+			anotherTranslate = { 2.0f,-0.5f,0.0f };
+			anotherObject3d->SetTranslate(anotherTranslate);
+			//ratate
+			Vector3 anotherRotate = anotherObject3d->GetRotate();
+			anotherRotate += { 0.1f,0.0f,0.0f };
+			anotherObject3d->SetRotate(anotherRotate);
+
+			//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+
 			//---------------------------------------------------------
 
 			//描画
@@ -1045,9 +1101,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			sprite->Update();
 			object3d->Update();
+			anotherObject3d->Update();
 
 			sprite->Draw();  // textureSrvHandleGPU は必要に応じて設定
 			object3d->Draw(dxCommon.get());
+			anotherObject3d->Draw(dxCommon.get());
 
 
 			//Spriteを常にuvCheckerにする
