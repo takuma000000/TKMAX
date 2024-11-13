@@ -129,14 +129,14 @@ void Model::MaterialResource(DirectXCommon* dxCommon)
 	materialData->uvTransform = MyMath::MakeIdentity4x4();
 }
 
-void Model::Initialize(ModelCommon* modelCommon, DirectXCommon* dxCommon)
+void Model::Initialize(ModelCommon* modelCommon, DirectXCommon* dxCommon, const std::string& directorypath, const std::string& filename)
 {
 	//引数で受け取ってメンバ変数に記録する
 	this->modelCommon_ = modelCommon;
 	dxCommon_ = dxCommon;
 
 	//モデル読み込み
-	modelData = LoadObjFile("resources", "plane.obj");
+	modelData = LoadObjFile(directorypath, filename);
 
 	VertexResource(dxCommon_);
 	MaterialResource(dxCommon_);

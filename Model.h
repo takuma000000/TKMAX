@@ -42,7 +42,7 @@ private:
 	Transform transform;
 
 public://メンバ関数
-	void Initialize(ModelCommon* modelCommon, DirectXCommon* dxCommon);
+	void Initialize(ModelCommon* modelCommon, DirectXCommon* dxCommon, const std::string& directorypath, const std::string& filename);
 	void Draw();
 
 public:
