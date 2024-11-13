@@ -5,6 +5,7 @@
 #include <cassert>
 #include "TextureManager.h"
 #include "Model.h"
+#include "ModelManager.h"
 
 void Object3d::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommon)
 {
@@ -67,6 +68,12 @@ void Object3d::Draw(DirectXCommon* dxCommon)
 	}
 
 	dxCommon_->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
+}
+
+void Object3d::SetModel(const std::string& filePath)
+{
+	//モデルを検索してセットする
+	model_ = ModelManager::GetInstance()->FindModel(filePath);
 }
 
 MaterialData Object3d::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)

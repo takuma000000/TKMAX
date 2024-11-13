@@ -35,6 +35,7 @@
 #include "Object3d.h"
 #include "Model.h"
 #include "ModelCommon.h"
+#include "ModelManager.h"
 
 //struct Vector2 {
 //	float x;
@@ -618,27 +619,29 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	object3dCommon = std::make_unique<Object3dCommon>();
 	object3dCommon->Initialize(dxCommon.get());
 
-	//ポインタ...ModelCommon
-	std::unique_ptr<ModelCommon> modelCommon = nullptr;
-	//Object3d共通部の初期化
-	modelCommon = std::make_unique<ModelCommon>();
-	modelCommon->Initialize(dxCommon.get());
+	////ポインタ...ModelCommon
+	//std::unique_ptr<ModelCommon> modelCommon = nullptr;
+	////Object3d共通部の初期化
+	//modelCommon = std::make_unique<ModelCommon>();
+	//modelCommon->Initialize(dxCommon.get());
+	ModelManager::GetInstance()->Initialize(dxCommon.get());
+	ModelManager::GetInstance()->LoadModel("axis.obj",dxCommon.get());
 
 	//Modelの初期化
-	Model* model = new Model();
-	model->Initialize(modelCommon.get(), dxCommon.get());
+	/*Model* model = new Model();
+	model->Initialize(modelCommon.get(), dxCommon.get());*/
 
 	///--------------------------------------------
 
 	//Object3dの初期化
 	Object3d* object3d = new Object3d();
 	object3d->Initialize(object3dCommon.get(), dxCommon.get());
-	object3d->SetModel(model);
+	object3d->SetModel("axis.obj");
 
 	//AnotherObject3d ( もう一つのObject3d )
 	Object3d* anotherObject3d = new Object3d();
 	anotherObject3d->Initialize(object3dCommon.get(), dxCommon.get());
-	anotherObject3d->SetModel(model);
+	anotherObject3d->SetModel("plane.obj");
 
 	//---------------------------------------------
 
@@ -1057,7 +1060,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			object3d->SetTranslate(translate);
 			//rotate
 			Vector3 rotate = object3d->GetRotate();
-			rotate += { 0.0f,0.0f,0.1f };
+			rotate += { 0.0f, 0.0f, 0.1f };
 			object3d->SetRotate(rotate);
 
 			//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
@@ -1070,7 +1073,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			anotherObject3d->SetTranslate(anotherTranslate);
 			//ratate
 			Vector3 anotherRotate = anotherObject3d->GetRotate();
-			anotherRotate += { 0.1f,0.0f,0.0f };
+			anotherRotate += { 0.1f, 0.0f, 0.0f };
 			anotherObject3d->SetRotate(anotherRotate);
 
 			//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
@@ -1201,6 +1204,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//Object3dの解放
 	delete object3d;
+
+	//3Dモデルマネージャーの終了
+	ModelManager::GetInstance()->Finalize();
 
 	//CloseHandle(fenceEvent);
 
