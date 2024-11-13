@@ -4,7 +4,8 @@
 #include <memory>
 
 class Model;
-class ModelCommmon;
+class ModelCommon;
+class DirectXCommon;
 
 class ModelManager
 {
@@ -26,13 +27,20 @@ private:
 	std::map<std::string, std::unique_ptr<Model>> models;
 
 	//モデル共通部
-	ModelCommmon* modelCommon = nullptr;
+	ModelCommon* modelCommon = nullptr;
+	DirectXCommon* dxCommon_ = nullptr;
 
 public:
 	//シングルトンインスタンスの取得
 	static ModelManager* GetInstance();
 	//終了
 	void Finalize();
+	//初期化
+	void Initialize(DirectXCommon* dxCommon);
+	//モデルのファイルに読み込み
+	void LoadModel(const std::string& filePath, DirectXCommon* dxCommon);
+	//モデルの検索
+	Model* FindModel(const std::string& filePath);
 
 };
 

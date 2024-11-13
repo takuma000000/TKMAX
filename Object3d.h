@@ -70,6 +70,7 @@ public://メンバ関数
 	void Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommon);
 	void Update();
 	void Draw(DirectXCommon* dxCommon);
+	void SetModel(const std::string& filePath);
 
 public:
 	//getter
