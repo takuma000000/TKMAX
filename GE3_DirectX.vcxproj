@@ -60,7 +60,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)C:\school\GE3\GE3_DirectX\engine\2d;$(ProjectDir)C:\school\GE3\GE3_DirectX\engine\3d;$(ProjectDir)C:\school\GE3\GE3_DirectX\engine\base;$(ProjectDir)C:\school\GE3\GE3_DirectX\engine\func\common;$(ProjectDir)C:\school\GE3\GE3_DirectX\engine\func\math;$(ProjectDir)C:\school\GE3\GE3_DirectX\engine\imgui;$(ProjectDir)C:\school\GE3\GE3_DirectX\engine\io;$(ProjectDir)C:\school\GE3\GE3_DirectX\engine\scene;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\2d;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\func\common;$(ProjectDir)engine\func\math;$(ProjectDir)engine\imgui;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -89,7 +89,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)C:\school\GE3\GE3_DirectX\engine\2d;$(ProjectDir)C:\school\GE3\GE3_DirectX\engine\3d;$(ProjectDir)C:\school\GE3\GE3_DirectX\engine\base;$(ProjectDir)C:\school\GE3\GE3_DirectX\engine\func\common;$(ProjectDir)C:\school\GE3\GE3_DirectX\engine\func\math;$(ProjectDir)C:\school\GE3\GE3_DirectX\engine\imgui;$(ProjectDir)C:\school\GE3\GE3_DirectX\engine\io;$(ProjectDir)C:\school\GE3\GE3_DirectX\engine\scene;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\2d;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\func\common;$(ProjectDir)engine\func\math;$(ProjectDir)engine\imgui;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
