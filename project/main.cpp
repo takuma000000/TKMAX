@@ -29,7 +29,7 @@
 #include "Input.h"
 #include "DirectXCommon.h"
 #include "SpriteCommon.h"
-#include "Sprite.h"
+#include "engine/2d/Sprite.h"
 #include "TextureManager.h"
 #include "Object3dCommon.h"
 #include "Object3d.h"
