@@ -6,7 +6,7 @@ on:
 
 env:
   # リポジトリのルートディレクトリを基点としたソリューションファイルのパス
-  SOLUTION_FILE_PATH: GE3_DirectX/project/GE3_DirectX.sln
+  SOLUTION_FILE_PATH: C:\school\GE3\GE3_DirectX\project\GE3_DirectX.sln
   # Visual Studio の構成
   CONFIGURATION: Debug
 
