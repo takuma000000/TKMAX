@@ -11,5 +11,8 @@ private:
 	Matrix4x4 worldMatrix;
 	Matrix4x4 viewMatrix;
 
+public://メンバ関数
+	void Update();
+
 };
 
