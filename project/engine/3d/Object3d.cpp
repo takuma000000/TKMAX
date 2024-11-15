@@ -26,20 +26,20 @@ void Object3d::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommo
 	//読み込んだテクスチャの番号を取得
 	modelData.material.textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(modelData.material.textureFilePath);
 
-	//Transform関数を作る
-	transform = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-	cameraTransform = { {1.0f,1.0f,1.0f},{0.3f,0.0f,0.0f},{0.0f,4.0f,-10.0f} };
+	////Transform関数を作る
+	//transform = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+	//cameraTransform = { {1.0f,1.0f,1.0f},{0.3f,0.0f,0.0f},{0.0f,4.0f,-10.0f} };
 
 }
 
 void Object3d::Update()
 {
-	//TransformからWorldMatrixを作る
-	Matrix4x4 worldMatrix = MyMath::MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
-	//cameraTransformからcameraMatrixを作る
-	Matrix4x4 cameraMatrix = MyMath::MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
-	//cameraMatrixからviewMatrixを作る
-	Matrix4x4 viewMatrix = MyMath::Inverse4x4(cameraMatrix);
+	////TransformからWorldMatrixを作る
+	//Matrix4x4 worldMatrix = MyMath::MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+	////cameraTransformからcameraMatrixを作る
+	//Matrix4x4 cameraMatrix = MyMath::MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
+	////cameraMatrixからviewMatrixを作る
+	//Matrix4x4 viewMatrix = MyMath::Inverse4x4(cameraMatrix);
 	//projectionMatrixを作って投資投影行列を書き込む
 	Matrix4x4 projectionMatrix = MyMath::MakePerspectiveFovMatrix(0.45f, float(WindowsAPI::kClientWidth) / float(WindowsAPI::kClientHeight), 0.1f, 100.0f);
 
