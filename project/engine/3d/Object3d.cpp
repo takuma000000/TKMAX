@@ -34,14 +34,14 @@ void Object3d::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommo
 
 void Object3d::Update()
 {
-	////TransformからWorldMatrixを作る
-	//Matrix4x4 worldMatrix = MyMath::MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
-	////cameraTransformからcameraMatrixを作る
+	//TransformからWorldMatrixを作る
+	Matrix4x4 worldMatrix = MyMath::MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+	//cameraTransformからcameraMatrixを作る
 	//Matrix4x4 cameraMatrix = MyMath::MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
-	////cameraMatrixからviewMatrixを作る
+	//cameraMatrixからviewMatrixを作る
 	//Matrix4x4 viewMatrix = MyMath::Inverse4x4(cameraMatrix);
 	//projectionMatrixを作って投資投影行列を書き込む
-	Matrix4x4 projectionMatrix = MyMath::MakePerspectiveFovMatrix(0.45f, float(WindowsAPI::kClientWidth) / float(WindowsAPI::kClientHeight), 0.1f, 100.0f);
+	//Matrix4x4 projectionMatrix = MyMath::MakePerspectiveFovMatrix(0.45f, float(WindowsAPI::kClientWidth) / float(WindowsAPI::kClientHeight), 0.1f, 100.0f);
 
 	//worldViewProjectionMatrixを作る	[ worldMatrix * ( viewMatrix * projectionMatrix ) ]
 	Matrix4x4 worldViewProjectionMatrix = MyMath::Multiply(worldMatrix, MyMath::Multiply(viewMatrix, projectionMatrix));
