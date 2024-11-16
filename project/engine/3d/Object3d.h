@@ -6,6 +6,7 @@
 
 class Object3dCommon;
 class Model;
+class Camera;
 
 struct Vector2 {
 	float x;
@@ -82,11 +83,13 @@ public:
 	void SetRotate(const Vector3& rotate) { this->transform.rotate = rotate; }
 	void SetTranslate(const Vector3& translate) { this->transform.translate = translate; }
 	void SetModel(Model* model) { this->model_ = model; }
+	void SetCamera(Camera* camera) { this->camera = camera; }
 
 private:
 	Object3dCommon* object3dCommon = nullptr;
 	DirectXCommon* dxCommon_;
 	Model* model_ = nullptr;
+	Camera* camera = nullptr;
 
 	//Objファイルのデータ
 	ModelData modelData;
