@@ -1,6 +1,7 @@
 #pragma once
 #include "DirectXCommon.h"
 
+class Camera;
 
 class Object3dCommon
 {
@@ -16,8 +17,12 @@ private://メンバ関数
 	//グラフィックスパイプラインの生成
 	void GenerateGraficsPipeline();
 
-public://getter
+public:
+	//getter
 	DirectXCommon* GetDxCommon() const { return dxCommon_; }
+	Camera* GetDefaultCamera() const { return defaultCamera_; }
+	//setter
+	void SetDefaultCamera(Camera* camera) { this->defaultCamera_ = camera; }
 
 private://メンバ変数
 	DirectXCommon* dxCommon_;
@@ -32,6 +37,8 @@ private://メンバ変数
 	D3D12_DEPTH_STENCIL_DESC depthStencilDesc{};
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
 
+	//デフォルトカメラ
+	Camera* defaultCamera_ = nullptr;
 
 };
 
