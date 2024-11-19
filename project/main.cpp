@@ -36,6 +36,7 @@
 #include "Model.h"
 #include "ModelCommon.h"
 #include "ModelManager.h"
+#include "Camera.h"
 
 //struct Vector2 {
 //	float x;
@@ -563,7 +564,7 @@ void Log(const std::string& message) {
 
 //Transform変数を作る
 Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f} ,{0.0f,0.0f,-10.0f} };
+//Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f} ,{0.0f,0.0f,-50.0f} };
 //Transform transformSprite{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 Transform uvTransformSprite{
 	{1.0f,1.0f,1.0f},
@@ -625,7 +626,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//modelCommon = std::make_unique<ModelCommon>();
 	//modelCommon->Initialize(dxCommon.get());
 	ModelManager::GetInstance()->Initialize(dxCommon.get());
-	ModelManager::GetInstance()->LoadModel("axis.obj",dxCommon.get());
+	ModelManager::GetInstance()->LoadModel("axis.obj", dxCommon.get());
 
 	//Modelの初期化
 	/*Model* model = new Model();
@@ -644,6 +645,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	anotherObject3d->SetModel("plane.obj");
 
 	//---------------------------------------------
+
+	//ポインタ...Camera
+	std::unique_ptr<Camera> camera = nullptr;
+	//Object3d共通部の初期化
+	camera = std::make_unique<Camera>();
+	camera->SetRotate({ 0.0f,0.0f,0.0f });
+	camera->SetTranslate({ 0.0f,0.0f,-30.0f });
+	//object3dCommon->SetDefaultCamera(camera.get());
+	object3d->SetCamera(camera.get());
+	anotherObject3d->SetCamera(camera.get());
+	//ImGui用のcamera設定
+	Vector3 cameraPosition = camera->GetTranslate();
+	Vector3 cameraRotation = camera->GetRotate();
+
 
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
@@ -938,6 +953,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// SRVの生成
 	//dxCommon->GetDevice()->CreateShaderResourceView(textureResource2.Get(), &srvDesc2, textureSrvHandleCPU2);
 
+
 	//出力ウィンドウへの文字出力ループを抜ける
 	Log("Hello,DirectX!\n");
 
@@ -959,10 +975,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//色を変えるImGuiの処理
 			ImGui::Begin("Setting");
 
-			ImGui::Text("Camera");
-			ImGui::DragFloat3("CameraTransform", &cameraTransform.translate.x, 0.01f);
-			ImGui::DragFloat3("cameraRotate", &cameraTransform.rotate.x, 0.01f);
-			ImGui::Text("Model Transform");
+			ImGui::Text("Camera Settings");
+
+			// カメラの位置を制御
+			ImGui::SliderFloat("Camera TranslateX", &cameraPosition.x, -3.0f, 3.0f);
+			ImGui::SliderFloat("Camera TranslateY", &cameraPosition.y, -3.0f, 3.0f);
+			ImGui::SliderFloat("Camera TranslateZ", &cameraPosition.z, -30.0f, 1.0f);
+
+			// カメラの回転を制御
+			ImGui::SliderFloat("Camera RotateX", &cameraRotation.x, -50.0f, 1.0f);
+			ImGui::SliderFloat("Camera RotateY", &cameraRotation.y, -50.0f, 1.0f);
+			ImGui::SliderFloat("Camera RotateZ", &cameraRotation.z, -50.0f, 1.0f);
+
+			// カメラに反映
+			camera->SetTranslate(cameraPosition);
+			camera->SetRotate(cameraRotation);
 
 			ImGui::Text("Model Transform");
 			ImGui::SliderFloat("Model RotateX", &transform.rotate.x, -3.14159f, 3.14159f);
@@ -1056,12 +1083,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			//translate
 			Vector3 translate = object3d->GetTranslate();
-			translate = { 2.0f,2.0f,0.0f };
+			translate = { 3.0f,-4.0f,0.0f };
 			object3d->SetTranslate(translate);
 			//rotate
 			Vector3 rotate = object3d->GetRotate();
 			rotate += { 0.0f, 0.0f, 0.1f };
 			object3d->SetRotate(rotate);
+			//scale
+			Vector3 scale = object3d->GetScale();
+			scale = { 1.0f, 1.0f, 1.0f };
+			object3d->SetScale(scale);
 
 			//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
@@ -1069,12 +1100,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//anotherObject3d-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 			//translate
 			Vector3 anotherTranslate = anotherObject3d->GetTranslate();
-			anotherTranslate = { 2.0f,-0.5f,0.0f };
+			anotherTranslate = { 3.0f,4.0f,0.0f };
 			anotherObject3d->SetTranslate(anotherTranslate);
 			//ratate
 			Vector3 anotherRotate = anotherObject3d->GetRotate();
 			anotherRotate += { 0.1f, 0.0f, 0.0f };
 			anotherObject3d->SetRotate(anotherRotate);
+			//scale
+			Vector3 anotherScale = anotherObject3d->GetScale();
+			anotherScale = { 1.0f, 1.0f, 1.0f };
+			anotherObject3d->SetScale(anotherScale);
 
 			//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
@@ -1101,7 +1136,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			////dxCommon->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 
-
+			camera->Update();
 			sprite->Update();
 			object3d->Update();
 			anotherObject3d->Update();
