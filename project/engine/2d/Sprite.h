@@ -128,4 +128,7 @@ private:
 	//テクスチャサイズをイメージに合わせる
 	void AdjustTextureSize();
 
+	//ファイルパスを保存するメンバー変数
+	std::string textureFilePath;
+
 };

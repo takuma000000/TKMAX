@@ -8,6 +8,7 @@
 #include <string>
 #include <chrono>
 #include "WindowsAPI.h"
+#include "SrvManager.h"
 #include "externals/DirectXTex/DirectXTex.h"//DirectX
 
 class DirectXCommon
@@ -162,6 +163,8 @@ private:
 	WindowsAPI* windowsAPI = nullptr;
 	//fence値
 	UINT fenceVal = 0;
+	//SrvManager
+	SrvManager* srvManager_ = nullptr;
 
 };
 
