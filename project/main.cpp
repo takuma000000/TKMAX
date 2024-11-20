@@ -37,6 +37,7 @@
 #include "ModelCommon.h"
 #include "ModelManager.h"
 #include "Camera.h"
+#include "SrvManager.h"
 
 //struct Vector2 {
 //	float x;
@@ -597,8 +598,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	dxCommon = std::make_unique<DirectXCommon>();
 	dxCommon->Initialize(windowsAPI.get());
 
+	//ポインタ...srvManager
+	std::unique_ptr<SrvManager> srvManager = nullptr;
+	srvManager = std::make_unique<SrvManager>();
+	srvManager->Initialize(dxCommon.get());
+
 	//テクスチャマネージャの初期化
-	TextureManager::GetInstance()->Initialize(dxCommon.get());
+	TextureManager::GetInstance()->Initialize(dxCommon.get(),srvManager.get());
 	//ファイルパス
 	TextureManager::GetInstance()->LoadTexture("./resources/uvChecker.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/pokemon.png");
@@ -658,7 +664,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//ImGui用のcamera設定
 	Vector3 cameraPosition = camera->GetTranslate();
 	Vector3 cameraRotation = camera->GetRotate();
-
 
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
