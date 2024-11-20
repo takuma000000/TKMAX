@@ -6,11 +6,13 @@ const uint32_t SrvManager::kMaxSRVCount = 512;
 
 void SrvManager::Initialize(DirectXCommon* directXCommon)
 {
+	assert(directXCommon != nullptr); // 必要条件を確認
 	//引数で受け取ってメンバ変数に記録する
 	this->directXCommon_ = directXCommon;
 
 	//SRV用のヒープでディスクリプタの数は128。SRVはShader内で触るものなので、ShaderVisibleはtrue
 	descriptorHeap = directXCommon_->CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kMaxSRVCount, true);
+	assert(descriptorHeap != nullptr); // ヒープが正しく作成されたことを確認
 	//デスクリプタ1個分のサイズを取得して記録
 	descriptorSize = directXCommon_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 }
