@@ -424,11 +424,6 @@ void DirectXCommon::UploadTextureData(ID3D12Resource* texture, const DirectX::Sc
 	}
 }
 
-Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> DirectXCommon::CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible)
-{
-	return Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>();
-}
-
 //DirectX::ScratchImage DirectXCommon::LoadTexture(const std::string& filePath)
 //{
 //	//テクスチャファイルを読んでプログラムを扱えるようにする
@@ -642,8 +637,8 @@ void DirectXCommon::PreDraw()
 	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	// 描画用のDescriptorHeapを設定
-	ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap.Get() };
-	commandList->SetDescriptorHeaps(1, descriptorHeaps);
+	ID3D12DescriptorHeap* descriptorHeaps[] = { srvManager_->GetSrvDescriptorHeap()};
+	commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
 	// ビューポートとシザー矩形の設定
 	D3D12_VIEWPORT viewport{};

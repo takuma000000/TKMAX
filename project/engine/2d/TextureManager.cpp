@@ -21,7 +21,7 @@ void TextureManager::LoadTexture(const std::string& filePath) {
 
 	//読み込み済みテクスチャを検索
 	if (textureDatas.contains(filePath)) {
-
+		return;
 	}
 
 	//テクスチャ枚数上限チェック
@@ -99,9 +99,12 @@ void TextureManager::LoadTexture(const std::string& filePath) {
 
 uint32_t TextureManager::GetTextureIndexByFilePath(const std::string& filePath)
 {
+	
 	//読み込み済みテクスチャを検索
 	if (textureDatas.contains(filePath)) {
-
+		//読み込み済みなら要素番号を返す
+		uint32_t textureIndex = textureDatas[filePath].srvIndex;
+		return textureIndex;
 	}
 
 	assert(0);

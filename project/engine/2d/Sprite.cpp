@@ -8,6 +8,7 @@ void Sprite::Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, std
 	//引数で受け取ったメンバ変数に記録する
 	this->spriteCommon = spriteCommon;
 	dxCommon_ = dxCommon;
+	this->textureFilePath = textureFilePath;
 
 	//VertexResourceを作る
 	vertexResource = dxCommon_->CreateBufferResource(sizeof(VertexData) * 4);
@@ -73,7 +74,7 @@ void Sprite::Update() {
 		bottom = -bottom;
 	}
 
-	const DirectX::TexMetadata& metadata = TextureManager::GetInstance()->GetMetadata(textureIndex);
+	const DirectX::TexMetadata& metadata = TextureManager::GetInstance()->GetMetadata(textureFilePath);
 	float tex_left = textureLeftTop.x / metadata.width;
 	float tex_right = (textureLeftTop.x + textureSize.x) / metadata.width;
 	float tex_top = textureLeftTop.y / metadata.height;
@@ -148,7 +149,7 @@ void Sprite::Draw() {
 	materialData->uvTransform = uvTransformMatrix;
 
 	//SRVのDescriptorTableの先頭を設定
-	dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(textureIndex));
+	dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(textureFilePath));
 	//描画。6個のインデックスを使用し1つのインスタンスを描画。その他は当面0で良い
 	dxCommon_->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 }
@@ -156,7 +157,7 @@ void Sprite::Draw() {
 void Sprite::AdjustTextureSize()
 {
 	//テクスチャデータを取得
-	const DirectX::TexMetadata& metadata = TextureManager::GetInstance()->GetMetadata(textureIndex);
+	const DirectX::TexMetadata& metadata = TextureManager::GetInstance()->GetMetadata(textureFilePath);
 
 	textureSize.x = static_cast<float>(metadata.width);
 	textureSize.y = static_cast<float>(metadata.height);
