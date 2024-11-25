@@ -18,7 +18,7 @@ void SrvManager::Initialize(DirectXCommon* directXCommon)
 void SrvManager::PreDraw()
 {
 	//描画用のDescriptorHeapの設定
-	ID3D12DescriptorHeap* descriptorHeaps[] = { descriptorHeap.Get() };
+	ID3D12DescriptorHeap* descriptorHeaps[] = { descriptorHeap.Get()};
 	directXCommon_->GetCommandList()->SetDescriptorHeaps(1, descriptorHeaps);
 }
 
