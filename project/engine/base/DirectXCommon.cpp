@@ -4,9 +4,9 @@
 #include <format>
 #include "Logger.h"
 #include "StringUtility.h"
-#include "externals/imgui/imgui.h"
-#include "externals/imgui/imgui_impl_win32.h"
-#include "externals/imgui/imgui_impl_dx12.h"
+//#include "externals/imgui/imgui.h"
+//#include "externals/imgui/imgui_impl_win32.h"
+//#include "externals/imgui/imgui_impl_dx12.h"
 
 using namespace StringUtility;
 using namespace Logger;
@@ -101,7 +101,7 @@ void DirectXCommon::Initialize(WindowsAPI* windowsAPI)
 	InitializeFence();
 	InitializeViewport();
 	InitializeScissorRect();
-	InitializeImGui();
+	//InitializeImGui();
 
 }
 
@@ -546,8 +546,8 @@ void DirectXCommon::InitializeScissorRect()
 	scissorRect.bottom = WindowsAPI::kClientHeight;
 }
 
-void DirectXCommon::InitializeImGui()
-{
+//void DirectXCommon::InitializeImGui()
+//{
 	////Imguiの初期化
 	//IMGUI_CHECKVERSION();
 	//ImGui::CreateContext();
@@ -560,7 +560,7 @@ void DirectXCommon::InitializeImGui()
 	//	srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
 	//	srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
 	//);
-}
+//}
 
 void DirectXCommon::InitializeFixFPS()
 {
@@ -637,8 +637,8 @@ void DirectXCommon::PreDraw()
 	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	// 描画用のDescriptorHeapを設定
-	ID3D12DescriptorHeap* descriptorHeaps[] = { srvManager_->GetSrvDescriptorHeap() };
-	commandList->SetDescriptorHeaps(1, descriptorHeaps);
+	//ID3D12DescriptorHeap* descriptorHeaps[] = { srvManager_->GetSrvDescriptorHeap().Get()};
+	//commandList->SetDescriptorHeaps(1, descriptorHeaps);
 
 	// ビューポートとシザー矩形の設定
 	D3D12_VIEWPORT viewport{};

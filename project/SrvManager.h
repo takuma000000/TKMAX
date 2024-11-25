@@ -52,7 +52,7 @@ public: //色々な関数
 	void CreateSRVforStructureBuffer(uint32_t srvIndex, ID3D12Resource* pResource, UINT numElements, UINT structureByteStride);
 
 	//getter
-	ID3D12DescriptorHeap* GetSrvDescriptorHeap() const { return descriptorHeap.Get(); }
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> GetSrvDescriptorHeap() const { return descriptorHeap; }
 	uint32_t GetDescriptorSizeSRV() { return descriptorSize; }
 
 };
