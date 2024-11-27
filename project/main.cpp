@@ -38,6 +38,7 @@
 #include "ModelManager.h"
 #include "Camera.h"
 #include "SrvManager.h"
+#include "ImGuiManager.h"
 
 
 //OutputDebugStringA関数
@@ -139,6 +140,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//ImGui用のcamera設定
 	Vector3 cameraPosition = camera->GetTranslate();
 	Vector3 cameraRotation = camera->GetRotate();
+
+	//ポインタ...ImGuiManager
+	std::unique_ptr<ImGuiManager>  imguiManager = nullptr;
+	imguiManager = std::make_unique<ImGuiManager>();
+	imguiManager->Initialize(windowsAPI.get());
 
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
