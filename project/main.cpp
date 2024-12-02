@@ -13,13 +13,14 @@
 #include <cmath>
 #include <fstream>
 #include <sstream>
-//#include "externals/imgui/imgui_impl_dx12.h"
-//#include "externals/imgui/imgui_impl_win32.h"
+#include <imgui/imgui.h>
 #include "externals/DirectXTex/DirectXTex.h"
+#include <xaudio2.h>
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
 #pragma comment(lib,"dxguid.lib")
 #pragma comment(lib,"dxcompiler.lib")
+#pragma comment(lib,"xaudio2.lib")
 
 #include "MyMath.h"
 #include "Vector3.h"
@@ -39,14 +40,13 @@
 #include "Camera.h"
 #include "SrvManager.h"
 #include "ImGuiManager.h"
-#include <imgui/imgui.h>
+#include "AudioManager.h"
 
 
 //OutputDebugStringA関数
 void Log(const std::string& message) {
 	OutputDebugStringA(message.c_str());
 }
-
 
 //Transform変数を作る
 Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
@@ -64,12 +64,18 @@ bool useMonsterBall = true;
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//基盤システムの初期化*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	HRESULT hr;
 
 	//ポインタ...WindowsAPI
 	std::unique_ptr<WindowsAPI> windowsAPI = nullptr;
 	//WindowsAPIの初期化
 	windowsAPI = std::make_unique<WindowsAPI>();
 	windowsAPI->Initialize();
+
+	//Audio
+	std::unique_ptr<AudioManager> audio = nullptr;
+	audio = std::make_unique<AudioManager>();
+	audio->Initialize();
 
 	//ポインタ...Input
 	std::unique_ptr<Input> input = nullptr;
@@ -82,6 +88,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//DirectXの初期化
 	dxCommon = std::make_unique<DirectXCommon>();
 	dxCommon->Initialize(windowsAPI.get());
+	//XAudioのエンジンのインスタンスを生成
+	audio->LoadSound("fanfare", "resources/fanfare.wav");
+	// 音声の再生
+	audio->PlaySound("fanfare");
 
 	//ポインタ...srvManager
 	std::unique_ptr<SrvManager> srvManager = nullptr;
@@ -191,7 +201,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	descriptionRootSignature.NumStaticSamplers = _countof(staticSamplers);
 
 
-	HRESULT hr;
 	//シリアライズしてバイナリにする
 	Microsoft::WRL::ComPtr<ID3DBlob> signatureBlog = nullptr;
 	Microsoft::WRL::ComPtr<ID3DBlob> errorBlog = nullptr;
@@ -266,6 +275,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
 	hr = dxCommon->GetDevice()->CreateGraphicsPipelineState(&graphicPipelineStateDesc, IID_PPV_ARGS(&graphicsPipelineState));
 	assert(SUCCEEDED(hr));
+
 
 	//出力ウィンドウへの文字出力ループを抜ける
 	Log("Hello,DirectX!\n");
@@ -411,20 +421,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	////				解放
 	////*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-	//Object3dの解放
+	// Object3dの解放
 	delete object3d;
 
-	//3Dモデルマネージャーの終了
+	// 3Dモデルマネージャーの終了
 	ModelManager::GetInstance()->Finalize();
 
-	//CloseHandle(fenceEvent);
-
-	//テクスチャマネージャの終了
+	// テクスチャマネージャーの終了
 	TextureManager::GetInstance()->Finalize();
 
-	//終了処理
-	windowsAPI->Finalize();
+	// 終了処理
+	audio->Finalize();
+
+	// 終了処理
 	imguiManager->Finalize();
+	windowsAPI->Finalize();
+
 
 	return 0;
 
