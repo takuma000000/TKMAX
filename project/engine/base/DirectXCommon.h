@@ -27,7 +27,7 @@ public: //getter
 	uint32_t GetDescriptorSizeRTV() { return descriptorSizeRTV; }
 	uint32_t GetDescriptorSizeDSV() { return descriptorSizeDSV; }
 	//バックバッファの数を取得
-	size_t GetBackBufferCount() const {return}
+	size_t GetBackBufferCount() const { return backBufferChange; }
 
 public: //メンバ関数...初期化...public
 	//初期化
@@ -167,6 +167,9 @@ private:
 	UINT fenceVal = 0;
 	//SrvManager
 	SrvManager* srvManager_ = nullptr;
+
+	//backBufferの代わり
+	uint32_t backBufferChange = 2;
 
 };
 
