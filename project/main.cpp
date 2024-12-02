@@ -144,7 +144,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//ポインタ...ImGuiManager
 	std::unique_ptr<ImGuiManager>  imguiManager = nullptr;
 	imguiManager = std::make_unique<ImGuiManager>();
-	imguiManager->Initialize(windowsAPI.get());
+	imguiManager->Initialize(windowsAPI.get(),dxCommon.get());
 
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
@@ -279,6 +279,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			break;
 		} else {
 
+
+			// ** ImGui処理開始 **
+			imguiManager->Begin();
+
 			////ゲームの処理
 			//ImGui_ImplDX12_NewFrame();
 			//ImGui_ImplWin32_NewFrame();
@@ -341,6 +345,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//sprite->SetTransform(transformSprite);*/
 
 			//ImGui::End();
+			
+			 // ** ImGui処理終了 **
+			imguiManager->End();
+
 			////開発用UIの処理。実際に開発用のUIを出す場合はここをゲーム固有の処理に置き換える
 			////ImGui::ShowDemoWindow();
 
@@ -349,6 +357,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			D3D12_VIEWPORT viewport = dxCommon->GetViewport();
 			D3D12_RECT scissorRect = dxCommon->GetRect();
+
+			// ** ImGui描画 **
+			imguiManager->Draw();
 
 			//Draw
 			dxCommon->PreDraw();
@@ -471,8 +482,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//テクスチャマネージャの終了
 	TextureManager::GetInstance()->Finalize();
 
-	//WindowsAPIの終了処理
+	//終了処理
 	windowsAPI->Finalize();
+	imguiManager->Finalize();
 
 	return 0;
 
