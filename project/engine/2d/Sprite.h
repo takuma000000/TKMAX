@@ -80,6 +80,9 @@ public://メンバ関数
 	void Update();
 	void Draw();
 
+	// ImGuiのデバッグ処理
+	void ImGuiDebug();
+
 private:
 	SpriteCommon* spriteCommon = nullptr;
 	DirectXCommon* dxCommon_;
@@ -98,7 +101,7 @@ private:
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
 	D3D12_INDEX_BUFFER_VIEW indexBufferView{};
 
-	Vector2 position = { 0.0f,0.0f };
+	Vector2 position = { 100.0f,100.0f };
 
 	Transform transformSprite;
 	Transform cameraTransform;
