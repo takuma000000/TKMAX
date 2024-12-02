@@ -3,6 +3,7 @@
 #include "DirectXCommon.h"
 #include "MyMath.h"
 #include "TextureManager.h"
+#include "imgui/imgui.h"
 
 void Sprite::Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, std::string textureFilePath) {
 	//引数で受け取ったメンバ変数に記録する
@@ -152,6 +153,17 @@ void Sprite::Draw() {
 	dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(textureFilePath));
 	//描画。6個のインデックスを使用し1つのインスタンスを描画。その他は当面0で良い
 	dxCommon_->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
+}
+
+void Sprite::ImGuiDebug() {
+
+	// ImGui ウィジェット: スプライトの座標操作
+	ImGui::Begin("Sprite");
+
+	// スプライトの座標を操作するスライダー
+	ImGui::SliderFloat2("Sprite Position", &position.x, 0.0f, 500.0f, "%.1f");
+
+	ImGui::End();
 }
 
 void Sprite::AdjustTextureSize()

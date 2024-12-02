@@ -13,8 +13,8 @@
 #include <cmath>
 #include <fstream>
 #include <sstream>
-#include "externals/imgui/imgui_impl_dx12.h"
-#include "externals/imgui/imgui_impl_win32.h"
+//#include "externals/imgui/imgui_impl_dx12.h"
+//#include "externals/imgui/imgui_impl_win32.h"
 #include "externals/DirectXTex/DirectXTex.h"
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
@@ -39,6 +39,7 @@
 #include "Camera.h"
 #include "SrvManager.h"
 #include "ImGuiManager.h"
+#include <imgui/imgui.h>
 
 
 //OutputDebugStringA関数
@@ -283,69 +284,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// ** ImGui処理開始 **
 			imguiManager->Begin();
 
-			////ゲームの処理
-			//ImGui_ImplDX12_NewFrame();
-			//ImGui_ImplWin32_NewFrame();
-			//ImGui::NewFrame();
+			sprite->ImGuiDebug();
 
-			////色を変えるImGuiの処理
-			//ImGui::Begin("Setting");
-
-			//ImGui::Text("Camera Settings");
-
-			//// カメラの位置を制御
-			//ImGui::SliderFloat("Camera TranslateX", &cameraPosition.x, -3.0f, 3.0f);
-			//ImGui::SliderFloat("Camera TranslateY", &cameraPosition.y, -3.0f, 3.0f);
-			//ImGui::SliderFloat("Camera TranslateZ", &cameraPosition.z, -30.0f, 1.0f);
-
-			//// カメラの回転を制御
-			//ImGui::SliderFloat("Camera RotateX", &cameraRotation.x, -50.0f, 1.0f);
-			//ImGui::SliderFloat("Camera RotateY", &cameraRotation.y, -50.0f, 1.0f);
-			//ImGui::SliderFloat("Camera RotateZ", &cameraRotation.z, -50.0f, 1.0f);
-
-			//// カメラに反映
-			//camera->SetTranslate(cameraPosition);
-			//camera->SetRotate(cameraRotation);
-
-			//ImGui::Text("Model Transform");
-			//ImGui::SliderFloat("Model RotateX", &transform.rotate.x, -3.14159f, 3.14159f);
-			//ImGui::SliderFloat("Model RotateY", &transform.rotate.y, -3.14159f, 3.14159f);
-			//ImGui::SliderFloat("Model RotateZ", &transform.rotate.z, -3.14159f, 3.14159f);
-			//ImGui::SliderFloat("Model ScaleX", &transform.scale.x, 0.1f, 10.0f);
-			//ImGui::SliderFloat("Model ScaleY", &transform.scale.y, 0.1f, 10.0f);
-			//ImGui::SliderFloat("Model ScaleZ", &transform.scale.z, 0.1f, 10.0f);
-			//ImGui::SliderFloat("Model TranslateX", &transform.translate.x, -10.0f, 10.0f);
-			//ImGui::SliderFloat("Model TranslateY", &transform.translate.y, -10.0f, 10.0f);
-			//ImGui::SliderFloat("Model TranslateZ", &transform.translate.z, -10.0f, 10.0f);
-
-			//ImGui::Text("useMonsterBall");
-			//ImGui::Checkbox("useMonsterBall", &useMonsterBall);
-
-			//ImGui::Text("Lighting");
-			////ImGui::SliderInt("Light", &materialData->enableLighting, 0, 1);
-			////ImGui::SliderFloat3("LightDirector", &directionalLightData->direction.x, -1.0f, 1.0f);
-
-			//ImGui::Text("UVchecker");
-			//ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
-			//ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
-			//ImGui::SliderAngle("UVRotate", &uvTransformSprite.rotate.z);
-
-			///*Sprite::Transform transformSprite = sprite->GetTransform();
-			//ImGui::Text("Sprite Transfom");
-			//ImGui::SliderFloat("Sprite RotateX", &transformSprite.rotate.x, -3.14159f, 3.14159f);
-			//ImGui::SliderFloat("Sprite RotateY", &transformSprite.rotate.y, -3.14159f, 3.14159f);
-			//ImGui::SliderFloat("Sprite RotateZ", &transformSprite.rotate.z, -3.14159f, 3.14159f);
-			//ImGui::SliderFloat("Sprite ScaleX", &transformSprite.scale.x, 0.1f, 10.0f);
-			//ImGui::SliderFloat("Sprite ScaleY", &transformSprite.scale.y, 0.1f, 10.0f);
-			//ImGui::SliderFloat("Sprite ScaleZ", &transformSprite.scale.z, 0.1f, 10.0f);
-			//ImGui::SliderFloat("Sprite TranslateX", &transformSprite.translate.x, 0.1f, 1000.0f);
-			//ImGui::SliderFloat("Sprite TranslateY", &transformSprite.translate.y, 0.1f, 1000.0f);
-			//ImGui::SliderFloat("Sprite TranslateZ", &transformSprite.translate.z, 0.1f, 1000.0f);
-
-			//sprite->SetTransform(transformSprite);*/
-
-			//ImGui::End();
-			
 			 // ** ImGui処理終了 **
 			imguiManager->End();
 
@@ -357,9 +297,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			D3D12_VIEWPORT viewport = dxCommon->GetViewport();
 			D3D12_RECT scissorRect = dxCommon->GetRect();
-
-			// ** ImGui描画 **
-			imguiManager->Draw();
 
 			//Draw
 			dxCommon->PreDraw();
@@ -452,6 +389,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			sprite->Draw();  // textureSrvHandleGPU は必要に応じて設定
 			object3d->Draw(dxCommon.get());
 			anotherObject3d->Draw(dxCommon.get());
+
+			// ** ImGui描画 **
+			imguiManager->Draw();
 
 			dxCommon->PostDraw();
 
