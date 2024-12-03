@@ -89,7 +89,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	dxCommon = std::make_unique<DirectXCommon>();
 	dxCommon->Initialize(windowsAPI.get());
 	//XAudioのエンジンのインスタンスを生成
-	audio->LoadSound("fanfare", "resources/fanfare.wav");
+	audio->LoadSound("fanfare", "fanfare.wav");
 	// 音声の再生
 	audio->PlaySound("fanfare");
 
