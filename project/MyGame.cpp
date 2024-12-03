@@ -80,6 +80,25 @@ void MyGame::Initialize()
 
 void MyGame::Finalize()
 {
+	////*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+	////				解放
+	////*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+	// Object3dの解放
+	delete object3d;
+
+	// 3Dモデルマネージャーの終了
+	ModelManager::GetInstance()->Finalize();
+
+	// テクスチャマネージャーの終了
+	TextureManager::GetInstance()->Finalize();
+
+	// 終了処理
+	audio->Finalize();
+
+	// 終了処理
+	imguiManager->Finalize();
+	windowsAPI->Finalize();
 }
 
 void MyGame::Update()
@@ -103,8 +122,8 @@ void MyGame::Update()
 	////ImGuiの内部コマンドを生成する
 	//ImGui::Render();
 
-	D3D12_VIEWPORT viewport = dxCommon->GetViewport();
-	D3D12_RECT scissorRect = dxCommon->GetRect();
+	viewport = dxCommon->GetViewport();
+	scissorRect = dxCommon->GetRect();
 
 	//Draw
 	dxCommon->PreDraw();
@@ -153,4 +172,21 @@ void MyGame::Update()
 
 void MyGame::Draw()
 {
+	//描画
+	dxCommon->GetCommandList()->RSSetViewports(1, &viewport);
+	dxCommon->GetCommandList()->RSSetScissorRects(1, &scissorRect);
+
+	camera->Update();
+	sprite->Update();
+	object3d->Update();
+	anotherObject3d->Update();
+
+	sprite->Draw();  // textureSrvHandleGPU は必要に応じて設定
+	object3d->Draw(dxCommon.get());
+	anotherObject3d->Draw(dxCommon.get());
+
+	// ** ImGui描画 **
+	imguiManager->Draw();
+
+	dxCommon->PostDraw();
 }

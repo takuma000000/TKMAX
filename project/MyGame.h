@@ -59,6 +59,9 @@ private://メンバ変数
 	//AnotherObject3d ( もう一つのObject3d )
 	Object3d* anotherObject3d = new Object3d();
 
+	D3D12_VIEWPORT viewport;
+	D3D12_RECT scissorRect;
+
 private:
 	//フラグ
 	bool endRequest_ = false; // 終了フラグ
