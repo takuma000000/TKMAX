@@ -16,6 +16,7 @@
     <ProjectGuid>{a602c058-3e09-4caa-b1fd-ebc11a6614ef}</ProjectGuid>
     <RootNamespace>CG20001DirectX</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>GE_DirectX</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -124,6 +125,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="externals\imgui\imgui_widgets.cpp" />
     <ClCompile Include="engine\io\Input.cpp" />
     <ClCompile Include="engine\func\common\Logger.cpp" />
+    <ClCompile Include="Framework.cpp" />
     <ClCompile Include="ImGuiManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="engine\3d\Model.cpp" />
@@ -168,6 +170,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\2d\TextureManager.h" />
     <ClInclude Include="engine\func\math\Vector3.h" />
     <ClInclude Include="engine\base\WindowsAPI.h" />
+    <ClInclude Include="Framework.h" />
     <ClInclude Include="ImGuiManager.h" />
     <ClInclude Include="MyGame.h" />
     <ClInclude Include="SrvManager.h" />
