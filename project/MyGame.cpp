@@ -8,25 +8,17 @@ void MyGame::Initialize()
 {
 	//基盤システムの初期化*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
-	//ポインタ...WindowsAPI
-	std::unique_ptr<WindowsAPI> windowsAPI = nullptr;
 	//WindowsAPIの初期化
 	windowsAPI = std::make_unique<WindowsAPI>();
 	windowsAPI->Initialize();
 
-	//Audio
-	std::unique_ptr<AudioManager> audio = nullptr;
 	audio = std::make_unique<AudioManager>();
 	audio->Initialize();
 
-	//ポインタ...Input
-	std::unique_ptr<Input> input = nullptr;
 	//入力の初期化
 	input = std::make_unique<Input>();
 	input->Initialize(windowsAPI.get());
 
-	//ポインタ...DirectXCommon
-	std::unique_ptr<DirectXCommon> dxCommon = nullptr;
 	//DirectXの初期化
 	dxCommon = std::make_unique<DirectXCommon>();
 	dxCommon->Initialize(windowsAPI.get());
@@ -35,8 +27,6 @@ void MyGame::Initialize()
 	// 音声の再生
 	audio->PlaySound("fanfare");
 
-	//ポインタ...srvManager
-	std::unique_ptr<SrvManager> srvManager = nullptr;
 	srvManager = std::make_unique<SrvManager>();
 	srvManager->Initialize(dxCommon.get());
 
@@ -46,19 +36,13 @@ void MyGame::Initialize()
 	TextureManager::GetInstance()->LoadTexture("./resources/uvChecker.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/pokemon.png");
 
-	//ポインタ...SpriteCommon
-	std::unique_ptr<SpriteCommon> spriteCommon = nullptr;
 	//スプライト共通部の初期化
 	spriteCommon = std::make_unique<SpriteCommon>();
 	spriteCommon->Initialize(dxCommon.get());
 
-	//ポインタ...Sprite
-	std::unique_ptr<Sprite> sprite = nullptr;
 	sprite = std::make_unique<Sprite>();
 	sprite->Initialize(spriteCommon.get(), dxCommon.get(), "./resources/uvChecker.png");
 
-	//ポインタ...Object3dCommon
-	std::unique_ptr<Object3dCommon> object3dCommon = nullptr;
 	//Object3d共通部の初期化
 	object3dCommon = std::make_unique<Object3dCommon>();
 	object3dCommon->Initialize(dxCommon.get());
@@ -69,20 +53,14 @@ void MyGame::Initialize()
 
 	///--------------------------------------------
 
-	//Object3dの初期化
-	Object3d* object3d = new Object3d();
 	object3d->Initialize(object3dCommon.get(), dxCommon.get());
 	object3d->SetModel("axis.obj");
 
-	//AnotherObject3d ( もう一つのObject3d )
-	Object3d* anotherObject3d = new Object3d();
 	anotherObject3d->Initialize(object3dCommon.get(), dxCommon.get());
 	anotherObject3d->SetModel("plane.obj");
 
 	//---------------------------------------------
 
-	//ポインタ...Camera
-	std::unique_ptr<Camera> camera = nullptr;
 	//Object3d共通部の初期化
 	camera = std::make_unique<Camera>();
 	camera->SetRotate({ 0.0f,0.0f,0.0f });
@@ -94,8 +72,6 @@ void MyGame::Initialize()
 	Vector3 cameraPosition = camera->GetTranslate();
 	Vector3 cameraRotation = camera->GetRotate();
 
-	//ポインタ...ImGuiManager
-	std::unique_ptr<ImGuiManager>  imguiManager = nullptr;
 	imguiManager = std::make_unique<ImGuiManager>();
 	imguiManager->Initialize(windowsAPI.get(), dxCommon.get());
 
@@ -108,6 +84,71 @@ void MyGame::Finalize()
 
 void MyGame::Update()
 {
+
+	if (windowsAPI->ProcessMessage()) {
+		endRequest_ = true;
+	}
+
+	// ** ImGui処理開始 **
+	imguiManager->Begin();
+
+	sprite->ImGuiDebug();
+
+	// ** ImGui処理終了 **
+	imguiManager->End();
+
+	////開発用UIの処理。実際に開発用のUIを出す場合はここをゲーム固有の処理に置き換える
+	////ImGui::ShowDemoWindow();
+
+	////ImGuiの内部コマンドを生成する
+	//ImGui::Render();
+
+	D3D12_VIEWPORT viewport = dxCommon->GetViewport();
+	D3D12_RECT scissorRect = dxCommon->GetRect();
+
+	//Draw
+	dxCommon->PreDraw();
+	spriteCommon->DrawSetCommon();
+	object3dCommon->DrawSetCommon();
+	srvManager->PreDraw();
+
+
+	//object3d*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+	//translate
+	Vector3 translate = object3d->GetTranslate();
+	translate = { 3.0f,-4.0f,0.0f };
+	object3d->SetTranslate(translate);
+	//rotate
+	Vector3 rotate = object3d->GetRotate();
+	rotate += { 0.0f, 0.0f, 0.1f };
+	object3d->SetRotate(rotate);
+	//scale
+	Vector3 scale = object3d->GetScale();
+	scale = { 1.0f, 1.0f, 1.0f };
+	object3d->SetScale(scale);
+
+	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+
+	//anotherObject3d-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	//translate
+	Vector3 anotherTranslate = anotherObject3d->GetTranslate();
+	anotherTranslate = { 3.0f,4.0f,0.0f };
+	anotherObject3d->SetTranslate(anotherTranslate);
+	//ratate
+	Vector3 anotherRotate = anotherObject3d->GetRotate();
+	anotherRotate += { 0.1f, 0.0f, 0.0f };
+	anotherObject3d->SetRotate(anotherRotate);
+	//scale
+	Vector3 anotherScale = anotherObject3d->GetScale();
+	anotherScale = { 1.0f, 1.0f, 1.0f };
+	anotherObject3d->SetScale(anotherScale);
+
+	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+
+	//---------------------------------------------------------
 }
 
 void MyGame::Draw()
