@@ -1,4 +1,5 @@
 #pragma once
+#include "Framework.h"
 
 // GE3クラス化(MyClass)
 #include "WindowsAPI.h"
@@ -18,19 +19,17 @@
 #include "AudioManager.h"
 
 
-class MyGame
+class MyGame : public Framework
 {
 public://メンバ関数
 	//初期化
-	void Initialize();
+	void Initialize() override;
 	//終了
-	void Finalize();
+	void Finalize() override;
 	//毎フレーム更新
-	void Update();
+	void Update() override;
 	//描画
-	void Draw();
-
-	bool IsEndRequest() const { return endRequest_; } // 終了リクエスト確認
+	void Draw() override;
 
 private://メンバ変数
 	//ポインタ...WindowsAPI
