@@ -13,6 +13,7 @@ using namespace Logger;
 
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
+#pragma comment(lib, "dxcompiler.lib")
 
 using namespace Microsoft::WRL;
 

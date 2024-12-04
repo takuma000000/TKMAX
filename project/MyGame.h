@@ -2,9 +2,7 @@
 #include "Framework.h"
 
 // GE3クラス化(MyClass)
-#include "WindowsAPI.h"
 #include "Input.h"
-#include "DirectXCommon.h"
 #include "SpriteCommon.h"
 #include "engine/2d/Sprite.h"
 #include "TextureManager.h"
@@ -14,7 +12,6 @@
 #include "ModelCommon.h"
 #include "ModelManager.h"
 #include "Camera.h"
-#include "SrvManager.h"
 #include "ImGuiManager.h"
 #include "AudioManager.h"
 
@@ -32,16 +29,11 @@ public://メンバ関数
 	void Draw() override;
 
 private://メンバ変数
-	//ポインタ...WindowsAPI
-	std::unique_ptr<WindowsAPI> windowsAPI = nullptr;
+
 	//Audio
 	std::unique_ptr<AudioManager> audio = nullptr;
 	//ポインタ...Input
 	std::unique_ptr<Input> input = nullptr;
-	//ポインタ...DirectXCommon
-	std::unique_ptr<DirectXCommon> dxCommon = nullptr;
-	//ポインタ...srvManager
-	std::unique_ptr<SrvManager> srvManager = nullptr;
 	//ポインタ...SpriteCommon
 	std::unique_ptr<SpriteCommon> spriteCommon = nullptr;
 	//ポインタ...Sprite
