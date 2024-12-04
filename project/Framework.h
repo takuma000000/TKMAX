@@ -1,4 +1,11 @@
 #pragma once
+#include <memory>
+
+//前方宣言
+class WindowsAPI;
+class DirectXCommon;
+class SrvManager;
+
 class Framework
 {
 public:
@@ -18,7 +25,17 @@ public:
 	//実行
 	void Run();
 
+	// 初期化した共通機能を派生クラスで使えるようにするためのアクセサ
+	WindowsAPI* GetWindowsAPI() const { return windowsAPI.get(); }
+	DirectXCommon* GetDirectXCommon() const { return dxCommon.get(); }
+	SrvManager* GetSrvManager() const { return srvManager.get(); }
+
 protected:
 	bool endRequest_ = false;    // 終了フラグ
+
+	// 汎用メンバ変数
+	std::unique_ptr<WindowsAPI> windowsAPI;
+	std::unique_ptr<DirectXCommon> dxCommon;
+	std::unique_ptr<SrvManager> srvManager;
 };
 

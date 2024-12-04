@@ -6,6 +6,10 @@
 
 void MyGame::Initialize()
 {
+
+	//基底クラスの初期化処理
+	Framework::Initialize();
+
 	//基盤システムの初期化*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
 	//WindowsAPIの初期化
@@ -99,10 +103,16 @@ void MyGame::Finalize()
 	// 終了処理
 	imguiManager->Finalize();
 	windowsAPI->Finalize();
+
+	//基底クラスの終了処理
+	Framework::Finalize();
 }
 
 void MyGame::Update()
 {
+
+	//基底クラスの更新処理
+	Framework::Update();
 
 	if (windowsAPI->ProcessMessage()) {
 		endRequest_ = true;

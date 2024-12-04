@@ -4,9 +4,9 @@
 #include <wrl.h>
 #include <array>
 #include <dxcapi.h>
-#include <d3d12.h>
 #include <string>
 #include <chrono>
+#include <dxcapi.h>
 #include "WindowsAPI.h"
 #include "SrvManager.h"
 #include "externals/DirectXTex/DirectXTex.h"//DirectX
