@@ -1,4 +1,5 @@
 #include "MyMath.h"
+#include "algorithm"
 
 // π
 float MyMath::GetPI() { return (float)M_PI; }
@@ -492,3 +493,131 @@ Matrix4x4  MyMath::MakePerspectiveFovMatrix(float fovY, float aspectRatio, float
 
 	return result;
 }
+
+Matrix4x4 MyMath::DirectionToDirection(const Vector3& from, const Vector3& to)
+{
+	Vector3 fromNormalized = Normalize(from);
+	Vector3 toNormalized = Normalize(to);
+
+	// ベクトル間の軸を計算
+	Vector3 axis = Cross(fromNormalized, toNormalized);
+	float axisLength = Length(axis);
+
+	// 方向が逆の場合
+	if (axisLength == 0.0f) {
+		if (Dot(fromNormalized, toNormalized) < 0.0f) {
+			// 180度回転の場合、適当な垂直軸を選ぶ
+			axis = Normalize(Perpendicular(fromNormalized));
+		} else {
+			// 同じ方向の場合、単位行列を返す
+			return MakeIdentity4x4();
+		}
+	}
+
+	axis = Normalize(axis);
+
+	// ベクトル間の角度を計算
+	float angle = acosf(std::clamp(Dot(fromNormalized, toNormalized), -1.0f, 1.0f));
+
+	// 回転行列を生成
+	return MakeRotateAxisAngle(axis, angle);
+}
+
+
+Matrix4x4 MyMath::MakeRotationMatrix(const Vector3& axis, float angle)
+{
+	Matrix4x4 rotationMatrix;
+
+	// 回転軸を正規化
+	Vector3 normalizedAxis = Normalize(axis);
+	float x = normalizedAxis.x;
+	float y = normalizedAxis.y;
+	float z = normalizedAxis.z;
+
+	// 三角関数
+	float cosAngle = cosf(angle);
+	float sinAngle = sinf(angle);
+	float oneMinusCos = 1.0f - cosAngle;
+
+	// 回転行列の各成分を計算 (ロドリゲスの回転公式)
+	rotationMatrix.m[0][0] = cosAngle + x * x * oneMinusCos;
+	rotationMatrix.m[0][1] = x * y * oneMinusCos - z * sinAngle;
+	rotationMatrix.m[0][2] = x * z * oneMinusCos + y * sinAngle;
+	rotationMatrix.m[0][3] = 0.0f;
+
+	rotationMatrix.m[1][0] = y * x * oneMinusCos + z * sinAngle;
+	rotationMatrix.m[1][1] = cosAngle + y * y * oneMinusCos;
+	rotationMatrix.m[1][2] = y * z * oneMinusCos - x * sinAngle;
+	rotationMatrix.m[1][3] = 0.0f;
+
+	rotationMatrix.m[2][0] = z * x * oneMinusCos - y * sinAngle;
+	rotationMatrix.m[2][1] = z * y * oneMinusCos + x * sinAngle;
+	rotationMatrix.m[2][2] = cosAngle + z * z * oneMinusCos;
+	rotationMatrix.m[2][3] = 0.0f;
+
+	rotationMatrix.m[3][0] = 0.0f;
+	rotationMatrix.m[3][1] = 0.0f;
+	rotationMatrix.m[3][2] = 0.0f;
+	rotationMatrix.m[3][3] = 1.0f;
+
+	return rotationMatrix;
+}
+
+Vector3 MyMath::Cross(const Vector3& v1, const Vector3& v2)
+{
+	return Vector3(
+		v1.y * v2.z - v1.z * v2.y, // x成分
+		v1.z * v2.x - v1.x * v2.z, // y成分
+		v1.x * v2.y - v1.y * v2.x  // z成分
+	);
+}
+
+float MyMath::Dot(const Vector3& v1, const Vector3& v2)
+{
+	return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+}
+
+Vector3 MyMath::Perpendicular(const Vector3& v)
+{
+	// 垂直なベクトルを生成するための基準ベクトル
+	Vector3 reference = (std::fabs(v.x) > std::fabs(v.z)) ? Vector3(0, 0, 1) : Vector3(1, 0, 0);
+
+	// 外積を計算して垂直なベクトルを取得
+	return Cross(v, reference);
+}
+
+Matrix4x4 MyMath::MakeRotateAxisAngle(const Vector3& axis, float angle)
+{
+	// 必要な値を事前計算
+	float cosTheta = cos(angle);
+	float sinTheta = sin(angle);
+	float oneMinusCos = 1.0f - cosTheta;
+
+	// 回転行列の各要素を計算
+	Matrix4x4 rotationMatrix = {};
+
+	rotationMatrix.m[0][0] = cosTheta + axis.x * axis.x * oneMinusCos;
+	rotationMatrix.m[0][1] = axis.y * axis.x * oneMinusCos + axis.z * sinTheta;
+	rotationMatrix.m[0][2] = axis.z * axis.x * oneMinusCos - axis.y * sinTheta;
+	rotationMatrix.m[0][3] = 0.0f;
+
+	rotationMatrix.m[1][0] = axis.x * axis.y * oneMinusCos - axis.z * sinTheta;
+	rotationMatrix.m[1][1] = cosTheta + axis.y * axis.y * oneMinusCos;
+	rotationMatrix.m[1][2] = axis.z * axis.y * oneMinusCos + axis.x * sinTheta;
+	rotationMatrix.m[1][3] = 0.0f;
+
+	rotationMatrix.m[2][0] = axis.x * axis.z * oneMinusCos + axis.y * sinTheta;
+	rotationMatrix.m[2][1] = axis.y * axis.z * oneMinusCos - axis.x * sinTheta;
+	rotationMatrix.m[2][2] = cosTheta + axis.z * axis.z * oneMinusCos;
+	rotationMatrix.m[2][3] = 0.0f;
+
+	rotationMatrix.m[3][0] = 0.0f;
+	rotationMatrix.m[3][1] = 0.0f;
+	rotationMatrix.m[3][2] = 0.0f;
+	rotationMatrix.m[3][3] = 1.0f;
+
+
+	return rotationMatrix;
+}
+
+

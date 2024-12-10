@@ -49,4 +49,9 @@ struct Vector3 final {
 		this->z += other.z;
 		return *this; // 自分自身を返す
 	}
+
+	// 単項マイナス演算子
+	Vector3 operator-() const {
+		return Vector3(-x, -y, -z);
+	}
 };

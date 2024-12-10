@@ -86,4 +86,17 @@ public:
 	static Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip);
 
 	static Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip);
+
+	static Matrix4x4 DirectionToDirection(const Vector3& from, const Vector3& to);
+
+	static Matrix4x4 MakeRotationMatrix(const Vector3& axis, float angle);
+
+	static Vector3 Cross(const Vector3& v1, const Vector3& v);
+
+	static float Dot(const Vector3& v1, const Vector3& v2);
+
+	static Vector3 Perpendicular(const Vector3& axis);
+
+	//任意軸回転行列
+	static Matrix4x4 MakeRotateAxisAngle(const Vector3& axis, float angle);
 };
