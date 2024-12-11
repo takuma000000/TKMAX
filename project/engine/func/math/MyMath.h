@@ -1,6 +1,7 @@
 #pragma once
 #include "Matrix4x4.h"
 #include "Vector3.h"
+#include "Quaternion.h"
 #include <cassert>
 #define _USE_MATH_DEFINES
 #include <cmath>
@@ -99,4 +100,22 @@ public:
 
 	//任意軸回転行列
 	static Matrix4x4 MakeRotateAxisAngle(const Vector3& axis, float angle);
+
+	///----------Quaternion-----------
+
+	//Quaternion積
+	static Quaternion Multiply(const Quaternion& lhs, const Quaternion& rhs);
+	//単位Quaternionを返す
+	static Quaternion IdentityQuaternion();
+	//共役Quaternionを返す
+	static Quaternion Conjugate(const Quaternion& quaternion);
+	//Quaternionのnormを返す
+	static float Norm(const Quaternion& quaternion);
+	//正規化したQuaternionを返す
+	static Quaternion Normalize(const Quaternion& quaternion);
+	//逆Quaternionを返す
+	static Quaternion Invers(const Quaternion& quaternion);
+
+
+	///-------------------------------
 };

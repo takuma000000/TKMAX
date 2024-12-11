@@ -620,4 +620,102 @@ Matrix4x4 MyMath::MakeRotateAxisAngle(const Vector3& axis, float angle)
 	return rotationMatrix;
 }
 
+Quaternion MyMath::Multiply(const Quaternion& lhs, const Quaternion& rhs)
+{
+	Quaternion result;
+
+	// 四元数の掛け算の公式
+	result.w = lhs.w * rhs.w - lhs.x * rhs.x - lhs.y * rhs.y - lhs.z * rhs.z;
+	result.x = lhs.w * rhs.x + lhs.x * rhs.w + lhs.y * rhs.z - lhs.z * rhs.y;
+	result.y = lhs.w * rhs.y - lhs.x * rhs.z + lhs.y * rhs.w + lhs.z * rhs.x;
+	result.z = lhs.w * rhs.z + lhs.x * rhs.y - lhs.y * rhs.x + lhs.z * rhs.w;
+
+	return result;
+}
+
+Quaternion MyMath::IdentityQuaternion()
+{
+	Quaternion identity;
+
+	// 単位四元数の定義
+	identity.w = 1.0f;
+	identity.x = 0.0f;
+	identity.y = 0.0f;
+	identity.z = 0.0f;
+
+	return identity;
+}
+Quaternion MyMath::Conjugate(const Quaternion& quaternion)
+{
+	Quaternion conjugate;
+
+	// 四元数の共役の計算
+	conjugate.w = quaternion.w;
+	conjugate.x = -quaternion.x;
+	conjugate.y = -quaternion.y;
+	conjugate.z = -quaternion.z;
+
+	return conjugate;
+}
+
+float MyMath::Norm(const Quaternion& quaternion)
+{
+	// 四元数のノルムの計算
+	return std::sqrt(
+		quaternion.w * quaternion.w +
+		quaternion.x * quaternion.x +
+		quaternion.y * quaternion.y +
+		quaternion.z * quaternion.z
+	);
+}
+
+Quaternion MyMath::Normalize(const Quaternion& quaternion)
+{
+	Quaternion normalized;
+
+	// ノルムを計算
+	float norm = MyMath::Norm(quaternion);
+
+	// ノルムがゼロでない場合に正規化
+	if (norm > 0.0f)
+	{
+		normalized.w = quaternion.w / norm;
+		normalized.x = quaternion.x / norm;
+		normalized.y = quaternion.y / norm;
+		normalized.z = quaternion.z / norm;
+	} else
+	{
+		// ノルムがゼロの場合は単位四元数を返す
+		normalized = MyMath::IdentityQuaternion();
+	}
+
+	return normalized;
+}
+
+Quaternion MyMath::Invers(const Quaternion& quaternion)
+{
+	Quaternion inverse;
+
+	// 四元数のノルムの二乗を計算
+	float normSquared = quaternion.w * quaternion.w +
+		quaternion.x * quaternion.x +
+		quaternion.y * quaternion.y +
+		quaternion.z * quaternion.z;
+
+	// ノルムがゼロでない場合に逆数を計算
+	if (normSquared > 0.0f)
+	{
+		Quaternion conjugate = MyMath::Conjugate(quaternion);
+		inverse.w = conjugate.w / normSquared;
+		inverse.x = conjugate.x / normSquared;
+		inverse.y = conjugate.y / normSquared;
+		inverse.z = conjugate.z / normSquared;
+	} else
+	{
+		// ノルムがゼロの場合は単位四元数を返す
+		inverse = MyMath::IdentityQuaternion();
+	}
+
+	return inverse;
+}
 

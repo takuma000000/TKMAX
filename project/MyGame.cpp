@@ -169,35 +169,32 @@ void MyGame::Update()
 
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
-	Vector3 from0 = MyMath::Normalize(Vector3{ 1.0f,0.7f,0.5f });
-	Vector3 to0 = from0 * -1.0f;
-	Vector3 from1 = MyMath::Normalize(Vector3{ -0.6f,0.9f,0.2f });
-	Vector3 to1 = MyMath::Normalize(Vector3{ 0.4f,0.7f,-0.5f });
-	Matrix4x4 rotateMatrix0 = MyMath::DirectionToDirection(MyMath::Normalize(Vector3{ 1.0f,0.0f,0.0f }), MyMath::Normalize(Vector3{ -1.0f,0.0f,0.0f }));
-	Matrix4x4 rotateMatrix1 = MyMath::DirectionToDirection(from0, to0);
-	Matrix4x4 rotateMatrix2 = MyMath::DirectionToDirection(from1, to1);
+	Quaternion q1 = { 2.0f,3.0f,4.0f,1.0f };
+	Quaternion q2 = { 1.0f,3.0f,5.0f,2.0f };
+	Quaternion identity = MyMath::IdentityQuaternion();
+	Quaternion conj = MyMath::Conjugate(q1);
+	Quaternion inv = MyMath::Invers(q1);
+	Quaternion normal = MyMath::Normalize(q1);
+	Quaternion mul1 = MyMath::Multiply(q1, q2);
+	Quaternion mul2 = MyMath::Multiply(q2, q1);
+	float norm = MyMath::Norm(q1);
+
 
 	imguiManager->Begin();
 
-	// ImGuiウィンドウで行列を表示
-	if (ImGui::Begin("Matrix Display")) {
-		// rotateMatrix0の表示（転置）
-		ImGui::Text("rotateMatrix0 (transposed):");
-		for (int y = 0; y < 4; ++y) {
-			ImGui::Text("%f %f %f %f", rotateMatrix0.m[0][y], rotateMatrix0.m[1][y], rotateMatrix0.m[2][y], rotateMatrix0.m[3][y]);
-		}
+	if (ImGui::Begin("Quaternion Results")) {
+		// q1とq2の表示
+		ImGui::Text("q1: (%.2f, %.2f, %.2f, %.2f)", q1.x, q1.y, q1.z, q1.w);
+		ImGui::Text("q2: (%.2f, %.2f, %.2f, %.2f)", q2.x, q2.y, q2.z, q2.w);
 
-		// rotateMatrix1の表示（転置）
-		ImGui::Text("rotateMatrix1 (transposed):");
-		for (int y = 0; y < 4; ++y) {
-			ImGui::Text("%f %f %f %f", rotateMatrix1.m[0][y], rotateMatrix1.m[1][y], rotateMatrix1.m[2][y], rotateMatrix1.m[3][y]);
-		}
-
-		// rotateMatrix2の表示（転置）
-		ImGui::Text("rotateMatrix2 (transposed):");
-		for (int y = 0; y < 4; ++y) {
-			ImGui::Text("%f %f %f %f", rotateMatrix2.m[0][y], rotateMatrix2.m[1][y], rotateMatrix2.m[2][y], rotateMatrix2.m[3][y]);
-		}
+		// 各計算結果の表示
+		ImGui::Text("Identity: (%.2f, %.2f, %.2f, %.2f)", identity.x, identity.y, identity.z, identity.w);
+		ImGui::Text("Conjugate: (%.2f, %.2f, %.2f, %.2f)", conj.x, conj.y, conj.z, conj.w);
+		ImGui::Text("Inverse: (%.2f, %.2f, %.2f, %.2f)", inv.x, inv.y, inv.z, inv.w);
+		ImGui::Text("Normalize: (%.2f, %.2f, %.2f, %.2f)", normal.x, normal.y, normal.z, normal.w);
+		ImGui::Text("Multiply (q1 * q2): (%.2f, %.2f, %.2f, %.2f)", mul1.x, mul1.y, mul1.z, mul1.w);
+		ImGui::Text("Multiply (q2 * q1): (%.2f, %.2f, %.2f, %.2f)", mul2.x, mul2.y, mul2.z, mul2.w);
+		ImGui::Text("Norm of q1: %.2f", norm);
 
 		ImGui::End();
 	}
