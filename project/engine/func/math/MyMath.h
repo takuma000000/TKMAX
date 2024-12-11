@@ -116,6 +116,12 @@ public:
 	//逆Quaternionを返す
 	static Quaternion Invers(const Quaternion& quaternion);
 
+	//任意回転軸を表すQuaternionの作成
+	static Quaternion MakeRotateAxisAngleQuaternion(const Vector3& axis, float angle);
+	//ベクトルをQuaternionで回転させた結果のベクトルを求める
+	static Vector3 RotateVector(const Vector3& vector, const Quaternion& quaternion);
+	//Quaternionから回転行列を求める
+	static Matrix4x4 MakeRotateMatrix(const Quaternion& quaternion);
 
 	///-------------------------------
 };

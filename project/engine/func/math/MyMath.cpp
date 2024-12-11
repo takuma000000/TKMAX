@@ -267,7 +267,7 @@ Vector3 MyMath::Transform(const Vector3& vector, const Matrix4x4& matrix) {
 		1.0f * matrix.m[3][2];
 	float w = vector.x * matrix.m[0][3] + vector.y * matrix.m[1][3] + vector.z * matrix.m[2][3] +
 		1.0f * matrix.m[3][3];
-	/*assert(w != 0.0f);*/
+	assert(w != 0.0f);
 	result.x /= w;
 	result.y /= w;
 	result.z /= w;
@@ -717,5 +717,91 @@ Quaternion MyMath::Invers(const Quaternion& quaternion)
 	}
 
 	return inverse;
+}
+
+Quaternion MyMath::MakeRotateAxisAngleQuaternion(const Vector3& axis, float angle)
+{
+	// 軸ベクトルを正規化する
+	Vector3 normalizedAxis = Normalize(axis);
+
+	// 角度をラジアンから半分にする
+	float halfAngle = angle * 0.5f;
+
+	// サインとコサインを計算
+	float sinHalfAngle = sin(halfAngle);
+	float cosHalfAngle = cos(halfAngle);
+
+	// クォータニオンを生成
+	Quaternion quaternion;
+	quaternion.x = normalizedAxis.x * sinHalfAngle;
+	quaternion.y = normalizedAxis.y * sinHalfAngle;
+	quaternion.z = normalizedAxis.z * sinHalfAngle;
+	quaternion.w = cosHalfAngle;
+
+	return quaternion;
+}
+
+Vector3 MyMath::RotateVector(const Vector3& vector, const Quaternion& quaternion)
+{
+	// クォータニオンを正規化（回転用クォータニオンは単位クォータニオンであるべき）
+	Quaternion normalizedQuaternion = Normalize(quaternion);
+
+	// ベクトルをクォータニオン形式に変換（w = 0）
+	Quaternion vectorQuat;
+	vectorQuat.x = vector.x;
+	vectorQuat.y = vector.y;
+	vectorQuat.z = vector.z;
+	vectorQuat.w = 0.0f;
+
+	// クォータニオンの逆を計算
+	Quaternion inverseQuat = Conjugate(normalizedQuaternion);
+
+	// v' = q * v * q^-1 を計算
+	Quaternion rotatedQuat = Multiply(Multiply(normalizedQuaternion, vectorQuat), inverseQuat);
+
+	// 回転後のベクトルを抽出
+	Vector3 rotatedVector;
+	rotatedVector.x = rotatedQuat.x;
+	rotatedVector.y = rotatedQuat.y;
+	rotatedVector.z = rotatedQuat.z;
+
+	return rotatedVector;
+}
+
+Matrix4x4 MyMath::MakeRotateMatrix(const Quaternion& quaternion)
+{
+	// クォータニオンを正規化
+	Quaternion normalizedQuaternion = Normalize(quaternion);
+
+	// クォータニオンの成分
+	float x = normalizedQuaternion.x;
+	float y = normalizedQuaternion.y;
+	float z = normalizedQuaternion.z;
+	float w = normalizedQuaternion.w;
+
+	// 回転行列を作成
+	Matrix4x4 rotateMatrix;
+
+	rotateMatrix.m[0][0] = 1.0f - 2.0f * (y * y + z * z);
+	rotateMatrix.m[0][1] = 2.0f * (x * y - z * w);
+	rotateMatrix.m[0][2] = 2.0f * (x * z + y * w);
+	rotateMatrix.m[0][3] = 0.0f;
+
+	rotateMatrix.m[1][0] = 2.0f * (x * y + z * w);
+	rotateMatrix.m[1][1] = 1.0f - 2.0f * (x * x + z * z);
+	rotateMatrix.m[1][2] = 2.0f * (y * z - x * w);
+	rotateMatrix.m[1][3] = 0.0f;
+
+	rotateMatrix.m[2][0] = 2.0f * (x * z - y * w);
+	rotateMatrix.m[2][1] = 2.0f * (y * z + x * w);
+	rotateMatrix.m[2][2] = 1.0f - 2.0f * (x * x + y * y);
+	rotateMatrix.m[2][3] = 0.0f;
+
+	rotateMatrix.m[3][0] = 0.0f;
+	rotateMatrix.m[3][1] = 0.0f;
+	rotateMatrix.m[3][2] = 0.0f;
+	rotateMatrix.m[3][3] = 1.0f;
+
+	return rotateMatrix;
 }
 
