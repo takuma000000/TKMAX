@@ -27,9 +27,9 @@ void MyGame::Initialize()
 	dxCommon = std::make_unique<DirectXCommon>();
 	dxCommon->Initialize(windowsAPI.get());
 	//XAudioのエンジンのインスタンスを生成
-	audio->LoadSound("fanfare", "fanfare.wav");
+	//audio->LoadSound("fanfare", "fanfare.wav");
 	// 音声の再生
-	audio->PlaySound("fanfare");
+	//audio->PlaySound("fanfare");
 
 	srvManager = std::make_unique<SrvManager>();
 	srvManager->Initialize(dxCommon.get());
@@ -57,11 +57,11 @@ void MyGame::Initialize()
 
 	///--------------------------------------------
 
-	object3d->Initialize(object3dCommon.get(), dxCommon.get());
+	/*object3d->Initialize(object3dCommon.get(), dxCommon.get());
 	object3d->SetModel("axis.obj");
 
 	anotherObject3d->Initialize(object3dCommon.get(), dxCommon.get());
-	anotherObject3d->SetModel("plane.obj");
+	anotherObject3d->SetModel("plane.obj");*/
 
 	//---------------------------------------------
 
@@ -121,60 +121,18 @@ void MyGame::Update()
 	// ** ImGui処理開始 **
 	imguiManager->Begin();
 
-	sprite->ImGuiDebug();
+	//sprite->ImGuiDebug();
 
 	// ** ImGui処理終了 **
 	imguiManager->End();
 
-	////開発用UIの処理。実際に開発用のUIを出す場合はここをゲーム固有の処理に置き換える
-	////ImGui::ShowDemoWindow();
-
-	////ImGuiの内部コマンドを生成する
-	//ImGui::Render();
+	camera->Update();
+	//sprite->Update();
+	//object3d->Update();
+	//anotherObject3d->Update();
 
 	viewport = dxCommon->GetViewport();
 	scissorRect = dxCommon->GetRect();
-
-	//Draw
-	dxCommon->PreDraw();
-	spriteCommon->DrawSetCommon();
-	object3dCommon->DrawSetCommon();
-	srvManager->PreDraw();
-
-
-	//object3d*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-
-	//translate
-	Vector3 translate = object3d->GetTranslate();
-	translate = { 3.0f,-4.0f,0.0f };
-	object3d->SetTranslate(translate);
-	//rotate
-	Vector3 rotate = object3d->GetRotate();
-	rotate += { 0.0f, 0.0f, 0.1f };
-	object3d->SetRotate(rotate);
-	//scale
-	Vector3 scale = object3d->GetScale();
-	scale = { 1.0f, 1.0f, 1.0f };
-	object3d->SetScale(scale);
-
-	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-
-
-	//anotherObject3d-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-	//translate
-	Vector3 anotherTranslate = anotherObject3d->GetTranslate();
-	anotherTranslate = { 3.0f,4.0f,0.0f };
-	anotherObject3d->SetTranslate(anotherTranslate);
-	//ratate
-	Vector3 anotherRotate = anotherObject3d->GetRotate();
-	anotherRotate += { 0.1f, 0.0f, 0.0f };
-	anotherObject3d->SetRotate(anotherRotate);
-	//scale
-	Vector3 anotherScale = anotherObject3d->GetScale();
-	anotherScale = { 1.0f, 1.0f, 1.0f };
-	anotherObject3d->SetScale(anotherScale);
-
-	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
 
 	//---------------------------------------------------------
@@ -182,18 +140,21 @@ void MyGame::Update()
 
 void MyGame::Draw()
 {
+
+	//Draw
+	dxCommon->PreDraw();
+	srvManager->PreDraw();
+
+	spriteCommon->DrawSetCommon();
+	object3dCommon->DrawSetCommon();
+
 	//描画
 	dxCommon->GetCommandList()->RSSetViewports(1, &viewport);
 	dxCommon->GetCommandList()->RSSetScissorRects(1, &scissorRect);
 
-	camera->Update();
-	sprite->Update();
-	object3d->Update();
-	anotherObject3d->Update();
-
-	sprite->Draw();  // textureSrvHandleGPU は必要に応じて設定
-	object3d->Draw(dxCommon.get());
-	anotherObject3d->Draw(dxCommon.get());
+	//sprite->Draw();  // textureSrvHandleGPU は必要に応じて設定
+	//object3d->Draw(dxCommon.get());
+	//anotherObject3d->Draw(dxCommon.get());
 
 	// ** ImGui描画 **
 	imguiManager->Draw();
