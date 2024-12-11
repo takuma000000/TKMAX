@@ -15,6 +15,9 @@
 #include "ImGuiManager.h"
 #include "AudioManager.h"
 
+//WinterGame_クラス
+#include "Skydome.h"
+
 
 class MyGame : public Framework
 {
@@ -44,6 +47,8 @@ private://メンバ変数
 	std::unique_ptr<Camera> camera = nullptr;
 	//ポインタ...ImGuiManager
 	std::unique_ptr<ImGuiManager>  imguiManager = nullptr;
+	//ポインタ...Skydome
+	std::unique_ptr<Skydome> skydome = nullptr;
 
 	//Object3dの初期化
 	Object3d* object3d = new Object3d();

@@ -51,9 +51,15 @@ void MyGame::Initialize()
 	object3dCommon = std::make_unique<Object3dCommon>();
 	object3dCommon->Initialize(dxCommon.get());
 
+	skydome = std::make_unique<Skydome>();
+	skydome->Initialize(object3dCommon.get(), dxCommon.get());
+	skydome->SetCamera(camera.get());
+
+
 
 	ModelManager::GetInstance()->Initialize(dxCommon.get());
-	ModelManager::GetInstance()->LoadModel("axis.obj", dxCommon.get());
+	//ModelManager::GetInstance()->LoadModel("axis.obj", dxCommon.get());
+	ModelManager::GetInstance()->LoadModel("SkyDome.obj", dxCommon.get());
 
 	///--------------------------------------------
 
@@ -69,12 +75,13 @@ void MyGame::Initialize()
 	camera = std::make_unique<Camera>();
 	camera->SetRotate({ 0.0f,0.0f,0.0f });
 	camera->SetTranslate({ 0.0f,0.0f,-30.0f });
-	//object3dCommon->SetDefaultCamera(camera.get());
-	object3d->SetCamera(camera.get());
-	anotherObject3d->SetCamera(camera.get());
-	//ImGui用のcamera設定
-	Vector3 cameraPosition = camera->GetTranslate();
-	Vector3 cameraRotation = camera->GetRotate();
+
+	////object3dCommon->SetDefaultCamera(camera.get());
+	//object3d->SetCamera(camera.get());
+	//anotherObject3d->SetCamera(camera.get());
+	////ImGui用のcamera設定
+	//Vector3 cameraPosition = camera->GetTranslate();
+	//Vector3 cameraRotation = camera->GetRotate();
 
 	imguiManager = std::make_unique<ImGuiManager>();
 	imguiManager->Initialize(windowsAPI.get(), dxCommon.get());
@@ -127,6 +134,8 @@ void MyGame::Update()
 	imguiManager->End();
 
 	camera->Update();
+	// Skydomeの更新
+	skydome->Update();
 	//sprite->Update();
 	//object3d->Update();
 	//anotherObject3d->Update();
@@ -155,6 +164,8 @@ void MyGame::Draw()
 	//sprite->Draw();  // textureSrvHandleGPU は必要に応じて設定
 	//object3d->Draw(dxCommon.get());
 	//anotherObject3d->Draw(dxCommon.get());
+	  // Skydomeの描画
+	skydome->Draw();
 
 	// ** ImGui描画 **
 	imguiManager->Draw();
