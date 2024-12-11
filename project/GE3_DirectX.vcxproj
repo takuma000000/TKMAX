@@ -114,8 +114,11 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   <ItemGroup>
     <ClCompile Include="AudioManager.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Enemy.cpp" />
+    <ClCompile Include="EnemyBullet.cpp" />
     <ClCompile Include="engine\base\D3DResourceLeakChecker.cpp" />
     <ClCompile Include="engine\base\DirectXCommon.cpp" />
+    <ClCompile Include="Explanation.cpp" />
     <ClCompile Include="externals\imgui\imgui.cpp" />
     <ClCompile Include="externals\imgui\imgui_demo.cpp" />
     <ClCompile Include="externals\imgui\imgui_draw.cpp" />
@@ -125,6 +128,10 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="externals\imgui\imgui_widgets.cpp" />
     <ClCompile Include="engine\io\Input.cpp" />
     <ClCompile Include="engine\func\common\Logger.cpp" />
+    <ClCompile Include="Finish.cpp" />
+    <ClCompile Include="Finish_fight.cpp" />
+    <ClCompile Include="Finish_good.cpp" />
+    <ClCompile Include="Finish_nice.cpp" />
     <ClCompile Include="Framework.cpp" />
     <ClCompile Include="ImGuiManager.cpp" />
     <ClCompile Include="main.cpp" />
@@ -140,13 +147,21 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\2d\TextureManager.cpp" />
     <ClCompile Include="engine\base\WindowsAPI.cpp" />
     <ClCompile Include="MyGame.cpp" />
+    <ClCompile Include="Player.cpp" />
+    <ClCompile Include="PlayerBullet.cpp" />
+    <ClCompile Include="RailCamera.cpp" />
+    <ClCompile Include="Skydome.cpp" />
     <ClCompile Include="SrvManager.cpp" />
+    <ClCompile Include="Title.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AudioManager.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Enemy.h" />
+    <ClInclude Include="EnemyBullet.h" />
     <ClInclude Include="engine\base\D3DResourceLeakChecker.h" />
     <ClInclude Include="engine\base\DirectXCommon.h" />
+    <ClInclude Include="Explanation.h" />
     <ClInclude Include="externals\imgui\imconfig.h" />
     <ClInclude Include="externals\imgui\imgui.h" />
     <ClInclude Include="externals\imgui\imgui_impl_dx12.h" />
@@ -170,10 +185,19 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\2d\TextureManager.h" />
     <ClInclude Include="engine\func\math\Vector3.h" />
     <ClInclude Include="engine\base\WindowsAPI.h" />
+    <ClInclude Include="Finish.h" />
+    <ClInclude Include="Finish_fight.h" />
+    <ClInclude Include="Finish_good.h" />
+    <ClInclude Include="Finish_nice.h" />
     <ClInclude Include="Framework.h" />
     <ClInclude Include="ImGuiManager.h" />
     <ClInclude Include="MyGame.h" />
+    <ClInclude Include="Player.h" />
+    <ClInclude Include="PlayerBullet.h" />
+    <ClInclude Include="RailCamera.h" />
+    <ClInclude Include="Skydome.h" />
     <ClInclude Include="SrvManager.h" />
+    <ClInclude Include="Title.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
