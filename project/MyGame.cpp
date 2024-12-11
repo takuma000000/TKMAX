@@ -29,9 +29,9 @@ void MyGame::Initialize()
 	dxCommon = std::make_unique<DirectXCommon>();
 	dxCommon->Initialize(windowsAPI.get());
 	//XAudioのエンジンのインスタンスを生成
-	audio->LoadSound("fanfare", "fanfare.wav");
+	//audio->LoadSound("fanfare", "fanfare.wav");
 	// 音声の再生
-	audio->PlaySound("fanfare");
+	//audio->PlaySound("fanfare");
 
 	srvManager = std::make_unique<SrvManager>();
 	srvManager->Initialize(dxCommon.get());
