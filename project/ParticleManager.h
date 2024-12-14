@@ -9,6 +9,22 @@ class ParticleManager
 {
 public:
 
+	struct AABB {
+		Vector3 min;//最小点
+		Vector3 max;//最大点
+	};
+
+	struct Acc {
+		Vector3 acc;//加速度
+		AABB area;//範囲
+	};
+
+	bool IsCollision(const AABB& aabb, const Vector3& point) {
+		return (point.x >= aabb.min.x && point.x <= aabb.max.x) &&
+			(point.y >= aabb.min.y && point.y <= aabb.max.y) &&
+			(point.z >= aabb.min.z && point.z <= aabb.max.z);
+	}
+
 	struct ParticleForGPU {
 		Matrix4x4 wvp;
 		Matrix4x4 World;
@@ -38,7 +54,7 @@ public:
 
 	static ParticleManager* GetInstance();
 
-	void Initialize(DirectXCommon* dxCommon, SrvManager* srvManager);
+	void Initialize(DirectXCommon* dxCommon, SrvManager* srvManager, Camera* camera);
 
 	void Update();
 
@@ -60,6 +76,9 @@ public:
 	//パーティクルグループの作成
 	void CreateParticleGroup(const std::string name, const std::string textureFilePath);
 
+	//billboardマトリクスの計算
+	void MakeBillboardMatrix();
+
 private:
 	static ParticleManager* instance;
 
@@ -70,6 +89,7 @@ private:
 
 	DirectXCommon* dxCommon_ = nullptr;
 	SrvManager* srvManager_ = nullptr;
+	Camera* camera_ = nullptr;
 
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
@@ -79,5 +99,20 @@ private:
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
 
 	std::unordered_map<std::string, ParticleGroup> particleGroups;
+
+	const uint32_t kNumMaxInstance = 100;
+
+	Matrix4x4 billboardMatrix = MyMath::MakeIdentity4x4();//単位行列
+
+	Acc acc;
+
+	//クライアント領域のサイズ
+	const int32_t kClientWidth = 1280;
+	const int32_t kClientHeight = 720;
+
+	//Δtを定義
+	const float kDeltaTime = 1.0f / 60.0f;
+
+	uint32_t numInstance = 0;//描画すべきインスタンス数
 };
 

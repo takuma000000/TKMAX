@@ -1,6 +1,8 @@
 #include "ParticleManager.h"
 #include "TextureManager.h"
 #include "MyMath.h"
+#include <numbers>
+
 
 ParticleManager* ParticleManager::instance = nullptr;
 
@@ -13,11 +15,16 @@ ParticleManager* ParticleManager::GetInstance()
 	return instance;
 }
 
-void ParticleManager::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager)
+void ParticleManager::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager, Camera* camera)
 {
 	//引数で受け取る
 	dxCommon_ = dxCommon;
 	srvManager_ = srvManager;
+	camera_ = camera;
+
+	acc.acc = { 15.0f,0.0f,0.0f };
+	acc.area.min = { -1.0f,-1.00f,-1.0f };
+	acc.area.max = { 1.0f,1.0f,1.0f };
 
 	//ランダムエンジンの初期化
 	std::random_device seedGenerator;
@@ -33,6 +40,49 @@ void ParticleManager::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager
 
 void ParticleManager::Update()
 {
+	MakeBillboardMatrix();
+
+	camera_->GetViewMatrix();
+	camera_->GetProjectionMatrix();
+
+	for (std::unordered_map<std::string, ParticleGroup>::iterator particleGroupIterator = particleGroups.begin(); particleGroupIterator != particleGroups.end();) {
+
+		ParticleGroup* particleGroup = &(particleGroupIterator->second);
+		particleGroupIterator->second.kNumInstance = 0;
+
+
+		for (std::list<Particle>::iterator particleIterator = particleGroup->particles.begin(); particleIterator != particleGroup->particles.end();) {
+			if ((*particleIterator).lifeTime <= (*particleIterator).currentTime) {//生存期間を過ぎていたら更新せず描画対象にしない
+				particleIterator = particleGroup->particles.erase(particleIterator);
+				continue;
+			}
+			Matrix4x4 scaleMatrix = MyMath::MakeScaleMatrix((*particleIterator).transform.scale);
+			Matrix4x4 translateMatrix = MyMath::MakeTranslateMatrix((*particleIterator).transform.translate);
+			Matrix4x4 worldMatrix = scaleMatrix * billboardMatrix * translateMatrix;
+			Matrix4x4 cameraMatrix = MyMath::MakeAffineMatrix(camera_->GetScale(), camera_->GetRotate(), camera_->GetTranslate());
+			Matrix4x4 viewMatrix = MyMath::Inverse4x4(cameraMatrix);
+			Matrix4x4 projectionMatrix = MyMath::MakePerspectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHeight), 0.1f, 100.0f);
+			Matrix4x4 worldViewProjectionMatrix = MyMath::Multiply(worldMatrix, MyMath::Multiply(viewMatrix, projectionMatrix));
+			if (numInstance < kNumMaxInstance) {
+				//フィールドの範囲内のParticleには加速度を適用する
+				if (IsCollision(acc.area, (*particleIterator).transform.translate)) {
+					(*particleIterator).velocity += acc.acc * kDeltaTime;
+				}
+				(*particleIterator).transform.translate += (*particleIterator).velocity * kDeltaTime;
+				(*particleIterator).currentTime += kDeltaTime;//経過時間を足す
+				particleGroup->instancingData[particleGroupIterator->second.kNumInstance].wvp = worldViewProjectionMatrix;
+				particleGroup->instancingData[particleGroupIterator->second.kNumInstance].World = worldMatrix;
+				particleGroup->instancingData[particleGroupIterator->second.kNumInstance].color = (*particleIterator).color;
+				float alpha = 1.0f - ((*particleIterator).currentTime / (*particleIterator).lifeTime);
+				particleGroup->instancingData[particleGroupIterator->second.kNumInstance].color.w = alpha;
+				particleGroup->instancingData[particleGroupIterator->second.kNumInstance].wvp = worldViewProjectionMatrix;
+				++numInstance;//生きているParticleの数を1つカウントする
+			}
+
+			++particleIterator;
+
+		}
+	}
 }
 
 void ParticleManager::Draw()
@@ -227,7 +277,7 @@ void ParticleManager::CreateParticleGroup(const std::string name, const std::str
 
 	// テクスチャを読み込む
 	TextureManager::GetInstance()->LoadTexture(textureFilePath);
-	
+
 	// テクスチャのSRVインデックスを取得
 	uint32_t srvIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
 	newGroup.srvIndex = srvIndex;
@@ -252,4 +302,17 @@ void ParticleManager::CreateParticleGroup(const std::string name, const std::str
 
 	// SRVインデックスを記録
 	newGroup.srvIndex = instanceSrvIndex;
+}
+
+void ParticleManager::MakeBillboardMatrix()
+{
+
+	Matrix4x4 backToFrontMatrix = MyMath::MakeRotateYMatrix(std::numbers::pi_v<float>);
+
+	billboardMatrix = MyMath::Multiply(backToFrontMatrix, camera_->GetWorldMatrix());
+
+	billboardMatrix.m[3][0] = 0.0f;//平行移動成分はいらない
+	billboardMatrix.m[3][1] = 0.0f;
+	billboardMatrix.m[3][2] = 0.0f;
+
 }
