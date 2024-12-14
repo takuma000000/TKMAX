@@ -87,6 +87,31 @@ void ParticleManager::Update()
 
 void ParticleManager::Draw()
 {
+	dxCommon_->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
+	dxCommon_->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
+	dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
+	dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	for (std::unordered_map<std::string, ParticleGroup>::iterator particleGroupIterator = particleGroups.begin(); particleGroupIterator != particleGroups.end();) {
+
+		//マテリアル用のリソースを作る。今回はcolor1つ分のサイズを用意する
+		materialResource = dxCommon_->CreateBufferResource(sizeof(Material));
+		//マテリアルにデータを書き込む
+		Material* materialData = nullptr;
+		//書き込むためのアドレスを取得
+		materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
+		//今回は白を書き込んでみる
+		materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+		materialData->enableLighting = true;
+		materialData->uvTransform = MyMath::MakeIdentity4x4();
+
+		dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource.Get()->GetGPUVirtualAddress());
+		dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(1, srvManager_->GetGPUDescriptorHandle(particleGroupIterator->second.srvIndex));
+		dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, srvManager_->GetGPUDescriptorHandle(particleGroupIterator->second.materialData.textureIndex));
+		dxCommon_->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), particleGroupIterator->second.kNumInstance, 0, 0);
+
+		++particleGroupIterator;
+	}
 }
 
 void ParticleManager::CreatePipeline()
