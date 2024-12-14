@@ -27,6 +27,7 @@ public://メンバ関数
 
 	//setter
 	void SetRotate(const Vector3& rotate) { this->transform.rotate = rotate; }
+	void SetScale(const Vector3& scale) { this->transform.scale = scale; }
 	void SetTranslate(const Vector3& translate) { this->transform.translate = translate; }
 	void SetFovY(float horizontal) { this->fovY = horizontal; }
 	void SetAspectRatio(float aspect) { this->aspectRatio = aspect; }
@@ -39,6 +40,7 @@ public://メンバ関数
 	const Matrix4x4& GetViewProjectionMatrix() const { return viewProjectionMatrix; }
 	const Vector3& GetRotate() const { return transform.rotate; }
 	const Vector3& GetTranslate() const { return transform.translate; }
+	const Vector3& GetScale() const { return transform.scale; }
 
 };
 

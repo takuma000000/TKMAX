@@ -14,6 +14,8 @@
 #include "Camera.h"
 #include "ImGuiManager.h"
 #include "AudioManager.h"
+#include "ParticleManager.h"
+#include "ParticlerEmitter.h"
 
 
 class MyGame : public Framework
@@ -44,6 +46,8 @@ private://メンバ変数
 	std::unique_ptr<Camera> camera = nullptr;
 	//ポインタ...ImGuiManager
 	std::unique_ptr<ImGuiManager>  imguiManager = nullptr;
+	//ポインタ...ParticleEmitter
+	std::unique_ptr<ParticleEmitter>  particleEmitter = nullptr;
 
 	//Object3dの初期化
 	Object3d* object3d = new Object3d();
