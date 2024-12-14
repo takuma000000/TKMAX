@@ -9,6 +9,13 @@ class ParticleManager
 {
 public:
 
+	struct Transform
+	{
+		Vector3 scale;
+		Vector3 rotate;
+		Vector3 translate;
+	};
+
 	struct AABB {
 		Vector3 min;//最小点
 		Vector3 max;//最大点
@@ -80,7 +87,9 @@ public:
 	void MakeBillboardMatrix();
 
 	//パーティクルの発生
-	void Emit(const std::string name, const Vector3& position, uint32_t count);
+	void Emit(const std::string name, Vector3& pos, uint32_t count);
+
+	std::unordered_map<std::string, ParticleGroup> GetParticleGroups() { return particleGroups; }
 
 private:
 	static ParticleManager* instance;
@@ -119,5 +128,8 @@ private:
 	uint32_t numInstance = 0;//描画すべきインスタンス数
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource;
+
+	std::mt19937 randomEngine;
+
 };
 

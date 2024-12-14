@@ -141,6 +141,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\base\WindowsAPI.cpp" />
     <ClCompile Include="MyGame.cpp" />
     <ClCompile Include="ParticleManager.cpp" />
+    <ClCompile Include="ParticlerEmitter.cpp" />
     <ClCompile Include="SrvManager.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -175,6 +176,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="ImGuiManager.h" />
     <ClInclude Include="MyGame.h" />
     <ClInclude Include="ParticleManager.h" />
+    <ClInclude Include="ParticlerEmitter.h" />
     <ClInclude Include="SrvManager.h" />
   </ItemGroup>
   <ItemGroup>

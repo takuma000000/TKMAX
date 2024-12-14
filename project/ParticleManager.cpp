@@ -63,7 +63,7 @@ void ParticleManager::Update()
 			Matrix4x4 viewMatrix = MyMath::Inverse4x4(cameraMatrix);
 			Matrix4x4 projectionMatrix = MyMath::MakePerspectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHeight), 0.1f, 100.0f);
 			Matrix4x4 worldViewProjectionMatrix = MyMath::Multiply(worldMatrix, MyMath::Multiply(viewMatrix, projectionMatrix));
-			if (numInstance < kNumMaxInstance) {
+			if (particleGroupIterator->second.kNumInstance < kNumMaxInstance) {
 				//フィールドの範囲内のParticleには加速度を適用する
 				if (IsCollision(acc.area, (*particleIterator).transform.translate)) {
 					(*particleIterator).velocity += acc.acc * kDeltaTime;
@@ -75,13 +75,13 @@ void ParticleManager::Update()
 				particleGroup->instancingData[particleGroupIterator->second.kNumInstance].color = (*particleIterator).color;
 				float alpha = 1.0f - ((*particleIterator).currentTime / (*particleIterator).lifeTime);
 				particleGroup->instancingData[particleGroupIterator->second.kNumInstance].color.w = alpha;
-				particleGroup->instancingData[particleGroupIterator->second.kNumInstance].wvp = worldViewProjectionMatrix;
-				++numInstance;//生きているParticleの数を1つカウントする
+				++particleGroupIterator->second.kNumInstance;//生きているParticleの数を1つカウントする
 			}
 
 			++particleIterator;
 
 		}
+		++particleGroupIterator;
 	}
 }
 
@@ -181,7 +181,7 @@ void ParticleManager::CreatePipeline()
 	//DepthStencilの設定
 	graphicPipelineStateDesc.DepthStencilState = depthStencilDesc;
 	graphicPipelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
+
 	hr = dxCommon_->GetDevice()->CreateGraphicsPipelineState(&graphicPipelineStateDesc, IID_PPV_ARGS(&graphicsPipelineState));
 	assert(SUCCEEDED(hr));
 }
@@ -252,7 +252,7 @@ void ParticleManager::CreateRootSigunature()
 	}
 
 	//バイナリを元に生成
-	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature = nullptr;
+	rootSignature = nullptr;
 	hr = dxCommon_->GetDevice()->CreateRootSignature(0, signatureBlog->GetBufferPointer(), signatureBlog->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
 	assert(SUCCEEDED(hr));
 }
@@ -298,6 +298,7 @@ void ParticleManager::CreateParticleGroup(const std::string name, const std::str
 
 	// 新たな空のパーティクルグループを作成し、コンテナに登録
 	ParticleGroup newGroup;
+
 	newGroup.materialData.textureFilePath = textureFilePath; // マテリアルデータにテクスチャファイルパスを設定
 
 	// テクスチャを読み込む
@@ -314,6 +315,8 @@ void ParticleManager::CreateParticleGroup(const std::string name, const std::str
 	// GPUリソースを作成
 	newGroup.instancingResource = dxCommon_->CreateBufferResource(bufferSize);
 
+	newGroup.instancingResource->Map(0, nullptr, reinterpret_cast<void**>(&newGroup.instancingData));
+
 	// SRVインデックスを確保
 	uint32_t instanceSrvIndex = srvManager_->Allocate();
 
@@ -327,6 +330,8 @@ void ParticleManager::CreateParticleGroup(const std::string name, const std::str
 
 	// SRVインデックスを記録
 	newGroup.srvIndex = instanceSrvIndex;
+
+	particleGroups[name] = newGroup;
 }
 
 void ParticleManager::MakeBillboardMatrix()
@@ -342,7 +347,7 @@ void ParticleManager::MakeBillboardMatrix()
 
 }
 
-void ParticleManager::Emit(const std::string name, const Vector3& position, uint32_t count)
+void ParticleManager::Emit(const std::string name, Vector3& pos, uint32_t count)
 {
 	// 登録済みのパーティクルグループかチェックしてassert
 	assert(particleGroups.find(name) != particleGroups.end());
@@ -354,8 +359,10 @@ void ParticleManager::Emit(const std::string name, const Vector3& position, uint
 	for (uint32_t i = 0; i < count; ++i) {
 		Particle newParticle;
 
+		std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
+		Vector3 randomTranslate{ distribution(randomEngine),distribution(randomEngine),distribution(randomEngine) };
 		// 初期位置
-		newParticle.transform.translate = position;
+		newParticle.transform.translate = pos + randomTranslate;
 
 		// 初期スケール（適宜調整）
 		newParticle.transform.scale = Vector3(1.0f, 1.0f, 1.0f);
@@ -367,8 +374,10 @@ void ParticleManager::Emit(const std::string name, const Vector3& position, uint
 			static_cast<float>(rand()) / RAND_MAX - 0.5f
 		};
 
+
+		std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
 		// 初期色
-		newParticle.color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+		newParticle.color = { distColor(randomEngine),distColor(randomEngine),distColor(randomEngine),1.0f };
 
 		// 生存時間（ランダムに範囲を指定可能）
 		newParticle.lifeTime = 1.0f + static_cast<float>(rand()) / RAND_MAX * 2.0f;

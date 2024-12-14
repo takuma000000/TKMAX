@@ -27,9 +27,9 @@ void MyGame::Initialize()
 	dxCommon = std::make_unique<DirectXCommon>();
 	dxCommon->Initialize(windowsAPI.get());
 	//XAudioのエンジンのインスタンスを生成
-	audio->LoadSound("fanfare", "fanfare.wav");
+	//audio->LoadSound("fanfare", "fanfare.wav");
 	// 音声の再生
-	audio->PlaySound("fanfare");
+	//audio->PlaySound("fanfare");
 
 	srvManager = std::make_unique<SrvManager>();
 	srvManager->Initialize(dxCommon.get());
@@ -80,6 +80,14 @@ void MyGame::Initialize()
 	imguiManager->Initialize(windowsAPI.get(), dxCommon.get());
 
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+	ParticleManager::GetInstance()->Initialize(dxCommon.get(), srvManager.get(), camera.get());
+	ParticleManager::GetInstance()->CreateParticleGroup("particle", "resources/circle.png");
+
+	particleEmitter = std::make_unique<ParticleEmitter>();
+	particleEmitter->Initialize("particle");
+
+	particleEmitter->Emit();
 }
 
 void MyGame::Finalize()
@@ -135,11 +143,13 @@ void MyGame::Update()
 	viewport = dxCommon->GetViewport();
 	scissorRect = dxCommon->GetRect();
 
-	//Draw
-	dxCommon->PreDraw();
-	spriteCommon->DrawSetCommon();
-	object3dCommon->DrawSetCommon();
-	srvManager->PreDraw();
+	camera->Update();
+	sprite->Update();
+	object3d->Update();
+	anotherObject3d->Update();
+
+	particleEmitter->Update();
+	ParticleManager::GetInstance()->Update();
 
 
 	//object3d*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
@@ -182,18 +192,22 @@ void MyGame::Update()
 
 void MyGame::Draw()
 {
+	dxCommon->PreDraw();
+	srvManager->PreDraw();
+
 	//描画
 	dxCommon->GetCommandList()->RSSetViewports(1, &viewport);
 	dxCommon->GetCommandList()->RSSetScissorRects(1, &scissorRect);
 
-	camera->Update();
-	sprite->Update();
-	object3d->Update();
-	anotherObject3d->Update();
+	//Draw
+	spriteCommon->DrawSetCommon();
+	object3dCommon->DrawSetCommon();
 
 	sprite->Draw();  // textureSrvHandleGPU は必要に応じて設定
 	object3d->Draw(dxCommon.get());
 	anotherObject3d->Draw(dxCommon.get());
+
+	ParticleManager::GetInstance()->Draw();
 
 	// ** ImGui描画 **
 	imguiManager->Draw();
