@@ -285,10 +285,13 @@
     <FxCompile Include="resources\shaders\Object3d.VS.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
+    <FxCompile Include="Particle.PS.hlsl" />
+    <FxCompile Include="Particle.VS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="resources\shaders\Object3d.hlsli">
       <Filter>shaders</Filter>
     </None>
+    <None Include="Particle.hlsli" />
   </ItemGroup>
 </Project>
