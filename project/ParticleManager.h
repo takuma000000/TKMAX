@@ -8,6 +8,34 @@
 class ParticleManager
 {
 public:
+
+	struct ParticleForGPU {
+		Matrix4x4 wvp;
+		Matrix4x4 World;
+		Vector4 color;
+	};
+
+
+	struct Particle {
+		Transform transform;
+		Vector3 velocity;
+		Vector4 color;
+
+		float lifeTime;
+		float currentTime;
+	};
+
+
+	struct ParticleGroup {
+		MaterialData materialData;
+		std::list<Particle> particles;
+		uint32_t srvIndex;
+		Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource;
+		uint32_t kNumInstance;
+		ParticleForGPU* instancingData;
+	};
+
+
 	static ParticleManager* GetInstance();
 
 	void Initialize(DirectXCommon* dxCommon, SrvManager* srvManager);
@@ -46,5 +74,7 @@ private:
 	ModelData modelData;
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
+
+	std::unordered_map<std::string, ParticleGroup> particleGroups;
 };
 
