@@ -79,6 +79,9 @@ public:
 	//billboardマトリクスの計算
 	void MakeBillboardMatrix();
 
+	//パーティクルの発生
+	void Emit(const std::string name, const Vector3& position, uint32_t count);
+
 private:
 	static ParticleManager* instance;
 

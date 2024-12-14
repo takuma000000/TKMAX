@@ -341,3 +341,40 @@ void ParticleManager::MakeBillboardMatrix()
 	billboardMatrix.m[3][2] = 0.0f;
 
 }
+
+void ParticleManager::Emit(const std::string name, const Vector3& position, uint32_t count)
+{
+	// 登録済みのパーティクルグループかチェックしてassert
+	assert(particleGroups.find(name) != particleGroups.end());
+
+	// 指定されたパーティクルグループを取得
+	ParticleGroup& group = particleGroups[name];
+
+	// パーティクルを生成してグループに追加
+	for (uint32_t i = 0; i < count; ++i) {
+		Particle newParticle;
+
+		// 初期位置
+		newParticle.transform.translate = position;
+
+		// 初期スケール（適宜調整）
+		newParticle.transform.scale = Vector3(1.0f, 1.0f, 1.0f);
+
+		// 初期速度（ランダム）
+		newParticle.velocity = {
+			static_cast<float>(rand()) / RAND_MAX - 0.5f,
+			static_cast<float>(rand()) / RAND_MAX,
+			static_cast<float>(rand()) / RAND_MAX - 0.5f
+		};
+
+		// 初期色
+		newParticle.color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+
+		// 生存時間（ランダムに範囲を指定可能）
+		newParticle.lifeTime = 1.0f + static_cast<float>(rand()) / RAND_MAX * 2.0f;
+		newParticle.currentTime = 0.0f;
+
+		// パーティクルをグループに追加
+		group.particles.push_back(newParticle);
+	}
+}
