@@ -57,6 +57,9 @@ public:
 	//Resource
 	void WriteResource();
 
+	//パーティクルグループの作成
+	void CreateParticleGroup(const std::string name, const std::string textureFilePath);
+
 private:
 	static ParticleManager* instance;
 

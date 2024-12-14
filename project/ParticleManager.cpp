@@ -1,4 +1,5 @@
 #include "ParticleManager.h"
+#include "TextureManager.h"
 #include "MyMath.h"
 
 ParticleManager* ParticleManager::instance = nullptr;
@@ -213,4 +214,42 @@ void ParticleManager::WriteResource()
 	//書き込むためのアドレスを取得
 	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
 	std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size());
+}
+
+void ParticleManager::CreateParticleGroup(const std::string name, const std::string textureFilePath)
+{
+	// 登録済みの名前かチェックしてassert
+	assert(particleGroups.find(name) == particleGroups.end());
+
+	// 新たな空のパーティクルグループを作成し、コンテナに登録
+	ParticleGroup newGroup;
+	newGroup.materialData.textureFilePath = textureFilePath; // マテリアルデータにテクスチャファイルパスを設定
+
+	// テクスチャを読み込む
+	TextureManager::GetInstance()->LoadTexture(textureFilePath);
+	
+	// テクスチャのSRVインデックスを取得
+	uint32_t srvIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
+	newGroup.srvIndex = srvIndex;
+
+	// インスタンシング用リソースの作成
+	newGroup.kNumInstance = 100; // 必要なインスタンス数（仮で100）。用途に応じて調整
+	size_t bufferSize = sizeof(ParticleForGPU) * newGroup.kNumInstance;
+
+	// GPUリソースを作成
+	newGroup.instancingResource = dxCommon_->CreateBufferResource(bufferSize);
+
+	// SRVインデックスを確保
+	uint32_t instanceSrvIndex = srvManager_->Allocate();
+
+	// 構造化バッファ用のSRVを生成
+	srvManager_->CreateSRVforStructureBuffer(
+		instanceSrvIndex,
+		newGroup.instancingResource.Get(),
+		newGroup.kNumInstance,       // インスタンスの数
+		sizeof(ParticleForGPU)       // 各インスタンスの構造体サイズ
+	);
+
+	// SRVインデックスを記録
+	newGroup.srvIndex = instanceSrvIndex;
 }
