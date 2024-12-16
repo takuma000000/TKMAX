@@ -22,7 +22,7 @@ void ParticleManager::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager
 	srvManager_ = srvManager;
 	camera_ = camera;
 
-	acc.acc = { 15.0f,0.0f,0.0f };
+	acc.acc = { 0.0f,0.0f,0.0f };
 	acc.area.min = { -1.0f,-1.00f,-1.0f };
 	acc.area.max = { 1.0f,1.0f,1.0f };
 
