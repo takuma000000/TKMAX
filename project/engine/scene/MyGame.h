@@ -13,9 +13,9 @@
 #include "ModelManager.h"
 #include "Camera.h"
 #include "ImGuiManager.h"
-#include "AudioManager.h"
-#include "ParticleManager.h"
-#include "ParticlerEmitter.h"
+#include "engine/audio/AudioManager.h"
+#include "engine/effect/ParticleManager.h"
+#include "engine/effect/ParticlerEmitter.h"
 
 
 class MyGame : public Framework
