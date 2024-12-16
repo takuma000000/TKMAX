@@ -5,8 +5,10 @@
 
 #include "DirectXCommon.h"
 #include "Object3dCommon.h"
-#include "Object3d.h"
+
 #include "Camera.h"
+
+class Sprite;
 
 class Skydome {
 public:
@@ -16,16 +18,14 @@ public:
 	void SetCamera(Camera* camera);
 
 	// スケール、回転、位置の設定
-	void SetScale(const Vector3& scale) { scale_ = scale; }
-	void SetRotate(const Vector3& rotate) { rotate_ = rotate; }
-	void SetTranslate(const Vector3& translate) { translate_ = translate; }
+	void SetScale(const Vector3& scale) { transform_.scale = scale; }
+	void SetRotate(const Vector3& rotate) { transform_.rotate = rotate; }
+	void SetTranslate(const Vector3& translate) { transform_.translate = translate; }
 
 private:
-	std::unique_ptr<Object3d> object3d_ = nullptr;
+	Transform transform_;
 
-	Vector3 scale_ = { 50.0f, 50.0f, 50.0f };
-	Vector3 rotate_ = { 0.0f, 0.0f, 0.0f };
-	Vector3 translate_ = { 0.0f, 0.0f, 0.0f };
+	std::unique_ptr<Object3d> object3d_ = nullptr;
 
 	DirectXCommon* dxCommon_ = nullptr;
 	Object3dCommon* obj3dCo_ = nullptr;

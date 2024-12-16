@@ -53,13 +53,8 @@ void MyGame::Initialize()
 
 	skydome = std::make_unique<Skydome>();
 	skydome->Initialize(object3dCommon.get(), dxCommon.get());
-	skydome->SetCamera(camera.get());
+	//skydome->SetCamera(camera.get());
 
-
-
-	ModelManager::GetInstance()->Initialize(dxCommon.get());
-	//ModelManager::GetInstance()->LoadModel("axis.obj", dxCommon.get());
-	ModelManager::GetInstance()->LoadModel("SkyDome.obj", dxCommon.get());
 
 	///--------------------------------------------
 
@@ -69,7 +64,12 @@ void MyGame::Initialize()
 	anotherObject3d->Initialize(object3dCommon.get(), dxCommon.get());
 	anotherObject3d->SetModel("plane.obj");*/
 
-	//---------------------------------------------
+	ModelManager::GetInstance()->Initialize(dxCommon.get());
+	//ModelManager::GetInstance()->LoadModel("axis.obj", dxCommon.get());
+	ModelManager::GetInstance()->LoadModel("SkyDome.obj", dxCommon.get());
+
+
+	///--------------------------------------------
 
 	//Object3d共通部の初期化
 	camera = std::make_unique<Camera>();
@@ -164,7 +164,8 @@ void MyGame::Draw()
 	//sprite->Draw();  // textureSrvHandleGPU は必要に応じて設定
 	//object3d->Draw(dxCommon.get());
 	//anotherObject3d->Draw(dxCommon.get());
-	  // Skydomeの描画
+
+	// Skydomeの描画
 	skydome->Draw();
 
 	// ** ImGui描画 **
