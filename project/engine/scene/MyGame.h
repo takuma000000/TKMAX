@@ -16,6 +16,8 @@
 #include "engine/audio/AudioManager.h"
 #include "engine/effect/ParticleManager.h"
 #include "engine/effect/ParticlerEmitter.h"
+#include "InputHandler.h" 
+#include "Input.h" 
 
 
 class MyGame : public Framework
@@ -48,6 +50,8 @@ private://メンバ変数
 	std::unique_ptr<ImGuiManager>  imguiManager = nullptr;
 	//ポインタ...ParticleEmitter
 	std::unique_ptr<ParticleEmitter>  particleEmitter = nullptr;
+
+	InputHandler inputHandler;  // InputHandlerのメンバ変数
 
 	//Object3dの初期化
 	Object3d* object3d = new Object3d();

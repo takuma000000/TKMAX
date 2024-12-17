@@ -3,6 +3,7 @@
 #include <wrl.h>
 #include <d3d12.h>
 #include <dxgi1_6.h>
+#include <InputHandler.h>
 
 void MyGame::Initialize()
 {
@@ -50,6 +51,13 @@ void MyGame::Initialize()
 	//Object3d共通部の初期化
 	object3dCommon = std::make_unique<Object3dCommon>();
 	object3dCommon->Initialize(dxCommon.get());
+
+	// 入力処理の初期化
+	input = std::make_unique<Input>();
+	input->Initialize(windowsAPI.get());
+
+	// InputHandlerのコマンドを設定
+	inputHandler.AssignMoveCommands();
 
 
 	ModelManager::GetInstance()->Initialize(dxCommon.get());
@@ -143,10 +151,17 @@ void MyGame::Update()
 	viewport = dxCommon->GetViewport();
 	scissorRect = dxCommon->GetRect();
 
+	input->Update();
+
+	ICommand* command = inputHandler.HandleInput(input.get());
+	if (command) {
+		command->Exec(*object3d);  // コマンドを実行
+	}
+
 	camera->Update();
 	sprite->Update();
 	object3d->Update();
-	anotherObject3d->Update();
+	//anotherObject3d->Update();
 
 	particleEmitter->Update();
 	ParticleManager::GetInstance()->Update();
@@ -154,10 +169,10 @@ void MyGame::Update()
 
 	//object3d*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
-	//translate
-	Vector3 translate = object3d->GetTranslate();
-	translate = { 3.0f,-4.0f,0.0f };
-	object3d->SetTranslate(translate);
+	////translate
+	//Vector3 translate = object3d->GetTranslate();
+	//translate = { 3.0f,-4.0f,0.0f };
+	//object3d->SetTranslate(translate);
 	//rotate
 	Vector3 rotate = object3d->GetRotate();
 	rotate += { 0.0f, 0.0f, 0.1f };
@@ -172,17 +187,17 @@ void MyGame::Update()
 
 	//anotherObject3d-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 	//translate
-	Vector3 anotherTranslate = anotherObject3d->GetTranslate();
-	anotherTranslate = { 3.0f,4.0f,0.0f };
-	anotherObject3d->SetTranslate(anotherTranslate);
-	//ratate
-	Vector3 anotherRotate = anotherObject3d->GetRotate();
-	anotherRotate += { 0.1f, 0.0f, 0.0f };
-	anotherObject3d->SetRotate(anotherRotate);
-	//scale
-	Vector3 anotherScale = anotherObject3d->GetScale();
-	anotherScale = { 1.0f, 1.0f, 1.0f };
-	anotherObject3d->SetScale(anotherScale);
+	//Vector3 anotherTranslate = anotherObject3d->GetTranslate();
+	//anotherTranslate = { 3.0f,4.0f,0.0f };
+	//anotherObject3d->SetTranslate(anotherTranslate);
+	////ratate
+	//Vector3 anotherRotate = anotherObject3d->GetRotate();
+	//anotherRotate += { 0.1f, 0.0f, 0.0f };
+	//anotherObject3d->SetRotate(anotherRotate);
+	////scale
+	//Vector3 anotherScale = anotherObject3d->GetScale();
+	//anotherScale = { 1.0f, 1.0f, 1.0f };
+	//anotherObject3d->SetScale(anotherScale);
 
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
@@ -205,7 +220,7 @@ void MyGame::Draw()
 
 	sprite->Draw();  // textureSrvHandleGPU は必要に応じて設定
 	object3d->Draw(dxCommon.get());
-	anotherObject3d->Draw(dxCommon.get());
+	//anotherObject3d->Draw(dxCommon.get());
 
 	ParticleManager::GetInstance()->Draw();
 
