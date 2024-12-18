@@ -664,7 +664,7 @@ void DirectXCommon::PostDraw()
 {
 	HRESULT hr;
 
-	// これから書き込むバックバッファのインデックスを取得    
+	// これから書き込むバックバッファのインデックスを取得
 	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
 
 	// 1. 描画コマンドの記録 (リソースバリア設定)

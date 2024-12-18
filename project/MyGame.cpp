@@ -51,10 +51,6 @@ void MyGame::Initialize()
 	object3dCommon = std::make_unique<Object3dCommon>();
 	object3dCommon->Initialize(dxCommon.get());
 
-	skydome = std::make_unique<Skydome>();
-	skydome->Initialize(object3dCommon.get(), dxCommon.get());
-	//skydome->SetCamera(camera.get());
-
 
 	///--------------------------------------------
 
@@ -85,6 +81,10 @@ void MyGame::Initialize()
 
 	imguiManager = std::make_unique<ImGuiManager>();
 	imguiManager->Initialize(windowsAPI.get(), dxCommon.get());
+
+	skydome = std::make_unique<Skydome>();
+	skydome->Initialize(object3dCommon.get(), dxCommon.get());
+	//skydome->SetCamera(camera.get());
 
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 }

@@ -10,7 +10,7 @@ void Skydome::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommon
 	object3d_->SetModel("SkyDome.obj");
 
 	//初期位置の設定
-	transform_.scale = { 80.0f,80.0f,80.0f };
+	transform_.scale = { 0.5f,1.0f,1.0f };
 	transform_.rotate = { 0.0f,0.0f,0.0f };
 	transform_.translate = { 0.0f,0.0f,0.0f };
 }
