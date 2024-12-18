@@ -157,6 +157,8 @@ void MyGame::Draw()
 	spriteCommon->DrawSetCommon();
 	object3dCommon->DrawSetCommon();
 
+	skydome->Draw();
+
 	//描画
 	dxCommon->GetCommandList()->RSSetViewports(1, &viewport);
 	dxCommon->GetCommandList()->RSSetScissorRects(1, &scissorRect);
@@ -164,12 +166,11 @@ void MyGame::Draw()
 	//sprite->Draw();  // textureSrvHandleGPU は必要に応じて設定
 	//object3d->Draw(dxCommon.get());
 	//anotherObject3d->Draw(dxCommon.get());
-
 	// Skydomeの描画
-	skydome->Draw();
 
 	// ** ImGui描画 **
 	imguiManager->Draw();
+
 
 	dxCommon->PostDraw();
 }
