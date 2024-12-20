@@ -5,7 +5,15 @@ class SpriteCommon
 {
 
 public://メンバ関数...初期化
+
+	static SpriteCommon* instance;
+	//シングルトンインスタンスの取得
+	static SpriteCommon* GetInstance();
+
 	void Initialize(DirectXCommon* dxCommon);
+
+	void Finalize();
+
 	//共通描画設定
 	void DrawSetCommon();
 
@@ -30,6 +38,19 @@ private:
 	D3D12_RASTERIZER_DESC resterizerDesc{};
 	D3D12_DEPTH_STENCIL_DESC depthStencilDesc{};
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
+
+
+	////シングルトン-----------------------------------------------
+
+	//コンストラクタ、デストラクタの隠蔽
+	SpriteCommon() = default;
+	~SpriteCommon() = default;
+	//コピーインストラクタの封印
+	SpriteCommon(SpriteCommon&) = delete;
+	//コピー代入演算子の封印
+	SpriteCommon& operator=(SpriteCommon&) = delete;
+
+	////---------------------------------------------------------
 
 };
 

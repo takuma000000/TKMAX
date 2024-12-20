@@ -7,7 +7,15 @@ class Object3dCommon
 {
 
 public://メンバ関数
+
+	static Object3dCommon* instance;
+	//シングルトンインスタンスの取得
+	static Object3dCommon* GetInstance();
+
 	void Initialize(DirectXCommon* dxCommon);
+
+	void Finalize();
+
 	//共通描画設定
 	void DrawSetCommon();
 
@@ -39,6 +47,19 @@ private://メンバ変数
 
 	//デフォルトカメラ
 	Camera* defaultCamera_ = nullptr;
+
+
+	////シングルトン-----------------------------------------------
+
+	//コンストラクタ、デストラクタの隠蔽
+	Object3dCommon() = default;
+	~Object3dCommon() = default;
+	//コピーインストラクタの封印
+	Object3dCommon(Object3dCommon&) = delete;
+	//コピー代入演算子の封印
+	Object3dCommon& operator=(Object3dCommon&) = delete;
+
+	////---------------------------------------------------------
 
 };
 

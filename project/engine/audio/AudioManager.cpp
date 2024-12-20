@@ -2,11 +2,7 @@
 #include <cassert>
 #include <fstream>
 
-AudioManager::AudioManager() {}
-
-AudioManager::~AudioManager() {
-	Finalize();
-}
+AudioManager* AudioManager::instance = nullptr;
 
 void AudioManager::Initialize() {
 	HRESULT hr = XAudio2Create(&xAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
@@ -27,6 +23,9 @@ void AudioManager::Finalize() {
 		masterVoice = nullptr;
 	}
 	xAudio2.Reset();
+
+	delete instance;
+	instance = nullptr;
 }
 
 bool AudioManager::LoadSound(const std::string& key, const std::string& filename) {
@@ -82,6 +81,14 @@ void AudioManager::UnloadSound(const std::string& key) {
 		delete[] it->second.pBuffer;
 		soundMap.erase(it);
 	}
+}
+
+AudioManager* AudioManager::GetInstance()
+{
+	if (instance == nullptr) {
+		instance = new AudioManager;
+	}
+	return instance;
 }
 
 SoundData AudioManager::LoadWaveFile(const std::string& filename) {
