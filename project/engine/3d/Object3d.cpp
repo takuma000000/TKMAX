@@ -76,6 +76,11 @@ void Object3d::SetModel(const std::string& filePath)
 	model_ = ModelManager::GetInstance()->FindModel(filePath);
 }
 
+void Object3d::SetTextureIndex(uint32_t textureIndex)
+{
+	modelData.material.textureIndex = textureIndex;
+}
+
 MaterialData Object3d::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)
 {
 	//中で必要となる変数の宣言

@@ -17,6 +17,7 @@
 
 //WinterGame_クラス
 #include "Skydome.h"
+#include "Player.h"
 
 
 class MyGame : public Framework
@@ -49,6 +50,9 @@ private://メンバ変数
 	std::unique_ptr<ImGuiManager>  imguiManager = nullptr;
 	//ポインタ...Skydome
 	std::unique_ptr<Skydome> skydome = nullptr;
+
+
+	Player player; // Player クラスのインスタンス
 
 	//Object3dの初期化
 	Object3d* object3d = new Object3d();

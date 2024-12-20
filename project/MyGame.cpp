@@ -63,6 +63,7 @@ void MyGame::Initialize()
 	ModelManager::GetInstance()->Initialize(dxCommon.get());
 	//ModelManager::GetInstance()->LoadModel("axis.obj", dxCommon.get());
 	ModelManager::GetInstance()->LoadModel("SkyDome.obj", dxCommon.get());
+	ModelManager::GetInstance()->LoadModel("player.obj", dxCommon.get());
 
 
 	///--------------------------------------------
@@ -85,6 +86,8 @@ void MyGame::Initialize()
 	skydome = std::make_unique<Skydome>();
 	skydome->Initialize(object3dCommon.get(), dxCommon.get());
 	//skydome->SetCamera(camera.get());
+
+	player.Initialize(object3dCommon.get(), dxCommon.get(), camera.get(), input.get());
 
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 }
@@ -136,6 +139,8 @@ void MyGame::Update()
 	camera->Update();
 	// Skydomeの更新
 	skydome->Update();
+
+	player.Update();
 	//sprite->Update();
 	//object3d->Update();
 	//anotherObject3d->Update();
@@ -158,6 +163,7 @@ void MyGame::Draw()
 	object3dCommon->DrawSetCommon();
 
 	skydome->Draw();
+	player.Draw();
 
 	//描画
 	dxCommon->GetCommandList()->RSSetViewports(1, &viewport);
