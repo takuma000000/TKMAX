@@ -28,7 +28,7 @@ public: //getter
 	uint32_t GetDescriptorSizeDSV() { return descriptorSizeDSV; }
 	//バックバッファの数を取得
 	size_t GetBackBufferCount() const { return backBufferChange; }
-
+		
 public: //メンバ関数...初期化...public
 	//初期化
 	void Initialize(WindowsAPI* windowsAPI);

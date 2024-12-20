@@ -1,10 +1,13 @@
 #pragma once
 #include <memory>
+#include <ImGuiManager.h>
 
 //前方宣言
 class WindowsAPI;
 class DirectXCommon;
 class SrvManager;
+class Input;
+class ImGuiManager;
 
 class Framework
 {
@@ -37,5 +40,9 @@ protected:
 	std::unique_ptr<WindowsAPI> windowsAPI;
 	std::unique_ptr<DirectXCommon> dxCommon;
 	std::unique_ptr<SrvManager> srvManager;
+	//ポインタ...Input
+	std::unique_ptr<Input> input = nullptr;
+	//ポインタ...ImGuiManager
+	std::unique_ptr<ImGuiManager>  imguiManager = nullptr;
 };
 

@@ -35,8 +35,6 @@ struct SoundData {
 class AudioManager
 {
 public:
-	AudioManager();
-	~AudioManager();
 
 	// 初期化と終了
 	void Initialize();
@@ -51,6 +49,10 @@ public:
 	// 音声データの解放
 	void UnloadSound(const std::string& key);
 
+	static AudioManager* instance;
+	//シングルトンインスタンスの取得
+	static AudioManager* GetInstance();
+
 private:
 	Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
 	IXAudio2MasteringVoice* masterVoice = nullptr;
@@ -60,6 +62,18 @@ private:
 
 	// WAVファイル読み込み
 	SoundData LoadWaveFile(const std::string& filename);
+
+	////シングルトン-----------------------------------------------
+
+	//コンストラクタ、デストラクタの隠蔽
+	AudioManager() = default;
+	~AudioManager() = default;
+	//コピーインストラクタの封印
+	AudioManager(AudioManager&) = delete;
+	//コピー代入演算子の封印
+	AudioManager& operator=(AudioManager&) = delete;
+
+	////---------------------------------------------------------
 
 };
 
