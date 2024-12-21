@@ -2,6 +2,8 @@
 #include <memory>
 #include <ImGuiManager.h>
 
+#include "SceneManager.h"
+
 //前方宣言
 class WindowsAPI;
 class DirectXCommon;
@@ -16,9 +18,7 @@ public:
 	virtual void Initialize();   // 初期化
 	virtual void Finalize();     // 終了
 	virtual void Update();       // 毎フレーム更新
-
-	// 純粋仮想関数（必ずオーバーライドしないとエラーになる）
-	virtual void Draw() = 0;     // 描画
+	virtual void Draw();         // 描画
 
 	// ゲーム終了のチェック
 	virtual bool IsEndRequest() { return endRequest_; }
@@ -40,9 +40,11 @@ protected:
 	std::unique_ptr<WindowsAPI> windowsAPI;
 	std::unique_ptr<DirectXCommon> dxCommon;
 	std::unique_ptr<SrvManager> srvManager;
-	//ポインタ...Input
-	std::unique_ptr<Input> input = nullptr;
+
 	//ポインタ...ImGuiManager
 	std::unique_ptr<ImGuiManager>  imguiManager = nullptr;
+
+private:
+	SceneManager* sceneManager_ = nullptr;
 };
 

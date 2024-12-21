@@ -11,6 +11,13 @@ void MyGame::Initialize()
 
 	Framework::Initialize();
 
+	// Initialize sceneManager_
+	sceneManager_ = new SceneManager();
+
+	//最初のシーンを設定
+	BaseScene* scene = new TitleScene(dxCommon.get(), srvManager.get());
+	sceneManager_->SetNextScene(scene);
+
 	assert(dxCommon.get() != nullptr && "DirectXCommon is nullptr in MyGame::Initialize");
 	assert(srvManager.get() != nullptr && "SrvManager is nullptr in MyGame::Initialize");
 
@@ -34,6 +41,7 @@ void MyGame::Finalize()
 
 	scene_->Finalize();
 	delete scene_;
+	delete sceneManager_;
 
 	// 終了処理
 	imguiManager->Finalize();

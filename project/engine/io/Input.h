@@ -12,8 +12,19 @@ public:
 	template <class T> using ComPtr = Microsoft::WRL::ComPtr<T>;
 
 public://メンバ関数
+
+	// シングルトンインスタンスの取得
+	static Input* GetInstance();
+
+	Input() = default;
+	~Input() = default;
+	Input(Input&) = delete;
+	Input& operator=(Input&) = delete;
+
 	//初期化
 	void Initialize(WindowsAPI* winApp);
+	//終了
+	void Finalize();
 	//更新
 	void Update();
 	//キーの押下をチェック( 押されているか )
@@ -23,6 +34,9 @@ public://メンバ関数
 	bool TriggerKey(BYTE keyNumber);
 
 private://メンバ変数
+
+	static Input* instance;
+
 	//キーボードのデバイス
 	ComPtr<IDirectInputDevice8> keyboard;
 	//全キーの状態
