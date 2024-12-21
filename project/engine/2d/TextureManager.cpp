@@ -131,13 +131,12 @@ const DirectX::TexMetadata& TextureManager::GetMetadata(const std::string& fileP
 }
 
 TextureManager* TextureManager::GetInstance() {
-	if (instance == nullptr) {
-		instance = new TextureManager;
-	}
-	return instance;
+	static TextureManager instance_;
+	return &instance_;
 }
 
 void TextureManager::Finalize() {
-	delete instance;
-	instance = nullptr;
+	//delete instance;
+	//instance = nullptr;
+
 }

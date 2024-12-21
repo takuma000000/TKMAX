@@ -19,9 +19,9 @@ void Framework::Initialize()
 	windowsAPI = std::make_unique<WindowsAPI>();
 	windowsAPI->Initialize();
 
+	// DirectXCommon の初期化
 	dxCommon = std::make_unique<DirectXCommon>();
 	dxCommon->Initialize(windowsAPI.get());
-	assert(dxCommon != nullptr && "DirectXCommon initialization failed");
 
 	srvManager = std::make_unique<SrvManager>();
 	srvManager->Initialize(dxCommon.get());
@@ -36,9 +36,9 @@ void Framework::Initialize()
 	AudioManager::GetInstance()->Initialize(); // AudioManagerを初期化
 
 	Object3dCommon::GetInstance()->Initialize(dxCommon.get()); // Object3dCommonを初期化
-	SpriteCommon::GetInstance()->Initialize(dxCommon.get()); // Object3dCommonを初期化
+	SpriteCommon::GetInstance()->Initialize(dxCommon.get()); // SpriteCommonを初期化
 
-	Input::GetInstance()->Initialize(windowsAPI.get()); // Object3dCommonを初期化
+	Input::GetInstance()->Initialize(windowsAPI.get()); // Inputを初期化
 
 }
 

@@ -5,7 +5,6 @@
 
 #include "Input.h"
 
-
 void TitleScene::Initialize()
 {
 	TextureManager::GetInstance()->LoadTexture("./resources/circle.png");
@@ -25,12 +24,14 @@ void TitleScene::Update()
 {
 	sprite->Update();
 
+	Input::GetInstance()->Update();
+
 	//ENTERキーが押されたら
 	 // ENTERキーが押されたら GameScene に遷移
 	if (Input::GetInstance()->TriggerKey(DIK_RETURN)) // DirectInput のキーコードを使用
 	{
 		// 次のシーンを生成
-		BaseScene* nextScene = new GameScene(dxCommon, srvManager);
+		BaseScene* nextScene = new GameScene(dxCommon,srvManager);
 
 		// シーン切り替えを依頼
 		sceneManager_->SetNextScene(nextScene);

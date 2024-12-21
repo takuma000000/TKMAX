@@ -1,5 +1,6 @@
 #pragma once
 #include "BaseScene.h"
+#include "DirectXCommon.h"
 
 class SceneManager
 {
@@ -16,6 +17,8 @@ private:
 
 	//次のシーン( 次フレームから実行 )
 	BaseScene* nextScene_ = nullptr;
+
+	DirectXCommon* dxCommon = nullptr;
 
 public://メンバ関数
 	void Update();

@@ -15,14 +15,11 @@ void MyGame::Initialize()
 	sceneManager_ = new SceneManager();
 
 	//最初のシーンを設定
-	BaseScene* scene = new TitleScene(dxCommon.get(), srvManager.get());
+	BaseScene* scene = new TitleScene(dxCommon.get(),srvManager.get());
 	sceneManager_->SetNextScene(scene);
 
 	assert(dxCommon.get() != nullptr && "DirectXCommon is nullptr in MyGame::Initialize");
 	assert(srvManager.get() != nullptr && "SrvManager is nullptr in MyGame::Initialize");
-
-	scene_ = new TitleScene(dxCommon.get(), srvManager.get());
-	scene_->Initialize();
 
 	imguiManager = std::make_unique<ImGuiManager>();
 	imguiManager->Initialize(windowsAPI.get(), dxCommon.get());
@@ -57,7 +54,7 @@ void MyGame::Update()
 	//基底クラスの更新処理
 	Framework::Update();
 
-	scene_->Update();
+	sceneManager_->Update();
 
 	if (windowsAPI->ProcessMessage()) {
 		endRequest_ = true;
@@ -88,7 +85,7 @@ void MyGame::Draw()
 	dxCommon->PreDraw();
 	srvManager->PreDraw();
 
-	scene_->Draw();
+	sceneManager_->Draw();
 
 	//描画
 	dxCommon->GetCommandList()->RSSetViewports(1, &viewport);

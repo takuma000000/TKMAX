@@ -21,9 +21,7 @@
 class TitleScene : public BaseScene
 {
 public:
-	TitleScene(DirectXCommon* dxCommon, SrvManager* srvManager)
-		: dxCommon(dxCommon), srvManager(srvManager) {
-	}
+	TitleScene(DirectXCommon* dxCommon, SrvManager* srvManager) : dxCommon(dxCommon), srvManager(srvManager) {}
 
 	void Initialize() override;
 	void Finalize() override;
