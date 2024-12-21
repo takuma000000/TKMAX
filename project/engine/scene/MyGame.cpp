@@ -14,7 +14,7 @@ void MyGame::Initialize()
 	assert(dxCommon.get() != nullptr && "DirectXCommon is nullptr in MyGame::Initialize");
 	assert(srvManager.get() != nullptr && "SrvManager is nullptr in MyGame::Initialize");
 
-	scene_ = new GameScene(dxCommon.get(), srvManager.get());
+	scene_ = new TitleScene(dxCommon.get(), srvManager.get());
 	scene_->Initialize();
 
 	imguiManager = std::make_unique<ImGuiManager>();

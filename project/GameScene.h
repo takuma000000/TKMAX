@@ -1,4 +1,6 @@
 #pragma once
+#include "BaseScene.h"
+
 #include <memory>
 #include "engine/audio/AudioManager.h"
 #include "TextureManager.h"
@@ -13,17 +15,17 @@
 #include "ModelCommon.h"
 #include "ModelManager.h"
 
-class GameScene
+class GameScene : public BaseScene
 {
 public:
 	GameScene(DirectXCommon* dxCommon, SrvManager* srvManager)
 		: dxCommon(dxCommon), srvManager(srvManager) {
 	}
 
-	void Initialize();
-	void Finalize();
-	void Update();
-	void Draw();
+	void Initialize() override;
+	void Finalize() override;
+	void Update() override;
+	void Draw() override;
 private:
 	DirectXCommon* dxCommon = nullptr;
 	SrvManager* srvManager = nullptr;
