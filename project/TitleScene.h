@@ -15,10 +15,10 @@
 #include "ModelCommon.h"
 #include "ModelManager.h"
 
-class GameScene : public BaseScene
+class TitleScene : public BaseScene
 {
 public:
-	GameScene(DirectXCommon* dxCommon, SrvManager* srvManager)
+	TitleScene(DirectXCommon* dxCommon, SrvManager* srvManager)
 		: dxCommon(dxCommon), srvManager(srvManager) {
 	}
 
@@ -33,7 +33,5 @@ private:
 	std::unique_ptr<Sprite> sprite = nullptr;
 	std::unique_ptr<Camera> camera = nullptr;
 
-	Object3d* object3d = new Object3d();
-	Object3d* anotherObject3d = new Object3d();
 };
 

@@ -112,6 +112,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BaseScene.cpp" />
     <ClCompile Include="engine\audio\AudioManager.cpp" />
     <ClCompile Include="engine\3d\Camera.cpp" />
     <ClCompile Include="engine\base\D3DResourceLeakChecker.cpp" />
@@ -144,8 +145,10 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\effect\ParticleManager.cpp" />
     <ClCompile Include="engine\effect\ParticlerEmitter.cpp" />
     <ClCompile Include="engine\base\SrvManager.cpp" />
+    <ClCompile Include="TitleScene.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BaseScene.h" />
     <ClInclude Include="engine\audio\AudioManager.h" />
     <ClInclude Include="engine\3d\Camera.h" />
     <ClInclude Include="engine\base\D3DResourceLeakChecker.h" />
@@ -180,6 +183,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\effect\ParticlerEmitter.h" />
     <ClInclude Include="engine\base\SrvManager.h" />
     <ClInclude Include="GameScene.h" />
+    <ClInclude Include="TitleScene.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

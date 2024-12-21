@@ -10,6 +10,7 @@
 #include "engine/effect/ParticlerEmitter.h"
 
 #include"GameScene.h"
+#include"TitleScene.h"
 
 class MyGame : public Framework
 {
@@ -33,7 +34,7 @@ private:
 	bool endRequest_ = false; // 終了フラグ
 
 	//シーン
-	GameScene* scene_ = nullptr;
+	TitleScene* scene_ = nullptr;
 
 };
 
