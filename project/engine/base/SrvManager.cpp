@@ -4,6 +4,12 @@
 //最大テクスチャ枚数
 const uint32_t SrvManager::kMaxSRVCount = 512;
 
+SrvManager::~SrvManager()
+{
+	int test = 1;
+	test = 0;
+}
+
 void SrvManager::Initialize(DirectXCommon* directXCommon)
 {
 	//引数で受け取ってメンバ変数に記録する

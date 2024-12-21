@@ -21,6 +21,9 @@ private:
 	uint32_t useIndex = 0;
 
 public:
+	//デストラクタ
+	~SrvManager();
+
 	//初期化
 	void Initialize(DirectXCommon* directXCommon);
 	//ヒープセットコマンド

@@ -12,6 +12,7 @@
 #include"GameScene.h"
 #include"TitleScene.h"
 
+#include "SceneManager.h"
 class MyGame : public Framework
 {
 public://メンバ関数
@@ -35,6 +36,6 @@ private:
 
 	//シーン
 	TitleScene* scene_ = nullptr;
+	SceneManager* sceneManager_ = nullptr; // 追加
 
 };
-

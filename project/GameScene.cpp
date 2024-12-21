@@ -2,10 +2,9 @@
 
 void GameScene::Initialize()
 {
+
 	assert(this != nullptr && "this is nullptr in GameScene::Initialize");
 	assert(dxCommon != nullptr && "dxCommon is nullptr in GameScene::Initialize");
-	assert(srvManager != nullptr && "srvManager is nullptr in GameScene::Initialize");
-
 
 	//AudioManager::GetInstance()->LoadSound("fanfare", "fanfare.wav");
 	//AudioManager::GetInstance()->PlaySound("fanfare");
@@ -47,6 +46,7 @@ void GameScene::Finalize()
 
 	// Object3dの解放
 	delete object3d;
+	delete anotherObject3d;
 
 	// 3Dモデルマネージャーの終了
 	ModelManager::GetInstance()->Finalize();

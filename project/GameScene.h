@@ -18,9 +18,8 @@
 class GameScene : public BaseScene
 {
 public:
-	GameScene(DirectXCommon* dxCommon, SrvManager* srvManager)
-		: dxCommon(dxCommon), srvManager(srvManager) {
-	}
+	GameScene(DirectXCommon* dxCommon, SrvManager* srvManager) : dxCommon(dxCommon), srvManager(srvManager) {}
+	~GameScene() = default;
 
 	void Initialize() override;
 	void Finalize() override;
