@@ -43,7 +43,7 @@ void MyGame::Initialize()
 	//スプライト共通部の初期化
 	spriteCommon = std::make_unique<SpriteCommon>();
 	spriteCommon->Initialize(dxCommon.get());
-
+	//スプライトの初期化
 	sprite = std::make_unique<Sprite>();
 	sprite->Initialize(spriteCommon.get(), dxCommon.get(), "./resources/uvChecker.png");
 
@@ -51,9 +51,6 @@ void MyGame::Initialize()
 	object3dCommon = std::make_unique<Object3dCommon>();
 	object3dCommon->Initialize(dxCommon.get());
 
-
-	ModelManager::GetInstance()->Initialize(dxCommon.get());
-	ModelManager::GetInstance()->LoadModel("axis.obj", dxCommon.get());
 
 	///--------------------------------------------
 
@@ -63,21 +60,38 @@ void MyGame::Initialize()
 	anotherObject3d->Initialize(object3dCommon.get(), dxCommon.get());
 	anotherObject3d->SetModel("plane.obj");*/
 
-	//---------------------------------------------
+	ModelManager::GetInstance()->Initialize(dxCommon.get());
+	//ModelManager::GetInstance()->LoadModel("axis.obj", dxCommon.get());
+	ModelManager::GetInstance()->LoadModel("SkyDome.obj", dxCommon.get());
+	ModelManager::GetInstance()->LoadModel("player.obj", dxCommon.get());
+
+
+	///--------------------------------------------
 
 	//Object3d共通部の初期化
 	camera = std::make_unique<Camera>();
 	camera->SetRotate({ 0.0f,0.0f,0.0f });
 	camera->SetTranslate({ 0.0f,0.0f,-30.0f });
-	//object3dCommon->SetDefaultCamera(camera.get());
-	object3d->SetCamera(camera.get());
-	anotherObject3d->SetCamera(camera.get());
-	//ImGui用のcamera設定
-	Vector3 cameraPosition = camera->GetTranslate();
-	Vector3 cameraRotation = camera->GetRotate();
+
+	////object3dCommon->SetDefaultCamera(camera.get());
+	//object3d->SetCamera(camera.get());
+	//anotherObject3d->SetCamera(camera.get());
+	////ImGui用のcamera設定
+	//Vector3 cameraPosition = camera->GetTranslate();
+	//Vector3 cameraRotation = camera->GetRotate();
 
 	imguiManager = std::make_unique<ImGuiManager>();
 	imguiManager->Initialize(windowsAPI.get(), dxCommon.get());
+
+	//Skydomeの初期化
+	skydome = std::make_unique<Skydome>();
+	skydome->Initialize(object3dCommon.get(), dxCommon.get());
+	skydome->SetCamera(camera.get());
+
+	//Playerの初期化
+	player = std::make_unique<Player>();
+	player->Initialize(object3dCommon.get(), dxCommon.get(), camera.get(), input.get());
+	player->SetCamera(camera.get());
 
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 }
@@ -126,7 +140,15 @@ void MyGame::Update()
 	// ** ImGui処理終了 **
 	imguiManager->End();
 
+	//入力の更新
+	input->Update();
+	//cameraの更新
 	camera->Update();
+	//skydomeの更新
+	skydome->Update();
+	//playerの更新
+	player->Update();
+
 	//sprite->Update();
 	//object3d->Update();
 	//anotherObject3d->Update();
@@ -148,6 +170,12 @@ void MyGame::Draw()
 	spriteCommon->DrawSetCommon();
 	object3dCommon->DrawSetCommon();
 
+	// ** 描画処理 **
+	//skydomeの描画
+	skydome->Draw();
+	//playerの描画
+	player->Draw();
+
 	//描画
 	dxCommon->GetCommandList()->RSSetViewports(1, &viewport);
 	dxCommon->GetCommandList()->RSSetScissorRects(1, &scissorRect);
@@ -155,9 +183,11 @@ void MyGame::Draw()
 	//sprite->Draw();  // textureSrvHandleGPU は必要に応じて設定
 	//object3d->Draw(dxCommon.get());
 	//anotherObject3d->Draw(dxCommon.get());
+	// Skydomeの描画
 
 	// ** ImGui描画 **
 	imguiManager->Draw();
+
 
 	dxCommon->PostDraw();
 }
