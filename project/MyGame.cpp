@@ -43,7 +43,7 @@ void MyGame::Initialize()
 	//スプライト共通部の初期化
 	spriteCommon = std::make_unique<SpriteCommon>();
 	spriteCommon->Initialize(dxCommon.get());
-
+	//スプライトの初期化
 	sprite = std::make_unique<Sprite>();
 	sprite->Initialize(spriteCommon.get(), dxCommon.get(), "./resources/uvChecker.png");
 
@@ -83,11 +83,15 @@ void MyGame::Initialize()
 	imguiManager = std::make_unique<ImGuiManager>();
 	imguiManager->Initialize(windowsAPI.get(), dxCommon.get());
 
+	//Skydomeの初期化
 	skydome = std::make_unique<Skydome>();
 	skydome->Initialize(object3dCommon.get(), dxCommon.get());
-	//skydome->SetCamera(camera.get());
+	skydome->SetCamera(camera.get());
 
-	player.Initialize(object3dCommon.get(), dxCommon.get(), camera.get(), input.get());
+	//Playerの初期化
+	player = std::make_unique<Player>();
+	player->Initialize(object3dCommon.get(), dxCommon.get(), camera.get(), input.get());
+	player->SetCamera(camera.get());
 
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 }
@@ -136,11 +140,15 @@ void MyGame::Update()
 	// ** ImGui処理終了 **
 	imguiManager->End();
 
+	//入力の更新
+	input->Update();
+	//cameraの更新
 	camera->Update();
-	// Skydomeの更新
+	//skydomeの更新
 	skydome->Update();
+	//playerの更新
+	player->Update();
 
-	player.Update();
 	//sprite->Update();
 	//object3d->Update();
 	//anotherObject3d->Update();
@@ -162,8 +170,11 @@ void MyGame::Draw()
 	spriteCommon->DrawSetCommon();
 	object3dCommon->DrawSetCommon();
 
+	// ** 描画処理 **
+	//skydomeの描画
 	skydome->Draw();
-	player.Draw();
+	//playerの描画
+	player->Draw();
 
 	//描画
 	dxCommon->GetCommandList()->RSSetViewports(1, &viewport);

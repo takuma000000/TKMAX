@@ -50,9 +50,9 @@ private://メンバ変数
 	std::unique_ptr<ImGuiManager>  imguiManager = nullptr;
 	//ポインタ...Skydome
 	std::unique_ptr<Skydome> skydome = nullptr;
+	//ポインタ...Player
+	std::unique_ptr<Player> player = nullptr;
 
-
-	Player player; // Player クラスのインスタンス
 
 	//Object3dの初期化
 	Object3d* object3d = new Object3d();
