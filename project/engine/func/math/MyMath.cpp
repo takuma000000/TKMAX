@@ -1,14 +1,14 @@
 #include "MyMath.h"
 
-// π
+// ﾏ
 float MyMath::GetPI() { return (float)M_PI; }
 
-// 加算(Vector3)
+// 蜉邂・Vector3)
 Vector3 MyMath::Add(const Vector3& v1, const Vector3& v2) {
 	return Vector3(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
 }
 
-// 加算(Matrix4x4)
+// 蜉邂・Matrix4x4)
 Matrix4x4 MyMath::Add(const Matrix4x4& m1, const Matrix4x4& m2) {
 	Matrix4x4 result;
 
@@ -20,12 +20,12 @@ Matrix4x4 MyMath::Add(const Matrix4x4& m1, const Matrix4x4& m2) {
 	return result;
 }
 
-// 減算(Vector3)
+// 貂帷ｮ・Vector3)
 Vector3 MyMath::Subtract(const Vector3& v1, const Vector3& v2) {
 	return Vector3(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
 }
 
-// 減算(Matrix4x4)
+// 貂帷ｮ・Matrix4x4)
 Matrix4x4 MyMath::Subtract(const Matrix4x4& m1, const Matrix4x4& m2) {
 	Matrix4x4 result;
 
@@ -37,12 +37,12 @@ Matrix4x4 MyMath::Subtract(const Matrix4x4& m1, const Matrix4x4& m2) {
 	return result;
 }
 
-// 積(Vector3)
+// 遨・Vector3)
 Vector3 MyMath::Multiply(const Vector3& v1, const Vector3& v2) {
 	return Vector3(v1.x * v2.x, v1.y * v2.y, v1.z * v2.z);
 }
 
-// 積(Matrix4x4)
+// 遨・Matrix4x4)
 Matrix4x4 MyMath::Multiply(const Matrix4x4& m1, const Matrix4x4& m2) {
 	Matrix4x4 result = {};
 
@@ -56,7 +56,7 @@ Matrix4x4 MyMath::Multiply(const Matrix4x4& m1, const Matrix4x4& m2) {
 	return result;
 }
 
-// 積(Vector3,Matrix4x4)
+// 遨・Vector3,Matrix4x4)
 Vector3 MyMath::Multiply(const Vector3& vec, const Matrix4x4& mat) {
 	Vector3 result;
 
@@ -67,15 +67,15 @@ Vector3 MyMath::Multiply(const Vector3& vec, const Matrix4x4& mat) {
 	return result;
 }
 
-// 　スカラー倍(Vector3)
+// 縲繧ｹ繧ｫ繝ｩ繝ｼ蛟・Vector3)
 Vector3 MyMath::Multiply(float scalar, const Vector3& v) {
 	return Vector3(scalar * v.x, scalar * v.y, scalar * v.z);
 }
 
-// 　長さ(ノルム)(Vector3)
+// 縲髟ｷ縺・繝弱Ν繝)(Vector3)
 float MyMath::Length(const Vector3& v) { return sqrtf(v.x * v.x + v.y * v.y + v.z * v.z); }
 
-// 距離(Vector3同士)
+// 霍晞屬(Vector3蜷悟｣ｫ)
 float MyMath::Distance(const Vector3& v1, const Vector3& v2) {
 	float dx = v2.x - v1.x;
 	float dy = v2.y - v1.y;
@@ -84,7 +84,7 @@ float MyMath::Distance(const Vector3& v1, const Vector3& v2) {
 	return sqrtf(dx * dx + dy * dy + dz * dz);
 }
 
-// 正規化(Vector3)
+// 豁｣隕丞喧(Vector3)
 Vector3 MyMath::Normalize(const Vector3& v) {
 
 	float length = Length(v);
@@ -96,15 +96,15 @@ Vector3 MyMath::Normalize(const Vector3& v) {
 	}
 }
 
-// 線形補間(float)
+// 邱壼ｽ｢陬憺俣(float)
 float MyMath::Lerp(float p1, float p2, float t) { return p1 + (p2 - p1) * t; }
 
-// 線形補間(Vector3)
+// 邱壼ｽ｢陬憺俣(Vector3)
 Vector3 MyMath::Vector3Lerp(const Vector3& p1, const Vector3& p2, float t) {
 	return { Lerp(p1.x, p2.x, t), Lerp(p1.y, p2.y, t), Lerp(p1.z, p2.z, t) };
 }
 
-// 逆行列
+// 騾・｡悟・
 Matrix4x4 MyMath::Inverse4x4(Matrix4x4& m) {
 	Matrix4x4 matrix = {};
 
@@ -200,7 +200,7 @@ Matrix4x4 MyMath::Inverse4x4(Matrix4x4& m) {
 	return matrix;
 }
 
-// 平行移動行列
+// 蟷ｳ陦檎ｧｻ蜍戊｡悟・
 Matrix4x4 MyMath::MakeTranslateMatrix(const Vector3& translate) {
 	Matrix4x4 translateMatrix;
 
@@ -227,7 +227,7 @@ Matrix4x4 MyMath::MakeTranslateMatrix(const Vector3& translate) {
 	return translateMatrix;
 }
 
-// 拡大縮小行列
+// 諡｡螟ｧ邵ｮ蟆剰｡悟・
 Matrix4x4 MyMath::MakeScaleMatrix(const Vector3& scale) {
 	Matrix4x4 scaleMatrix;
 
@@ -254,7 +254,7 @@ Matrix4x4 MyMath::MakeScaleMatrix(const Vector3& scale) {
 	return scaleMatrix;
 }
 
-// 座標変換
+// 蠎ｧ讓吝､画鋤
 Vector3 MyMath::Transform(const Vector3& vector, const Matrix4x4& matrix) {
 	Vector3 result;
 
@@ -361,11 +361,11 @@ Matrix4x4 MyMath::MakeRotateMatrix(Vector3 rotate) {
 	return rotateXYZMatrix;
 }
 
-// 3次元アフィン変換行列
+// 3谺｡蜈・い繝輔ぅ繝ｳ螟画鋤陦悟・
 Matrix4x4 MyMath::MakeAffineMatrix(Vector3 scale, Vector3 rotate, Vector3 translate) {
 	Matrix4x4 affineMatrix;
 
-	// 各変換行列を
+	// 蜷・､画鋤陦悟・繧・
 	Matrix4x4 scaleMatrix = MakeScaleMatrix(scale);
 
 	Matrix4x4 rotateXMatrix = MakeRotateXMatrix(rotate.x);
@@ -375,13 +375,13 @@ Matrix4x4 MyMath::MakeAffineMatrix(Vector3 scale, Vector3 rotate, Vector3 transl
 
 	Matrix4x4 translateMatrix = MakeTranslateMatrix(translate);
 
-	// 各変換行列を合成してアフィン変換行列を作成
+	// 蜷・､画鋤陦悟・繧貞粋謌舌＠縺ｦ繧｢繝輔ぅ繝ｳ螟画鋤陦悟・繧剃ｽ懈・
 	affineMatrix = Multiply(scaleMatrix, Multiply(rotateXYZMatrix, translateMatrix));
 
 	return affineMatrix;
 }
 
-// ベクトル変換
+// 繝吶け繝医Ν螟画鋤
 Vector3 MyMath::TransformNormal(const Vector3& v, const Matrix4x4& m) {
 
 	Vector3 result{
@@ -392,7 +392,7 @@ Vector3 MyMath::TransformNormal(const Vector3& v, const Matrix4x4& m) {
 	return result;
 }
 
-// ビューポート変換行列
+// 繝薙Η繝ｼ繝昴・繝亥､画鋤陦悟・
 Matrix4x4 MyMath::MakeViewportMatrix(
 	float left, float top, float width, float height, float minDepth, float maxDepth) {
 
@@ -425,7 +425,7 @@ Matrix4x4  MyMath::MakeIdentity4x4() {
 
 	Matrix4x4 identity;
 
-	// 単位行列を生成する
+	// 蜊倅ｽ崎｡悟・繧堤函謌舌☆繧・
 	for (int i = 0; i < 4; ++i) {
 		for (int j = 0; j < 4; ++j) {
 			identity.m[i][j] = (i == j) ? 1.0f : 0.0f;

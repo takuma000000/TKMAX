@@ -21,6 +21,7 @@
 #include "Skydome.h"
 #include "Player.h"
 #include "Enemy.h" // 敵クラスをインクルード
+#include "PlayerBullet.h"
 
 
 class MyGame : public Framework

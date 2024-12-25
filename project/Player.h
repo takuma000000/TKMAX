@@ -6,13 +6,20 @@
 #include "Object3dCommon.h"
 #include "Camera.h"
 #include "Input.h"
-#include "Camera.h"
+
+#include <vector>
+#include "PlayerBullet.h"
 
 class Player {
 public:
+
 	void Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommon, Camera* camera, Input* input);
 	void Update();
 	void Draw();
+
+	void FireBullet();
+
+	Vector3 GetTargetDirection() const; // 新規追加
 
 	// スケール、回転、位置の設定
 	void SetScale(const Vector3& scale) { transform_.scale = scale; }
@@ -20,6 +27,8 @@ public:
 	void SetTranslate(const Vector3& translate) { transform_.translate = translate; }
 
 	void SetCamera(Camera* camera);
+
+	void DrawImGui();
 
 private:
 	Transform transform_;
@@ -30,4 +39,6 @@ private:
 	Object3dCommon* obj3dCo_ = nullptr;
 	Camera* camera_ = nullptr;
 	Input* input_ = nullptr;
+
+	std::vector<std::unique_ptr<PlayerBullet>> bullets_;
 };

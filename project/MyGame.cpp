@@ -67,6 +67,7 @@ void MyGame::Initialize()
 	ModelManager::GetInstance()->LoadModel("SkyDome.obj", dxCommon.get());
 	ModelManager::GetInstance()->LoadModel("player.obj", dxCommon.get());
 	ModelManager::GetInstance()->LoadModel("enemy.obj", dxCommon.get());
+	ModelManager::GetInstance()->LoadModel("bullet.obj", dxCommon.get());
 
 	///--------------------------------------------
 
@@ -158,13 +159,12 @@ void MyGame::Update()
 		endRequest_ = true;
 	}
 
-	// ** ImGui処理開始 **
-	imguiManager->Begin();
+	// ** ImGui描画 **
+	imguiManager->Begin(); // ImGuiの描画開始
 
-	//sprite->ImGuiDebug();
+	player->DrawImGui(); // PlayerクラスのImGui描画
 
-	// ** ImGui処理終了 **
-	imguiManager->End();
+	imguiManager->End(); // ImGuiの描画終了
 
 	//入力の更新
 	input->Update();
@@ -201,10 +201,10 @@ void MyGame::Draw()
 	object3dCommon->DrawSetCommon();
 
 	// ** 描画処理 **
-	//skydomeの描画
-	skydome->Draw();
 	//playerの描画
 	player->Draw();
+	//skydomeの描画
+	skydome->Draw();
 	// 敵の描画
 	for (Enemy* enemy : enemies) {
 		enemy->Draw();
@@ -219,7 +219,6 @@ void MyGame::Draw()
 	//anotherObject3d->Draw(dxCommon.get());
 	// Skydomeの描画
 
-	// ** ImGui描画 **
 	imguiManager->Draw();
 
 
