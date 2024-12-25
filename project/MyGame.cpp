@@ -1,5 +1,7 @@
 #include "MyGame.h"
 
+#include "Enemy.h" // 敵クラスのインクルード
+
 #include <wrl.h>
 #include <d3d12.h>
 #include <dxgi1_6.h>
@@ -64,7 +66,7 @@ void MyGame::Initialize()
 	//ModelManager::GetInstance()->LoadModel("axis.obj", dxCommon.get());
 	ModelManager::GetInstance()->LoadModel("SkyDome.obj", dxCommon.get());
 	ModelManager::GetInstance()->LoadModel("player.obj", dxCommon.get());
-
+	ModelManager::GetInstance()->LoadModel("enemy.obj", dxCommon.get());
 
 	///--------------------------------------------
 
@@ -93,6 +95,21 @@ void MyGame::Initialize()
 	player->Initialize(object3dCommon.get(), dxCommon.get(), camera.get(), input.get());
 	player->SetCamera(camera.get());
 
+	// 敵の生成
+	std::vector<Vector3> enemyPositions = {
+		{10.0f, 0.0f, 10.0f},
+		{0.0f, 8.0f, 10.0f},
+		{-10.0f, 0.0f, 10.0f},
+		{0.0f, -8.0f, 10.0f},
+	};
+
+	for (const auto& position : enemyPositions) {
+		Enemy* enemy = new Enemy();
+		enemy->Initialize(object3dCommon.get(), dxCommon.get(), camera.get(), position);
+		enemy->SetCamera(camera.get()); // カメラを設定
+		enemies.push_back(enemy);
+	}
+
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 }
 
@@ -101,6 +118,11 @@ void MyGame::Finalize()
 	////*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 	////				解放
 	////*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+	for (Enemy* enemy : enemies) {
+		delete enemy;
+	}
+	enemies.clear();
 
 	// Object3dの解放
 	delete object3d;
@@ -148,6 +170,10 @@ void MyGame::Update()
 	skydome->Update();
 	//playerの更新
 	player->Update();
+	// 敵の更新
+	for (Enemy* enemy : enemies) {
+		enemy->Update();
+	}
 
 	//sprite->Update();
 	//object3d->Update();
@@ -175,6 +201,10 @@ void MyGame::Draw()
 	skydome->Draw();
 	//playerの描画
 	player->Draw();
+	// 敵の描画
+	for (Enemy* enemy : enemies) {
+		enemy->Draw();
+	}
 
 	//描画
 	dxCommon->GetCommandList()->RSSetViewports(1, &viewport);
