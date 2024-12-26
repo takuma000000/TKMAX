@@ -1,6 +1,8 @@
 #include "Camera.h"
 #include "Object3d.h"
 
+#include <DirectXMath.h>
+
 Camera::Camera()
 	:transform({ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} })
 	, fovY(0.45f)
@@ -23,4 +25,14 @@ void Camera::Update()
 	projectionMatrix = MyMath::MakePerspectiveFovMatrix(fovY, aspectRatio, nearClip, farClip);
 	//合成行列
 	viewProjectionMatrix = MyMath::Multiply(viewMatrix, projectionMatrix);
+}
+
+DirectX::XMMATRIX Camera::GetInverseViewMatrix() const
+{
+	return DirectX::XMMatrixInverse(nullptr, MyMath::ToXMMatrix(viewMatrix));
+}
+
+DirectX::XMMATRIX Camera::GetInverseProjectionMatrix() const
+{
+	return DirectX::XMMatrixInverse(nullptr, MyMath::ToXMMatrix(projectionMatrix));
 }

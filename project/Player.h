@@ -6,6 +6,7 @@
 #include "Object3dCommon.h"
 #include "Camera.h"
 #include "Input.h"
+#include <windows.h>
 
 #include <vector>
 #include "PlayerBullet.h"
@@ -28,6 +29,8 @@ public:
 
 	void SetCamera(Camera* camera);
 
+	Vector3 ScreenToWorld(const POINT& screenPos) const;
+
 	void DrawImGui();
 
 private:
@@ -39,6 +42,7 @@ private:
 	Object3dCommon* obj3dCo_ = nullptr;
 	Camera* camera_ = nullptr;
 	Input* input_ = nullptr;
+	WindowsAPI* windo = nullptr;
 
 	std::vector<std::unique_ptr<PlayerBullet>> bullets_;
 };

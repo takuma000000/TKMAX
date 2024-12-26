@@ -25,6 +25,10 @@ public://メンバ関数
 
 	void Update();
 
+	DirectX::XMMATRIX GetInverseViewMatrix() const;
+	DirectX::XMMATRIX GetInverseProjectionMatrix() const;
+
+
 	//setter
 	void SetRotate(const Vector3& rotate) { this->transform.rotate = rotate; }
 	void SetTranslate(const Vector3& translate) { this->transform.translate = translate; }

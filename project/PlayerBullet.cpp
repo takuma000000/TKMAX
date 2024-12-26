@@ -14,7 +14,7 @@ void PlayerBullet::Initialize(const Vector3& position, const Vector3& velocity, 
 	object3d_->SetTranslate(position_);
 
 	// 初期位置の設定
-	transform_.scale = { 1.0f, 1.0f, 1.0f };
+	transform_.scale = { 0.3f, 0.3f, 0.3f };
 	transform_.rotate = { 0.0f, 0.0f, 0.0f };
 	transform_.translate = { 0.0f, 0.0f, 0.0f };
 }
@@ -31,7 +31,7 @@ void PlayerBullet::Update() {
 	object3d_->Update();
 
 	// Z座標の範囲で寿命判定
-	if (position_.z > 1000.0f || position_.z < -1000.0f) {
+	if (position_.z > 400.0f || position_.z < -400.0f) {
 		active_ = false;
 		std::cout << "Bullet deactivated due to lifetime." << std::endl;
 	}
