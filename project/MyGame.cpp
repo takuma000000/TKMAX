@@ -1,5 +1,7 @@
 #include "MyGame.h"
 
+#include "Enemy.h" // 敵クラスのインクルード
+
 #include <wrl.h>
 #include <d3d12.h>
 #include <dxgi1_6.h>
@@ -64,7 +66,8 @@ void MyGame::Initialize()
 	//ModelManager::GetInstance()->LoadModel("axis.obj", dxCommon.get());
 	ModelManager::GetInstance()->LoadModel("SkyDome.obj", dxCommon.get());
 	ModelManager::GetInstance()->LoadModel("player.obj", dxCommon.get());
-
+	ModelManager::GetInstance()->LoadModel("enemy.obj", dxCommon.get());
+	ModelManager::GetInstance()->LoadModel("bullet.obj", dxCommon.get());
 
 	///--------------------------------------------
 
@@ -93,6 +96,25 @@ void MyGame::Initialize()
 	player->Initialize(object3dCommon.get(), dxCommon.get(), camera.get(), input.get());
 	player->SetCamera(camera.get());
 
+	// 敵の生成
+	std::vector<Vector3> enemyPositions = {
+		{10.0f, 0.0f, 10.0f},
+		{0.0f, 8.0f, 10.0f},
+		{-10.0f, 0.0f, 10.0f},
+		{0.0f, -8.0f, 10.0f},
+		{10.0f, 8.0f, 10.0f},
+		{-10.0f, 8.0f, 10.0f},
+		{10.0f, -8.0f, 10.0f},
+		{-10.0f, -8.0f, 10.0f},
+	};
+
+	for (const auto& position : enemyPositions) {
+		Enemy* enemy = new Enemy();
+		enemy->Initialize(object3dCommon.get(), dxCommon.get(), camera.get(), position);
+		enemy->SetCamera(camera.get()); // カメラを設定
+		enemies.push_back(enemy);
+	}
+
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 }
 
@@ -101,6 +123,11 @@ void MyGame::Finalize()
 	////*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 	////				解放
 	////*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+	for (Enemy* enemy : enemies) {
+		delete enemy;
+	}
+	enemies.clear();
 
 	// Object3dの解放
 	delete object3d;
@@ -132,13 +159,12 @@ void MyGame::Update()
 		endRequest_ = true;
 	}
 
-	// ** ImGui処理開始 **
-	imguiManager->Begin();
+	// ** ImGui描画 **
+	imguiManager->Begin(); // ImGuiの描画開始
 
-	//sprite->ImGuiDebug();
+	player->DrawImGui(); // PlayerクラスのImGui描画
 
-	// ** ImGui処理終了 **
-	imguiManager->End();
+	imguiManager->End(); // ImGuiの描画終了
 
 	//入力の更新
 	input->Update();
@@ -148,6 +174,10 @@ void MyGame::Update()
 	skydome->Update();
 	//playerの更新
 	player->Update();
+	// 敵の更新
+	for (Enemy* enemy : enemies) {
+		enemy->Update();
+	}
 
 	//sprite->Update();
 	//object3d->Update();
@@ -171,10 +201,14 @@ void MyGame::Draw()
 	object3dCommon->DrawSetCommon();
 
 	// ** 描画処理 **
-	//skydomeの描画
-	skydome->Draw();
 	//playerの描画
 	player->Draw();
+	//skydomeの描画
+	skydome->Draw();
+	// 敵の描画
+	for (Enemy* enemy : enemies) {
+		enemy->Draw();
+	}
 
 	//描画
 	dxCommon->GetCommandList()->RSSetViewports(1, &viewport);
@@ -185,7 +219,6 @@ void MyGame::Draw()
 	//anotherObject3d->Draw(dxCommon.get());
 	// Skydomeの描画
 
-	// ** ImGui描画 **
 	imguiManager->Draw();
 
 

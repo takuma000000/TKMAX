@@ -15,9 +15,13 @@
 #include "ImGuiManager.h"
 #include "AudioManager.h"
 
+#include <vector>
+
 //WinterGame_クラス
 #include "Skydome.h"
 #include "Player.h"
+#include "Enemy.h" // 敵クラスをインクルード
+#include "PlayerBullet.h"
 
 
 class MyGame : public Framework
@@ -52,6 +56,8 @@ private://メンバ変数
 	std::unique_ptr<Skydome> skydome = nullptr;
 	//ポインタ...Player
 	std::unique_ptr<Player> player = nullptr;
+
+	std::vector<Enemy*> enemies; // 敵のリストを追加
 
 
 	//Object3dの初期化
