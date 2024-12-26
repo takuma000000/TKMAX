@@ -19,6 +19,8 @@ public:
 
 
 private:
+	Transform transform_;
+
 	Vector3 position_;
 	Vector3 velocity_;
 	bool active_ = false;

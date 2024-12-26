@@ -12,6 +12,11 @@ void PlayerBullet::Initialize(const Vector3& position, const Vector3& velocity, 
 	object3d_->Initialize(ob3dCo_, dxCommon_);
 	object3d_->SetModel("bullet.obj");
 	object3d_->SetTranslate(position_);
+
+	// 初期位置の設定
+	transform_.scale = { 1.0f, 1.0f, 1.0f };
+	transform_.rotate = { 0.0f, 0.0f, 0.0f };
+	transform_.translate = { 0.0f, 0.0f, 0.0f };
 }
 
 void PlayerBullet::Update() {
@@ -19,6 +24,10 @@ void PlayerBullet::Update() {
 
 	position_ += velocity_;
 	object3d_->SetTranslate(position_);
+	// オブジェクトの更新
+	object3d_->SetScale(transform_.scale);
+	object3d_->SetRotate(transform_.rotate);
+	//object3d_->SetTranslate(transform_.translate);
 	object3d_->Update();
 
 	// Z座標の範囲で寿命判定

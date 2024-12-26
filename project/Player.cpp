@@ -36,7 +36,7 @@ void Player::Update() {
 	}
 
 
-	if (input_->TriggerKey(DIK_SPACE)) {
+	if (input_->PushKey(DIK_SPACE)) {
 		FireBullet();
 	}
 
