@@ -14,7 +14,7 @@ void PlayerBullet::Initialize(const Vector3& position, const Vector3& velocity, 
 	object3d_->SetTranslate(position_);
 
 	// 初期位置の設定
-	transform_.scale = { 1.0f, 1.0f, 1.0f };
+	transform_.scale = { 0.3f, 0.3f, 0.3f };
 	transform_.rotate = { 0.0f, 0.0f, 0.0f };
 	transform_.translate = { 0.0f, 0.0f, 0.0f };
 }
