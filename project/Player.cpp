@@ -72,23 +72,32 @@ void Player::Draw() {
 
 void Player::FireBullet()
 {
+	// マウス座標を取得
+	POINT mousePos = input_->GetMousePosition();
+
+	// スクリーン座標を正規化デバイス座標 (NDC) に変換
+	float ndcX = (2.0f * mousePos.x) / windo->GetWindowWidth() - 1.0f;
+	float ndcY = 1.0f - (2.0f * mousePos.y) / windo->GetWindowHeight();
+
+	// NDCを視点空間座標に変換
+	DirectX::XMVECTOR screenSpace = DirectX::XMVectorSet(ndcX, ndcY, 1.0f, 1.0f);
+	DirectX::XMVECTOR viewSpace = DirectX::XMVector3TransformCoord(screenSpace, camera_->GetInverseProjectionMatrix());
+
+	// 視点空間座標をワールド空間座標に変換
+	DirectX::XMVECTOR worldSpace = DirectX::XMVector3TransformCoord(viewSpace, camera_->GetInverseViewMatrix());
+	Vector3 targetWorldPos = {
+		DirectX::XMVectorGetX(worldSpace),
+		DirectX::XMVectorGetY(worldSpace),
+		DirectX::XMVectorGetZ(worldSpace)
+	};
+
+	// プレイヤー位置からターゲットへの方向ベクトルを計算
+	Vector3 direction = MyMath::Normalize(targetWorldPos - transform_.translate);
+
+	// 弾の初期化
 	auto bullet = std::make_unique<PlayerBullet>();
-
-	Vector3 bulletVelocity = GetTargetDirection() * 1.0f;
-	bullet->Initialize(transform_.translate, bulletVelocity, obj3dCo_, dxCommon_);
-	// カメラを設定
+	bullet->Initialize(transform_.translate, direction * 1.0f, obj3dCo_, dxCommon_);
 	bullet->SetCamera(camera_);
-
-
-	if (!bullet) {
-		std::cerr << "Bullet initialization failed!" << std::endl;
-		return;
-	}
-
-	std::cout << "Bullet created at: ("
-		<< transform_.translate.x << ", "
-		<< transform_.translate.y << ", "
-		<< transform_.translate.z << ")" << std::endl;
 
 	bullets_.push_back(std::move(bullet));
 }
@@ -105,6 +114,22 @@ Vector3 Player::GetTargetDirection() const
 void Player::SetCamera(Camera* camera)
 {
 	object3d_->SetCamera(camera);
+}
+
+Vector3 Player::ScreenToWorld(const POINT& screenPos) const
+{
+	// スクリーン座標を正規化デバイス座標 (NDC) に変換
+	float ndcX = (2.0f * screenPos.x) / windo->GetWindowWidth() - 1.0f;
+	float ndcY = 1.0f - (2.0f * screenPos.y) / windo->GetWindowHeight();
+
+	// NDCを視点空間座標に変換
+	DirectX::XMVECTOR screenSpace = DirectX::XMVectorSet(ndcX, ndcY, 1.0f, 1.0f);
+	DirectX::XMVECTOR viewSpace = DirectX::XMVector3TransformCoord(screenSpace, camera_->GetInverseProjectionMatrix());
+
+	// 視点空間座標をワールド空間座標に変換
+	DirectX::XMVECTOR worldSpace = DirectX::XMVector3TransformCoord(viewSpace, camera_->GetInverseViewMatrix());
+
+	return { DirectX::XMVectorGetX(worldSpace), DirectX::XMVectorGetY(worldSpace), DirectX::XMVectorGetZ(worldSpace) };
 }
 
 void Player::DrawImGui()

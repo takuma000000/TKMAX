@@ -5,6 +5,8 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 
+#include <DirectXMath.h>
+
 class MyMath {
 public:
 	// π
@@ -86,4 +88,6 @@ public:
 	static Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip);
 
 	static Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip);
+
+	static DirectX::XMMATRIX ToXMMatrix(const Matrix4x4& matrix);
 };

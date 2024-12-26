@@ -28,6 +28,10 @@ public:
 	//メッセージの処理
 	bool ProcessMessage();
 
+	int GetWindowWidth() const { return kClientWidth; }
+	int GetWindowHeight() const { return kClientHeight; }
+
+
 private:
 	//ウィンドウハンドル
 	HWND hwnd = nullptr;

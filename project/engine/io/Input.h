@@ -22,6 +22,10 @@ public://メンバ関数
 	//キーのトリガーをチェック
 	bool TriggerKey(BYTE keyNumber);
 
+	// マウス座標を取得する
+	POINT GetMousePosition();
+
+
 private://メンバ変数
 	//キーボードのデバイス
 	ComPtr<IDirectInputDevice8> keyboard;

@@ -31,7 +31,7 @@ void PlayerBullet::Update() {
 	object3d_->Update();
 
 	// Z座標の範囲で寿命判定
-	if (position_.z > 1000.0f || position_.z < -1000.0f) {
+	if (position_.z > 400.0f || position_.z < -400.0f) {
 		active_ = false;
 		std::cout << "Bullet deactivated due to lifetime." << std::endl;
 	}
