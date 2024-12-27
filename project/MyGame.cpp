@@ -93,19 +93,21 @@ void MyGame::Initialize()
 
 	//Playerの初期化
 	player = std::make_unique<Player>();
-	player->Initialize(object3dCommon.get(), dxCommon.get(), camera.get(), input.get());
+	player->Initialize(object3dCommon.get(), dxCommon.get(), camera.get(), input.get(),spriteCommon.get());
 	player->SetCamera(camera.get());
+	// PlayerにSprite共通部を設定
+	player->SetSpriteCommon(spriteCommon.get());
 
 	// 敵の生成
 	std::vector<Vector3> enemyPositions = {
-		{10.0f, 0.0f, 10.0f},
-		{0.0f, 8.0f, 10.0f},
-		{-10.0f, 0.0f, 10.0f},
-		{0.0f, -8.0f, 10.0f},
-		{10.0f, 8.0f, 10.0f},
-		{-10.0f, 8.0f, 10.0f},
-		{10.0f, -8.0f, 10.0f},
-		{-10.0f, -8.0f, 10.0f},
+		{20.0f, 0.0f, 50.0f},
+		{0.0f, 8.0f, 50.0f},
+		{-20.0f, 0.0f, 50.0f},
+		{0.0f, -8.0f, 50.0f},
+		{20.0f, 8.0f, 50.0f},
+		{-20.0f, 8.0f, 50.0f},
+		{20.0f, -8.0f, 50.0f},
+		{-20.0f, -8.0f, 50.0f},
 	};
 
 	for (const auto& position : enemyPositions) {
