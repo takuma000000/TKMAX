@@ -10,7 +10,7 @@ void Enemy::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommon, 
 	object3d_->SetModel("enemy.obj");
 
 	// 初期位置の設定
-	transform_.scale = { 1.0f, 1.0f, 1.0f };
+	transform_.scale = { 3.0f, 3.0f, 3.0f };
 	transform_.rotate = { 0.0f, 0.0f, 0.0f };
 	transform_.translate = position;
 }

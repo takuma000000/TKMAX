@@ -4,6 +4,7 @@
 #include "Vector3.h"
 #include "DirectXCommon.h"
 #include "Object3dCommon.h"
+#include "Sprite.h"
 #include "Camera.h"
 #include "Input.h"
 #include <windows.h>
@@ -14,7 +15,7 @@
 class Player {
 public:
 
-	void Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommon, Camera* camera, Input* input);
+	void Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommon, Camera* camera, Input* input, SpriteCommon* spriteCommon);
 	void Update();
 	void Draw();
 
@@ -33,6 +34,8 @@ public:
 
 	void DrawImGui();
 
+	void SetSpriteCommon(SpriteCommon* spriteCommon); // Sprite共通部の設定
+
 private:
 	Transform transform_;
 
@@ -45,4 +48,7 @@ private:
 	WindowsAPI* windo = nullptr;
 
 	std::vector<std::unique_ptr<PlayerBullet>> bullets_;
+
+	std::unique_ptr<Sprite> mouseSprite_;            // マウス位置を示すSprite
+	SpriteCommon* spriteCommon_ = nullptr;           // Sprite共通部
 };
