@@ -36,6 +36,10 @@ public:
 
 	void SetSpriteCommon(SpriteCommon* spriteCommon); // Sprite共通部の設定
 
+	// 弾の取得
+	const std::vector<std::unique_ptr<PlayerBullet>>& GetBullets() const { return bullets_; }
+
+
 private:
 	Transform transform_;
 

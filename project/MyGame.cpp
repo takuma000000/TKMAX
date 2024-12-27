@@ -41,6 +41,8 @@ void MyGame::Initialize()
 	//ファイルパス
 	TextureManager::GetInstance()->LoadTexture("./resources/uvChecker.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/pokemon.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/crushring.png");
+
 
 	//スプライト共通部の初期化
 	spriteCommon = std::make_unique<SpriteCommon>();
@@ -117,6 +119,10 @@ void MyGame::Initialize()
 		enemies.push_back(enemy);
 	}
 
+	// Title の初期化
+	title = new Title();
+	title->Initialize(spriteCommon.get(), dxCommon.get());
+
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 }
 
@@ -133,6 +139,12 @@ void MyGame::Finalize()
 
 	// Object3dの解放
 	delete object3d;
+
+	// Title の解放
+	if (title) {
+		delete title;
+		title = nullptr;
+	}
 
 	// 3Dモデルマネージャーの終了
 	ModelManager::GetInstance()->Finalize();
@@ -170,15 +182,64 @@ void MyGame::Update()
 
 	//入力の更新
 	input->Update();
-	//cameraの更新
-	camera->Update();
-	//skydomeの更新
-	skydome->Update();
-	//playerの更新
-	player->Update();
-	// 敵の更新
-	for (Enemy* enemy : enemies) {
-		enemy->Update();
+
+
+	switch (currentPhase_) {
+	case GamePhase::Title:
+		if (input->PushKey(DIK_SPACE)) { // スペースキーで次のフェーズへ
+			currentPhase_ = GamePhase::Explanation;
+		}
+
+		title->Update(); // Title の更新処理
+		break;
+
+	case GamePhase::Explanation:
+		if (input->PushKey(DIK_RETURN)) { // Enterキーで次のフェーズへ
+			currentPhase_ = GamePhase::GameScene;
+		}
+		break;
+
+	case GamePhase::GameScene:
+		camera->Update();
+		skydome->Update();
+		player->Update();
+
+		// 敵の更新と当たり判定
+		for (auto it = enemies.begin(); it != enemies.end(); ) {
+			Enemy* enemy = *it;
+
+			if (enemy->IsDead()) {
+				delete enemy;
+				it = enemies.erase(it);
+				continue;
+			}
+
+			// 弾との衝突判定
+			for (const auto& bullet : player->GetBullets()) {
+				float distance = MyMath::Distance(enemy->GetPosition(), bullet->GetPosition());
+				if (distance < 1.0f) { // 衝突範囲の閾値
+					enemy->OnCollision(); // 敵を無効化
+					bullet->Deactivate(); // 弾を無効化
+					break;
+				}
+			}
+
+			enemy->Update();
+			++it;
+		}
+
+		// 敵が全滅したらクリアフェーズへ
+		if (enemies.empty()) {
+			currentPhase_ = GamePhase::Clear;
+		}
+		break;
+
+	case GamePhase::Clear:
+		if (input->TriggerKey(DIK_RETURN)) { // Enterキーでタイトルフェーズに戻る
+			ResetGame(); // 状態をリセット
+			currentPhase_ = GamePhase::Title;
+		}
+		break;
 	}
 
 	//sprite->Update();
@@ -201,15 +262,28 @@ void MyGame::Draw()
 
 	spriteCommon->DrawSetCommon();
 	object3dCommon->DrawSetCommon();
+	switch (currentPhase_) {
+	case GamePhase::Title:
+		
+		title->Draw(); // Title の描画処理
 
-	// ** 描画処理 **
-	//playerの描画
-	player->Draw();
-	//skydomeの描画
-	skydome->Draw();
-	// 敵の描画
-	for (Enemy* enemy : enemies) {
-		enemy->Draw();
+		break;
+
+	case GamePhase::Explanation:
+		
+		break;
+
+	case GamePhase::GameScene:
+		skydome->Draw();
+		player->Draw();
+		for (const auto& enemy : enemies) {
+			enemy->Draw();
+		}
+		break;
+
+	case GamePhase::Clear:
+		
+		break;
 	}
 
 	//描画
@@ -225,4 +299,35 @@ void MyGame::Draw()
 
 
 	dxCommon->PostDraw();
+}
+
+void MyGame::ResetGame()
+{
+	// 敵を全削除
+	for (Enemy* enemy : enemies) {
+		delete enemy;
+	}
+	enemies.clear();
+
+	// 敵を再生成
+	std::vector<Vector3> enemyPositions = {
+		{20.0f, 0.0f, 50.0f},
+		{0.0f, 8.0f, 50.0f},
+		{-20.0f, 0.0f, 50.0f},
+		{0.0f, -8.0f, 50.0f},
+		{20.0f, 8.0f, 50.0f},
+		{-20.0f, 8.0f, 50.0f},
+		{20.0f, -8.0f, 50.0f},
+		{-20.0f, -8.0f, 50.0f},
+	};
+
+	for (const auto& position : enemyPositions) {
+		Enemy* enemy = new Enemy();
+		enemy->Initialize(object3dCommon.get(), dxCommon.get(), camera.get(), position);
+		enemy->SetCamera(camera.get());
+		enemies.push_back(enemy);
+	}
+
+	// プレイヤーの初期位置リセット
+	player->SetTranslate({ 0.0f, 0.0f, 0.0f });
 }

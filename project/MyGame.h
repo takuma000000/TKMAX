@@ -22,6 +22,14 @@
 #include "Player.h"
 #include "Enemy.h" // 敵クラスをインクルード
 #include "PlayerBullet.h"
+#include "Title.h" // Title クラス
+
+enum class GamePhase {
+	Title,
+	Explanation,
+	GameScene,
+	Clear
+};
 
 
 class MyGame : public Framework
@@ -35,6 +43,8 @@ public://メンバ関数
 	void Update() override;
 	//描画
 	void Draw() override;
+
+	void ResetGame();
 
 private://メンバ変数
 
@@ -71,6 +81,11 @@ private://メンバ変数
 private:
 	//フラグ
 	bool endRequest_ = false; // 終了フラグ
+
+	GamePhase currentPhase_ = GamePhase::Title; // 現在のフェーズ
+
+	// Title クラスのポインタを追加
+	Title* title = nullptr;
 
 };
 

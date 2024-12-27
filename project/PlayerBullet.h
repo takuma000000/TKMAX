@@ -17,6 +17,10 @@ public:
 	const Vector3& GetPosition() const;
 	void SetPosition(const Vector3& position);
 
+	// 弾の無効化
+	void Deactivate() { active_ = false; }
+
+
 
 private:
 	Transform transform_;

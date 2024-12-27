@@ -22,6 +22,10 @@ public:
 	bool IsDead() const { return isDead_; }
 	void OnCollision() { isDead_ = true; }
 
+	// 弾の取得
+	const Vector3& GetPosition() const { return transform_.translate; }
+
+
 private:
 	Transform transform_;
 
