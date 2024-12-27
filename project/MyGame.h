@@ -22,6 +22,7 @@
 #include "Player.h"
 #include "Enemy.h" // 敵クラスをインクルード
 #include "PlayerBullet.h"
+#include "Title.h" // Title クラス
 
 enum class GamePhase {
 	Title,
@@ -82,6 +83,9 @@ private:
 	bool endRequest_ = false; // 終了フラグ
 
 	GamePhase currentPhase_ = GamePhase::Title; // 現在のフェーズ
+
+	// Title クラスのポインタを追加
+	Title* title = nullptr;
 
 };
 

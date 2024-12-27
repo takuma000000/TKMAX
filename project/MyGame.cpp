@@ -41,6 +41,8 @@ void MyGame::Initialize()
 	//ファイルパス
 	TextureManager::GetInstance()->LoadTexture("./resources/uvChecker.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/pokemon.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/crushring.png");
+
 
 	//スプライト共通部の初期化
 	spriteCommon = std::make_unique<SpriteCommon>();
@@ -117,6 +119,10 @@ void MyGame::Initialize()
 		enemies.push_back(enemy);
 	}
 
+	// Title の初期化
+	title = new Title();
+	title->Initialize(spriteCommon.get(), dxCommon.get());
+
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 }
 
@@ -133,6 +139,12 @@ void MyGame::Finalize()
 
 	// Object3dの解放
 	delete object3d;
+
+	// Title の解放
+	if (title) {
+		delete title;
+		title = nullptr;
+	}
 
 	// 3Dモデルマネージャーの終了
 	ModelManager::GetInstance()->Finalize();
@@ -177,6 +189,8 @@ void MyGame::Update()
 		if (input->PushKey(DIK_SPACE)) { // スペースキーで次のフェーズへ
 			currentPhase_ = GamePhase::Explanation;
 		}
+
+		title->Update(); // Title の更新処理
 		break;
 
 	case GamePhase::Explanation:
@@ -251,6 +265,8 @@ void MyGame::Draw()
 	switch (currentPhase_) {
 	case GamePhase::Title:
 		
+		title->Draw(); // Title の描画処理
+
 		break;
 
 	case GamePhase::Explanation:
