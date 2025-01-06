@@ -16,6 +16,8 @@
 
 #include "SceneManager.h"
 
+#include <memory>
+
 
 class MyGame : public Framework
 {
@@ -40,6 +42,6 @@ private:
 
 	//シーン
 	//TitleScene* scene_ = nullptr;
-	SceneManager* sceneManager_ = nullptr; // 追加
+	std::unique_ptr<SceneManager> sceneManager_ = nullptr;
 
 };
