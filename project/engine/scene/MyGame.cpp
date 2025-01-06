@@ -12,15 +12,15 @@ void MyGame::Initialize()
 	Framework::Initialize();
 
 	// Initialize sceneManager_
-	sceneManager_ = new SceneManager();
+	sceneManager_ = std::make_unique<SceneManager>();
 
 	//最初のシーンを設定
 	//BaseScene* scene = new TitleScene(dxCommon.get(),srvManager.get());
 	//sceneManager_->SetNextScene(scene);
 
 	//シーンファクトリーの生成、マネージャにセット
-	sceneFactory_ = new SceneFactory(dxCommon.get(), srvManager.get());
-	sceneManager_->SetSceneFactory(sceneFactory_);
+	sceneFactory_ = std::make_unique<SceneFactory>(dxCommon.get(), srvManager.get());
+	sceneManager_->SetSceneFactory(sceneFactory_.get());
 
 	//最初のシーンを設定
 	sceneManager_->SetNextScene(sceneFactory_->CreateScene("TITLE"));
@@ -42,10 +42,6 @@ void MyGame::Finalize()
 	////*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 	////				解放
 	////*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
-	//scene_->Finalize();
-	//delete scene_;
-	delete sceneManager_;
 
 	// 終了処理
 	imguiManager->Finalize();

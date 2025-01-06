@@ -13,7 +13,7 @@
 void Framework::Initialize()
 {
 	//シーンマネージャの生成
-	sceneManager_ = new SceneManager();
+	sceneManager_ = std::make_unique<SceneManager>();
 
 
 	windowsAPI = std::make_unique<WindowsAPI>();
@@ -44,9 +44,6 @@ void Framework::Initialize()
 
 void Framework::Finalize()
 {
-	//シーンマネージャーの解放
-	delete sceneManager_;
-	delete sceneFactory_;
 
 	windowsAPI->Finalize();
 

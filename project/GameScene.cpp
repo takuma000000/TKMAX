@@ -18,9 +18,11 @@ void GameScene::Initialize()
 
 	ModelManager::GetInstance()->LoadModel("axis.obj", dxCommon);
 
+	object3d = std::make_unique<Object3d>();
 	object3d->Initialize(Object3dCommon::GetInstance(), dxCommon);
 	object3d->SetModel("axis.obj");
 
+	anotherObject3d = std::make_unique<Object3d>();
 	anotherObject3d->Initialize(Object3dCommon::GetInstance(), dxCommon);
 	anotherObject3d->SetModel("plane.obj");
 
@@ -43,10 +45,6 @@ void GameScene::Finalize()
 
 	// 終了処理
 	AudioManager::GetInstance()->Finalize();
-
-	// Object3dの解放
-	delete object3d;
-	delete anotherObject3d;
 
 	// 3Dモデルマネージャーの終了
 	ModelManager::GetInstance()->Finalize();

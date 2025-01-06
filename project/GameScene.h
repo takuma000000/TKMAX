@@ -32,7 +32,7 @@ private:
 	std::unique_ptr<Sprite> sprite = nullptr;
 	std::unique_ptr<Camera> camera = nullptr;
 
-	Object3d* object3d = new Object3d();
-	Object3d* anotherObject3d = new Object3d();
+	std::unique_ptr<Object3d> object3d = nullptr;
+	std::unique_ptr<Object3d> anotherObject3d = nullptr;
 };
 

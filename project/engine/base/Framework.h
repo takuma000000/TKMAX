@@ -5,6 +5,7 @@
 #include "SceneManager.h"
 #include "AbstractSceneFactory.h"
 
+
 //前方宣言
 class WindowsAPI;
 class DirectXCommon;
@@ -46,10 +47,10 @@ protected:
 	std::unique_ptr<ImGuiManager>  imguiManager = nullptr;
 
 	//シーンファクトリー
-	AbstractSceneFactory* sceneFactory_ = nullptr;
+	std::unique_ptr<AbstractSceneFactory> sceneFactory_ = nullptr;
 
 private:
-	SceneManager* sceneManager_ = nullptr;
+	std::unique_ptr<SceneManager> sceneManager_ = nullptr;
 
 };
 
