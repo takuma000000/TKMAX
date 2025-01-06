@@ -46,6 +46,7 @@ void Framework::Finalize()
 {
 	//シーンマネージャーの解放
 	delete sceneManager_;
+	delete sceneFactory_;
 
 	windowsAPI->Finalize();
 

@@ -3,6 +3,7 @@
 #include <ImGuiManager.h>
 
 #include "SceneManager.h"
+#include "AbstractSceneFactory.h"
 
 //前方宣言
 class WindowsAPI;
@@ -44,7 +45,11 @@ protected:
 	//ポインタ...ImGuiManager
 	std::unique_ptr<ImGuiManager>  imguiManager = nullptr;
 
+	//シーンファクトリー
+	AbstractSceneFactory* sceneFactory_ = nullptr;
+
 private:
 	SceneManager* sceneManager_ = nullptr;
+
 };
 

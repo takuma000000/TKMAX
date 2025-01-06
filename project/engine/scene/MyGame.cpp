@@ -15,8 +15,15 @@ void MyGame::Initialize()
 	sceneManager_ = new SceneManager();
 
 	//最初のシーンを設定
-	BaseScene* scene = new TitleScene(dxCommon.get(),srvManager.get());
-	sceneManager_->SetNextScene(scene);
+	//BaseScene* scene = new TitleScene(dxCommon.get(),srvManager.get());
+	//sceneManager_->SetNextScene(scene);
+
+	//シーンファクトリーの生成、マネージャにセット
+	sceneFactory_ = new SceneFactory(dxCommon.get(), srvManager.get());
+	sceneManager_->SetSceneFactory(sceneFactory_);
+
+	//最初のシーンを設定
+	sceneManager_->SetNextScene(sceneFactory_->CreateScene("TITLE"));
 
 	assert(dxCommon.get() != nullptr && "DirectXCommon is nullptr in MyGame::Initialize");
 	assert(srvManager.get() != nullptr && "SrvManager is nullptr in MyGame::Initialize");
@@ -36,8 +43,8 @@ void MyGame::Finalize()
 	////				解放
 	////*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-	scene_->Finalize();
-	delete scene_;
+	//scene_->Finalize();
+	//delete scene_;
 	delete sceneManager_;
 
 	// 終了処理
