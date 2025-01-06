@@ -112,7 +112,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="BaseScene.cpp" />
+    <ClCompile Include="engine\scene\BaseScene.cpp" />
     <ClCompile Include="engine\audio\AudioManager.cpp" />
     <ClCompile Include="engine\3d\Camera.cpp" />
     <ClCompile Include="engine\base\D3DResourceLeakChecker.cpp" />
@@ -128,7 +128,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\func\common\Logger.cpp" />
     <ClCompile Include="engine\base\Framework.cpp" />
     <ClCompile Include="engine\imgui\ImGuiManager.cpp" />
-    <ClCompile Include="GameScene.cpp" />
+    <ClCompile Include="engine\scene\GameScene.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="engine\3d\Model.cpp" />
     <ClCompile Include="engine\3d\ModelCommon.cpp" />
@@ -145,13 +145,13 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\effect\ParticleManager.cpp" />
     <ClCompile Include="engine\effect\ParticlerEmitter.cpp" />
     <ClCompile Include="engine\base\SrvManager.cpp" />
-    <ClCompile Include="SceneFactory.cpp" />
-    <ClCompile Include="SceneManager.cpp" />
-    <ClCompile Include="TitleScene.cpp" />
+    <ClCompile Include="engine\scene\SceneFactory.cpp" />
+    <ClCompile Include="engine\scene\SceneManager.cpp" />
+    <ClCompile Include="engine\scene\TitleScene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AbstractSceneFactory.h" />
-    <ClInclude Include="BaseScene.h" />
+    <ClInclude Include="engine\scene\BaseScene.h" />
     <ClInclude Include="engine\audio\AudioManager.h" />
     <ClInclude Include="engine\3d\Camera.h" />
     <ClInclude Include="engine\base\D3DResourceLeakChecker.h" />
@@ -185,10 +185,10 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\effect\ParticleManager.h" />
     <ClInclude Include="engine\effect\ParticlerEmitter.h" />
     <ClInclude Include="engine\base\SrvManager.h" />
-    <ClInclude Include="GameScene.h" />
-    <ClInclude Include="SceneFactory.h" />
-    <ClInclude Include="SceneManager.h" />
-    <ClInclude Include="TitleScene.h" />
+    <ClInclude Include="engine\scene\GameScene.h" />
+    <ClInclude Include="engine\scene\SceneFactory.h" />
+    <ClInclude Include="engine\scene\SceneManager.h" />
+    <ClInclude Include="engine\scene\TitleScene.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
