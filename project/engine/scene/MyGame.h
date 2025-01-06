@@ -9,10 +9,14 @@
 #include "engine/effect/ParticleManager.h"
 #include "engine/effect/ParticlerEmitter.h"
 
-#include"GameScene.h"
-#include"TitleScene.h"
+//#include"GameScene.h"
+//#include"TitleScene.h"
+#include "SceneFactory.h"
+#include "AbstractSceneFactory.h"
 
 #include "SceneManager.h"
+
+
 class MyGame : public Framework
 {
 public://メンバ関数
@@ -35,7 +39,7 @@ private:
 	bool endRequest_ = false; // 終了フラグ
 
 	//シーン
-	TitleScene* scene_ = nullptr;
+	//TitleScene* scene_ = nullptr;
 	SceneManager* sceneManager_ = nullptr; // 追加
 
 };

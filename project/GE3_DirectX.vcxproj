@@ -145,10 +145,12 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\effect\ParticleManager.cpp" />
     <ClCompile Include="engine\effect\ParticlerEmitter.cpp" />
     <ClCompile Include="engine\base\SrvManager.cpp" />
+    <ClCompile Include="SceneFactory.cpp" />
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="TitleScene.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AbstractSceneFactory.h" />
     <ClInclude Include="BaseScene.h" />
     <ClInclude Include="engine\audio\AudioManager.h" />
     <ClInclude Include="engine\3d\Camera.h" />
@@ -184,6 +186,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\effect\ParticlerEmitter.h" />
     <ClInclude Include="engine\base\SrvManager.h" />
     <ClInclude Include="GameScene.h" />
+    <ClInclude Include="SceneFactory.h" />
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="TitleScene.h" />
   </ItemGroup>
