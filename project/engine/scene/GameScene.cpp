@@ -17,6 +17,7 @@ void GameScene::Initialize()
 	sprite->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/uvChecker.png");
 
 	ModelManager::GetInstance()->LoadModel("axis.obj", dxCommon);
+	ModelManager::GetInstance()->LoadModel("plane.obj", dxCommon);
 
 	object3d = std::make_unique<Object3d>();
 	object3d->Initialize(Object3dCommon::GetInstance(), dxCommon);
