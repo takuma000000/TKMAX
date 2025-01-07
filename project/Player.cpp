@@ -107,34 +107,32 @@ void Player::Draw() {
 
 void Player::FireBullet()
 {
+	if (bulletCount_ <= 0) {
+		return; // 弾がない場合は発射しない
+	}
+
 	// マウス座標を取得
 	POINT mousePos = input_->GetMousePosition();
 
-	// スクリーン座標を正規化デバイス座標 (NDC) に変換
-	float ndcX = (2.0f * mousePos.x) / windo->GetWindowWidth() - 1.0f;
-	float ndcY = 1.0f - (2.0f * mousePos.y) / windo->GetWindowHeight();
-
-	// NDCを視点空間座標に変換
-	DirectX::XMVECTOR screenSpace = DirectX::XMVectorSet(ndcX, ndcY, 1.0f, 1.0f);
-	DirectX::XMVECTOR viewSpace = DirectX::XMVector3TransformCoord(screenSpace, camera_->GetInverseProjectionMatrix());
-
-	// 視点空間座標をワールド空間座標に変換
-	DirectX::XMVECTOR worldSpace = DirectX::XMVector3TransformCoord(viewSpace, camera_->GetInverseViewMatrix());
-	Vector3 targetWorldPos = {
-		DirectX::XMVectorGetX(worldSpace),
-		DirectX::XMVectorGetY(worldSpace),
-		DirectX::XMVectorGetZ(worldSpace)
-	};
+	// マウス位置をワールド座標へ変換
+	Vector3 targetWorldPos = ScreenToWorld(mousePos);
 
 	// プレイヤー位置からターゲット位置への方向を計算
 	Vector3 direction = MyMath::Normalize(targetWorldPos - transform_.translate);
 
+	// 弾のスピード設定
+	const float bulletSpeed = 1.0f;
+
 	// 弾の初期化
 	auto bullet = std::make_unique<PlayerBullet>();
-	bullet->Initialize(transform_.translate, direction * 1.0f, obj3dCo_, dxCommon_);
+	bullet->Initialize(transform_.translate, direction * bulletSpeed, obj3dCo_, dxCommon_);
 	bullet->SetCamera(camera_);
 
+	// 弾の登録
 	bullets_.push_back(std::move(bullet));
+
+	// 弾の残数を減らす
+	bulletCount_--;
 }
 
 Vector3 Player::GetTargetDirection() const

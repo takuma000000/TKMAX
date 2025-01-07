@@ -22,7 +22,7 @@ void MyGame::Initialize()
 	audio->Initialize();
 
 	//入力の初期化
-	input = std::make_unique<Input>();
+	input = std::make_unique<Input>();		
 	input->Initialize(windowsAPI.get());
 
 	//DirectXの初期化
@@ -186,22 +186,25 @@ void MyGame::Update()
 
 	switch (currentPhase_) {
 	case GamePhase::Title:
-		if (input->TriggerKey(DIK_SPACE)) { // スペースキーで次のフェーズへ
+		if (input->TriggerKey(DIK_SPACE)) {
 			currentPhase_ = GamePhase::Explanation;
+			input->Update(); // ここでキー入力をリセット
 		}
-
-		title->Update(); // Title の更新処理
+		title->Update();
 		break;
 
 	case GamePhase::Explanation:
-		if (input->TriggerKey(DIK_SPACE)) { // Enterキーで次のフェーズへ
+		if (input->TriggerKey(DIK_SPACE)) {
 			currentPhase_ = GamePhase::GameScene;
+			input->Update(); // ここでキー入力をリセット
 		}
 		break;
 
 	case GamePhase::GameScene:
 		camera->Update();
 		skydome->Update();
+
+		// ゲームシーン中のみプレイヤーを更新
 		player->Update();
 
 		// 敵の更新と当たり判定
@@ -216,10 +219,13 @@ void MyGame::Update()
 
 			// 弾との衝突判定
 			for (const auto& bullet : player->GetBullets()) {
+				float enemySize = (enemy->GetScale().x + enemy->GetScale().y + enemy->GetScale().z) / 3.0f;
+				float collisionThreshold = enemySize * 0.5f;
+
 				float distance = MyMath::Distance(enemy->GetPosition(), bullet->GetPosition());
-				if (distance < 1.0f) { // 衝突範囲の閾値
-					enemy->OnCollision(); // 敵を無効化
-					bullet->Deactivate(); // 弾を無効化
+				if (distance < collisionThreshold) {
+					enemy->OnCollision();
+					bullet->Deactivate();
 					break;
 				}
 			}
@@ -232,12 +238,26 @@ void MyGame::Update()
 		if (enemies.empty()) {
 			currentPhase_ = GamePhase::Clear;
 		}
+
+		// 弾が0になったらゲームオーバー
+		if (player->GetBulletCount() <= 0) {
+			currentPhase_ = GamePhase::Over;
+		}
 		break;
 
 	case GamePhase::Clear:
 		if (input->TriggerKey(DIK_SPACE)) { // Enterキーでタイトルフェーズに戻る
 			ResetGame(); // 状態をリセット
 			currentPhase_ = GamePhase::Title;
+			input->Update(); // ここでキー入力をリセット
+		}
+		break;
+
+	case GamePhase::Over:
+		if (input->TriggerKey(DIK_SPACE)) {
+			ResetGame();
+			currentPhase_ = GamePhase::Title;
+			input->Update(); // ここでキー入力をリセット
 		}
 		break;
 	}
@@ -284,6 +304,11 @@ void MyGame::Draw()
 	case GamePhase::Clear:
 		
 		break;
+
+	case GamePhase::Over:
+		// ゲームオーバー画面を描画（実際の描画コードは適宜追加）
+		break;
+
 	}
 
 	//描画
@@ -330,4 +355,7 @@ void MyGame::ResetGame()
 
 	// プレイヤーの初期位置リセット
 	player->SetTranslate({ 0.0f, 0.0f, 0.0f });
+
+	// **弾のリセット**
+	player->ResetBulletCount();
 }

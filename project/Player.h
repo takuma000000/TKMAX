@@ -28,6 +28,10 @@ public:
 	void SetRotate(const Vector3& rotate) { transform_.rotate = rotate; }
 	void SetTranslate(const Vector3& translate) { transform_.translate = translate; }
 
+	const Vector3& GetScale() const { return transform_.scale; }
+	const Vector3& GetRotate() const { return transform_.rotate; }	
+	const Vector3& GetTranslate() const { return transform_.translate; }
+
 	void SetCamera(Camera* camera);
 
 	Vector3 ScreenToWorld(const POINT& screenPos) const;
@@ -36,8 +40,12 @@ public:
 
 	void SetSpriteCommon(SpriteCommon* spriteCommon); // Sprite共通部の設定
 
+	int GetBulletCount() const { return bulletCount_; }
+
 	// 弾の取得
 	const std::vector<std::unique_ptr<PlayerBullet>>& GetBullets() const { return bullets_; }
+
+	void ResetBulletCount() { bulletCount_ = 10; }
 
 
 private:
@@ -55,4 +63,6 @@ private:
 
 	std::unique_ptr<Sprite> mouseSprite_;            // マウス位置を示すSprite
 	SpriteCommon* spriteCommon_ = nullptr;           // Sprite共通部
+
+	int bulletCount_ = 10; // 弾の初期残数
 };
