@@ -42,6 +42,8 @@ void MyGame::Initialize()
 	TextureManager::GetInstance()->LoadTexture("./resources/uvChecker.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/pokemon.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/crushring.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/clear_ring.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/over_ring.png");
 
 
 	//スプライト共通部の初期化
@@ -122,6 +124,16 @@ void MyGame::Initialize()
 	// Title の初期化
 	title = new Title();
 	title->Initialize(spriteCommon.get(), dxCommon.get());
+
+	// CLEARスプライトの初期化
+	clearSprite_ = std::make_unique<Sprite>();
+	clearSprite_->Initialize(spriteCommon.get(), dxCommon.get(), "./resources/clear_ring.png");
+	clearSprite_->SetPosition({ 0.0f, 0.0f });
+
+	// OVERスプライトの初期化
+	overSprite_ = std::make_unique<Sprite>();
+	overSprite_->Initialize(spriteCommon.get(), dxCommon.get(), "./resources/over_ring.png");
+	overSprite_->SetPosition({ 0.0f, 0.0f });
 
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 }
@@ -240,6 +252,9 @@ void MyGame::Update()
 		break;
 
 	case GamePhase::Clear:
+
+		clearSprite_->Update(); // CLEARスプライトの更新
+
 		if (input->TriggerKey(DIK_SPACE)) { // Enterキーでタイトルフェーズに戻る
 			ResetGame(); // 状態をリセット
 			currentPhase_ = GamePhase::Title;
@@ -248,6 +263,10 @@ void MyGame::Update()
 		break;
 
 	case GamePhase::Over:
+
+		// OVERスプライトの更新
+		overSprite_->Update();
+
 		if (input->TriggerKey(DIK_SPACE)) {
 			ResetGame();
 			currentPhase_ = GamePhase::Title;
@@ -296,11 +315,12 @@ void MyGame::Draw()
 		break;
 
 	case GamePhase::Clear:
-		
+		clearSprite_->Draw(); // CLEAR画面のスプライトを描画
 		break;
 
 	case GamePhase::Over:
-		// ゲームオーバー画面を描画（実際の描画コードは適宜追加）
+		// OVER画面のスプライトを描画
+		overSprite_->Draw();
 		break;
 
 	}

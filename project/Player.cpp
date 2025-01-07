@@ -24,7 +24,7 @@ void Player::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommon,
 	// Spriteの初期化
 	mouseSprite_ = std::make_unique<Sprite>();
 	mouseSprite_->Initialize(spriteCommon_, dxCommon_, "./resources/point.png");
-	mouseSprite_->SetPosition({ 0.0f, 0.0f }); // 初期位置
+	mouseSprite_->SetAnchorPoint({ 0.5f, 0.5f }); // 初期位置
 
 
 }
@@ -44,11 +44,9 @@ void Player::Update() {
 		transform_.translate.x += 0.1f;
 	}
 
-
 	if (input_->TriggerKey(DIK_SPACE)) {
 		FireBullet();
 	}
-
 
 	// 弾の更新
 	for (auto& bullet : bullets_) {
@@ -79,25 +77,11 @@ void Player::Update() {
 	// マウス座標を取得
 	POINT mousePos = input_->GetMousePosition();
 
-	// スクリーン座標を正規化デバイス座標 (NDC) に変換
-	float ndcX = (2.0f * mousePos.x) / windo->GetWindowWidth() - 1.0f;
-	float ndcY = 1.0f - (2.0f * mousePos.y) / windo->GetWindowHeight();
+	// **スプライトの位置をマウス座標に直接設定**
+	mouseSprite_->SetPosition({ static_cast<float>(mousePos.x), static_cast<float>(mousePos.y) });
 
-	// NDCを視点空間座標に変換
-	DirectX::XMVECTOR screenSpace = DirectX::XMVectorSet(ndcX, ndcY, 1.0f, 1.0f);
-	DirectX::XMVECTOR viewSpace = DirectX::XMVector3TransformCoord(screenSpace, camera_->GetInverseProjectionMatrix());
-
-	// 視点空間座標をワールド空間座標に変換
-	DirectX::XMVECTOR worldSpace = DirectX::XMVector3TransformCoord(viewSpace, camera_->GetInverseViewMatrix());
-	Vector3 targetWorldPos = {
-		DirectX::XMVectorGetX(worldSpace),
-		DirectX::XMVectorGetY(worldSpace),
-		0.0f // Sprite表示用にZ軸は0に固定
-	};
-
+	// スプライトの更新
 	mouseSprite_->Update();
-
-    mouseSprite_->SetPosition({ static_cast<float>(mousePos.x), static_cast<float>(mousePos.y) });
 }
 
 void Player::Draw() {

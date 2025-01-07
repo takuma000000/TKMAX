@@ -198,6 +198,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Skydome.h" />
     <ClInclude Include="SrvManager.h" />
     <ClInclude Include="Title.h" />
+    <ClInclude Include="engine\func\math\Vector2.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

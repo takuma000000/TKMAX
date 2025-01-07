@@ -90,6 +90,10 @@ private:
 
 	// Title クラスのポインタを追加
 	Title* title = nullptr;
+	// Claer クラスのポインタを追加
+	std::unique_ptr<Sprite> clearSprite_; // CLEAR画面用スプライト
+	// Over クラスのポインタを追加
+	std::unique_ptr<Sprite> overSprite_; // GameOver画面用スプライト
 
 };
 
