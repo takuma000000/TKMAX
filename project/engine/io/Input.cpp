@@ -48,12 +48,8 @@ bool Input::PushKey(BYTE keyNumber)
 
 bool Input::TriggerKey(BYTE keyNumber)
 {
-	//指定キーを押していればtrueを返す
-	if (keyPre[keyNumber]) {
-		return true;
-	}
-	//そうでなければfalseで返す
-	return false;
+	// 前回押されておらず、今回押されているならtrueを返す
+	return !keyPre[keyNumber] && key[keyNumber];
 }
 
 POINT Input::GetMousePosition()
