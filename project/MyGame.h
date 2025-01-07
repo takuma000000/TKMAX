@@ -94,6 +94,8 @@ private:
 	std::unique_ptr<Sprite> clearSprite_; // CLEAR画面用スプライト
 	// Over クラスのポインタを追加
 	std::unique_ptr<Sprite> overSprite_; // GameOver画面用スプライト
+	//　説明画面のスプライト
+	std::unique_ptr<Sprite> explanationSprite_;
 
 };
 

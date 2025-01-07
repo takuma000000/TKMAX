@@ -26,7 +26,8 @@ void Enemy::Update() {
 	// 一定時間ごとに方向変更
 	if (moveChangeTimer_ <= 0) {
 		ChangeDirection();
-		moveChangeTimer_ = rand() % 60 + 30; // 30～90フレームで方向を変える
+		moveChangeTimer_ = rand() % 120 + 60; // 60～180フレームに変更
+
 	}
 
 	// 移動
@@ -58,7 +59,11 @@ void Enemy::SetCamera(Camera* camera) {
 
 void Enemy::ChangeDirection()
 {
-	float angle = (rand() % 360) * (3.141592f / 180.0f); // 0〜360度のランダムな角度
-	velocity_.x = cos(angle) * moveSpeed_;
-	velocity_.y = sin(angle) * moveSpeed_;
+	float angle = (rand() % 360) * (3.141592f / 180.0f);
+	Vector3 newVelocity = { cos(angle) * moveSpeed_, sin(angle) * moveSpeed_, 0.0f };
+
+	// 徐々に現在の速度に近づける
+	velocity_.x = velocity_.x * 0.8f + newVelocity.x * 0.2f;
+	velocity_.y = velocity_.y * 0.8f + newVelocity.y * 0.2f;
 }
+

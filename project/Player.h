@@ -92,7 +92,6 @@ public:
 	/// 
 	/// </summary>
 	void DrawImGui();
-
 	/// <summary>
 	/// 
 	/// </summary>
@@ -111,7 +110,7 @@ public:
 	/// <summary>
 	/// 
 	/// </summary>
-	void ResetBulletCount() { bulletCount_ = 80; }
+	void ResetBulletCount() { bulletCount_ = 15; }
 
 	/// <summary>
 	/// 
@@ -164,7 +163,7 @@ private:
 	/// <summary>
 	/// 
 	/// </summary>
-	int bulletCount_ = 80; // 弾の初期残数
+	int bulletCount_ = 15; // 弾の初期残数
 	/// <summary>
 	/// 
 	/// </summary>

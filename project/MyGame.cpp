@@ -44,6 +44,7 @@ void MyGame::Initialize()
 	TextureManager::GetInstance()->LoadTexture("./resources/crushring.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/clear_ring.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/over_ring.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/setumei.png");
 
 
 	//スプライト共通部の初期化
@@ -87,8 +88,8 @@ void MyGame::Initialize()
 	//Vector3 cameraPosition = camera->GetTranslate();
 	//Vector3 cameraRotation = camera->GetRotate();
 
-	imguiManager = std::make_unique<ImGuiManager>();
-	imguiManager->Initialize(windowsAPI.get(), dxCommon.get());
+	//imguiManager = std::make_unique<ImGuiManager>();
+	//imguiManager->Initialize(windowsAPI.get(), dxCommon.get());
 
 	//Skydomeの初期化
 	skydome = std::make_unique<Skydome>();
@@ -135,6 +136,11 @@ void MyGame::Initialize()
 	overSprite_->Initialize(spriteCommon.get(), dxCommon.get(), "./resources/over_ring.png");
 	overSprite_->SetPosition({ 0.0f, 0.0f });
 
+	// 説明画面のスプライトの初期化
+	explanationSprite_ = std::make_unique<Sprite>();
+	explanationSprite_->Initialize(spriteCommon.get(), dxCommon.get(), "./resources/setumei.png");
+	explanationSprite_->SetPosition({ 0.0f, 0.0f });
+
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 }
 
@@ -168,7 +174,7 @@ void MyGame::Finalize()
 	audio->Finalize();
 
 	// 終了処理
-	imguiManager->Finalize();
+	//imguiManager->Finalize();
 	windowsAPI->Finalize();
 
 	//基底クラスの終了処理
@@ -186,11 +192,11 @@ void MyGame::Update()
 	}
 
 	// ** ImGui描画 **
-	imguiManager->Begin(); // ImGuiの描画開始
+	//imguiManager->Begin(); // ImGuiの描画開始
 
 	//player->DrawImGui(); // PlayerクラスのImGui描画
 
-	imguiManager->End(); // ImGuiの描画終了
+	//imguiManager->End(); // ImGuiの描画終了
 
 	//入力の更新
 	input->Update();
@@ -202,7 +208,7 @@ void MyGame::Update()
 			currentPhase_ = GamePhase::Explanation;
 			input->Update(); // ここでキー入力をリセット
 		}
-		title->Update();
+		title->Update();// Title の更新処理
 		break;
 
 	case GamePhase::Explanation:
@@ -210,6 +216,7 @@ void MyGame::Update()
 			currentPhase_ = GamePhase::GameScene;
 			input->Update(); // ここでキー入力をリセット
 		}
+		explanationSprite_->Update();// 説明画面のスプライトの更新
 		break;
 
 	case GamePhase::GameScene:
@@ -305,7 +312,7 @@ void MyGame::Draw()
 		break;
 
 	case GamePhase::Explanation:
-		
+		explanationSprite_->Draw(); // 説明画面のスプライトを描画
 		break;
 
 	case GamePhase::GameScene:
@@ -336,7 +343,7 @@ void MyGame::Draw()
 	//anotherObject3d->Draw(dxCommon.get());
 	// Skydomeの描画
 
-	imguiManager->Draw();
+	//imguiManager->Draw();
 
 
 	dxCommon->PostDraw();

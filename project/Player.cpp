@@ -20,10 +20,11 @@ void Player::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommon,
 	transform_.translate = { 0.0f, 0.0f, 0.0f };
 
 	TextureManager::GetInstance()->LoadTexture("./resources/point.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/rockon.png");
 
 	// ロックオンマーカーの初期化
 	lockOnMarker_ = std::make_unique<Sprite>();
-	lockOnMarker_->Initialize(spriteCommon_, dxCommon_, "./resources/point.png"); // マーカー用のテクスチャ
+	lockOnMarker_->Initialize(spriteCommon_, dxCommon_, "./resources/rockon.png"); // マーカー用のテクスチャ
 	lockOnMarker_->SetAnchorPoint({ 0.5f, 0.5f });
 	lockOnMarker_->SetSize({ 0.5f, 0.5f }); // スプライトのサイズを調整
 	lockOnMarker_->SetVisible(false); // 初期状態は非表示
