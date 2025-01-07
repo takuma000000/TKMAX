@@ -203,21 +203,16 @@ void MyGame::Update()
 	case GamePhase::GameScene:
 		camera->Update();
 		skydome->Update();
-
-		// ゲームシーン中のみプレイヤーを更新
 		player->Update();
 
-		// 敵の更新と当たり判定
-		for (auto it = enemies.begin(); it != enemies.end(); ) {
+		for (auto it = enemies.begin(); it != enemies.end();) {
 			Enemy* enemy = *it;
-
 			if (enemy->IsDead()) {
 				delete enemy;
 				it = enemies.erase(it);
 				continue;
 			}
 
-			// 弾との衝突判定
 			for (const auto& bullet : player->GetBullets()) {
 				float enemySize = (enemy->GetScale().x + enemy->GetScale().y + enemy->GetScale().z) / 3.0f;
 				float collisionThreshold = enemySize * 0.5f;
@@ -229,19 +224,18 @@ void MyGame::Update()
 					break;
 				}
 			}
-
 			enemy->Update();
 			++it;
+		}
+
+		// **10発撃ち切った後、5秒経過して敵が残っていたら Over フェーズへ移行**
+		if (player->GetBulletCount() <= 0 && player->IsOverTimerExpired() && !enemies.empty()) {
+			currentPhase_ = GamePhase::Over;
 		}
 
 		// 敵が全滅したらクリアフェーズへ
 		if (enemies.empty()) {
 			currentPhase_ = GamePhase::Clear;
-		}
-
-		// 弾が0になったらゲームオーバー
-		if (player->GetBulletCount() <= 0) {
-			currentPhase_ = GamePhase::Over;
 		}
 		break;
 
