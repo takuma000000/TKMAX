@@ -11,6 +11,7 @@
 
 #include <vector>
 #include "PlayerBullet.h"
+#include "Enemy.h"
 
 class Player {
 public:
@@ -27,7 +28,7 @@ public:
 	/// <summary>
 	/// 
 	/// </summary>
-	void Update();
+	void Update(const std::vector<Enemy*>& enemies);
 	/// <summary>
 	/// 
 	/// </summary>
@@ -91,7 +92,6 @@ public:
 	/// 
 	/// </summary>
 	void DrawImGui();
-
 	/// <summary>
 	/// 
 	/// </summary>
@@ -110,13 +110,20 @@ public:
 	/// <summary>
 	/// 
 	/// </summary>
-	void ResetBulletCount() { bulletCount_ = 20; }
+	void ResetBulletCount() { bulletCount_ = 15; }
 
 	/// <summary>
 	/// 
 	/// </summary>
 	/// <returns></returns>
 	bool IsOverTimerExpired() const { return overTimer_ == 0.0f; }
+
+	/// <summary>
+	///
+	void LockOnTarget(const std::vector<Enemy*>& enemies);
+
+	Vector3 WorldToScreen(const Vector3& worldPos) const;
+
 
 private:
 
@@ -156,10 +163,16 @@ private:
 	/// <summary>
 	/// 
 	/// </summary>
-	int bulletCount_ = 20; // 弾の初期残数
+	int bulletCount_ = 15; // 弾の初期残数
 	/// <summary>
 	/// 
 	/// </summary>
 	float overTimer_ = -1.0f; // -1: 未使用状態, 0以上: カウントダウン中
+
+private:
+	Enemy* targetEnemy_ = nullptr; // 現在ロックオンしているエネミー
+
+	std::unique_ptr<Sprite> lockOnMarker_; // ロックオンマーカー
+
 
 };

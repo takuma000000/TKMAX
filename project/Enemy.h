@@ -46,7 +46,7 @@ private:
 private:
 	Vector3 velocity_;  // 速度ベクトル
 	Vector3 initialPosition_; // 初期位置を保持
-	float moveRadius_ = 5.0f; // 移動範囲の制限
+	float moveRadius_ = 3.0f; // 移動範囲の制限
 	float moveSpeed_ = 0.1f; // 移動速度
 	int moveChangeTimer_ = 0; // 方向変更用のタイマー
 

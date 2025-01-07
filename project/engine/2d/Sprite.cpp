@@ -123,6 +123,9 @@ void Sprite::Update() {
 }
 
 void Sprite::Draw() {
+
+	if (!isVisible_) return; // 非表示なら描画しない
+
 	//VertexBufferViewを設定
 	//Spriteの描画。変更が必要なものだけ変更する
 	dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);//VBVを設定
