@@ -176,7 +176,7 @@ void MyGame::Update()
 	// ** ImGui描画 **
 	imguiManager->Begin(); // ImGuiの描画開始
 
-	player->DrawImGui(); // PlayerクラスのImGui描画
+	//player->DrawImGui(); // PlayerクラスのImGui描画
 
 	imguiManager->End(); // ImGuiの描画終了
 
@@ -186,7 +186,7 @@ void MyGame::Update()
 
 	switch (currentPhase_) {
 	case GamePhase::Title:
-		if (input->PushKey(DIK_SPACE)) { // スペースキーで次のフェーズへ
+		if (input->TriggerKey(DIK_SPACE)) { // スペースキーで次のフェーズへ
 			currentPhase_ = GamePhase::Explanation;
 		}
 
@@ -194,7 +194,7 @@ void MyGame::Update()
 		break;
 
 	case GamePhase::Explanation:
-		if (input->PushKey(DIK_RETURN)) { // Enterキーで次のフェーズへ
+		if (input->TriggerKey(DIK_SPACE)) { // Enterキーで次のフェーズへ
 			currentPhase_ = GamePhase::GameScene;
 		}
 		break;
@@ -235,7 +235,7 @@ void MyGame::Update()
 		break;
 
 	case GamePhase::Clear:
-		if (input->TriggerKey(DIK_RETURN)) { // Enterキーでタイトルフェーズに戻る
+		if (input->TriggerKey(DIK_SPACE)) { // Enterキーでタイトルフェーズに戻る
 			ResetGame(); // 状態をリセット
 			currentPhase_ = GamePhase::Title;
 		}
