@@ -1,5 +1,8 @@
 #pragma once
 #include "Framework.h"
+#include <memory> // 追加
+
+class Player; // 前方宣言
 
 // GE3クラス化(MyClass)
 #include "Input.h"
@@ -28,7 +31,8 @@ enum class GamePhase {
 	Title,
 	Explanation,
 	GameScene,
-	Clear
+	Clear,
+	Over,
 };
 
 
