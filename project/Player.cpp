@@ -62,6 +62,14 @@ void Player::Update() {
 			}),
 		bullets_.end());
 
+	// 10発撃ち切った後のカウントダウン処理
+	if (overTimer_ > 0.0f) {
+		overTimer_ -= 1.0f / 60.0f; // 1フレームごとに約1/60秒減少
+		if (overTimer_ <= 0.0f) {
+			overTimer_ = 0.0f; // 0以下にならないように
+		}
+	}
+
 	// オブジェクトの更新
 	object3d_->SetScale(transform_.scale);
 	object3d_->SetRotate(transform_.rotate);
@@ -113,26 +121,22 @@ void Player::FireBullet()
 
 	// マウス座標を取得
 	POINT mousePos = input_->GetMousePosition();
-
-	// マウス位置をワールド座標へ変換
 	Vector3 targetWorldPos = ScreenToWorld(mousePos);
-
-	// プレイヤー位置からターゲット位置への方向を計算
 	Vector3 direction = MyMath::Normalize(targetWorldPos - transform_.translate);
-
-	// 弾のスピード設定
 	const float bulletSpeed = 1.0f;
 
-	// 弾の初期化
 	auto bullet = std::make_unique<PlayerBullet>();
 	bullet->Initialize(transform_.translate, direction * bulletSpeed, obj3dCo_, dxCommon_);
 	bullet->SetCamera(camera_);
-
-	// 弾の登録
 	bullets_.push_back(std::move(bullet));
 
 	// 弾の残数を減らす
 	bulletCount_--;
+
+	// 10発目を撃ったタイミングで overTimer_ を開始（5秒）
+	if (bulletCount_ == 0) {
+		overTimer_ = 5.0f;
+	}
 }
 
 Vector3 Player::GetTargetDirection() const
