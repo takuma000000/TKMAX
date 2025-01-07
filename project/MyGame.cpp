@@ -215,7 +215,9 @@ void MyGame::Update()
 	case GamePhase::GameScene:
 		camera->Update();
 		skydome->Update();
-		player->Update();
+
+		// **エネミーのロックオンを更新**
+		player->Update(enemies);
 
 		for (auto it = enemies.begin(); it != enemies.end();) {
 			Enemy* enemy = *it;

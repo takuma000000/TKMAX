@@ -21,16 +21,36 @@ void Player::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommon,
 
 	TextureManager::GetInstance()->LoadTexture("./resources/point.png");
 
-	// Spriteの初期化
-	mouseSprite_ = std::make_unique<Sprite>();
-	mouseSprite_->Initialize(spriteCommon_, dxCommon_, "./resources/point.png");
-	mouseSprite_->SetAnchorPoint({ 0.5f, 0.5f }); // 初期位置
+	// ロックオンマーカーの初期化
+	lockOnMarker_ = std::make_unique<Sprite>();
+	lockOnMarker_->Initialize(spriteCommon_, dxCommon_, "./resources/point.png"); // マーカー用のテクスチャ
+	lockOnMarker_->SetAnchorPoint({ 0.5f, 0.5f });
+	lockOnMarker_->SetSize({ 0.5f, 0.5f }); // スプライトのサイズを調整
+	lockOnMarker_->SetVisible(false); // 初期状態は非表示
 
 
 }
 
-void Player::Update() {
-	// 入力による移動
+void Player::Update(const std::vector<Enemy*>& enemies) {
+	// **最も近いエネミーをロックオン**
+	LockOnTarget(enemies);
+
+	// **ロックオンした敵のマーカーを更新**
+	if (targetEnemy_) {
+		Vector3 enemyPos = targetEnemy_->GetPosition();
+		enemyPos.y += 2.0f; // 頭上にマーカーを表示
+
+		// ワールド座標をスクリーン座標に変換
+		Vector3 screenPos = WorldToScreen(enemyPos);
+		lockOnMarker_->SetPosition({ screenPos.x, screenPos.y });
+		lockOnMarker_->SetVisible(true);
+	} else {
+		lockOnMarker_->SetVisible(false);
+	}
+
+	lockOnMarker_->Update();
+
+	// **プレイヤーの移動処理**
 	if (input_->PushKey(DIK_W)) {
 		transform_.translate.y += 0.1f;
 	}
@@ -44,15 +64,17 @@ void Player::Update() {
 		transform_.translate.x += 0.1f;
 	}
 
+	// **弾を発射**
 	if (input_->TriggerKey(DIK_SPACE)) {
 		FireBullet();
 	}
 
-	// 弾の更新
+	// **弾の更新**
 	for (auto& bullet : bullets_) {
 		bullet->Update();
 	}
 
+	// **不要な弾の削除**
 	bullets_.erase(
 		std::remove_if(bullets_.begin(), bullets_.end(),
 			[](const std::unique_ptr<PlayerBullet>& bullet) {
@@ -60,28 +82,20 @@ void Player::Update() {
 			}),
 		bullets_.end());
 
-	// 10発撃ち切った後のカウントダウン処理
+	// **弾のカウントダウン処理**
 	if (overTimer_ > 0.0f) {
-		overTimer_ -= 1.0f / 60.0f; // 1フレームごとに約1/60秒減少
+		overTimer_ -= 1.0f / 60.0f;
 		if (overTimer_ <= 0.0f) {
-			overTimer_ = 0.0f; // 0以下にならないように
+			overTimer_ = 0.0f;
 		}
 	}
 
-	// オブジェクトの更新
+	// **プレイヤーの3Dオブジェクトを更新**
 	object3d_->SetScale(transform_.scale);
 	object3d_->SetRotate(transform_.rotate);
 	object3d_->SetTranslate(transform_.translate);
 	object3d_->Update();
 
-	// マウス座標を取得
-	POINT mousePos = input_->GetMousePosition();
-
-	// **スプライトの位置をマウス座標に直接設定**
-	mouseSprite_->SetPosition({ static_cast<float>(mousePos.x), static_cast<float>(mousePos.y) });
-
-	// スプライトの更新
-	mouseSprite_->Update();
 }
 
 void Player::Draw() {
@@ -93,20 +107,17 @@ void Player::Draw() {
 
 	object3d_->Draw(dxCommon_);
 
-	// Spriteの描画
-	mouseSprite_->Draw();
+	lockOnMarker_->Draw();
 }
 
 void Player::FireBullet()
 {
-	if (bulletCount_ <= 0) {
-		return; // 弾がない場合は発射しない
+	if (bulletCount_ <= 0 || targetEnemy_ == nullptr) {
+		return; // 弾がない、またはターゲットがいない場合は発射しない
 	}
 
-	// マウス座標を取得
-	POINT mousePos = input_->GetMousePosition();
-	Vector3 targetWorldPos = ScreenToWorld(mousePos);
-	Vector3 direction = MyMath::Normalize(targetWorldPos - transform_.translate);
+	Vector3 targetPos = targetEnemy_->GetPosition();
+	Vector3 direction = MyMath::Normalize(targetPos - transform_.translate);
 	const float bulletSpeed = 1.0f;
 
 	auto bullet = std::make_unique<PlayerBullet>();
@@ -114,12 +125,10 @@ void Player::FireBullet()
 	bullet->SetCamera(camera_);
 	bullets_.push_back(std::move(bullet));
 
-	// 弾の残数を減らす
 	bulletCount_--;
 
-	// 10発目を撃ったタイミングで overTimer_ を開始（5秒）
 	if (bulletCount_ == 0) {
-		overTimer_ = 5.0f;
+		overTimer_ = 5.0f; // 10発撃ち切ったらリロードタイム開始
 	}
 }
 
@@ -176,4 +185,50 @@ void Player::DrawImGui()
 void Player::SetSpriteCommon(SpriteCommon* spriteCommon)
 {
 	spriteCommon_ = spriteCommon;
+}
+
+void Player::LockOnTarget(const std::vector<Enemy*>& enemies)
+{
+	if (enemies.empty()) {
+		targetEnemy_ = nullptr;
+		lockOnMarker_->SetVisible(false); // ロックオン対象がいない場合は非表示
+		return;
+	}
+
+	float minDistance = FLT_MAX;
+	Enemy* closestEnemy = nullptr;
+
+	for (Enemy* enemy : enemies) {
+		if (enemy->IsDead()) continue;
+
+		float distance = MyMath::Distance(transform_.translate, enemy->GetPosition());
+		if (distance < minDistance) {
+			minDistance = distance;
+			closestEnemy = enemy;
+		}
+	}
+
+	targetEnemy_ = closestEnemy;
+
+	if (targetEnemy_) {
+		lockOnMarker_->SetVisible(true); // マーカーを表示
+	} else {
+		lockOnMarker_->SetVisible(false); // ターゲットがいない場合は非表示
+	}
+}
+
+Vector3 Player::WorldToScreen(const Vector3& worldPos) const
+{
+	DirectX::XMVECTOR worldVec = DirectX::XMVectorSet(worldPos.x, worldPos.y, worldPos.z, 1.0f);
+
+	// `Matrix4x4` を `DirectX::XMMATRIX` に変換
+	DirectX::XMMATRIX viewProjMatrix = DirectX::XMLoadFloat4x4(reinterpret_cast<const DirectX::XMFLOAT4X4*>(&camera_->GetViewProjectionMatrix()));
+
+	// ワールド座標をスクリーン座標へ変換
+	DirectX::XMVECTOR screenVec = DirectX::XMVector3TransformCoord(worldVec, viewProjMatrix);
+
+	float screenX = (DirectX::XMVectorGetX(screenVec) + 1.0f) * 0.5f * windo->GetWindowWidth();
+	float screenY = (1.0f - DirectX::XMVectorGetY(screenVec)) * 0.5f * windo->GetWindowHeight();
+
+	return { screenX, screenY, 0.0f };
 }

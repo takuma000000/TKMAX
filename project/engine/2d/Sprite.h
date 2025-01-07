@@ -75,6 +75,11 @@ public:
 	void SetTextureLeftTop(const Vector2& textureLeftTop) { this->textureLeftTop = textureLeftTop; }
 	void SetTextureSize(const Vector2& textureSize) { this->textureSize = textureSize; }
 
+
+	void SetVisible(bool isVisible) { isVisible_ = isVisible; }
+	bool IsVisible() const { return isVisible_; }
+
+
 public://メンバ関数
 	void Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, std::string textureFilePath);
 	void Update();
@@ -134,4 +139,5 @@ private:
 	//ファイルパスを保存するメンバー変数
 	std::string textureFilePath;
 
+	bool isVisible_ = true; // 初期状態は「表示」
 };
