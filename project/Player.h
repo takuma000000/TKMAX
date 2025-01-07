@@ -110,7 +110,7 @@ public:
 	/// <summary>
 	/// 
 	/// </summary>
-	void ResetBulletCount() { bulletCount_ = 10; }
+	void ResetBulletCount() { bulletCount_ = 20; }
 
 	/// <summary>
 	/// 
@@ -156,7 +156,7 @@ private:
 	/// <summary>
 	/// 
 	/// </summary>
-	int bulletCount_ = 10; // 弾の初期残数
+	int bulletCount_ = 20; // 弾の初期残数
 	/// <summary>
 	/// 
 	/// </summary>
