@@ -743,63 +743,33 @@ Quaternion MyMath::MakeRotateAxisAngleQuaternion(const Vector3& axis, float angl
 
 Vector3 MyMath::RotateVector(const Vector3& vector, const Quaternion& quaternion)
 {
-	// クォータニオンを正規化（回転用クォータニオンは単位クォータニオンであるべき）
-	Quaternion normalizedQuaternion = Normalize(quaternion);
+	Quaternion normalizedQuaternion = Normalize(quaternion); // クォータニオンを正規化
 
-	// ベクトルをクォータニオン形式に変換（w = 0）
-	Quaternion vectorQuat;
-	vectorQuat.x = vector.x;
-	vectorQuat.y = vector.y;
-	vectorQuat.z = vector.z;
-	vectorQuat.w = 0.0f;
+	Quaternion vectorQuat{ vector.x, vector.y, vector.z, 0.0f }; // ベクトルを四元数として扱う
+	Quaternion inverseQuat = Conjugate(normalizedQuaternion);  // クォータニオンの共役
 
-	// クォータニオンの逆を計算
-	Quaternion inverseQuat = Conjugate(normalizedQuaternion);
-
-	// v' = q * v * q^-1 を計算
 	Quaternion rotatedQuat = Multiply(Multiply(normalizedQuaternion, vectorQuat), inverseQuat);
 
-	// 回転後のベクトルを抽出
-	Vector3 rotatedVector;
-	rotatedVector.x = rotatedQuat.x;
-	rotatedVector.y = rotatedQuat.y;
-	rotatedVector.z = rotatedQuat.z;
-
-	return rotatedVector;
+	return Vector3(rotatedQuat.x, rotatedQuat.y, rotatedQuat.z);
 }
 
-Matrix4x4 MyMath::MakeRotateMatrix(const Quaternion& quaternion)
+// 回転行列を生成
+Matrix4x4 MyMath::MakeRotateMatrix(const Quaternion& q)
 {
-	// クォータニオンを正規化
-	Quaternion normalizedQuaternion = Normalize(quaternion);
+	Matrix4x4 rotateMatrix = {};
 
-	// クォータニオンの成分
-	float x = normalizedQuaternion.x;
-	float y = normalizedQuaternion.y;
-	float z = normalizedQuaternion.z;
-	float w = normalizedQuaternion.w;
+	rotateMatrix.m[0][0] = 1.0f - 2.0f * (q.y * q.y + q.z * q.z);
+	rotateMatrix.m[0][1] = 2.0f * (q.x * q.y + q.z * q.w);
+	rotateMatrix.m[0][2] = 2.0f * (q.x * q.z - q.y * q.w);
 
-	// 回転行列を作成
-	Matrix4x4 rotateMatrix;
+	rotateMatrix.m[1][0] = 2.0f * (q.x * q.y - q.z * q.w);
+	rotateMatrix.m[1][1] = 1.0f - 2.0f * (q.x * q.x + q.z * q.z);
+	rotateMatrix.m[1][2] = 2.0f * (q.y * q.z + q.x * q.w);
 
-	rotateMatrix.m[0][0] = 1.0f - 2.0f * (y * y + z * z);
-	rotateMatrix.m[0][1] = 2.0f * (x * y - z * w);
-	rotateMatrix.m[0][2] = 2.0f * (x * z + y * w);
-	rotateMatrix.m[0][3] = 0.0f;
+	rotateMatrix.m[2][0] = 2.0f * (q.x * q.z + q.y * q.w);
+	rotateMatrix.m[2][1] = 2.0f * (q.y * q.z - q.x * q.w);
+	rotateMatrix.m[2][2] = 1.0f - 2.0f * (q.x * q.x + q.y * q.y);
 
-	rotateMatrix.m[1][0] = 2.0f * (x * y + z * w);
-	rotateMatrix.m[1][1] = 1.0f - 2.0f * (x * x + z * z);
-	rotateMatrix.m[1][2] = 2.0f * (y * z - x * w);
-	rotateMatrix.m[1][3] = 0.0f;
-
-	rotateMatrix.m[2][0] = 2.0f * (x * z - y * w);
-	rotateMatrix.m[2][1] = 2.0f * (y * z + x * w);
-	rotateMatrix.m[2][2] = 1.0f - 2.0f * (x * x + y * y);
-	rotateMatrix.m[2][3] = 0.0f;
-
-	rotateMatrix.m[3][0] = 0.0f;
-	rotateMatrix.m[3][1] = 0.0f;
-	rotateMatrix.m[3][2] = 0.0f;
 	rotateMatrix.m[3][3] = 1.0f;
 
 	return rotateMatrix;

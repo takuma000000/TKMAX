@@ -121,7 +121,7 @@ public:
 	//ベクトルをQuaternionで回転させた結果のベクトルを求める
 	static Vector3 RotateVector(const Vector3& vector, const Quaternion& quaternion);
 	//Quaternionから回転行列を求める
-	static Matrix4x4 MakeRotateMatrix(const Quaternion& quaternion);
+	static Matrix4x4 MakeRotateMatrix(const Quaternion& q);
 
 	///-------------------------------
 };
