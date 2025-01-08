@@ -169,42 +169,33 @@ void MyGame::Update()
 
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
-	Quaternion rotation = MyMath::MakeRotateAxisAngleQuaternion(MyMath::Normalize(Vector3{ 1.0f,0.4f,-0.2f }), 0.45f);
-	Vector3 pointY = { 2.1f,-0.9f,1.3f };
-	Matrix4x4 rotateMatrix = MyMath::MakeRotateMatrix(rotation);
-	Vector3 rotateByQuaternion = MyMath::RotateVector(pointY, rotation);
-	Vector3 rotateByMatrix = MyMath::Transform(pointY, rotateMatrix);
+	Quaternion rotation0 = MyMath::MakeRotateAxisAngleQuaternion({ 0.71f,0.71f,0.0f }, 0.3f);
+	Quaternion rotation1 = MyMath::MakeRotateAxisAngleQuaternion({ 0.71f,0.0f,0.71f }, 3.141592f);
+
+	// クォータニオンの線形補間
+	Quaternion interpolate0 = MyMath::Slerp(rotation0, rotation1, 0.0f);
+	Quaternion interpolate1 = MyMath::Slerp(rotation0, rotation1, 0.3f);
+	Quaternion interpolate2 = MyMath::Slerp(rotation0, rotation1, 0.5f);
+	Quaternion interpolate3 = MyMath::Slerp(rotation0, rotation1, 0.7f);
+	Quaternion interpolate4 = MyMath::Slerp(rotation0, rotation1, 1.0f);
 
 
+	//ImGuiの更新
 	imguiManager->Begin();
 
-	if (ImGui::Begin("Rotation Results")) {
-		// クォータニオンの表示
-		ImGui::Text("Quaternion (rotation):");
-		ImGui::Text("[%.3f, %.3f, %.3f, %.3f]", rotation.x, rotation.y, rotation.z, rotation.w);
+	ImGui::Begin("Quaternion Slerp Debug");
 
-		// 行列の要素を表形式で表示
-		ImGui::Separator();
-		ImGui::Text("Rotation Matrix:");
-		ImGui::Text("[%.3f, %.3f, %.3f, %.3f]", rotateMatrix.m[0][0], rotateMatrix.m[0][1], rotateMatrix.m[0][2], rotateMatrix.m[0][3]);
-		ImGui::Text("[%.3f, %.3f, %.3f, %.3f]", rotateMatrix.m[1][0], rotateMatrix.m[1][1], rotateMatrix.m[1][2], rotateMatrix.m[1][3]);
-		ImGui::Text("[%.3f, %.3f, %.3f, %.3f]", rotateMatrix.m[2][0], rotateMatrix.m[2][1], rotateMatrix.m[2][2], rotateMatrix.m[2][3]);
-		ImGui::Text("[%.3f, %.3f, %.3f, %.3f]", rotateMatrix.m[3][0], rotateMatrix.m[3][1], rotateMatrix.m[3][2], rotateMatrix.m[3][3]);
+	// 各クォータニオンの値を表示
+	ImGui::Text("Quaternion Interpolation Results:");
+	ImGui::Text("interpolate0: [%.2f, %.2f, %.2f, %.2f]", interpolate0.x, interpolate0.y, interpolate0.z, interpolate0.w);
+	ImGui::Text("interpolate1: [%.2f, %.2f, %.2f, %.2f]", interpolate1.x, interpolate1.y, interpolate1.z, interpolate1.w);
+	ImGui::Text("interpolate2: [%.2f, %.2f, %.2f, %.2f]", interpolate2.x, interpolate2.y, interpolate2.z, interpolate2.w);
+	ImGui::Text("interpolate3: [%.2f, %.2f, %.2f, %.2f]", interpolate3.x, interpolate3.y, interpolate3.z, interpolate3.w);
+	ImGui::Text("interpolate4: [%.2f, %.2f, %.2f, %.2f]", interpolate4.x, interpolate4.y, interpolate4.z, interpolate4.w);
 
-		// クォータニオンで回転させた結果を表示
-		ImGui::Separator();
-		ImGui::Text("Rotated by Quaternion:");
-		ImGui::Text("[%.3f, %.3f, %.3f]", rotateByQuaternion.x, rotateByQuaternion.y, rotateByQuaternion.z);
-
-		// 行列で回転させた結果を表示
-		ImGui::Separator();
-		ImGui::Text("Rotated by Matrix:");
-		ImGui::Text("[%.3f, %.3f, %.3f]", rotateByMatrix.x, rotateByMatrix.y, rotateByMatrix.z);
-	}
 	ImGui::End();
 
 	imguiManager->End();
-
 
 	//---------------------------------------------------------
 }

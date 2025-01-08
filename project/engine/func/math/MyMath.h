@@ -122,6 +122,11 @@ public:
 	static Vector3 RotateVector(const Vector3& vector, const Quaternion& quaternion);
 	//Quaternionから回転行列を求める
 	static Matrix4x4 MakeRotateMatrix(const Quaternion& q);
+	//Quaternionの球面線形補間
+	static Quaternion Slerp(const Quaternion& q1, const Quaternion& q2, float t);
+	//Quaternionの内積
+	static float Dot(const Quaternion& q1, const Quaternion& q2);
+
 
 	///-------------------------------
 };

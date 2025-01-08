@@ -775,3 +775,56 @@ Matrix4x4 MyMath::MakeRotateMatrix(const Quaternion& q)
 	return rotateMatrix;
 }
 
+Quaternion MyMath::Slerp(const Quaternion& q1, const Quaternion& q2, float t)
+{
+	// クォータニオンを正規化
+	Quaternion q1Norm = Normalize(q1);
+	Quaternion q2Norm = Normalize(q2);
+
+	// 内積を計算
+	float dot = Dot(q1Norm, q2Norm);
+
+	// 補間の方向を調整
+	if (dot < 0.0f) {
+		q2Norm.x = -q2Norm.x;
+		q2Norm.y = -q2Norm.y;
+		q2Norm.z = -q2Norm.z;
+		q2Norm.w = -q2Norm.w;
+		dot = -dot;
+	}
+
+	// しきい値 (内積が 1 に近い場合は線形補間)
+	const float THRESHOLD = 0.9995f;
+	if (dot > THRESHOLD) {
+		// 線形補間 (Lerp)
+		Quaternion result = {
+			Lerp(q1Norm.x, q2Norm.x, t),
+			Lerp(q1Norm.y, q2Norm.y, t),
+			Lerp(q1Norm.z, q2Norm.z, t),
+			Lerp(q1Norm.w, q2Norm.w, t)
+		};
+		return Normalize(result);
+	}
+
+	// 球面線形補間 (Slerp)
+	float theta = acosf(dot);      // 角度
+	float sinTheta = sinf(theta);  // sin(θ)
+
+	float weight1 = sinf((1.0f - t) * theta) / sinTheta;
+	float weight2 = sinf(t * theta) / sinTheta;
+
+	Quaternion result = {
+		weight1 * q1Norm.x + weight2 * q2Norm.x,
+		weight1 * q1Norm.y + weight2 * q2Norm.y,
+		weight1 * q1Norm.z + weight2 * q2Norm.z,
+		weight1 * q1Norm.w + weight2 * q2Norm.w
+	};
+
+	return Normalize(result);
+}
+
+float MyMath::Dot(const Quaternion& q1, const Quaternion& q2)
+{
+	return q1.x * q2.x + q1.y * q2.y + q1.z * q2.z + q1.w * q2.w;
+}
+
