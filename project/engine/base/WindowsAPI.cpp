@@ -67,6 +67,8 @@ void WindowsAPI::Initialize()
 		nullptr					//オプション
 	);
 
+
+
 	//ウィンドウを表示する
 	ShowWindow(hwnd, SW_SHOW);
 
