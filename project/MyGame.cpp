@@ -186,10 +186,10 @@ void MyGame::Update()
 		// 行列の要素を表形式で表示
 		ImGui::Separator();
 		ImGui::Text("Rotation Matrix:");
-		ImGui::Text("[%.3f, %.3f, %.3f, %.3f]", rotateMatrix.m[0][0], rotateMatrix.m[1][0], rotateMatrix.m[2][0], rotateMatrix.m[3][0]);
-		ImGui::Text("[%.3f, %.3f, %.3f, %.3f]", rotateMatrix.m[0][1], rotateMatrix.m[1][1], rotateMatrix.m[2][1], rotateMatrix.m[3][1]);
-		ImGui::Text("[%.3f, %.3f, %.3f, %.3f]", rotateMatrix.m[0][2], rotateMatrix.m[1][2], rotateMatrix.m[2][2], rotateMatrix.m[3][2]);
-		ImGui::Text("[%.3f, %.3f, %.3f, %.3f]", rotateMatrix.m[0][3], rotateMatrix.m[1][3], rotateMatrix.m[2][3], rotateMatrix.m[3][3]);
+		ImGui::Text("[%.3f, %.3f, %.3f, %.3f]", rotateMatrix.m[0][0], rotateMatrix.m[0][1], rotateMatrix.m[0][2], rotateMatrix.m[0][3]);
+		ImGui::Text("[%.3f, %.3f, %.3f, %.3f]", rotateMatrix.m[1][0], rotateMatrix.m[1][1], rotateMatrix.m[1][2], rotateMatrix.m[1][3]);
+		ImGui::Text("[%.3f, %.3f, %.3f, %.3f]", rotateMatrix.m[2][0], rotateMatrix.m[2][1], rotateMatrix.m[2][2], rotateMatrix.m[2][3]);
+		ImGui::Text("[%.3f, %.3f, %.3f, %.3f]", rotateMatrix.m[3][0], rotateMatrix.m[3][1], rotateMatrix.m[3][2], rotateMatrix.m[3][3]);
 
 		// クォータニオンで回転させた結果を表示
 		ImGui::Separator();
