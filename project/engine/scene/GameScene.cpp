@@ -12,6 +12,7 @@ void GameScene::Initialize()
 	//ファイルパス
 	TextureManager::GetInstance()->LoadTexture("./resources/uvChecker.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/pokemon.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/circle.png");
 
 	sprite = std::make_unique<Sprite>();
 	sprite->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/uvChecker.png");
