@@ -6,8 +6,8 @@ void GameScene::Initialize()
 	assert(this != nullptr && "this is nullptr in GameScene::Initialize");
 	assert(dxCommon != nullptr && "dxCommon is nullptr in GameScene::Initialize");
 
-	//AudioManager::GetInstance()->LoadSound("fanfare", "fanfare.wav");
-	//AudioManager::GetInstance()->PlaySound("fanfare");
+	AudioManager::GetInstance()->LoadSound("fanfare", "fanfare.wav");
+	AudioManager::GetInstance()->PlaySound("fanfare");
 	
 	//ファイルパス
 	TextureManager::GetInstance()->LoadTexture("./resources/uvChecker.png");
