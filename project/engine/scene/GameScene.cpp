@@ -29,44 +29,32 @@ void GameScene::Finalize()
 
 void GameScene::Update()
 {
+	// ────────────────────────────────────────
+	// 各オブジェクトの更新処理
+	// ────────────────────────────────────────
 	camera->Update();
 	sprite->Update();
 	object3d->Update();
 	anotherObject3d->Update();
 
-	//object3d*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	// ────────────────────────────────────────
+	// 移動・回転（加算）・スケール更新
+	// ────────────────────────────────────────
 
-	//translate
-	Vector3 translate = object3d->GetTranslate();
-	translate = { 3.0f,-4.0f,0.0f };
-	object3d->SetTranslate(translate);
-	//rotate
-	Vector3 rotate = object3d->GetRotate();
-	rotate += { 0.0f, 0.0f, 0.1f };
-	object3d->SetRotate(rotate);
-	//scale
-	Vector3 scale = object3d->GetScale();
-	scale = { 1.0f, 1.0f, 1.0f };
-	object3d->SetScale(scale);
+	//*-*-*-*-*-*-*-*-*-*-*
+	// object3d
+	//*-*-*-*-*-*-*-*-*-*-*
+	UpdateObjectTransform(object3d, { 3.0f, -4.0f, 0.0f }, { 0.0f,0.0f,0.0f }, { 1.0f, 1.0f, 1.0f });
 
-	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	//*-*-*-*-*-*-*-*-*-*-*
+	// anotherObject3d
+	//*-*-*-*-*-*-*-*-*-*-*
 
-
-	//anotherObject3d-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-	//translate
-	Vector3 anotherTranslate = anotherObject3d->GetTranslate();
-	anotherTranslate = { 3.0f,4.0f,0.0f };
-	anotherObject3d->SetTranslate(anotherTranslate);
-	//ratate
+	// 回転
 	Vector3 anotherRotate = anotherObject3d->GetRotate();
-	anotherRotate += { 0.1f, 0.0f, 0.0f };
-	anotherObject3d->SetRotate(anotherRotate);
-	//scale
-	Vector3 anotherScale = anotherObject3d->GetScale();
-	anotherScale = { 1.0f, 1.0f, 1.0f };
-	anotherObject3d->SetScale(anotherScale);
+	anotherRotate.x += 0.1f;
 
-	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	UpdateObjectTransform(anotherObject3d, { 3.0f, 4.0f, 0.0f }, anotherRotate, { 1.0f, 1.0f, 1.0f });
 }
 
 void GameScene::Draw()
@@ -85,8 +73,8 @@ void GameScene::Draw()
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeAudio()
 {
-	AudioManager::GetInstance()->LoadSound("fanfare", "fanfare.wav");
-	AudioManager::GetInstance()->PlaySound("fanfare");
+	//AudioManager::GetInstance()->LoadSound("fanfare", "fanfare.wav");
+	//AudioManager::GetInstance()->PlaySound("fanfare");
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -143,4 +131,22 @@ void GameScene::InitializeCamera()
 
 	object3d->SetCamera(camera.get());
 	anotherObject3d->SetCamera(camera.get());
+}
+
+// ──────────────────────────────────────────────
+// ● 指定した Object3d の Transform を更新する
+// ──────────────────────────────────────────────
+// - 更新対象の Object3d の座標・回転・スケールを設定）
+// ──────────────────────────────────────────────
+/**
+ * @param obj       [in/out] 更新対象の Object3d
+ * @param translate [in]     新しい座標
+ * @param rotate    [in]     新しい回転角（加算処理なし）
+ * @param scale     [in]     スケール値（直接上書き）
+ */
+void GameScene::UpdateObjectTransform(std::unique_ptr<Object3d>& obj, const Vector3& translate, const Vector3& rotate, const Vector3& scale)
+{
+	obj->SetTranslate(translate);
+	obj->SetRotate(rotate);
+	obj->SetScale(scale);
 }

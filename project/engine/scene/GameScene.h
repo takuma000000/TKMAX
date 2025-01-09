@@ -15,6 +15,8 @@
 #include "ModelCommon.h"
 #include "ModelManager.h"
 
+#include "engine/func/math/Vector3.h"
+
 class GameScene : public BaseScene
 {
 public:
@@ -26,9 +28,7 @@ public:
 	void Update() override;
 	void Draw() override;
 
-private:
-
-	// ──────────────────── 初期化処理 ────────────────────
+private:// ──────────────────── 初期化処理 ────────────────────
 
    // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    // ゲーム内のサウンドをロード＆再生
@@ -59,6 +59,24 @@ private:
 	// カメラを作成し、各オブジェクトに適用
 	// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 	void InitializeCamera();
+
+private: // ──────────────────── 更新処理 ────────────────────
+
+	/**
+	* @brief 指定した Object3d の Transform を更新する
+	* @param obj 更新対象の Object3d
+	* @param translate 新しい座標
+	* @param rotate 回転角の加算値
+	* @param scale スケール値
+	*
+	* ───────────────────────────────────────────
+	* obj の移動・回転・スケールをまとめて更新する
+	* obj->SetTranslate(translate);
+	* obj->SetRotate(obj->GetRotate() + rotate);
+	* obj->SetScale(scale);
+	* ───────────────────────────────────────────
+	*/
+	void UpdateObjectTransform(std::unique_ptr<Object3d>& obj, const Vector3& translate, const Vector3& rotate, const Vector3& scale);
 
 private:
 	DirectXCommon* dxCommon = nullptr;
