@@ -2,41 +2,17 @@
 
 void GameScene::Initialize()
 {
-
+	// ──────────────── NULLチェック ────────────────
 	assert(this != nullptr && "this is nullptr in GameScene::Initialize");
 	assert(dxCommon != nullptr && "dxCommon is nullptr in GameScene::Initialize");
 
-	AudioManager::GetInstance()->LoadSound("fanfare", "fanfare.wav");
-	AudioManager::GetInstance()->PlaySound("fanfare");
-	
-	//ファイルパス
-	TextureManager::GetInstance()->LoadTexture("./resources/uvChecker.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/pokemon.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/circle.png");
-
-	sprite = std::make_unique<Sprite>();
-	sprite->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/uvChecker.png");
-
-	ModelManager::GetInstance()->LoadModel("axis.obj", dxCommon);
-
-	object3d = std::make_unique<Object3d>();
-	object3d->Initialize(Object3dCommon::GetInstance(), dxCommon);
-	object3d->SetModel("axis.obj");
-
-	anotherObject3d = std::make_unique<Object3d>();
-	anotherObject3d->Initialize(Object3dCommon::GetInstance(), dxCommon);
-	anotherObject3d->SetModel("plane.obj");
-
-	//Object3d共通部の初期化
-	camera = std::make_unique<Camera>();
-	camera->SetRotate({ 0.0f,0.0f,0.0f });
-	camera->SetTranslate({ 0.0f,0.0f,-30.0f });
-	//object3dCommon->SetDefaultCamera(camera.get());
-	object3d->SetCamera(camera.get());
-	anotherObject3d->SetCamera(camera.get());
-	//ImGui用のcamera設定
-	Vector3 cameraPosition = camera->GetTranslate();
-	Vector3 cameraRotation = camera->GetRotate();
+	// ──────────────── 各種初期化処理 ───────────────
+	InitializeAudio();   // サウンドのロード＆再生
+	LoadTextures();      // テクスチャのロード
+	InitializeSprite();  // スプライトの作成＆初期化
+	LoadModels();        // 3Dモデルのロード
+	InitializeObjects(); // 3Dオブジェクトの作成＆初期化
+	InitializeCamera();  // カメラの作成＆設定
 }
 
 void GameScene::Finalize()
@@ -102,4 +78,69 @@ void GameScene::Draw()
 	sprite->Draw();  // textureSrvHandleGPU は必要に応じて設定
 	object3d->Draw(dxCommon);
 	anotherObject3d->Draw(dxCommon);
+}
+
+// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+// ゲーム内のサウンドをロード＆再生する
+// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+void GameScene::InitializeAudio()
+{
+	AudioManager::GetInstance()->LoadSound("fanfare", "fanfare.wav");
+	AudioManager::GetInstance()->PlaySound("fanfare");
+}
+
+// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+// 必要なテクスチャをロードする
+// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+void GameScene::LoadTextures()
+{
+	//ファイルパス
+	TextureManager::GetInstance()->LoadTexture("./resources/uvChecker.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/pokemon.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/circle.png");
+}
+
+// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+// スプライトを作成し、初期化する
+// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+void GameScene::InitializeSprite()
+{
+	sprite = std::make_unique<Sprite>();
+	sprite->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/uvChecker.png");
+}
+
+// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+// 必要な3Dモデルをロードする
+// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+void GameScene::LoadModels()
+{
+	ModelManager::GetInstance()->LoadModel("axis.obj", dxCommon);
+}
+
+// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+// 3Dオブジェクトを作成し、初期化する
+// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+void GameScene::InitializeObjects()
+{
+	object3d = std::make_unique<Object3d>();
+	object3d->Initialize(Object3dCommon::GetInstance(), dxCommon);
+	object3d->SetModel("axis.obj");
+
+	anotherObject3d = std::make_unique<Object3d>();
+	anotherObject3d->Initialize(Object3dCommon::GetInstance(), dxCommon);
+	anotherObject3d->SetModel("plane.obj");
+}
+
+// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+// カメラを作成し、各オブジェクトに適用する
+// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+void GameScene::InitializeCamera()
+{
+	//Object3d共通部の初期化
+	camera = std::make_unique<Camera>();
+	camera->SetRotate({ 0.0f,0.0f,0.0f });
+	camera->SetTranslate({ 0.0f,0.0f,-30.0f });
+
+	object3d->SetCamera(camera.get());
+	anotherObject3d->SetCamera(camera.get());
 }
