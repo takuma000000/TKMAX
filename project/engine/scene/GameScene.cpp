@@ -59,6 +59,7 @@ void GameScene::Update()
 
 void GameScene::Draw()
 {
+
 	//Draw
 	SpriteCommon::GetInstance()->DrawSetCommon();
 	Object3dCommon::GetInstance()->DrawSetCommon();
