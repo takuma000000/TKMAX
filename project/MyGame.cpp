@@ -46,6 +46,7 @@ void MyGame::Initialize()
 	TextureManager::GetInstance()->LoadTexture("./resources/over_ring.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/setumei.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/bullet.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/circle.png");
 
 	//スプライト共通部の初期化
 	spriteCommon = std::make_unique<SpriteCommon>();
@@ -150,6 +151,15 @@ void MyGame::Initialize()
 		bulletSprites_.push_back(std::move(sprite));
 	}
 
+	// パーティクルの初期化
+	ParticleManager::GetInstance()->Initialize(dxCommon.get(), srvManager.get(), camera.get());
+	ParticleManager::GetInstance()->CreateParticleGroup("particle", "resources/circle.png");
+
+	particleEmitter = std::make_unique<ParticleEmitter>();
+	particleEmitter->Initialize("particle");
+
+	particleEmitter->Emit();
+
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 }
 
@@ -231,6 +241,9 @@ void MyGame::Update()
 	case GamePhase::GameScene:
 		camera->Update();
 		skydome->Update();
+
+		particleEmitter->Update();
+		ParticleManager::GetInstance()->Update();
 
 		// **エネミーのロックオンを更新**
 		player->Update(enemies);
@@ -336,6 +349,9 @@ void MyGame::Draw()
 	case GamePhase::GameScene:
 		skydome->Draw();
 		player->Draw();
+
+		ParticleManager::GetInstance()->Draw();
+
 		for (const auto& enemy : enemies) {
 			enemy->Draw();
 		}

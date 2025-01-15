@@ -17,6 +17,8 @@ class Player; // 前方宣言
 #include "Camera.h"
 #include "ImGuiManager.h"
 #include "AudioManager.h"
+#include "ParticleManager.h"
+#include "ParticleEmitter.h"
 
 #include <vector>
 
@@ -70,6 +72,8 @@ private://メンバ変数
 	std::unique_ptr<Skydome> skydome = nullptr;
 	//ポインタ...Player
 	std::unique_ptr<Player> player = nullptr;
+	//ポインタ...ParticleEmitter
+	std::unique_ptr<ParticleEmitter>  particleEmitter = nullptr;
 
 	std::vector<Enemy*> enemies; // 敵のリストを追加
 
