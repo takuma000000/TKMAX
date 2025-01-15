@@ -96,6 +96,8 @@ private:
 	std::unique_ptr<Sprite> overSprite_; // GameOver画面用スプライト
 	//　説明画面のスプライト
 	std::unique_ptr<Sprite> explanationSprite_;
+	// プレイヤーの弾のスプライト
+	std::vector<std::unique_ptr<Sprite>> bulletSprites_; // 弾のスプライト配列
 
 };
 
