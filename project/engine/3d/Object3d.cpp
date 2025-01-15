@@ -58,7 +58,7 @@ void Object3d::Draw(DirectXCommon* dxCommon)
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 
 	//SRVを切り替える
-	dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(modelData.material.textureFilePath));
+	//dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
 
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(3, materialResourceLight->GetGPUVirtualAddress());
 
@@ -74,11 +74,6 @@ void Object3d::SetModel(const std::string& filePath)
 {
 	//モデルを検索してセットする
 	model_ = ModelManager::GetInstance()->FindModel(filePath);
-}
-
-void Object3d::SetTextureIndex(uint32_t textureIndex)
-{
-	modelData.material.textureIndex = textureIndex;
 }
 
 MaterialData Object3d::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)
