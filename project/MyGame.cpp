@@ -45,7 +45,7 @@ void MyGame::Initialize()
 	TextureManager::GetInstance()->LoadTexture("./resources/clear_ring.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/over_ring.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/setumei.png");
-
+	TextureManager::GetInstance()->LoadTexture("./resources/bullet.png");
 
 	//スプライト共通部の初期化
 	spriteCommon = std::make_unique<SpriteCommon>();
@@ -140,6 +140,15 @@ void MyGame::Initialize()
 	explanationSprite_ = std::make_unique<Sprite>();
 	explanationSprite_->Initialize(spriteCommon.get(), dxCommon.get(), "./resources/setumei.png");
 	explanationSprite_->SetPosition({ 0.0f, 0.0f });
+
+	// 15 発分のスプライトを作成
+	for (int i = 0; i < 15; i++) {
+		auto sprite = std::make_unique<Sprite>();
+		sprite->Initialize(spriteCommon.get(), dxCommon.get(), "./resources/bullet.png");
+		sprite->SetPosition({ 20.0f + i * 30.0f, 20.0f }); // 左上から横に並べる
+		sprite->SetSize({ 0.5f, 0.5f }); // サイズ調整
+		bulletSprites_.push_back(std::move(sprite));
+	}
 
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 }
@@ -249,9 +258,17 @@ void MyGame::Update()
 			++it;
 		}
 
-		// **10発撃ち切った後、5秒経過して敵が残っていたら Over フェーズへ移行**
+		// **15発撃ち切った後、5秒経過して敵が残っていたら Over フェーズへ移行**
 		if (player->GetBulletCount() <= 0 && player->IsOverTimerExpired() && !enemies.empty()) {
 			currentPhase_ = GamePhase::Over;
+		}
+
+		// ゲームシーンなら弾のスプライトを更新
+		if (currentPhase_ == GamePhase::GameScene) {
+			int bulletCount = player->GetBulletCount();
+			for (int i = 0; i < bulletCount; i++) {
+				bulletSprites_[i]->Update();
+			}
 		}
 
 		// 敵が全滅したらクリアフェーズへ
@@ -297,18 +314,19 @@ void MyGame::Update()
 
 void MyGame::Draw()
 {
-
-	//Draw
+	// 描画開始
 	dxCommon->PreDraw();
 	srvManager->PreDraw();
 
 	spriteCommon->DrawSetCommon();
 	object3dCommon->DrawSetCommon();
+
+	// 🎯 `bulletCount` を switch の外で宣言
+	int bulletCount = player->GetBulletCount();
+
 	switch (currentPhase_) {
 	case GamePhase::Title:
-		
 		title->Draw(); // Title の描画処理
-
 		break;
 
 	case GamePhase::Explanation:
@@ -321,6 +339,11 @@ void MyGame::Draw()
 		for (const auto& enemy : enemies) {
 			enemy->Draw();
 		}
+
+		// 🔥 **残弾表示**
+		for (int i = 0; i < bulletCount; i++) {
+			bulletSprites_[i]->Draw();
+		}
 		break;
 
 	case GamePhase::Clear:
@@ -328,26 +351,17 @@ void MyGame::Draw()
 		break;
 
 	case GamePhase::Over:
-		// OVER画面のスプライトを描画
-		overSprite_->Draw();
+		overSprite_->Draw(); // OVER画面のスプライトを描画
 		break;
-
 	}
 
-	//描画
+	// 描画終了
 	dxCommon->GetCommandList()->RSSetViewports(1, &viewport);
 	dxCommon->GetCommandList()->RSSetScissorRects(1, &scissorRect);
-
-	//sprite->Draw();  // textureSrvHandleGPU は必要に応じて設定
-	//object3d->Draw(dxCommon.get());
-	//anotherObject3d->Draw(dxCommon.get());
-	// Skydomeの描画
-
-	//imguiManager->Draw();
-
-
 	dxCommon->PostDraw();
 }
+
+
 
 void MyGame::ResetGame()
 {

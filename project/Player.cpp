@@ -119,7 +119,8 @@ void Player::FireBullet()
 
 	Vector3 targetPos = targetEnemy_->GetPosition();
 	Vector3 direction = MyMath::Normalize(targetPos - transform_.translate);
-	const float bulletSpeed = 1.0f;
+	//弾の速度
+	const float bulletSpeed = 2.0f;
 
 	auto bullet = std::make_unique<PlayerBullet>();
 	bullet->Initialize(transform_.translate, direction * bulletSpeed, obj3dCo_, dxCommon_);
@@ -129,7 +130,7 @@ void Player::FireBullet()
 	bulletCount_--;
 
 	if (bulletCount_ == 0) {
-		overTimer_ = 5.0f; // 10発撃ち切ったらリロードタイム開始
+		overTimer_ = 2.0f; // 10発撃ち切ったらリロードタイム開始
 	}
 }
 
