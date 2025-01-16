@@ -793,17 +793,15 @@ Quaternion MyMath::Slerp(const Quaternion& q1, const Quaternion& q2, float t)
 		dot = -dot;
 	}
 
-	// しきい値 (内積が 1 に近い場合は線形補間)
-	const float THRESHOLD = 0.9995f;
-	if (dot > THRESHOLD) {
-		// 線形補間 (Lerp)
-		Quaternion result = {
+	// 内積が 1.0 に非常に近い場合は線形補間を使用
+	const float EPSILON = 0.0001f;
+	if (dot >= 1.0f - EPSILON) {
+		return Quaternion{
 			Lerp(q1Norm.x, q2Norm.x, t),
 			Lerp(q1Norm.y, q2Norm.y, t),
 			Lerp(q1Norm.z, q2Norm.z, t),
 			Lerp(q1Norm.w, q2Norm.w, t)
 		};
-		return Normalize(result);
 	}
 
 	// 球面線形補間 (Slerp)
@@ -822,6 +820,7 @@ Quaternion MyMath::Slerp(const Quaternion& q1, const Quaternion& q2, float t)
 
 	return Normalize(result);
 }
+
 
 float MyMath::Dot(const Quaternion& q1, const Quaternion& q2)
 {

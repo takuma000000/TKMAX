@@ -170,7 +170,7 @@ void MyGame::Update()
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
 	Quaternion rotation0 = MyMath::MakeRotateAxisAngleQuaternion({ 0.71f,0.71f,0.0f }, 0.3f);
-	Quaternion rotation1 = MyMath::MakeRotateAxisAngleQuaternion({ 0.71f,0.0f,0.71f }, 3.141592f);
+	Quaternion rotation1 = {-rotation0.x, -rotation0.y, -rotation0.z, -rotation0.w};
 
 	// クォータニオンの線形補間
 	Quaternion interpolate0 = MyMath::Slerp(rotation0, rotation1, 0.0f);
