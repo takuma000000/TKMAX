@@ -36,8 +36,10 @@ void SceneManager::Draw()
 
 SceneManager::~SceneManager()
 {
-	//最後のシーンの終了と解放
-	scene_->Finalize();
-	delete scene_;
+	if (scene_) {
+		scene_->Finalize();
+		delete scene_;
+		scene_ = nullptr; // ポインタを無効化
+	}
 
 }
