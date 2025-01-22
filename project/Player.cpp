@@ -143,6 +143,11 @@ Vector3 Player::GetTargetDirection() const
 	return MyMath::Normalize(direction); // 正規化して方向ベクトルを返す
 }
 
+void Player::OnCollision()
+{
+
+}
+
 void Player::SetCamera(Camera* camera)
 {
 	object3d_->SetCamera(camera);

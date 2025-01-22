@@ -48,6 +48,7 @@ void MyGame::Initialize()
 	TextureManager::GetInstance()->LoadTexture("./resources/over_ring.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/setumei.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/bullet.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/enemyBullet.png");
 
 	//スプライト共通部の初期化
 	spriteCommon = std::make_unique<SpriteCommon>();
@@ -75,6 +76,7 @@ void MyGame::Initialize()
 	ModelManager::GetInstance()->LoadModel("player.obj", dxCommon.get());
 	ModelManager::GetInstance()->LoadModel("enemy.obj", dxCommon.get());
 	ModelManager::GetInstance()->LoadModel("bullet.obj", dxCommon.get());
+	ModelManager::GetInstance()->LoadModel("enemyBullet.obj", dxCommon.get());
 
 	///--------------------------------------------
 
@@ -192,51 +194,40 @@ void MyGame::Finalize()
 	Framework::Finalize();
 }
 
-void MyGame::Update()
-{
-
-	//基底クラスの更新処理
+void MyGame::Update() {
+	// 基底クラスの更新処理
 	Framework::Update();
 
 	if (windowsAPI->ProcessMessage()) {
 		endRequest_ = true;
 	}
 
-	// ** ImGui描画 **
-	//imguiManager->Begin(); // ImGuiの描画開始
-
-	//player->DrawImGui(); // PlayerクラスのImGui描画
-
-	//imguiManager->End(); // ImGuiの描画終了
-
-	//入力の更新
 	input->Update();
-
 
 	switch (currentPhase_) {
 	case GamePhase::Title:
 		if (input->TriggerKey(DIK_SPACE)) {
 			currentPhase_ = GamePhase::Explanation;
-			input->Update(); // ここでキー入力をリセット
+			input->Update(); // キー入力をリセット
 		}
-		title->Update();// Title の更新処理
+		title->Update(); // タイトル画面の更新処理
 		break;
 
 	case GamePhase::Explanation:
 		if (input->TriggerKey(DIK_SPACE)) {
 			currentPhase_ = GamePhase::GameScene;
-			input->Update(); // ここでキー入力をリセット
+			input->Update(); // キー入力をリセット
 		}
-		explanationSprite_->Update();// 説明画面のスプライトの更新
+		explanationSprite_->Update(); // 説明画面の更新
 		break;
 
 	case GamePhase::GameScene:
 		camera->Update();
 		skydome->Update();
 
-		// **エネミーのロックオンを更新**
-		player->Update(enemies);
+		player->Update(enemies); // プレイヤーの更新処理
 
+		// 敵の更新
 		for (auto it = enemies.begin(); it != enemies.end();) {
 			Enemy* enemy = *it;
 			if (enemy->IsDead()) {
@@ -245,27 +236,48 @@ void MyGame::Update()
 				continue;
 			}
 
+			enemy->Update(player.get()); // 敵がプレイヤーをターゲットにして弾を発射
+			++it;
+		}
+
+		// 敵の弾とプレイヤーの衝突判定
+		for (const auto& enemy : enemies) {
+			for (const auto& bullet : enemy->GetBullets()) {
+				float distance = MyMath::Distance(player->GetTranslate(), bullet->GetPosition());
+				float collisionThreshold = 1.0f; // 衝突判定の距離（適宜調整）
+
+				if (distance < collisionThreshold) {
+					player->OnCollision(); // プレイヤーの被弾処理
+					bullet->Deactivate();  // 弾を無効化
+					break;
+				}
+			}
+		}
+
+		// プレイヤーの弾と敵の衝突判定
+		for (auto it = enemies.begin(); it != enemies.end();) {
+			Enemy* enemy = *it;
 			for (const auto& bullet : player->GetBullets()) {
 				float enemySize = (enemy->GetScale().x + enemy->GetScale().y + enemy->GetScale().z) / 3.0f;
 				float collisionThreshold = enemySize * 0.5f;
 
 				float distance = MyMath::Distance(enemy->GetPosition(), bullet->GetPosition());
 				if (distance < collisionThreshold) {
-					enemy->OnCollision();
+					enemy->OnCollision(); // 敵の被弾処理
 					bullet->Deactivate();
 					break;
 				}
 			}
-			enemy->Update();
-			++it;
+
+			if (enemy->IsDead()) {
+				delete enemy;
+				it = enemies.erase(it);
+			} else {
+				++it;
+			}
 		}
 
-		// **15発撃ち切った後、5秒経過して敵が残っていたら Over フェーズへ移行**
-		if (player->GetBulletCount() <= 0 && player->IsOverTimerExpired() && !enemies.empty()) {
-			currentPhase_ = GamePhase::Over;
-		}
-
-		// ゲームシーンなら弾のスプライトを更新
+		// 弾のスプライト更新
 		if (currentPhase_ == GamePhase::GameScene) {
 			int bulletCount = player->GetBulletCount();
 			for (int i = 0; i < bulletCount; i++) {
@@ -277,42 +289,38 @@ void MyGame::Update()
 		if (enemies.empty()) {
 			currentPhase_ = GamePhase::Clear;
 		}
+
+		// 弾切れかつ敵が残っている場合、ゲームオーバーフェーズへ
+		if (player->GetBulletCount() <= 0 && player->IsOverTimerExpired() && !enemies.empty()) {
+			currentPhase_ = GamePhase::Over;
+		}
 		break;
 
 	case GamePhase::Clear:
+		clearSprite_->Update(); // クリア画面の更新
 
-		clearSprite_->Update(); // CLEARスプライトの更新
-
-		if (input->TriggerKey(DIK_SPACE)) { // Enterキーでタイトルフェーズに戻る
-			ResetGame(); // 状態をリセット
+		if (input->TriggerKey(DIK_SPACE)) { // スペースキーでタイトルフェーズに戻る
+			ResetGame();
 			currentPhase_ = GamePhase::Title;
-			input->Update(); // ここでキー入力をリセット
+			input->Update(); // キー入力をリセット
 		}
 		break;
 
 	case GamePhase::Over:
+		overSprite_->Update(); // ゲームオーバー画面の更新
 
-		// OVERスプライトの更新
-		overSprite_->Update();
-
-		if (input->TriggerKey(DIK_SPACE)) {
+		if (input->TriggerKey(DIK_SPACE)) { // スペースキーでタイトルフェーズに戻る
 			ResetGame();
 			currentPhase_ = GamePhase::Title;
-			input->Update(); // ここでキー入力をリセット
+			input->Update(); // キー入力をリセット
 		}
 		break;
 	}
 
-	//sprite->Update();
-	//object3d->Update();
-	//anotherObject3d->Update();
-
 	viewport = dxCommon->GetViewport();
 	scissorRect = dxCommon->GetRect();
-
-
-	//---------------------------------------------------------
 }
+
 
 void MyGame::Draw()
 {
