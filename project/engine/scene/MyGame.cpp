@@ -59,9 +59,11 @@ void MyGame::Update()
 
 	sceneManager_->Update();
 
+	// ウィンドウメッセージの処理
 	if (windowsAPI->ProcessMessage()) {
-		endRequest_ = true;
+		SetEndRequest(true); // Frameworkの終了フラグを設定
 	}
+
 
 	// ** ImGui処理開始 **
 	imguiManager->Begin();

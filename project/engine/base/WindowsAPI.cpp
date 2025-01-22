@@ -5,25 +5,39 @@
 //#include "externals/imgui/imgui.h"
 #include <iostream>
 #include <imgui/imgui_impl_win32.h>
+
+#include "Framework.h"
+extern Framework* gFramework; // グローバルポインタでFrameworkを参照
+
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 //ウィンドウプロシージャ
 LRESULT CALLBACK WindowsAPI::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
+	// ImGui のウィンドウ処理
 	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) {
 		return true;
 	}
 
-	//メッセージに応じてゲーム固有の処理を行う
+	// メッセージに応じてゲーム固有の処理を行う
 	switch (msg) {
-		//ウィンドウが破壊された
+		// ウィンドウが閉じられた
+	case WM_CLOSE:
+		if (gFramework) {
+			gFramework->SetEndRequest(true); // Frameworkの終了フラグを設定
+		}
+		// ウィンドウを破壊する
+		DestroyWindow(hwnd);
+		return 0;
+
+		// ウィンドウが破壊された
 	case WM_DESTROY:
-		//OSに対して、アプリの終了を伝える
+		// OSに対してアプリの終了を伝える
 		PostQuitMessage(0);
 		return 0;
 	}
 
-	//標準のメッセージ処理を行う
+	// 標準のメッセージ処理を行う
 	return DefWindowProc(hwnd, msg, wparam, lparam);
 }
 

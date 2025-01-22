@@ -1,12 +1,15 @@
 #include "MyGame.h"
 
+Framework* gFramework = nullptr; // グローバル変数でFrameworkを保持
+
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
-	Framework* game = new MyGame();
+	gFramework = new MyGame();
 
-	game->Run();
+	gFramework->Run();
 
-	delete game;
+	delete gFramework;
+	gFramework = nullptr;
 
 	return 0;
 }
