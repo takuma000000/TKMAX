@@ -43,7 +43,10 @@ public:
 	/// 
 	/// </summary>
 	/// <returns></returns>
-	Vector3 GetTargetDirection() const; // 新規追加
+	Vector3 GetTargetDirection() const;
+
+	// 衝突時の処理
+	void OnCollision();// 衝突時の処理
 
 	// スケール、回転、位置の設定
 	/// <summary>

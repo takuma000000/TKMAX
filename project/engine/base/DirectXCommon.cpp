@@ -609,14 +609,7 @@ void DirectXCommon::UpdateFixFPS()
 
 void DirectXCommon::PreDraw()
 {
-	//HRESULT hr;
-
-	//// 1. コマンドリストの開始（リセット）
-	//hr = commandAllocator->Reset();
-	//assert(SUCCEEDED(hr));
-	//hr = commandList->Reset(commandAllocator.Get(), nullptr);
-	//assert(SUCCEEDED(hr));
-
+	
 	// これから書き込むバックバッファのインデックスを取得    
 	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
 

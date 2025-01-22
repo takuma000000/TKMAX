@@ -5,11 +5,14 @@
 #include "DirectXCommon.h"
 #include "Object3dCommon.h"
 #include "Camera.h"
+#include "EnemyBullet.h"
+
+class Player;
 
 class Enemy {
 public:
 	void Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommon, Camera* camera, const Vector3& position);
-	void Update();
+	void Update(Player* player);
 	void Draw();
 
 	// スケール、回転、位置の設定
@@ -31,6 +34,9 @@ public:
 
 	void ChangeDirection();
 
+	// 敵の弾のリストを取得
+	const std::vector<std::unique_ptr<EnemyBullet>>& GetBullets() const { return bullets_; }
+
 
 private:
 	Transform transform_;
@@ -47,7 +53,13 @@ private:
 	Vector3 velocity_;  // 速度ベクトル
 	Vector3 initialPosition_; // 初期位置を保持
 	float moveRadius_ = 3.0f; // 移動範囲の制限
-	float moveSpeed_ = 0.1f; // 移動速度
+	float moveSpeed_ = 0.25f; // 移動速度
 	int moveChangeTimer_ = 0; // 方向変更用のタイマー
+
+	std::vector<std::unique_ptr<EnemyBullet>> bullets_;
+	int fireTimer_ = 0; // 発射タイマー
+	const int fireInterval_ = 120; // 弾の発射間隔
+	
+	void FireBullet(const Vector3& playerPos);// 弾の発射
 
 };

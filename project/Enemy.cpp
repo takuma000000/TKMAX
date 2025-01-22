@@ -1,4 +1,5 @@
 #include "Enemy.h"
+#include "Player.h"
 
 void Enemy::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommon, Camera* camera, const Vector3& position) {
 	dxCommon_ = dxCommon;
@@ -20,14 +21,13 @@ void Enemy::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommon, 
 	ChangeDirection();
 }
 
-void Enemy::Update() {
+void Enemy::Update(Player* player) {
 	moveChangeTimer_--;
 
 	// 一定時間ごとに方向変更
 	if (moveChangeTimer_ <= 0) {
 		ChangeDirection();
-		moveChangeTimer_ = rand() % 120 + 60; // 60～180フレームに変更
-
+		moveChangeTimer_ = rand() % 90 + 30; // 60～180フレームに変更
 	}
 
 	// 移動
@@ -42,6 +42,25 @@ void Enemy::Update() {
 		velocity_.y = -velocity_.y;
 	}
 
+	// 弾の発射タイマーを管理
+	fireTimer_--;
+	if (fireTimer_ <= 0) {
+		FireBullet(player->GetTranslate());
+		fireTimer_ = fireInterval_;  // タイマーをリセット
+	}
+
+	// 弾の更新
+	for (auto& bullet : bullets_) {
+		bullet->Update();
+	}
+
+	bullets_.erase(
+		std::remove_if(bullets_.begin(), bullets_.end(),
+			[](const std::unique_ptr<EnemyBullet>& bullet) {
+				return !bullet->IsActive();
+			}),
+		bullets_.end());
+
 	object3d_->SetScale(transform_.scale);
 	object3d_->SetRotate(transform_.rotate);
 	object3d_->SetTranslate(transform_.translate);
@@ -49,8 +68,13 @@ void Enemy::Update() {
 	object3d_->Update();
 }
 
+
 void Enemy::Draw() {
 	object3d_->Draw(dxCommon_);
+	// 弾の描画
+	for (const auto& bullet : bullets_) {
+		bullet->Draw();
+	}
 }
 
 void Enemy::SetCamera(Camera* camera) {
@@ -65,5 +89,16 @@ void Enemy::ChangeDirection()
 	// 徐々に現在の速度に近づける
 	velocity_.x = velocity_.x * 0.8f + newVelocity.x * 0.2f;
 	velocity_.y = velocity_.y * 0.8f + newVelocity.y * 0.2f;
+}
+
+void Enemy::FireBullet(const Vector3& playerPos)
+{
+	Vector3 direction = MyMath::Normalize(playerPos - transform_.translate);
+	float bulletSpeed = 0.8f;
+
+	auto bullet = std::make_unique<EnemyBullet>();
+	bullet->Initialize(transform_.translate, direction * bulletSpeed, obj3dCo_, dxCommon_);
+	bullet->SetCamera(camera_);
+	bullets_.push_back(std::move(bullet));
 }
 
