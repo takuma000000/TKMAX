@@ -2,6 +2,7 @@
 #include "DirectXCommon.h"
 #include "Matrix4x4.h"
 #include "Vector3.h"
+#include "Vector4.h"
 
 class SpriteCommon;
 
@@ -14,12 +15,6 @@ public:
 		float y;
 	};
 
-	struct Vector4 {
-		float x;
-		float y;
-		float z;
-		float w;
-	};
 
 	struct Transform {
 		Vector3 scale;

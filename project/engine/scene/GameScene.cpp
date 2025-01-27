@@ -13,6 +13,10 @@ void GameScene::Initialize()
 	LoadModels();        // 3Dモデルのロード
 	InitializeObjects(); // 3Dオブジェクトの作成＆初期化
 	InitializeCamera();  // カメラの作成＆設定
+
+	// ──────────────── ライトの初期化 ───────────────
+	directionalLight_ = std::make_unique<DirectionalLight>();
+	directionalLight_->Initialize({ 1.0f, 1.0f, 1.0f, 1.0f }, { 0.0f, -1.0f, 0.0f }, 1.0f);
 }
 
 void GameScene::Finalize()
@@ -36,6 +40,8 @@ void GameScene::Update()
 	sprite->Update();
 	object3d->Update();
 	anotherObject3d->Update();
+	// ライトの更新
+	directionalLight_->Update();
 
 	// ────────────────────────────────────────
 	// 移動・回転（加算）・スケール更新
@@ -67,6 +73,11 @@ void GameScene::Draw()
 	sprite->Draw();  // textureSrvHandleGPU は必要に応じて設定
 	object3d->Draw(dxCommon);
 	anotherObject3d->Draw(dxCommon);
+
+	// ライト情報をシェーダーなどに適用（必要に応じて実装）
+	Vector4 lightColor = directionalLight_->GetColor();
+	Vector3 lightDirection = directionalLight_->GetDirection();
+	float lightIntensity = directionalLight_->GetIntensity();
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*

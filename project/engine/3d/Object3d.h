@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 #include "DirectXCommon.h"
+#include "Vector3.h"
+#include "Vector4.h"
 
 class Object3dCommon;
 class Model;
@@ -11,13 +13,6 @@ class Camera;
 struct Vector2 {
 	float x;
 	float y;
-};
-
-struct Vector4 {
-	float x;
-	float y;
-	float z;
-	float w;
 };
 
 struct Transform {
@@ -58,7 +53,7 @@ struct TransformationMatrix {
 	Matrix4x4 World;
 };
 
-struct DirectionalLight {
+struct DirectionalLightEX {
 	Vector4 color;
 	Vector3 direction;
 	float intensity;
@@ -119,7 +114,7 @@ private:
 	//Light用のマテリアルリソースを作る
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceLight;
 	//データを書き込む
-	DirectionalLight* directionalLightData = nullptr;
+	DirectionalLightEX* directionalLightData = nullptr;
 
 	//VertexResource関数
 	void VertexResource(DirectXCommon* dxCommon);

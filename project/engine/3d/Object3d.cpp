@@ -217,7 +217,7 @@ void Object3d::Light(DirectXCommon* dxCommon)
 	dxCommon_ = dxCommon;
 
 	//並行光源リソースを作る
-	materialResourceLight = dxCommon->CreateBufferResource(sizeof(DirectionalLight));
+	materialResourceLight = dxCommon->CreateBufferResource(sizeof(DirectionalLightEX));
 	//書き込むためのアドレスを取得
 	materialResourceLight->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
 	//デフォルト値を書き込んでおく

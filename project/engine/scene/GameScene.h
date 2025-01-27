@@ -14,6 +14,7 @@
 #include "Model.h"
 #include "ModelCommon.h"
 #include "ModelManager.h"
+#include "DirectionalLight.h"
 
 #include "engine/func/math/Vector3.h"
 
@@ -87,5 +88,7 @@ private:
 
 	std::unique_ptr<Object3d> object3d = nullptr;
 	std::unique_ptr<Object3d> anotherObject3d = nullptr;
+
+	std::unique_ptr<DirectionalLight> directionalLight_ = nullptr;// ディレクショナルライト
 };
 
