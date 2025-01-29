@@ -19,6 +19,9 @@ void Enemy::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommon, 
 
 	// ランダムな初速度を設定
 	ChangeDirection();
+
+	// 弾の発射タイマーをランダムに設定（0～fireInterval_ の範囲）
+	fireTimer_ = rand() % fireInterval_;
 }
 
 void Enemy::Update(Player* player) {
