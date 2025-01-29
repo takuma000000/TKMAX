@@ -244,9 +244,10 @@ void MyGame::Update() {
 		for (const auto& enemy : enemies) {
 			for (const auto& bullet : enemy->GetBullets()) {
 				float distance = MyMath::Distance(player->GetTranslate(), bullet->GetPosition());
-				float collisionThreshold = 1.0f; // 衝突判定の距離（適宜調整）
+				float collisionThreshold = 1.0f; // 衝突判定の距離
 
-				if (distance < collisionThreshold) {
+				// **プレイヤーが無敵状態なら衝突を無視**
+				if (distance < collisionThreshold && !player->IsInvincible()) {
 					player->OnCollision(); // プレイヤーの被弾処理
 					bullet->Deactivate();  // 弾を無効化
 					break;

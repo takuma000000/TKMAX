@@ -33,6 +33,22 @@ void Player::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommon,
 }
 
 void Player::Update(const std::vector<Enemy*>& enemies) {
+	// **無敵時間と点滅の処理**
+	if (isInvincible_) {
+		invincibleTime_ -= 1.0f / 60.0f; // 無敵時間を減少
+		blinkTimer_ -= 1.0f / 60.0f; // 点滅タイマー更新
+
+		if (blinkTimer_ <= 0.0f) {
+			blinkTimer_ = blinkInterval_; // 点滅間隔をリセット
+			isVisible_ = !isVisible_; // 表示・非表示を切り替え
+		}
+
+		if (invincibleTime_ <= 0.0f) {
+			isInvincible_ = false;
+			isVisible_ = true; // 通常表示に戻す
+		}
+	}
+
 	// **最も近いエネミーをロックオン**
 	LockOnTarget(enemies);
 
@@ -91,24 +107,29 @@ void Player::Update(const std::vector<Enemy*>& enemies) {
 		}
 	}
 
-	// **プレイヤーの3Dオブジェクトを更新**
-	object3d_->SetScale(transform_.scale);
-	object3d_->SetRotate(transform_.rotate);
-	object3d_->SetTranslate(transform_.translate);
-	object3d_->Update();
-
+	// **プレイヤーの3Dオブジェクトを更新（点滅時は描画しない）**
+	if (isVisible_) {
+		object3d_->SetScale(transform_.scale);
+		object3d_->SetRotate(transform_.rotate);
+		object3d_->SetTranslate(transform_.translate);
+		object3d_->Update();
+	}
 }
 
+
 void Player::Draw() {
+
+	lockOnMarker_->Draw();
 
 	// 弾の描画
 	for (auto& bullet : bullets_) {
 		bullet->Draw();
 	}
 
+	// **無敵時間中で表示がOFFなら描画しない**
+	if (!isVisible_) return;
 	object3d_->Draw(dxCommon_);
 
-	lockOnMarker_->Draw();
 }
 
 void Player::FireBullet()
@@ -145,7 +166,12 @@ Vector3 Player::GetTargetDirection() const
 
 void Player::OnCollision()
 {
-
+	if (!isInvincible_) {
+		isInvincible_ = true; // 無敵状態をON
+		invincibleTime_ = 3.0f; // 3秒間の無敵時間
+		blinkTimer_ = blinkInterval_; // 点滅タイマーをリセット
+		isVisible_ = false; // 最初は非表示
+	}
 }
 
 void Player::SetCamera(Camera* camera)
