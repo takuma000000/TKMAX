@@ -120,7 +120,7 @@ void Player::FireBullet()
 	Vector3 targetPos = targetEnemy_->GetPosition();
 	Vector3 direction = MyMath::Normalize(targetPos - transform_.translate);
 	//弾の速度
-	const float bulletSpeed = 2.0f;
+	const float bulletSpeed = 3.0f;
 
 	auto bullet = std::make_unique<PlayerBullet>();
 	bullet->Initialize(transform_.translate, direction * bulletSpeed, obj3dCo_, dxCommon_);
