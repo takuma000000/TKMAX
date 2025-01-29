@@ -113,20 +113,21 @@ public:
 	/// <summary>
 	/// 
 	/// </summary>
-	void ResetBulletCount() { bulletCount_ = 15; }
+	void ResetBulletCount() { bulletCount_ = 15; }// 弾の初期残数にリセット
 
 	/// <summary>
 	/// 
 	/// </summary>
 	/// <returns></returns>
-	bool IsOverTimerExpired() const { return overTimer_ == 0.0f; }
+	bool IsOverTimerExpired() const { return overTimer_ == 0.0f; }// オーバータイマーが0かどうか
 
 	/// <summary>
 	///
-	void LockOnTarget(const std::vector<Enemy*>& enemies);
+	void LockOnTarget(const std::vector<Enemy*>& enemies);// ロックオン対象の設定
 
-	Vector3 WorldToScreen(const Vector3& worldPos) const;
+	Vector3 WorldToScreen(const Vector3& worldPos) const;// ワールド座標をスクリーン座標に変換
 
+	bool IsInvincible() const { return isInvincible_; }// 無敵状態かどうか
 
 private:
 
@@ -177,5 +178,11 @@ private:
 
 	std::unique_ptr<Sprite> lockOnMarker_; // ロックオンマーカー
 
+private:
+	bool isInvincible_ = false; // 無敵状態かどうか
+	float invincibleTime_ = 0.0f; // 無敵時間のカウント
+	float blinkInterval_ = 0.2f; // 点滅の間隔（秒）
+	float blinkTimer_ = 0.0f; // 点滅用のカウンター
+	bool isVisible_ = true; // プレイヤーの表示・非表示
 
 };
