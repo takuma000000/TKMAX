@@ -99,5 +99,8 @@ private:
 	// プレイヤーの弾のスプライト
 	std::vector<std::unique_ptr<Sprite>> bulletSprites_; // 弾のスプライト配列
 
+private:
+	std::vector<std::unique_ptr<Sprite>> heartSprites_; // HP表示用スプライト
+	int playerHP;
 };
 

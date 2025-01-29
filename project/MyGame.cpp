@@ -49,6 +49,7 @@ void MyGame::Initialize()
 	TextureManager::GetInstance()->LoadTexture("./resources/setumei.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/bullet.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/enemyBullet.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/heart_CR.png");
 
 	//スプライト共通部の初期化
 	spriteCommon = std::make_unique<SpriteCommon>();
@@ -84,16 +85,6 @@ void MyGame::Initialize()
 	camera = std::make_unique<Camera>();
 	camera->SetRotate({ 0.0f,0.0f,0.0f });
 	camera->SetTranslate({ 0.0f,0.0f,-30.0f });
-
-	////object3dCommon->SetDefaultCamera(camera.get());
-	//object3d->SetCamera(camera.get());
-	//anotherObject3d->SetCamera(camera.get());
-	////ImGui用のcamera設定
-	//Vector3 cameraPosition = camera->GetTranslate();
-	//Vector3 cameraRotation = camera->GetRotate();
-
-	//imguiManager = std::make_unique<ImGuiManager>();
-	//imguiManager->Initialize(windowsAPI.get(), dxCommon.get());
 
 	//Skydomeの初期化
 	skydome = std::make_unique<Skydome>();
@@ -152,6 +143,24 @@ void MyGame::Initialize()
 		sprite->SetPosition({ 20.0f + i * 30.0f, 20.0f }); // 左上から横に並べる
 		sprite->SetSize({ 0.5f, 0.5f }); // サイズ調整
 		bulletSprites_.push_back(std::move(sprite));
+	}
+
+
+	// ウィンドウサイズを取得
+	int screenWidth = windowsAPI->GetWindowWidth();
+	int screenHeight = windowsAPI->GetWindowHeight();
+
+	// HP表示用スプライトの作成（画面右下に配置）
+	for (int i = 0; i < 3; i++) {
+		auto heartSprite = std::make_unique<Sprite>();
+		heartSprite->Initialize(spriteCommon.get(), dxCommon.get(), "./resources/heart_CR.png");
+
+		// 画面右下に並べる
+		float xPos = screenWidth - 50.0f - i * 50.0f;
+		float yPos = screenHeight - 50.0f;
+		heartSprite->SetPosition({ xPos, yPos });
+
+		heartSprites_.push_back(std::move(heartSprite));
 	}
 
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
@@ -225,7 +234,16 @@ void MyGame::Update() {
 		camera->Update();
 		skydome->Update();
 
-		player->Update(enemies); // プレイヤーの更新処理
+		if (!player->IsDead()) {
+			player->Update(enemies); // HPが0なら更新しない
+		}
+
+		playerHP = player->GetHP();
+
+		for (int i = 0; i < heartSprites_.size(); i++) {
+			heartSprites_[i]->SetVisible(i < playerHP); // HPの数だけ表示
+			heartSprites_[i]->Update();
+		}
 
 		// 敵の更新
 		for (auto it = enemies.begin(); it != enemies.end();) {
@@ -291,10 +309,16 @@ void MyGame::Update() {
 			currentPhase_ = GamePhase::Clear;
 		}
 
-		// 弾切れかつ敵が残っている場合、ゲームオーバーフェーズへ
-		if (player->GetBulletCount() <= 0 && player->IsOverTimerExpired() && !enemies.empty()) {
+		// **HPが0のときにカウントダウンが進むようにする**
+		if (player->GetHP() <= 0 && player->IsHPOverTimerRunning()) {
+			player->Update(enemies); // HPが0でも `hpOverTimer_` を減少させる
+		}
+
+		if ((player->GetHP() <= 0 && player->IsHPOverTimerExpired()) ||
+			(player->GetBulletCount() <= 0 && player->IsOverTimerExpired())) {
 			currentPhase_ = GamePhase::Over;
 		}
+
 		break;
 
 	case GamePhase::Clear:
@@ -346,9 +370,18 @@ void MyGame::Draw()
 
 	case GamePhase::GameScene:
 		skydome->Draw();
-		player->Draw();
+		if (!player->IsDead()) {
+			player->Draw(); // HPが0なら描画しない
+		}
 		for (const auto& enemy : enemies) {
 			enemy->Draw();
+		}
+
+		// HPスプライトの描画
+		if (currentPhase_ == GamePhase::GameScene) {
+			for (const auto& heart : heartSprites_) {
+				heart->Draw();
+			}
 		}
 
 		// 🔥 **残弾表示**
@@ -406,4 +439,7 @@ void MyGame::ResetGame()
 
 	// **弾のリセット**
 	player->ResetBulletCount();
+
+	// **HPのリセット**
+	player->ResetHP();
 }

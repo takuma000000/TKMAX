@@ -71,7 +71,7 @@ public:
 	/// 
 	/// </summary>
 	/// <returns></returns>
-	const Vector3& GetRotate() const { return transform_.rotate; }	
+	const Vector3& GetRotate() const { return transform_.rotate; }
 	/// <summary>
 	/// 
 	/// </summary>
@@ -129,6 +129,15 @@ public:
 
 	bool IsInvincible() const { return isInvincible_; }// 無敵状態かどうか
 
+	bool IsHPOverTimerExpired() const { return hpOverTimer_ == 0.0f; }
+
+	void ResetHP() { hp_ = 3; hpOverTimer_ = -1.0f; } // HPを初期値に戻す
+
+	bool IsDead() const { return hp_ <= 0; } // HPが0以下なら死亡状態
+
+	bool IsHPOverTimerRunning() const { return hpOverTimer_ > 0.0f; }// HPが0になった後のカウントダウン中かどうか
+
+
 private:
 
 	/// <summary>
@@ -173,6 +182,9 @@ private:
 	/// </summary>
 	float overTimer_ = -1.0f; // -1: 未使用状態, 0以上: カウントダウン中
 
+	float hpOverTimer_ = -1.0f; // HPが0になったときのカウントダウン用 (-1: 未使用, 0以上: カウント中)
+
+
 private:
 	Enemy* targetEnemy_ = nullptr; // 現在ロックオンしているエネミー
 
@@ -185,4 +197,10 @@ private:
 	float blinkTimer_ = 0.0f; // 点滅用のカウンター
 	bool isVisible_ = true; // プレイヤーの表示・非表示
 
+private:
+	int hp_ = 3; // HPの初期値
+
+public:
+	int GetHP() const { return hp_; } // HPを取得する
+	void DecreaseHP() { if (hp_ > 0) hp_--; } // HPを減らす
 };

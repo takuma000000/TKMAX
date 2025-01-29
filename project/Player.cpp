@@ -33,71 +33,74 @@ void Player::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommon,
 }
 
 void Player::Update(const std::vector<Enemy*>& enemies) {
-	// **無敵時間と点滅の処理**
-	if (isInvincible_) {
-		invincibleTime_ -= 1.0f / 60.0f; // 無敵時間を減少
-		blinkTimer_ -= 1.0f / 60.0f; // 点滅タイマー更新
+	// **HPが0なら移動や攻撃を無効化**
+	if (hp_ > 0) {
+		// **無敵時間と点滅の処理**
+		if (isInvincible_) {
+			invincibleTime_ -= 1.0f / 60.0f; // 無敵時間を減少
+			blinkTimer_ -= 1.0f / 60.0f; // 点滅タイマー更新
 
-		if (blinkTimer_ <= 0.0f) {
-			blinkTimer_ = blinkInterval_; // 点滅間隔をリセット
-			isVisible_ = !isVisible_; // 表示・非表示を切り替え
+			if (blinkTimer_ <= 0.0f) {
+				blinkTimer_ = blinkInterval_; // 点滅間隔をリセット
+				isVisible_ = !isVisible_; // 表示・非表示を切り替え
+			}
+
+			if (invincibleTime_ <= 0.0f) {
+				isInvincible_ = false;
+				isVisible_ = true; // 通常表示に戻す
+			}
 		}
 
-		if (invincibleTime_ <= 0.0f) {
-			isInvincible_ = false;
-			isVisible_ = true; // 通常表示に戻す
+		// **最も近いエネミーをロックオン**
+		LockOnTarget(enemies);
+
+		// **ロックオンした敵のマーカーを更新**
+		if (targetEnemy_) {
+			Vector3 enemyPos = targetEnemy_->GetPosition();
+			enemyPos.y += 2.0f; // 頭上にマーカーを表示
+
+			// ワールド座標をスクリーン座標に変換
+			Vector3 screenPos = WorldToScreen(enemyPos);
+			lockOnMarker_->SetPosition({ screenPos.x, screenPos.y });
+			lockOnMarker_->SetVisible(true);
+		} else {
+			lockOnMarker_->SetVisible(false);
 		}
-	}
 
-	// **最も近いエネミーをロックオン**
-	LockOnTarget(enemies);
+		lockOnMarker_->Update();
 
-	// **ロックオンした敵のマーカーを更新**
-	if (targetEnemy_) {
-		Vector3 enemyPos = targetEnemy_->GetPosition();
-		enemyPos.y += 2.0f; // 頭上にマーカーを表示
+		// **プレイヤーの移動処理**
+		if (input_->PushKey(DIK_W)) {
+			transform_.translate.y += 0.1f;
+		}
+		if (input_->PushKey(DIK_S)) {
+			transform_.translate.y -= 0.1f;
+		}
+		if (input_->PushKey(DIK_A)) {
+			transform_.translate.x -= 0.1f;
+		}
+		if (input_->PushKey(DIK_D)) {
+			transform_.translate.x += 0.1f;
+		}
 
-		// ワールド座標をスクリーン座標に変換
-		Vector3 screenPos = WorldToScreen(enemyPos);
-		lockOnMarker_->SetPosition({ screenPos.x, screenPos.y });
-		lockOnMarker_->SetVisible(true);
-	} else {
-		lockOnMarker_->SetVisible(false);
-	}
+		// **弾を発射**
+		if (input_->TriggerKey(DIK_SPACE)) {
+			FireBullet();
+		}
 
-	lockOnMarker_->Update();
+		// **弾の更新**
+		for (auto& bullet : bullets_) {
+			bullet->Update();
+		}
 
-	// **プレイヤーの移動処理**
-	if (input_->PushKey(DIK_W)) {
-		transform_.translate.y += 0.1f;
+		// **不要な弾の削除**
+		bullets_.erase(
+			std::remove_if(bullets_.begin(), bullets_.end(),
+				[](const std::unique_ptr<PlayerBullet>& bullet) {
+					return !bullet->IsActive();
+				}),
+			bullets_.end());
 	}
-	if (input_->PushKey(DIK_S)) {
-		transform_.translate.y -= 0.1f;
-	}
-	if (input_->PushKey(DIK_A)) {
-		transform_.translate.x -= 0.1f;
-	}
-	if (input_->PushKey(DIK_D)) {
-		transform_.translate.x += 0.1f;
-	}
-
-	// **弾を発射**
-	if (input_->TriggerKey(DIK_SPACE)) {
-		FireBullet();
-	}
-
-	// **弾の更新**
-	for (auto& bullet : bullets_) {
-		bullet->Update();
-	}
-
-	// **不要な弾の削除**
-	bullets_.erase(
-		std::remove_if(bullets_.begin(), bullets_.end(),
-			[](const std::unique_ptr<PlayerBullet>& bullet) {
-				return !bullet->IsActive();
-			}),
-		bullets_.end());
 
 	// **弾のカウントダウン処理**
 	if (overTimer_ > 0.0f) {
@@ -107,8 +110,16 @@ void Player::Update(const std::vector<Enemy*>& enemies) {
 		}
 	}
 
+	// **HPが0の時のカウントダウン（ゲームオーバー遷移用）**
+	if (hp_ <= 0 && hpOverTimer_ > 0.0f) {
+		hpOverTimer_ -= 1.0f / 60.0f;
+		if (hpOverTimer_ <= 0.0f) {
+			hpOverTimer_ = 0.0f;
+		}
+	}
+
 	// **プレイヤーの3Dオブジェクトを更新（点滅時は描画しない）**
-	if (isVisible_) {
+	if (hp_ > 0 && isVisible_) {
 		object3d_->SetScale(transform_.scale);
 		object3d_->SetRotate(transform_.rotate);
 		object3d_->SetTranslate(transform_.translate);
@@ -117,8 +128,8 @@ void Player::Update(const std::vector<Enemy*>& enemies) {
 }
 
 
-void Player::Draw() {
 
+void Player::Draw() {
 	lockOnMarker_->Draw();
 
 	// 弾の描画
@@ -128,12 +139,21 @@ void Player::Draw() {
 
 	// **無敵時間中で表示がOFFなら描画しない**
 	if (!isVisible_) return;
+
+	if (hp_ <= 0) {
+		return; // HPが0なら描画しない
+	}
+
 	object3d_->Draw(dxCommon_);
 
 }
 
 void Player::FireBullet()
 {
+	if (hp_ <= 0) {
+		return; // HPが0なら弾を撃てない
+	}
+
 	if (bulletCount_ <= 0 || targetEnemy_ == nullptr) {
 		return; // 弾がない、またはターゲットがいない場合は発射しない
 	}
@@ -166,11 +186,16 @@ Vector3 Player::GetTargetDirection() const
 
 void Player::OnCollision()
 {
-	if (!isInvincible_) {
-		isInvincible_ = true; // 無敵状態をON
-		invincibleTime_ = 3.0f; // 3秒間の無敵時間
-		blinkTimer_ = blinkInterval_; // 点滅タイマーをリセット
-		isVisible_ = false; // 最初は非表示
+	if (!isInvincible_) {// 無敵状態でない場合
+		isInvincible_ = true;// 無敵状態にする
+		invincibleTime_ = 3.0f;// 無敵時間を設定
+		blinkTimer_ = blinkInterval_;// 点滅用のタイマーをリセット
+		isVisible_ = false; // 点滅開始
+		DecreaseHP(); // HPを1減少させる
+
+		if (hp_ == 0) {
+			hpOverTimer_ = 2.0f; // HPが0になったら2秒後にゲームオーバー
+		}
 	}
 }
 
