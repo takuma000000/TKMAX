@@ -81,7 +81,7 @@ void Player::Update(const std::vector<Enemy*>& enemies) {
 		}
 		if (input_->PushKey(DIK_D)) {
 			transform_.translate.x += 0.1f;
-		}
+		} 
 
 		// **弾を発射**
 		if (input_->TriggerKey(DIK_SPACE)) {
