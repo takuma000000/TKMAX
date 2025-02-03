@@ -22,7 +22,7 @@ void MyGame::Initialize()
 	audio->Initialize();
 
 	//入力の初期化
-	input = std::make_unique<Input>();		
+	input = std::make_unique<Input>();
 	input->Initialize(windowsAPI.get());
 
 	//DirectXの初期化
@@ -93,7 +93,7 @@ void MyGame::Initialize()
 
 	//Playerの初期化
 	player = std::make_unique<Player>();
-	player->Initialize(object3dCommon.get(), dxCommon.get(), camera.get(), input.get(),spriteCommon.get());
+	player->Initialize(object3dCommon.get(), dxCommon.get(), camera.get(), input.get(), spriteCommon.get());
 	player->SetCamera(camera.get());
 	// PlayerにSprite共通部を設定
 	player->SetSpriteCommon(spriteCommon.get());
@@ -276,31 +276,38 @@ void MyGame::Update() {
 		// プレイヤーの弾と敵の衝突判定
 		for (auto it = enemies.begin(); it != enemies.end();) {
 			Enemy* enemy = *it;
+			// 弾との衝突判定
 			for (const auto& bullet : player->GetBullets()) {
+				// 敵のサイズから衝突判定の閾値を計算
 				float enemySize = (enemy->GetScale().x + enemy->GetScale().y + enemy->GetScale().z) / 3.0f;
+				// 衝突判定の閾値
 				float collisionThreshold = enemySize * 0.5f;
 
+				// 敵と弾の距離が一定以下なら衝突
 				float distance = MyMath::Distance(enemy->GetPosition(), bullet->GetPosition());
+				// 衝突判定
 				if (distance < collisionThreshold) {
 					enemy->OnCollision(); // 敵の被弾処理
-					bullet->Deactivate();
+					bullet->Deactivate(); // 弾を無効化
 					break;
 				}
 			}
-
+			// 敵が死んだら削除
 			if (enemy->IsDead()) {
 				delete enemy;
-				it = enemies.erase(it);
+				it = enemies.erase(it); // 削除した要素の次の要素を指すイテレータを返す
 			} else {
-				++it;
+				++it; // 次の要素へ
 			}
 		}
 
 		// 弾のスプライト更新
 		if (currentPhase_ == GamePhase::GameScene) {
+			// 🔥 **残弾表示**
 			int bulletCount = player->GetBulletCount();
+			// 弾の数だけスプライトを更新
 			for (int i = 0; i < bulletCount; i++) {
-				bulletSprites_[i]->Update();
+				bulletSprites_[i]->Update(); // 弾のスプライトを更新
 			}
 		}
 
@@ -314,6 +321,7 @@ void MyGame::Update() {
 			player->Update(enemies); // HPが0でも `hpOverTimer_` を減少させる
 		}
 
+		// **HPが0かつカウントダウンが終了したらゲームオーバーフェーズへ**
 		if ((player->GetHP() <= 0 && player->IsHPOverTimerExpired()) ||
 			(player->GetBulletCount() <= 0 && player->IsOverTimerExpired())) {
 			currentPhase_ = GamePhase::Over;
