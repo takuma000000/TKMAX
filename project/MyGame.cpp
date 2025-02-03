@@ -213,6 +213,7 @@ void MyGame::Update() {
 
 	input->Update();
 
+	// ゲームフェーズごとの更新処理
 	switch (currentPhase_) {
 	case GamePhase::Title:
 		if (input->TriggerKey(DIK_SPACE)) {
@@ -333,6 +334,7 @@ void MyGame::Update() {
 		clearSprite_->Update(); // クリア画面の更新
 
 		if (input->TriggerKey(DIK_SPACE)) { // スペースキーでタイトルフェーズに戻る
+			// ゲームをリセット
 			ResetGame();
 			currentPhase_ = GamePhase::Title;
 			input->Update(); // キー入力をリセット
@@ -414,7 +416,7 @@ void MyGame::Draw()
 }
 
 
-
+// ゲームをリセット
 void MyGame::ResetGame()
 {
 	// 敵を全削除
