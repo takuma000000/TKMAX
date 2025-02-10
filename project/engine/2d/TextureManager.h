@@ -53,10 +53,37 @@ public:
 	struct TextureData {
 		DirectX::TexMetadata metadata;
 		Microsoft::WRL::ComPtr<ID3D12Resource> resource;
-		uint32_t srvIndex;
-		D3D12_CPU_DESCRIPTOR_HANDLE srvHnadleCPU;
-		D3D12_GPU_DESCRIPTOR_HANDLE srvHnadleGPU;
+		uint32_t srvIndex = 0;
+		D3D12_CPU_DESCRIPTOR_HANDLE srvHnadleCPU{};
+		D3D12_GPU_DESCRIPTOR_HANDLE srvHnadleGPU{};
+
+		// デフォルトコンストラクタ（手動で定義）
+		TextureData() = default;
+
+		// ムーブコンストラクタ
+		TextureData(TextureData&& other) noexcept
+			: metadata(std::move(other.metadata)),
+			resource(std::move(other.resource)),
+			srvIndex(other.srvIndex),
+			srvHnadleCPU(other.srvHnadleCPU),
+			srvHnadleGPU(other.srvHnadleGPU) {
+			other.srvIndex = 0;
+		}
+
+		// ムーブ代入演算子
+		TextureData& operator=(TextureData&& other) noexcept {
+			if (this != &other) {
+				metadata = std::move(other.metadata);
+				resource = std::move(other.resource);
+				srvIndex = other.srvIndex;
+				srvHnadleCPU = other.srvHnadleCPU;
+				srvHnadleGPU = other.srvHnadleGPU;
+				other.srvIndex = 0;
+			}
+			return *this;
+		}
 	};
+
 
 	//テクスチャデータ
 	std::unordered_map<std::string, TextureData> textureDatas;
