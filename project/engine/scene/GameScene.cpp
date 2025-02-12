@@ -1,5 +1,7 @@
 #include "GameScene.h"
 
+#include "imgui/imgui.h"
+
 void GameScene::Initialize()
 {
 	// ──────────────── NULLチェック ────────────────
@@ -13,6 +15,10 @@ void GameScene::Initialize()
 	LoadModels();        // 3Dモデルのロード
 	InitializeObjects(); // 3Dオブジェクトの作成＆初期化
 	InitializeCamera();  // カメラの作成＆設定
+
+	// ──────────────── ライトの初期化 ───────────────
+	directionalLight_ = std::make_unique<DirectionalLight>();
+	directionalLight_->Initialize({ 1.0f, 1.0f, 1.0f, 1.0f }, { 0.0f, -1.0f, 0.0f }, 1.0f);
 }
 
 void GameScene::Finalize()
@@ -33,9 +39,13 @@ void GameScene::Update()
 	// 各オブジェクトの更新処理
 	// ────────────────────────────────────────
 	camera->Update();
+	
+	// camera->ImGuiDebug();
 	sprite->Update();
 	object3d->Update();
-	anotherObject3d->Update();
+	//anotherObject3d->Update();
+	// ライトの更新
+	directionalLight_->Update();
 
 	// ────────────────────────────────────────
 	// 移動・回転（加算）・スケール更新
@@ -44,17 +54,17 @@ void GameScene::Update()
 	//*-*-*-*-*-*-*-*-*-*-*
 	// object3d
 	//*-*-*-*-*-*-*-*-*-*-*
-	UpdateObjectTransform(object3d, { 3.0f, -4.0f, 0.0f }, { 0.0f,0.0f,0.0f }, { 1.0f, 1.0f, 1.0f });
+	UpdateObjectTransform(object3d, { 0.0f, 0.0f, 0.0f }, { 0.0f,0.0f,0.0f }, { 5.0f, 5.0f, 5.0f });
 
 	//*-*-*-*-*-*-*-*-*-*-*
 	// anotherObject3d
 	//*-*-*-*-*-*-*-*-*-*-*
 
 	// 回転
-	Vector3 anotherRotate = anotherObject3d->GetRotate();
-	anotherRotate.x += 0.1f;
+	//Vector3 anotherRotate = anotherObject3d->GetRotate();
+	//anotherRotate.x += 0.1f;
 
-	UpdateObjectTransform(anotherObject3d, { 3.0f, 4.0f, 0.0f }, anotherRotate, { 1.0f, 1.0f, 1.0f });
+	//UpdateObjectTransform(anotherObject3d, { 3.0f, 4.0f, 0.0f }, anotherRotate, { 1.0f, 1.0f, 1.0f });
 }
 
 void GameScene::Draw()
@@ -66,7 +76,12 @@ void GameScene::Draw()
 
 	sprite->Draw();  // textureSrvHandleGPU は必要に応じて設定
 	object3d->Draw(dxCommon);
-	anotherObject3d->Draw(dxCommon);
+	//anotherObject3d->Draw(dxCommon);
+
+	// ライト情報をシェーダーなどに適用（必要に応じて実装）
+	Vector4 lightColor = directionalLight_->GetColor();
+	Vector3 lightDirection = directionalLight_->GetDirection();
+	float lightIntensity = directionalLight_->GetIntensity();
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -87,6 +102,7 @@ void GameScene::LoadTextures()
 	TextureManager::GetInstance()->LoadTexture("./resources/uvChecker.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/pokemon.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/circle.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/sphere.png");
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -96,6 +112,8 @@ void GameScene::InitializeSprite()
 {
 	sprite = std::make_unique<Sprite>();
 	sprite->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/uvChecker.png");
+
+	sprite->SetPosition({ -1000.0f, 0.0f });
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -104,6 +122,7 @@ void GameScene::InitializeSprite()
 void GameScene::LoadModels()
 {
 	ModelManager::GetInstance()->LoadModel("axis.obj", dxCommon);
+	ModelManager::GetInstance()->LoadModel("sphere.obj", dxCommon);
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -113,11 +132,11 @@ void GameScene::InitializeObjects()
 {
 	object3d = std::make_unique<Object3d>();
 	object3d->Initialize(Object3dCommon::GetInstance(), dxCommon);
-	object3d->SetModel("axis.obj");
+	object3d->SetModel("sphere.obj");
 
-	anotherObject3d = std::make_unique<Object3d>();
+	/*anotherObject3d = std::make_unique<Object3d>();
 	anotherObject3d->Initialize(Object3dCommon::GetInstance(), dxCommon);
-	anotherObject3d->SetModel("plane.obj");
+	anotherObject3d->SetModel("plane.obj");*/
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -131,7 +150,7 @@ void GameScene::InitializeCamera()
 	camera->SetTranslate({ 0.0f,0.0f,-30.0f });
 
 	object3d->SetCamera(camera.get());
-	anotherObject3d->SetCamera(camera.get());
+	//anotherObject3d->SetCamera(camera.get());
 }
 
 // ──────────────────────────────────────────────

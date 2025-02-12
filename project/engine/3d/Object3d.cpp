@@ -51,24 +51,25 @@ void Object3d::Update()
 
 void Object3d::Draw(DirectXCommon* dxCommon)
 {
-	dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);//VBVを設定
+	dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);// VBVを設定
 
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-	//wvp用のCBufferの場所を設定
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 
-	//SRVを切り替える
-	//dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
+	// Object3d のテクスチャを適用
+	dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(modelData.material.textureFilePath));
 
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(3, materialResourceLight->GetGPUVirtualAddress());
 
-	//3Dモデルが割り当てられていれば描画する
+	// ここで model_ のテクスチャを適用する
 	if (model_) {
+		dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(model_->GetTexturePath()));
 		model_->Draw();
 	}
 
 	dxCommon_->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 }
+
 
 void Object3d::SetModel(const std::string& filePath)
 {
@@ -217,7 +218,7 @@ void Object3d::Light(DirectXCommon* dxCommon)
 	dxCommon_ = dxCommon;
 
 	//並行光源リソースを作る
-	materialResourceLight = dxCommon->CreateBufferResource(sizeof(DirectionalLight));
+	materialResourceLight = dxCommon->CreateBufferResource(sizeof(DirectionalLightEX));
 	//書き込むためのアドレスを取得
 	materialResourceLight->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
 	//デフォルト値を書き込んでおく

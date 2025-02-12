@@ -42,6 +42,11 @@ private:
 	Transform transform;
 
 public:
+
+	std::string GetTexturePath() const { return modelData.material.textureFilePath; }
+
+public://メンバ関数
+
 	// デフォルトコンストラクタ
 	Model() = default;
 
