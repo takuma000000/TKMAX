@@ -41,6 +41,9 @@ private:
 	//Transform情報
 	Transform transform;
 
+public:
+	std::string GetTexturePath() const { return modelData.material.textureFilePath; }
+
 public://メンバ関数
 	void Initialize(ModelCommon* modelCommon, DirectXCommon* dxCommon, const std::string& directorypath, const std::string& filename);
 	void Draw();

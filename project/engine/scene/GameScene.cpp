@@ -54,7 +54,7 @@ void GameScene::Update()
 	//*-*-*-*-*-*-*-*-*-*-*
 	// object3d
 	//*-*-*-*-*-*-*-*-*-*-*
-	UpdateObjectTransform(object3d, { 0.0f, 0.0f, 0.0f }, { 0.0f,0.0f,0.0f }, { 1.0f, 1.0f, 1.0f });
+	UpdateObjectTransform(object3d, { 0.0f, 0.0f, 0.0f }, { 0.0f,0.0f,0.0f }, { 5.0f, 5.0f, 5.0f });
 
 	//*-*-*-*-*-*-*-*-*-*-*
 	// anotherObject3d
