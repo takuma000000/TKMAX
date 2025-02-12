@@ -3,6 +3,8 @@
 #include "Object3d.h"
 #include "Matrix4x4.h"
 
+#include "imgui/imgui.h"
+
 class Camera
 {
 
@@ -24,6 +26,8 @@ public://メンバ関数
 	Camera();
 
 	void Update();
+
+	void ImGuiDebug();
 
 	//setter
 	void SetRotate(const Vector3& rotate) { this->transform.rotate = rotate; }

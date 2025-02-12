@@ -24,3 +24,10 @@ void Camera::Update()
 	//合成行列
 	viewProjectionMatrix = MyMath::Multiply(viewMatrix, projectionMatrix);
 }
+
+void Camera::ImGuiDebug() {
+
+	ImGui::Begin("Camera");
+	ImGui::DragFloat3("Translate", &transform.translate.x, 0.01f);
+	ImGui::End();
+}
