@@ -38,13 +38,26 @@ void TextureManager::LoadTexture(const std::string& filePath) {
 	hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, 0, mipImages);
 	assert(SUCCEEDED(hr));
 
-	//追加したテクスチャデータの参照を取得
-	TextureData& textureData = textureDatas[filePath];
+	auto it = textureDatas.find(filePath);
+	if (it == textureDatas.end()) {
+		// filePath が存在しない場合、新しい TextureData を作成
+		TextureData textureData;
+		textureData.metadata = mipImages.GetMetadata();
+		textureData.resource = dxCommon_->CreateTextureResource(textureData.metadata);
 
-	// 画像のファイルパス、メタデータ、リソース情報を設定
-	//textureData.filePath = filePath;  // ファイルパス
-	textureData.metadata = mipImages.GetMetadata();  // メタデータを取得
-	textureData.resource = dxCommon_->CreateTextureResource(textureData.metadata);  // テクスチャリソースを生成
+		// `emplace` を使用して `std::move` で格納
+		auto result = textureDatas.emplace(filePath, std::move(textureData));
+		it = result.first; // 挿入されたデータのイテレータを取得
+	}
+
+	// 参照を安全に取得
+	TextureData& textureData = it->second;
+	textureData.metadata = mipImages.GetMetadata();
+	textureData.resource = dxCommon_->CreateTextureResource(textureData.metadata);
+
+	// std::move を使って textureDatas にムーブ
+	textureDatas[filePath] = std::move(textureData);
+
 
 	dxCommon_->UploadTextureData(textureData.resource.Get(), mipImages);
 
