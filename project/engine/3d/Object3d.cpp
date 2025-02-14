@@ -216,6 +216,7 @@ void Object3d::WVPResource(DirectXCommon* dxCommon)
 	//単位行列を書き込んでおく
 	wvpData->wvp = MyMath::MakeIdentity4x4();
 	wvpData->World = MyMath::MakeIdentity4x4();
+	wvpData->WorldInverseTranspose = MyMath::MakeIdentity4x4();
 }
 
 void Object3d::CameraResource(DirectXCommon* dxCommon)
