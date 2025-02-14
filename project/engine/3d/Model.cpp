@@ -111,7 +111,7 @@ void Model::MaterialResource(DirectXCommon* dxCommon) {
 	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
 
 	materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-	materialData->enableLighting = false;
+	materialData->enableLighting = true;
 	materialData->uvTransform = MyMath::MakeIdentity4x4();
 }
 

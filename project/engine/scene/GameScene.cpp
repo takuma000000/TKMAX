@@ -47,6 +47,7 @@ void GameScene::Update()
 	// ライトの更新
 	directionalLight_->Update();
 
+
 	// ────────────────────────────────────────
 	// 移動・回転（加算）・スケール更新
 	// ────────────────────────────────────────
@@ -54,17 +55,28 @@ void GameScene::Update()
 	//*-*-*-*-*-*-*-*-*-*-*
 	// object3d
 	//*-*-*-*-*-*-*-*-*-*-*
-	UpdateObjectTransform(object3d, { 0.0f, 0.0f, 0.0f }, { 0.0f,0.0f,0.0f }, { 5.0f, 5.0f, 5.0f });
+	//UpdateObjectTransform(object3d, { 0.0f, 0.0f, 0.0f }, { 0.0f,0.0f,0.0f }, { 5.0f, 5.0f, 5.0f });
 
-	//*-*-*-*-*-*-*-*-*-*-*
-	// anotherObject3d
-	//*-*-*-*-*-*-*-*-*-*-*
+	Vector3 object3dRotate = object3d->GetRotate();
+	Vector3 object3dTranslate = object3d->GetTranslate();
+	Vector3 object3dScale = object3d->GetScale();
 
-	// 回転
-	//Vector3 anotherRotate = anotherObject3d->GetRotate();
-	//anotherRotate.x += 0.1f;
+	
 
-	//UpdateObjectTransform(anotherObject3d, { 3.0f, 4.0f, 0.0f }, anotherRotate, { 1.0f, 1.0f, 1.0f });
+	ImGui::Begin("Object3d");
+	if (ImGui::DragFloat3("Object3dRotate", &object3dRotate.x, 0.01f))
+	{
+		object3d->SetRotate(object3dRotate);
+	}
+	if (ImGui::DragFloat3("Object3dTranslate", &object3dTranslate.x, 0.01f))
+	{
+		object3d->SetTranslate(object3dTranslate);
+	}
+	if (ImGui::DragFloat3("Object3dScale", &object3dScale.x, 0.01f))
+	{
+		object3d->SetScale(object3dScale);
+	}
+	ImGui::End();
 }
 
 void GameScene::Draw()

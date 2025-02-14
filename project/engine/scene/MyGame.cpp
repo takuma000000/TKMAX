@@ -57,16 +57,15 @@ void MyGame::Update()
 	//基底クラスの更新処理
 	Framework::Update();
 
+	// ** ImGui処理開始 **
+	imguiManager->Begin();
+
 	sceneManager_->Update();
 
 	// ウィンドウメッセージの処理
 	if (windowsAPI->ProcessMessage()) {
 		SetEndRequest(true); // Frameworkの終了フラグを設定
 	}
-
-
-	// ** ImGui処理開始 **
-	imguiManager->Begin();
 
 	// ** ImGui処理終了 **
 	imguiManager->End();
