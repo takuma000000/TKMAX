@@ -89,8 +89,8 @@ void GameScene::Draw()
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeAudio()
 {
-	//AudioManager::GetInstance()->LoadSound("fanfare", "fanfare.wav");
-	//AudioManager::GetInstance()->PlaySound("fanfare");
+	AudioManager::GetInstance()->LoadSound("fanfare", "fanfare.wav");
+	AudioManager::GetInstance()->PlaySound("fanfare");
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
