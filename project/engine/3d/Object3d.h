@@ -45,6 +45,7 @@ struct Material {
 	int32_t enableLighting;
 	float padding[3];
 	Matrix4x4 uvTransform;
+	float shininess; // 追加
 };
 
 //座標変換行列データ
@@ -57,6 +58,12 @@ struct DirectionalLightEX {
 	Vector4 color;
 	Vector3 direction;
 	float intensity;
+};
+
+struct CameraForGPU
+{
+	Vector3 worldPosition;
+	float padding[1];
 };
 
 class Object3d
@@ -116,12 +123,19 @@ private:
 	//データを書き込む
 	DirectionalLightEX* directionalLightData = nullptr;
 
+	//カメラ用のリソースを作る
+	Microsoft::WRL::ComPtr<ID3D12Resource> cameraResource;
+	//データを書き込む
+	CameraForGPU* cameraData = nullptr;
+
 	//VertexResource関数
 	void VertexResource(DirectXCommon* dxCommon);
 	//materialResource関数
 	void MaterialResource(DirectXCommon* dxCommon);
 	//wvpResource関数
 	void WVPResource(DirectXCommon* dxCommon);
+	//cameraResource関数
+	void CameraResource(DirectXCommon* dxCommon);
 	//Light関数
 	void Light(DirectXCommon* dxCommon);
 

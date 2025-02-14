@@ -21,6 +21,7 @@ void Object3d::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommo
 	MaterialResource(dxCommon_);
 	WVPResource(dxCommon_);
 	Light(dxCommon_);
+	CameraResource(dxCommon_);
 
 	//.objの参照しているテクスチャファイル読み込み
 	TextureManager::GetInstance()->LoadTexture(modelData.material.textureFilePath);
@@ -62,6 +63,7 @@ void Object3d::Draw(DirectXCommon* dxCommon)
 	dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(modelData.material.textureFilePath));
 
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(3, materialResourceLight->GetGPUVirtualAddress());
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(4, cameraResource->GetGPUVirtualAddress());
 
 	// ここで model_ のテクスチャを適用する
 	if (model_) {
@@ -200,6 +202,7 @@ void Object3d::MaterialResource(DirectXCommon* dxCommon)
 	materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	materialData->enableLighting = true;
 	materialData->uvTransform = MyMath::MakeIdentity4x4();
+	materialData->shininess = 49.3f;
 }
 
 void Object3d::WVPResource(DirectXCommon* dxCommon)
@@ -213,6 +216,16 @@ void Object3d::WVPResource(DirectXCommon* dxCommon)
 	//単位行列を書き込んでおく
 	wvpData->wvp = MyMath::MakeIdentity4x4();
 	wvpData->World = MyMath::MakeIdentity4x4();
+}
+
+void Object3d::CameraResource(DirectXCommon* dxCommon)
+{
+	dxCommon_ = dxCommon;
+
+	cameraResource = dxCommon_->CreateBufferResource(sizeof(CameraForGPU));
+	cameraResource->Map(0, nullptr, reinterpret_cast<void**>(&cameraData));
+	// カメラ位置を設定
+	cameraData->worldPosition = { 0.0f, 5.0f, -10.0f }; // 必要に応じて変更
 }
 
 void Object3d::Light(DirectXCommon* dxCommon)
