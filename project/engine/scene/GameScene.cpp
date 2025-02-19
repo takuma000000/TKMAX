@@ -61,8 +61,9 @@ void GameScene::Update()
 	Vector3 object3dTranslate = object3d->GetTranslate();
 	Vector3 object3dScale = object3d->GetScale();
 
-	
+	Vector3 direction = directionalLight_->GetDirection();
 
+	
 	ImGui::Begin("Object3d");
 	if (ImGui::DragFloat3("Object3dRotate", &object3dRotate.x, 0.01f))
 	{
@@ -75,6 +76,10 @@ void GameScene::Update()
 	if (ImGui::DragFloat3("Object3dScale", &object3dScale.x, 0.01f))
 	{
 		object3d->SetScale(object3dScale);
+	}
+	if (ImGui::DragFloat3("LightDir", &direction.x, 0.01f))
+	{
+		directionalLight_->SetDirection(direction);
 	}
 	ImGui::End();
 }

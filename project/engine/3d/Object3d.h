@@ -61,8 +61,7 @@ struct DirectionalLightEX {
 	float intensity;
 };
 
-struct CameraForGPU
-{
+struct CameraForGPU{
 	Vector3 worldPosition;
 	float padding[1];
 };

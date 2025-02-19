@@ -73,7 +73,7 @@ PixelShaderOutput main(VertexShaderOutput input)
     
         float3 specular = gDirectionalLight.color.rgb * gDirectionalLight.intensity * specularPow * float3(1.0f, 1.0f, 1.0f);
     
-        //float3 pointLightDirection = normalize(input.worldPosition - gPointLight.position);
+        float3 pointLightDirection = normalize(input.worldPosition - gPointLight.position);
         
         
         output.color.rgb = diffuse + specular; // 合計色

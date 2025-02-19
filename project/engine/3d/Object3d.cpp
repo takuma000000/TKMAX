@@ -204,7 +204,7 @@ void Object3d::MaterialResource(DirectXCommon* dxCommon)
 	materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	materialData->enableLighting = true;
 	materialData->uvTransform = MyMath::MakeIdentity4x4();
-	materialData->shininess = 49.3f;
+	materialData->shininess = 10.0f;
 }
 
 void Object3d::WVPResource(DirectXCommon* dxCommon)
@@ -236,7 +236,7 @@ void Object3d::Light(DirectXCommon* dxCommon)
 	dxCommon_ = dxCommon;
 
 	//並行光源リソースを作る
-	materialResourceLight = dxCommon->CreateBufferResource(sizeof(DirectionalLightEX));
+	materialResourceLight = dxCommon_->CreateBufferResource(sizeof(DirectionalLightEX));
 	//書き込むためのアドレスを取得
 	materialResourceLight->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
 	//デフォルト値を書き込んでおく
