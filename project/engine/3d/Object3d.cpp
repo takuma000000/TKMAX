@@ -14,6 +14,8 @@ void Object3d::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommo
 	this->object3dCommon = object3dCommon;
 	dxCommon_ = dxCommon;
 
+	transform.scale = { 3.0f, 3.0f, 3.0f };
+
 	//モデル読み込み
 	modelData = LoadObjFile("resources", "plane.obj");
 
