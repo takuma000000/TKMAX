@@ -52,6 +52,7 @@ void Object3d::Update()
 
 	wvpData->wvp = worldViewProjectionMatrix;
 	wvpData->World = worldMatrix;
+	wvpData->WorldInverseTranspose = MyMath::Inverse4x4(worldMatrix);
 }
 
 void Object3d::Draw(DirectXCommon* dxCommon)
@@ -241,6 +242,6 @@ void Object3d::Light(DirectXCommon* dxCommon)
 	materialResourceLight->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
 	//デフォルト値を書き込んでおく
 	directionalLightData->color = { 1.0f,1.0f,1.0f,1.0f };
-	directionalLightData->direction = { 0.0f,-1.0f,0.0f };
+	directionalLightData->direction = { 1.0f,0.0f,0.0f };
 	directionalLightData->intensity = 1.0f;
 }

@@ -34,15 +34,6 @@ struct Camera
 
 ConstantBuffer<Camera> gCamera : register(b2);
 
-struct PointLight
-{
-    float4 color;
-    float3 position;
-    float intensity;
-};
-
-ConstantBuffer<PointLight> gPointLight : register(b3);
-
 PixelShaderOutput main(VertexShaderOutput input)
 {
     PixelShaderOutput output;
@@ -73,9 +64,6 @@ PixelShaderOutput main(VertexShaderOutput input)
     
         float3 specular = gDirectionalLight.color.rgb * gDirectionalLight.intensity * specularPow * float3(1.0f, 1.0f, 1.0f);
     
-        float3 pointLightDirection = normalize(input.worldPosition - gPointLight.position);
-        
-        
         output.color.rgb = diffuse + specular; // 合計色
         output.color.a = gMaterial.color.a * textureColor.a; // 透明度
     }

@@ -14,9 +14,9 @@
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{a602c058-3e09-4caa-b1fd-ebc11a6614ef}</ProjectGuid>
-    <RootNamespace>CG20001DirectX</RootNamespace>
+    <RootNamespace>TKMAX</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>GE_DirectX</ProjectName>
+    <ProjectName>TKMAX</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
