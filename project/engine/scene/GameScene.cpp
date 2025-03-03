@@ -2,6 +2,8 @@
 
 #include "imgui/imgui.h"
 
+#include "MyMath.h"
+
 void GameScene::Initialize()
 {
 	// ──────────────── NULLチェック ────────────────
@@ -77,9 +79,9 @@ void GameScene::Update()
 	{
 		object3d->SetScale(object3dScale);
 	}
-	if (ImGui::DragFloat3("LightDir", &direction.x, 0.01f))
+	if (ImGui::DragFloat3("LightDir", &direction.x, 0.1f))
 	{
-		directionalLight_->SetDirection(direction);
+		directionalLight_->SetDirection(MyMath::Normalize(direction));
 	}
 	ImGui::End();
 }

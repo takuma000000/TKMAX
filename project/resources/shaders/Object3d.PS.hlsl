@@ -51,21 +51,31 @@ PixelShaderOutput main(VertexShaderOutput input)
     {
         float NdotL = dot(normalize(input.normal), -gDirectionalLight.direction);
         float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
-    
-        float3 toEye = normalize(gCamera.worldPosition - input.worldPosition); // カメラ方向
-        float3 reflectLight = reflect(gDirectionalLight.direction, normalize(input.normal)); // 反射光
-
-        //float3 halfVector = normalize(-gDirectionalLight.direction + toEye); // ハーフベクトル
-        //float NDotH = dot(normalize(input.normal), halfVector);
+        output.color = gMaterial.color * textureColor * gDirectionalLight.color * cos * gDirectionalLight.intensity;
+        output.color.rgb = gMaterial.color.rgb * textureColor.rgb * gDirectionalLight.color.rgb * cos * gDirectionalLight.intensity;
         
-        //float specularPow = pow(saturate(NDotH), gMaterial.shininess); // スペキュラー
+        float3 toEye = normalize(gCamera.worldPosition - input.worldPosition);
+        float3 reflectLight = reflect(gDirectionalLight.direction, normalize(input.normal));
+        
+        float RdotE = dot(reflectLight, toEye);
+        float specularPow = pow(saturate(RdotE), gMaterial.shininess);
+        
+        // 拡散反射
+        float3 diffuse =
+        gMaterial.color.rgb * textureColor.rgb * gDirectionalLight.color.rgb * cos * gDirectionalLight.intensity;
 
-        //float3 diffuse = gMaterial.color.rgb * textureColor.rgb * gDirectionalLight.color.rgb * cos * gDirectionalLight.intensity; // 拡散反射
-    
-        //float3 specular = gDirectionalLight.color.rgb * gDirectionalLight.intensity * specularPow * float3(1.0f, 1.0f, 1.0f);
-    
-        //output.color.rgb = diffuse + specular; // 合計色
-        output.color.a = gMaterial.color.a * textureColor.a; // 透明度
+        // 鏡面反射
+        float3 specular =
+        gDirectionalLight.color.rgb * gDirectionalLight.intensity * specularPow * float3(1.0f, 1.0f, 1.0f);
+
+        // 拡散反射 + 鏡面反射
+        output.color.rgb = diffuse + specular;
+
+        // アルファ（おまけで適用）
+        output.color.a = gMaterial.color.a * textureColor.a;
+
+        
+        output.color.a = textureColor.a;
     }
     else
     {

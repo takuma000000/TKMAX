@@ -43,9 +43,10 @@ struct ModelData {
 struct Material {
 	Vector4	color;
 	int32_t enableLighting;
-	float padding[3];
+	int32_t padding[3];
 	Matrix4x4 uvTransform;
 	float shininess; // 追加
+	float padding2[3]; // 追加
 };
 
 //座標変換行列データ
@@ -63,7 +64,7 @@ struct DirectionalLightEX {
 
 struct CameraForGPU{
 	Vector3 worldPosition;
-	float padding[1];
+	float padding;
 };
 
 class Object3d
