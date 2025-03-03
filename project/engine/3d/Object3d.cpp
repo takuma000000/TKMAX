@@ -205,7 +205,7 @@ void Object3d::MaterialResource(DirectXCommon* dxCommon)
 	materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	materialData->enableLighting = true;
 	materialData->uvTransform = MyMath::MakeIdentity4x4();
-	materialData->shininess = 10.0f;
+	materialData->shininess = 49.3f;
 }
 
 void Object3d::WVPResource(DirectXCommon* dxCommon)
