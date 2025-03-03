@@ -55,16 +55,16 @@ PixelShaderOutput main(VertexShaderOutput input)
         float3 toEye = normalize(gCamera.worldPosition - input.worldPosition); // カメラ方向
         float3 reflectLight = reflect(gDirectionalLight.direction, normalize(input.normal)); // 反射光
 
-        float3 halfVector = normalize(-gDirectionalLight.direction + toEye); // ハーフベクトル
-        float NDotH = dot(normalize(input.normal), halfVector);
+        //float3 halfVector = normalize(-gDirectionalLight.direction + toEye); // ハーフベクトル
+        //float NDotH = dot(normalize(input.normal), halfVector);
         
-        float specularPow = pow(saturate(NDotH), gMaterial.shininess); // スペキュラー
+        //float specularPow = pow(saturate(NDotH), gMaterial.shininess); // スペキュラー
 
-        float3 diffuse = gMaterial.color.rgb * textureColor.rgb * gDirectionalLight.color.rgb * cos * gDirectionalLight.intensity; // 拡散反射
+        //float3 diffuse = gMaterial.color.rgb * textureColor.rgb * gDirectionalLight.color.rgb * cos * gDirectionalLight.intensity; // 拡散反射
     
-        float3 specular = gDirectionalLight.color.rgb * gDirectionalLight.intensity * specularPow * float3(1.0f, 1.0f, 1.0f);
+        //float3 specular = gDirectionalLight.color.rgb * gDirectionalLight.intensity * specularPow * float3(1.0f, 1.0f, 1.0f);
     
-        output.color.rgb = diffuse + specular; // 合計色
+        //output.color.rgb = diffuse + specular; // 合計色
         output.color.a = gMaterial.color.a * textureColor.a; // 透明度
     }
     else
