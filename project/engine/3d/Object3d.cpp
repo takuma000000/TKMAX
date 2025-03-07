@@ -30,7 +30,7 @@ void Object3d::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommo
 	//読み込んだテクスチャの番号を取得
 	modelData.material.textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(modelData.material.textureFilePath);
 
-	materialData->enableLighting = true;
+	//materialData->enableLighting = false;
 
 	this->camera = object3dCommon->GetDefaultCamera();
 
@@ -203,7 +203,7 @@ void Object3d::MaterialResource(DirectXCommon* dxCommon)
 	//materialDataに初期値を書き込む
 	//今回は白を書き込んでみる
 	materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-	materialData->enableLighting = true;
+	//materialData->enableLighting = true;
 	materialData->uvTransform = MyMath::MakeIdentity4x4();
 	materialData->shininess = 49.3f;
 }
