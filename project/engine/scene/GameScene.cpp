@@ -20,7 +20,7 @@ void GameScene::Initialize()
 
 	// ──────────────── ライトの初期化 ───────────────
 	directionalLight_ = std::make_unique<DirectionalLight>();
-	directionalLight_->Initialize({ 1.0f, 1.0f, 1.0f, 1.0f }, { 0.0f, -1.0f, 0.0f }, 1.0f);
+	directionalLight_->Initialize({ 1.0f, 1.0f, 1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f }, 1.0f);
 }
 
 void GameScene::Finalize()
