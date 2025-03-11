@@ -79,10 +79,6 @@ void GameScene::Update()
 	{
 		object3d->SetScale(object3dScale);
 	}
-	if (ImGui::DragFloat3("LightDir", &direction.x, 0.1f))
-	{
-		directionalLight_->SetDirection(MyMath::Normalize(direction));
-	}
 	ImGui::End();
 }
 

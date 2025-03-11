@@ -45,8 +45,7 @@ struct Material {
 	int32_t enableLighting;
 	int32_t padding[3];
 	Matrix4x4 uvTransform;
-	float shininess; // 追加
-	float padding2[3]; // 追加
+	float shininess;//明るさ
 };
 
 //座標変換行列データ
@@ -63,8 +62,8 @@ struct DirectionalLightEX {
 };
 
 struct CameraForGPU{
-	Vector3 worldPosition;
-	float padding;
+	Vector3 worldPosition;//カメラの位置
+	float padding;//16byte境界に合わせるためのパディング
 };
 
 class Object3d

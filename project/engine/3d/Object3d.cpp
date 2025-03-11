@@ -203,9 +203,9 @@ void Object3d::MaterialResource(DirectXCommon* dxCommon)
 	//materialDataに初期値を書き込む
 	//今回は白を書き込んでみる
 	materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-	//materialData->enableLighting = true;
+	materialData->enableLighting = true;
 	materialData->uvTransform = MyMath::MakeIdentity4x4();
-	materialData->shininess = 49.3f;
+	materialData->shininess = 10.3f;//明るさ
 }
 
 void Object3d::WVPResource(DirectXCommon* dxCommon)
@@ -242,6 +242,6 @@ void Object3d::Light(DirectXCommon* dxCommon)
 	materialResourceLight->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
 	//デフォルト値を書き込んでおく
 	directionalLightData->color = { 1.0f,1.0f,1.0f,1.0f };
-	directionalLightData->direction = { 1.0f,0.0f,0.0f };
-	directionalLightData->intensity = 1.0f;
+	directionalLightData->direction = { -0.5f, -1.0f, -0.5f }; // 斜め上から光を当てる
+	directionalLightData->intensity = 1.0f;//光の強さ
 }
