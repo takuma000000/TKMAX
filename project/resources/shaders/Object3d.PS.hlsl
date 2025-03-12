@@ -45,6 +45,20 @@ struct PointLight
 
 ConstantBuffer<PointLight> gPointLight : register(b3);
 
+struct SpotLight
+{
+    float4 color;
+    float3 position;
+    float intensity;
+    float3 direction;
+    float distance;
+    float decay;
+    float cosAngle;
+    float cosFalloffStart;
+};
+
+ConstantBuffer<SpotLight> gSpotLight : register(b4);
+
 PixelShaderOutput main(VertexShaderOutput input)
 {
     PixelShaderOutput output;
@@ -96,7 +110,32 @@ PixelShaderOutput main(VertexShaderOutput input)
         
         float3 pointLight_Specular = gPointLight.color.rgb * gPointLight.intensity * pointLight_SpecularPow * factor * float3(1.0f, 1.0f, 1.0f);
         
-        output.color.rgb = directionalLight_Diffuse + directionalLight_Specular + pointLight_Diffuse + pointLight_Specular;
+        
+        //SpotLight//////////////////////////////////////////////////
+        
+        float distance_Spot = length(gSpotLight.position - input.worldPosition); //距離の2乗
+        float factor_Spot = pow(saturate(-distance_Spot / gSpotLight.distance + 1.0f), gSpotLight.decay);
+        
+        float3 spotLightDirectionOnSurFace = normalize(input.worldPosition - gSpotLight.position);
+        
+        float3 spotLight_HalfVector = normalize(-gSpotLight.direction + toEye);
+        float spotLight_NDotH = dot(normalize(input.normal), spotLight_HalfVector);
+        float spotLight_SpecularPow = pow(saturate(spotLight_NDotH), gMaterial.shininess);
+        
+        float spotLight_NDotL = dot(normalize(input.normal), -gSpotLight.direction);
+        float spotLight_Cos = pow(spotLight_NDotL * 0.5 + 0.5f, 2.0f);
+        
+        float cosAngle = dot(spotLightDirectionOnSurFace, gSpotLight.direction);
+        float falloffFactor = saturate((cosAngle - gSpotLight.cosAngle) / (gSpotLight.cosFalloffStart - gSpotLight.cosAngle));
+        
+        float3 spotLight_Diffuse = gMaterial.color.rgb * textureColor.rgb * gSpotLight.color.rgb * spotLight_Cos * gSpotLight.intensity * factor_Spot * falloffFactor;
+      
+        float3 spotLight_Specular = gSpotLight.color.rgb * gSpotLight.intensity * spotLight_SpecularPow * factor_Spot * float3(1.0f, 1.0f, 1.0f) * falloffFactor;
+        
+        
+        
+        
+        output.color.rgb = directionalLight_Diffuse + directionalLight_Specular + pointLight_Diffuse + pointLight_Specular + spotLight_Diffuse + spotLight_Specular;
 
         // アルファ（おまけで適用）
         output.color.a = gMaterial.color.a * textureColor.a;
