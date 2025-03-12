@@ -113,6 +113,7 @@ void Model::MaterialResource(DirectXCommon* dxCommon) {
 	materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	materialData->enableLighting = true;
 	materialData->uvTransform = MyMath::MakeIdentity4x4();
+	materialData->shininess = 48.3f;
 }
 
 void Model::Initialize(ModelCommon* modelCommon, DirectXCommon* dxCommon, const std::string& directorypath, const std::string& filename) {

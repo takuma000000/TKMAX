@@ -43,7 +43,7 @@ struct ModelData {
 struct Material {
 	Vector4	color;
 	int32_t enableLighting;
-	int32_t padding[3];
+	float padding[3];
 	Matrix4x4 uvTransform;
 	float shininess;//明るさ
 };

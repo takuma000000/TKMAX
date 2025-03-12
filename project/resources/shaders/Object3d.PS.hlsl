@@ -47,6 +47,11 @@ PixelShaderOutput main(VertexShaderOutput input)
     // ピクセルの色を計算する
     //output.color = gMaterial.color * textureColor;
 
+    if (textureColor.a == 0.0f)
+    {
+        discard;
+    }
+    
     if (gMaterial.enableLighting != 0)
     {
         float NdotL = dot(normalize(input.normal), -gDirectionalLight.direction);
@@ -55,8 +60,9 @@ PixelShaderOutput main(VertexShaderOutput input)
         float3 toEye = normalize(gCamera.worldPosition - input.worldPosition);
         float3 reflectLight = reflect(gDirectionalLight.direction, normalize(input.normal));
         
-        float RdotE = dot(reflectLight, toEye);
-        float specularPow = pow(saturate(RdotE), gMaterial.shininess);
+        float3 halfVector = normalize(-gDirectionalLight.direction + toEye);
+        float HDotH = dot(normalize(input.normal), halfVector);
+        float specularPow = pow(saturate(HDotH), gMaterial.shininess);
         
         // 拡散反射
         float3 diffuse =
@@ -80,5 +86,17 @@ PixelShaderOutput main(VertexShaderOutput input)
         output.color = gMaterial.color * textureColor;
     }
 
+    
+    if (textureColor.a < 0.5f)
+    {
+        discard;
+    }
+
+    
+    if (output.color.a == 0.0f)
+    {
+        discard;
+    }
+    
     return output;
 }

@@ -162,7 +162,7 @@ void GameScene::InitializeCamera()
 	//Object3d共通部の初期化
 	camera = std::make_unique<Camera>();
 	camera->SetRotate({ 0.0f,0.0f,0.0f });
-	camera->SetTranslate({ 0.0f,0.0f,-30.0f });
+	camera->SetTranslate({ 0.0f,0.0f,-10.0f });
 
 	object3d->SetCamera(camera.get());
 	//anotherObject3d->SetCamera(camera.get());
