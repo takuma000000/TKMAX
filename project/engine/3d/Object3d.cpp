@@ -14,6 +14,9 @@ void Object3d::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommo
 	this->object3dCommon = object3dCommon;
 	dxCommon_ = dxCommon;
 
+	transform.scale = { 1.0f, 1.0f, 1.0f };
+	transform.rotate = { 0.f, 1.6f, 0.0f };
+
 	//モデル読み込み
 	modelData = LoadObjFile("resources", "plane.obj");
 
@@ -21,11 +24,14 @@ void Object3d::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommo
 	MaterialResource(dxCommon_);
 	WVPResource(dxCommon_);
 	Light(dxCommon_);
+	CameraResource(dxCommon_);
 
 	//.objの参照しているテクスチャファイル読み込み
 	TextureManager::GetInstance()->LoadTexture(modelData.material.textureFilePath);
 	//読み込んだテクスチャの番号を取得
 	modelData.material.textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(modelData.material.textureFilePath);
+
+	//materialData->enableLighting = false;
 
 	this->camera = object3dCommon->GetDefaultCamera();
 
@@ -39,14 +45,18 @@ void Object3d::Update()
 	Matrix4x4 worldViewProjectionMatrix;
 
 	if (camera) {
-		const Matrix4x4& viewProjectionMatrix = camera->GetViewProjectionMatrix();
+		const Matrix4x4
+			& viewProjectionMatrix = camera->GetViewProjectionMatrix();
 		worldViewProjectionMatrix = MyMath::Multiply(worldMatrix, viewProjectionMatrix);
 	} else {
 		worldViewProjectionMatrix = worldMatrix;
 	}
 
+	materialData;
+
 	wvpData->wvp = worldViewProjectionMatrix;
 	wvpData->World = worldMatrix;
+	wvpData->WorldInverseTranspose = MyMath::Inverse4x4(worldMatrix);
 }
 
 void Object3d::Draw(DirectXCommon* dxCommon)
@@ -60,6 +70,7 @@ void Object3d::Draw(DirectXCommon* dxCommon)
 	dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(modelData.material.textureFilePath));
 
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(3, materialResourceLight->GetGPUVirtualAddress());
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(4, cameraResource->GetGPUVirtualAddress());
 
 	// ここで model_ のテクスチャを適用する
 	if (model_) {
@@ -67,7 +78,7 @@ void Object3d::Draw(DirectXCommon* dxCommon)
 		model_->Draw();
 	}
 
-	dxCommon_->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
+	//dxCommon_->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 }
 
 
@@ -196,8 +207,9 @@ void Object3d::MaterialResource(DirectXCommon* dxCommon)
 	//materialDataに初期値を書き込む
 	//今回は白を書き込んでみる
 	materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-	materialData->enableLighting = false;
+	materialData->enableLighting = true;
 	materialData->uvTransform = MyMath::MakeIdentity4x4();
+	materialData->shininess = 48.3f;//明るさ
 }
 
 void Object3d::WVPResource(DirectXCommon* dxCommon)
@@ -211,6 +223,17 @@ void Object3d::WVPResource(DirectXCommon* dxCommon)
 	//単位行列を書き込んでおく
 	wvpData->wvp = MyMath::MakeIdentity4x4();
 	wvpData->World = MyMath::MakeIdentity4x4();
+	wvpData->WorldInverseTranspose = MyMath::MakeIdentity4x4();
+}
+
+void Object3d::CameraResource(DirectXCommon* dxCommon)
+{
+	dxCommon_ = dxCommon;
+
+	cameraResource = dxCommon_->CreateBufferResource(sizeof(CameraForGPU));
+	cameraResource->Map(0, nullptr, reinterpret_cast<void**>(&cameraData));
+	// カメラ位置を設定
+	cameraData->worldPosition = { 0.0f, 5.0f, -10.0f }; // 必要に応じて変更
 }
 
 void Object3d::Light(DirectXCommon* dxCommon)
@@ -218,11 +241,11 @@ void Object3d::Light(DirectXCommon* dxCommon)
 	dxCommon_ = dxCommon;
 
 	//並行光源リソースを作る
-	materialResourceLight = dxCommon->CreateBufferResource(sizeof(DirectionalLightEX));
+	materialResourceLight = dxCommon_->CreateBufferResource(sizeof(DirectionalLightEX));
 	//書き込むためのアドレスを取得
 	materialResourceLight->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
 	//デフォルト値を書き込んでおく
 	directionalLightData->color = { 1.0f,1.0f,1.0f,1.0f };
-	directionalLightData->direction = { 0.0f,-1.0f,0.0f };
-	directionalLightData->intensity = 1.0f;
+	directionalLightData->direction = { 1.0f, 0.0f, 0.0f }; // 斜め上から光を当てる
+	directionalLightData->intensity = 1.0f;//光の強さ
 }

@@ -3,19 +3,23 @@
 Texture2D<float4> gTexture : register(t0);
 SamplerState gSampler : register(s0);
 
-struct Material {
+struct Material
+{
     float4 color;
     int enableLighting;
     float4x4 uvTransform;
+    float shininess;
 };
 
 ConstantBuffer<Material> gMaterial : register(b0);
 
-struct PixelShaderOutput {
+struct PixelShaderOutput
+{
     float4 color : SV_TARGET0;
 };
 
-struct DirectionalLight {
+struct DirectionalLight
+{
     float4 color;
     float3 direction;
     float intensity;
@@ -23,11 +27,19 @@ struct DirectionalLight {
 
 ConstantBuffer<DirectionalLight> gDirectionalLight : register(b1);
 
-PixelShaderOutput main(VertexShaderOutput input) {
+struct Camera
+{
+    float3 worldPosition;
+};
+
+ConstantBuffer<Camera> gCamera : register(b2);
+
+PixelShaderOutput main(VertexShaderOutput input)
+{
     PixelShaderOutput output;
 
     //Materialを拡張する
-    float4 transformedUV = mul(float4(input.texcoord, 0.0f,1.0f), gMaterial.uvTransform);
+    float4 transformedUV = mul(float4(input.texcoord, 0.0f, 1.0f), gMaterial.uvTransform);
 
     // テクスチャサンプルを行う
     float4 textureColor = gTexture.Sample(gSampler, transformedUV.xy);
@@ -35,13 +47,56 @@ PixelShaderOutput main(VertexShaderOutput input) {
     // ピクセルの色を計算する
     //output.color = gMaterial.color * textureColor;
 
-    if (gMaterial.enableLighting != 0) {
+    if (textureColor.a == 0.0f)
+    {
+        discard;
+    }
+    
+    if (gMaterial.enableLighting != 0)
+    {
         float NdotL = dot(normalize(input.normal), -gDirectionalLight.direction);
         float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
-        output.color = gMaterial.color * textureColor * gDirectionalLight.color * cos * gDirectionalLight.intensity;
-    } else {
+        
+        float3 toEye = normalize(gCamera.worldPosition - input.worldPosition);
+        float3 reflectLight = reflect(gDirectionalLight.direction, normalize(input.normal));
+        
+        float3 halfVector = normalize(-gDirectionalLight.direction + toEye);
+        float HDotH = dot(normalize(input.normal), halfVector);
+        float specularPow = pow(saturate(HDotH), gMaterial.shininess);
+        
+        // 拡散反射
+        float3 diffuse =
+        gMaterial.color.rgb * textureColor.rgb * gDirectionalLight.color.rgb * cos * gDirectionalLight.intensity;
+
+        // 鏡面反射
+        float3 specular =
+        gDirectionalLight.color.rgb * gDirectionalLight.intensity * specularPow * float3(1.0f, 1.0f, 1.0f);
+
+        // 拡散反射 + 鏡面反射
+        output.color.rgb = diffuse + specular;
+
+        // アルファ（おまけで適用）
+        output.color.a = gMaterial.color.a * textureColor.a;
+
+        
+       // output.color.a = textureColor.a;
+    }
+    else
+    {
         output.color = gMaterial.color * textureColor;
     }
 
+    
+    if (textureColor.a < 0.5f)
+    {
+        discard;
+    }
+
+    
+    if (output.color.a == 0.0f)
+    {
+        discard;
+    }
+    
     return output;
 }

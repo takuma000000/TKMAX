@@ -15,6 +15,8 @@ public:
 	Vector3 GetDirection() const { return direction_; }
 	float GetIntensity() const { return intensity_; }
 
+	void SetDirection(const Vector3& direction) { direction_ = direction; }
+
 private:
 	Vector4 color_;
 	Vector3 direction_;

@@ -66,12 +66,12 @@ void AudioManager::PlaySound(const std::string& key) {
 	assert(SUCCEEDED(hr));
 
 	// 音声の終了を待つ
-	XAUDIO2_VOICE_STATE state;
+	/*XAUDIO2_VOICE_STATE state;
 	do {
 		sourceVoice->GetState(&state);
-	} while (state.BuffersQueued > 0);
+	} while (state.BuffersQueued > 0);*/
 
-	sourceVoice->DestroyVoice();
+	//sourceVoice->DestroyVoice();
 }
 
 
