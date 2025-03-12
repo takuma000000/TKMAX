@@ -2,6 +2,8 @@
 
 #include "imgui/imgui.h"
 
+#include "MyMath.h"
+
 void GameScene::Initialize()
 {
 	// ──────────────── NULLチェック ────────────────
@@ -18,7 +20,7 @@ void GameScene::Initialize()
 
 	// ──────────────── ライトの初期化 ───────────────
 	directionalLight_ = std::make_unique<DirectionalLight>();
-	directionalLight_->Initialize({ 1.0f, 1.0f, 1.0f, 1.0f }, { 0.0f, -1.0f, 0.0f }, 1.0f);
+	directionalLight_->Initialize({ 1.0f, 1.0f, 1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f }, 1.0f);
 }
 
 void GameScene::Finalize()
@@ -76,10 +78,6 @@ void GameScene::Update()
 	if (ImGui::DragFloat3("Object3dScale", &object3dScale.x, 0.01f))
 	{
 		object3d->SetScale(object3dScale);
-	}
-	if (ImGui::DragFloat3("LightDir", &direction.x, 0.01f))
-	{
-		directionalLight_->SetDirection(direction);
 	}
 	ImGui::End();
 }
@@ -164,7 +162,7 @@ void GameScene::InitializeCamera()
 	//Object3d共通部の初期化
 	camera = std::make_unique<Camera>();
 	camera->SetRotate({ 0.0f,0.0f,0.0f });
-	camera->SetTranslate({ 0.0f,0.0f,-30.0f });
+	camera->SetTranslate({ 0.0f,0.0f,-10.0f });
 
 	object3d->SetCamera(camera.get());
 	//anotherObject3d->SetCamera(camera.get());

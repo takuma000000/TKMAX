@@ -14,7 +14,8 @@ void Object3d::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommo
 	this->object3dCommon = object3dCommon;
 	dxCommon_ = dxCommon;
 
-	transform.scale = { 3.0f, 3.0f, 3.0f };
+	transform.scale = { 1.0f, 1.0f, 1.0f };
+	transform.rotate = { 0.f, 1.6f, 0.0f };
 
 	//モデル読み込み
 	modelData = LoadObjFile("resources", "plane.obj");
@@ -30,7 +31,7 @@ void Object3d::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommo
 	//読み込んだテクスチャの番号を取得
 	modelData.material.textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(modelData.material.textureFilePath);
 
-	materialData->enableLighting = true;
+	//materialData->enableLighting = false;
 
 	this->camera = object3dCommon->GetDefaultCamera();
 
@@ -44,11 +45,14 @@ void Object3d::Update()
 	Matrix4x4 worldViewProjectionMatrix;
 
 	if (camera) {
-		const Matrix4x4& viewProjectionMatrix = camera->GetViewProjectionMatrix();
+		const Matrix4x4
+			& viewProjectionMatrix = camera->GetViewProjectionMatrix();
 		worldViewProjectionMatrix = MyMath::Multiply(worldMatrix, viewProjectionMatrix);
 	} else {
 		worldViewProjectionMatrix = worldMatrix;
 	}
+
+	materialData;
 
 	wvpData->wvp = worldViewProjectionMatrix;
 	wvpData->World = worldMatrix;
@@ -74,7 +78,7 @@ void Object3d::Draw(DirectXCommon* dxCommon)
 		model_->Draw();
 	}
 
-	dxCommon_->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
+	//dxCommon_->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 }
 
 
@@ -205,7 +209,7 @@ void Object3d::MaterialResource(DirectXCommon* dxCommon)
 	materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	materialData->enableLighting = true;
 	materialData->uvTransform = MyMath::MakeIdentity4x4();
-	materialData->shininess = 10.0f;
+	materialData->shininess = 48.3f;//明るさ
 }
 
 void Object3d::WVPResource(DirectXCommon* dxCommon)
@@ -242,6 +246,6 @@ void Object3d::Light(DirectXCommon* dxCommon)
 	materialResourceLight->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
 	//デフォルト値を書き込んでおく
 	directionalLightData->color = { 1.0f,1.0f,1.0f,1.0f };
-	directionalLightData->direction = { 1.0f,0.0f,0.0f };
-	directionalLightData->intensity = 1.0f;
+	directionalLightData->direction = { 1.0f, 0.0f, 0.0f }; // 斜め上から光を当てる
+	directionalLightData->intensity = 1.0f;//光の強さ
 }
