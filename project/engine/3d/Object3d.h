@@ -61,6 +61,15 @@ struct DirectionalLightEX {
 	float intensity;
 };
 
+struct PointLightEX {
+	Vector4 color;
+	Vector3 position;
+	float intensity;
+	float radius;
+	float decay;
+	float padding[2];
+};
+
 struct CameraForGPU{
 	Vector3 worldPosition;//カメラの位置
 	float padding;//16byte境界に合わせるためのパディング
@@ -123,6 +132,11 @@ private:
 	//データを書き込む
 	DirectionalLightEX* directionalLightData = nullptr;
 
+	//PointLight用のマテリアルリソースを作る
+	Microsoft::WRL::ComPtr<ID3D12Resource> pointLightResource;
+	//データを書き込む
+	PointLightEX* pointLightData = nullptr;
+
 	//カメラ用のリソースを作る
 	Microsoft::WRL::ComPtr<ID3D12Resource> cameraResource;
 	//データを書き込む
@@ -138,6 +152,8 @@ private:
 	void CameraResource(DirectXCommon* dxCommon);
 	//Light関数
 	void Light(DirectXCommon* dxCommon);
+	//PointLight関数
+	void PointLight(DirectXCommon* dxCommon);
 
 	Transform transform;
 	Transform cameraTransform;

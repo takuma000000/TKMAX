@@ -88,6 +88,8 @@ private:
 
 	std::unique_ptr<Object3d> object3d = nullptr;
 	std::unique_ptr<Object3d> anotherObject3d = nullptr;
+	//地面
+	std::unique_ptr<Object3d> ground_ = nullptr;
 
 	std::unique_ptr<DirectionalLight> directionalLight_ = nullptr;// ディレクショナルライト
 };

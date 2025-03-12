@@ -8,6 +8,8 @@
 #include "ModelManager.h"
 #include "Camera.h"
 
+#include "imgui/imgui.h"
+
 void Object3d::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommon)
 {
 	//引数で受け取ってメンバ変数に記録する
@@ -15,7 +17,7 @@ void Object3d::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommo
 	dxCommon_ = dxCommon;
 
 	transform.scale = { 1.0f, 1.0f, 1.0f };
-	transform.rotate = { 0.f, 1.6f, 0.0f };
+	transform.rotate = { 0.0f, 1.6f, 0.0f };
 
 	//モデル読み込み
 	modelData = LoadObjFile("resources", "plane.obj");
@@ -25,6 +27,7 @@ void Object3d::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommo
 	WVPResource(dxCommon_);
 	Light(dxCommon_);
 	CameraResource(dxCommon_);
+	PointLight(dxCommon_);
 
 	//.objの参照しているテクスチャファイル読み込み
 	TextureManager::GetInstance()->LoadTexture(modelData.material.textureFilePath);
@@ -39,25 +42,63 @@ void Object3d::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommo
 
 void Object3d::Update()
 {
-	//TransformからWorldMatrixを作る
+	// TransformからWorldMatrixを作る
 	Matrix4x4 worldMatrix = MyMath::MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
-	//worldViewProjectionMatrixを作る	[ worldMatrix * ( viewMatrix * projectionMatrix ) ]
 	Matrix4x4 worldViewProjectionMatrix;
 
 	if (camera) {
-		const Matrix4x4
-			& viewProjectionMatrix = camera->GetViewProjectionMatrix();
+		const Matrix4x4& viewProjectionMatrix = camera->GetViewProjectionMatrix();
 		worldViewProjectionMatrix = MyMath::Multiply(worldMatrix, viewProjectionMatrix);
 	} else {
 		worldViewProjectionMatrix = worldMatrix;
 	}
 
-	materialData;
-
 	wvpData->wvp = worldViewProjectionMatrix;
 	wvpData->World = worldMatrix;
 	wvpData->WorldInverseTranspose = MyMath::Inverse4x4(worldMatrix);
+
+	// ---- ImGui のライト設定 ----
+	ImGui::Begin("Light Settings");
+
+	// Directional Light
+	if (ImGui::ColorEdit3("Directional Light Color", &directionalLightData->color.x)) {
+		// 変更があったら適用
+	}
+
+	if (ImGui::DragFloat3("Directional Light Direction", &directionalLightData->direction.x, 0.01f, -1.0f, 1.0f)) {
+		// ライトの方向を更新
+	}
+
+	if (ImGui::DragFloat("Directional Light Intensity", &directionalLightData->intensity, 0.01f, 0.0f, 10.0f)) {
+		// 強度を更新
+	}
+
+	ImGui::Separator(); // UIを区切る
+
+	// Point Light
+	if (ImGui::ColorEdit3("Point Light Color", &pointLightData->color.x)) {
+		// 変更があったら適用
+	}
+
+	if (ImGui::DragFloat3("Point Light Position", &pointLightData->position.x, 0.1f, -50.0f, 50.0f)) {
+		// 位置を更新
+	}
+
+	if (ImGui::DragFloat("Point Light Intensity", &pointLightData->intensity, 0.01f, 0.0f, 10.0f)) {
+		// 強度を更新
+	}
+
+	if (ImGui::DragFloat("Point Light Radius", &pointLightData->radius, 0.01f, 0.0f, 100.0f)) {
+		// 半径を更新
+	}
+
+	if (ImGui::DragFloat("Point Light Decay", &pointLightData->decay, 0.01f, 0.0f, 10.0f)) {
+		// 減衰率を更新
+	}
+
+	ImGui::End();
 }
+
 
 void Object3d::Draw(DirectXCommon* dxCommon)
 {
@@ -71,6 +112,8 @@ void Object3d::Draw(DirectXCommon* dxCommon)
 
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(3, materialResourceLight->GetGPUVirtualAddress());
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(4, cameraResource->GetGPUVirtualAddress());
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(5, pointLightResource->GetGPUVirtualAddress());
+
 
 	// ここで model_ のテクスチャを適用する
 	if (model_) {
@@ -247,5 +290,21 @@ void Object3d::Light(DirectXCommon* dxCommon)
 	//デフォルト値を書き込んでおく
 	directionalLightData->color = { 1.0f,1.0f,1.0f,1.0f };
 	directionalLightData->direction = { 1.0f, 0.0f, 0.0f }; // 斜め上から光を当てる
-	directionalLightData->intensity = 1.0f;//光の強さ
+	directionalLightData->intensity = 0.0f;//光の強さ
+}
+
+void Object3d::PointLight(DirectXCommon* dxCommon)
+{
+	dxCommon_ = dxCommon;
+
+	//並行光源リソースを作る
+	pointLightResource = dxCommon_->CreateBufferResource(sizeof(PointLightEX));
+	//書き込むためのアドレスを取得
+	pointLightResource->Map(0, nullptr, reinterpret_cast<void**>(&pointLightData));
+	//デフォルト値を書き込んでおく
+	pointLightData->color = { 1.0f,1.0f,1.0f,1.0f };
+	pointLightData->position = { 0.0f,2.0f,0.0f };
+	pointLightData->intensity = 1.0f;//光の強さ
+	pointLightData->radius = 10.0f;
+	pointLightData->decay = 1.0f;
 }
