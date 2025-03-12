@@ -9,6 +9,7 @@
 #include "Camera.h"
 
 #include "imgui/imgui.h"
+#include <numbers>
 
 void Object3d::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommon)
 {
@@ -28,6 +29,7 @@ void Object3d::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommo
 	Light(dxCommon_);
 	CameraResource(dxCommon_);
 	PointLight(dxCommon_);
+	SpotLight(dxCommon_);
 
 	//.objの参照しているテクスチャファイル読み込み
 	TextureManager::GetInstance()->LoadTexture(modelData.material.textureFilePath);
@@ -96,6 +98,33 @@ void Object3d::Update()
 		// 減衰率を更新
 	}
 
+	//Spot Light
+	if (ImGui::ColorEdit3("Spot Light Color", &spotLightData->color.x)) {
+		// 変更があったら適用
+	}
+	if (ImGui::DragFloat3("Spot Light Position", &spotLightData->position.x, 0.1f, -50.0f, 50.0f)) {
+		// 位置を更新
+	}
+	if (ImGui::DragFloat("Spot Light Intensity", &spotLightData->intensity, 0.01f, 0.0f, 10.0f)) {
+		// 強度を更新
+	}
+	if (ImGui::DragFloat3("Spot Light Direction", &spotLightData->direction.x, 0.01f, -1.0f, 1.0f)) {
+		// ライトの方向を更新
+	}
+	if (ImGui::DragFloat("Spot Light Distance", &spotLightData->distance, 0.01f, 0.0f, 100.0f)) {
+		// 距離を更新
+	}
+	if (ImGui::DragFloat("Spot Light Decay", &spotLightData->decay, 0.01f, 0.0f, 10.0f)) {
+		// 減衰率を更新
+	}
+	if (ImGui::DragFloat("Spot Light CosAngle", &spotLightData->cosAngle, 0.01f, 0.0f, 1.0f)) {
+		// 角度を更新
+	}
+	if (ImGui::DragFloat("Spot Light CosFalloff", &spotLightData->cosFalloffStart, 0.01f, 0.0f, 1.0f)) {
+		// 角度を更新
+	}
+
+
 	ImGui::End();
 }
 
@@ -113,6 +142,7 @@ void Object3d::Draw(DirectXCommon* dxCommon)
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(3, materialResourceLight->GetGPUVirtualAddress());
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(4, cameraResource->GetGPUVirtualAddress());
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(5, pointLightResource->GetGPUVirtualAddress());
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(6, spotLightResource->GetGPUVirtualAddress());
 
 
 	// ここで model_ のテクスチャを適用する
@@ -304,7 +334,26 @@ void Object3d::PointLight(DirectXCommon* dxCommon)
 	//デフォルト値を書き込んでおく
 	pointLightData->color = { 1.0f,1.0f,1.0f,1.0f };
 	pointLightData->position = { 0.0f,2.0f,0.0f };
-	pointLightData->intensity = 1.0f;//光の強さ
+	pointLightData->intensity = 0.0f;//光の強さ
 	pointLightData->radius = 10.0f;
 	pointLightData->decay = 1.0f;
+}
+
+void Object3d::SpotLight(DirectXCommon* dxCommon)
+{
+	dxCommon_ = dxCommon;
+
+	//並行光源リソースを作る
+	spotLightResource = dxCommon_->CreateBufferResource(sizeof(SpotLightEX));
+	//書き込むためのアドレスを取得
+	spotLightResource->Map(0, nullptr, reinterpret_cast<void**>(&spotLightData));
+	//デフォルト値を書き込んでおく
+	spotLightData->color = { 1.0f,1.0f,1.0f,1.0f };
+	spotLightData->position = { 2.0f,1.25f,0.0f };
+	spotLightData->intensity = 4.0f;//光の強さ
+	spotLightData->direction = MyMath::Normalize({ -1.0f, -1.0f, 0.0f });
+	spotLightData->distance = 7.0f;
+	spotLightData->decay = 2.0f;
+	spotLightData->cosAngle = std::cos(std::numbers::pi_v<float> / 3.0f);
+	spotLightData->cosFalloffStart = std::cos(std::numbers::pi_v<float> / 3.0f);
 }

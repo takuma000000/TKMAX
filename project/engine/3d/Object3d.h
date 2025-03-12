@@ -70,6 +70,18 @@ struct PointLightEX {
 	float padding[2];
 };
 
+struct SpotLightEX {
+	Vector4 color;
+	Vector3 position;
+	float intensity;
+	Vector3 direction;
+	float distance;
+	float decay;
+	float cosAngle;
+	float cosFalloffStart;
+	float padding[2];
+};
+
 struct CameraForGPU{
 	Vector3 worldPosition;//カメラの位置
 	float padding;//16byte境界に合わせるためのパディング
@@ -137,6 +149,11 @@ private:
 	//データを書き込む
 	PointLightEX* pointLightData = nullptr;
 
+	//SpotLight用のマテリアルリソースを作る
+	Microsoft::WRL::ComPtr<ID3D12Resource> spotLightResource;
+	//データを書き込む
+	SpotLightEX* spotLightData = nullptr;
+
 	//カメラ用のリソースを作る
 	Microsoft::WRL::ComPtr<ID3D12Resource> cameraResource;
 	//データを書き込む
@@ -154,6 +171,8 @@ private:
 	void Light(DirectXCommon* dxCommon);
 	//PointLight関数
 	void PointLight(DirectXCommon* dxCommon);
+	//SpotLight関数
+	void SpotLight(DirectXCommon* dxCommon);
 
 	Transform transform;
 	Transform cameraTransform;
