@@ -20,7 +20,7 @@ void GameScene::Initialize()
 
 	// ──────────────── ライトの初期化 ───────────────
 	directionalLight_ = std::make_unique<DirectionalLight>();
-	directionalLight_->Initialize({ 1.0f, 1.0f, 1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f }, 1.0f);
+	directionalLight_->Initialize({ 1.0f, 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 0.0f }, 1.0f);
 }
 
 void GameScene::Finalize()
@@ -45,6 +45,7 @@ void GameScene::Update()
 	// camera->ImGuiDebug();
 	sprite->Update();
 	object3d->Update();
+	ground_->Update();
 	//anotherObject3d->Update();
 	// ライトの更新
 	directionalLight_->Update();
@@ -57,7 +58,11 @@ void GameScene::Update()
 	//*-*-*-*-*-*-*-*-*-*-*
 	// object3d
 	//*-*-*-*-*-*-*-*-*-*-*
-	//UpdateObjectTransform(object3d, { 0.0f, 0.0f, 0.0f }, { 0.0f,0.0f,0.0f }, { 5.0f, 5.0f, 5.0f });
+	UpdateObjectTransform(object3d, { 0.0f, 0.0f, 00.0f }, { 0.0f,1.6f,0.0f }, { 1.0f, 1.0f, 1.0f });
+								  ///   translate       ///     rotate      ///       scale       ///
+
+	UpdateObjectTransform(ground_, { 0.0f, 0.0f, 0.0f }, { 0.0f,1.6f,0.0f }, { 1.0f, 1.0f, 1.0f });
+
 
 	Vector3 object3dRotate = object3d->GetRotate();
 	Vector3 object3dTranslate = object3d->GetTranslate();
@@ -91,6 +96,7 @@ void GameScene::Draw()
 
 	sprite->Draw();  // textureSrvHandleGPU は必要に応じて設定
 	object3d->Draw(dxCommon);
+	ground_->Draw(dxCommon);
 	//anotherObject3d->Draw(dxCommon);
 
 	// ライト情報をシェーダーなどに適用（必要に応じて実装）
@@ -138,6 +144,7 @@ void GameScene::LoadModels()
 {
 	ModelManager::GetInstance()->LoadModel("axis.obj", dxCommon);
 	ModelManager::GetInstance()->LoadModel("sphere.obj", dxCommon);
+	ModelManager::GetInstance()->LoadModel("terrain.obj", dxCommon);
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -148,6 +155,11 @@ void GameScene::InitializeObjects()
 	object3d = std::make_unique<Object3d>();
 	object3d->Initialize(Object3dCommon::GetInstance(), dxCommon);
 	object3d->SetModel("sphere.obj");
+
+	//地面
+	ground_ = std::make_unique<Object3d>();
+	ground_->Initialize(Object3dCommon::GetInstance(), dxCommon);
+	ground_->SetModel("terrain.obj");
 
 	/*anotherObject3d = std::make_unique<Object3d>();
 	anotherObject3d->Initialize(Object3dCommon::GetInstance(), dxCommon);
@@ -162,9 +174,10 @@ void GameScene::InitializeCamera()
 	//Object3d共通部の初期化
 	camera = std::make_unique<Camera>();
 	camera->SetRotate({ 0.0f,0.0f,0.0f });
-	camera->SetTranslate({ 0.0f,0.0f,-10.0f });
+	camera->SetTranslate({ 0.0f,2.5f,-20.0f });
 
 	object3d->SetCamera(camera.get());
+	ground_->SetCamera(camera.get());
 	//anotherObject3d->SetCamera(camera.get());
 }
 
