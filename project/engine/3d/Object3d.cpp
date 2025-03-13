@@ -11,6 +11,10 @@
 #include "imgui/imgui.h"
 #include <numbers>
 
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
 void Object3d::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommon)
 {
 	//引数で受け取ってメンバ変数に記録する
