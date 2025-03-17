@@ -3,17 +3,14 @@
 #define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
 #include <wrl.h>
+#include <Xinput.h>
 #include "WindowsAPI.h"
 
-//入力
 class Input
 {
 public:
 	template <class T> using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-public://メンバ関数
-
-	// シングルトンインスタンスの取得
 	static Input* GetInstance();
 
 	Input() = default;
@@ -21,31 +18,38 @@ public://メンバ関数
 	Input(Input&) = delete;
 	Input& operator=(Input&) = delete;
 
-	//初期化
 	void Initialize(WindowsAPI* winApp);
-	//終了
 	void Finalize();
-	//更新
 	void Update();
-	//キーの押下をチェック( 押されているか )
-	bool PushKey(BYTE keyNumber);
 
-	//キーのトリガーをチェック
+	bool PushKey(BYTE keyNumber);
 	bool TriggerKey(BYTE keyNumber);
 
-private://メンバ変数
+	// 追加: ゲームパッドのボタンチェック
+	bool PushButton(WORD button);
+	bool TriggerButton(WORD button);
 
+	// 追加: 左スティックの取得
+	SHORT GetLeftStickX();
+	SHORT GetLeftStickY();
+
+	// 追加: 右スティックの取得
+	SHORT GetRightStickX();
+	SHORT GetRightStickY();
+
+	// 追加: 振動を設定
+	void SetVibration(WORD leftMotor, WORD rightMotor);
+
+private:
 	static Input* instance;
 
-	//キーボードのデバイス
 	ComPtr<IDirectInputDevice8> keyboard;
-	//全キーの状態
 	BYTE key[256] = {};
-	//前回の全キーの状態
 	BYTE keyPre[256] = {};
-	//DirectInputのインスタンス
 	ComPtr<IDirectInput8> directInput;
-	//WindowsAPI
 	WindowsAPI* winApp = nullptr;
 
+	// 追加: XInput 用のメンバ変数
+	XINPUT_STATE controllerState = {};
+	XINPUT_STATE prevControllerState = {};
 };
