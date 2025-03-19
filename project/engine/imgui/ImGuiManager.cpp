@@ -53,11 +53,6 @@ void ImGuiManager::Initialize(WindowsAPI* winApp, DirectXCommon* dxCommon)
 	//ImGuiドッキング
 	ImGuiIO& io = ImGui::GetIO();
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-
-	//ImGui::StyleColorsDark();  // ダークテーマ (デフォルト)
-	//ImGui::StyleColorsLight(); // ライトテーマ
-	//ImGui::StyleColorsClassic(); // クラシックテーマ
-
 }
 
 void ImGuiManager::Finalize()
