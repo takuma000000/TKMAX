@@ -8,7 +8,7 @@
 #include "ModelManager.h"
 #include "Camera.h"
 
-#include "imgui/imgui.h"
+#include "externals/imgui/imgui.h"
 #include <numbers>
 
 void Object3d::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommon)

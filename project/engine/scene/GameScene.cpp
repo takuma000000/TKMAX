@@ -1,6 +1,6 @@
 #include "GameScene.h"
 
-#include "imgui/imgui.h"
+#include "externals/imgui/imgui.h"
 
 #include "MyMath.h"
 

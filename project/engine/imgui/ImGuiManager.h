@@ -17,6 +17,15 @@ public:
 	//画面への描画
 	void Draw();
 
+	///ImGuiの色関数===========================================
+	//イチゴ色
+	void SetColorStrawberry();
+	//ホワイトタイガー
+	void SetColorWhiteTiger();
+
+	///=======================================================
+
+
 private:
 	WindowsAPI* winApp_ = nullptr;
 	DirectXCommon* dxCommon_ = nullptr;

@@ -3,7 +3,7 @@
 #include "Object3d.h"
 #include "Matrix4x4.h"
 
-#include "imgui/imgui.h"
+#include "externals/imgui/imgui.h"
 
 class Camera
 {

@@ -13,42 +13,19 @@ void ImGuiManager::Initialize(WindowsAPI* winApp, DirectXCommon* dxCommon)
 	//ImGuoのコンテキストを生成
 	ImGui::CreateContext();
 
-	ImGuiStyle& style = ImGui::GetStyle();
+	///ImGuiの色設定場所===========================================
 
-	//========================================
-	// スタイルの設定
-	style.WindowRounding = 20.0f; // ウィンドウの角を丸くする
-	style.FrameRounding = 4.0f;  // フレームの角を丸くする
+	//イチゴ色
+	//SetColorStrawberry();
 
-	// カスタムスタイルの設定
-	ImVec4* colors = style.Colors;
-	colors[ImGuiCol_Text] = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);      // テキスト色
-	colors[ImGuiCol_WindowBg] = ImVec4(1.0f, 0.3f, 0.0f, 0.7f);      // ウィンドウ背景（透過）
-	colors[ImGuiCol_Border] = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);      // 枠線
-	colors[ImGuiCol_FrameBg] = ImVec4(0.0f, 0.2f, 0.0f, 0.4f);      // フレーム背景
-	colors[ImGuiCol_FrameBgHovered] = ImVec4(0.0f, 0.7f, 0.0f, 0.4f);      // フレーム背景（ホバー時）
-	colors[ImGuiCol_FrameBgActive] = ImVec4(0.0f, 0.9f, 0.0f, 0.4f);      // フレーム背景（アクティブ時）
-	colors[ImGuiCol_TitleBg] = ImVec4(0.0f, 0.4f, 0.0f, 0.4f);      // タイトル背景
-	colors[ImGuiCol_TitleBgActive] = ImVec4(0.0f, 0.6f, 0.0f, 0.4f);      // タイトル背景（アクティブ時）
-	colors[ImGuiCol_CheckMark] = ImVec4(0.0f, 0.9f, 0.0f, 1.0f);      // チェックマーク
-	colors[ImGuiCol_SliderGrab] = ImVec4(1.0f, 0.5f, 0.0f, 1.0f);      // スライダー
-	colors[ImGuiCol_Button] = ImVec4(0.0f, 0.4f, 0.0f, 0.4f);      // ボタン
-	colors[ImGuiCol_ButtonHovered] = ImVec4(0.0f, 0.7f, 0.0f, 0.4f);      // ボタン（ホバー時）
-	colors[ImGuiCol_ButtonActive] = ImVec4(0.0f, 0.9f, 0.0f, 0.4f);      // ボタン（アクティブ時）
-	colors[ImGuiCol_Header] = ImVec4(0.0f, 0.4f, 0.0f, 0.4f);      // ヘッダー
-	colors[ImGuiCol_HeaderHovered] = ImVec4(0.0f, 0.7f, 0.0f, 0.4f);      // ヘッダー（ホバー時）
-	colors[ImGuiCol_HeaderActive] = ImVec4(0.0f, 0.9f, 0.0f, 0.4f);      // ヘッダー（アクティブ時）
-	colors[ImGuiCol_Separator] = ImVec4(0.0f, 0.9f, 0.0f, 0.4f);      // セパレーター
-	colors[ImGuiCol_ResizeGrip] = ImVec4(0.0f, 0.4f, 0.0f, 0.4f);      // リサイズグリップ
-	colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.0f, 0.7f, 0.0f, 0.4f);      // リサイズグリップ（ホバー時）
-	colors[ImGuiCol_ResizeGripActive] = ImVec4(0.0f, 0.9f, 0.0f, 0.4f);      // リサイズグリップ（アクティブ時）
-	colors[ImGuiCol_Tab] = ImVec4(0.0f, 0.4f, 0.0f, 0.4f);      // タブ
-	colors[ImGuiCol_TabHovered] = ImVec4(0.0f, 0.7f, 0.0f, 0.4f);      // タブ（ホバー時）
-	colors[ImGuiCol_TabActive] = ImVec4(0.0f, 0.9f, 0.0f, 0.4f);      // タブ（アクティブ時）
-	colors[ImGuiCol_PopupBg] = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);      // ポップアップ背景（透過）
+	//ホワイトタイガー色
+	SetColorWhiteTiger();
 
-	//ImGuiのスタイルを設定
-	//ImGui::StyleColorsDark();
+
+
+	///===========================================================
+
+
 
 	//Win32用の初期化
 	ImGui_ImplWin32_Init(winApp_->GetHwnd());
@@ -117,4 +94,108 @@ void ImGuiManager::Draw()
 	commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 	//描画コマンドを発行
 	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
+}
+
+void ImGuiManager::SetColorStrawberry()
+{
+	ImGuiStyle& style = ImGui::GetStyle();
+
+	//========================================
+	// スタイルの設定
+	style.WindowRounding = 20.0f; // ウィンドウの角を丸くする
+	style.FrameRounding = 4.0f;  // フレームの角を丸くする
+
+	ImVec4* colors = style.Colors;
+
+	// 🍓 ウィンドウとテキスト
+	colors[ImGuiCol_Text] = ImVec4(0.98f, 0.8f, 0.3f, 1.0f);     // 種の黄色（いちごの種の明るさ）
+	colors[ImGuiCol_WindowBg] = ImVec4(0.9f, 0.2f, 0.3f, 0.95f);  // 苺色の背景
+	colors[ImGuiCol_Border] = ImVec4(1.0f, 0.98f, 0.95f, 1.0f);   // 白雪色の枠線（クリームっぽさ）
+
+	// 🍓 フレーム（スライダーやボックスの背景）
+	colors[ImGuiCol_FrameBg] = ImVec4(0.9f, 0.2f, 0.3f, 0.6f);   // 苺色
+	colors[ImGuiCol_FrameBgHovered] = ImVec4(0.8f, 0.1f, 0.2f, 0.6f); // 完熟いちごの濃い赤
+	colors[ImGuiCol_FrameBgActive] = ImVec4(0.98f, 0.8f, 0.3f, 0.6f); // 種の黄色
+
+	// 🍓 タイトルバー
+	colors[ImGuiCol_TitleBg] = ImVec4(0.8f, 0.1f, 0.2f, 0.9f);  // 完熟いちごの濃い赤
+	colors[ImGuiCol_TitleBgActive] = ImVec4(0.98f, 0.8f, 0.3f, 0.9f); // 種の黄色（目立たせる）
+
+	// 🍓 チェックボックス・スライダー
+	colors[ImGuiCol_CheckMark] = ImVec4(0.3f, 0.7f, 0.3f, 1.0f);  // 若草色（いちごの葉の緑）
+	colors[ImGuiCol_SliderGrab] = ImVec4(0.98f, 0.8f, 0.3f, 1.0f); // 種の黄色
+	colors[ImGuiCol_SliderGrabActive] = ImVec4(0.8f, 0.1f, 0.2f, 1.0f); // 完熟いちごの濃い赤
+
+	// 🍓 ボタン
+	colors[ImGuiCol_Button] = ImVec4(0.98f, 0.8f, 0.3f, 0.7f);   // 種の黄色（ポップな印象）
+	colors[ImGuiCol_ButtonHovered] = ImVec4(0.9f, 0.2f, 0.3f, 0.7f); // 苺色
+	colors[ImGuiCol_ButtonActive] = ImVec4(0.8f, 0.1f, 0.2f, 0.7f); // 完熟いちご
+
+	// 🍓 ヘッダー（ツリーノードやタブ）
+	colors[ImGuiCol_Header] = ImVec4(0.9f, 0.2f, 0.3f, 0.7f);   // 苺色
+	colors[ImGuiCol_HeaderHovered] = ImVec4(0.98f, 0.8f, 0.3f, 0.7f); // 種の黄色
+	colors[ImGuiCol_HeaderActive] = ImVec4(0.8f, 0.1f, 0.2f, 0.7f); // 完熟いちご
+
+	// 🍓 セパレーター（区切り線）
+	colors[ImGuiCol_Separator] = ImVec4(1.0f, 0.98f, 0.95f, 0.7f);   // 白雪色（クリーム）
+
+	// 🍓 タブ
+	colors[ImGuiCol_Tab] = ImVec4(0.9f, 0.2f, 0.3f, 0.7f);     // 苺色
+	colors[ImGuiCol_TabHovered] = ImVec4(0.98f, 0.8f, 0.3f, 0.7f); // 種の黄色
+	colors[ImGuiCol_TabActive] = ImVec4(0.8f, 0.1f, 0.2f, 0.7f); // 完熟いちご
+
+	// 🍓 ポップアップ（コンテキストメニュー）
+	colors[ImGuiCol_PopupBg] = ImVec4(0.9f, 0.2f, 0.3f, 0.95f);  // 苺色
+}
+
+void ImGuiManager::SetColorWhiteTiger()
+{
+	ImGuiStyle& style = ImGui::GetStyle();
+
+	//========================================
+	// スタイルの設定
+	style.WindowRounding = 19.0f; // ウィンドウの角を丸くする
+	style.FrameRounding = 4.0f;  // フレームの角を丸くする
+
+	ImVec4* colors = style.Colors;
+
+	// 🐯 **ウィンドウとテキスト**
+	colors[ImGuiCol_Text] = ImVec4(0.7f, 0.9f, 1.0f, 1.0f);   // **ホワイトタイガーの目（水色の輝き）**
+	colors[ImGuiCol_WindowBg] = ImVec4(0.35f, 0.35f, 0.35f, 0.95f);  // **グレーの背景（毛色）**
+	colors[ImGuiCol_Border] = ImVec4(0.25f, 0.25f, 0.25f, 1.0f);   // **黒い縞模様をイメージ（コントラストUP）**
+
+	//— 🐯** スライダーやボックス（入力欄）**
+	colors[ImGuiCol_FrameBg] = ImVec4(0.5f, 0.5f, 0.8f, 0.95f);  // **明るめのグレー（毛並み）**
+	colors[ImGuiCol_FrameBgHovered] = ImVec4(0.0f, 0.0f, 1.0f, 1.0f); // **氷青（ホワイトタイガーの目）**
+	colors[ImGuiCol_FrameBgActive] = ImVec4(0.0f, 0.0f, 1.0f, 1.0f); // **さらに明るい水色**
+
+	//— 🐯** タイトルバー**
+	colors[ImGuiCol_TitleBg] = ImVec4(1.0f, 1.0f, 1.0f, 0.7f);  // **黒に近いグレー（縞模様イメージ）**
+	colors[ImGuiCol_TitleBgActive] = ImVec4(1.0f, 1.0f, 1.0f, 1.0f); // **ホワイトタイガーの目の水色**
+
+	//— 🐯** チェックボックス・スライダーのつまみ**
+	colors[ImGuiCol_CheckMark] = ImVec4(0.7f, 0.9f, 1.0f, 1.0f);  // **氷青（目の色）**
+	colors[ImGuiCol_SliderGrab] = ImVec4(0.6f, 0.8f, 1.0f, 1.0f); // **明るい水色**
+	colors[ImGuiCol_SliderGrabActive] = ImVec4(0.8f, 1.0f, 1.0f, 1.0f); // **ハイライト**
+
+	//— 🐯** ボタン**
+	colors[ImGuiCol_Button] = ImVec4(0.3f, 0.3f, 0.3f, 1.0f);   // **縞模様の黒に近いグレー**
+	colors[ImGuiCol_ButtonHovered] = ImVec4(0.6f, 0.7f, 0.8f, 1.0f); // **ホワイトタイガーの目**
+	colors[ImGuiCol_ButtonActive] = ImVec4(0.1f, 0.1f, 0.1f, 1.0f); // **漆黒（力強さ）**
+
+	//— 🐯** ヘッダー（タブ・ツリーノード）**
+	colors[ImGuiCol_Header] = ImVec4(0.3f, 0.3f, 0.3f, 1.0f); // **ダークグレー**
+	colors[ImGuiCol_HeaderHovered] = ImVec4(0.6f, 0.7f, 0.8f, 1.0f); // **ホワイトタイガーの目**
+	colors[ImGuiCol_HeaderActive] = ImVec4(0.2f, 0.6f, 0.8f, 1.0f); // **アクティブ時に水色を強調**
+
+	//— 🐯** 区切り線（セパレーター）**
+	colors[ImGuiCol_Separator] = ImVec4(0.1f, 0.1f, 0.1f, 1.0f);   // **黒の縞模様をイメージ**
+
+	//— 🐯** タブ**
+	colors[ImGuiCol_Tab] = ImVec4(0.3f, 0.3f, 0.3f, 1.0f);     // **薄墨色**
+	colors[ImGuiCol_TabHovered] = ImVec4(0.6f, 0.7f, 0.8f, 1.0f); // **ホワイトタイガーの目**
+	colors[ImGuiCol_TabActive] = ImVec4(0.2f, 0.6f, 0.8f, 1.0f); // **アクティブ時は水色を強調**
+
+	//— 🐯** ポップアップ（コンテキストメニュー）**
+	colors[ImGuiCol_PopupBg] = ImVec4(0.4f, 0.4f, 0.4f, 0.95f);  // **背景に溶け込むグレー**
 }
