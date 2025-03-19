@@ -17,7 +17,7 @@ void ImGuiManager::Initialize(WindowsAPI* winApp, DirectXCommon* dxCommon)
 
 	//========================================
 	// スタイルの設定
-	style.WindowRounding = 5.0f; // ウィンドウの角を丸くする
+	style.WindowRounding = 20.0f; // ウィンドウの角を丸くする
 	style.FrameRounding = 4.0f;  // フレームの角を丸くする
 
 	// カスタムスタイルの設定
