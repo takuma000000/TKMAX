@@ -200,11 +200,11 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <Text Include="externals\imgui\LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\imgui\imgui.vcxproj">
+      <Project>{1e8bae7a-978b-4b4c-a197-6a5625168f88}</Project>
+    </ProjectReference>
     <ProjectReference Include="externals\DirectXTex\DirectXTex_Desktop_2022_Win10.vcxproj">
       <Project>{371b9fa9-4c90-4ac6-a123-aced756d6c77}</Project>
-    </ProjectReference>
-    <ProjectReference Include="imgui\imgui.vcxproj">
-      <Project>{c413545f-5f7f-4aa5-b387-782f9eb43c7d}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

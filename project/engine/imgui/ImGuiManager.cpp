@@ -1,7 +1,7 @@
 #include "ImGuiManager.h"
-#include "imgui/imgui.h"
-#include <imgui/imgui_impl_win32.h>
-#include <imgui/imgui_impl_dx12.h>
+#include "externals/imgui/imgui.h"
+#include <externals/imgui/imgui_impl_win32.h>
+#include <externals/imgui/imgui_impl_dx12.h>
 
 void ImGuiManager::Initialize(WindowsAPI* winApp, DirectXCommon* dxCommon)
 {
@@ -36,6 +36,10 @@ void ImGuiManager::Initialize(WindowsAPI* winApp, DirectXCommon* dxCommon)
 		srvHeap_->GetCPUDescriptorHandleForHeapStart(), // SRVのCPU側のハンドル
 		srvHeap_->GetGPUDescriptorHandleForHeapStart() // SRVのGPU側のハンドル
 	);
+
+	//ImGuiドッキング
+	ImGuiIO& io = ImGui::GetIO();
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
 }
 
