@@ -12,8 +12,43 @@ void ImGuiManager::Initialize(WindowsAPI* winApp, DirectXCommon* dxCommon)
 
 	//ImGuoのコンテキストを生成
 	ImGui::CreateContext();
+
+	ImGuiStyle& style = ImGui::GetStyle();
+
+	//========================================
+	// スタイルの設定
+	style.WindowRounding = 5.0f; // ウィンドウの角を丸くする
+	style.FrameRounding = 4.0f;  // フレームの角を丸くする
+
+	// カスタムスタイルの設定
+	ImVec4* colors = style.Colors;
+	colors[ImGuiCol_Text] = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);      // テキスト色
+	colors[ImGuiCol_WindowBg] = ImVec4(1.0f, 0.3f, 0.0f, 0.7f);      // ウィンドウ背景（透過）
+	colors[ImGuiCol_Border] = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);      // 枠線
+	colors[ImGuiCol_FrameBg] = ImVec4(0.0f, 0.2f, 0.0f, 0.4f);      // フレーム背景
+	colors[ImGuiCol_FrameBgHovered] = ImVec4(0.0f, 0.7f, 0.0f, 0.4f);      // フレーム背景（ホバー時）
+	colors[ImGuiCol_FrameBgActive] = ImVec4(0.0f, 0.9f, 0.0f, 0.4f);      // フレーム背景（アクティブ時）
+	colors[ImGuiCol_TitleBg] = ImVec4(0.0f, 0.4f, 0.0f, 0.4f);      // タイトル背景
+	colors[ImGuiCol_TitleBgActive] = ImVec4(0.0f, 0.6f, 0.0f, 0.4f);      // タイトル背景（アクティブ時）
+	colors[ImGuiCol_CheckMark] = ImVec4(0.0f, 0.9f, 0.0f, 1.0f);      // チェックマーク
+	colors[ImGuiCol_SliderGrab] = ImVec4(1.0f, 0.5f, 0.0f, 1.0f);      // スライダー
+	colors[ImGuiCol_Button] = ImVec4(0.0f, 0.4f, 0.0f, 0.4f);      // ボタン
+	colors[ImGuiCol_ButtonHovered] = ImVec4(0.0f, 0.7f, 0.0f, 0.4f);      // ボタン（ホバー時）
+	colors[ImGuiCol_ButtonActive] = ImVec4(0.0f, 0.9f, 0.0f, 0.4f);      // ボタン（アクティブ時）
+	colors[ImGuiCol_Header] = ImVec4(0.0f, 0.4f, 0.0f, 0.4f);      // ヘッダー
+	colors[ImGuiCol_HeaderHovered] = ImVec4(0.0f, 0.7f, 0.0f, 0.4f);      // ヘッダー（ホバー時）
+	colors[ImGuiCol_HeaderActive] = ImVec4(0.0f, 0.9f, 0.0f, 0.4f);      // ヘッダー（アクティブ時）
+	colors[ImGuiCol_Separator] = ImVec4(0.0f, 0.9f, 0.0f, 0.4f);      // セパレーター
+	colors[ImGuiCol_ResizeGrip] = ImVec4(0.0f, 0.4f, 0.0f, 0.4f);      // リサイズグリップ
+	colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.0f, 0.7f, 0.0f, 0.4f);      // リサイズグリップ（ホバー時）
+	colors[ImGuiCol_ResizeGripActive] = ImVec4(0.0f, 0.9f, 0.0f, 0.4f);      // リサイズグリップ（アクティブ時）
+	colors[ImGuiCol_Tab] = ImVec4(0.0f, 0.4f, 0.0f, 0.4f);      // タブ
+	colors[ImGuiCol_TabHovered] = ImVec4(0.0f, 0.7f, 0.0f, 0.4f);      // タブ（ホバー時）
+	colors[ImGuiCol_TabActive] = ImVec4(0.0f, 0.9f, 0.0f, 0.4f);      // タブ（アクティブ時）
+	colors[ImGuiCol_PopupBg] = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);      // ポップアップ背景（透過）
+
 	//ImGuiのスタイルを設定
-	ImGui::StyleColorsDark();
+	//ImGui::StyleColorsDark();
 
 	//Win32用の初期化
 	ImGui_ImplWin32_Init(winApp_->GetHwnd());
@@ -40,6 +75,10 @@ void ImGuiManager::Initialize(WindowsAPI* winApp, DirectXCommon* dxCommon)
 	//ImGuiドッキング
 	ImGuiIO& io = ImGui::GetIO();
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
+	//ImGui::StyleColorsDark();  // ダークテーマ (デフォルト)
+	//ImGui::StyleColorsLight(); // ライトテーマ
+	//ImGui::StyleColorsClassic(); // クラシックテーマ
 
 }
 
