@@ -22,7 +22,8 @@ public:
 	void SetColorStrawberry();
 	//ホワイトタイガー
 	void SetColorWhiteTiger();
-
+	//レインボー キラキラ✨
+	void SetColorRainbow();
 	///=======================================================
 
 

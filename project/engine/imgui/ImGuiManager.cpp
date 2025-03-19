@@ -21,7 +21,8 @@ void ImGuiManager::Initialize(WindowsAPI* winApp, DirectXCommon* dxCommon)
 	//ホワイトタイガー色
 	SetColorWhiteTiger();
 
-
+	//レインボー キラキラ✨
+	//SetColorRainbow();
 
 	///===========================================================
 
@@ -198,4 +199,47 @@ void ImGuiManager::SetColorWhiteTiger()
 
 	//— 🐯** ポップアップ（コンテキストメニュー）**
 	colors[ImGuiCol_PopupBg] = ImVec4(0.4f, 0.4f, 0.4f, 0.95f);  // **背景に溶け込むグレー**
+}
+
+void ImGuiManager::SetColorRainbow()
+{
+	ImGuiStyle& style = ImGui::GetStyle();
+
+	//========================================
+	// スタイルの設定
+	style.WindowRounding = 19.0f; // ウィンドウの角を丸くする
+	style.FrameRounding = 4.0f;  // フレームの角を丸くする
+
+	ImVec4* colors = style.Colors;
+
+	colors[ImGuiCol_Text] = ImVec4(1.0f, 0.0f, 1.0f, 1.0f);
+	colors[ImGuiCol_WindowBg] = ImVec4(0.0f, 1.0f, 1.0f, 0.95f);
+	colors[ImGuiCol_Border] = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+
+	colors[ImGuiCol_FrameBg] = ImVec4(1.0f, 1.0f, 0.0f, 0.9f);
+	colors[ImGuiCol_FrameBgHovered] = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
+	colors[ImGuiCol_FrameBgActive] = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
+
+	colors[ImGuiCol_TitleBg] = ImVec4(0.5f, 0.0f, 1.0f, 1.0f);
+	colors[ImGuiCol_TitleBgActive] = ImVec4(1.0f, 0.5f, 0.0f, 1.0f);
+
+	colors[ImGuiCol_CheckMark] = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+	colors[ImGuiCol_SliderGrab] = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
+	colors[ImGuiCol_SliderGrabActive] = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
+
+	colors[ImGuiCol_Button] = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
+	colors[ImGuiCol_ButtonHovered] = ImVec4(1.0f, 0.0f, 1.0f, 1.0f);
+	colors[ImGuiCol_ButtonActive] = ImVec4(0.0f, 1.0f, 1.0f, 1.0f);
+
+	colors[ImGuiCol_Header] = ImVec4(1.0f, 0.5f, 0.0f, 1.0f);
+	colors[ImGuiCol_HeaderHovered] = ImVec4(0.0f, 1.0f, 0.5f, 1.0f);
+	colors[ImGuiCol_HeaderActive] = ImVec4(0.5f, 0.0f, 1.0f, 1.0f);
+
+	colors[ImGuiCol_Separator] = ImVec4(0.0f, 1.0f, 1.0f, 1.0f);
+
+	colors[ImGuiCol_Tab] = ImVec4(1.0f, 0.0f, 0.5f, 1.0f);
+	colors[ImGuiCol_TabHovered] = ImVec4(0.5f, 1.0f, 0.0f, 1.0f);
+	colors[ImGuiCol_TabActive] = ImVec4(0.0f, 0.5f, 1.0f, 1.0f);
+
+	colors[ImGuiCol_PopupBg] = ImVec4(1.0f, 0.5f, 1.0f, 0.95f);
 }
