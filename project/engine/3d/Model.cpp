@@ -6,6 +6,10 @@
 #include "TextureManager.h"
 #include "Object3d.h"
 
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
 MaterialData Model::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename) {
 	MaterialData materialData;
 	std::ifstream file(directoryPath + "/" + filename);
@@ -31,6 +35,45 @@ ModelData Model::LoadObjFile(const std::string& directoryPath, const std::string
 	std::vector<Vector4> positions;
 	std::vector<Vector3> normals;
 	std::vector<Vector2> texcoords;
+
+	//Assimp::Importer importer;
+	//std::string filePath = directoryPath + "/" + filename;
+	//const aiScene* scene = importer.ReadFile(filePath.c_str(), aiProcess_FlipWindingOrder | aiProcess_FlipUVs);
+	//assert(scene->HasMeshes());
+
+	//for (uint32_t meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex) {
+	//	aiMesh* mesh = scene->mMeshes[meshIndex];
+	//	assert(mesh->HasNormals());//法線ベクトルがあるか
+	//	assert(mesh->HasTextureCoords(0));//テクスチャ座標があるか
+	//	for (uint32_t faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex) {
+	//		aiFace face = mesh->mFaces[faceIndex];//面情報
+	//		assert(face.mNumIndices == 3);//三角形ポリゴンのみ対応
+	//		for (uint32_t element = 0; element < face.mNumIndices; ++element) {
+	//			uint32_t vertexIndex = face.mIndices[element];
+	//			aiVector3D& position = mesh->mVertices[vertexIndex];
+	//			aiVector3D& normal = mesh->mNormals[vertexIndex];
+	//			aiVector3D& texcoord = mesh->mTextureCoords[0][vertexIndex];
+	//			VertexData vertex;
+	//			vertex.position = { position.x, position.y, position.z, 1.0f };
+	//			vertex.normal = { normal.x, normal.y, normal.z };
+	//			vertex.texcoord = { texcoord.x, texcoord.y };
+	//			
+	//			vertex.position.x *= -1.0f;
+	//			vertex.normal.x *= -1.0f;
+	//			modelData.vertices.push_back(vertex);
+	//		}
+	//		
+	//	}
+	//}
+
+	//for (uint32_t maaterialIndex = 0; maaterialIndex < scene->mNumMaterials; ++maaterialIndex) {
+	//	aiMaterial* material = scene->mMaterials[maaterialIndex];
+	//	if (material->GetTextureCount(aiTextureType_DIFFUSE) != 0) {
+	//		aiString textureFilePath;
+	//		material->GetTexture(aiTextureType_DIFFUSE, 0, &textureFilePath);
+	//		modelData.material.textureFilePath = directoryPath + "/" + textureFilePath.C_Str();
+	//	}
+	//}
 
 	std::ifstream file(directoryPath + "/" + filename);
 	assert(file.is_open());
