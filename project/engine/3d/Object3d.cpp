@@ -25,7 +25,7 @@ void Object3d::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommo
 	transform.rotate = { 0.0f, 1.6f, 0.0f };
 
 	//モデル読み込み
-	modelData = LoadObjFile("resources", "plane.obj");
+	modelData = LoadModelFile("resources", "plane.gltf");
 
 	VertexResource(dxCommon_);
 	MaterialResource(dxCommon_);
@@ -188,7 +188,7 @@ MaterialData Object3d::LoadMaterialTemplateFile(const std::string& directoryPath
 	return materialData;
 }
 
-ModelData Object3d::LoadObjFile(const std::string& directoryPath, const std::string& filename)
+ModelData Object3d::LoadModelFile(const std::string& directoryPath, const std::string& filename)
 {
 	//必要となる変数の宣言
 	ModelData modelData;//構築するモデルデータ
