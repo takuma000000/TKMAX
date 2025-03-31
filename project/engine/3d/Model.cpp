@@ -147,6 +147,7 @@ void Model::VertexResource(DirectXCommon* dxCommon) {
 	std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size());
 }
 
+
 void Model::MaterialResource(DirectXCommon* dxCommon) {
 	dxCommon_ = dxCommon;
 
