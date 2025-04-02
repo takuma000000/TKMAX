@@ -25,10 +25,10 @@ void Object3d::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommo
 	transform.rotate = { 0.0f, 1.6f, 0.0f };
 
 	//モデル読み込み
-	modelData = LoadModelFile("resources", "plane.gltf");
+	//modelData = LoadModelFile("resources", "plane.gltf");
 
-	VertexResource(dxCommon_);
-	MaterialResource(dxCommon_);
+	SetModel("resources/plane_2.gltf");
+
 	WVPResource(dxCommon_);
 	Light(dxCommon_);
 	CameraResource(dxCommon_);
@@ -150,10 +150,14 @@ void Object3d::Draw(DirectXCommon* dxCommon)
 
 
 	// ここで model_ のテクスチャを適用する
+	// テクスチャ適用
 	if (model_) {
 		dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(model_->GetTexturePath()));
 		model_->Draw();
+	} else {
+		// fallbackでObject3dのmodelDataを使う場合はここで描画する（不要なら削除）
 	}
+
 
 	//dxCommon_->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 }
@@ -198,6 +202,7 @@ ModelData Object3d::LoadModelFile(const std::string& directoryPath, const std::s
 
 	const aiScene* scene = importer.ReadFile(filePath.c_str(), aiProcess_FlipWindingOrder | aiProcess_FlipUVs);
 
+	assert(scene && scene->mRootNode && "Failed to load model with Assimp.");//読み込めなかったら止める
 	assert(scene->HasMeshes()); // メッシュがないのは対応しない
 
 	for (uint32_t meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex)

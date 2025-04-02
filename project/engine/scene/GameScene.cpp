@@ -145,6 +145,7 @@ void GameScene::LoadModels()
 	ModelManager::GetInstance()->LoadModel("axis.obj", dxCommon);
 	ModelManager::GetInstance()->LoadModel("sphere.obj", dxCommon);
 	ModelManager::GetInstance()->LoadModel("terrain.obj", dxCommon);
+	ModelManager::GetInstance()->LoadModel("plane.gltf", dxCommon);
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
