@@ -6,8 +6,6 @@
 #include "Object3dCommon.h"
 #include "Camera.h"
 #include "ImGuiManager.h"
-#include "engine/effect/ParticleManager.h"
-#include "engine/effect/ParticlerEmitter.h"
 
 //#include"GameScene.h"
 //#include"TitleScene.h"

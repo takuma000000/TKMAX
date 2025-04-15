@@ -21,6 +21,12 @@ void GameScene::Initialize()
 	// ──────────────── ライトの初期化 ───────────────
 	directionalLight_ = std::make_unique<DirectionalLight>();
 	directionalLight_->Initialize({ 1.0f, 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 0.0f }, 1.0f);
+
+	// ──────────────── パーティクルの初期化 ───────────────
+	ParticleManager::GetInstance()->Initialize(dxCommon, srvManager, camera.get());
+	ParticleManager::GetInstance()->CreateParticleGroup("uv", "./resources/uvChecker.png");
+	particleEmitter = std::make_unique<ParticleEmitter>();
+	particleEmitter->Initialize("uv", { 0.0f,2.5f,10.0f });
 }
 
 void GameScene::Finalize()
@@ -41,7 +47,7 @@ void GameScene::Update()
 	// 各オブジェクトの更新処理
 	// ────────────────────────────────────────
 	camera->Update();
-	
+
 	// camera->ImGuiDebug();
 	sprite->Update();
 	object3d->Update();
@@ -59,7 +65,7 @@ void GameScene::Update()
 	// object3d
 	//*-*-*-*-*-*-*-*-*-*-*
 	UpdateObjectTransform(object3d, { 0.0f, 0.0f, 00.0f }, { 0.0f,1.6f,0.0f }, { 1.0f, 1.0f, 1.0f });
-								  ///   translate       ///     rotate      ///       scale       ///
+	///   translate       ///     rotate      ///       scale       ///
 
 	UpdateObjectTransform(ground_, { 0.0f, 0.0f, 0.0f }, { 0.0f,1.6f,0.0f }, { 1.0f, 1.0f, 1.0f });
 
@@ -70,7 +76,9 @@ void GameScene::Update()
 
 	Vector3 direction = directionalLight_->GetDirection();
 
-	
+	// 
+	ParticleManager::GetInstance()->Update();
+
 	ImGui::Begin("Object3d");
 	if (ImGui::DragFloat3("Object3dRotate", &object3dRotate.x, 0.01f))
 	{
@@ -85,6 +93,15 @@ void GameScene::Update()
 		object3d->SetScale(object3dScale);
 	}
 	ImGui::End();
+
+	ImGui::Begin("Particle");
+
+	if (ImGui::Button("emit particle")) {
+		particleEmitter->Update();
+		particleEmitter->Emit();
+	}
+
+	ImGui::End();
 }
 
 void GameScene::Draw()
@@ -98,6 +115,9 @@ void GameScene::Draw()
 	object3d->Draw(dxCommon);
 	ground_->Draw(dxCommon);
 	//anotherObject3d->Draw(dxCommon);
+
+	// 
+	ParticleManager::GetInstance()->Draw();
 
 	// ライト情報をシェーダーなどに適用（必要に応じて実装）
 	Vector4 lightColor = directionalLight_->GetColor();

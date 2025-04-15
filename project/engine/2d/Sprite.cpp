@@ -3,7 +3,7 @@
 #include "DirectXCommon.h"
 #include "MyMath.h"
 #include "TextureManager.h"
-#include "imgui/imgui.h"
+#include "externals/imgui/imgui.h"
 
 void Sprite::Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, std::string textureFilePath) {
 	//引数で受け取ったメンバ変数に記録する

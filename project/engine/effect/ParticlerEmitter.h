@@ -7,7 +7,7 @@ private:
 
 public:
 
-	void Initialize(std::string name);
+	void Initialize(std::string name, Vector3 pos);
 
 	void Emit();
 
