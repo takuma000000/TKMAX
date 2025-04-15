@@ -2,6 +2,7 @@
 
 #include "externals/imgui/imgui.h"
 
+#include <algorithm>
 #include "MyMath.h"
 
 void GameScene::Initialize()
@@ -90,7 +91,6 @@ void GameScene::Update()
 	ImGui::End();
 
 	ImGui::Begin("FPS");
-	ImGui::Text("FPS : %.2f", fps_);
 	ImGui::Text("FrameTime : %.2f ms", frameTimeMs_);
 	ImGui::Text("DrawCall : %d", drawCallCount_);
 	ImGui::End();

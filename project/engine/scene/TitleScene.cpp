@@ -3,6 +3,9 @@
 #include "SceneManager.h"
 #include "GameScene.h"
 
+#include <algorithm>
+
+
 void TitleScene::Initialize()
 {
 	TextureManager::GetInstance()->LoadTexture("./resources/circle.png");
@@ -41,6 +44,9 @@ void TitleScene::Update()
 	// ImGuiのデバッグウィンドウ
 	ImGui::Begin("FPS");
 	ImGui::Text("FPS : %.2f", fps_);
+	float fpsRatio = fps_ / 144.0f; // 最大FPS(目安) 144fps
+	fpsRatio = std::clamp(fpsRatio, 0.0f, 1.0f); // 0~1に制限
+	ImGui::ProgressBar(fpsRatio, ImVec2(0.0f, 0.0f)); // サイズ(0,0)は自動
 	ImGui::Text("FrameTime : %.2f ms", frameTimeMs_);
 	ImGui::End();
 }
