@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include "MyMath.h"
+#include <psapi.h>
 
 void GameScene::Initialize()
 {
@@ -39,6 +40,7 @@ void GameScene::Finalize()
 void GameScene::Update()
 {
 	ResetDrawCallCount();
+	UpdateMemory(); // メモリ使用量の更新
 
 	// ────────────────────────────────────────
 	// 各オブジェクトの更新処理
@@ -94,6 +96,14 @@ void GameScene::Update()
 	ImGui::Text("FPS : %.2f", fps_);
 	ImGui::Text("FrameTime : %.2f ms", frameTimeMs_);
 	ImGui::Text("DrawCall : %d", drawCallCount_);
+	// メモリ使用量取得
+	PROCESS_MEMORY_COUNTERS pmc{};
+	if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
+		// WorkingSetSize = 実際にメモリ上に展開されているサイズ
+		size_t memoryUsageKB = pmc.WorkingSetSize / 1024; // KB
+		size_t memoryUsageMB = memoryUsageKB / 1024; // MB
+		ImGui::Text("Memory Usage : %zu KB :: %zu MB", memoryUsageKB, memoryUsageMB);
+	}
 	ImGui::End();
 }
 
@@ -210,4 +220,8 @@ void GameScene::UpdateObjectTransform(std::unique_ptr<Object3d>& obj, const Vect
 	obj->SetTranslate(translate);
 	obj->SetRotate(rotate);
 	obj->SetScale(scale);
+}
+
+void GameScene::UpdateMemory()
+{
 }

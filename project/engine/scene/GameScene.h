@@ -79,6 +79,8 @@ private: // ──────────────────── 更新�
 	*/
 	void UpdateObjectTransform(std::unique_ptr<Object3d>& obj, const Vector3& translate, const Vector3& rotate, const Vector3& scale);
 
+	//メモリ使用量
+	void UpdateMemory();
 
 private:
 	DirectXCommon* dxCommon = nullptr;
