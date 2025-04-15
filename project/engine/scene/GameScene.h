@@ -79,6 +79,9 @@ private: // ──────────────────── 更新�
 	*/
 	void UpdateObjectTransform(std::unique_ptr<Object3d>& obj, const Vector3& translate, const Vector3& rotate, const Vector3& scale);
 
+	//fps
+	void UpdateFps();
+
 private:
 	DirectXCommon* dxCommon = nullptr;
 	SrvManager* srvManager = nullptr;
@@ -92,5 +95,11 @@ private:
 	std::unique_ptr<Object3d> ground_ = nullptr;
 
 	std::unique_ptr<DirectionalLight> directionalLight_ = nullptr;// ディレクショナルライト
+
+	///fps
+	float fps_ = 0.0f;//フレームレート
+	float timeCount_ = 0.0f;//経過時間
+	int frameCount_ = 0;//フレームカウント
+	///
 };
 

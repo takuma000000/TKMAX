@@ -37,6 +37,8 @@ void GameScene::Finalize()
 
 void GameScene::Update()
 {
+	UpdateFps(); // FPSの更新
+
 	// ────────────────────────────────────────
 	// 各オブジェクトの更新処理
 	// ────────────────────────────────────────
@@ -84,6 +86,10 @@ void GameScene::Update()
 	{
 		object3d->SetScale(object3dScale);
 	}
+	ImGui::End();
+
+	ImGui::Begin("FPS");
+	ImGui::Text("FPS : %.2f", fps_);
 	ImGui::End();
 }
 
@@ -197,4 +203,18 @@ void GameScene::UpdateObjectTransform(std::unique_ptr<Object3d>& obj, const Vect
 	obj->SetTranslate(translate);
 	obj->SetRotate(rotate);
 	obj->SetScale(scale);
+}
+
+void GameScene::UpdateFps()
+{
+	// フレームカウントと経過時間加算
+	frameCount_++;
+	timeCount_ += ImGui::GetIO().DeltaTime; // フレーム時間（秒）
+
+	// 1秒経過ごとにFPS計算
+	if (timeCount_ >= 1.0f) {
+		fps_ = static_cast<float>(frameCount_) / timeCount_;
+		frameCount_ = 0;
+		timeCount_ = 0.0f;
+	}
 }
