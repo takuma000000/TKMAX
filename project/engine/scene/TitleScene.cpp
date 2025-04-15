@@ -3,8 +3,6 @@
 #include "SceneManager.h"
 #include "GameScene.h"
 
-#include "Input.h"
-
 void TitleScene::Initialize()
 {
 	TextureManager::GetInstance()->LoadTexture("./resources/circle.png");
@@ -22,6 +20,8 @@ void TitleScene::Finalize()
 
 void TitleScene::Update()
 {
+	UpdatePerformanceInfo(); // FPSの更新
+
 	sprite->Update();
 
 	Input::GetInstance()->Update();
@@ -37,6 +37,11 @@ void TitleScene::Update()
 		sceneManager_->SetNextScene(nextScene);
 	}
 
+	// ImGuiのデバッグウィンドウ
+	ImGui::Begin("FPS");
+	ImGui::Text("FPS : %.2f", fps_);
+	ImGui::Text("FrameTime : %.2f ms", frameTimeMs_);
+	ImGui::End();
 }
 
 void TitleScene::Draw()

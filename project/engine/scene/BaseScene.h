@@ -18,8 +18,17 @@ public:
 		sceneManager_ = sceneManager;
 	}
 
+	void UpdatePerformanceInfo();
+
 protected:
 	// シーンマネージャへのポインタ
 	SceneManager* sceneManager_ = nullptr;
+
+protected:
+	float fps_ = 0.0f;          // フレームレート
+	float timeCount_ = 0.0f;    // 経過時間
+	int frameCount_ = 0;        // フレーム数
+	float frameTimeMs_ = 0.0f;  // フレームタイム(ms)
+
 };
 
