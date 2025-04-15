@@ -16,10 +16,10 @@ void ImGuiManager::Initialize(WindowsAPI* winApp, DirectXCommon* dxCommon)
 	///ImGuiの色設定場所===========================================
 
 	//イチゴ色
-	//SetColorStrawberry();
+	SetColorStrawberry();
 
 	//ホワイトタイガー色
-	SetColorWhiteTiger();
+	//SetColorWhiteTiger();
 
 	//レインボー キラキラ✨
 	//SetColorRainbow();
