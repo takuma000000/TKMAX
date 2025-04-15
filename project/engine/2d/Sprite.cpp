@@ -4,6 +4,12 @@
 #include "MyMath.h"
 #include "TextureManager.h"
 #include "externals/imgui/imgui.h"
+#include "BaseScene.h"
+
+void Sprite::SetParentScene(BaseScene* parentScene)
+{
+	parentScene_ = parentScene;
+}
 
 void Sprite::Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, std::string textureFilePath) {
 	//引数で受け取ったメンバ変数に記録する
@@ -123,6 +129,10 @@ void Sprite::Update() {
 }
 
 void Sprite::Draw() {
+	if (parentScene_) {
+		parentScene_->AddDrawCallCount();
+	}
+
 	//VertexBufferViewを設定
 	//Spriteの描画。変更が必要なものだけ変更する
 	dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);//VBVを設定

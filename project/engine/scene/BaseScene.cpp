@@ -33,3 +33,8 @@ void BaseScene::UpdatePerformanceInfo()
 		timeCount_ = 0.0f;
 	}
 }
+
+void BaseScene::ResetDrawCallCount()
+{
+	drawCallCount_ = 0;
+}

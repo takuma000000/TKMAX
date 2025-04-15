@@ -20,6 +20,7 @@ void TitleScene::Finalize()
 
 void TitleScene::Update()
 {
+	ResetDrawCallCount();
 	UpdatePerformanceInfo(); // FPSの更新
 
 	sprite->Update();

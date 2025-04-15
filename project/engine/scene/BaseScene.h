@@ -18,7 +18,7 @@ public:
 		sceneManager_ = sceneManager;
 	}
 
-	void UpdatePerformanceInfo();
+	void AddDrawCallCount() { drawCallCount_++; }
 
 protected:
 	// シーンマネージャへのポインタ
@@ -30,5 +30,9 @@ protected:
 	int frameCount_ = 0;        // フレーム数
 	float frameTimeMs_ = 0.0f;  // フレームタイム(ms)
 
+	int drawCallCount_ = 0;  // DrawCall数カウント用
+
+	void UpdatePerformanceInfo();// TKMAXパフォーマンス可視化
+	void ResetDrawCallCount(); // カウントリセット
 };
 

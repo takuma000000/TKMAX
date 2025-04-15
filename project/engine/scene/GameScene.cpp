@@ -37,7 +37,7 @@ void GameScene::Finalize()
 
 void GameScene::Update()
 {
-	UpdatePerformanceInfo(); // FPSの更新
+	ResetDrawCallCount();
 
 	// ────────────────────────────────────────
 	// 各オブジェクトの更新処理
@@ -52,6 +52,7 @@ void GameScene::Update()
 	// ライトの更新
 	directionalLight_->Update();
 
+	UpdatePerformanceInfo(); // FPSの更新
 
 	// ────────────────────────────────────────
 	// 移動・回転（加算）・スケール更新
@@ -91,6 +92,7 @@ void GameScene::Update()
 	ImGui::Begin("FPS");
 	ImGui::Text("FPS : %.2f", fps_);
 	ImGui::Text("FrameTime : %.2f ms", frameTimeMs_);
+	ImGui::Text("DrawCall : %d", drawCallCount_);
 	ImGui::End();
 }
 
@@ -140,8 +142,8 @@ void GameScene::InitializeSprite()
 {
 	sprite = std::make_unique<Sprite>();
 	sprite->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/uvChecker.png");
-
 	sprite->SetPosition({ -1000.0f, 0.0f });
+	sprite->SetParentScene(this);
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -159,14 +161,17 @@ void GameScene::LoadModels()
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeObjects()
 {
+
 	object3d = std::make_unique<Object3d>();
 	object3d->Initialize(Object3dCommon::GetInstance(), dxCommon);
 	object3d->SetModel("sphere.obj");
+	object3d->SetParentScene(this);
 
 	//地面
 	ground_ = std::make_unique<Object3d>();
 	ground_->Initialize(Object3dCommon::GetInstance(), dxCommon);
 	ground_->SetModel("terrain.obj");
+	ground_->SetParentScene(this);
 
 	/*anotherObject3d = std::make_unique<Object3d>();
 	anotherObject3d->Initialize(Object3dCommon::GetInstance(), dxCommon);

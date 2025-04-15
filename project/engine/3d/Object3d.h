@@ -9,6 +9,7 @@
 class Object3dCommon;
 class Model;
 class Camera;
+class BaseScene;
 
 struct Vector2 {
 	float x;
@@ -107,6 +108,7 @@ public:
 	void SetTranslate(const Vector3& translate) { this->transform.translate = translate; }
 	void SetModel(Model* model) { this->model_ = model; }
 	void SetCamera(Camera* camera) { this->camera = camera; }
+	void SetParentScene(BaseScene* parentScene);
 
 private:
 	Object3dCommon* object3dCommon = nullptr;
@@ -179,5 +181,7 @@ private:
 
 	//SRV切り替え
 	bool useMonsterBall = true;
+
+	BaseScene* parentScene_ = nullptr;
 };
 

@@ -5,6 +5,7 @@
 #include "Vector4.h"
 
 class SpriteCommon;
+class BaseScene;
 
 class Sprite
 {
@@ -69,6 +70,7 @@ public:
 	void SetIsFlipY(bool isFlipY) { this->isFlipY_ = isFlipY; }
 	void SetTextureLeftTop(const Vector2& textureLeftTop) { this->textureLeftTop = textureLeftTop; }
 	void SetTextureSize(const Vector2& textureSize) { this->textureSize = textureSize; }
+	void SetParentScene(BaseScene* parentScene);
 
 public://メンバ関数
 	void Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, std::string textureFilePath);
@@ -128,5 +130,7 @@ private:
 
 	//ファイルパスを保存するメンバー変数
 	std::string textureFilePath;
+
+	BaseScene* parentScene_ = nullptr;
 
 };

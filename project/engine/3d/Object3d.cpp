@@ -10,6 +10,7 @@
 
 #include "externals/imgui/imgui.h"
 #include <numbers>
+#include "BaseScene.h"
 
 void Object3d::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommon)
 {
@@ -131,6 +132,11 @@ void Object3d::Update()
 
 void Object3d::Draw(DirectXCommon* dxCommon)
 {
+	if (parentScene_) {
+		parentScene_->AddDrawCallCount();
+	}
+
+
 	dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);// VBVを設定
 
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
@@ -159,6 +165,11 @@ void Object3d::SetModel(const std::string& filePath)
 {
 	//モデルを検索してセットする
 	model_ = ModelManager::GetInstance()->FindModel(filePath);
+}
+
+void Object3d::SetParentScene(BaseScene* parentScene)
+{
+	parentScene_ = parentScene;
 }
 
 MaterialData Object3d::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)
