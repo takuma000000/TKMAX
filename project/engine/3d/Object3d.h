@@ -92,6 +92,10 @@ class Object3d
 {
 
 public://メンバ関数
+
+	Object3d();
+	~Object3d();
+
 	void Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommon);
 	void Update();
 	void Draw(DirectXCommon* dxCommon);
@@ -102,6 +106,7 @@ public:
 	const Vector3& GetScale() const { return transform.scale; }
 	const Vector3& GetRotate() const { return transform.rotate; }
 	const Vector3& GetTranslate() const { return transform.translate; }
+	static int GetActiveCount() { return activeCount_; }
 	//setter
 	void SetScale(const Vector3& scale) { this->transform.scale = scale; }
 	void SetRotate(const Vector3& rotate) { this->transform.rotate = rotate; }
@@ -183,5 +188,7 @@ private:
 	bool useMonsterBall = true;
 
 	BaseScene* parentScene_ = nullptr;
+
+	inline static int activeCount_ = 0; // 静的メンバ変数
 };
 

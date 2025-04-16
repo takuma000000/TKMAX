@@ -70,60 +70,9 @@ void GameScene::Update()
 
 	UpdateObjectTransform(ground_, { 0.0f, 0.0f, 0.0f }, { 0.0f,1.6f,0.0f }, { 1.0f, 1.0f, 1.0f });
 
-
-	Vector3 object3dRotate = object3d->GetRotate();
-	Vector3 object3dTranslate = object3d->GetTranslate();
-	Vector3 object3dScale = object3d->GetScale();
-
-	Vector3 direction = directionalLight_->GetDirection();
-
-	
-	ImGui::Begin("Object3d");
-	if (ImGui::DragFloat3("Object3dRotate", &object3dRotate.x, 0.01f))
-	{
-		object3d->SetRotate(object3dRotate);
-	}
-	if (ImGui::DragFloat3("Object3dTranslate", &object3dTranslate.x, 0.01f))
-	{
-		object3d->SetTranslate(object3dTranslate);
-	}
-	if (ImGui::DragFloat3("Object3dScale", &object3dScale.x, 0.01f))
-	{
-		object3d->SetScale(object3dScale);
-	}
-	ImGui::End();
-
-	ImGui::Begin("Info");
-	ImGui::Text("FPS : %.2f", fps_);
-	ImGui::Separator();
-	ImGui::Text("FrameTime : %.2f ms", frameTimeMs_);
-	ImGui::Separator();
-	ImGui::Text("DrawCall : %d", drawCallCount_);
-	ImGui::Separator();
-	// メモリ使用量取得
-	PROCESS_MEMORY_COUNTERS pmc{};
-	if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
-		// WorkingSetSize = 実際にメモリ上に展開されているサイズ
-		size_t memoryUsageKB = pmc.WorkingSetSize / 1024; // KB
-		size_t memoryUsageMB = memoryUsageKB / 1024; // MB
-		ImGui::Text("Memory Usage : %zu KB / %zu MB", memoryUsageKB, memoryUsageMB);
-	}
-	ImGui::Separator();
-	ImGui::Text("Memory Usage Graph (MB)");
-	ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(1.0f, 0.0f, 0.0f, 1.0f)); // 赤色
-	ImGui::PlotLines(
-		"##MemoryPlot",
-		memoryHistory_.data(),
-		kMemoryHistorySize,
-		memoryHistoryIndex_,
-		nullptr,
-		0.0f,
-		500.0f,
-		ImVec2(0, 150)
-	);
-	ImGui::PopStyleColor();
-
-	ImGui::End();
+	///ImGui
+	ImGuiDebug(); // ImGuiのデバッグウィンドウを表示
+	///ImGui
 }
 
 void GameScene::Draw()
@@ -221,6 +170,76 @@ void GameScene::InitializeCamera()
 	object3d->SetCamera(camera.get());
 	ground_->SetCamera(camera.get());
 	//anotherObject3d->SetCamera(camera.get());
+}
+
+void GameScene::ImGuiDebug()
+{
+	Vector3 object3dRotate = object3d->GetRotate();
+	Vector3 object3dTranslate = object3d->GetTranslate();
+	Vector3 object3dScale = object3d->GetScale();
+
+	Vector3 direction = directionalLight_->GetDirection();
+
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	ImGui::Begin("Object3d");
+	if (ImGui::DragFloat3("Object3dRotate", &object3dRotate.x, 0.01f))
+	{
+		object3d->SetRotate(object3dRotate);
+	}
+	if (ImGui::DragFloat3("Object3dTranslate", &object3dTranslate.x, 0.01f))
+	{
+		object3d->SetTranslate(object3dTranslate);
+	}
+	if (ImGui::DragFloat3("Object3dScale", &object3dScale.x, 0.01f))
+	{
+		object3d->SetScale(object3dScale);
+	}
+	ImGui::End();
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	ImGui::Begin("Info");
+	ImGui::Text("FPS : %.2f", fps_);
+	ImGui::Separator();
+	ImGui::Text("FrameTime : %.2f ms", frameTimeMs_);
+	ImGui::Separator();
+	ImGui::Text("DrawCall : %d", drawCallCount_);
+	ImGui::Separator();
+	// メモリ使用量取得
+	PROCESS_MEMORY_COUNTERS pmc{};
+	if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
+		// WorkingSetSize = 実際にメモリ上に展開されているサイズ
+		size_t memoryUsageKB = pmc.WorkingSetSize / 1024; // KB
+		size_t memoryUsageMB = memoryUsageKB / 1024; // MB
+		ImGui::Text("Memory Usage : %zu KB / %zu MB", memoryUsageKB, memoryUsageMB);
+	}
+	ImGui::Text("MB");
+	ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(1.0f, 0.0f, 0.0f, 1.0f)); // 赤色
+	ImGui::PlotLines(
+		"##MemoryPlot",
+		memoryHistory_.data(),
+		kMemoryHistorySize,
+		memoryHistoryIndex_,
+		nullptr,
+		0.0f,
+		500.0f,
+		ImVec2(0, 150)
+	);
+	ImGui::PopStyleColor();
+	ImGui::Separator();
+	ImGui::Text("Active Sprite : %d", Sprite::GetActiveCount());
+	ImGui::Text("Active Object3D : %d", Object3d::GetActiveCount());
+	ImGui::End();
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	ImGui::Begin("Camera");
+	Vector3 camPos = camera->GetTranslate();
+	if (ImGui::DragFloat3("Position", &camPos.x, 0.1f, -50, 50.0f)) {
+		camera->SetTranslate(camPos);
+	}
+	Vector3 camRot = camera->GetRotate();
+	if (ImGui::DragFloat3("Rotation", &camRot.x, 0.1f, -30.0f, 30.0f)) {
+		camera->SetRotate(camRot);
+	}
+	ImGui::End();
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
 // ──────────────────────────────────────────────
