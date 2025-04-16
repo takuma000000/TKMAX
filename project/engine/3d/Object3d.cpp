@@ -12,6 +12,16 @@
 #include <numbers>
 #include "BaseScene.h"
 
+Object3d::Object3d()
+{
+	++activeCount_;
+}
+
+Object3d::~Object3d()
+{
+	--activeCount_;
+}
+
 void Object3d::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommon)
 {
 	//引数で受け取ってメンバ変数に記録する

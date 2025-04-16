@@ -11,6 +11,10 @@ class Sprite
 {
 
 public:
+
+	Sprite();
+	~Sprite();
+
 	struct Vector2 {
 		float x;
 		float y;
@@ -59,6 +63,7 @@ public:
 	bool GetIsFlipY() const { return isFlipY_; }
 	const Vector2& GetTextureLeftTop() const { return textureLeftTop; }
 	const Vector2& GetTextureSize() const { return textureSize; }
+	static int GetActiveCount() { return activeCount_; }
 	//setter
 	void SetPosition(const Vector2& position) { this->position = position; }
 	void SetTransform(const Transform& transform) { this->transform = transform; }
@@ -132,5 +137,7 @@ private:
 	std::string textureFilePath;
 
 	BaseScene* parentScene_ = nullptr;
+
+	inline static int activeCount_ = 0;
 
 };

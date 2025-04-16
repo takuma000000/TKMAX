@@ -6,6 +6,16 @@
 #include "externals/imgui/imgui.h"
 #include "BaseScene.h"
 
+Sprite::Sprite()
+{
+	++activeCount_;
+}
+
+Sprite::~Sprite()
+{
+	--activeCount_;
+}
+
 void Sprite::SetParentScene(BaseScene* parentScene)
 {
 	parentScene_ = parentScene;
