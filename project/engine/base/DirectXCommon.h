@@ -10,6 +10,7 @@
 #include "WindowsAPI.h"
 #include "SrvManager.h"
 #include "externals/DirectXTex/DirectXTex.h"//DirectX
+#include <Vector4.h>
 
 class DirectXCommon
 {
@@ -28,7 +29,7 @@ public: //getter
 	uint32_t GetDescriptorSizeDSV() { return descriptorSizeDSV; }
 	//バックバッファの数を取得
 	size_t GetBackBufferCount() const { return backBufferChange; }
-		
+
 public: //メンバ関数...初期化...public
 	//初期化
 	void Initialize(WindowsAPI* windowsAPI);
@@ -81,6 +82,12 @@ public: //リソース生成関数
 	//テクスチャデータの転送
 	void UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages);
 
+	//レンダーテクスチャーの生成
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateRenderTextureResource(Microsoft::WRL::ComPtr<ID3D12Device>, uint32_t width, uint32_t height, DXGI_FORMAT format, const Vector4& clearColor);
+	//レンダーテクスチャーの生成RTV
+	void CreateRenderTextureReaourceRTV();
+	//レンダーテクスチャーの生成SRV
+	void CreateRenderTextureReaourceSRV();
 
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(
 		D3D12_DESCRIPTOR_HEAP_TYPE heapType,
@@ -154,11 +161,12 @@ private:
 	//RTV    
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvHeap_;
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvStartHandle;
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[4];
 	//barrier
 	D3D12_RESOURCE_BARRIER barrier{};
 	//記録時間( FPS固定用 )
 	std::chrono::steady_clock::time_point reference_;
+	Microsoft::WRL::ComPtr<ID3D12Resource> renderTextureResource;//レンダーテクスチャー
 
 private:
 	//WindowsAPI
