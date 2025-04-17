@@ -105,5 +105,8 @@ private:
 	static const int kMemoryHistorySize = 100;
 	std::array<float, kMemoryHistorySize> memoryHistory_{}; // 過去のメモリ使用履歴（MB）
 	int memoryHistoryIndex_ = 0;
+
+	//パーティクル
+	std::unique_ptr<ParticleEmitter> particleEmitter = nullptr;
 };
 
