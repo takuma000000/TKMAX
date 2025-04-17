@@ -4,7 +4,7 @@ void ParticleEmitter::Initialize(std::string name, Vector3 pos)
 {
 	this->name = name;
 
-	emitter.count = 3;
+	emitter.count = 8;
 	emitter.frequency = 0.5f;
 	emitter.frequencyTime = 0.0f;
 	emitter.transform.translate = pos;

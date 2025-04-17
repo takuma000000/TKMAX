@@ -86,29 +86,9 @@ void GameScene::Update()
 	// 
 	ParticleManager::GetInstance()->Update();
 
-	ImGui::Begin("Object3d");
-	if (ImGui::DragFloat3("Object3dRotate", &object3dRotate.x, 0.01f))
-	{
-		object3d->SetRotate(object3dRotate);
-	}
-	if (ImGui::DragFloat3("Object3dTranslate", &object3dTranslate.x, 0.01f))
-	{
-		object3d->SetTranslate(object3dTranslate);
-	}
-	if (ImGui::DragFloat3("Object3dScale", &object3dScale.x, 0.01f))
-	{
-		object3d->SetScale(object3dScale);
-	}
-	ImGui::End();
-
-	ImGui::Begin("Particle");
-
-	if (ImGui::Button("emit particle")) {
-		particleEmitter->Update();
-		particleEmitter->Emit();
-	}
-
-	ImGui::End();
+	// ────────────────────────────────────────
+	ImGuiDebug();
+	// ────────────────────────────────────────
 }
 
 void GameScene::Draw()
@@ -276,6 +256,13 @@ void GameScene::ImGuiDebug()
 	Vector3 camRot = camera->GetRotate();
 	if (ImGui::DragFloat3("Rotation", &camRot.x, 0.1f, -30.0f, 30.0f)) {
 		camera->SetRotate(camRot);
+	}
+	ImGui::End();
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	ImGui::Begin("Particle");
+	if (ImGui::Button("emit particle")) {
+		particleEmitter->Update();
+		particleEmitter->Emit();
 	}
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
