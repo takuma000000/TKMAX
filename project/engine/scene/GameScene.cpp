@@ -250,6 +250,13 @@ void GameScene::ImGuiDebug()
 	ImGui::Separator();
 	ImGui::Text("Active Sprite : %d", Sprite::GetActiveCount());
 	ImGui::Text("Active Object3D : %d", Object3d::GetActiveCount());
+	ImGui::Separator();
+	int totalParticles = 0;
+	for (const auto& pair : ParticleManager::GetInstance()->GetParticleGroups()) {
+		totalParticles += static_cast<int>(pair.second.particles.size());
+	}
+	ImGui::Text("Active Particles: %d", totalParticles);
+	ImGui::Text("ParticleGroup Count: %d", ParticleManager::GetInstance()->GetParticleGroups().size());
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	ImGui::Begin("Camera");
