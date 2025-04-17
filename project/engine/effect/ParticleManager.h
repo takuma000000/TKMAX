@@ -12,7 +12,8 @@ public:
 
 	enum class ParticleType {
 		NORMAL,
-		RING
+		RING,
+		CYLINDER,
 	};
 
 	struct Transform
@@ -102,6 +103,8 @@ public:
 
 	//Ring関数
 	void CreateRingVertices();
+	//Cylinder関数
+	void CreateCylinderVertices();
 
 private:
 	static ParticleManager* instance;
@@ -125,6 +128,10 @@ private:
 	ModelData ringModelData;
 	Microsoft::WRL::ComPtr<ID3D12Resource> ringVertexResource = nullptr;
 	D3D12_VERTEX_BUFFER_VIEW ringVertexBufferView{};
+
+	ModelData cylinderModelData;
+	Microsoft::WRL::ComPtr<ID3D12Resource> cylinderVertexResource = nullptr;
+	D3D12_VERTEX_BUFFER_VIEW cylinderVertexBufferView{};
 
 	std::unordered_map<std::string, ParticleGroup> particleGroups;
 

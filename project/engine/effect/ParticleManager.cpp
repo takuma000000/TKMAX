@@ -108,7 +108,7 @@ void ParticleManager::Draw()
 		dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource.Get()->GetGPUVirtualAddress());
 		dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(1, srvManager_->GetGPUDescriptorHandle(particleGroupIterator->second.srvIndex));
 		dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, srvManager_->GetGPUDescriptorHandle(particleGroupIterator->second.materialData.textureIndex));
-		
+
 		ParticleGroup& group = particleGroupIterator->second;//グループの取得
 		// 頂点バッファ切り替え
 		if (group.type == ParticleType::NORMAL) {
@@ -117,6 +117,9 @@ void ParticleManager::Draw()
 		} else if (group.type == ParticleType::RING) {
 			dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &ringVertexBufferView);
 			dxCommon_->GetCommandList()->DrawInstanced(UINT(ringModelData.vertices.size()), group.kNumInstance, 0, 0);
+		} else if (group.type == ParticleType::CYLINDER) {
+			dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &cylinderVertexBufferView);
+			dxCommon_->GetCommandList()->DrawInstanced(UINT(cylinderModelData.vertices.size()), group.kNumInstance, 0, 0);
 		}
 
 		++particleGroupIterator;
@@ -158,7 +161,7 @@ void ParticleManager::CreatePipeline()
 	blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
 
 	D3D12_RASTERIZER_DESC resterizerDesc{};
-	resterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
+	resterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
 	resterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
 
 	Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = dxCommon_->CompileShader(L"Particle.VS.hlsl", L"vs_6_0");
@@ -278,6 +281,9 @@ void ParticleManager::InitializeVD()
 
 	CreateRingVertices();
 	ringModelData.material.textureFilePath = "./resources/gradationLine.png";
+
+	CreateCylinderVertices();
+	cylinderModelData.material.textureFilePath = "./resources/gradationLine.png";
 }
 
 void ParticleManager::CreateVR()
@@ -286,6 +292,8 @@ void ParticleManager::CreateVR()
 	vertexResource = dxCommon_->CreateBufferResource(sizeof(VertexData) * modelData.vertices.size());
 	//リングの頂点リソースを作る
 	ringVertexResource = dxCommon_->CreateBufferResource(sizeof(VertexData) * ringModelData.vertices.size());
+	//cylinderの頂点リソースを作る
+	cylinderVertexResource = dxCommon_->CreateBufferResource(sizeof(VertexData) * cylinderModelData.vertices.size());
 }
 
 void ParticleManager::CreateVB()
@@ -299,6 +307,11 @@ void ParticleManager::CreateVB()
 	ringVertexBufferView.BufferLocation = ringVertexResource->GetGPUVirtualAddress();
 	ringVertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * ringModelData.vertices.size());
 	ringVertexBufferView.StrideInBytes = sizeof(VertexData);
+
+	//cylinderの頂点リソースを作成する
+	cylinderVertexBufferView.BufferLocation = cylinderVertexResource->GetGPUVirtualAddress();
+	cylinderVertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * cylinderModelData.vertices.size());
+	cylinderVertexBufferView.StrideInBytes = sizeof(VertexData);
 }
 
 void ParticleManager::WriteResource()
@@ -314,6 +327,12 @@ void ParticleManager::WriteResource()
 	//書き込むためのアドレスを取得
 	ringVertexResource->Map(0, nullptr, reinterpret_cast<void**>(&ringVertexData));
 	std::memcpy(ringVertexData, ringModelData.vertices.data(), sizeof(VertexData) * ringModelData.vertices.size());
+
+	//cylinderの頂点リソースを作成する
+	VertexData* cylinderVertexData = nullptr;
+	//書き込むためのアドレスを取得
+	cylinderVertexResource->Map(0, nullptr, reinterpret_cast<void**>(&cylinderVertexData));
+	std::memcpy(cylinderVertexData, cylinderModelData.vertices.data(), sizeof(VertexData) * cylinderModelData.vertices.size());
 
 }
 
@@ -378,8 +397,8 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& randomE
 	//一定時間で消えるようにする
 	std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
 	Particle particle;
-	particle.transform.scale = { 0.05f,distScale(randomEngine),1.0f };//スケールを指定
-	particle.transform.rotate = { distRotate(randomEngine),0.0f,0.0f };//回転を指定
+	particle.transform.scale = { 1.0f,1.0f,1.0f };//スケールを指定
+	particle.transform.rotate = { 0.0f,0.0f,0.0f };//回転を指定
 	//位置と速度を[-1,1]でランダムに初期化
 	Vector3 randomTranslate{ distribution(randomEngine),distribution(randomEngine),distribution(randomEngine) };
 	particle.transform.translate = translate;//位置を指定
@@ -421,3 +440,49 @@ void ParticleManager::CreateRingVertices()
 	}
 
 }
+
+void ParticleManager::CreateCylinderVertices() {
+	const uint32_t kHeightDivide = 8; // 縦方向の分割数（お好みで）
+	const float height = 2.0f;        // 円柱の高さ
+	const float halfHeight = height / 2.0f;
+
+	for (uint32_t h = 0; h < kHeightDivide; ++h) {
+		float y0 = -halfHeight + height * (float(h) / kHeightDivide);
+		float y1 = -halfHeight + height * (float(h + 1) / kHeightDivide);
+		float v0 = float(h) / kHeightDivide;
+		float v1 = float(h + 1) / kHeightDivide;
+
+		for (uint32_t i = 0; i < kRingDivide; ++i) {
+			float theta0 = i * radianPerDivide;
+			float theta1 = (i + 1) * radianPerDivide;
+
+			float sin0 = std::sin(theta0);
+			float cos0 = std::cos(theta0);
+			float sin1 = std::sin(theta1);
+			float cos1 = std::cos(theta1);
+
+			float x0 = cos0 * kOuterRadius;
+			float z0 = -sin0 * kOuterRadius;
+			float x1 = cos1 * kOuterRadius;
+			float z1 = -sin1 * kOuterRadius;
+
+			float u0 = float(i) / kRingDivide;
+			float u1 = float(i + 1) / kRingDivide;
+
+			Vector3 normal0 = { cos0, 0.0f, -sin0 };
+			Vector3 normal1 = { cos1, 0.0f, -sin1 };
+
+			// 1枚目の三角形
+			cylinderModelData.vertices.push_back({ {x0, y0, z0, 1.0f}, {u0, v0}, normal0 });
+			cylinderModelData.vertices.push_back({ {x1, y0, z1, 1.0f}, {u1, v0}, normal1 });
+			cylinderModelData.vertices.push_back({ {x0, y1, z0, 1.0f}, {u0, v1}, normal0 });
+
+			// 2枚目の三角形
+			cylinderModelData.vertices.push_back({ {x0, y1, z0, 1.0f}, {u0, v1}, normal0 });
+			cylinderModelData.vertices.push_back({ {x1, y0, z1, 1.0f}, {u1, v0}, normal1 });
+			cylinderModelData.vertices.push_back({ {x1, y1, z1, 1.0f}, {u1, v1}, normal1 });
+		}
+	}
+}
+
+

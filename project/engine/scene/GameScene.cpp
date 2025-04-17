@@ -27,7 +27,7 @@ void GameScene::Initialize()
 
 	// ──────────────── パーティクルの初期化 ───────────────
 	ParticleManager::GetInstance()->Initialize(dxCommon, srvManager, camera.get());
-	ParticleManager::GetInstance()->CreateParticleGroup("uv", "./resources/gradationLine.png",ParticleManager::ParticleType::RING);
+	ParticleManager::GetInstance()->CreateParticleGroup("uv", "./resources/gradationLine.png",ParticleManager::ParticleType::CYLINDER);
 	particleEmitter = std::make_unique<ParticleEmitter>();
 	particleEmitter->Initialize("uv", { 0.0f,2.5f,10.0f });
 }
