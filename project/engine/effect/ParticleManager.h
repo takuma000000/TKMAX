@@ -91,6 +91,8 @@ public:
 
 	std::unordered_map<std::string, ParticleGroup> GetParticleGroups() { return particleGroups; }
 
+	Particle MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate);
+
 private:
 	static ParticleManager* instance;
 
