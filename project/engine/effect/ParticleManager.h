@@ -4,6 +4,7 @@
 #include "SrvManager.h"
 #include "Camera.h"
 #include <random>
+#include <numbers>
 
 class ParticleManager
 {
@@ -93,6 +94,9 @@ public:
 
 	Particle MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate);
 
+	//Ring関数
+	void CreateRingVertices();
+
 private:
 	static ParticleManager* instance;
 
@@ -111,6 +115,10 @@ private:
 	ModelData modelData;
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
+
+	ModelData ringModelData;
+	Microsoft::WRL::ComPtr<ID3D12Resource> ringVertexResource = nullptr;
+	D3D12_VERTEX_BUFFER_VIEW ringVertexBufferView{};
 
 	std::unordered_map<std::string, ParticleGroup> particleGroups;
 
@@ -133,5 +141,10 @@ private:
 
 	std::mt19937 randomEngine;
 
+	//Ring
+	const uint32_t kRingDivide = 32;
+	const float kOuterRadius = 1.0f;
+	const float kInnerRadius = 0.2f;
+	const float radianPreDivide = 2.0f * std::numbers::pi_v<float> / float(kRingDivide);
 };
 

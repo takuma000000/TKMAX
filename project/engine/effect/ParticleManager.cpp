@@ -90,10 +90,12 @@ void ParticleManager::Draw()
 {
 	dxCommon_->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
 	dxCommon_->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
-	dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
 	dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	for (std::unordered_map<std::string, ParticleGroup>::iterator particleGroupIterator = particleGroups.begin(); particleGroupIterator != particleGroups.end();) {
+
+		dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
+		dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &ringVertexBufferView);
 
 		//マテリアル用のリソースを作る。今回はcolor1つ分のサイズを用意する
 		materialResource = dxCommon_->CreateBufferResource(sizeof(Material));
@@ -234,7 +236,7 @@ void ParticleManager::CreateRootSigunature()
 	D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
 	staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;//バイリニアフィルタ
 	staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;//0～1の範囲外をリピート
-	staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;//0～1の範囲外をリピート
+	staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;//0～1の範囲外をリピート
 	staticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;//0～1の範囲外をリピート
 	staticSamplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;//比較しない
 	staticSamplers[0].MaxLOD = D3D12_FLOAT32_MAX;//ありったけのMipMapを使う
@@ -267,6 +269,9 @@ void ParticleManager::InitializeVD()
 	modelData.vertices.push_back({ .position = {-1.0f,1.0f,0.0f,1.0f},.texcoord = {1.0f,0.0f},.normal = {0.0f,0.0f,1.0f} });
 	modelData.vertices.push_back({ .position = {-1.0f,-1.0f,0.0f,1.0f},.texcoord = {1.0f,1.0f},.normal = {0.0f,0.0f,1.0f} });
 	modelData.material.textureFilePath = "./resources/circle.png";
+
+	CreateRingVertices();
+	ringModelData.material.textureFilePath = "./resources/gradationLine.png";
 }
 
 void ParticleManager::CreateVR()
@@ -382,4 +387,64 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& randomE
 	particle.lifeTime = 1.0f;//生存時間を指定
 	particle.currentTime = 0.0f;//経過時間を指定
 	return particle;
+}
+
+void ParticleManager::CreateRingVertices()
+{
+	modelData.vertices.clear();
+
+	for (uint32_t index = 0; index < kRingDivide; ++index) {
+		float sin = std::sin(index * radianPreDivide);
+		float cos = std::cos(index * radianPreDivide);
+		float sinNext = std::sin((index + 1) * radianPreDivide);
+		float cosNext = std::cos((index + 1) * radianPreDivide);
+
+		float u = float(index) / float(kRingDivide);
+		float uNext = float(index + 1) / float(kRingDivide);
+
+		// ① 外側（今の点）
+		ringModelData.vertices.push_back({
+			{ -sin * kOuterRadius, cos * kOuterRadius, 0.0f, 1.0f }, // position
+			{ u, 0.0f }, // texcoord
+			{ 0.0f, 0.0f, 1.0f } // normal
+			});
+
+		// ② 外側（次の点）
+		ringModelData.vertices.push_back({
+			{ -sinNext * kOuterRadius, cosNext * kOuterRadius, 0.0f, 1.0f },
+			{ uNext, 0.0f },
+			{ 0.0f, 0.0f, 1.0f }
+			});
+
+		// ③ 内側（今の点）
+		ringModelData.vertices.push_back({
+			{ -sin * kInnerRadius, cos * kInnerRadius, 0.0f, 1.0f },
+			{ u, 1.0f },
+			{ 0.0f, 0.0f, 1.0f }
+			});
+
+		// ④ 内側（次の点）
+		ringModelData.vertices.push_back({
+			{ -sin * kInnerRadius, cos * kInnerRadius, 0.0f, 1.0f },
+			{ u, 1.0f },
+			{ 0.0f, 0.0f, 1.0f }
+			});
+
+		// ⑤ 外側（次の点）
+		ringModelData.vertices.push_back({
+			{ -sinNext * kOuterRadius, cosNext * kOuterRadius, 0.0f, 1.0f },
+			{ uNext, 0.0f },
+			{ 0.0f, 0.0f, 1.0f }
+			});
+
+		// ⑥ 内側（次の点）
+		ringModelData.vertices.push_back({
+			{ -sinNext * kInnerRadius, cosNext * kInnerRadius, 0.0f, 1.0f },
+			{ uNext, 1.0f },
+			{ 0.0f, 0.0f, 1.0f }
+			});
+	}
+
+	// 頂点データを書き込む
+	WriteResource();
 }
