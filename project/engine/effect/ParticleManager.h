@@ -10,6 +10,11 @@ class ParticleManager
 {
 public:
 
+	enum class ParticleType {
+		NORMAL,
+		RING
+	};
+
 	struct Transform
 	{
 		Vector3 scale;
@@ -57,6 +62,7 @@ public:
 		Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource;
 		uint32_t kNumInstance;
 		ParticleForGPU* instancingData;
+		ParticleType type;
 	};
 
 
@@ -82,7 +88,7 @@ public:
 	void WriteResource();
 
 	//パーティクルグループの作成
-	void CreateParticleGroup(const std::string name, const std::string textureFilePath);
+	void CreateParticleGroup(const std::string& name, const std::string& textureFilePath, ParticleType type);
 
 	//billboardマトリクスの計算
 	void MakeBillboardMatrix();

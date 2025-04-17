@@ -94,9 +94,6 @@ void ParticleManager::Draw()
 
 	for (std::unordered_map<std::string, ParticleGroup>::iterator particleGroupIterator = particleGroups.begin(); particleGroupIterator != particleGroups.end();) {
 
-		dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
-		dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &ringVertexBufferView);
-
 		//マテリアル用のリソースを作る。今回はcolor1つ分のサイズを用意する
 		materialResource = dxCommon_->CreateBufferResource(sizeof(Material));
 		//マテリアルにデータを書き込む
@@ -111,7 +108,16 @@ void ParticleManager::Draw()
 		dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource.Get()->GetGPUVirtualAddress());
 		dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(1, srvManager_->GetGPUDescriptorHandle(particleGroupIterator->second.srvIndex));
 		dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, srvManager_->GetGPUDescriptorHandle(particleGroupIterator->second.materialData.textureIndex));
-		dxCommon_->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), particleGroupIterator->second.kNumInstance, 0, 0);
+		
+		ParticleGroup& group = particleGroupIterator->second;//グループの取得
+		// 頂点バッファ切り替え
+		if (group.type == ParticleType::NORMAL) {
+			dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
+			dxCommon_->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), group.kNumInstance, 0, 0);
+		} else if (group.type == ParticleType::RING) {
+			dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &ringVertexBufferView);
+			dxCommon_->GetCommandList()->DrawInstanced(UINT(ringModelData.vertices.size()), group.kNumInstance, 0, 0);
+		}
 
 		++particleGroupIterator;
 	}
@@ -278,6 +284,8 @@ void ParticleManager::CreateVR()
 {
 	//頂点リソースを作る
 	vertexResource = dxCommon_->CreateBufferResource(sizeof(VertexData) * modelData.vertices.size());
+	//リングの頂点リソースを作る
+	ringVertexResource = dxCommon_->CreateBufferResource(sizeof(VertexData) * ringModelData.vertices.size());
 }
 
 void ParticleManager::CreateVB()
@@ -286,6 +294,11 @@ void ParticleManager::CreateVB()
 	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
 	vertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * modelData.vertices.size());
 	vertexBufferView.StrideInBytes = sizeof(VertexData);
+
+	//リングの頂点リソースを作成する
+	ringVertexBufferView.BufferLocation = ringVertexResource->GetGPUVirtualAddress();
+	ringVertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * ringModelData.vertices.size());
+	ringVertexBufferView.StrideInBytes = sizeof(VertexData);
 }
 
 void ParticleManager::WriteResource()
@@ -295,46 +308,34 @@ void ParticleManager::WriteResource()
 	//書き込むためのアドレスを取得
 	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
 	std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size());
+
+	//リングの頂点リソースを作成する
+	VertexData* ringVertexData = nullptr;
+	//書き込むためのアドレスを取得
+	ringVertexResource->Map(0, nullptr, reinterpret_cast<void**>(&ringVertexData));
+	std::memcpy(ringVertexData, ringModelData.vertices.data(), sizeof(VertexData) * ringModelData.vertices.size());
+
 }
 
-void ParticleManager::CreateParticleGroup(const std::string name, const std::string textureFilePath)
+void ParticleManager::CreateParticleGroup(const std::string& name, const std::string& textureFilePath, ParticleType type)
 {
-	// 登録済みの名前かチェックしてassert
 	assert(particleGroups.find(name) == particleGroups.end());
 
-	// 新たな空のパーティクルグループを作成し、コンテナに登録
 	ParticleGroup newGroup;
+	newGroup.materialData.textureFilePath = textureFilePath;
+	newGroup.type = type;
 
-	newGroup.materialData.textureFilePath = textureFilePath; // マテリアルデータにテクスチャファイルパスを設定
-
-	// テクスチャを読み込む
 	TextureManager::GetInstance()->LoadTexture(textureFilePath);
-
-	// テクスチャのSRVインデックスを取得
 	uint32_t srvIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
 	newGroup.srvIndex = srvIndex;
 
-	// インスタンシング用リソースの作成
-	newGroup.kNumInstance = 100; // 必要なインスタンス数（仮で100）。用途に応じて調整
+	newGroup.kNumInstance = 100;
 	size_t bufferSize = sizeof(ParticleForGPU) * newGroup.kNumInstance;
-
-	// GPUリソースを作成
 	newGroup.instancingResource = dxCommon_->CreateBufferResource(bufferSize);
-
 	newGroup.instancingResource->Map(0, nullptr, reinterpret_cast<void**>(&newGroup.instancingData));
 
-	// SRVインデックスを確保
 	uint32_t instanceSrvIndex = srvManager_->Allocate();
-
-	// 構造化バッファ用のSRVを生成
-	srvManager_->CreateSRVforStructureBuffer(
-		instanceSrvIndex,
-		newGroup.instancingResource.Get(),
-		newGroup.kNumInstance,       // インスタンスの数
-		sizeof(ParticleForGPU)       // 各インスタンスの構造体サイズ
-	);
-
-	// SRVインデックスを記録
+	srvManager_->CreateSRVforStructureBuffer(instanceSrvIndex, newGroup.instancingResource.Get(), newGroup.kNumInstance, sizeof(ParticleForGPU));
 	newGroup.srvIndex = instanceSrvIndex;
 
 	particleGroups[name] = newGroup;
@@ -391,7 +392,6 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& randomE
 
 void ParticleManager::CreateRingVertices()
 {
-	modelData.vertices.clear();
 
 	for (uint32_t index = 0; index < kRingDivide; ++index) {
 		float sin = std::sin(index * radianPreDivide);
@@ -418,33 +418,17 @@ void ParticleManager::CreateRingVertices()
 
 		// ③ 内側（今の点）
 		ringModelData.vertices.push_back({
-			{ -sin * kInnerRadius, cos * kInnerRadius, 0.0f, 1.0f },
+			{ -sin * kInnerRadius, cosNext * kInnerRadius, 0.0f, 1.0f },
 			{ u, 1.0f },
 			{ 0.0f, 0.0f, 1.0f }
 			});
 
 		// ④ 内側（次の点）
 		ringModelData.vertices.push_back({
-			{ -sin * kInnerRadius, cos * kInnerRadius, 0.0f, 1.0f },
-			{ u, 1.0f },
-			{ 0.0f, 0.0f, 1.0f }
-			});
-
-		// ⑤ 外側（次の点）
-		ringModelData.vertices.push_back({
-			{ -sinNext * kOuterRadius, cosNext * kOuterRadius, 0.0f, 1.0f },
-			{ uNext, 0.0f },
-			{ 0.0f, 0.0f, 1.0f }
-			});
-
-		// ⑥ 内側（次の点）
-		ringModelData.vertices.push_back({
 			{ -sinNext * kInnerRadius, cosNext * kInnerRadius, 0.0f, 1.0f },
 			{ uNext, 1.0f },
 			{ 0.0f, 0.0f, 1.0f }
 			});
-	}
 
-	// 頂点データを書き込む
-	WriteResource();
+	}
 }
