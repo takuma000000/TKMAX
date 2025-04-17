@@ -49,6 +49,9 @@ void GameScene::Update()
 	ResetDrawCallCount();
 	UpdateMemory(); // メモリ使用量の更新
 
+	particleEmitter->Update();
+	//particleEmitter->Emit();
+
 	// ────────────────────────────────────────
 	// 各オブジェクトの更新処理
 	// ────────────────────────────────────────
@@ -260,12 +263,7 @@ void GameScene::ImGuiDebug()
 	}
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	ImGui::Begin("Particle");
-	if (ImGui::Button("emit particle")) {
-		particleEmitter->Update();
-		particleEmitter->Emit();
-	}
-	ImGui::End();
+	
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
