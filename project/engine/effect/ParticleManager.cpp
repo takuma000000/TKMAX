@@ -327,7 +327,7 @@ void ParticleManager::CreateParticleGroup(const std::string& name, const std::st
 
 	TextureManager::GetInstance()->LoadTexture(textureFilePath);
 	uint32_t srvIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
-	newGroup.srvIndex = srvIndex;
+	newGroup.materialData.textureIndex = srvIndex;
 
 	newGroup.kNumInstance = 100;
 	size_t bufferSize = sizeof(ParticleForGPU) * newGroup.kNumInstance;
@@ -392,43 +392,32 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& randomE
 
 void ParticleManager::CreateRingVertices()
 {
-
 	for (uint32_t index = 0; index < kRingDivide; ++index) {
-		float sin = std::sin(index * radianPreDivide);
-		float cos = std::cos(index * radianPreDivide);
-		float sinNext = std::sin((index + 1) * radianPreDivide);
-		float cosNext = std::cos((index + 1) * radianPreDivide);
+		float theta = index * radianPerDivide;
+		float nextTheta = (index + 1) * radianPerDivide;
+
+		float sin = std::sin(theta);
+		float cos = std::cos(theta);
+		float sinNext = std::sin(nextTheta);
+		float cosNext = std::cos(nextTheta);
 
 		float u = float(index) / float(kRingDivide);
 		float uNext = float(index + 1) / float(kRingDivide);
 
-		// ① 外側（今の点）
-		ringModelData.vertices.push_back({
-			{ -sin * kOuterRadius, cos * kOuterRadius, 0.0f, 1.0f }, // position
-			{ u, 0.0f }, // texcoord
-			{ 0.0f, 0.0f, 1.0f } // normal
-			});
+		Vector4 outerCurr = { -sin * kOuterRadius, cos * kOuterRadius, 0.0f, 1.0f };
+		Vector4 outerNext = { -sinNext * kOuterRadius, cosNext * kOuterRadius, 0.0f, 1.0f };
+		Vector4 innerCurr = { -sin * kInnerRadius, cos * kInnerRadius, 0.0f, 1.0f };
+		Vector4 innerNext = { -sinNext * kInnerRadius, cosNext * kInnerRadius, 0.0f, 1.0f };
 
-		// ② 外側（次の点）
-		ringModelData.vertices.push_back({
-			{ -sinNext * kOuterRadius, cosNext * kOuterRadius, 0.0f, 1.0f },
-			{ uNext, 0.0f },
-			{ 0.0f, 0.0f, 1.0f }
-			});
+		// 1枚目の三角形
+		ringModelData.vertices.push_back({ outerCurr, {u, 0.0f}, {0.0f, 0.0f, 1.0f} });
+		ringModelData.vertices.push_back({ outerNext, {uNext, 0.0f}, {0.0f, 0.0f, 1.0f} });
+		ringModelData.vertices.push_back({ innerCurr, {u, 1.0f}, {0.0f, 0.0f, 1.0f} });
 
-		// ③ 内側（今の点）
-		ringModelData.vertices.push_back({
-			{ -sin * kInnerRadius, cosNext * kInnerRadius, 0.0f, 1.0f },
-			{ u, 1.0f },
-			{ 0.0f, 0.0f, 1.0f }
-			});
-
-		// ④ 内側（次の点）
-		ringModelData.vertices.push_back({
-			{ -sinNext * kInnerRadius, cosNext * kInnerRadius, 0.0f, 1.0f },
-			{ uNext, 1.0f },
-			{ 0.0f, 0.0f, 1.0f }
-			});
-
+		// 2枚目の三角形
+		ringModelData.vertices.push_back({ innerCurr, {u, 1.0f}, {0.0f, 0.0f, 1.0f} });
+		ringModelData.vertices.push_back({ outerNext, {uNext, 0.0f}, {0.0f, 0.0f, 1.0f} });
+		ringModelData.vertices.push_back({ innerNext, {uNext, 1.0f}, {0.0f, 0.0f, 1.0f} });
 	}
+
 }
