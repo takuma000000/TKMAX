@@ -301,7 +301,7 @@ void Object3d::MaterialResource(DirectXCommon* dxCommon)
 	//materialDataに初期値を書き込む
 	//今回は白を書き込んでみる
 	materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-	materialData->enableLighting = true;
+	materialData->enableLighting = false;
 	materialData->uvTransform = MyMath::MakeIdentity4x4();
 	materialData->shininess = 48.3f;//明るさ
 }

@@ -58,7 +58,8 @@ void ParticleManager::Update()
 			}
 			Matrix4x4 scaleMatrix = MyMath::MakeScaleMatrix((*particleIterator).transform.scale);
 			Matrix4x4 translateMatrix = MyMath::MakeTranslateMatrix((*particleIterator).transform.translate);
-			Matrix4x4 worldMatrix = scaleMatrix * billboardMatrix * translateMatrix;
+			Matrix4x4 rotateMatrix = MyMath::MakeRotateMatrix((*particleIterator).transform.rotate);
+			Matrix4x4 worldMatrix = scaleMatrix * rotateMatrix * billboardMatrix * translateMatrix;
 			Matrix4x4 cameraMatrix = MyMath::MakeAffineMatrix(camera_->GetScale(), camera_->GetRotate(), camera_->GetTranslate());
 			Matrix4x4 viewMatrix = MyMath::Inverse4x4(cameraMatrix);
 			Matrix4x4 projectionMatrix = MyMath::MakePerspectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHeight), 0.1f, 100.0f);
@@ -357,33 +358,28 @@ void ParticleManager::Emit(const std::string name, Vector3& pos, uint32_t count)
 
 	// パーティクルを生成してグループに追加
 	for (uint32_t i = 0; i < count; ++i) {
-		Particle newParticle;
-
-		std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
-		Vector3 randomTranslate{ distribution(randomEngine),distribution(randomEngine),distribution(randomEngine) };
-		// 初期位置
-		newParticle.transform.translate = pos + randomTranslate;
-
-		// 初期スケール（適宜調整）
-		newParticle.transform.scale = Vector3(1.0f, 1.0f, 1.0f);
-
-		// 初期速度（ランダム）
-		newParticle.velocity = {
-			static_cast<float>(rand()) / RAND_MAX - 0.5f,
-			static_cast<float>(rand()) / RAND_MAX,
-			static_cast<float>(rand()) / RAND_MAX - 0.5f
-		};
-
-
-		std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
-		// 初期色
-		newParticle.color = { distColor(randomEngine),distColor(randomEngine),distColor(randomEngine),1.0f };
-
-		// 生存時間（ランダムに範囲を指定可能）
-		newParticle.lifeTime = 1.0f + static_cast<float>(rand()) / RAND_MAX * 2.0f;
-		newParticle.currentTime = 0.0f;
-
-		// パーティクルをグループに追加
+		Particle newParticle = MakeNewParticle(randomEngine, pos);
 		group.particles.push_back(newParticle);
 	}
+}
+
+ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate)
+{
+	std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);//位置の範囲を指定
+	std::uniform_real_distribution<float> distColor(0.0f, 1.0f);//色の範囲を指定
+	std::uniform_real_distribution<float> distRotate(-std::numbers::pi_v<float>, std::numbers::pi_v<float>);//回転の範囲を指定
+	std::uniform_real_distribution<float> distScale(0.4f, 1.5f);//スケールの範囲を指定
+	//一定時間で消えるようにする
+	std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
+	Particle particle;
+	particle.transform.scale = { 0.05f,distScale(randomEngine),1.0f };//スケールを指定
+	particle.transform.rotate = { distRotate(randomEngine),0.0f,0.0f };//回転を指定
+	//位置と速度を[-1,1]でランダムに初期化
+	Vector3 randomTranslate{ distribution(randomEngine),distribution(randomEngine),distribution(randomEngine) };
+	particle.transform.translate = translate;//位置を指定
+	particle.velocity = { 0.0f,0.0f,0.0f };//速度を指定
+	particle.color = { 1.0f,1.0f,1.0f,1.0f };//色を指定
+	particle.lifeTime = 1.0f;//生存時間を指定
+	particle.currentTime = 0.0f;//経過時間を指定
+	return particle;
 }

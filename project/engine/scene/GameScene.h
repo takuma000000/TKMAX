@@ -15,7 +15,8 @@
 #include "ModelCommon.h"
 #include "ModelManager.h"
 #include "DirectionalLight.h"
-
+#include "engine/effect/ParticleManager.h"
+#include "engine/effect/ParticlerEmitter.h"
 #include "engine/func/math/Vector3.h"
 
 class GameScene : public BaseScene
