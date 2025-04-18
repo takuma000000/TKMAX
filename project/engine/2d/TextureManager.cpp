@@ -18,65 +18,94 @@ void TextureManager::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager)
 }
 
 void TextureManager::LoadTexture(const std::string& filePath) {
-
-	//読み込み済みテクスチャを検索
+	// 既に読み込み済みならスキップ
 	if (textureDatas.contains(filePath)) {
 		return;
 	}
 
-	//テクスチャ枚数上限チェック
+	// テクスチャ上限チェック
 	assert(srvManager_->Available());
 
-	//テクスチャファイルを読んでプログラムを扱えるようにする
 	DirectX::ScratchImage image{};
 	std::wstring filePathW = ConvertString(filePath);
-	HRESULT hr = DirectX::LoadFromWICFile(filePathW.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
+	HRESULT hr = S_FALSE;
+
+	// 拡張子がDDSかで分岐
+	if (filePath.ends_with(".dds")) {
+		hr = DirectX::LoadFromDDSFile(filePathW.c_str(), DirectX::DDS_FLAGS_NONE, nullptr, image);
+	} else {
+		hr = DirectX::LoadFromWICFile(filePathW.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
+	}
 	assert(SUCCEEDED(hr));
 
-	//MipMapの作成
+	// MipMap生成用
 	DirectX::ScratchImage mipImages{};
-	hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, 0, mipImages);
-	assert(SUCCEEDED(hr));
 
-	auto it = textureDatas.find(filePath);
-	if (it == textureDatas.end()) {
-		// filePath が存在しない場合、新しい TextureData を作成
-		TextureData textureData;
-		textureData.metadata = mipImages.GetMetadata();
-		textureData.resource = dxCommon_->CreateTextureResource(textureData.metadata);
+	// 圧縮フォーマットなら一旦解凍
+	if (DirectX::IsCompressed(image.GetMetadata().format)) {
+		DirectX::ScratchImage decompressed{};
+		hr = DirectX::Decompress(
+			image.GetImages(),
+			image.GetImageCount(),
+			image.GetMetadata(),
+			DXGI_FORMAT_R8G8B8A8_UNORM,
+			decompressed);
+		assert(SUCCEEDED(hr));
 
-		// `emplace` を使用して `std::move` で格納
-		auto result = textureDatas.emplace(filePath, std::move(textureData));
-		it = result.first; // 挿入されたデータのイテレータを取得
+		hr = DirectX::GenerateMipMaps(
+			decompressed.GetImages(),
+			decompressed.GetImageCount(),
+			decompressed.GetMetadata(),
+			DirectX::TEX_FILTER_SRGB,
+			0,
+			mipImages);
+		assert(SUCCEEDED(hr));
+	} else {
+		// 非圧縮ならそのまま
+		hr = DirectX::GenerateMipMaps(
+			image.GetImages(),
+			image.GetImageCount(),
+			image.GetMetadata(),
+			DirectX::TEX_FILTER_SRGB,
+			0,
+			mipImages);
+		assert(SUCCEEDED(hr));
 	}
 
-	// 参照を安全に取得
-	TextureData& textureData = it->second;
+	// テクスチャ情報作成
+	TextureData textureData{};
 	textureData.metadata = mipImages.GetMetadata();
 	textureData.resource = dxCommon_->CreateTextureResource(textureData.metadata);
 
-	// std::move を使って textureDatas にムーブ
-	textureDatas[filePath] = std::move(textureData);
-
-
 	dxCommon_->UploadTextureData(textureData.resource.Get(), mipImages);
 
-	//テクスチャデータ要素数番号をSRVのインデックスを計算する
-	uint32_t srvIndex = static_cast<uint32_t>(textureDatas.size() - 1) + kSRVIndexTop;
 	textureData.srvIndex = srvManager_->Allocate();
 	textureData.srvHnadleCPU = srvManager_->GetCPUDescriptorHandle(textureData.srvIndex);
 	textureData.srvHnadleGPU = srvManager_->GetGPUDescriptorHandle(textureData.srvIndex);
 
-	// metaDataを基にSRVの設定
+	// SRV設定
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
 	srvDesc.Format = textureData.metadata.format;
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D; // 2Dテクスチャ
-	srvDesc.Texture2D.MipLevels = UINT(textureData.metadata.mipLevels);
 
-	// SRVの生成
+	if (textureData.metadata.IsCubemap()) {
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+		srvDesc.TextureCube.MostDetailedMip = 0;
+		srvDesc.TextureCube.MipLevels = UINT_MAX;
+		srvDesc.TextureCube.ResourceMinLODClamp = 0.0f;
+	} else {
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Texture2D.MipLevels = UINT(textureData.metadata.mipLevels);
+	}
+
+	// SRV生成
 	dxCommon_->GetDevice()->CreateShaderResourceView(textureData.resource.Get(), &srvDesc, textureData.srvHnadleCPU);
+
+	// 登録
+	textureDatas.emplace(filePath, std::move(textureData));
 }
+
+
 
 //Microsoft::WRL::ComPtr<ID3D12Resource> TextureManager::CreateTextureResource(const DirectX::TexMetadata& metadata)
 //{

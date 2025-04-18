@@ -30,6 +30,11 @@ void GameScene::Initialize()
 	ParticleManager::GetInstance()->CreateParticleGroup("uv", "./resources/gradationLine.png", ParticleManager::ParticleType::CYLINDER);
 	particleEmitter = std::make_unique<ParticleEmitter>();
 	particleEmitter->Initialize("uv", { 0.0f,2.5f,10.0f });
+
+	// ──────────────── スカイボックスの初期化 ───────────────
+	skybox_ = std::make_unique<Skybox>();
+	skybox_->Initialize(dxCommon, "resources/rostock_laage_airport_4k.dds");  // あなたのキューブマップDDSに置き換えて
+
 }
 
 void GameScene::Finalize()
@@ -111,6 +116,8 @@ void GameScene::Draw()
 	// 
 	ParticleManager::GetInstance()->Draw();
 
+	skybox_->Draw(camera->GetViewMatrix(), camera->GetProjectionMatrix());// スカイボックスの描画
+
 	// ライト情報をシェーダーなどに適用（必要に応じて実装）
 	Vector4 lightColor = directionalLight_->GetColor();
 	Vector3 lightDirection = directionalLight_->GetDirection();
@@ -145,7 +152,7 @@ void GameScene::LoadTextures()
 void GameScene::InitializeSprite()
 {
 	sprite = std::make_unique<Sprite>();
-	sprite->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/uvChecker.png");
+	sprite->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/circle.png");
 	sprite->SetPosition({ -1000.0f, 0.0f });
 	sprite->SetParentScene(this);
 }
@@ -194,6 +201,7 @@ void GameScene::InitializeCamera()
 
 	object3d->SetCamera(camera.get());
 	ground_->SetCamera(camera.get());
+	skybox_->SetCamera(camera.get());
 	//anotherObject3d->SetCamera(camera.get());
 }
 

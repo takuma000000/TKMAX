@@ -18,6 +18,7 @@
 #include "engine/effect/ParticleManager.h"
 #include "engine/effect/ParticlerEmitter.h"
 #include "engine/func/math/Vector3.h"
+#include <SkyBox.h>
 
 class GameScene : public BaseScene
 {
@@ -108,5 +109,8 @@ private:
 
 	//パーティクル
 	std::unique_ptr<ParticleEmitter> particleEmitter = nullptr;
+
+	std::unique_ptr<Skybox> skybox_;// スカイボックス
+
 };
 
