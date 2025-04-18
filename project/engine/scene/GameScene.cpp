@@ -201,7 +201,7 @@ void GameScene::InitializeCamera()
 
 	object3d->SetCamera(camera.get());
 	ground_->SetCamera(camera.get());
-	skybox_->SetCamera(camera.get());
+	//skybox_->SetCamera(camera.get());
 	//anotherObject3d->SetCamera(camera.get());
 }
 
