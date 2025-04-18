@@ -492,3 +492,211 @@ Matrix4x4  MyMath::MakePerspectiveFovMatrix(float fovY, float aspectRatio, float
 
 	return result;
 }
+
+Quaternion MyMath::Multiply(const Quaternion& lhs, const Quaternion& rhs)
+{
+	Quaternion result;
+
+	// 四元数の掛け算の公式
+	result.w = lhs.w * rhs.w - lhs.x * rhs.x - lhs.y * rhs.y - lhs.z * rhs.z;
+	result.x = lhs.w * rhs.x + lhs.x * rhs.w + lhs.y * rhs.z - lhs.z * rhs.y;
+	result.y = lhs.w * rhs.y - lhs.x * rhs.z + lhs.y * rhs.w + lhs.z * rhs.x;
+	result.z = lhs.w * rhs.z + lhs.x * rhs.y - lhs.y * rhs.x + lhs.z * rhs.w;
+
+	return result;
+}
+
+Quaternion MyMath::IdentityQuaternion()
+{
+	Quaternion identity;
+
+	// 単位四元数の定義
+	identity.w = 1.0f;
+	identity.x = 0.0f;
+	identity.y = 0.0f;
+	identity.z = 0.0f;
+
+	return identity;
+}
+Quaternion MyMath::Conjugate(const Quaternion& quaternion)
+{
+	Quaternion conjugate;
+
+	// 四元数の共役の計算
+	conjugate.w = quaternion.w;
+	conjugate.x = -quaternion.x;
+	conjugate.y = -quaternion.y;
+	conjugate.z = -quaternion.z;
+
+	return conjugate;
+}
+
+float MyMath::Norm(const Quaternion& quaternion)
+{
+	// 四元数のノルムの計算
+	return std::sqrt(
+		quaternion.w * quaternion.w +
+		quaternion.x * quaternion.x +
+		quaternion.y * quaternion.y +
+		quaternion.z * quaternion.z
+	);
+}
+
+Quaternion MyMath::NormalizeQua(const Quaternion& quaternion)
+{
+	Quaternion normalized;
+
+	// ノルムを計算
+	float norm = MyMath::Norm(quaternion);
+
+	// ノルムがゼロでない場合に正規化
+	if (norm > 0.0f)
+	{
+		normalized.w = quaternion.w / norm;
+		normalized.x = quaternion.x / norm;
+		normalized.y = quaternion.y / norm;
+		normalized.z = quaternion.z / norm;
+	} else
+	{
+		// ノルムがゼロの場合は単位四元数を返す
+		normalized = MyMath::IdentityQuaternion();
+	}
+
+	return normalized;
+}
+
+Quaternion MyMath::Invers(const Quaternion& quaternion)
+{
+	Quaternion inverse;
+
+	// 四元数のノルムの二乗を計算
+	float normSquared = quaternion.w * quaternion.w +
+		quaternion.x * quaternion.x +
+		quaternion.y * quaternion.y +
+		quaternion.z * quaternion.z;
+
+	// ノルムがゼロでない場合に逆数を計算
+	if (normSquared > 0.0f)
+	{
+		Quaternion conjugate = MyMath::Conjugate(quaternion);
+		inverse.w = conjugate.w / normSquared;
+		inverse.x = conjugate.x / normSquared;
+		inverse.y = conjugate.y / normSquared;
+		inverse.z = conjugate.z / normSquared;
+	} else
+	{
+		// ノルムがゼロの場合は単位四元数を返す
+		inverse = MyMath::IdentityQuaternion();
+	}
+
+	return inverse;
+}
+
+Quaternion MyMath::MakeRotateAxisAngleQuaternion(const Vector3& axis, float angle)
+{
+	// 軸ベクトルを正規化する
+	Vector3 normalizedAxis = Normalize(axis);
+
+	// 角度をラジアンから半分にする
+	float halfAngle = angle * 0.5f;
+
+	// サインとコサインを計算
+	float sinHalfAngle = sin(halfAngle);
+	float cosHalfAngle = cos(halfAngle);
+
+	// クォータニオンを生成
+	Quaternion quaternion;
+	quaternion.x = normalizedAxis.x * sinHalfAngle;
+	quaternion.y = normalizedAxis.y * sinHalfAngle;
+	quaternion.z = normalizedAxis.z * sinHalfAngle;
+	quaternion.w = cosHalfAngle;
+
+	return quaternion;
+}
+
+Vector3 MyMath::RotateVector(const Vector3& vector, const Quaternion& quaternion)
+{
+	Quaternion normalizedQuaternion = NormalizeQua(quaternion); // クォータニオンを正規化
+
+	Quaternion vectorQuat{ vector.x, vector.y, vector.z, 0.0f }; // ベクトルを四元数として扱う
+	Quaternion inverseQuat = Conjugate(normalizedQuaternion);  // クォータニオンの共役
+
+	Quaternion rotatedQuat = Multiply(Multiply(normalizedQuaternion, vectorQuat), inverseQuat);
+
+	return Vector3(rotatedQuat.x, rotatedQuat.y, rotatedQuat.z);
+}
+
+// 回転行列を生成
+Matrix4x4 MyMath::MakeRotateMatrix(const Quaternion& q)
+{
+	Matrix4x4 rotateMatrix = {};
+
+	rotateMatrix.m[0][0] = 1.0f - 2.0f * (q.y * q.y + q.z * q.z);
+	rotateMatrix.m[0][1] = 2.0f * (q.x * q.y + q.z * q.w);
+	rotateMatrix.m[0][2] = 2.0f * (q.x * q.z - q.y * q.w);
+
+	rotateMatrix.m[1][0] = 2.0f * (q.x * q.y - q.z * q.w);
+	rotateMatrix.m[1][1] = 1.0f - 2.0f * (q.x * q.x + q.z * q.z);
+	rotateMatrix.m[1][2] = 2.0f * (q.y * q.z + q.x * q.w);
+
+	rotateMatrix.m[2][0] = 2.0f * (q.x * q.z + q.y * q.w);
+	rotateMatrix.m[2][1] = 2.0f * (q.y * q.z - q.x * q.w);
+	rotateMatrix.m[2][2] = 1.0f - 2.0f * (q.x * q.x + q.y * q.y);
+
+	rotateMatrix.m[3][3] = 1.0f;
+
+	return rotateMatrix;
+}
+
+Quaternion MyMath::Slerp(const Quaternion& q1, const Quaternion& q2, float t)
+{
+	// クォータニオンを正規化
+	Quaternion q1Norm = NormalizeQua(q1);
+	Quaternion q2Norm = NormalizeQua(q2);
+
+	// 内積を計算
+	float dot = Dot(q1Norm, q2Norm);
+
+	// 補間の方向を調整
+	if (dot < 0.0f) {
+		q2Norm.x = -q2Norm.x;
+		q2Norm.y = -q2Norm.y;
+		q2Norm.z = -q2Norm.z;
+		q2Norm.w = -q2Norm.w;
+		dot = -dot;
+	}
+
+	// しきい値 (内積が 1 に近い場合は線形補間)
+	const float THRESHOLD = 0.9995f;
+	if (dot > THRESHOLD) {
+		// 線形補間 (Lerp)
+		Quaternion result = {
+			Lerp(q1Norm.x, q2Norm.x, t),
+			Lerp(q1Norm.y, q2Norm.y, t),
+			Lerp(q1Norm.z, q2Norm.z, t),
+			Lerp(q1Norm.w, q2Norm.w, t)
+		};
+		return NormalizeQua(result);
+	}
+
+	// 球面線形補間 (Slerp)
+	float theta = acosf(dot);      // 角度
+	float sinTheta = sinf(theta);  // sin(θ)
+
+	float weight1 = sinf((1.0f - t) * theta) / sinTheta;
+	float weight2 = sinf(t * theta) / sinTheta;
+
+	Quaternion result = {
+		weight1 * q1Norm.x + weight2 * q2Norm.x,
+		weight1 * q1Norm.y + weight2 * q2Norm.y,
+		weight1 * q1Norm.z + weight2 * q2Norm.z,
+		weight1 * q1Norm.w + weight2 * q2Norm.w
+	};
+
+	return NormalizeQua(result);
+}
+
+float MyMath::Dot(const Quaternion& q1, const Quaternion& q2)
+{
+	return q1.x * q2.x + q1.y * q2.y + q1.z * q2.z + q1.w * q2.w;
+}
