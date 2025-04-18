@@ -17,6 +17,9 @@ public:
 	void Initialize(DirectXCommon* dxCommon, const std::string& texturePath);
 	void Draw(const Matrix4x4& view, const Matrix4x4& projection);
 
+	//ImGui
+	void ImGuiUpdate();
+
 	void SetScale(const Vector3& scale) { scale_ = scale; }
 
 	// 定数バッファ用構造体
@@ -30,7 +33,11 @@ public:
 		Matrix4x4 uvTransform;
 		float shininess;
 	};
-	
+	struct CameraForGPU {
+		Vector3 worldPosition;//カメラの位置
+		float padding;//16byte境界に合わせるためのパディング
+	};
+
 private:
 	struct Vertex {
 		Vector3 position;
@@ -54,6 +61,11 @@ private:
 
 	Vector3 scale_ = { 2.0f, 2.0f, 2.0f }; // デフォルトスケール
 
+	//カメラ用のリソースを作る
+	Microsoft::WRL::ComPtr<ID3D12Resource> cameraResource;
+	//データを書き込む
+	CameraForGPU* cameraData = nullptr;
+
 	
 	/// <summary>
 	/// 生成関数
@@ -61,5 +73,8 @@ private:
 	void CreateVertexBuffer();// 頂点バッファ生成
 	void CreateRootSignature();// RootSignature生成
 	void CreatePipelineState();// PSO生成
+
+	//cameraResource関数
+	void CameraResource(DirectXCommon* dxCommon);
 
 };

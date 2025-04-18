@@ -1,6 +1,7 @@
 #include "Skybox.h"
 #include <externals/DirectXTex/d3dx12.h>
 #include <dxcapi.h> // DXC関連
+#include "externals/imGui/imgui.h"
 
 void Skybox::Initialize(DirectXCommon* dxCommon, const std::string& texturePath) {
 	dxCommon_ = dxCommon;
@@ -29,6 +30,8 @@ void Skybox::Initialize(DirectXCommon* dxCommon, const std::string& texturePath)
 	CreateVertexBuffer();      // 頂点バッファ生成
  	CreateRootSignature();     // RootSigだけ分離
 	CreatePipelineState();     // PSOだけ分離
+
+	
 
 }
 
@@ -172,6 +175,16 @@ void Skybox::CreatePipelineState() {
 	assert(SUCCEEDED(hr));
 }
 
+//void Skybox::CameraResource(DirectXCommon* dxCommon)
+//{
+//	dxCommon_ = dxCommon;
+//
+//	cameraResource = dxCommon_->CreateBufferResource(sizeof(CameraForGPU));
+//	cameraResource->Map(0, nullptr, reinterpret_cast<void**>(&cameraData));
+//	// カメラ位置を設定
+//	cameraData->worldPosition = { 0.0f, 5.0f, -10.0f }; // 必要に応じて変更
+//}
+
 void Skybox::Draw(const Matrix4x4& view, const Matrix4x4& projection) {
 	ID3D12GraphicsCommandList* cmdList = dxCommon_->GetCommandList();
 	cmdList->SetPipelineState(pipelineState_.Get());
@@ -197,6 +210,13 @@ void Skybox::Draw(const Matrix4x4& view, const Matrix4x4& projection) {
 	cmdList->SetGraphicsRootConstantBufferView(1, materialBuffer_->GetGPUVirtualAddress());
 	cmdList->SetGraphicsRootDescriptorTable(2, srvHandleGPU_);
 	cmdList->DrawInstanced(vertexCount_, 1, 0, 0);
+}
+
+void Skybox::ImGuiUpdate()
+{
+	ImGui::Begin("Skybox");
+	ImGui::DragFloat3("Scale", &scale_.x, 0.1f, 0.0f, 10.0f);
+	ImGui::End();
 }
 
 
