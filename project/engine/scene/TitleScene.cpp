@@ -32,7 +32,7 @@ void TitleScene::Update()
 
 	//ENTERキーが押されたら
 	 // ENTERキーが押されたら GameScene に遷移
-	if (Input::GetInstance()->TriggerKey(DIK_SPACE)) // DirectInput のキーコードを使用
+	if (Input::GetInstance()->TriggerKey(DIK_SPACE)||Input::GetInstance()->PushButton(XINPUT_GAMEPAD_A)) // DirectInput のキーコードを使用
 	{
 		// 次のシーンを生成
 		BaseScene* nextScene = new GameScene(dxCommon,srvManager);
