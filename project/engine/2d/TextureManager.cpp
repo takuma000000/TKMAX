@@ -143,6 +143,20 @@ const DirectX::TexMetadata& TextureManager::GetMetadata(const std::string& fileP
 	return textureData.metadata;
 }
 
+D3D12_GPU_DESCRIPTOR_HANDLE TextureManager::GetSrvHandleGPU(uint32_t index)
+{
+	for (const auto& [key, tex] : textureDatas) {
+		if (tex.srvIndex == index) {
+			return tex.srvHnadleGPU;
+		}
+	}
+
+	assert(0 && "SRV index not found in textureDatas.");
+	D3D12_GPU_DESCRIPTOR_HANDLE invalid{};
+	invalid.ptr = 0;
+	return invalid;
+}
+
 TextureManager* TextureManager::GetInstance() {
 	static TextureManager instance_;
 	return &instance_;

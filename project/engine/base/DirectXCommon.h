@@ -94,6 +94,16 @@ public: //リソース生成関数
 		UINT numDescriptors,
 		bool shaderVisible);
 
+	D3D12_CPU_DESCRIPTOR_HANDLE GetDSVHandle() const {
+		return dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	}
+
+	D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentRTVHandle() const {
+		UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+		return rtvHandles[backBufferIndex];
+	}
+
+
 	//public: //テクスチャファイル読み込み関数
 	//	//テクスチャファイルの読み込み
 	//	DirectX::ScratchImage LoadTexture(const std::string& filePath);
@@ -135,11 +145,12 @@ private:
 	//DescriptorHeap
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap;
-	//Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap;
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap;
 	//DescriptorSizeを取得しておく
 	//uint32_t descriptorSizeSRV;
 	uint32_t descriptorSizeRTV;
 	uint32_t descriptorSizeDSV;
+	uint32_t descriptorSizeSRV;
 	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap;
 	//swapChainResources
@@ -167,6 +178,10 @@ private:
 	//記録時間( FPS固定用 )
 	std::chrono::steady_clock::time_point reference_;
 	Microsoft::WRL::ComPtr<ID3D12Resource> renderTextureResource;//レンダーテクスチャー
+
+	// 現在のrenderTextureのリソース状態を追跡
+	D3D12_RESOURCE_STATES renderTextureState = D3D12_RESOURCE_STATE_RENDER_TARGET;
+
 
 private:
 	//WindowsAPI

@@ -129,6 +129,11 @@ void Sprite::Update() {
 }
 
 void Sprite::Draw() {
+
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = dxCommon_->GetCurrentRTVHandle();
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dxCommon_->GetDSVHandle();
+	dxCommon_->GetCommandList()->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
+
 	if (parentScene_) {
 		parentScene_->AddDrawCallCount();
 	}
@@ -160,7 +165,8 @@ void Sprite::Draw() {
 	materialData->uvTransform = uvTransformMatrix;
 
 	//SRVのDescriptorTableの先頭を設定
-	dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(textureFilePath));
+	// 修正後: インデックス指定でSRV取得（こっちにする）
+	dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(textureIndex));
 	//描画。6個のインデックスを使用し1つのインスタンスを描画。その他は当面0で良い
 	dxCommon_->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 }
