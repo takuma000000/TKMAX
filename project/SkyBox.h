@@ -59,7 +59,9 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialBuffer_;
 	Material* mappedMaterial_ = nullptr;
 
-	Vector3 scale_ = { 2.0f, 2.0f, 2.0f }; // デフォルトスケール
+	Vector3 scale_ = { 5.0f, 5.0f, 5.0f }; // デフォルトスケール
+	Vector3 rotation_ = { 0.0f, 0.0f, 0.0f }; // デフォルト回転
+	Vector3 translation_ = { 0.0f, 0.0f, 0.0f }; // デフォルト位置
 
 	//カメラ用のリソースを作る
 	Microsoft::WRL::ComPtr<ID3D12Resource> cameraResource;

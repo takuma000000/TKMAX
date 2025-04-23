@@ -38,25 +38,31 @@ void Skybox::Initialize(DirectXCommon* dxCommon, const std::string& texturePath)
 void Skybox::CreateVertexBuffer() {
 	// 1x1x1のキューブを構成する36頂点
 	std::vector<Vertex> vertices = {
-		// +Y面
-		{{-1,  1, -1}}, {{ 1,  1, -1}}, {{ 1,  1,  1}},
-		{{-1,  1, -1}}, {{ 1,  1,  1}}, {{-1,  1,  1}},
-		// -Y面
-		{{-1, -1,  1}}, {{ 1, -1,  1}}, {{ 1, -1, -1}},
-		{{-1, -1,  1}}, {{ 1, -1, -1}}, {{-1, -1, -1}},
-		// -X面
-		{{-1, -1,  1}}, {{-1, -1, -1}}, {{-1,  1, -1}},
-		{{-1, -1,  1}}, {{-1,  1, -1}}, {{-1,  1,  1}},
-		// +X面
-		{{ 1, -1, -1}}, {{ 1, -1,  1}}, {{ 1,  1,  1}},
-		{{ 1, -1, -1}}, {{ 1,  1,  1}}, {{ 1,  1, -1}},
-		// -Z面
-		{{-1, -1, -1}}, {{ 1, -1, -1}}, {{ 1,  1, -1}},
-		{{-1, -1, -1}}, {{ 1,  1, -1}}, {{-1,  1, -1}},
-		// +Z面
-		{{ 1, -1,  1}}, {{-1, -1,  1}}, {{-1,  1,  1}},
-		{{ 1, -1,  1}}, {{-1,  1,  1}}, {{ 1,  1,  1}},
+		// +Y面（上面）
+		{{-1,  1, -1}}, {{ 1,  1,  1}}, {{ 1,  1, -1}},
+		{{-1,  1, -1}}, {{-1,  1,  1}}, {{ 1,  1,  1}},
+
+		// -Y面（下面）
+		{{-1, -1,  1}}, {{ 1, -1, -1}}, {{ 1, -1,  1}},
+		{{-1, -1,  1}}, {{-1, -1, -1}}, {{ 1, -1, -1}},
+
+		// -X面（左面）
+		{{-1, -1,  1}}, {{-1,  1, -1}}, {{-1, -1, -1}},
+		{{-1, -1,  1}}, {{-1,  1,  1}}, {{-1,  1, -1}},
+
+		// +X面（右面）
+		{{ 1, -1, -1}}, {{ 1,  1,  1}}, {{ 1, -1,  1}},
+		{{ 1, -1, -1}}, {{ 1,  1, -1}}, {{ 1,  1,  1}},
+
+		// -Z面（奥面）
+		{{-1, -1, -1}}, {{ 1,  1, -1}}, {{ 1, -1, -1}},
+		{{-1, -1, -1}}, {{-1,  1, -1}}, {{ 1,  1, -1}},
+
+		// +Z面（手前面）
+		{{ 1, -1,  1}}, {{-1,  1,  1}}, {{-1, -1,  1}},
+		{{ 1, -1,  1}}, {{ 1,  1,  1}}, {{-1,  1,  1}},
 	};
+
 
 	vertexCount_ = static_cast<UINT>(vertices.size());
 	size_t bufferSize = sizeof(Vertex) * vertexCount_;
@@ -192,19 +198,21 @@ void Skybox::Draw(const Matrix4x4& view, const Matrix4x4& projection) {
 	cmdList->IASetVertexBuffers(0, 1, &vertexBufferView_);
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	// カメラの位置成分だけを抜いて逆行列に反映させない view を作る
+	// 平行移動を除去するには「行」ではなく「列」をクリア
 	Matrix4x4 camView = view;
-	camView.m[3][0] = 0.0f;
-	camView.m[3][1] = 0.0f;
-	camView.m[3][2] = 0.0f;
+	camView.m[0][3] = 0.0f;
+	camView.m[1][3] = 0.0f;
+	camView.m[2][3] = 0.0f;
+	camView.m[3][3] = 1.0f;
 
-	// ワールド行列 = スケールだけ（移動しない）
 	Matrix4x4 scaleMatrix = MyMath::MakeScaleMatrix(scale_);
-	Matrix4x4 worldMatrix = scaleMatrix;
+	Matrix4x4 rotateMatrix = MyMath::MakeRotateMatrix(rotation_);
+	Matrix4x4 translateMatrix = MyMath::MakeTranslateMatrix(translation_);
 
-	// スカイボックス用の VP 行列 = 移動成分を除いた View * Projection
-	mappedData_->viewProjection = MyMath::Multiply(camView, projection);
-	mappedData_->world = worldMatrix;
+	// ワールド行列 = S * R * T（順番はスカイボックスならどれでもOKだが通常これ）
+	Matrix4x4 worldMatrix = MyMath::Multiply(scaleMatrix, rotateMatrix);
+	worldMatrix = MyMath::Multiply(worldMatrix, translateMatrix);
+
 
 	cmdList->SetGraphicsRootConstantBufferView(0, constantBuffer_->GetGPUVirtualAddress());
 	cmdList->SetGraphicsRootConstantBufferView(1, materialBuffer_->GetGPUVirtualAddress());
@@ -216,6 +224,8 @@ void Skybox::ImGuiUpdate()
 {
 	ImGui::Begin("Skybox");
 	ImGui::DragFloat3("Scale", &scale_.x, 0.1f, 0.0f, 10.0f);
+	ImGui::DragFloat3("Rotation", &rotation_.x, 0.1f, 0.0f, 360.0f);
+	ImGui::DragFloat3("Translation", &translation_.x, 0.1f, -10.0f, 10.0f);
 	ImGui::End();
 }
 

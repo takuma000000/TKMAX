@@ -16,7 +16,11 @@ struct VertexShaderInput
 VertexShaderOutput main(VertexShaderInput input)
 {
     VertexShaderOutput output;
-    output.position = mul(input.position, gTransformationMatrix.wvp).xyww;
-    output.texcoord = input.position.xyz;
+    float4 worldPos = mul(input.position, gTransformationMatrix.World);
+    output.position = mul(worldPos, gTransformationMatrix.wvp);
+
+    // キューブマップ用にワールド方向ベクトルを使う（正規化）
+    output.texcoord = normalize(worldPos.xyz);
+
     return output;
 }
