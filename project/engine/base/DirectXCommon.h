@@ -89,6 +89,9 @@ public: //リソース生成関数
 	//レンダーテクスチャーの生成SRV
 	void CreateRenderTextureReaourceSRV();
 
+	//RootSignature関数
+	void CreateRootSignature(ID3D12RootSignature** rootSignature, const D3D12_ROOT_PARAMETER1* rootParameters, UINT numParameters, const D3D12_STATIC_SAMPLER_DESC* staticSamplers, UINT numStaticSamplers);
+
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(
 		D3D12_DESCRIPTOR_HEAP_TYPE heapType,
 		UINT numDescriptors,

@@ -66,6 +66,10 @@ Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilTextureResource(Microso
 	return resource;
 }
 
+void DirectXCommon::CreateRootSignature(ID3D12RootSignature** rootSignature, const D3D12_ROOT_PARAMETER1* rootParameters, UINT numParameters, const D3D12_STATIC_SAMPLER_DESC* staticSamplers, UINT numStaticSamplers) {
+	
+}
+
 Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> DirectXCommon::CreateDescriptorHeap(
 	D3D12_DESCRIPTOR_HEAP_TYPE heapType,
 	UINT numDescriptors,
