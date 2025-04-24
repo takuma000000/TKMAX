@@ -528,6 +528,8 @@ void DirectXCommon::CreateRenderTextureReaourceRTV()
 		kRenderTargetClearValue
 	);
 
+	renderTextureResource->SetName(L"RenderTexture");
+
 	// RTVヒープの3番目にRenderTextureのハンドルを割り当てる（0,1はswapchain用）
 	rtvHandles[2] = rtvHeap_->GetCPUDescriptorHandleForHeapStart();
 	rtvHandles[2].ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV) * 2;
@@ -593,9 +595,11 @@ void DirectXCommon::InitializeRTV()
 
 	//SwapChainからResourceを引っ張てくる
 	hr = swapChain->GetBuffer(0, IID_PPV_ARGS(&swapChainResource[0]));
+	swapChainResource[0]->SetName(L"SwapChainResource0");
 	//うまく取得できなければ起動できない
 	assert(SUCCEEDED(hr));
 	hr = swapChain->GetBuffer(1, IID_PPV_ARGS(&swapChainResource[1]));
+	swapChainResource[1]->SetName(L"SwapChainResource1");
 	assert(SUCCEEDED(hr));
 
 #pragma endregion
@@ -763,26 +767,15 @@ void DirectXCommon::PreDraw()
 
 	// === Object描画ここで行う ===
 
-	// ==========================
-	// ② Swapchainへの描画（ImGui用）
-	// ==========================
-	if (renderTextureState != D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE) {
-		barrier.Transition.pResource = renderTextureResource.Get();
-		barrier.Transition.StateBefore = renderTextureState;
-		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-		commandList->ResourceBarrier(1, &barrier);
-
-		renderTextureState = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-	}
 
 	barrier.Transition.pResource = swapChainResource[backBufferIndex].Get();
 	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	commandList->ResourceBarrier(1, &barrier);
 
-	commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, nullptr);
+	//commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, nullptr);
 
-	float clearSwapChainColor[] = { 0.1f, 0.1f, 0.1f, 1.0f };
+	float clearSwapChainColor[] = { 1.0f, 0.0f, 0.0f, 1.0f };//背景色
 	commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearSwapChainColor, 0, nullptr);
 
 	commandList->RSSetViewports(1, &viewport);
@@ -795,6 +788,18 @@ void DirectXCommon::PostDraw()
 	HRESULT hr;
 
 	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+
+	// ==========================
+	// ② Swapchainへの描画（ImGui用）
+	// ==========================
+	if (renderTextureState != D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE) {
+		barrier.Transition.pResource = renderTextureResource.Get();
+		barrier.Transition.StateBefore = renderTextureState;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+		commandList->ResourceBarrier(1, &barrier);
+
+		renderTextureState = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	}
 
 	// SwapChainをPresent状態に戻す
 	barrier.Transition.pResource = swapChainResource[backBufferIndex].Get();

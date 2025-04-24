@@ -49,7 +49,6 @@ void GameScene::Update()
 	camera->Update();
 	
 	// camera->ImGuiDebug();
-	//sprite->Update();
 	object3d->Update();
 	ground_->Update();
 	//anotherObject3d->Update();
@@ -130,15 +129,14 @@ void GameScene::Draw()
 {
 
 	// === DSVを明示的にバインド ===
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = dxCommon->GetCurrentRTVHandle();
+	/*D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = dxCommon->GetCurrentRTVHandle();
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dxCommon->GetDSVHandle();
-	dxCommon->GetCommandList()->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
+	dxCommon->GetCommandList()->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);*/
 
 	//Draw
 	SpriteCommon::GetInstance()->DrawSetCommon();
 	Object3dCommon::GetInstance()->DrawSetCommon();
 
-	//sprite->Draw();  // textureSrvHandleGPU は必要に応じて設定
 	object3d->Draw(dxCommon);
 	ground_->Draw(dxCommon);
 	//anotherObject3d->Draw(dxCommon);
@@ -170,10 +168,7 @@ void GameScene::LoadTextures()
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeSprite()
 {
-	sprite = std::make_unique<Sprite>();
-	sprite->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/uvChecker.png");
-	sprite->SetPosition({ -1000.0f, 0.0f });
-	sprite->SetParentScene(this);
+	
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
