@@ -90,7 +90,9 @@ public: //リソース生成関数
 	void CreateRenderTextureReaourceSRV();
 
 	//RootSignature関数
-	void CreateRootSignature();
+	void CreateRootSignatureDX();
+	//PipelineState関数
+	void CreatePipelineStateDX();
 
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(
 		D3D12_DESCRIPTOR_HEAP_TYPE heapType,
@@ -185,6 +187,8 @@ private:
 	// 現在のrenderTextureのリソース状態を追跡
 	D3D12_RESOURCE_STATES renderTextureState = D3D12_RESOURCE_STATE_RENDER_TARGET;
 
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature = nullptr;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
 
 private:
 	//WindowsAPI
