@@ -29,7 +29,8 @@ public:
 	//ヒープセットコマンド
 	void PreDraw();
 	//SRVセットコマンド
-	void SetGraphicsRootDescriptorTable(UINT RootParameterIndex, uint32_t srvIndex);
+	void SetGraphicsRootDescriptorTable(UINT 
+		meterIndex, uint32_t srvIndex);
 
 	//
 	uint32_t Allocate();

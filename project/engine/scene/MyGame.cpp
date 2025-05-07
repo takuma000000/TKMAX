@@ -15,7 +15,8 @@ void MyGame::Initialize()
 	sceneManager_ = std::make_unique<SceneManager>();
 
 	//最初のシーンを設定
-	//BaseScene* scene = new TitleScene(dxCommon.get(),srvManager.get());
+	//BaseScene* scene = new 
+	// Scene(dxCommon.get(),srvManager.get());
 	//sceneManager_->SetNextScene(scene);
 
 	//シーンファクトリーの生成、マネージャにセット
@@ -23,7 +24,7 @@ void MyGame::Initialize()
 	sceneManager_->SetSceneFactory(sceneFactory_.get());
 
 	//最初のシーンを設定
-	sceneManager_->SetNextScene(sceneFactory_->CreateScene("TITLE"));
+	sceneManager_->SetNextScene(sceneFactory_->CreateScene("GAME"));
 
 	assert(dxCommon.get() != nullptr && "DirectXCommon is nullptr in MyGame::Initialize");
 	assert(srvManager.get() != nullptr && "SrvManager is nullptr in MyGame::Initialize");

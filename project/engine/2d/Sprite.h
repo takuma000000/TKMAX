@@ -76,6 +76,7 @@ public:
 	void SetTextureLeftTop(const Vector2& textureLeftTop) { this->textureLeftTop = textureLeftTop; }
 	void SetTextureSize(const Vector2& textureSize) { this->textureSize = textureSize; }
 	void SetParentScene(BaseScene* parentScene);
+	void SetTextureIndex(uint32_t index) { textureIndex = index; }
 
 public://メンバ関数
 	void Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, std::string textureFilePath);

@@ -60,7 +60,10 @@ void GameScene::Update()
 	camera->Update();
 
 	// camera->ImGuiDebug();
+<<<<<<< HEAD
 	//sprite->Update();
+=======
+>>>>>>> CG5_00_02
 	object3d->Update();
 	ground_->Update();
 	//anotherObject3d->Update();
@@ -99,10 +102,16 @@ void GameScene::Update()
 void GameScene::Draw()
 {
 
+	// === DSVを明示的にバインド ===
+	/*D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = dxCommon->GetCurrentRTVHandle();
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dxCommon->GetDSVHandle();
+	dxCommon->GetCommandList()->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);*/
+
 	//Draw
 	SpriteCommon::GetInstance()->DrawSetCommon();
 	Object3dCommon::GetInstance()->DrawSetCommon();
 
+<<<<<<< HEAD
 	//sprite->Draw();  // textureSrvHandleGPU は必要に応じて設定
 	object3d->Draw(dxCommon);
 	ground_->Draw(dxCommon);
@@ -115,6 +124,11 @@ void GameScene::Draw()
 	Vector4 lightColor = directionalLight_->GetColor();
 	Vector3 lightDirection = directionalLight_->GetDirection();
 	float lightIntensity = directionalLight_->GetIntensity();
+=======
+	object3d->Draw(dxCommon);
+	ground_->Draw(dxCommon);
+	//anotherObject3d->Draw(dxCommon);
+>>>>>>> CG5_00_02
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -144,10 +158,14 @@ void GameScene::LoadTextures()
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeSprite()
 {
+<<<<<<< HEAD
 	/*sprite = std::make_unique<Sprite>();
 	sprite->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/uvChecker.png");
 	sprite->SetPosition({ -1000.0f, 0.0f });
 	sprite->SetParentScene(this);*/
+=======
+	
+>>>>>>> CG5_00_02
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*

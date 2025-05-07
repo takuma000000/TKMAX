@@ -135,7 +135,6 @@ void Object3d::Update()
 		// 角度を更新
 	}
 
-
 	ImGui::End();
 }
 
