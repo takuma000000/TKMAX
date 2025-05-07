@@ -2,7 +2,7 @@ name: ReleaseBuild
 on:
   push:
     branches:
-      - master
+      - default
 
 env:
   # リポジトリのルートディレクトリを基点としたソリューションファイルのパス
