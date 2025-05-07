@@ -174,7 +174,7 @@ void DirectXCommon::CreatePipelineStateDX()
 
 	Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = CompileShader(L"CopyImage.VS.hlsl", L"vs_6_0");
 	assert(vertexShaderBlob != nullptr);
-	Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = CompileShader(L"GaussianFilter.PS.hlsl", L"ps_6_0");
+	Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = CompileShader(L"RadialBlur.PS.hlsl", L"ps_6_0");
 	assert(pixelShaderBlob != nullptr);
 
 	//DepthStencilStateの設定
