@@ -11,12 +11,17 @@
 #include "SrvManager.h"
 #include "externals/DirectXTex/DirectXTex.h"//DirectX
 #include <Vector4.h>
+#include <Matrix4x4.h>
 
 class DirectXCommon
 {
 public:
 	// コンストラクタ
 	//DirectXCommon();
+
+	struct OutlineParameter {
+		Matrix4x4 projectionInverse;
+	};
 
 public: //getter
 	ID3D12Device* GetDevice() const { return device.Get(); }
@@ -93,6 +98,8 @@ public: //リソース生成関数
 	void CreateRootSignatureDX();
 	//PipelineState関数
 	void CreatePipelineStateDX();
+	//DepthSRV関数
+	void CreateDepthSRV();
 
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(
 		D3D12_DESCRIPTOR_HEAP_TYPE heapType,
@@ -189,6 +196,10 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
+
+	// クラス内メンバとして追加（private: に）
+	Microsoft::WRL::ComPtr<ID3D12Resource> outlineConstantBuffer_ = nullptr;
+	OutlineParameter* outlineMappedData_ = nullptr;
 
 private:
 	//WindowsAPI

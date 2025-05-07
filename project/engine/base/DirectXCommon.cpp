@@ -73,7 +73,12 @@ void DirectXCommon::CreateRootSignatureDX() {
 	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
 	descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
-	// === SRV (t0) ===
+	
+
+	// RootParameterの数を2に増やす（SRV + CBV）
+	D3D12_ROOT_PARAMETER rootParameters[2]{};
+
+	// SRV (t0)
 	D3D12_DESCRIPTOR_RANGE srvRange{};
 	srvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	srvRange.NumDescriptors = 1;
@@ -81,12 +86,16 @@ void DirectXCommon::CreateRootSignatureDX() {
 	srvRange.RegisterSpace = 0;
 	srvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-	// RootParameter for SRV
-	D3D12_ROOT_PARAMETER rootParameters[1]{};
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 	rootParameters[0].DescriptorTable.NumDescriptorRanges = 1;
 	rootParameters[0].DescriptorTable.pDescriptorRanges = &srvRange;
-	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL; // PSで使用
+	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+	// CBV (b0)
+	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameters[1].Descriptor.ShaderRegister = 0; // b0
+	rootParameters[1].Descriptor.RegisterSpace = 0;
+	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 	descriptionRootSignature.pParameters = rootParameters;
 	descriptionRootSignature.NumParameters = _countof(rootParameters);
@@ -174,7 +183,7 @@ void DirectXCommon::CreatePipelineStateDX()
 
 	Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = CompileShader(L"CopyImage.VS.hlsl", L"vs_6_0");
 	assert(vertexShaderBlob != nullptr);
-	Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = CompileShader(L"GaussianFilter.PS.hlsl", L"ps_6_0");
+	Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = CompileShader(L"DepthBasedOutline.PS.hlsl", L"ps_6_0");
 	assert(pixelShaderBlob != nullptr);
 
 	//DepthStencilStateの設定
@@ -205,6 +214,21 @@ void DirectXCommon::CreatePipelineStateDX()
 	hr = device->CreateGraphicsPipelineState(&graphicPipelineStateDesc, IID_PPV_ARGS(&graphicsPipelineState));
 	assert(SUCCEEDED(hr));
 }
+
+void DirectXCommon::CreateDepthSRV()
+{
+	D3D12_SHADER_RESOURCE_VIEW_DESC depthSrvDesc{};
+	depthSrvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+	depthSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	depthSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	depthSrvDesc.Texture2D.MipLevels = 1;
+
+	D3D12_CPU_DESCRIPTOR_HANDLE handle = srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	handle.ptr += descriptorSizeSRV * 11; // 例: 深度SRVは11番目
+
+	device->CreateShaderResourceView(depthStencilResource.Get(), &depthSrvDesc, handle);
+}
+
 
 Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> DirectXCommon::CreateDescriptorHeap(
 	D3D12_DESCRIPTOR_HEAP_TYPE heapType,
@@ -248,8 +272,7 @@ void DirectXCommon::Initialize(WindowsAPI* windowsAPI)
 	CreateRenderTextureReaourceRTV();
 	CreateRenderTextureReaourceSRV();
 	CreatePipelineStateDX();
-	//InitializeImGui();
-
+	CreateDepthSRV();
 }
 
 void DirectXCommon::InitializeDevice()
