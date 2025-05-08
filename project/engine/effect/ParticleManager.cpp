@@ -3,6 +3,8 @@
 #include "MyMath.h"
 #include <numbers>
 
+#include "externals/imgui/imgui.h"
+
 
 ParticleManager* ParticleManager::instance = nullptr;
 
@@ -363,23 +365,63 @@ void ParticleManager::Emit(const std::string name, Vector3& pos, uint32_t count)
 	}
 }
 
-ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate)
-{
-	std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);//位置の範囲を指定
-	std::uniform_real_distribution<float> distColor(0.0f, 1.0f);//色の範囲を指定
-	std::uniform_real_distribution<float> distRotate(-std::numbers::pi_v<float>, std::numbers::pi_v<float>);//回転の範囲を指定
-	std::uniform_real_distribution<float> distScale(0.4f, 1.5f);//スケールの範囲を指定
-	//一定時間で消えるようにする
-	std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
+ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& randomEngine, const Vector3& center) {
+	std::uniform_real_distribution<float> distPos(-1.5f, 1.5f);
+	std::uniform_real_distribution<float> distScale(0.05f, 0.2f);
+	std::uniform_real_distribution<float> distTime(0.3f, 0.6f);
+	std::uniform_real_distribution<float> distAlpha(0.6f, 1.0f);
+	// 回転させるための初期Z角をランダムに
+	std::uniform_real_distribution<float> distRotateZ(0.0f, std::numbers::pi_v<float> *2.0f);
+
+
 	Particle particle;
-	particle.transform.scale = { 0.05f,distScale(randomEngine),1.0f };//スケールを指定
-	particle.transform.rotate = { distRotate(randomEngine),0.0f,0.0f };//回転を指定
-	//位置と速度を[-1,1]でランダムに初期化
-	Vector3 randomTranslate{ distribution(randomEngine),distribution(randomEngine),distribution(randomEngine) };
-	particle.transform.translate = translate;//位置を指定
-	particle.velocity = { 0.0f,0.0f,0.0f };//速度を指定
-	particle.color = { 1.0f,1.0f,1.0f,1.0f };//色を指定
-	particle.lifeTime = 1.0f;//生存時間を指定
-	particle.currentTime = 0.0f;//経過時間を指定
+
+	// 初期位置：ランダムな球状の周囲にばらまく
+	Vector3 offset = Vector3{
+		distPos(randomEngine),
+		distPos(randomEngine),
+		distPos(randomEngine)
+	};
+	particle.transform.translate = center + offset;
+
+	// 吸い込む方向＝中心に向かう
+	Vector3 dirToCenter = MyMath::Normalize(center - particle.transform.translate);
+	particle.velocity = dirToCenter * 3.0f;
+
+	// 小さく光る粒（スケール）
+	float s = distScale(randomEngine);
+	particle.transform.scale = { s, s, 1.0f };
+
+	// 色：青白く神秘的
+	particle.color = { 0.7f, 0.9f, 1.0f, distAlpha(randomEngine) };
+
+	particle.lifeTime = distTime(randomEngine);
+	particle.currentTime = 0.0f;
+
+	particle.transform.rotate = { 0.0f, 0.0f, distRotateZ(randomEngine) };
 	return particle;
 }
+
+int ParticleManager::GetTotalActiveParticleCount() {
+	int total = 0;
+	for (const auto& pair : particleGroups) {
+		total += static_cast<int>(pair.second.particles.size());
+	}
+	return total;
+}
+
+void ParticleManager::ImGuiDebug(){
+	ImGui::Begin("ParticleManager");
+
+	int totalCount = 0;
+	for (const auto& [name, group] : particleGroups) {
+		int count = static_cast<int>(group.particles.size());
+		totalCount += count;
+		ImGui::Text("%s : %d", name.c_str(), count);
+	}
+	ImGui::Separator();
+	ImGui::Text("Total Active Particles: %d", totalCount);
+
+	ImGui::End();
+}
+

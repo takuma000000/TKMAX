@@ -133,5 +133,10 @@ private:
 
 	std::mt19937 randomEngine;
 
+public:
+	// 現在アクティブなパーティクル数を返す
+	int GetTotalActiveParticleCount();
+	void ImGuiDebug(); // パーティクルデバッグ表示
+
 };
 

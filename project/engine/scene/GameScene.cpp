@@ -24,9 +24,9 @@ void GameScene::Initialize()
 
 	// ──────────────── パーティクルの初期化 ───────────────
 	ParticleManager::GetInstance()->Initialize(dxCommon, srvManager, camera.get());
-	ParticleManager::GetInstance()->CreateParticleGroup("uv", "./resources/uvChecker.png");
+	ParticleManager::GetInstance()->CreateParticleGroup("uv", "./resources/INZM.png");
 	particleEmitter = std::make_unique<ParticleEmitter>();
-	particleEmitter->Initialize("uv", { 0.0f,2.5f,10.0f });
+	particleEmitter->Initialize("uv", { 0.0f,2.5f,-15.0f });
 }
 
 void GameScene::Finalize()
@@ -95,13 +95,12 @@ void GameScene::Update()
 	ImGui::End();
 
 	ImGui::Begin("Particle");
-
-	if (ImGui::Button("emit particle")) {
-		particleEmitter->Update();
-		particleEmitter->Emit();
-	}
-
+	ParticleManager::GetInstance()->ImGuiDebug();
 	ImGui::End();
+
+	//particleEmitter->Emit();
+	particleEmitter->Update();
+
 }
 
 void GameScene::Draw()
@@ -144,6 +143,7 @@ void GameScene::LoadTextures()
 	TextureManager::GetInstance()->LoadTexture("./resources/pokemon.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/circle.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/sphere.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/INZM.png");
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
