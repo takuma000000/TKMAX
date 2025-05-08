@@ -5,6 +5,8 @@
 #include "Logger.h"
 #include "StringUtility.h"
 #include "thread"
+#include <TextureManager.h>
+#include <externals/imgui/imgui.h>
 //#include "externals/imgui/imgui.h"
 //#include "externals/imgui/imgui_impl_win32.h"
 //#include "externals/imgui/imgui_impl_dx12.h"
@@ -76,26 +78,34 @@ void DirectXCommon::CreateRootSignatureDX() {
 	
 
 	// RootParameterの数を2に増やす（SRV + CBV）
+	// RootParameterの数を2に増やす（SRV + CBV）
 	D3D12_ROOT_PARAMETER rootParameters[2]{};
 
-	// SRV (t0)
-	D3D12_DESCRIPTOR_RANGE srvRange{};
-	srvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	srvRange.NumDescriptors = 1;
-	srvRange.BaseShaderRegister = 0; // t0
-	srvRange.RegisterSpace = 0;
-	srvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+	// === SRV (t0, t1) ===
+	D3D12_DESCRIPTOR_RANGE srvRange[2]{};
+	srvRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	srvRange[0].NumDescriptors = 1;
+	srvRange[0].BaseShaderRegister = 0; // t0
+	srvRange[0].RegisterSpace = 0;
+	srvRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+	srvRange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	srvRange[1].NumDescriptors = 1;
+	srvRange[1].BaseShaderRegister = 1; // t1
+	srvRange[1].RegisterSpace = 0;
+	srvRange[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParameters[0].DescriptorTable.NumDescriptorRanges = 1;
-	rootParameters[0].DescriptorTable.pDescriptorRanges = &srvRange;
+	rootParameters[0].DescriptorTable.NumDescriptorRanges = 2;
+	rootParameters[0].DescriptorTable.pDescriptorRanges = srvRange;
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
-	// CBV (b0)
-	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	// === ✅ 正しくCBVにする（ここ！） ===
+	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // ←ここをDescriptorTableではなくCBVに！
 	rootParameters[1].Descriptor.ShaderRegister = 0; // b0
 	rootParameters[1].Descriptor.RegisterSpace = 0;
 	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
 
 	descriptionRootSignature.pParameters = rootParameters;
 	descriptionRootSignature.NumParameters = _countof(rootParameters);
@@ -273,6 +283,40 @@ void DirectXCommon::Initialize(WindowsAPI* windowsAPI)
 	CreateRenderTextureReaourceSRV();
 	CreatePipelineStateDX();
 	CreateDepthSRV();
+
+	// === Dissolve用定数バッファ（threshold） ===
+	thresholdBuffer_ = CreateBufferResource(sizeof(ThresholdParam));
+	thresholdBuffer_->SetName(L"ThresholdBuffer");
+	thresholdBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&thresholdMappedData_));
+	thresholdMappedData_->threshold = 0.5f; // 初期値
+
+	// === noise0.png 読み込みとSRV作成 ===
+	DirectX::ScratchImage noiseImage{};
+	std::wstring filePathW = ConvertString("resources/noise0.png");
+	HRESULT hr = DirectX::LoadFromWICFile(filePathW.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, noiseImage);
+	assert(SUCCEEDED(hr));
+
+	DirectX::ScratchImage mipImages{};
+	hr = DirectX::GenerateMipMaps(
+		noiseImage.GetImages(), noiseImage.GetImageCount(),
+		noiseImage.GetMetadata(), DirectX::TEX_FILTER_SRGB, 0, mipImages);
+	assert(SUCCEEDED(hr));
+
+	auto noiseTex = CreateTextureResource(mipImages.GetMetadata());
+	UploadTextureData(noiseTex.Get(), mipImages);
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+	srvDesc.Format = mipImages.GetMetadata().format;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = 1;
+
+	D3D12_CPU_DESCRIPTOR_HANDLE handle = srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	handle.ptr += descriptorSizeSRV * 11;
+	device->CreateShaderResourceView(noiseTex.Get(), &srvDesc, handle);
+
+
+
 }
 
 void DirectXCommon::InitializeDevice()
@@ -946,6 +990,10 @@ void DirectXCommon::PostDraw()
 	assert(graphicsPipelineState != nullptr);
 	assert(srvDescriptorHeap != nullptr);
 
+	// RenderTexture を SRV として使う描画の直前に追加
+	D3D12_GPU_VIRTUAL_ADDRESS cbvAddress = thresholdBuffer_->GetGPUVirtualAddress();
+	commandList->SetGraphicsRootConstantBufferView(1, cbvAddress);
+
 	// ==========================
 	// ① RenderTextureをSRVとして使用（ポストエフェクト描画）
 	// ==========================
@@ -959,8 +1007,9 @@ void DirectXCommon::PostDraw()
 
 	// SRV（t0）にRenderTextureの10番目をバインド
 	D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
-	gpuHandle.ptr += descriptorSizeSRV * 10;
+	gpuHandle.ptr += descriptorSizeSRV * 10; // t0 = RenderTexture（index 10）
 	commandList->SetGraphicsRootDescriptorTable(0, gpuHandle);
+
 
 	// ✅ RenderTexture を PIXEL_SHADER_RESOURCE 状態に遷移
 	//if (renderTextureState != D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE) {
@@ -1040,6 +1089,13 @@ void DirectXCommon::PostDraw()
 	assert(SUCCEEDED(hr));
 	hr = commandList->Reset(commandAllocator.Get(), nullptr);
 	assert(SUCCEEDED(hr));
+}
+
+void DirectXCommon::ImGuiDebug()
+{
+	ImGui::Begin("Dissolve Settings");
+	ImGui::SliderFloat("Threshold", &thresholdMappedData_->threshold, 0.0f, 1.0f);
+	ImGui::End();
 }
 
 

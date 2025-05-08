@@ -138,6 +138,8 @@ public: //描画関数
 	//描画後処理
 	void PostDraw();
 
+	void ImGuiDebug();
+
 private:
 	//DirectX12デバイス
 	Microsoft::WRL::ComPtr<ID3D12Device> device;
@@ -200,6 +202,11 @@ private:
 	// クラス内メンバとして追加（private: に）
 	Microsoft::WRL::ComPtr<ID3D12Resource> outlineConstantBuffer_ = nullptr;
 	OutlineParameter* outlineMappedData_ = nullptr;
+
+	// ← すでに outlineConstantBuffer_ とかあるところの近く
+	Microsoft::WRL::ComPtr<ID3D12Resource> thresholdBuffer_ = nullptr;
+	struct ThresholdParam { float threshold; float padding[3]; };
+	ThresholdParam* thresholdMappedData_ = nullptr;
 
 private:
 	//WindowsAPI

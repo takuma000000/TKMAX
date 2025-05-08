@@ -121,8 +121,10 @@ void GameScene::Update()
 		ImVec2(0, 150)
 	);
 	ImGui::PopStyleColor();
-
 	ImGui::End();
+
+	dxCommon->ImGuiDebug();
+
 }
 
 void GameScene::Draw()
