@@ -49,8 +49,8 @@ void GameScene::Update()
 	camera->Update();
 	
 	// camera->ImGuiDebug();
-	object3d->Update();
-	ground_->Update();
+	//object3d->Update();
+	//ground_->Update();
 	//anotherObject3d->Update();
 	// ライトの更新
 	directionalLight_->Update();
@@ -64,10 +64,10 @@ void GameScene::Update()
 	//*-*-*-*-*-*-*-*-*-*-*
 	// object3d
 	//*-*-*-*-*-*-*-*-*-*-*
-	UpdateObjectTransform(object3d, { 0.0f, 0.0f, 00.0f }, { 0.0f,1.6f,0.0f }, { 1.0f, 1.0f, 1.0f });
+	//UpdateObjectTransform(object3d, { 0.0f, 0.0f, 00.0f }, { 0.0f,1.6f,0.0f }, { 1.0f, 1.0f, 1.0f });
 								  ///   translate       ///     rotate      ///       scale       ///
 
-	UpdateObjectTransform(ground_, { 0.0f, 0.0f, 0.0f }, { 0.0f,1.6f,0.0f }, { 1.0f, 1.0f, 1.0f });
+	//UpdateObjectTransform(ground_, { 0.0f, 0.0f, 0.0f }, { 0.0f,1.6f,0.0f }, { 1.0f, 1.0f, 1.0f });
 
 
 	Vector3 object3dRotate = object3d->GetRotate();
@@ -137,8 +137,8 @@ void GameScene::Draw()
 	SpriteCommon::GetInstance()->DrawSetCommon();
 	Object3dCommon::GetInstance()->DrawSetCommon();
 
-	object3d->Draw(dxCommon);
-	ground_->Draw(dxCommon);
+	//object3d->Draw(dxCommon);
+	//ground_->Draw(dxCommon);
 	//anotherObject3d->Draw(dxCommon);
 }
 
