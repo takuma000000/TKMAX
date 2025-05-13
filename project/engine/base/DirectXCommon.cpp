@@ -234,7 +234,7 @@ void DirectXCommon::CreateDepthSRV()
 	depthSrvDesc.Texture2D.MipLevels = 1;
 
 	D3D12_CPU_DESCRIPTOR_HANDLE handle = srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	handle.ptr += descriptorSizeSRV * 11; // 例: 深度SRVは11番目
+	handle.ptr += descriptorSizeSRV * kDepthSRVIndex;
 
 	device->CreateShaderResourceView(depthStencilResource.Get(), &depthSrvDesc, handle);
 }
@@ -312,7 +312,7 @@ void DirectXCommon::Initialize(WindowsAPI* windowsAPI)
 	srvDesc.Texture2D.MipLevels = 1;
 
 	D3D12_CPU_DESCRIPTOR_HANDLE handle = srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	handle.ptr += descriptorSizeSRV * 11;
+	handle.ptr += descriptorSizeSRV * kDepthSRVIndex;
 	device->CreateShaderResourceView(noiseTex.Get(), &srvDesc, handle);
 
 
@@ -739,8 +739,8 @@ void DirectXCommon::CreateRenderTextureReaourceRTV()
 	renderTextureResource->SetName(L"RenderTexture");
 
 	// RTVヒープの3番目にRenderTextureのハンドルを割り当てる（0,1はswapchain用）
-	rtvHandles[2] = rtvHeap_->GetCPUDescriptorHandleForHeapStart();
-	rtvHandles[2].ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV) * 2;
+	rtvHandles[kRenderTextureRTVIndex] = rtvHeap_->GetCPUDescriptorHandleForHeapStart();
+	rtvHandles[kRenderTextureRTVIndex].ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV) * kRenderTextureRTVIndex;
 
 	device->CreateRenderTargetView(renderTextureResource.Get(), &rtvDesc, rtvHandles[2]);
 }
@@ -755,9 +755,8 @@ void DirectXCommon::CreateRenderTextureReaourceSRV()
 	renderTextureSrvDesc.Texture2D.MipLevels = 1;
 
 	// 例：SRVの10番にRenderTextureを割り当てる（0〜9は他テクスチャに使う前提）
-	uint32_t renderTextureSRVIndex = 10;
 	D3D12_CPU_DESCRIPTOR_HANDLE handle = srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	handle.ptr += descriptorSizeSRV * renderTextureSRVIndex;
+	handle.ptr += descriptorSizeSRV * kRenderTextureSRVIndex;
 
 	device->CreateShaderResourceView(renderTextureResource.Get(), &renderTextureSrvDesc, handle);
 }
@@ -950,10 +949,10 @@ void DirectXCommon::PreDraw()
 	
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
-	commandList->OMSetRenderTargets(1, &rtvHandles[2], false, &dsvHandle);
+	commandList->OMSetRenderTargets(1, &rtvHandles[kRenderTextureRTVIndex], false, &dsvHandle);
 
 	float clearRenderTextureColor[] = { 1.0f, 0.0f, 0.0f, 1.0f };
-	commandList->ClearRenderTargetView(rtvHandles[2], clearRenderTextureColor, 0, nullptr);
+	commandList->ClearRenderTargetView(rtvHandles[kRenderTextureRTVIndex], clearRenderTextureColor, 0, nullptr);
 	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	commandList->RSSetViewports(1, &viewport);
@@ -990,10 +989,6 @@ void DirectXCommon::PostDraw()
 	assert(graphicsPipelineState != nullptr);
 	assert(srvDescriptorHeap != nullptr);
 
-	// RenderTexture を SRV として使う描画の直前に追加
-	D3D12_GPU_VIRTUAL_ADDRESS cbvAddress = thresholdBuffer_->GetGPUVirtualAddress();
-	commandList->SetGraphicsRootConstantBufferView(1, cbvAddress);
-
 	// ==========================
 	// ① RenderTextureをSRVとして使用（ポストエフェクト描画）
 	// ==========================
@@ -1001,13 +996,17 @@ void DirectXCommon::PostDraw()
 	commandList->SetGraphicsRootSignature(rootSignature.Get());
 	commandList->SetPipelineState(graphicsPipelineState.Get());
 
+	// RenderTexture を SRV として使う描画の直前に追加
+	D3D12_GPU_VIRTUAL_ADDRESS cbvAddress = thresholdBuffer_->GetGPUVirtualAddress();
+	commandList->SetGraphicsRootConstantBufferView(1, cbvAddress);
+
 	// SRVヒープのバインド
 	ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap.Get() };
 	commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
 	// SRV（t0）にRenderTextureの10番目をバインド
 	D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
-	gpuHandle.ptr += descriptorSizeSRV * 10; // t0 = RenderTexture（index 10）
+	gpuHandle.ptr += descriptorSizeSRV * kRenderTextureSRVIndex;
 	commandList->SetGraphicsRootDescriptorTable(0, gpuHandle);
 
 
