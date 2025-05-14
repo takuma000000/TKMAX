@@ -26,7 +26,7 @@ void GameScene::Initialize()
 	ParticleManager::GetInstance()->Initialize(dxCommon, srvManager, camera.get());
 	ParticleManager::GetInstance()->CreateParticleGroup("uv", "./resources/uvChecker.png");
 	particleEmitter = std::make_unique<ParticleEmitter>();
-	particleEmitter->Initialize("uv", { 0.0f,2.5f,10.0f });
+	particleEmitter->Initialize("uv", { 0.0f,2.5f,-20.0f });
 }
 
 void GameScene::Finalize()
@@ -96,10 +96,10 @@ void GameScene::Update()
 
 	ImGui::Begin("Particle");
 
-	if (ImGui::Button("emit particle")) {
-		particleEmitter->Update();
-		particleEmitter->Emit();
-	}
+
+	particleEmitter->Update();
+	//particleEmitter->Emit();
+
 
 	ImGui::End();
 }
