@@ -363,23 +363,58 @@ void ParticleManager::Emit(const std::string name, Vector3& pos, uint32_t count)
 	}
 }
 
-ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate)
+ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& randomEngine, const Vector3& center)
 {
-	std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);//位置の範囲を指定
-	std::uniform_real_distribution<float> distColor(0.0f, 1.0f);//色の範囲を指定
-	std::uniform_real_distribution<float> distRotate(-std::numbers::pi_v<float>, std::numbers::pi_v<float>);//回転の範囲を指定
-	std::uniform_real_distribution<float> distScale(0.4f, 1.5f);//スケールの範囲を指定
-	//一定時間で消えるようにする
-	std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
+	std::uniform_real_distribution<float> distAngle(0.0f, 2.0f * std::numbers::pi_v<float>);
+	std::uniform_real_distribution<float> distSpeed(0.8f, 2.0f);
+	std::uniform_real_distribution<float> distScale(0.05f, 0.15f);
+	std::uniform_real_distribution<float> distLifetime(0.15f, 0.3f);
+
+	// 色カテゴリの選択（1～4のうちどれか1つ）
+	std::uniform_int_distribution<int> colorTypeDist(0, 3);
+
+	// 色ごとの明確なバリエーション
+	const Vector4 colorList[] = {
+		{1.0f, 1.0f, 1.0f, 1.0f},  // 真っ白
+		{0.6f, 0.8f, 1.0f, 1.0f},  // 青白
+		{0.4f, 0.9f, 1.0f, 1.0f},  // シアンっぽい
+		{0.3f, 0.6f, 1.0f, 1.0f},  // 濃い青
+	};
+
 	Particle particle;
-	particle.transform.scale = { 0.05f,distScale(randomEngine),1.0f };//スケールを指定
-	particle.transform.rotate = { distRotate(randomEngine),0.0f,0.0f };//回転を指定
-	//位置と速度を[-1,1]でランダムに初期化
-	Vector3 randomTranslate{ distribution(randomEngine),distribution(randomEngine),distribution(randomEngine) };
-	particle.transform.translate = translate;//位置を指定
-	particle.velocity = { 0.0f,0.0f,0.0f };//速度を指定
-	particle.color = { 1.0f,1.0f,1.0f,1.0f };//色を指定
-	particle.lifeTime = 1.0f;//生存時間を指定
-	particle.currentTime = 0.0f;//経過時間を指定
+
+	// 中心から放射
+	particle.transform.translate = center;
+
+	float theta = distAngle(randomEngine);
+	float phi = distAngle(randomEngine);
+
+	Vector3 dir = {
+		std::cos(theta) * std::sin(phi),
+		std::cos(phi),
+		std::sin(theta) * std::sin(phi)
+	};
+
+	particle.velocity = dir * distSpeed(randomEngine);
+	particle.transform.rotate = { 0.0f, 0.0f, 0.0f };
+
+	float scale = distScale(randomEngine);
+	particle.transform.scale = { scale, scale, scale };
+
+	// 色をランダムで決定（4種から明確に選ぶ）
+	particle.color = colorList[colorTypeDist(randomEngine)];
+
+	particle.lifeTime = distLifetime(randomEngine);
+	particle.currentTime = 0.0f;
+
 	return particle;
 }
+
+
+
+
+
+
+
+
+

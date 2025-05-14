@@ -24,7 +24,7 @@ void GameScene::Initialize()
 
 	// ──────────────── パーティクルの初期化 ───────────────
 	ParticleManager::GetInstance()->Initialize(dxCommon, srvManager, camera.get());
-	ParticleManager::GetInstance()->CreateParticleGroup("uv", "./resources/uvChecker.png");
+	ParticleManager::GetInstance()->CreateParticleGroup("uv", "./resources/circle.png");
 	particleEmitter = std::make_unique<ParticleEmitter>();
 	particleEmitter->Initialize("uv", { 0.0f,2.5f,-20.0f });
 }
@@ -96,12 +96,24 @@ void GameScene::Update()
 
 	ImGui::Begin("Particle");
 
+	// Emitフラグ
+	static bool emitRequested = false;
 
-	particleEmitter->Update();
-	//particleEmitter->Emit();
+	// ボタン押したらフラグを立てる
+	if (ImGui::Button("Let's Particle")) {
+		emitRequested = true;
+	}
 
+	// フラグが立っていたら、Emitter経由でEmit実行
+	if (emitRequested) {
+		particleEmitter->Emit(); // ← Emitterを活用して発生！
+		emitRequested = false;
+	}
 
 	ImGui::End();
+
+
+
 }
 
 void GameScene::Draw()
