@@ -309,6 +309,9 @@ void ParticleManager::CreateParticleGroup(const std::string name, const std::str
 	uint32_t srvIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
 	newGroup.srvIndex = srvIndex;
 
+	// ✅ これを追加！
+	newGroup.materialData.textureIndex = srvIndex;
+
 	// インスタンシング用リソースの作成
 	newGroup.kNumInstance = 100; // 必要なインスタンス数（仮で100）。用途に応じて調整
 	size_t bufferSize = sizeof(ParticleForGPU) * newGroup.kNumInstance;
