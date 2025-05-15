@@ -24,7 +24,7 @@ void GameScene::Initialize()
 
 	// ──────────────── パーティクルの初期化 ───────────────
 	ParticleManager::GetInstance()->Initialize(dxCommon, srvManager, camera.get());
-	ParticleManager::GetInstance()->CreateParticleGroup("uv", "./resources/uvChecker.png");
+	ParticleManager::GetInstance()->CreateParticleGroup("uv", "./resources/spark.png");
 	particleEmitter = std::make_unique<ParticleEmitter>();
 	particleEmitter->Initialize("uv", { 0.0f,2.5f,-20.0f });
 }
@@ -156,6 +156,7 @@ void GameScene::LoadTextures()
 	TextureManager::GetInstance()->LoadTexture("./resources/pokemon.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/circle.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/sphere.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/spark.png");
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*

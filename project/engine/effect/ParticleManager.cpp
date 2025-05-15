@@ -372,23 +372,28 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& randomE
 	std::uniform_real_distribution<float> distSpeed(0.8f, 2.0f);
 	std::uniform_real_distribution<float> distScale(0.05f, 0.15f);
 	std::uniform_real_distribution<float> distLifetime(0.15f, 0.3f);
+	std::uniform_real_distribution<float> distOffset(-0.1f, 0.1f); // ★ 新規：中心からのずれ範囲
 
-	// 色カテゴリの選択（1～4のうちどれか1つ）
 	std::uniform_int_distribution<int> colorTypeDist(0, 3);
 
-	// 色ごとの明確なバリエーション
 	const Vector4 colorList[] = {
 		{1.0f, 1.0f, 1.0f, 1.0f},  // 真っ白
 		{0.6f, 0.8f, 1.0f, 1.0f},  // 青白
-		{0.4f, 0.9f, 1.0f, 1.0f},  // シアンっぽい
-		{0.3f, 0.6f, 1.0f, 1.0f},  // 濃い青
+		{0.4f, 0.9f, 1.0f, 1.0f},  // シアン
+		{0.3f, 0.6f, 1.0f, 1.0f},  // 濃青
 	};
 
 	Particle particle;
 
-	// 中心から放射
-	particle.transform.translate = center;
+	// ★ 発生位置にランダムオフセットを加える
+	Vector3 offset = {
+		distOffset(randomEngine),
+		distOffset(randomEngine),
+		distOffset(randomEngine)
+	};
+	particle.transform.translate = center + offset;
 
+	// ランダム放射方向
 	float theta = distAngle(randomEngine);
 	float phi = distAngle(randomEngine);
 
@@ -404,7 +409,6 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& randomE
 	float scale = distScale(randomEngine);
 	particle.transform.scale = { scale, scale, scale };
 
-	// 色をランダムで決定（4種から明確に選ぶ）
 	particle.color = colorList[colorTypeDist(randomEngine)];
 
 	particle.lifeTime = distLifetime(randomEngine);
@@ -412,6 +416,7 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& randomE
 
 	return particle;
 }
+
 
 
 
