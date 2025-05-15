@@ -79,6 +79,8 @@ void GameScene::Update()
 	// 
 	ParticleManager::GetInstance()->Update();
 
+	particleEmitter->Update();
+
 	ImGui::Begin("Object3d");
 	if (ImGui::DragFloat3("Object3dRotate", &object3dRotate.x, 0.01f))
 	{

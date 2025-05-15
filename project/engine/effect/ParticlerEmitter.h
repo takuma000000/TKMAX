@@ -20,6 +20,7 @@ private:
 		uint32_t count;
 		float frequency;
 		float frequencyTime;
+		float lifeTime;
 	};
 
 	Emitter emitter{};

@@ -378,9 +378,13 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& randomE
 
 	const Vector4 colorList[] = {
 		{1.0f, 1.0f, 1.0f, 1.0f},  // 真っ白
-		{0.6f, 0.8f, 1.0f, 1.0f},  // 青白
-		{0.4f, 0.9f, 1.0f, 1.0f},  // シアン
-		{0.3f, 0.6f, 1.0f, 1.0f},  // 濃青
+		{0.0f, 0.0f, 1.0f, 1.0f},  // 青
+		{1.0f, 0.0f, 0.0f, 1.0f},  // 赤
+		{1.0f, 1.0f, 0.0f, 1.0f},  // 黄
+		{1.0f, 0.5f, 0.5f, 1.0f},  // ピンク
+		//{1.0f, 0.5f, 0.2f, 1.0f},  // 濃橙
+		//{0.4f, 0.9f, 1.0f, 1.0f},  // シアン
+		//{0.3f, 0.6f, 1.0f, 1.0f},  // 濃青
 	};
 
 	Particle particle;
