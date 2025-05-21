@@ -10,8 +10,8 @@
 #include <windows.h>
 
 #include <vector>
-//#include "PlayerBullet.h"
-//#include "Enemy.h"
+#include "PlayerBullet.h"
+#include "Enemy.h"
 
 class Player {
 public:
