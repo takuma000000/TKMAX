@@ -17,7 +17,10 @@
 #include "DirectionalLight.h"
 #include "engine/func/math/Vector3.h"
 #include "Input.h"
+
+
 #include "Player.h"
+#include "Enemy.h"
 
 class GameScene : public BaseScene
 {
@@ -53,13 +56,16 @@ private:
 	std::unique_ptr<DirectionalLight> directionalLight_ = nullptr;
 
 	//=========================================================
-	//Player
+	// Player
 	std::unique_ptr<Player> player_ = nullptr;
 	std::unique_ptr<Input> input_ = nullptr;
 	std::unique_ptr<Object3dCommon> object3dCommon_ = nullptr;
 	std::unique_ptr<SpriteCommon> spriteCommon_ = nullptr;
 	std::vector<std::unique_ptr<Sprite>> bulletSprites_;
 	std::vector<std::unique_ptr<Sprite>> heartSprites_;
+	//=========================================================
+	// Enemy
+	std::vector<std::unique_ptr<Enemy>> enemies_;
 	//=========================================================
 
 	static const int kMemoryHistorySize = 100;

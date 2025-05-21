@@ -58,6 +58,26 @@ void GameScene::Initialize()
 		heartSprites_.push_back(std::move(heart));
 	}
 
+	// 敵の配置位置
+	std::vector<Vector3> enemyPositions = {
+		{ 20.0f, 0.0f, 50.0f },
+		{ 0.0f, 8.0f, 50.0f },
+		{ -20.0f, 0.0f, 50.0f },
+		{ 0.0f, -8.0f, 50.0f },
+		{ 20.0f, 8.0f, 50.0f },
+		{ -20.0f, 8.0f, 50.0f },
+		{ 20.0f, -8.0f, 50.0f },
+		{ -20.0f, -8.0f, 50.0f }
+	};
+
+	for (const auto& pos : enemyPositions) {
+		auto enemy = std::make_unique<Enemy>();
+		enemy->Initialize(object3dCommon_.get(), dxCommon, camera.get(), pos);
+		enemy->SetCamera(camera.get());
+		enemies_.push_back(std::move(enemy));
+	}
+
+
 }
 
 void GameScene::Finalize()
@@ -92,21 +112,62 @@ void GameScene::Update()
 	UpdatePerformanceInfo(); // FPSの更新
 
 	if (player_) {
-		std::vector<Enemy*> dummyEnemies; // 現時点では空
-		player_->Update(dummyEnemies);
+		// 敵と連携
+		player_->Update(enemies_); // ロックオン用に渡す
 
+		// 弾スプライト更新
 		int bulletCount = player_->GetBulletCount();
 		for (int i = 0; i < bulletSprites_.size(); i++) {
 			bulletSprites_[i]->SetVisible(i < bulletCount);
 			bulletSprites_[i]->Update();
 		}
 
+		// HPスプライト更新
 		int hp = player_->GetHP();
 		for (int i = 0; i < heartSprites_.size(); i++) {
 			heartSprites_[i]->SetVisible(i < hp);
 			heartSprites_[i]->Update();
 		}
 	}
+
+	// 敵の更新＆削除
+	for (auto it = enemies_.begin(); it != enemies_.end();) {
+		auto& enemy = *it;
+		if (enemy->IsDead()) {
+			it = enemies_.erase(it);
+		} else {
+			enemy->Update(player_.get());
+			++it;
+		}
+	}
+
+	// 敵弾とプレイヤーの当たり判定
+	for (const auto& enemy : enemies_) {
+		for (const auto& bullet : enemy->GetBullets()) {
+			float distance = MyMath::Distance(player_->GetTranslate(), bullet->GetPosition());
+			float threshold = 1.0f;
+			if (distance < threshold && !player_->IsInvincible()) {
+				player_->OnCollision();
+				bullet->Deactivate();
+				break;
+			}
+		}
+	}
+
+	// プレイヤー弾と敵の当たり判定
+	for (auto& enemy : enemies_) {
+		for (const auto& bullet : player_->GetBullets()) {
+			float enemySize = (enemy->GetScale().x + enemy->GetScale().y + enemy->GetScale().z) / 3.0f;
+			float threshold = enemySize * 0.5f;
+			float distance = MyMath::Distance(enemy->GetPosition(), bullet->GetPosition());
+			if (distance < threshold) {
+				enemy->OnCollision();
+				bullet->Deactivate();
+				break;
+			}
+		}
+	}
+
 
 
 	// ────────────────────────────────────────
@@ -145,6 +206,10 @@ void GameScene::Draw()
 		for (auto& sprite : heartSprites_) {
 			sprite->Draw();
 		}
+	}
+
+	for (const auto& enemy : enemies_) {
+		enemy->Draw();
 	}
 
 
