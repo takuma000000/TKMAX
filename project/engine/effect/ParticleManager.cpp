@@ -382,9 +382,10 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& randomE
 		{1.0f, 0.0f, 0.0f, 1.0f},  // 赤
 		{1.0f, 1.0f, 0.0f, 1.0f},  // 黄
 		{1.0f, 0.5f, 0.5f, 1.0f},  // ピンク
-		//{1.0f, 0.5f, 0.2f, 1.0f},  // 濃橙
-		//{0.4f, 0.9f, 1.0f, 1.0f},  // シアン
-		//{0.3f, 0.6f, 1.0f, 1.0f},  // 濃青
+		{0.5f, 1.0f, 0.5f, 1.0f},  // 緑
+		{0.5f, 0.5f, 1.0f, 1.0f},  // 水色
+		{1.0f, 0.5f, 1.0f, 1.0f},   // 紫
+		{1.0f, 0.84f, 0.0f, 1.0f}  // 金色
 	};
 
 	Particle particle;
