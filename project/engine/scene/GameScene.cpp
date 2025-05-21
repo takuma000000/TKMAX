@@ -24,6 +24,40 @@ void GameScene::Initialize()
 	// ──────────────── ライトの初期化 ───────────────
 	directionalLight_ = std::make_unique<DirectionalLight>();
 	directionalLight_->Initialize({ 1.0f, 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 0.0f }, 1.0f);
+
+	// 共通初期化
+	object3dCommon_ = std::make_unique<Object3dCommon>();
+	object3dCommon_->Initialize(dxCommon);
+
+	spriteCommon_ = std::make_unique<SpriteCommon>();
+	spriteCommon_->Initialize(dxCommon);
+
+	input_ = std::make_unique<Input>();
+	input_->Initialize(nullptr); // ※必要なら WindowsAPI 渡す
+
+	// プレイヤー初期化
+	player_ = std::make_unique<Player>();
+	player_->Initialize(object3dCommon_.get(), dxCommon, camera.get(), input_.get(), spriteCommon_.get());
+	player_->SetCamera(camera.get());
+	player_->SetSpriteCommon(spriteCommon_.get());
+
+	// 弾スプライト生成
+	for (int i = 0; i < 15; i++) {
+		auto sprite = std::make_unique<Sprite>();
+		sprite->Initialize(spriteCommon_.get(), dxCommon, "./resources/bullet.png");
+		sprite->SetPosition({ 20.0f + i * 30.0f, 20.0f });
+		sprite->SetSize({ 0.5f, 0.5f });
+		bulletSprites_.push_back(std::move(sprite));
+	}
+
+	// HP表示
+	for (int i = 0; i < 3; i++) {
+		auto heart = std::make_unique<Sprite>();
+		heart->Initialize(spriteCommon_.get(), dxCommon, "./resources/heart_CR.png");
+		heart->SetPosition({ 850.0f - i * 50.0f, 600.0f }); // 画面右下
+		heartSprites_.push_back(std::move(heart));
+	}
+
 }
 
 void GameScene::Finalize()
@@ -57,6 +91,24 @@ void GameScene::Update()
 
 	UpdatePerformanceInfo(); // FPSの更新
 
+	if (player_) {
+		std::vector<Enemy*> dummyEnemies; // 現時点では空
+		player_->Update(dummyEnemies);
+
+		int bulletCount = player_->GetBulletCount();
+		for (int i = 0; i < bulletSprites_.size(); i++) {
+			bulletSprites_[i]->SetVisible(i < bulletCount);
+			bulletSprites_[i]->Update();
+		}
+
+		int hp = player_->GetHP();
+		for (int i = 0; i < heartSprites_.size(); i++) {
+			heartSprites_[i]->SetVisible(i < hp);
+			heartSprites_[i]->Update();
+		}
+	}
+
+
 	// ────────────────────────────────────────
 	// 移動・回転（加算）・スケール更新
 	// ────────────────────────────────────────
@@ -69,60 +121,6 @@ void GameScene::Update()
 
 	//UpdateObjectTransform(ground_, { 0.0f, 0.0f, 0.0f }, { 0.0f,1.6f,0.0f }, { 1.0f, 1.0f, 1.0f });
 
-
-	Vector3 object3dRotate = object3d->GetRotate();
-	Vector3 object3dTranslate = object3d->GetTranslate();
-	Vector3 object3dScale = object3d->GetScale();
-
-	Vector3 direction = directionalLight_->GetDirection();
-
-	
-	ImGui::Begin("Object3d");
-	if (ImGui::DragFloat3("Object3dRotate", &object3dRotate.x, 0.01f))
-	{
-		object3d->SetRotate(object3dRotate);
-	}
-	if (ImGui::DragFloat3("Object3dTranslate", &object3dTranslate.x, 0.01f))
-	{
-		object3d->SetTranslate(object3dTranslate);
-	}
-	if (ImGui::DragFloat3("Object3dScale", &object3dScale.x, 0.01f))
-	{
-		object3d->SetScale(object3dScale);
-	}
-	ImGui::End();
-
-	ImGui::Begin("Info");
-	ImGui::Text("FPS : %.2f", fps_);
-	ImGui::Separator();
-	ImGui::Text("FrameTime : %.2f ms", frameTimeMs_);
-	ImGui::Separator();
-	ImGui::Text("DrawCall : %d", drawCallCount_);
-	ImGui::Separator();
-	// メモリ使用量取得
-	PROCESS_MEMORY_COUNTERS pmc{};
-	if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
-		// WorkingSetSize = 実際にメモリ上に展開されているサイズ
-		size_t memoryUsageKB = pmc.WorkingSetSize / 1024; // KB
-		size_t memoryUsageMB = memoryUsageKB / 1024; // MB
-		ImGui::Text("Memory Usage : %zu KB / %zu MB", memoryUsageKB, memoryUsageMB);
-	}
-	ImGui::Separator();
-	ImGui::Text("Memory Usage Graph (MB)");
-	ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(1.0f, 0.0f, 0.0f, 1.0f)); // 赤色
-	ImGui::PlotLines(
-		"##MemoryPlot",
-		memoryHistory_.data(),
-		kMemoryHistorySize,
-		memoryHistoryIndex_,
-		nullptr,
-		0.0f,
-		500.0f,
-		ImVec2(0, 150)
-	);
-	ImGui::PopStyleColor();
-
-	ImGui::End();
 }
 
 void GameScene::Draw()
@@ -136,6 +134,19 @@ void GameScene::Draw()
 	//Draw
 	SpriteCommon::GetInstance()->DrawSetCommon();
 	Object3dCommon::GetInstance()->DrawSetCommon();
+
+	if (player_) {
+		player_->Draw();
+
+		for (auto& sprite : bulletSprites_) {
+			sprite->Draw();
+		}
+
+		for (auto& sprite : heartSprites_) {
+			sprite->Draw();
+		}
+	}
+
 
 	//object3d->Draw(dxCommon);
 	//ground_->Draw(dxCommon);
@@ -247,4 +258,61 @@ void GameScene::UpdateMemory()
 		memoryHistory_[memoryHistoryIndex_] = memoryUsageMB;
 		memoryHistoryIndex_ = (memoryHistoryIndex_ + 1) % kMemoryHistorySize;
 	}
+}
+
+void GameScene::ImGui()
+{
+	Vector3 object3dRotate = object3d->GetRotate();
+	Vector3 object3dTranslate = object3d->GetTranslate();
+	Vector3 object3dScale = object3d->GetScale();
+
+	Vector3 direction = directionalLight_->GetDirection();
+
+
+	ImGui::Begin("Object3d");
+	if (ImGui::DragFloat3("Object3dRotate", &object3dRotate.x, 0.01f))
+	{
+		object3d->SetRotate(object3dRotate);
+	}
+	if (ImGui::DragFloat3("Object3dTranslate", &object3dTranslate.x, 0.01f))
+	{
+		object3d->SetTranslate(object3dTranslate);
+	}
+	if (ImGui::DragFloat3("Object3dScale", &object3dScale.x, 0.01f))
+	{
+		object3d->SetScale(object3dScale);
+	}
+	ImGui::End();
+
+	ImGui::Begin("Info");
+	ImGui::Text("FPS : %.2f", fps_);
+	ImGui::Separator();
+	ImGui::Text("FrameTime : %.2f ms", frameTimeMs_);
+	ImGui::Separator();
+	ImGui::Text("DrawCall : %d", drawCallCount_);
+	ImGui::Separator();
+	// メモリ使用量取得
+	PROCESS_MEMORY_COUNTERS pmc{};
+	if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
+		// WorkingSetSize = 実際にメモリ上に展開されているサイズ
+		size_t memoryUsageKB = pmc.WorkingSetSize / 1024; // KB
+		size_t memoryUsageMB = memoryUsageKB / 1024; // MB
+		ImGui::Text("Memory Usage : %zu KB / %zu MB", memoryUsageKB, memoryUsageMB);
+	}
+	ImGui::Separator();
+	ImGui::Text("Memory Usage Graph (MB)");
+	ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(1.0f, 0.0f, 0.0f, 1.0f)); // 赤色
+	ImGui::PlotLines(
+		"##MemoryPlot",
+		memoryHistory_.data(),
+		kMemoryHistorySize,
+		memoryHistoryIndex_,
+		nullptr,
+		0.0f,
+		500.0f,
+		ImVec2(0, 150)
+	);
+	ImGui::PopStyleColor();
+
+	ImGui::End();
 }
