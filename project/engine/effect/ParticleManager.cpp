@@ -366,39 +366,87 @@ void ParticleManager::Emit(const std::string name, Vector3& pos, uint32_t count)
 	}
 }
 
+//ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& randomEngine, const Vector3& center)
+//{
+//	std::uniform_real_distribution<float> distAngle(0.0f, 2.0f * std::numbers::pi_v<float>);
+//	std::uniform_real_distribution<float> distSpeed(0.8f, 2.0f);
+//	std::uniform_real_distribution<float> distScale(0.05f, 0.15f);
+//	std::uniform_real_distribution<float> distLifetime(0.15f, 0.3f);
+//	std::uniform_real_distribution<float> distOffset(-0.1f, 0.1f); // ★ 新規：中心からのずれ範囲
+//
+//	std::uniform_int_distribution<int> colorTypeDist(0, 3);
+//
+//	const Vector4 colorList[] = {
+//		{1.0f, 1.0f, 1.0f, 1.0f},  // 真っ白
+//		{0.0f, 0.0f, 1.0f, 1.0f},  // 青
+//		{1.0f, 0.0f, 0.0f, 1.0f},  // 赤
+//		{1.0f, 1.0f, 0.0f, 1.0f},  // 黄
+//		{1.0f, 0.5f, 0.5f, 1.0f},  // ピンク
+//		{0.5f, 1.0f, 0.5f, 1.0f},  // 緑
+//		{0.5f, 0.5f, 1.0f, 1.0f},  // 水色
+//		{1.0f, 0.5f, 1.0f, 1.0f},   // 紫
+//		{1.0f, 0.84f, 0.0f, 1.0f}  // 金色
+//	};
+//
+//	Particle particle;
+//
+//	// ★ 発生位置にランダムオフセットを加える
+//	Vector3 offset = {
+//		distOffset(randomEngine),
+//		distOffset(randomEngine),
+//		distOffset(randomEngine)
+//	};
+//	particle.transform.translate = center + offset;
+//
+//	// ランダム放射方向
+//	float theta = distAngle(randomEngine);
+//	float phi = distAngle(randomEngine);
+//
+//	Vector3 dir = {
+//		std::cos(theta) * std::sin(phi),
+//		std::cos(phi),
+//		std::sin(theta) * std::sin(phi)
+//	};
+//
+//	particle.velocity = dir * distSpeed(randomEngine);
+//	particle.transform.rotate = { 0.0f, 0.0f, 0.0f };
+//
+//	float scale = distScale(randomEngine);
+//	particle.transform.scale = { scale, scale, scale };
+//
+//	particle.color = colorList[colorTypeDist(randomEngine)];
+//
+//	particle.lifeTime = distLifetime(randomEngine);
+//	particle.currentTime = 0.0f;
+//
+//	return particle;
+//}
+
 ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& randomEngine, const Vector3& center)
 {
 	std::uniform_real_distribution<float> distAngle(0.0f, 2.0f * std::numbers::pi_v<float>);
-	std::uniform_real_distribution<float> distSpeed(0.8f, 2.0f);
+	std::uniform_real_distribution<float> distSpeed(1.0f, 2.5f);
 	std::uniform_real_distribution<float> distScale(0.05f, 0.15f);
-	std::uniform_real_distribution<float> distLifetime(0.15f, 0.3f);
-	std::uniform_real_distribution<float> distOffset(-0.1f, 0.1f); // ★ 新規：中心からのずれ範囲
-
-	std::uniform_int_distribution<int> colorTypeDist(0, 3);
+	std::uniform_real_distribution<float> distLifetime(0.3f, 0.6f);
+	std::uniform_real_distribution<float> distOffset(-0.2f, 0.2f);
+	std::uniform_int_distribution<int> colorTypeDist(0, 4);
 
 	const Vector4 colorList[] = {
-		{1.0f, 1.0f, 1.0f, 1.0f},  // 真っ白
-		{0.0f, 0.0f, 1.0f, 1.0f},  // 青
-		{1.0f, 0.0f, 0.0f, 1.0f},  // 赤
-		{1.0f, 1.0f, 0.0f, 1.0f},  // 黄
-		{1.0f, 0.5f, 0.5f, 1.0f},  // ピンク
-		{0.5f, 1.0f, 0.5f, 1.0f},  // 緑
-		{0.5f, 0.5f, 1.0f, 1.0f},  // 水色
-		{1.0f, 0.5f, 1.0f, 1.0f},   // 紫
-		{1.0f, 0.84f, 0.0f, 1.0f}  // 金色
+		{1.0f, 0.4f, 0.7f, 1.0f},
+		{0.2f, 0.8f, 1.0f, 1.0f},
+		{1.0f, 1.0f, 0.5f, 1.0f},
+		{1.0f, 0.7f, 0.2f, 1.0f},
+		{0.6f, 1.0f, 0.6f, 1.0f}
 	};
 
 	Particle particle;
 
-	// ★ 発生位置にランダムオフセットを加える
-	Vector3 offset = {
+	particle.transform.translate = center + Vector3{
 		distOffset(randomEngine),
 		distOffset(randomEngine),
 		distOffset(randomEngine)
 	};
-	particle.transform.translate = center + offset;
 
-	// ランダム放射方向
 	float theta = distAngle(randomEngine);
 	float phi = distAngle(randomEngine);
 
@@ -407,20 +455,25 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& randomE
 		std::cos(phi),
 		std::sin(theta) * std::sin(phi)
 	};
-
 	particle.velocity = dir * distSpeed(randomEngine);
-	particle.transform.rotate = { 0.0f, 0.0f, 0.0f };
 
 	float scale = distScale(randomEngine);
 	particle.transform.scale = { scale, scale, scale };
 
 	particle.color = colorList[colorTypeDist(randomEngine)];
-
 	particle.lifeTime = distLifetime(randomEngine);
 	particle.currentTime = 0.0f;
 
+	// オプション：ぐるぐる回転
+	particle.transform.rotate = {
+		distAngle(randomEngine),
+		distAngle(randomEngine),
+		distAngle(randomEngine)
+	};
+
 	return particle;
 }
+
 
 
 
