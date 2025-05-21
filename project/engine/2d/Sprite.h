@@ -78,6 +78,9 @@ public://メンバ関数
 	void Update();
 	void Draw();
 
+	void SetVisible(bool visible) { isVisible_ = visible; }
+	bool IsVisible() const { return isVisible_; }
+
 	// ImGuiのデバッグ処理
 	void ImGuiDebug();
 

@@ -111,9 +111,14 @@ void GameScene::Update()
 
 	UpdatePerformanceInfo(); // FPSの更新
 
+	// Player更新
 	if (player_) {
-		// 敵と連携
-		player_->Update(enemies_); // ロックオン用に渡す
+		std::vector<Enemy*> enemyPtrs;
+		for (const auto& enemy : enemies_) {
+			enemyPtrs.push_back(enemy.get());
+		}
+
+		player_->Update(enemyPtrs);
 
 		// 弾スプライト更新
 		int bulletCount = player_->GetBulletCount();
@@ -129,6 +134,7 @@ void GameScene::Update()
 			heartSprites_[i]->Update();
 		}
 	}
+
 
 	// 敵の更新＆削除
 	for (auto it = enemies_.begin(); it != enemies_.end();) {

@@ -19,6 +19,10 @@ public://メンバ関数
 	//終了
 	void Finalize();
 
+	int GetWindowWidth() const { return windowWidth_; }
+	int GetWindowHeight() const { return windowHeight_; }
+
+
 public://定数
 	//クライアント領域のサイズ
 	static const int32_t kClientWidth = 1280;
