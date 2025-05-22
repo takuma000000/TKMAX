@@ -353,8 +353,15 @@ void ParticleManager::CreateParticleGroup(const std::string& name, const std::st
 	newGroup.instancingResource = dxCommon_->CreateBufferResource(bufferSize);
 	newGroup.instancingResource->Map(0, nullptr, reinterpret_cast<void**>(&newGroup.instancingData));
 
-	uint32_t instanceSrvIndex = srvManager_->Allocate();
-	srvManager_->CreateSRVforStructureBuffer(instanceSrvIndex, newGroup.instancingResource.Get(), newGroup.kNumInstance, sizeof(ParticleForGPU));
+	// 構造化バッファ用のSRVを生成
+	srvManager_->CreateSRVforStructureBuffer(
+		instanceSrvIndex,
+		newGroup.instancingResource.Get(),
+		newGroup.kNumInstance,       // インスタンスの数
+		sizeof(ParticleForGPU)       // 各インスタンスの構造体サイズ
+	);
+
+	// SRVインデックスを記録
 	newGroup.srvIndex = instanceSrvIndex;
 
 	particleGroups[name] = newGroup;

@@ -79,58 +79,8 @@ void GameScene::Update()
 	//*-*-*-*-*-*-*-*-*-*-*
 	// object3d
 	//*-*-*-*-*-*-*-*-*-*-*
-	UpdateObjectTransform(object3d, { 0.0f, 0.0f, 00.0f }, { 0.0f,1.6f,0.0f }, { 1.0f, 1.0f, 1.0f });
-	///   translate       ///     rotate      ///       scale       ///
-
-	UpdateObjectTransform(ground_, { 0.0f, 0.0f, 0.0f }, { 0.0f,1.6f,0.0f }, { 1.0f, 1.0f, 1.0f });
-
-
-	Vector3 object3dRotate = object3d->GetRotate();
-	Vector3 object3dTranslate = object3d->GetTranslate();
-	Vector3 object3dScale = object3d->GetScale();
-
-	Vector3 direction = directionalLight_->GetDirection();
-
-	// 
-	ParticleManager::GetInstance()->Update();
-
-	// ────────────────────────────────────────
 	ImGuiDebug();
-	// ────────────────────────────────────────
-}
 
-	ImGui::Begin("Info");
-	ImGui::Text("FPS : %.2f", fps_);
-	ImGui::Separator();
-	ImGui::Text("FrameTime : %.2f ms", frameTimeMs_);
-	ImGui::Separator();
-	ImGui::Text("DrawCall : %d", drawCallCount_);
-	ImGui::Separator();
-	// メモリ使用量取得
-	PROCESS_MEMORY_COUNTERS pmc{};
-	if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
-		// WorkingSetSize = 実際にメモリ上に展開されているサイズ
-		size_t memoryUsageKB = pmc.WorkingSetSize / 1024; // KB
-		size_t memoryUsageMB = memoryUsageKB / 1024; // MB
-		ImGui::Text("Memory Usage : %zu KB / %zu MB", memoryUsageKB, memoryUsageMB);
-	}
-	ImGui::Separator();
-	ImGui::Text("Memory Usage Graph (MB)");
-	ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(1.0f, 0.0f, 0.0f, 1.0f)); // 赤色
-	ImGui::PlotLines(
-		"##MemoryPlot",
-		memoryHistory_.data(),
-		kMemoryHistorySize,
-		memoryHistoryIndex_,
-		nullptr,
-		0.0f,
-		500.0f,
-		ImVec2(0, 150)
-	);
-	ImGui::PopStyleColor();
-	ImGui::End();
-
-	dxCommon->ImGuiDebug();
 
 }
 
@@ -381,4 +331,60 @@ void GameScene::UpdateMemory()
 		memoryHistory_[memoryHistoryIndex_] = memoryUsageMB;
 		memoryHistoryIndex_ = (memoryHistoryIndex_ + 1) % kMemoryHistorySize;
 	}
+}
+
+void GameScene::ImGuiDebug()
+{
+	Vector3 object3dRotate = object3d->GetRotate();
+	Vector3 object3dTranslate = object3d->GetTranslate();
+	Vector3 object3dScale = object3d->GetScale();
+
+	Vector3 direction = directionalLight_->GetDirection();
+
+
+	ImGui::Begin("Object3d");
+	if (ImGui::DragFloat3("Object3dRotate", &object3dRotate.x, 0.01f))
+	{
+		object3d->SetRotate(object3dRotate);
+	}
+	if (ImGui::DragFloat3("Object3dTranslate", &object3dTranslate.x, 0.01f))
+	{
+		object3d->SetTranslate(object3dTranslate);
+	}
+	if (ImGui::DragFloat3("Object3dScale", &object3dScale.x, 0.01f))
+	{
+		object3d->SetScale(object3dScale);
+	}
+	ImGui::End();
+
+	ImGui::Begin("Info");
+	ImGui::Text("FPS : %.2f", fps_);
+	ImGui::Separator();
+	ImGui::Text("FrameTime : %.2f ms", frameTimeMs_);
+	ImGui::Separator();
+	ImGui::Text("DrawCall : %d", drawCallCount_);
+	ImGui::Separator();
+	// メモリ使用量取得
+	PROCESS_MEMORY_COUNTERS pmc{};
+	if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
+		// WorkingSetSize = 実際にメモリ上に展開されているサイズ
+		size_t memoryUsageKB = pmc.WorkingSetSize / 1024; // KB
+		size_t memoryUsageMB = memoryUsageKB / 1024; // MB
+		ImGui::Text("Memory Usage : %zu KB / %zu MB", memoryUsageKB, memoryUsageMB);
+	}
+	ImGui::Separator();
+	ImGui::Text("Memory Usage Graph (MB)");
+	ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(1.0f, 0.0f, 0.0f, 1.0f)); // 赤色
+	ImGui::PlotLines(
+		"##MemoryPlot",
+		memoryHistory_.data(),
+		kMemoryHistorySize,
+		memoryHistoryIndex_,
+		nullptr,
+		0.0f,
+		500.0f,
+		ImVec2(0, 150)
+	);
+	ImGui::PopStyleColor();
+	ImGui::End();
 }
