@@ -19,8 +19,8 @@ public://メンバ関数
 	//終了
 	void Finalize();
 
-	int GetWindowWidth() const { return windowWidth_; }
-	int GetWindowHeight() const { return windowHeight_; }
+	int GetWindowWidth() const { return kClientWidth; }
+	int GetWindowHeight() const { return kClientHeight; }
 
 
 public://定数

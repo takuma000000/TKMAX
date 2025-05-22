@@ -26,10 +26,10 @@ void GameScene::Initialize()
 	directionalLight_->Initialize({ 1.0f, 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 0.0f }, 1.0f);
 
 	// 共通初期化
-	object3dCommon_ = std::make_unique<Object3dCommon>();
+	object3dCommon_ = Object3dCommon::GetInstance();
 	object3dCommon_->Initialize(dxCommon);
 
-	spriteCommon_ = std::make_unique<SpriteCommon>();
+	spriteCommon_ = SpriteCommon::GetInstance(); // スプライト共通部
 	spriteCommon_->Initialize(dxCommon);
 
 	input_ = std::make_unique<Input>();
@@ -37,14 +37,14 @@ void GameScene::Initialize()
 
 	// プレイヤー初期化
 	player_ = std::make_unique<Player>();
-	player_->Initialize(object3dCommon_.get(), dxCommon, camera.get(), input_.get(), spriteCommon_.get());
+	player_->Initialize(object3dCommon_, dxCommon, camera.get(), input_.get(), spriteCommon_);
 	player_->SetCamera(camera.get());
-	player_->SetSpriteCommon(spriteCommon_.get());
+	player_->SetSpriteCommon(spriteCommon_);
 
 	// 弾スプライト生成
 	for (int i = 0; i < 15; i++) {
 		auto sprite = std::make_unique<Sprite>();
-		sprite->Initialize(spriteCommon_.get(), dxCommon, "./resources/bullet.png");
+		sprite->Initialize(spriteCommon_, dxCommon, "./resources/bullet.png");
 		sprite->SetPosition({ 20.0f + i * 30.0f, 20.0f });
 		sprite->SetSize({ 0.5f, 0.5f });
 		bulletSprites_.push_back(std::move(sprite));
@@ -53,7 +53,7 @@ void GameScene::Initialize()
 	// HP表示
 	for (int i = 0; i < 3; i++) {
 		auto heart = std::make_unique<Sprite>();
-		heart->Initialize(spriteCommon_.get(), dxCommon, "./resources/heart_CR.png");
+		heart->Initialize(spriteCommon_, dxCommon, "./resources/heart_CR.png");
 		heart->SetPosition({ 850.0f - i * 50.0f, 600.0f }); // 画面右下
 		heartSprites_.push_back(std::move(heart));
 	}
@@ -72,7 +72,7 @@ void GameScene::Initialize()
 
 	for (const auto& pos : enemyPositions) {
 		auto enemy = std::make_unique<Enemy>();
-		enemy->Initialize(object3dCommon_.get(), dxCommon, camera.get(), pos);
+		enemy->Initialize(object3dCommon_, dxCommon, camera.get(), pos);
 		enemy->SetCamera(camera.get());
 		enemies_.push_back(std::move(enemy));
 	}

@@ -108,6 +108,8 @@ private:
 	Transform cameraTransform;
 	Transform transform;
 
+	bool isVisible_ = true;
+
 	//回転
 	float rotation = 0.0f;
 

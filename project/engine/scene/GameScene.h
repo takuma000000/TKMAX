@@ -59,7 +59,7 @@ private:
 	// Player
 	std::unique_ptr<Player> player_ = nullptr;
 	std::unique_ptr<Input> input_ = nullptr;
-	std::unique_ptr<Object3dCommon> object3dCommon_ = nullptr;
+	Object3dCommon* object3dCommon_ = nullptr;
 	SpriteCommon* spriteCommon_ = nullptr;
 	std::vector<std::unique_ptr<Sprite>> bulletSprites_;
 	std::vector<std::unique_ptr<Sprite>> heartSprites_;
