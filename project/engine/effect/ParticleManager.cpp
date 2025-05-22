@@ -320,9 +320,6 @@ void ParticleManager::CreateParticleGroup(const std::string name, const std::str
 
 	newGroup.instancingResource->Map(0, nullptr, reinterpret_cast<void**>(&newGroup.instancingData));
 
-	// SRVインデックスを確保
-	uint32_t instanceSrvIndex = srvManager_->Allocate();
-
 	// 構造化バッファ用のSRVを生成
 	srvManager_->CreateSRVforStructureBuffer(
 		instanceSrvIndex,

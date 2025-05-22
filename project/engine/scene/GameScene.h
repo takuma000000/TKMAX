@@ -82,6 +82,9 @@ private: // ──────────────────── 更新�
 	//メモリ使用量
 	void UpdateMemory();
 
+	//ImGUiでのデバッグ表示
+	void ImGuiDebug();
+
 private:
 	DirectXCommon* dxCommon = nullptr;
 	SrvManager* srvManager = nullptr;
