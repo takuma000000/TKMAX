@@ -468,11 +468,11 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& randomE
 	particle.currentTime = 0.0f;
 
 	// オプション：ぐるぐる回転
-	particle.transform.rotate = {
+	/*particle.transform.rotate = {
 		distAngle(randomEngine),
 		distAngle(randomEngine),
 		distAngle(randomEngine)
-	};
+	};*/
 
 	return particle;
 }
