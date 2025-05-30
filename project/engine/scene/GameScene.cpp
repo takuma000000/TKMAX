@@ -24,7 +24,7 @@ void GameScene::Initialize()
 
 	// ──────────────── パーティクルの初期化 ───────────────
 	ParticleManager::GetInstance()->Initialize(dxCommon, srvManager, camera.get());
-	ParticleManager::GetInstance()->CreateParticleGroup("uv", "./resources/spark.png");
+	ParticleManager::GetInstance()->CreateParticleGroup("uv", "./resources/fire.png");
 	particleEmitter = std::make_unique<ParticleEmitter>();
 	particleEmitter->Initialize("uv", { 0.0f,2.5f,-20.0f });
 }
@@ -80,7 +80,7 @@ void GameScene::Update()
 	ParticleManager::GetInstance()->Update();
 
 	particleEmitter->Update();
-
+#ifdef _DEBUG
 	ImGui::Begin("Object3d");
 	if (ImGui::DragFloat3("Object3dRotate", &object3dRotate.x, 0.01f))
 	{
@@ -114,7 +114,7 @@ void GameScene::Update()
 
 	ImGui::End();
 
-
+#endif
 
 }
 
@@ -159,6 +159,7 @@ void GameScene::LoadTextures()
 	TextureManager::GetInstance()->LoadTexture("./resources/circle.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/sphere.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/spark.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/fire.png");
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*

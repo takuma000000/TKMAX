@@ -76,6 +76,7 @@ void ParticleManager::Update()
 				particleGroup->instancingData[particleGroupIterator->second.kNumInstance].color = (*particleIterator).color;
 				float alpha = 1.0f - ((*particleIterator).currentTime / (*particleIterator).lifeTime);
 				particleGroup->instancingData[particleGroupIterator->second.kNumInstance].color.w = alpha;
+				(*particleIterator).color.w = alpha;//色のアルファ値を更新する
 				++particleGroupIterator->second.kNumInstance;//生きているParticleの数を1つカウントする
 			}
 
@@ -422,60 +423,110 @@ void ParticleManager::Emit(const std::string name, Vector3& pos, uint32_t count)
 //	return particle;
 //}
 
+//ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& randomEngine, const Vector3& center)
+//{
+//	std::uniform_real_distribution<float> distAngle(0.0f, 2.0f * std::numbers::pi_v<float>);
+//	std::uniform_real_distribution<float> distSpeed(1.0f, 2.5f);
+//	std::uniform_real_distribution<float> distScale(0.05f, 0.15f);
+//	std::uniform_real_distribution<float> distLifetime(0.3f, 0.6f);
+//	std::uniform_real_distribution<float> distOffset(-0.2f, 0.2f);
+//	std::uniform_int_distribution<int> colorTypeDist(0, 4);
+//
+//	const Vector4 colorList[] = {
+//		{1.0f, 0.4f, 0.7f, 1.0f},
+//		{0.2f, 0.8f, 1.0f, 1.0f},
+//		{1.0f, 1.0f, 0.5f, 1.0f},
+//		{1.0f, 0.7f, 0.2f, 1.0f},
+//		{0.6f, 1.0f, 0.6f, 1.0f},
+//		{0.5f, 0.5f, 1.0f, 1.0f},
+//		{1.0f, 0.5f, 1.0f, 1.0f},
+//		{1.0f, 0.84f, 0.0f, 1.0f}
+//	};
+//
+//	Particle particle;
+//
+//	particle.transform.translate = center + Vector3{
+//		distOffset(randomEngine),
+//		distOffset(randomEngine),
+//		distOffset(randomEngine)
+//	};
+//
+//	float theta = distAngle(randomEngine);
+//	float phi = distAngle(randomEngine);
+//
+//	Vector3 dir = {
+//		std::cos(theta) * std::sin(phi),
+//		std::cos(phi),
+//		std::sin(theta) * std::sin(phi)
+//	};
+//	particle.velocity = dir * distSpeed(randomEngine);
+//
+//	float scale = distScale(randomEngine);
+//	particle.transform.scale = { scale, scale, scale };
+//
+//	particle.color = colorList[colorTypeDist(randomEngine)];
+//	particle.lifeTime = distLifetime(randomEngine);
+//	particle.currentTime = 0.0f;
+//
+//	// オプション：ぐるぐる回転
+//	/*particle.transform.rotate = {
+//		distAngle(randomEngine),
+//		distAngle(randomEngine),
+//		distAngle(randomEngine)
+//	};*/
+//
+//	return particle;
+//}
+
 ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& randomEngine, const Vector3& center)
 {
-	std::uniform_real_distribution<float> distAngle(0.0f, 2.0f * std::numbers::pi_v<float>);
-	std::uniform_real_distribution<float> distSpeed(1.0f, 2.5f);
-	std::uniform_real_distribution<float> distScale(0.05f, 0.15f);
-	std::uniform_real_distribution<float> distLifetime(0.3f, 0.6f);
-	std::uniform_real_distribution<float> distOffset(-0.2f, 0.2f);
-	std::uniform_int_distribution<int> colorTypeDist(0, 4);
-
-	const Vector4 colorList[] = {
-		{1.0f, 0.4f, 0.7f, 1.0f},
-		{0.2f, 0.8f, 1.0f, 1.0f},
-		{1.0f, 1.0f, 0.5f, 1.0f},
-		{1.0f, 0.7f, 0.2f, 1.0f},
-		{0.6f, 1.0f, 0.6f, 1.0f},
-		{0.5f, 0.5f, 1.0f, 1.0f},
-		{1.0f, 0.5f, 1.0f, 1.0f},
-		{1.0f, 0.84f, 0.0f, 1.0f}
-	};
+	std::uniform_real_distribution<float> distOffset(-0.1f, 0.1f); // 軽く散らす
+	std::uniform_real_distribution<float> distScale(0.7f, 1.1f);   // 適度なサイズ
+	std::uniform_real_distribution<float> distLife(0.2f, 0.3f);    // 表示時間
+	std::uniform_real_distribution<float> distColor(0.9f, 1.0f);
+	std::uniform_real_distribution<float> distVelocity(-0.03f, 0.03f); // 微小な動き
 
 	Particle particle;
 
-	particle.transform.translate = center + Vector3{
+	// 初期位置
+	Vector3 offset = {
 		distOffset(randomEngine),
 		distOffset(randomEngine),
-		distOffset(randomEngine)
+		0.0f
+	};
+	particle.transform.translate = center + offset;
+
+	// 微細な速度（ランダム方向）
+	particle.velocity = {
+		distVelocity(randomEngine),
+		distVelocity(randomEngine),
+		0.0f // Z方向には動かさない
 	};
 
-	float theta = distAngle(randomEngine);
-	float phi = distAngle(randomEngine);
-
-	Vector3 dir = {
-		std::cos(theta) * std::sin(phi),
-		std::cos(phi),
-		std::sin(theta) * std::sin(phi)
-	};
-	particle.velocity = dir * distSpeed(randomEngine);
-
+	// スケール
 	float scale = distScale(randomEngine);
 	particle.transform.scale = { scale, scale, scale };
 
-	particle.color = colorList[colorTypeDist(randomEngine)];
-	particle.lifeTime = distLifetime(randomEngine);
+	// 色（少し温かい白）
+	particle.color = {
+		distColor(randomEngine),
+		distColor(randomEngine) * 0.95f,
+		distColor(randomEngine) * 0.85f,
+		1.0f
+	};
+
+	// 時間
+	particle.lifeTime = distLife(randomEngine);
 	particle.currentTime = 0.0f;
 
-	// オプション：ぐるぐる回転
-	/*particle.transform.rotate = {
-		distAngle(randomEngine),
-		distAngle(randomEngine),
-		distAngle(randomEngine)
-	};*/
+	// 回転（ランダムに回してもOKだが今は使わない）
+	particle.transform.rotate = { 0.0f, 0.0f, 0.0f };
 
 	return particle;
 }
+
+
+
 
 
 

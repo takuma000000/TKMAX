@@ -4,8 +4,8 @@ void ParticleEmitter::Initialize(std::string name, Vector3 pos)
 {
 	this->name = name;
 
-	emitter.count = 16;//パーティクルの数
-	emitter.frequency = 0.5f;//パーティクルの発生間隔
+	emitter.count = 6;//パーティクルの数
+	emitter.frequency = 1.0f;//パーティクルの発生間隔
 	emitter.frequencyTime = 0.0f;//発生間隔のカウント
 	emitter.transform.translate = pos;//パーティクルの発生位置
 	emitter.transform.rotate = { 0.0f,0.0f,0.0f };//パーティクルの回転
