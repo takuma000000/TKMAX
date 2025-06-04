@@ -1000,10 +1000,6 @@ void DirectXCommon::PostDraw()
 	commandList->SetGraphicsRootSignature(rootSignature.Get());
 	commandList->SetPipelineState(graphicsPipelineState.Get());
 
-	// RenderTexture を SRV として使う描画の直前に追加
-	D3D12_GPU_VIRTUAL_ADDRESS cbvAddress = thresholdBuffer_->GetGPUVirtualAddress();
-	commandList->SetGraphicsRootConstantBufferView(1, cbvAddress);
-
 	// SRVヒープのバインド
 	ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap.Get() };
 	commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
