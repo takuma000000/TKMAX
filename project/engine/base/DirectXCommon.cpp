@@ -89,13 +89,19 @@ void DirectXCommon::CreateRootSignatureDX() {
 	srvRange[0].RegisterSpace = 0;
 	srvRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
+	srvRange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	srvRange[1].NumDescriptors = 1;
+	srvRange[1].BaseShaderRegister = 1; // t1
+	srvRange[1].RegisterSpace = 0;
+	srvRange[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParameters[0].DescriptorTable.NumDescriptorRanges = 1;
-	rootParameters[0].DescriptorTable.pDescriptorRanges = &srvRange;
+	rootParameters[0].DescriptorTable.NumDescriptorRanges = 2;
+	rootParameters[0].DescriptorTable.pDescriptorRanges = srvRange;
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
-	// CBV (b0)
-	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	// === ✅ 正しくCBVにする（ここ！） ===
+	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV; // ←ここをDescriptorTableではなくCBVに！
 	rootParameters[1].Descriptor.ShaderRegister = 0; // b0
 	rootParameters[1].Descriptor.RegisterSpace = 0;
 	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
@@ -219,6 +225,21 @@ void DirectXCommon::CreatePipelineStateDX()
 	assert(SUCCEEDED(hr));
 }
 
+void DirectXCommon::CreateDepthSRV()
+{
+	D3D12_SHADER_RESOURCE_VIEW_DESC depthSrvDesc{};
+	depthSrvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+	depthSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	depthSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	depthSrvDesc.Texture2D.MipLevels = 1;
+
+	D3D12_CPU_DESCRIPTOR_HANDLE handle = srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	handle.ptr += descriptorSizeSRV * kDepthSRVIndex;
+
+	device->CreateShaderResourceView(depthStencilResource.Get(), &depthSrvDesc, handle);
+}
+
+
 Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> DirectXCommon::CreateDescriptorHeap(
 	D3D12_DESCRIPTOR_HEAP_TYPE heapType,
 	UINT numDescriptors,
@@ -262,6 +283,40 @@ void DirectXCommon::Initialize(WindowsAPI* windowsAPI)
 	CreateRenderTextureReaourceSRV();
 	CreatePipelineStateDX();
 	CreateDepthSRV();
+
+	// === Dissolve用定数バッファ（threshold） ===
+	thresholdBuffer_ = CreateBufferResource(sizeof(ThresholdParam));
+	thresholdBuffer_->SetName(L"ThresholdBuffer");
+	thresholdBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&thresholdMappedData_));
+	thresholdMappedData_->threshold = 0.5f; // 初期値
+
+	// === noise0.png 読み込みとSRV作成 ===
+	DirectX::ScratchImage noiseImage{};
+	std::wstring filePathW = ConvertString("resources/noise0.png");
+	HRESULT hr = DirectX::LoadFromWICFile(filePathW.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, noiseImage);
+	assert(SUCCEEDED(hr));
+
+	DirectX::ScratchImage mipImages{};
+	hr = DirectX::GenerateMipMaps(
+		noiseImage.GetImages(), noiseImage.GetImageCount(),
+		noiseImage.GetMetadata(), DirectX::TEX_FILTER_SRGB, 0, mipImages);
+	assert(SUCCEEDED(hr));
+
+	auto noiseTex = CreateTextureResource(mipImages.GetMetadata());
+	UploadTextureData(noiseTex.Get(), mipImages);
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+	srvDesc.Format = mipImages.GetMetadata().format;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = 1;
+
+	D3D12_CPU_DESCRIPTOR_HANDLE handle = srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	handle.ptr += descriptorSizeSRV * kDepthSRVIndex;
+	device->CreateShaderResourceView(noiseTex.Get(), &srvDesc, handle);
+
+
+
 }
 
 void DirectXCommon::InitializeDevice()
@@ -684,8 +739,8 @@ void DirectXCommon::CreateRenderTextureReaourceRTV()
 	renderTextureResource->SetName(L"RenderTexture");
 
 	// RTVヒープの3番目にRenderTextureのハンドルを割り当てる（0,1はswapchain用）
-	rtvHandles[2] = rtvHeap_->GetCPUDescriptorHandleForHeapStart();
-	rtvHandles[2].ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV) * 2;
+	rtvHandles[kRenderTextureRTVIndex] = rtvHeap_->GetCPUDescriptorHandleForHeapStart();
+	rtvHandles[kRenderTextureRTVIndex].ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV) * kRenderTextureRTVIndex;
 
 	device->CreateRenderTargetView(renderTextureResource.Get(), &rtvDesc, rtvHandles[2]);
 }
@@ -700,9 +755,8 @@ void DirectXCommon::CreateRenderTextureReaourceSRV()
 	renderTextureSrvDesc.Texture2D.MipLevels = 1;
 
 	// 例：SRVの10番にRenderTextureを割り当てる（0〜9は他テクスチャに使う前提）
-	uint32_t renderTextureSRVIndex = 10;
 	D3D12_CPU_DESCRIPTOR_HANDLE handle = srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	handle.ptr += descriptorSizeSRV * renderTextureSRVIndex;
+	handle.ptr += descriptorSizeSRV * kRenderTextureSRVIndex;
 
 	device->CreateShaderResourceView(renderTextureResource.Get(), &renderTextureSrvDesc, handle);
 }
@@ -895,10 +949,10 @@ void DirectXCommon::PreDraw()
 	
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
-	commandList->OMSetRenderTargets(1, &rtvHandles[2], false, &dsvHandle);
+	commandList->OMSetRenderTargets(1, &rtvHandles[kRenderTextureRTVIndex], false, &dsvHandle);
 
 	float clearRenderTextureColor[] = { 1.0f, 0.0f, 0.0f, 1.0f };
-	commandList->ClearRenderTargetView(rtvHandles[2], clearRenderTextureColor, 0, nullptr);
+	commandList->ClearRenderTargetView(rtvHandles[kRenderTextureRTVIndex], clearRenderTextureColor, 0, nullptr);
 	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	commandList->RSSetViewports(1, &viewport);
@@ -946,13 +1000,17 @@ void DirectXCommon::PostDraw()
 	commandList->SetGraphicsRootSignature(rootSignature.Get());
 	commandList->SetPipelineState(graphicsPipelineState.Get());
 
+	// RenderTexture を SRV として使う描画の直前に追加
+	D3D12_GPU_VIRTUAL_ADDRESS cbvAddress = thresholdBuffer_->GetGPUVirtualAddress();
+	commandList->SetGraphicsRootConstantBufferView(1, cbvAddress);
+
 	// SRVヒープのバインド
 	ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap.Get() };
 	commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
 	// SRV（t0）にRenderTextureの10番目をバインド
 	D3D12_GPU_DESCRIPTOR_HANDLE gpuHandle = srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
-	gpuHandle.ptr += descriptorSizeSRV * 10; // t0 = RenderTexture（index 10）
+	gpuHandle.ptr += descriptorSizeSRV * kRenderTextureSRVIndex;
 	commandList->SetGraphicsRootDescriptorTable(0, gpuHandle);
 
 
