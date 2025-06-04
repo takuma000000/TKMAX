@@ -288,10 +288,13 @@ void MyGame::Update() {
 				float distance = MyMath::Distance(enemy->GetPosition(), bullet->GetPosition());
 				// 衝突判定
 				if (distance < collisionThreshold) {
-					enemy->OnCollision(); // 敵の被弾処理
-					bullet->Deactivate(); // 弾を無効化
+					Vector3 knockDir = enemy->GetPosition() - bullet->GetPosition();
+					enemy->ApplyHitReaction(bullet->GetPosition(), 0.2f); // ←速度はお好みで
+					enemy->DecreaseHP();                   // ★ダメージを与える（HP制）
+					bullet->Deactivate();                  // 弾は消える
 					break;
 				}
+
 			}
 			// 敵が死んだら削除
 			if (enemy->IsDead()) {

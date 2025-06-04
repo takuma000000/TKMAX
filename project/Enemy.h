@@ -50,6 +50,18 @@ private:
 	bool isDead_ = false;
 
 private:
+	int hp_ = 3; // ★追加
+
+	Vector3 hitMoveVelocity_ = { 0, 0, 0 };
+	float hitMoveTime_ = 0.0f;
+
+public:
+	void DecreaseHP(int amount = 1); // ★追加
+	void ApplyHitReaction(const Vector3& sourcePosition, float speed);
+
+
+
+private:
 	Vector3 velocity_;  // 速度ベクトル
 	Vector3 initialPosition_; // 初期位置を保持
 	float moveRadius_ = 3.0f; // 移動範囲の制限

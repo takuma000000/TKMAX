@@ -25,6 +25,37 @@ void Enemy::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommon, 
 }
 
 void Enemy::Update(Player* player) {
+
+	// 
+	if (hitMoveTime_ > 0.0f) {
+		transform_.translate.x += hitMoveVelocity_.x;
+		transform_.translate.y += hitMoveVelocity_.y;
+		hitMoveTime_ -= 1.0f / 60.0f;
+
+		if (hitMoveTime_ <= 0.0f) {
+			hitMoveVelocity_ = { 0, 0, 0 };
+			ChangeDirection(); // ←方向を再設定すると自然に戻る
+		}
+	} else {
+		moveChangeTimer_--;
+
+		if (moveChangeTimer_ <= 0) {
+			ChangeDirection();
+			moveChangeTimer_ = rand() % 90 + 30;
+		}
+
+		transform_.translate.x += velocity_.x;
+		transform_.translate.y += velocity_.y;
+
+		if (transform_.translate.x > initialPosition_.x + moveRadius_ || transform_.translate.x < initialPosition_.x - moveRadius_) {
+			velocity_.x = -velocity_.x;
+		}
+		if (transform_.translate.y > initialPosition_.y + moveRadius_ || transform_.translate.y < initialPosition_.y - moveRadius_) {
+			velocity_.y = -velocity_.y;
+		}
+	}
+
+
 	moveChangeTimer_--;
 
 	// 一定時間ごとに方向変更
@@ -93,6 +124,26 @@ void Enemy::ChangeDirection()
 	velocity_.x = velocity_.x * 0.8f + newVelocity.x * 0.2f;
 	velocity_.y = velocity_.y * 0.8f + newVelocity.y * 0.2f;
 }
+
+void Enemy::DecreaseHP(int amount)
+{
+	hp_ -= amount;
+	if (hp_ <= 0) {
+		isDead_ = true;
+	}
+}
+
+void Enemy::ApplyHitReaction(const Vector3& sourcePosition, float speed)
+{
+	Vector3 diff = transform_.translate - sourcePosition;
+	diff.z = 0.0f; // Z方向は無視
+
+	Vector3 dir = MyMath::Normalize(diff);
+	hitMoveVelocity_ = dir * speed;
+	hitMoveTime_ = 0.5f; // 0.5秒間だけ滑るように移動
+}
+
+
 
 void Enemy::FireBullet(const Vector3& playerPos)
 {
