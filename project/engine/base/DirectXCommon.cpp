@@ -989,16 +989,16 @@ void DirectXCommon::PostDraw()
 	assert(graphicsPipelineState != nullptr);
 	assert(srvDescriptorHeap != nullptr);
 
-	// RenderTexture を SRV として使う描画の直前に追加
-	D3D12_GPU_VIRTUAL_ADDRESS cbvAddress = thresholdBuffer_->GetGPUVirtualAddress();
-	commandList->SetGraphicsRootConstantBufferView(1, cbvAddress);
-
 	// ==========================
 	// ① RenderTextureをSRVとして使用（ポストエフェクト描画）
 	// ==========================
 	commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, nullptr);
 	commandList->SetGraphicsRootSignature(rootSignature.Get());
 	commandList->SetPipelineState(graphicsPipelineState.Get());
+
+	// RenderTexture を SRV として使う描画の直前に追加
+	D3D12_GPU_VIRTUAL_ADDRESS cbvAddress = thresholdBuffer_->GetGPUVirtualAddress();
+	commandList->SetGraphicsRootConstantBufferView(1, cbvAddress);
 
 	// SRVヒープのバインド
 	ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap.Get() };
