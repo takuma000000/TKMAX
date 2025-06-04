@@ -63,8 +63,8 @@ void GameScene::Update()
 
 	//sprite->Update();
 
-	object3d->Update();
-	ground_->Update();
+	//object3d->Update();
+	//ground_->Update();
 	//anotherObject3d->Update();
 	// ライトの更新
 	directionalLight_->Update();
@@ -96,8 +96,8 @@ void GameScene::Draw()
 	Object3dCommon::GetInstance()->DrawSetCommon();
 
 	//sprite->Draw();  // textureSrvHandleGPU は必要に応じて設定
-	object3d->Draw(dxCommon);
-	ground_->Draw(dxCommon);
+	//object3d->Draw(dxCommon);
+	//ground_->Draw(dxCommon);
 	//anotherObject3d->Draw(dxCommon);
 
 	// 
@@ -160,16 +160,16 @@ void GameScene::LoadModels()
 void GameScene::InitializeObjects()
 {
 
-	object3d = std::make_unique<Object3d>();
+	/*object3d = std::make_unique<Object3d>();
 	object3d->Initialize(Object3dCommon::GetInstance(), dxCommon);
 	object3d->SetModel("sphere.obj");
-	object3d->SetParentScene(this);
+	object3d->SetParentScene(this);*/
 
 	//地面
-	ground_ = std::make_unique<Object3d>();
+	/*ground_ = std::make_unique<Object3d>();
 	ground_->Initialize(Object3dCommon::GetInstance(), dxCommon);
 	ground_->SetModel("terrain.obj");
-	ground_->SetParentScene(this);
+	ground_->SetParentScene(this);*/
 
 	/*anotherObject3d = std::make_unique<Object3d>();
 	anotherObject3d->Initialize(Object3dCommon::GetInstance(), dxCommon);
@@ -186,21 +186,21 @@ void GameScene::InitializeCamera()
 	camera->SetRotate({ 0.0f,0.0f,0.0f });
 	camera->SetTranslate({ 0.0f,2.5f,-25.0f });
 
-	object3d->SetCamera(camera.get());
-	ground_->SetCamera(camera.get());
+	//object3d->SetCamera(camera.get());
+	//ground_->SetCamera(camera.get());
 	//anotherObject3d->SetCamera(camera.get());
 }
 
 void GameScene::ImGuiDebug()
 {
-	Vector3 object3dRotate = object3d->GetRotate();
+	/*Vector3 object3dRotate = object3d->GetRotate();
 	Vector3 object3dTranslate = object3d->GetTranslate();
 	Vector3 object3dScale = object3d->GetScale();
 
-	Vector3 direction = directionalLight_->GetDirection();
+	Vector3 direction = directionalLight_->GetDirection();*/
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	ImGui::Begin("Object3d");
+	/*ImGui::Begin("Object3d");
 	if (ImGui::DragFloat3("Object3dRotate", &object3dRotate.x, 0.01f))
 	{
 		object3d->SetRotate(object3dRotate);
@@ -213,7 +213,7 @@ void GameScene::ImGuiDebug()
 	{
 		object3d->SetScale(object3dScale);
 	}
-	ImGui::End();
+	ImGui::End();*/
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	ImGui::Begin("Info");
 	ImGui::Text("FPS : %.2f", fps_);
