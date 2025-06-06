@@ -6,6 +6,7 @@
 #include "MyMath.h"
 #include <psapi.h>
 #include <Input.h>
+#include "externals/nlohmann/json.hpp"
 
 void GameScene::Initialize()
 {
