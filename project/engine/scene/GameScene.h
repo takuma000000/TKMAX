@@ -20,6 +20,7 @@
 #include "engine/func/math/Vector3.h"
 
 #include "Player.h"
+#include "Enemy.h"
 
 class GameScene : public BaseScene
 {
@@ -114,5 +115,7 @@ private:
 	std::unique_ptr<ParticleEmitter> particleEmitter = nullptr;
 
 	std::unique_ptr<Player> player_ = nullptr;
+	std::unique_ptr<Enemy> enemy_ = nullptr;
+
 };
 

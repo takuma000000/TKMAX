@@ -66,6 +66,7 @@ void GameScene::Update()
 	//object3d->Update();
 	ground_->Update();
 	player_->Update();
+	enemy_->Update();
 	//anotherObject3d->Update();
 	// ライトの更新
 	directionalLight_->Update();
@@ -100,6 +101,7 @@ void GameScene::Draw()
 	//object3d->Draw(dxCommon);
 	ground_->Draw(dxCommon);
 	player_->Draw();
+	enemy_->Draw();
 	//anotherObject3d->Draw(dxCommon);
 
 	// 
@@ -176,6 +178,9 @@ void GameScene::InitializeObjects()
 	player_ = std::make_unique<Player>();
 	player_->Initialize(dxCommon);
 
+	enemy_ = std::make_unique<Enemy>();
+	enemy_->Initialize(dxCommon);
+
 	/*anotherObject3d = std::make_unique<Object3d>();
 	anotherObject3d->Initialize(Object3dCommon::GetInstance(), dxCommon);
 	anotherObject3d->SetModel("plane.obj");*/
@@ -195,6 +200,7 @@ void GameScene::InitializeCamera()
 	ground_->SetCamera(camera.get());
 
 	player_->SetCamera(camera.get());
+	enemy_->SetCamera(camera.get());
 	//anotherObject3d->SetCamera(camera.get());
 }
 
@@ -238,6 +244,21 @@ void GameScene::ImGuiDebug()
 	if (ImGui::DragFloat3("PlayerScale", &playerScale.x, 0.01f))
 	{
 		player_->GetObject3d()->SetScale(playerScale);
+	}
+	ImGui::End();
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	ImGui::Begin("Enemy");
+	Vector3 enemyRotate = enemy_->GetObject3d()->GetRotate();
+	Vector3 enemyTranslate = enemy_->GetObject3d()->GetTranslate();
+	Vector3 enemyScale = enemy_->GetObject3d()->GetScale();
+	if (ImGui::DragFloat3("EnemyRotate", &enemyRotate.x, 0.01f)) {
+		enemy_->GetObject3d()->SetRotate(enemyRotate);
+	}
+	if (ImGui::DragFloat3("EnemyTranslate", &enemyTranslate.x, 0.01f)) {
+		enemy_->GetObject3d()->SetTranslate(enemyTranslate);
+	}
+	if (ImGui::DragFloat3("EnemyScale", &enemyScale.x, 0.01f)) {
+		enemy_->GetObject3d()->SetScale(enemyScale);
 	}
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
