@@ -63,8 +63,9 @@ void GameScene::Update()
 
 	//sprite->Update();
 
-	object3d->Update();
+	//object3d->Update();
 	ground_->Update();
+	player_->Update();
 	//anotherObject3d->Update();
 	// ライトの更新
 	directionalLight_->Update();
@@ -96,8 +97,9 @@ void GameScene::Draw()
 	Object3dCommon::GetInstance()->DrawSetCommon();
 
 	//sprite->Draw();  // textureSrvHandleGPU は必要に応じて設定
-	object3d->Draw(dxCommon);
+	//object3d->Draw(dxCommon);
 	ground_->Draw(dxCommon);
+	player_->Draw();
 	//anotherObject3d->Draw(dxCommon);
 
 	// 
@@ -171,6 +173,9 @@ void GameScene::InitializeObjects()
 	ground_->SetModel("terrain.obj");
 	ground_->SetParentScene(this);
 
+	player_ = std::make_unique<Player>();
+	player_->Initialize(dxCommon);
+
 	/*anotherObject3d = std::make_unique<Object3d>();
 	anotherObject3d->Initialize(Object3dCommon::GetInstance(), dxCommon);
 	anotherObject3d->SetModel("plane.obj");*/
@@ -188,6 +193,8 @@ void GameScene::InitializeCamera()
 
 	object3d->SetCamera(camera.get());
 	ground_->SetCamera(camera.get());
+
+	player_->SetCamera(camera.get());
 	//anotherObject3d->SetCamera(camera.get());
 }
 
@@ -212,6 +219,25 @@ void GameScene::ImGuiDebug()
 	if (ImGui::DragFloat3("Object3dScale", &object3dScale.x, 0.01f))
 	{
 		object3d->SetScale(object3dScale);
+	}
+	ImGui::End();
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	ImGui::Begin("Player");
+	// PlayerのTransformを更新
+	Vector3 playerRotate = player_->GetObject3d()->GetRotate();
+	Vector3 playerTranslate = player_->GetObject3d()->GetTranslate();
+	Vector3 playerScale = player_->GetObject3d()->GetScale();
+	if (ImGui::DragFloat3("PlayerRotate", &playerRotate.x, 0.01f))
+	{
+		player_->GetObject3d()->SetRotate(playerRotate);
+	}
+	if (ImGui::DragFloat3("PlayerTranslate", &playerTranslate.x, 0.01f))
+	{
+		player_->GetObject3d()->SetTranslate(playerTranslate);
+	}
+	if (ImGui::DragFloat3("PlayerScale", &playerScale.x, 0.01f))
+	{
+		player_->GetObject3d()->SetScale(playerScale);
 	}
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////

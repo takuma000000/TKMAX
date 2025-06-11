@@ -339,8 +339,9 @@ void Object3d::Light(DirectXCommon* dxCommon)
 	materialResourceLight->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
 	//デフォルト値を書き込んでおく
 	directionalLightData->color = { 1.0f,1.0f,1.0f,1.0f };
-	directionalLightData->direction = { 1.0f, 0.0f, 0.0f }; // 斜め上から光を当てる
-	directionalLightData->intensity = 0.0f;//光の強さ
+	directionalLightData->intensity = 2.0f; // 一般的に十分見える強さ
+	directionalLightData->direction = MyMath::Normalize({ -0.5f, -1.0f, -0.5f });
+
 }
 
 void Object3d::PointLight(DirectXCommon* dxCommon)
@@ -370,7 +371,7 @@ void Object3d::SpotLight(DirectXCommon* dxCommon)
 	//デフォルト値を書き込んでおく
 	spotLightData->color = { 1.0f,1.0f,1.0f,1.0f };
 	spotLightData->position = { 2.0f,1.25f,0.0f };
-	spotLightData->intensity = 4.0f;//光の強さ
+	spotLightData->intensity = 0.0f;//光の強さ
 	spotLightData->direction = MyMath::Normalize({ -1.0f, -1.0f, 0.0f });
 	spotLightData->distance = 7.0f;
 	spotLightData->decay = 2.0f;
