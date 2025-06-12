@@ -13,6 +13,18 @@ public:
 
 	void Update();
 
+	inline const std::string& GetName() const { return name; }
+
+	inline Vector3 GetPosition() const { return emitter.transform.translate; }
+
+	inline float GetFrequency() const { return emitter.frequency; }
+
+	inline uint32_t GetCount() const { return emitter.count; }
+
+	inline void SetFrequency(float freq) { emitter.frequency = freq; }
+
+	inline void SetCount(uint32_t count) { emitter.count = count; }
+
 private:
 
 	struct Emitter {

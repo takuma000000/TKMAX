@@ -18,9 +18,11 @@
 #include "engine/effect/ParticleManager.h"
 #include "engine/effect/ParticlerEmitter.h"
 #include "engine/func/math/Vector3.h"
+#include <list>
 
 #include "Player.h"
 #include "Enemy.h"
+#include "PlayerBullet.h"
 
 class GameScene : public BaseScene
 {
@@ -116,6 +118,9 @@ private:
 
 	std::unique_ptr<Player> player_ = nullptr;
 	std::unique_ptr<Enemy> enemy_ = nullptr;
+	std::list<std::unique_ptr<PlayerBullet>> bullets_;
+
+	bool debugEmitFlag_ = false; // ImGuiチェック用
 
 };
 

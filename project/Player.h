@@ -16,6 +16,7 @@ public:
 	void SetCamera(Camera* cam);
 	Object3d* GetObject3d() const; // Cameraセット用に
 
+
 private:
 	DirectXCommon* dxCommon_ = nullptr;
 

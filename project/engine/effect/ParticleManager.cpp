@@ -401,24 +401,46 @@ void ParticleManager::Emit(const std::string name, Vector3& pos, uint32_t count)
 
 ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate)
 {
-	std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);//位置の範囲を指定
-	std::uniform_real_distribution<float> distColor(0.0f, 1.0f);//色の範囲を指定
-	std::uniform_real_distribution<float> distRotate(-std::numbers::pi_v<float>, std::numbers::pi_v<float>);//回転の範囲を指定
-	std::uniform_real_distribution<float> distScale(0.4f, 1.5f);//スケールの範囲を指定
-	//一定時間で消えるようにする
-	std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
+	std::uniform_real_distribution<float> distPos(-0.2f, 0.2f);     // ばらける範囲広め
+	std::uniform_real_distribution<float> distVel(-0.6f, 0.6f);     // 弾ける強さUP
+	std::uniform_real_distribution<float> distScale(0.5f, 3.0f);    // ← サイズ大きく
+	std::uniform_real_distribution<float> distTime(0.8f, 1.5f);     // ← 寿命ちょい長め
+	std::uniform_real_distribution<float> distColor(0.8f, 1.0f);    // 白～黄
+
 	Particle particle;
-	particle.transform.scale = { 1.0f,1.0f,1.0f };//スケールを指定
-	particle.transform.rotate = { 0.0f,0.0f,0.0f };//回転を指定
-	//位置と速度を[-1,1]でランダムに初期化
-	Vector3 randomTranslate{ distribution(randomEngine),distribution(randomEngine),distribution(randomEngine) };
-	particle.transform.translate = translate;//位置を指定
-	particle.velocity = { 0.0f,0.0f,0.0f };//速度を指定
-	particle.color = { 1.0f,1.0f,1.0f,1.0f };//色を指定
-	particle.lifeTime = 1.0f;//生存時間を指定
-	particle.currentTime = 0.0f;//経過時間を指定
+
+	particle.transform.scale = {
+		distScale(randomEngine),
+		distScale(randomEngine),
+		distScale(randomEngine)
+	};
+	particle.transform.rotate = { 0.0f, 0.0f, 0.0f };
+	particle.transform.translate = translate + Vector3(
+		distPos(randomEngine),
+		distPos(randomEngine),
+		distPos(randomEngine)
+	);
+
+	// 上にも弾け飛ばす
+	particle.velocity = Vector3(
+		distVel(randomEngine),
+		distVel(randomEngine) + 0.3f, // 上向き追加
+		distVel(randomEngine)
+	);
+
+	// 黄色寄りの白（赤と緑強め）
+	float r = 1.0f;
+	float g = distColor(randomEngine);
+	float b = distColor(randomEngine) * 0.3f;
+	particle.color = { r, g, b, 1.0f };
+
+	particle.lifeTime = distTime(randomEngine);
+	particle.currentTime = 0.0f;
+
 	return particle;
 }
+
+
 
 void ParticleManager::CreateRingVertices()
 {

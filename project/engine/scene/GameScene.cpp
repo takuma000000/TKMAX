@@ -27,9 +27,9 @@ void GameScene::Initialize()
 
 	// ──────────────── パーティクルの初期化 ───────────────
 	ParticleManager::GetInstance()->Initialize(dxCommon, srvManager, camera.get());
-	ParticleManager::GetInstance()->CreateParticleGroup("uv", "./resources/gradationLine.png", ParticleManager::ParticleType::CYLINDER);
+	ParticleManager::GetInstance()->CreateParticleGroup("hitEffect", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
 	particleEmitter = std::make_unique<ParticleEmitter>();
-	particleEmitter->Initialize("uv", { 0.0f,2.5f,10.0f });
+	particleEmitter->Initialize("hitEffect", { 0.0f,0.0f,10.0f });
 }
 
 void GameScene::Finalize()
@@ -51,6 +51,8 @@ void GameScene::Update()
 	ResetDrawCallCount();
 	UpdateMemory(); // メモリ使用量の更新
 
+	ParticleManager::GetInstance()->Update();
+
 	particleEmitter->Update();
 	//particleEmitter->Emit();
 
@@ -67,7 +69,49 @@ void GameScene::Update()
 	ground_->Update();
 	player_->Update();
 	enemy_->Update();
-	//anotherObject3d->Update();
+	
+	if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
+		auto bullet = std::make_unique<PlayerBullet>();
+		Vector3 playerPos = player_->GetObject3d()->GetTranslate();
+		Vector3 enemyPos = enemy_->GetObject3d()->GetTranslate();
+		bullet->Initialize(dxCommon, playerPos, enemyPos);
+
+		bullet->SetCamera(camera.get()); // ← ここでセット！！
+
+		bullets_.push_back(std::move(bullet));
+	}
+	for (auto it = bullets_.begin(); it != bullets_.end();) {
+		(*it)->Update();
+
+		// 追加：Enemyとの当たり判定
+		Vector3 bulletPos = (*it)->GetPosition(); // GetPositionをPlayerBulletに実装しておく
+		Vector3 enemyPos = enemy_->GetObject3d()->GetTranslate();
+
+		float distance = MyMath::Distance(bulletPos, enemyPos);
+		float hitRadius = 1.0f; // 当たり判定半径（必要に応じて調整）
+
+		if (distance < hitRadius) {
+			// ✨演出出す（例: "hitEffect" という名前のパーティクルグループを事前に作っておく）
+			ParticleManager::GetInstance()->Emit("hitEffect", bulletPos, 20);
+
+			it = bullets_.erase(it);
+			continue;
+		}
+
+		if ((*it)->IsDead()) {
+			it = bullets_.erase(it);
+		} else {
+			++it;
+		}
+	}
+
+	// Update内、ImGui更新のすぐ後か bullets_ ループの手前あたり
+	if (debugEmitFlag_) {
+		Vector3 debugPos = { 0.0f, 2.0f, 0.0f }; // 任意の位置でOK
+		ParticleManager::GetInstance()->Emit("hitEffect", debugPos, 30);
+	}
+
+
 	// ライトの更新
 	directionalLight_->Update();
 
@@ -102,7 +146,9 @@ void GameScene::Draw()
 	ground_->Draw(dxCommon);
 	player_->Draw();
 	enemy_->Draw();
-	//anotherObject3d->Draw(dxCommon);
+	for (auto& b : bullets_) {
+		b->Draw();
+	}
 
 	// 
 	ParticleManager::GetInstance()->Draw();
@@ -336,6 +382,28 @@ void GameScene::ImGuiDebug()
 	DrawButtonBar("Back", Input::GetInstance()->PushButton(XINPUT_GAMEPAD_BACK), ImVec4(1.0f, 1.0f, 1.0f, 1.0f)); // 白
 	DrawButtonBar("LB", Input::GetInstance()->PushButton(XINPUT_GAMEPAD_LEFT_SHOULDER), ImVec4(0.6f, 0.2f, 0.8f, 1.0f)); // 紫
 	DrawButtonBar("RB", Input::GetInstance()->PushButton(XINPUT_GAMEPAD_RIGHT_SHOULDER), ImVec4(1.0f, 0.6f, 0.0f, 1.0f)); // オレンジ
+	ImGui::End();
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	ImGui::Begin("Particle Debug");
+
+	ImGui::Checkbox("Emit Effect Now", &debugEmitFlag_);
+
+	if (particleEmitter) {
+		ImGui::Text("Emitter Name: %s", particleEmitter->GetName().c_str());
+
+		Vector3 pos = particleEmitter->GetPosition();
+		ImGui::Text("Position: (%.2f, %.2f, %.2f)", pos.x, pos.y, pos.z);
+
+		float freq = particleEmitter->GetFrequency();
+		if (ImGui::SliderFloat("Frequency", &freq, 0.01f, 2.0f)) {
+			particleEmitter->SetFrequency(freq);
+		}
+
+		int count = (int)particleEmitter->GetCount();
+		if (ImGui::SliderInt("Count", &count, 1, 100)) {
+			particleEmitter->SetCount((uint32_t)count);
+		}
+	}
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 }

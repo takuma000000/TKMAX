@@ -4,11 +4,11 @@ void Player::Initialize(DirectXCommon* dxCommon)
 {
 	dxCommon_ = dxCommon;
 
-	ModelManager::GetInstance()->LoadModel("sphere.obj", dxCommon_);
+	ModelManager::GetInstance()->LoadModel("cube.obj", dxCommon_);
 
 	object3d_ = std::make_unique<Object3d>();
 	object3d_->Initialize(Object3dCommon::GetInstance(), Object3dCommon::GetInstance()->GetDxCommon());
-	object3d_->SetModel("sphere.obj"); // ここはお好みのモデルに
+	object3d_->SetModel("cube.obj"); // ここはお好みのモデルに
 	object3d_->SetTranslate({ 0, 1, 0 }); // 初期位置もお好みで
 }
 

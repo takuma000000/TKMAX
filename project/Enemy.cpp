@@ -4,11 +4,11 @@ void Enemy::Initialize(DirectXCommon* dxCommon)
 {
 	dxCommon_ = dxCommon;
 
-	ModelManager::GetInstance()->LoadModel("sphere.obj", dxCommon_);
+	ModelManager::GetInstance()->LoadModel("cube.obj", dxCommon_);
 
 	object3d_ = std::make_unique<Object3d>();
 	object3d_->Initialize(Object3dCommon::GetInstance(), Object3dCommon::GetInstance()->GetDxCommon());
-	object3d_->SetModel("sphere.obj"); // 敵のモデル（お好みで）
+	object3d_->SetModel("cube.obj"); // 敵のモデル（お好みで）
 	object3d_->SetTranslate({ 5, 1, 0 }); // 初期位置（お好みで）
 }
 
