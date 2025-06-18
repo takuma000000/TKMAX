@@ -77,10 +77,13 @@ void Enemy::Update(Player* player) {
 	}
 
 	// 弾の発射タイマーを管理
-	fireTimer_--;
-	if (fireTimer_ <= 0) {
-		FireBullet(player->GetTranslate());
-		fireTimer_ = fireInterval_;  // タイマーをリセット
+	// 弾の発射タイマーを管理（HPが1のときだけ発射）
+	if (hp_ == 1) {
+		fireTimer_--;
+		if (fireTimer_ <= 0) {
+			FireBullet(player->GetTranslate());
+			fireTimer_ = fireInterval_;  // タイマーをリセット
+		}
 	}
 
 	// 弾の更新
