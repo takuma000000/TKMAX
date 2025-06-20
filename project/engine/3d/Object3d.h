@@ -97,6 +97,8 @@ public://メンバ関数
 	void Draw(DirectXCommon* dxCommon);
 	void SetModel(const std::string& filePath);
 
+	void TransferMatrix();
+
 public:
 	//getter
 	const Vector3& GetScale() const { return transform.scale; }

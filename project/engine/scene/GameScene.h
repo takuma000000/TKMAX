@@ -15,6 +15,7 @@
 #include "ModelCommon.h"
 #include "ModelManager.h"
 #include "DirectionalLight.h"
+#include <map>
 
 #include "engine/func/math/Vector3.h"
 
@@ -102,5 +103,8 @@ private:
 	static const int kMemoryHistorySize = 100;
 	std::array<float, kMemoryHistorySize> memoryHistory_{}; // 過去のメモリ使用履歴（MB）
 	int memoryHistoryIndex_ = 0;
+
+	std::vector<Object3d*> objects; // 生成した3Dオブジェクトを格納するコンテナ
+	std::map<std::string, Model*> models; // モデルデータにアクセスするためのコンテナ
 };
 

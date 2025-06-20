@@ -7,6 +7,7 @@
 #include <psapi.h>
 #include <Input.h>
 #include "externals/nlohmann/json.hpp"
+#include <fstream>
 
 void GameScene::Initialize()
 {
@@ -25,6 +26,99 @@ void GameScene::Initialize()
 	// ──────────────── ライトの初期化 ───────────────
 	directionalLight_ = std::make_unique<DirectionalLight>();
 	directionalLight_->Initialize({ 1.0f, 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 0.0f }, 1.0f);
+
+	struct LevelData {
+		// オブジェクト1個分のデータ
+		struct ObjectData {
+			std::string fileName; // ファイル名
+			Vector3 translation;
+			Vector3 rotation;
+			Vector3 scaling;
+		};
+		// オブジェクトのコンテナ
+		std::vector<ObjectData> objects;
+	};
+
+	// 連結してフルパスを得る
+	const std::string fullPath = std::string("resources/levels/") + "untitled.json";
+	// ファイルストリーム
+	std::ifstream file;
+	// ファイルを開く
+	file.open(fullPath);
+	// ファイルオープン失敗をチェック
+	if (file.fail()) {
+		assert(0);
+	}
+
+	// JSON文字から解凍したデータ
+	nlohmann::json deserialized;
+	// 解凍
+	file >> deserialized;
+	// 正しいレベルエディタファイルかチェック
+	assert(deserialized.isObject());
+	assert(deserialized.contains("name"));
+	assert(deserialized["name"].is_string());
+	// "name"を文字列として取得
+	std::string name = deserialized["name"].get<std::string>();
+	// 正しいレベルデータファイルかチェック
+	assert(name.compare("scene") == 0);
+
+	// レベルデータ格納用インスタンスを生成
+	LevelData* levelData = new LevelData();
+	// "objects"の全オブジェクトを走査
+	for (nlohmann::json& object : deserialized["objects"]) {
+		assert(object.contains("type"));
+		// 種別を取得
+		std::string type = object["type"].get<std::string>();
+		// 種類ごとの処理
+		// MESH
+		if (type.compare("MESH") == 0) {
+			// 要素追加
+			levelData->objects.emplace_back(LevelData::ObjectData());
+			// 今追加した要素の参照を得る
+			LevelData::ObjectData& objectData = levelData->objects.back();
+			if (object.contains("file_name")) {
+				// ファイル名
+				objectData.fileName = object["file_name"];
+			}
+			// トランスフォームのパラメータ読み込み
+			nlohmann::json transform = object["transform"];
+			// 平行移動
+			objectData.translation.x = (float)transform["translation"][0];
+			objectData.translation.y = (float)transform["translation"][2];
+			objectData.translation.z = (float)transform["translation"][1];
+			// 回転角
+			objectData.rotation.x = (float)transform["rotation"][0];
+			objectData.rotation.y = (float)transform["rotation"][2];
+			objectData.rotation.z = (float)transform["rotation"][1];
+			// スケーリング
+			objectData.scaling.x = (float)transform["scaling"][0];
+			objectData.scaling.y = (float)transform["scaling"][2];
+			objectData.scaling.z = (float)transform["scaling"][1];
+		}
+		// 再帰処理
+			// TODO: オブジェクト走査を再帰関数にまとめ、再帰呼出で枝を走査する
+		if (object.contains("children")) {
+
+		}
+	}
+	// レベルエディタからオブジェクトを生成、配置
+	for (auto& objectData : levelData->objects) {
+		// ファイル名から登録済みモデルを検索
+		Model* model = nullptr;
+		decltype(models)::iterator it = models.find(objectData.fileName);
+		if (it != models.end()) { model = it->second; }
+		// モデルを指定して3Dオブジェクトを生成
+		Object3d* newObject = new Object3d();
+		newObject->SetModel(objectData.fileName);
+		newObject->SetTranslate(objectData.translation);
+		newObject->SetRotate(objectData.rotation);
+		newObject->SetScale(objectData.scaling);
+
+		newObject->Initialize(Object3dCommon::GetInstance(), dxCommon);
+
+		objects.push_back(newObject);
+	}
 }
 
 void GameScene::Finalize()
@@ -41,6 +135,10 @@ void GameScene::Finalize()
 
 void GameScene::Update()
 {
+	for (Object3d* object : objects) {
+		object->
+	}
+
 	ResetDrawCallCount();
 	UpdateMemory(); // メモリ使用量の更新
 
@@ -48,7 +146,7 @@ void GameScene::Update()
 	// 各オブジェクトの更新処理
 	// ────────────────────────────────────────
 	camera->Update();
-	
+
 	// camera->ImGuiDebug();
 	object3d->Update();
 	ground_->Update();
@@ -66,8 +164,6 @@ void GameScene::Update()
 	// object3d
 	//*-*-*-*-*-*-*-*-*-*-*
 	ImGuiDebug();
-
-
 }
 
 void GameScene::Draw()
@@ -113,7 +209,7 @@ void GameScene::LoadTextures()
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeSprite()
 {
-	
+
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*

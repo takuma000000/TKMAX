@@ -166,6 +166,11 @@ void Object3d::SetModel(const std::string& filePath)
 	model_ = ModelManager::GetInstance()->FindModel(filePath);
 }
 
+void Object3d::TransferMatrix()
+{
+
+}
+
 void Object3d::SetParentScene(BaseScene* parentScene)
 {
 	parentScene_ = parentScene;
