@@ -2,27 +2,6 @@
     "name": "scene",
     "objects": [
         {
-            "type": "MESH",
-            "name": "Cube",
-            "transform": {
-                "translation": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "rotation": [
-                    0.0,
-                    -0.0,
-                    0.0
-                ],
-                "scaling": [
-                    1.0,
-                    1.0,
-                    1.0
-                ]
-            }
-        },
-        {
             "type": "LIGHT",
             "name": "Light",
             "transform": {
@@ -56,6 +35,69 @@
                     63.559295654296875,
                     2.2983238068263745e-07,
                     46.69194412231445
+                ],
+                "scaling": [
+                    1.0,
+                    1.0,
+                    1.0
+                ]
+            }
+        },
+        {
+            "type": "MESH",
+            "name": "球",
+            "transform": {
+                "translation": [
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "rotation": [
+                    0.0,
+                    -0.0,
+                    0.0
+                ],
+                "scaling": [
+                    1.0,
+                    1.0,
+                    1.0
+                ]
+            }
+        },
+        {
+            "type": "MESH",
+            "name": "球.001",
+            "transform": {
+                "translation": [
+                    0.0,
+                    0.0,
+                    2.705183982849121
+                ],
+                "rotation": [
+                    -0.0,
+                    -0.0,
+                    180.0
+                ],
+                "scaling": [
+                    -1.0,
+                    -1.0,
+                    -1.0
+                ]
+            }
+        },
+        {
+            "type": "MESH",
+            "name": "球.002",
+            "transform": {
+                "translation": [
+                    0.0,
+                    3.3063032627105713,
+                    0.0
+                ],
+                "rotation": [
+                    0.0,
+                    -0.0,
+                    0.0
                 ],
                 "scaling": [
                     1.0,

@@ -27,18 +27,6 @@ void GameScene::Initialize()
 	directionalLight_ = std::make_unique<DirectionalLight>();
 	directionalLight_->Initialize({ 1.0f, 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 0.0f }, 1.0f);
 
-	struct LevelData {
-		// オブジェクト1個分のデータ
-		struct ObjectData {
-			std::string fileName; // ファイル名
-			Vector3 translation;
-			Vector3 rotation;
-			Vector3 scaling;
-		};
-		// オブジェクトのコンテナ
-		std::vector<ObjectData> objects;
-	};
-
 	// 連結してフルパスを得る
 	const std::string fullPath = std::string("resources/levels/") + "untitled.json";
 	// ファイルストリーム
@@ -63,8 +51,8 @@ void GameScene::Initialize()
 	// 正しいレベルデータファイルかチェック
 	assert(name.compare("scene") == 0);
 
-	// レベルデータ格納用インスタンスを生成
-	LevelData* levelData = new LevelData();
+	levelData = new LevelData(); // レベルデータ格納用インスタンスを生成
+
 	// "objects"の全オブジェクトを走査
 	for (nlohmann::json& object : deserialized["objects"]) {
 		assert(object.contains("type"));
@@ -115,7 +103,18 @@ void GameScene::Initialize()
 		newObject->SetRotate(objectData.rotation);
 		newObject->SetScale(objectData.scaling);
 
+		// 初期化
 		newObject->Initialize(Object3dCommon::GetInstance(), dxCommon);
+		// カメラ
+		newObject->SetCamera(camera.get());
+
+		// モデル
+		if (model) {
+			newObject->SetModel(model);
+		} else {
+			// モデルが見つからない場合はデフォルトのモデルを設定
+			newObject->SetModel("sphere.obj");
+		}
 
 		objects.push_back(newObject);
 	}
@@ -136,8 +135,11 @@ void GameScene::Finalize()
 void GameScene::Update()
 {
 	for (Object3d* object : objects) {
-		object->
-	}
+
+		/// TODO: レベルデータからのオブジェクト更新処理を実装
+		object->Update();
+		object->ImGui();
+	}	
 
 	ResetDrawCallCount();
 	UpdateMemory(); // メモリ使用量の更新
@@ -178,8 +180,14 @@ void GameScene::Draw()
 	SpriteCommon::GetInstance()->DrawSetCommon();
 	Object3dCommon::GetInstance()->DrawSetCommon();
 
-	object3d->Draw(dxCommon);
-	ground_->Draw(dxCommon);
+	for (Object3d* object : objects) {
+
+		/// TODO: レベルデータからのオブジェクト描画処理を実装
+		object->Draw(dxCommon);
+	}
+
+	//object3d->Draw(dxCommon);
+	//ground_->Draw(dxCommon);
 	//anotherObject3d->Draw(dxCommon);
 }
 

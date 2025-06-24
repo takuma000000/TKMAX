@@ -96,6 +96,7 @@ public://メンバ関数
 	void Update();
 	void Draw(DirectXCommon* dxCommon);
 	void SetModel(const std::string& filePath);
+	void ImGui();
 
 	void TransferMatrix();
 

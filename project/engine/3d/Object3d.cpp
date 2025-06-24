@@ -372,3 +372,11 @@ void Object3d::SpotLight(DirectXCommon* dxCommon)
 	spotLightData->cosAngle = std::cos(std::numbers::pi_v<float> / 3.0f);
 	spotLightData->cosFalloffStart = std::cos(std::numbers::pi_v<float> / 3.0f);
 }
+
+void Object3d::ImGui() {
+	ImGui::Begin("Object3d Settings");
+
+	ImGui::DragFloat3("translate", &transform.translate.x);
+
+	ImGui::End();
+}

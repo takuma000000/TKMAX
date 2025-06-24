@@ -16,11 +16,25 @@
 #include "ModelManager.h"
 #include "DirectionalLight.h"
 #include <map>
+#include <string>
 
 #include "engine/func/math/Vector3.h"
 
 class GameScene : public BaseScene
 {
+
+	struct LevelData {
+		// オブジェクト1個分のデータ
+		struct ObjectData {
+			std::string fileName; // ファイル名
+			Vector3 translation;
+			Vector3 rotation;
+			Vector3 scaling;
+		};
+		// オブジェクトのコンテナ
+		std::vector<ObjectData> objects;
+	};
+
 public:
 	GameScene(DirectXCommon* dxCommon, SrvManager* srvManager) : dxCommon(dxCommon), srvManager(srvManager) {}
 	~GameScene() = default;
@@ -104,6 +118,7 @@ private:
 	std::array<float, kMemoryHistorySize> memoryHistory_{}; // 過去のメモリ使用履歴（MB）
 	int memoryHistoryIndex_ = 0;
 
+	LevelData* levelData = nullptr;; // レベルデータ格納用インスタンスを生成
 	std::vector<Object3d*> objects; // 生成した3Dオブジェクトを格納するコンテナ
 	std::map<std::string, Model*> models; // モデルデータにアクセスするためのコンテナ
 };
