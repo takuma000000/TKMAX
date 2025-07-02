@@ -5,6 +5,7 @@
 #include "Logger.h"
 #include "StringUtility.h"
 #include "thread"
+#include "externals/DirectXTex/d3dx12.h"
 //#include "externals/imgui/imgui.h"
 //#include "externals/imgui/imgui_impl_win32.h"
 //#include "externals/imgui/imgui_impl_dx12.h"
@@ -390,12 +391,13 @@ Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateBufferResource(size_
 	// 頂点リソースの設定
 	D3D12_RESOURCE_DESC vertexResourceDesc{};
 	vertexResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	vertexResourceDesc.Width = sizeInBytes; // **256 バイトアライメント済み**
+	vertexResourceDesc.Width = sizeInBytes;
 	vertexResourceDesc.Height = 1;
 	vertexResourceDesc.DepthOrArraySize = 1;
 	vertexResourceDesc.MipLevels = 1;
 	vertexResourceDesc.SampleDesc.Count = 1;
 	vertexResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	vertexResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE; // これを必ずセット
 
 	// 実際に頂点リソースを作る
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = nullptr;
@@ -745,6 +747,109 @@ void DirectXCommon::PostDraw()
 	// 7. コマンドリストのリセット（次のフレームの準備）
 	hr = commandList->Reset(commandAllocator.Get(), nullptr);
 	assert(SUCCEEDED(hr));
+}
+
+Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateTextureFromDDS(
+	const std::wstring& filePath,
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& srvHeap,
+	UINT descriptorIndex
+)
+{
+	using namespace DirectX;
+
+	// 1. DDSを読み込む
+	ScratchImage image = {};
+	HRESULT hr = LoadFromDDSFile(filePath.c_str(), DDS_FLAGS_NONE, nullptr, image);
+	if (FAILED(hr)) {
+		throw std::runtime_error("Failed to load DDS file");
+	}
+
+	const TexMetadata& metadata = image.GetMetadata();
+
+	// 2. VRAMにTextureResourceを作る
+	D3D12_RESOURCE_DESC resourceDesc = {};
+	resourceDesc.Dimension = static_cast<D3D12_RESOURCE_DIMENSION>(metadata.dimension);
+	resourceDesc.Alignment = 0;
+	resourceDesc.Width = metadata.width;
+	resourceDesc.Height = static_cast<UINT>(metadata.height);
+	resourceDesc.DepthOrArraySize = static_cast<UINT16>((metadata.dimension == TEX_DIMENSION_TEXTURE3D) ? metadata.depth : metadata.arraySize);
+	resourceDesc.MipLevels = static_cast<UINT16>(metadata.mipLevels);
+	resourceDesc.Format = metadata.format;
+	resourceDesc.SampleDesc.Count = 1;
+	resourceDesc.SampleDesc.Quality = 0;
+	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+	D3D12_HEAP_PROPERTIES heapProps = {};
+	heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> texture = nullptr;
+	hr = device->CreateCommittedResource(
+		&heapProps,
+		D3D12_HEAP_FLAG_NONE,
+		&resourceDesc,
+		D3D12_RESOURCE_STATE_COPY_DEST, // 転送先
+		nullptr,
+		IID_PPV_ARGS(texture.GetAddressOf())
+	);
+	if (FAILED(hr)) {
+		throw std::runtime_error("Failed to create texture resource");
+	}
+
+	// 3. Subresourceを準備
+	std::vector<D3D12_SUBRESOURCE_DATA> subresources;
+	PrepareUpload(device.Get(), image.GetImages(), image.GetImageCount(), metadata, subresources);
+
+	// 4. IntermediateResourceを作る
+	const uint64_t intermediateSize = GetRequiredIntermediateSize(texture.Get(), 0, static_cast<UINT>(subresources.size()));
+
+	// 🔵 ここで一時オブジェクトを変数にする
+	CD3DX12_HEAP_PROPERTIES uploadHeapProps(D3D12_HEAP_TYPE_UPLOAD);
+	CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(intermediateSize);
+
+	ComPtr<ID3D12Resource> intermediate = nullptr;
+	hr = device->CreateCommittedResource(
+		&uploadHeapProps,
+		D3D12_HEAP_FLAG_NONE,
+		&bufferDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(intermediate.GetAddressOf())
+	);
+	if (FAILED(hr)) {
+		throw std::runtime_error("Failed to create intermediate resource");
+	}
+
+
+	// 5. 転送コマンド
+	UpdateSubresources(commandList.Get(), texture.Get(), intermediate.Get(), 0, 0, static_cast<UINT>(subresources.size()), subresources.data());
+
+	// 6. バリアで GENERIC_READ に変更
+	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+		texture.Get(),
+		D3D12_RESOURCE_STATE_COPY_DEST,
+		D3D12_RESOURCE_STATE_GENERIC_READ
+	);
+	commandList->ResourceBarrier(1, &barrier);
+
+	// 7. SRVを作る
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Format = metadata.format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.TextureCube.MipLevels = static_cast<UINT>(metadata.mipLevels);
+	srvDesc.TextureCube.MostDetailedMip = 0;
+	srvDesc.TextureCube.ResourceMinLODClamp = 0.0f;
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE handle(
+		srvHeap->GetCPUDescriptorHandleForHeapStart(),
+		descriptorIndex,
+		device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)
+	);
+
+	device->CreateShaderResourceView(texture.Get(), &srvDesc, handle);
+
+	return texture; // 必要なら保持する
 }
 
 

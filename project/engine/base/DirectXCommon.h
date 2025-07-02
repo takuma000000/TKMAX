@@ -109,6 +109,13 @@ public: //描画関数
 	//描画後処理
 	void PostDraw();
 
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureFromDDS(
+		const std::wstring& filePath,
+		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& srvHeap,
+		UINT descriptorIndex
+	);
+
+
 private:
 	//DirectX12デバイス
 	Microsoft::WRL::ComPtr<ID3D12Device> device;

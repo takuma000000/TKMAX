@@ -6,19 +6,26 @@
 void Skybox::Initialize(DirectXCommon* dxCommon, const std::string& texturePath) {
 	dxCommon_ = dxCommon;
 
-	// テクスチャ読み込み（DDS）
-	TextureManager::GetInstance()->LoadTexture(texturePath);
-	srvHandleGPU_ = TextureManager::GetInstance()->GetSrvHandleGPU(texturePath);
+	// DDSテクスチャをVRAMにロードし、SRVを作る
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvHeap =
+		dxCommon_->CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1, true);
 
-	// VP行列用定数バッファ作成
+	dxCommon_->CreateTextureFromDDS(
+		std::wstring(texturePath.begin(), texturePath.end()),
+		srvHeap,
+		0
+	);
+
+	// GPUハンドルを取得
+	srvHandleGPU_ = srvHeap->GetGPUDescriptorHandleForHeapStart();
+
+	// 定数バッファ作成
 	constantBuffer_ = dxCommon_->CreateBufferResource(sizeof(TransformationMatrix));
-	// マッピングしてポインタ取得
 	constantBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&mappedData_));
 
 	materialBuffer_ = dxCommon_->CreateBufferResource(sizeof(Material));
 	materialBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&mappedMaterial_));
 
-	// 適当な初期値を設定（色＝白、ライティング無効）
 	*mappedMaterial_ = {
 		{1.0f, 1.0f, 1.0f, 1.0f}, // color
 		1,                        // enableLighting
@@ -26,14 +33,13 @@ void Skybox::Initialize(DirectXCommon* dxCommon, const std::string& texturePath)
 		1.0f                      // shininess
 	};
 
-	// 頂点バッファ生成
-	CreateVertexBuffer();      // 頂点バッファ生成
- 	CreateRootSignature();     // RootSigだけ分離
-	CreatePipelineState();     // PSOだけ分離
-
-	
-
+	// 頂点・ルートシグネチャ・パイプライン生成
+	CreateVertexBuffer();
+	CreateRootSignature();
+	CreatePipelineState();
 }
+
+
 
 void Skybox::CreateVertexBuffer() {
 	// 1x1x1のキューブを構成する36頂点
