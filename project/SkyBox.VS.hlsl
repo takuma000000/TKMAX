@@ -1,26 +1,25 @@
-#include "SkyBox.hlsli"
-
-struct TransformationMatrix
+cbuffer Transform : register(b0)
 {
-    float4x4 wvp;
-    float4x4 World;
+    matrix viewProjection;
+    matrix world;
 };
 
-ConstantBuffer<TransformationMatrix> gTransformationMatrix : register(b0);
-
-struct VertexShaderInput
+struct VSInput
 {
-    float4 position : POSITION0;
+    float3 position : POSITION;
 };
 
-VertexShaderOutput main(VertexShaderInput input)
+struct VSOutput
 {
-    VertexShaderOutput output;
-    
-    output.position = mul(input.position, gTransformationMatrix.wvp).xyww;
+    float4 position : SV_POSITION;
+    float3 texcoord : TEXCOORD;
+};
 
-    // キューブマップ用にワールド方向ベクトルを使う（正規化）
-    output.texcoord = input.position.xyz;
-
+VSOutput main(VSInput input)
+{
+    VSOutput output;
+    float4 pos = mul(float4(input.position, 1), world);
+    output.position = mul(pos, viewProjection).xyww; // ここ!!
+    output.texcoord = input.position;
     return output;
 }
