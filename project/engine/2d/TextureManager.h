@@ -47,6 +47,7 @@ public: //テクスチャファイル読み込み関数
 	//テクスチャファイルの読み込み
 	void LoadTexture(const std::string& filePath);
 
+	ID3D12Resource* UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages, ID3D12Device* device, ID3D12GraphicsCommandList* commandList);
 
 public:
 	//テクスチャ1枚分のデータ
