@@ -84,6 +84,8 @@ public: //リソース生成関数
 		UINT numDescriptors,
 		bool shaderVisible);
 
+	Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages);
+
 	//public: //テクスチャファイル読み込み関数
 	//	//テクスチャファイルの読み込み
 	//	DirectX::ScratchImage LoadTexture(const std::string& filePath);
