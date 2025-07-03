@@ -21,6 +21,9 @@ void GameScene::Initialize()
 	InitializeObjects(); // 3Dオブジェクトの作成＆初期化
 	InitializeCamera();  // カメラの作成＆設定
 
+	// ──────────────── TextureManager 初期化 ────────────────
+	TextureManager::GetInstance()->Initialize(dxCommon, srvManager);
+
 	// ──────────────── ライトの初期化 ───────────────
 	directionalLight_ = std::make_unique<DirectionalLight>();
 	directionalLight_->Initialize({ 1.0f, 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 0.0f }, 1.0f);
