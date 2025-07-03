@@ -163,7 +163,7 @@ void Skybox::CreatePipelineState() {
 	psoDesc.InputLayout = { inputLayout, _countof(inputLayout) };
 
 	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_FRONT; // ← これ大事！
+	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
 	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 
 	// Skybox用深度設定
@@ -176,7 +176,7 @@ void Skybox::CreatePipelineState() {
 	psoDesc.NumRenderTargets = 1;
 	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
 	psoDesc.SampleDesc.Count = 1;
-	psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT; // ← 修正ここ
+	psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
 	hr = dxCommon_->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState_));
 	assert(SUCCEEDED(hr));
