@@ -70,6 +70,8 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource_;
 
+	Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource_;
+
 	
 	/// <summary>
 	/// 生成関数

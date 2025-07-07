@@ -6,45 +6,8 @@
 void Skybox::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager, const std::string& texturePath) {
     dxCommon_ = dxCommon;
 
-    // DDSロード
-    DirectX::ScratchImage image;
-    DirectX::TexMetadata metadata;
-    std::wstring wPath(texturePath.begin(), texturePath.end());
-    HRESULT hr = DirectX::LoadFromDDSFile(wPath.c_str(), DirectX::DDS_FLAGS_NONE, &metadata, image);
-    assert(SUCCEEDED(hr));
-
-    // テクスチャリソースをSkyboxメンバに保持する
-    textureResource_ = dxCommon_->CreateTextureResource(metadata);
-
-    // テクスチャデータをアップロード
-    dxCommon_->UploadTextureData(textureResource_.Get(), image);
-
-    // SRV割り当て
-    uint32_t srvIndex = srvManager->Allocate();
-
-    // SRV作成
-    if (metadata.IsCubemap()) {
-        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-        srvDesc.Format = metadata.format;
-        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
-        srvDesc.TextureCube.MipLevels = UINT(metadata.mipLevels);
-        srvDesc.TextureCube.MostDetailedMip = 0;
-        srvDesc.TextureCube.ResourceMinLODClamp = 0.0f;
-
-        D3D12_CPU_DESCRIPTOR_HANDLE handle = srvManager->GetCPUDescriptorHandle(srvIndex);
-        dxCommon_->GetDevice()->CreateShaderResourceView(textureResource_.Get(), &srvDesc, handle);
-    } else {
-        srvManager->CreateSRVforTexture2D(
-            srvIndex,
-            textureResource_.Get(),
-            metadata.format,
-            static_cast<UINT>(metadata.mipLevels)
-        );
-    }
-
-    // GPUハンドル
-    srvHandleGPU_ = srvManager->GetGPUDescriptorHandle(srvIndex);
+	TextureManager::GetInstance()->LoadTexture(texturePath);
+	srvHandleGPU_ = TextureManager::GetInstance()->GetSrvHandleGPU(texturePath);
 
     // 定数バッファ
     constantBuffer_ = dxCommon_->CreateBufferResource(sizeof(TransformationMatrix));

@@ -6,7 +6,6 @@
 #include <dxcapi.h>
 #include <string>
 #include <chrono>
-#include <dxcapi.h>
 #include "WindowsAPI.h"
 #include "SrvManager.h"
 #include "externals/DirectXTex/DirectXTex.h"//DirectX
@@ -28,7 +27,7 @@ public: //getter
 	uint32_t GetDescriptorSizeDSV() { return descriptorSizeDSV; }
 	//バックバッファの数を取得
 	size_t GetBackBufferCount() const { return backBufferChange; }
-		
+
 public: //メンバ関数...初期化...public
 	//初期化
 	void Initialize(WindowsAPI* windowsAPI);
@@ -78,8 +77,11 @@ public: //リソース生成関数
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizeInBytes);
 	//テクスチャリソースの生成
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(const DirectX::TexMetadata& metadata);
-	//テクスチャデータの転送
-	void UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages);
+	// UploadTextureData関数
+	Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(
+		ID3D12Resource* texture,
+		const DirectX::ScratchImage& mipImages
+	);
 
 
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(

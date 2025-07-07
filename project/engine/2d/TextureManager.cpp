@@ -18,6 +18,7 @@ void TextureManager::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager)
 }
 
 void TextureManager::LoadTexture(const std::string& filePath) {
+
 	// 既に読み込み済みならスキップ
 	if (textureDatas.contains(filePath)) {
 		return;
@@ -33,7 +34,8 @@ void TextureManager::LoadTexture(const std::string& filePath) {
 	// 拡張子がDDSかで分岐
 	if (filePath.ends_with(".dds")) {
 		hr = DirectX::LoadFromDDSFile(filePathW.c_str(), DirectX::DDS_FLAGS_NONE, nullptr, image);
-	} else {
+	}
+	else {
 		hr = DirectX::LoadFromWICFile(filePathW.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
 	}
 	assert(SUCCEEDED(hr));
@@ -60,7 +62,8 @@ void TextureManager::LoadTexture(const std::string& filePath) {
 			0,
 			mipImages);
 		assert(SUCCEEDED(hr));
-	} else {
+	}
+	else {
 		// 非圧縮ならそのまま
 		hr = DirectX::GenerateMipMaps(
 			image.GetImages(),
@@ -74,10 +77,10 @@ void TextureManager::LoadTexture(const std::string& filePath) {
 
 	// テクスチャ情報作成
 	TextureData textureData{};
+	
+
 	textureData.metadata = mipImages.GetMetadata();
 	textureData.resource = dxCommon_->CreateTextureResource(textureData.metadata);
-
-	dxCommon_->UploadTextureData(textureData.resource.Get(), mipImages);
 
 	textureData.srvIndex = srvManager_->Allocate();
 	textureData.srvHnadleCPU = srvManager_->GetCPUDescriptorHandle(textureData.srvIndex);
@@ -93,13 +96,16 @@ void TextureManager::LoadTexture(const std::string& filePath) {
 		srvDesc.TextureCube.MostDetailedMip = 0;
 		srvDesc.TextureCube.MipLevels = UINT_MAX;
 		srvDesc.TextureCube.ResourceMinLODClamp = 0.0f;
-	} else {
+	}
+	else {
 		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 		srvDesc.Texture2D.MipLevels = UINT(textureData.metadata.mipLevels);
 	}
 
 	// SRV生成
 	dxCommon_->GetDevice()->CreateShaderResourceView(textureData.resource.Get(), &srvDesc, textureData.srvHnadleCPU);
+
+	textureData.intermediateResource = dxCommon_->UploadTextureData(textureData.resource.Get(), mipImages);
 
 	// 登録
 	textureDatas.emplace(filePath, std::move(textureData));
@@ -141,7 +147,7 @@ void TextureManager::LoadTexture(const std::string& filePath) {
 
 uint32_t TextureManager::GetTextureIndexByFilePath(const std::string& filePath)
 {
-	
+
 	//読み込み済みテクスチャを検索
 	if (textureDatas.contains(filePath)) {
 		//読み込み済みなら要素番号を返す

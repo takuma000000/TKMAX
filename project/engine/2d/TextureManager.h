@@ -53,6 +53,7 @@ public:
 	struct TextureData {
 		DirectX::TexMetadata metadata;
 		Microsoft::WRL::ComPtr<ID3D12Resource> resource;
+		Microsoft::WRL::ComPtr <ID3D12Resource> intermediateResource;
 		uint32_t srvIndex = 0;
 		D3D12_CPU_DESCRIPTOR_HANDLE srvHnadleCPU{};
 		D3D12_GPU_DESCRIPTOR_HANDLE srvHnadleGPU{};
@@ -64,6 +65,7 @@ public:
 		TextureData(TextureData&& other) noexcept
 			: metadata(std::move(other.metadata)),
 			resource(std::move(other.resource)),
+			intermediateResource(std::move(other.intermediateResource)),
 			srvIndex(other.srvIndex),
 			srvHnadleCPU(other.srvHnadleCPU),
 			srvHnadleGPU(other.srvHnadleGPU) {
@@ -75,6 +77,7 @@ public:
 			if (this != &other) {
 				metadata = std::move(other.metadata);
 				resource = std::move(other.resource);
+				intermediateResource = std::move(other.intermediateResource);
 				srvIndex = other.srvIndex;
 				srvHnadleCPU = other.srvHnadleCPU;
 				srvHnadleGPU = other.srvHnadleGPU;
@@ -82,6 +85,7 @@ public:
 			}
 			return *this;
 		}
+
 	};
 
 
