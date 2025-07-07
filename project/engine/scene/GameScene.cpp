@@ -33,7 +33,7 @@ void GameScene::Initialize()
 
 	// ──────────────── スカイボックスの初期化 ───────────────
 	skybox_ = std::make_unique<Skybox>();
-	skybox_->Initialize(dxCommon, "resources/rostock_laage_airport_4k.dds");  // あなたのキューブマップDDSに置き換えて
+	skybox_->Initialize(dxCommon, srvManager, "resources/rostock_laage_airport_4k.dds");
 
 }
 

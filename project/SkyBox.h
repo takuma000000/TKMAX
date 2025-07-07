@@ -14,7 +14,7 @@ class DirectXCommon;
 
 class Skybox {
 public:
-	void Initialize(DirectXCommon* dxCommon, const std::string& texturePath);
+	void Initialize(DirectXCommon* dxCommon, SrvManager* srvManager, const std::string& texturePath);
 	void Draw(const Matrix4x4& view, const Matrix4x4& projection);
 
 	//ImGui
@@ -67,6 +67,8 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> cameraResource;
 	//データを書き込む
 	CameraForGPU* cameraData = nullptr;
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource_;
 
 	
 	/// <summary>

@@ -3,37 +3,68 @@
 #include <dxcapi.h> // DXC関連
 #include "externals/imGui/imgui.h"
 
-void Skybox::Initialize(DirectXCommon* dxCommon, const std::string& texturePath) {
-	dxCommon_ = dxCommon;
+void Skybox::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager, const std::string& texturePath) {
+    dxCommon_ = dxCommon;
 
-	// テクスチャ読み込み（DDS）
-	TextureManager::GetInstance()->LoadTexture(texturePath);
-	srvHandleGPU_ = TextureManager::GetInstance()->GetSrvHandleGPU(texturePath);
+    // DDSロード
+    DirectX::ScratchImage image;
+    DirectX::TexMetadata metadata;
+    std::wstring wPath(texturePath.begin(), texturePath.end());
+    HRESULT hr = DirectX::LoadFromDDSFile(wPath.c_str(), DirectX::DDS_FLAGS_NONE, &metadata, image);
+    assert(SUCCEEDED(hr));
 
-	// VP行列用定数バッファ作成
-	constantBuffer_ = dxCommon_->CreateBufferResource(sizeof(TransformationMatrix));
-	// マッピングしてポインタ取得
-	constantBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&mappedData_));
+    // テクスチャリソースをSkyboxメンバに保持する
+    textureResource_ = dxCommon_->CreateTextureResource(metadata);
 
-	materialBuffer_ = dxCommon_->CreateBufferResource(sizeof(Material));
-	materialBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&mappedMaterial_));
+    // テクスチャデータをアップロード
+    dxCommon_->UploadTextureData(textureResource_.Get(), image);
 
-	// 適当な初期値を設定（色＝白、ライティング無効）
-	*mappedMaterial_ = {
-		{1.0f, 1.0f, 1.0f, 1.0f}, // color
-		1,                        // enableLighting
-		MyMath::MakeIdentity4x4(), // uvTransform
-		1.0f                      // shininess
-	};
+    // SRV割り当て
+    uint32_t srvIndex = srvManager->Allocate();
 
-	// 頂点バッファ生成
-	CreateVertexBuffer();      // 頂点バッファ生成
- 	CreateRootSignature();     // RootSigだけ分離
-	CreatePipelineState();     // PSOだけ分離
+    // SRV作成
+    if (metadata.IsCubemap()) {
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+        srvDesc.Format = metadata.format;
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+        srvDesc.TextureCube.MipLevels = UINT(metadata.mipLevels);
+        srvDesc.TextureCube.MostDetailedMip = 0;
+        srvDesc.TextureCube.ResourceMinLODClamp = 0.0f;
 
-	
+        D3D12_CPU_DESCRIPTOR_HANDLE handle = srvManager->GetCPUDescriptorHandle(srvIndex);
+        dxCommon_->GetDevice()->CreateShaderResourceView(textureResource_.Get(), &srvDesc, handle);
+    } else {
+        srvManager->CreateSRVforTexture2D(
+            srvIndex,
+            textureResource_.Get(),
+            metadata.format,
+            static_cast<UINT>(metadata.mipLevels)
+        );
+    }
 
+    // GPUハンドル
+    srvHandleGPU_ = srvManager->GetGPUDescriptorHandle(srvIndex);
+
+    // 定数バッファ
+    constantBuffer_ = dxCommon_->CreateBufferResource(sizeof(TransformationMatrix));
+    constantBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&mappedData_));
+
+    materialBuffer_ = dxCommon_->CreateBufferResource(sizeof(Material));
+    materialBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&mappedMaterial_));
+
+    *mappedMaterial_ = {
+        {1.0f, 1.0f, 1.0f, 1.0f},
+        1,
+        MyMath::MakeIdentity4x4(),
+        1.0f
+    };
+
+    CreateVertexBuffer();
+    CreateRootSignature();
+    CreatePipelineState();
 }
+
 
 void Skybox::CreateVertexBuffer() {
 	// 1x1x1のキューブを構成する36頂点
