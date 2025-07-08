@@ -30,6 +30,11 @@ void GameScene::Initialize()
 	ParticleManager::GetInstance()->CreateParticleGroup("uv", "./resources/gradationLine.png", ParticleManager::ParticleType::CYLINDER);
 	particleEmitter = std::make_unique<ParticleEmitter>();
 	particleEmitter->Initialize("uv", { 0.0f,2.5f,10.0f });
+
+	// ──────────────── スカイボックスの初期化 ───────────────
+	skybox_ = std::make_unique<Skybox>();
+	skybox_->Initialize(dxCommon, srvManager, "resources/rostock_laage_airport_4k.dds");
+
 }
 
 void GameScene::Finalize()
@@ -60,11 +65,9 @@ void GameScene::Update()
 	camera->Update();
 
 	// camera->ImGuiDebug();
-
-	//sprite->Update();
-
-	object3d->Update();
-	ground_->Update();
+	sprite->Update();
+	//object3d->Update();
+	//ground_->Update();
 	//anotherObject3d->Update();
 	// ライトの更新
 	directionalLight_->Update();
@@ -78,9 +81,18 @@ void GameScene::Update()
 	//*-*-*-*-*-*-*-*-*-*-*
 	// object3d
 	//*-*-*-*-*-*-*-*-*-*-*
+	UpdateObjectTransform(object3d, { 0.0f, 0.0f, 00.0f }, { 0.0f,1.6f,0.0f }, { 1.0f, 1.0f, 1.0f });
+	///   translate       ///     rotate      ///       scale       ///
+
+	UpdateObjectTransform(ground_, { 0.0f, 0.0f, 0.0f }, { 0.0f,1.6f,0.0f }, { 1.0f, 1.0f, 1.0f });
+
+
+	// 
+	ParticleManager::GetInstance()->Update();
+
+	// ────────────────────────────────────────
 	ImGuiDebug();
-
-
+	// ────────────────────────────────────────
 }
 
 void GameScene::Draw()
@@ -95,13 +107,15 @@ void GameScene::Draw()
 	SpriteCommon::GetInstance()->DrawSetCommon();
 	Object3dCommon::GetInstance()->DrawSetCommon();
 
-	//sprite->Draw();  // textureSrvHandleGPU は必要に応じて設定
-	object3d->Draw(dxCommon);
-	ground_->Draw(dxCommon);
+	sprite->Draw();  // textureSrvHandleGPU は必要に応じて設定
+	//object3d->Draw(dxCommon);
+	//ground_->Draw(dxCommon);
 	//anotherObject3d->Draw(dxCommon);
 
 	// 
 	ParticleManager::GetInstance()->Draw();
+
+	skybox_->Draw(camera->GetViewMatrix(), camera->GetProjectionMatrix());// スカイボックスの描画
 
 	// ライト情報をシェーダーなどに適用（必要に応じて実装）
 	Vector4 lightColor = directionalLight_->GetColor();
@@ -137,8 +151,8 @@ void GameScene::LoadTextures()
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeSprite()
 {
-	/*sprite = std::make_unique<Sprite>();
-	sprite->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/uvChecker.png");
+	sprite = std::make_unique<Sprite>();
+	sprite->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/circle.png");
 	sprite->SetPosition({ -1000.0f, 0.0f });
 	sprite->SetParentScene(this);*/
 
@@ -184,10 +198,11 @@ void GameScene::InitializeCamera()
 	//Object3d共通部の初期化
 	camera = std::make_unique<Camera>();
 	camera->SetRotate({ 0.0f,0.0f,0.0f });
-	camera->SetTranslate({ 0.0f,2.5f,-25.0f });
+	camera->SetTranslate({ 0.0f,0.0f,-0.0f });
 
 	object3d->SetCamera(camera.get());
 	ground_->SetCamera(camera.get());
+	//skybox_->SetCamera(camera.get());
 	//anotherObject3d->SetCamera(camera.get());
 }
 
@@ -290,6 +305,8 @@ void GameScene::ImGuiDebug()
 	DrawButtonBar("LB", Input::GetInstance()->PushButton(XINPUT_GAMEPAD_LEFT_SHOULDER), ImVec4(0.6f, 0.2f, 0.8f, 1.0f)); // 紫
 	DrawButtonBar("RB", Input::GetInstance()->PushButton(XINPUT_GAMEPAD_RIGHT_SHOULDER), ImVec4(1.0f, 0.6f, 0.0f, 1.0f)); // オレンジ
 	ImGui::End();
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	skybox_->ImGuiUpdate();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 

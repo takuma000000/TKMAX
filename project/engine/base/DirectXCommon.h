@@ -6,7 +6,6 @@
 #include <dxcapi.h>
 #include <string>
 #include <chrono>
-#include <dxcapi.h>
 #include "WindowsAPI.h"
 #include "SrvManager.h"
 #include "externals/DirectXTex/DirectXTex.h"//DirectX
@@ -84,8 +83,11 @@ public: //リソース生成関数
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizeInBytes);
 	//テクスチャリソースの生成
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(const DirectX::TexMetadata& metadata);
-	//テクスチャデータの転送
-	void UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages);
+	// UploadTextureData関数
+	Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(
+		ID3D12Resource* texture,
+		const DirectX::ScratchImage& mipImages
+	);
 
 	//レンダーテクスチャーの生成
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateRenderTextureResource(Microsoft::WRL::ComPtr<ID3D12Device>, uint32_t width, uint32_t height, DXGI_FORMAT format, const Vector4& clearColor);
