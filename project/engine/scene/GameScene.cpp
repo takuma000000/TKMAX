@@ -154,7 +154,7 @@ void GameScene::InitializeSprite()
 	sprite = std::make_unique<Sprite>();
 	sprite->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/circle.png");
 	sprite->SetPosition({ -1000.0f, 0.0f });
-	sprite->SetParentScene(this);*/
+	sprite->SetParentScene(this);
 
 }
 

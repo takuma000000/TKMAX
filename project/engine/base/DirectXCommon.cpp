@@ -282,7 +282,7 @@ void DirectXCommon::Initialize(WindowsAPI* windowsAPI)
 	InitializeViewport();
 	InitializeScissorRect();
 	CreateRenderTextureReaourceRTV();
-	CreateRenderTextureReaourceSRV();
+	// CreateRenderTextureReaourceSRV();
 	CreatePipelineStateDX();
 	CreateDepthSRV();
 
@@ -1016,8 +1016,70 @@ void DirectXCommon::ImGuiDebug()
 	ImGui::End();
 }
 
+Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateRenderTextureResource(
+	Microsoft::WRL::ComPtr<ID3D12Device> device,
+	uint32_t width,
+	uint32_t height,
+	DXGI_FORMAT format,
+	const Vector4& clearColor)
+{
+	// Resourceの設定
+	D3D12_RESOURCE_DESC resourceDesc{};
+	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	resourceDesc.Width = width;
+	resourceDesc.Height = height;
+	resourceDesc.DepthOrArraySize = 1;
+	resourceDesc.MipLevels = 1;
+	resourceDesc.Format = format;
+	resourceDesc.SampleDesc.Count = 1;
+	resourceDesc.SampleDesc.Quality = 0;
+	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
 
+	// Heapの設定（VRAM）
+	D3D12_HEAP_PROPERTIES heapProperties{};
+	heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
 
+	// クリアカラー
+	D3D12_CLEAR_VALUE clearValue{};
+	clearValue.Format = format;
+	clearValue.Color[0] = clearColor.x;
+	clearValue.Color[1] = clearColor.y;
+	clearValue.Color[2] = clearColor.z;
+	clearValue.Color[3] = clearColor.w;
 
+	// リソース作成
+	Microsoft::WRL::ComPtr<ID3D12Resource> renderTexture;
+	HRESULT hr = device->CreateCommittedResource(
+		&heapProperties,
+		D3D12_HEAP_FLAG_NONE,
+		&resourceDesc,
+		D3D12_RESOURCE_STATE_RENDER_TARGET,
+		&clearValue,
+		IID_PPV_ARGS(&renderTexture)
+	);
+	assert(SUCCEEDED(hr));
 
+	return renderTexture;
+}
 
+void DirectXCommon::CreateRenderTextureReaourceRTV()
+{
+	const Vector4 kRenderTargetClearValue{ 1.0f, 0.0f, 0.0f, 1.0f };
+
+	renderTextureResource = CreateRenderTextureResource(
+		device,
+		WindowsAPI::kClientWidth,
+		WindowsAPI::kClientHeight,
+		DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
+		kRenderTargetClearValue
+	);
+
+	renderTextureResource->SetName(L"RenderTexture");
+
+	// RTVヒープの3番目にRenderTextureのハンドルを割り当てる（0,1はswapchain用）
+	rtvHandles[kRenderTextureRTVIndex] = rtvHeap_->GetCPUDescriptorHandleForHeapStart();
+	rtvHandles[kRenderTextureRTVIndex].ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV) * kRenderTextureRTVIndex;
+
+	device->CreateRenderTargetView(renderTextureResource.Get(), &rtvDesc, rtvHandles[2]);
+}
