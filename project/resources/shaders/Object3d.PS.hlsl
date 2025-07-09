@@ -2,6 +2,7 @@
 
 Texture2D<float4> gTexture : register(t0);
 SamplerState gSampler : register(s0);
+TextureCube<float4> gEnvironmentTexture : register(t1);
 
 struct Material
 {
@@ -132,16 +133,24 @@ PixelShaderOutput main(VertexShaderOutput input)
       
         float3 spotLight_Specular = gSpotLight.color.rgb * gSpotLight.intensity * spotLight_SpecularPow * factor_Spot * float3(1.0f, 1.0f, 1.0f) * falloffFactor;
         
-        
-        
-        
         output.color.rgb = directionalLight_Diffuse + directionalLight_Specular + pointLight_Diffuse + pointLight_Specular + spotLight_Diffuse + spotLight_Specular;
 
+        
+        // ======================
+        // 環境マップの反射を加算
+        // ======================
+        // カメラからピクセル位置へのベクトル
+        float3 cameraToPosition = normalize(input.worldPosition - gCamera.worldPosition);
+        // 反射ベクトルを計算
+        float3 reflectedVector = reflect(cameraToPosition, normalize(input.normal));
+        // キューブマップから反射色を取得
+        float4 environmentColor = gEnvironmentTexture.Sample(gSampler, reflectedVector);
+        // 色に加算（乗算で反射率を調整してもOK）
+        output.color.rgb += environmentColor.rgb * 0.3f; // ← 0.3f は反射率（好みで調整）
+        
+        
         // アルファ（おまけで適用）
         output.color.a = gMaterial.color.a * textureColor.a;
-
-        
-       // output.color.a = textureColor.a;
     }
     else
     {

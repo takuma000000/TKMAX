@@ -166,6 +166,10 @@ private:
 	//データを書き込む
 	CameraForGPU* cameraData = nullptr;
 
+	// EnvironmentMap用のSRVハンドル
+	D3D12_GPU_DESCRIPTOR_HANDLE environmentSrvHandle{};
+
+
 	//VertexResource関数
 	void VertexResource(DirectXCommon* dxCommon);
 	//materialResource関数
@@ -180,6 +184,8 @@ private:
 	void PointLight(DirectXCommon* dxCommon);
 	//SpotLight関数
 	void SpotLight(DirectXCommon* dxCommon);
+	// EnvironmentTextureResource関数
+	void EnvironmentTextureResource(DirectXCommon* dxCommon);
 
 	Transform transform;
 	Transform cameraTransform;

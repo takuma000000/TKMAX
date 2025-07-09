@@ -41,6 +41,7 @@ void Object3d::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommo
 	CameraResource(dxCommon_);
 	PointLight(dxCommon_);
 	SpotLight(dxCommon_);
+	EnvironmentTextureResource(dxCommon_);
 
 	//.objの参照しているテクスチャファイル読み込み
 	TextureManager::GetInstance()->LoadTexture(modelData.material.textureFilePath);
@@ -152,12 +153,19 @@ void Object3d::Draw(DirectXCommon* dxCommon)
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 
 	// Object3d のテクスチャを適用
-	dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(modelData.material.textureFilePath));
+	// Object3d の t0 と t1 両方を SRVバインド（t0ハンドルでまとめていける）
+	dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, environmentSrvHandle);
 
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(3, materialResourceLight->GetGPUVirtualAddress());
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(4, cameraResource->GetGPUVirtualAddress());
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(5, pointLightResource->GetGPUVirtualAddress());
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(6, spotLightResource->GetGPUVirtualAddress());
+
+	// SetGraphicsRootDescriptorTable で環境マップをバインドする前
+	assert(environmentSrvHandle.ptr != 0); // SRVがnullじゃないことを確認
+	//dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(7, environmentSrvHandle);
+
+
 
 
 	// ここで model_ のテクスチャを適用する
@@ -377,3 +385,18 @@ void Object3d::SpotLight(DirectXCommon* dxCommon)
 	spotLightData->cosAngle = std::cos(std::numbers::pi_v<float> / 3.0f);
 	spotLightData->cosFalloffStart = std::cos(std::numbers::pi_v<float> / 3.0f);
 }
+
+void Object3d::EnvironmentTextureResource(DirectXCommon* dxCommon)
+{
+	dxCommon_ = dxCommon;
+
+	// 環境マップとして使用するキューブマップテクスチャ（DDS形式）
+	const std::string envMapPath = "resources/rostock_laage_airport_4k.dds";
+
+	// 一度でもLoadTextureされていれば、再ロードはされない（中で重複防止されてる）
+	TextureManager::GetInstance()->LoadTexture(envMapPath);
+
+	// GPUハンドル（DescriptorTableで使用するSRVのGPUハンドル）を取得
+	environmentSrvHandle = TextureManager::GetInstance()->GetSrvHandleGPU(envMapPath);
+}
+
