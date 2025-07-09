@@ -1,24 +1,12 @@
 #pragma once
 #include "BaseScene.h"
+#include "SystemIncludes.h"
 
 #include <memory>
-#include "engine/audio/AudioManager.h"
-#include "TextureManager.h"
-#include "DirectXCommon.h"
-#include "srvManager.h"
 #include "engine/2d/Sprite.h"
-#include "SpriteCommon.h"
 #include "Object3d.h"
 #include "Camera.h"
-#include "Object3dCommon.h"
-#include "Model.h"
-#include "ModelCommon.h"
-#include "ModelManager.h"
-#include "DirectionalLight.h"
-#include "engine/effect/ParticleManager.h"
-#include "engine/effect/ParticlerEmitter.h"
-#include "engine/func/math/Vector3.h"
-#include <SkyBox.h>
+#include "SkyBox.h"
 
 class GameScene : public BaseScene
 {
@@ -26,93 +14,43 @@ public:
 	GameScene(DirectXCommon* dxCommon, SrvManager* srvManager) : dxCommon(dxCommon), srvManager(srvManager) {}
 	~GameScene() = default;
 
+	// -------------------- 初期化・終了 --------------------
 	void Initialize() override;
 	void Finalize() override;
+
+	// -------------------- 更新・描画 --------------------
 	void Update() override;
 	void Draw() override;
 
-private:// ──────────────────── 初期化処理 ────────────────────
+private:
+	// -------------------- 初期化内部処理 --------------------
+	void InitializeAudio();     // サウンド
+	void LoadTextures();        // テクスチャ
+	void InitializeSprite();    // スプライト
+	void LoadModels();          // モデル
+	void InitializeObjects();   // 3Dオブジェクト
+	void InitializeCamera();    // カメラ
 
-   // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-   // ゲーム内のサウンドをロード＆再生
-   // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-	void InitializeAudio();
-
-	// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-	// 必要なテクスチャをロード
-	// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-	void LoadTextures();
-
-	// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-	// スプライトを作成し、初期化
-	// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-	void InitializeSprite();
-
-	// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-	// 必要な3Dモデルをロード
-	// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-	void LoadModels();
-
-	// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-	// 3Dオブジェクトを作成し、初期化
-	// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-	void InitializeObjects();
-
-	// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-	// カメラを作成し、各オブジェクトに適用
-	// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-	void InitializeCamera();
-
-	// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-	// ImGui
-	// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-	void ImGuiDebug();
-
-private: // ──────────────────── 更新処理 ────────────────────
-
-	/**
-	* @brief 指定した Object3d の Transform を更新する
-	* @param obj 更新対象の Object3d
-	* @param translate 新しい座標
-	* @param rotate 回転角の加算値
-	* @param scale スケール値
-	*
-	* ───────────────────────────────────────────
-	* obj の移動・回転・スケールをまとめて更新する
-	* obj->SetTranslate(translate);
-	* obj->SetRotate(obj->GetRotate() + rotate);
-	* obj->SetScale(scale);
-	* ───────────────────────────────────────────
-	*/
-	void UpdateObjectTransform(std::unique_ptr<Object3d>& obj, const Vector3& translate, const Vector3& rotate, const Vector3& scale);
-
-	//メモリ使用量
-	void UpdateMemory();
-
-	
+	// -------------------- デバッグUI・状態更新 --------------------
+	void ImGuiDebug();          // ImGui表示
+	void UpdateMemory();        // メモリ使用量更新
 
 private:
+	// -------------------- システム参照 --------------------
 	DirectXCommon* dxCommon = nullptr;
 	SrvManager* srvManager = nullptr;
 
-	std::unique_ptr<Sprite> sprite = nullptr;
-	std::unique_ptr<Camera> camera = nullptr;
-
-	std::unique_ptr<Object3d> object3d = nullptr;
-	std::unique_ptr<Object3d> anotherObject3d = nullptr;
-	//地面
-	std::unique_ptr<Object3d> ground_ = nullptr;
-
+	// -------------------- ゲームオブジェクト --------------------
+	std::unique_ptr<Sprite> sprite = nullptr;// スプライト
+	std::unique_ptr<Camera> camera = nullptr;// カメラ
+	std::unique_ptr<Object3d> object3d = nullptr;// 3Dオブジェクト
+	std::unique_ptr<Object3d> ground_ = nullptr;// 地面オブジェクト
 	std::unique_ptr<DirectionalLight> directionalLight_ = nullptr;// ディレクショナルライト
+	std::unique_ptr<ParticleEmitter> particleEmitter = nullptr;// パーティクルエミッター
+	std::unique_ptr<Skybox> skybox_ = nullptr;// スカイボックス
 
-	static const int kMemoryHistorySize = 100;
-	std::array<float, kMemoryHistorySize> memoryHistory_{}; // 過去のメモリ使用履歴（MB）
-	int memoryHistoryIndex_ = 0;
-
-	//パーティクル
-	std::unique_ptr<ParticleEmitter> particleEmitter = nullptr;
-
-	std::unique_ptr<Skybox> skybox_;// スカイボックス
-
+	// -------------------- メモリ情報 --------------------
+	static const int kMemoryHistorySize = 100;// メモリ履歴のサイズ
+	std::array<float, kMemoryHistorySize> memoryHistory_{};// メモリ使用量履歴
+	int memoryHistoryIndex_ = 0;// メモリ履歴のインデックス
 };
-
