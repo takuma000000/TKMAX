@@ -4,28 +4,28 @@
 #include "externals/imGui/imgui.h"
 
 void Skybox::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager, const std::string& texturePath) {
-    dxCommon_ = dxCommon;
+	dxCommon_ = dxCommon;
 
 	TextureManager::GetInstance()->LoadTexture(texturePath);
 	srvHandleGPU_ = TextureManager::GetInstance()->GetSrvHandleGPU(texturePath);
 
-    // 定数バッファ
-    constantBuffer_ = dxCommon_->CreateBufferResource(sizeof(TransformationMatrix));
-    constantBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&mappedData_));
+	// 定数バッファ
+	constantBuffer_ = dxCommon_->CreateBufferResource(sizeof(TransformationMatrix));
+	constantBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&mappedData_));
 
-    materialBuffer_ = dxCommon_->CreateBufferResource(sizeof(Material));
-    materialBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&mappedMaterial_));
+	materialBuffer_ = dxCommon_->CreateBufferResource(sizeof(Material));
+	materialBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&mappedMaterial_));
 
-    *mappedMaterial_ = {
-        {1.0f, 1.0f, 1.0f, 1.0f},
-        1,
-        MyMath::MakeIdentity4x4(),
-        1.0f
-    };
+	*mappedMaterial_ = {
+		{1.0f, 1.0f, 1.0f, 1.0f},
+		1,
+		MyMath::MakeIdentity4x4(),
+		1.0f
+	};
 
-    CreateVertexBuffer();
-    CreateRootSignature();
-    CreatePipelineState();
+	CreateVertexBuffer();
+	CreateRootSignature();
+	CreatePipelineState();
 }
 
 
