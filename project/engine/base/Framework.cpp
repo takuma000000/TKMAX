@@ -15,7 +15,6 @@ void Framework::Initialize()
 	//シーンマネージャの生成
 	sceneManager_ = std::make_unique<SceneManager>();
 
-
 	windowsAPI = std::make_unique<WindowsAPI>();
 	windowsAPI->Initialize();
 

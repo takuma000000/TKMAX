@@ -1,6 +1,8 @@
 #pragma once
 #include "BaseScene.h"
 #include "SystemIncludes.h"
+#include "engine/effect/ParticleManager.h"
+#include "engine/effect/ParticlerEmitter.h"
 
 #include <memory>
 #include "engine/2d/Sprite.h"

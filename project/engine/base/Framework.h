@@ -35,6 +35,8 @@ public:
 	DirectXCommon* GetDirectXCommon() const { return dxCommon.get(); }
 	SrvManager* GetSrvManager() const { return srvManager.get(); }
 
+	static DirectXCommon* GetDxCommon();
+
 public:
 	void SetEndRequest(bool endRequest) { endRequest_ = endRequest; } // 終了フラグを設定する
 

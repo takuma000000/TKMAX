@@ -281,7 +281,7 @@ void DirectXCommon::Initialize(WindowsAPI* windowsAPI)
 	InitializeFence();
 	InitializeViewport();
 	InitializeScissorRect();
-	CreateRenderTextureReaourceRTV();
+	CreateRenderTextureResourceRTV();
 	// CreateRenderTextureReaourceSRV();
 	CreatePipelineStateDX();
 	CreateDepthSRV();
@@ -720,12 +720,12 @@ void DirectXCommon::InitializeRTV()
 #pragma region SwapChainからResourceを引っ張てくる
 
 	//SwapChainからResourceを引っ張てくる
-	hr = swapChain->GetBuffer(0, IID_PPV_ARGS(&swapChainResource[0]));
-	swapChainResource[0]->SetName(L"SwapChainResource0");
+	hr = swapChain->GetBuffer(0, IID_PPV_ARGS(&swapChainResources[0]));
+	swapChainResources[0]->SetName(L"SwapChainResource0");
 	//うまく取得できなければ起動できない
 	assert(SUCCEEDED(hr));
-	hr = swapChain->GetBuffer(1, IID_PPV_ARGS(&swapChainResource[1]));
-	swapChainResource[1]->SetName(L"SwapChainResource1");
+	hr = swapChain->GetBuffer(1, IID_PPV_ARGS(&swapChainResources[1]));
+	swapChainResources[1]->SetName(L"SwapChainResource1");
 	assert(SUCCEEDED(hr));
 
 #pragma endregion
@@ -750,8 +750,8 @@ void DirectXCommon::InitializeRTV()
 	rtvHandles[1].ptr = rtvHandles[0].ptr + descriptorSize;
 
 	//2つ目を作る
-	device->CreateRenderTargetView(swapChainResource[0].Get(), &rtvDesc, rtvHandles[0]);
-	device->CreateRenderTargetView(swapChainResource[1].Get(), &rtvDesc, rtvHandles[1]);
+	device->CreateRenderTargetView(swapChainResources[0].Get(), &rtvDesc, rtvHandles[0]);
+	device->CreateRenderTargetView(swapChainResources[1].Get(), &rtvDesc, rtvHandles[1]);
 
 }
 
@@ -880,7 +880,7 @@ void DirectXCommon::PreDraw()
 	// === Object描画ここで行う ===
 	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
 
-	barrier.Transition.pResource = swapChainResource[backBufferIndex].Get();
+	barrier.Transition.pResource = swapChainResources[backBufferIndex].Get();
 	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	commandList->ResourceBarrier(1, &barrier);
@@ -950,7 +950,7 @@ void DirectXCommon::PostDraw()
 
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barrier.Transition.pResource = swapChainResource[backBufferIndex].Get();
+	barrier.Transition.pResource = swapChainResources[backBufferIndex].Get();
 	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 	//barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
@@ -1063,7 +1063,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateRenderTextureResourc
 	return renderTexture;
 }
 
-void DirectXCommon::CreateRenderTextureReaourceRTV()
+void DirectXCommon::CreateRenderTextureResourceRTV()
 {
 	const Vector4 kRenderTargetClearValue{ 1.0f, 0.0f, 0.0f, 1.0f };
 

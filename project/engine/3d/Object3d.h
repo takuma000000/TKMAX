@@ -6,6 +6,8 @@
 #include "Vector3.h"
 #include "Vector4.h"
 
+#include "Framework.h"
+
 class Object3dCommon;
 class Model;
 class Camera;
