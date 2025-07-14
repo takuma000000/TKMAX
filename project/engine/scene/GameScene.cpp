@@ -65,7 +65,7 @@ void GameScene::Update()
 	camera->Update();
 
 	// camera->ImGuiDebug();
-	sprite->Update();
+	//sprite->Update();
 	//object3d->Update();
 	//ground_->Update();
 	//anotherObject3d->Update();
@@ -103,7 +103,7 @@ void GameScene::Draw()
 	SpriteCommon::GetInstance()->DrawSetCommon();
 	Object3dCommon::GetInstance()->DrawSetCommon();
 
-	sprite->Draw();  // textureSrvHandleGPU は必要に応じて設定
+	//sprite->Draw();  // textureSrvHandleGPU は必要に応じて設定
 	//object3d->Draw(dxCommon);
 	//ground_->Draw(dxCommon);
 	//anotherObject3d->Draw(dxCommon);
@@ -114,10 +114,6 @@ void GameScene::Draw()
 
 	//skybox_->Draw(camera->GetViewMatrix(), camera->GetProjectionMatrix());// スカイボックスの描画
 
-	// ライト情報をシェーダーなどに適用（必要に応じて実装）
-	Vector4 lightColor = directionalLight_->GetColor();
-	Vector3 lightDirection = directionalLight_->GetDirection();
-	float lightIntensity = directionalLight_->GetIntensity();
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -183,8 +179,7 @@ void GameScene::InitializeObjects()
 	//プレイヤー
 	player_ = std::make_unique<Player>();
 	player_->Initialize(Object3dCommon::GetInstance(), dxCommon);
-	player_->SetCamera(camera.get());
-	player_->SetPosition({ 0.0f, 1.0f, 0.0f }); // 初期位置
+	player_->SetPosition({ 0.0f, 0.0f, 0.0f }); // 初期位置
 
 	/*anotherObject3d = std::make_unique<Object3d>();
 	anotherObject3d->Initialize(Object3dCommon::GetInstance(), dxCommon);
@@ -204,8 +199,6 @@ void GameScene::InitializeCamera()
 	object3d->SetCamera(camera.get());
 	ground_->SetCamera(camera.get());
 	player_->SetCamera(camera.get());
-	//skybox_->SetCamera(camera.get());
-	//anotherObject3d->SetCamera(camera.get());
 }
 
 void GameScene::ImGuiDebug()
