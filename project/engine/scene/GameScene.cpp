@@ -69,6 +69,7 @@ void GameScene::Update()
 	//object3d->Update();
 	//ground_->Update();
 	//anotherObject3d->Update();
+	player_->Update();
 	// ライトの更新
 	directionalLight_->Update();
 
@@ -106,6 +107,7 @@ void GameScene::Draw()
 	//object3d->Draw(dxCommon);
 	//ground_->Draw(dxCommon);
 	//anotherObject3d->Draw(dxCommon);
+	player_->Draw(dxCommon);
 
 	// 
 	//ParticleManager::GetInstance()->Draw();
@@ -166,7 +168,7 @@ void GameScene::LoadModels()
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeObjects()
 {
-
+	//オブzヘクト
 	object3d = std::make_unique<Object3d>();
 	object3d->Initialize(Object3dCommon::GetInstance(), dxCommon);
 	object3d->SetModel("sphere.obj");
@@ -177,6 +179,12 @@ void GameScene::InitializeObjects()
 	ground_->Initialize(Object3dCommon::GetInstance(), dxCommon);
 	ground_->SetModel("terrain.obj");
 	ground_->SetParentScene(this);
+
+	//プレイヤー
+	player_ = std::make_unique<Player>();
+	player_->Initialize(Object3dCommon::GetInstance(), dxCommon);
+	player_->SetCamera(camera.get());
+	player_->SetPosition({ 0.0f, 1.0f, 0.0f }); // 初期位置
 
 	/*anotherObject3d = std::make_unique<Object3d>();
 	anotherObject3d->Initialize(Object3dCommon::GetInstance(), dxCommon);
@@ -195,6 +203,7 @@ void GameScene::InitializeCamera()
 
 	object3d->SetCamera(camera.get());
 	ground_->SetCamera(camera.get());
+	player_->SetCamera(camera.get());
 	//skybox_->SetCamera(camera.get());
 	//anotherObject3d->SetCamera(camera.get());
 }

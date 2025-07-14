@@ -20,6 +20,8 @@
 #include "engine/func/math/Vector3.h"
 #include <SkyBox.h>
 
+#include "Player.h"
+
 class GameScene : public BaseScene
 {
 public:
@@ -111,6 +113,7 @@ private:
 	std::unique_ptr<ParticleEmitter> particleEmitter = nullptr;
 
 	std::unique_ptr<Skybox> skybox_;// スカイボックス
+	std::unique_ptr<Player> player_ = nullptr;
 
 };
 
