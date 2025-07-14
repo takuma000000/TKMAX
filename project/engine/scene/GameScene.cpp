@@ -56,7 +56,7 @@ void GameScene::Update()
 	ResetDrawCallCount();
 	UpdateMemory(); // メモリ使用量の更新
 
-	particleEmitter->Update();
+	//particleEmitter->Update();
 	//particleEmitter->Emit();
 
 	// ────────────────────────────────────────
@@ -108,9 +108,9 @@ void GameScene::Draw()
 	//anotherObject3d->Draw(dxCommon);
 
 	// 
-	ParticleManager::GetInstance()->Draw();
+	//ParticleManager::GetInstance()->Draw();
 
-	skybox_->Draw(camera->GetViewMatrix(), camera->GetProjectionMatrix());// スカイボックスの描画
+	//skybox_->Draw(camera->GetViewMatrix(), camera->GetProjectionMatrix());// スカイボックスの描画
 
 	// ライト情報をシェーダーなどに適用（必要に応じて実装）
 	Vector4 lightColor = directionalLight_->GetColor();
@@ -299,7 +299,7 @@ void GameScene::ImGuiDebug()
 	DrawButtonBar("RB", Input::GetInstance()->PushButton(XINPUT_GAMEPAD_RIGHT_SHOULDER), ImVec4(1.0f, 0.6f, 0.0f, 1.0f)); // オレンジ
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	skybox_->ImGuiUpdate();
+	//skybox_->ImGuiUpdate();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
