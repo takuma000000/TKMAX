@@ -7,9 +7,6 @@
 #include "thread"
 #include "externals/DirectXTex/d3dx12.h"
 #include <vector>
-//#include "externals/imgui/imgui.h"
-//#include "externals/imgui/imgui_impl_win32.h"
-//#include "externals/imgui/imgui_impl_dx12.h"
 
 #define ALIGN256(size) ((size + 255) & ~255)
 
@@ -21,16 +18,6 @@ using namespace Logger;
 #pragma comment(lib, "dxcompiler.lib")
 
 using namespace Microsoft::WRL;
-
-////最大テクスチャ枚数
-//const uint32_t DirectXCommon::kMaxSRVCount = 512;
-
-// コンストラクタの実装
-//DirectXCommon::DirectXCommon()
-//	: descriptorSizeSRV(0), descriptorSizeRTV(0), descriptorSizeDSV(0), fenceValue(0), fenceEvent(nullptr), windowsAPI(nullptr)
-//{
-//	// 初期化コードがあればここに記述
-//}
 
 Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilTextureResource(Microsoft::WRL::ComPtr<ID3D12Device> device, int32_t width, int32_t height) {
 	//生成するResourceの設定
@@ -83,7 +70,6 @@ Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> DirectXCommon::CreateDescriptorHeap
 
 	return descriptorHeap;
 }
-
 
 void DirectXCommon::Initialize(WindowsAPI* windowsAPI)
 {
@@ -278,8 +264,6 @@ void DirectXCommon::GenerateDescpitorHeap()
 
 	//RTV用のヒープでディスクリプタの数は2。RTVはShader内で触るものではないので、ShaderVisibleはfalse
 	rtvDescriptorHeap = this->CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
-	/*SRV用のヒープでディスクリプタの数は128。SRVはShader内で触るものなので、ShaderVisibleはtrue
-	srvDescriptorHeap = CreateDescriptorHeap(device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kMaxSRVCount, true);*/
 
 #pragma endregion
 }
@@ -347,36 +331,6 @@ Microsoft::WRL::ComPtr<IDxcBlob> DirectXCommon::CompileShader(const std::wstring
 
 	return shaderBlob;
 }
-
-
-//Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateBufferResource(size_t sizeInBytes)
-//{
-//	HRESULT hr;
-//
-//	// 頂点リソース用のヒープの設定
-//	D3D12_HEAP_PROPERTIES uploadHeapProperties{};
-//	uploadHeapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
-//	// 頂点リソースの設定
-//	D3D12_RESOURCE_DESC vertexResourceDesc{};
-//	// バッファリソース
-//	vertexResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-//	vertexResourceDesc.Width = sizeInBytes; // リソースのサイズ。今回はVector4を3頂点分
-//	// バッファの場合はこれらは1にする決まり
-//	vertexResourceDesc.Height = 1;
-//	vertexResourceDesc.DepthOrArraySize = 1;
-//	vertexResourceDesc.MipLevels = 1;
-//	vertexResourceDesc.SampleDesc.Count = 1;
-//	// バッファの場合はこれにする決まり
-//	vertexResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-//	// 実際に頂点リソースを作る
-//	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = nullptr;
-//	hr = device->CreateCommittedResource(&uploadHeapProperties, D3D12_HEAP_FLAG_NONE,
-//		&vertexResourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-//		IID_PPV_ARGS(&vertexResource));
-//	assert(SUCCEEDED(hr));
-//
-//	return vertexResource;
-//}
 
 Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateBufferResource(size_t sizeInBytes)
 {
@@ -467,38 +421,6 @@ Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::UploadTextureData(ID3D12Re
 	return intermediateResource;
 }
 
-
-//DirectX::ScratchImage DirectXCommon::LoadTexture(const std::string& filePath)
-//{
-//	//テクスチャファイルを読んでプログラムを扱えるようにする
-//	DirectX::ScratchImage image{};
-//	std::wstring filePathW = ConvertString(filePath);
-//	HRESULT hr = DirectX::LoadFromWICFile(filePathW.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
-//	assert(SUCCEEDED(hr));
-//
-//	//MipMapの作成
-//	DirectX::ScratchImage mipImages{};
-//	hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, 0, mipImages);
-//	assert(SUCCEEDED(hr));
-//
-//	//MipMap付きのデータを返す
-//	return mipImages;
-//}
-
-//D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetCPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index)
-//{
-//	D3D12_CPU_DESCRIPTOR_HANDLE handleCPU = descriptorHeap->GetCPUDescriptorHandleForHeapStart();
-//	handleCPU.ptr += (descriptorSize * index);
-//	return handleCPU;
-//}
-//
-//D3D12_GPU_DESCRIPTOR_HANDLE DirectXCommon::GetGPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index)
-//{
-//	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
-//	handleGPU.ptr += (descriptorSize * index);
-//	return handleGPU;
-//}
-
 void DirectXCommon::InitializeRTV()
 {
 	HRESULT hr;
@@ -508,10 +430,10 @@ void DirectXCommon::InitializeRTV()
 #pragma region SwapChainからResourceを引っ張てくる
 
 	//SwapChainからResourceを引っ張てくる
-	hr = swapChain->GetBuffer(0, IID_PPV_ARGS(&swapChainResource[0]));
+	hr = swapChain->GetBuffer(0, IID_PPV_ARGS(&swapChainResources[0]));
 	//うまく取得できなければ起動できない
 	assert(SUCCEEDED(hr));
-	hr = swapChain->GetBuffer(1, IID_PPV_ARGS(&swapChainResource[1]));
+	hr = swapChain->GetBuffer(1, IID_PPV_ARGS(&swapChainResources[1]));
 	assert(SUCCEEDED(hr));
 
 #pragma endregion
@@ -524,9 +446,8 @@ void DirectXCommon::InitializeRTV()
 	rtvStartHandle = rtvHeap_->GetCPUDescriptorHandleForHeapStart();
 
 	//裏表の2つ分
-
-		//RTVを2つ作るのでディスクリプタを2つ用意
-		// rtvHandles[0] に最初のデスクリプタハンドルを設定
+	//RTVを2つ作るのでディスクリプタを2つ用意
+	// rtvHandles[0] に最初のデスクリプタハンドルを設定
 	rtvHandles[0] = rtvStartHandle;
 
 	// デスクリプタのサイズを取得
@@ -536,9 +457,8 @@ void DirectXCommon::InitializeRTV()
 	rtvHandles[1].ptr = rtvHandles[0].ptr + descriptorSize;
 
 	//2つ目を作る
-	device->CreateRenderTargetView(swapChainResource[0].Get(), &rtvDesc, rtvHandles[0]);
-	device->CreateRenderTargetView(swapChainResource[1].Get(), &rtvDesc, rtvHandles[1]);
-
+	device->CreateRenderTargetView(swapChainResources[0].Get(), &rtvDesc, rtvHandles[0]);
+	device->CreateRenderTargetView(swapChainResources[1].Get(), &rtvDesc, rtvHandles[1]);
 }
 
 void DirectXCommon::InitializeDSV()
@@ -590,28 +510,10 @@ void DirectXCommon::InitializeScissorRect()
 	scissorRect.bottom = WindowsAPI::kClientHeight;
 }
 
-//void DirectXCommon::InitializeImGui()
-//{
-	////Imguiの初期化
-	//IMGUI_CHECKVERSION();
-	//ImGui::CreateContext();
-	//ImGui::StyleColorsDark();
-	//ImGui_ImplWin32_Init(windowsAPI->GetHwnd());
-	//ImGui_ImplDX12_Init(device.Get(),
-	//	swapChainDesc.BufferCount,
-	//	rtvDesc.Format,
-	//	srvDescriptorHeap.Get(),
-	//	srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
-	//	srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart()
-	//);
-//}
-
 void DirectXCommon::InitializeFixFPS()
 {
-
 	//現在時間を記録する
 	reference_ = std::chrono::steady_clock::now();
-
 }
 
 void DirectXCommon::UpdateFixFPS()
@@ -639,33 +541,15 @@ void DirectXCommon::UpdateFixFPS()
 
 }
 
-//D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVCPUDescriptorHandle(uint32_t index)
-//{
-//	return GetCPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, index);
-//}
-//
-//D3D12_GPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVGPUDescriptorHandle(uint32_t index)
-//{
-//	return GetGPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, index);
-//}
-
 void DirectXCommon::PreDraw()
 {
-	//HRESULT hr;
-
-	//// 1. コマンドリストの開始（リセット）
-	//hr = commandAllocator->Reset();
-	//assert(SUCCEEDED(hr));
-	//hr = commandList->Reset(commandAllocator.Get(), nullptr);
-	//assert(SUCCEEDED(hr));
-
 	// これから書き込むバックバッファのインデックスを取得    
 	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
 
 	// TransitionBarrierの設定 (Present -> RenderTarget)
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barrier.Transition.pResource = swapChainResource[backBufferIndex].Get();
+	barrier.Transition.pResource = swapChainResources[backBufferIndex].Get();
 	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	commandList->ResourceBarrier(1, &barrier);
@@ -679,10 +563,6 @@ void DirectXCommon::PreDraw()
 	float clearColor[] = { 0.1f, 0.25f, 0.5f, 1.0f };
 	commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
 	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
-
-	// 描画用のDescriptorHeapを設定
-	//ID3D12DescriptorHeap* descriptorHeaps[] = { srvManager_->GetSrvDescriptorHeap().Get()};
-	//commandList->SetDescriptorHeaps(1, descriptorHeaps);
 
 	// ビューポートとシザー矩形の設定
 	D3D12_VIEWPORT viewport{};
@@ -710,7 +590,7 @@ void DirectXCommon::PostDraw()
 	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
 
 	// 1. 描画コマンドの記録 (リソースバリア設定)
-	barrier.Transition.pResource = swapChainResource[backBufferIndex].Get();
+	barrier.Transition.pResource = swapChainResources[backBufferIndex].Get();
 	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
 	commandList->ResourceBarrier(1, &barrier);
