@@ -1,5 +1,5 @@
 #include "Player.h"
-#include "externals/imgui/imgui.h"
+
 
 void Player::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	object_ = std::make_unique<Object3d>();
@@ -9,6 +9,7 @@ void Player::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 
 void Player::Update() {
 	HandleGamePadMove();
+	HandleCameraControl();
 	object_->Update();
 }
 
@@ -64,5 +65,31 @@ void Player::HandleGamePadMove() {
 	pos.x += moveX;
 	pos.z += moveZ;
 	object_->SetTranslate(pos);
+}
+
+void Player::HandleCameraControl() {
+	if (!camera) return;
+
+	Input* input = Input::GetInstance();
+
+	const float sensitivity = 0.005f; // 回転感度（調整してOK）
+	const SHORT deadZone = 8000;
+
+	SHORT rx = input->GetRightStickX();
+	SHORT ry = input->GetRightStickY();
+
+	// デッドゾーン処理
+	float rotX = abs(ry) > deadZone ? -(ry / 32768.0f) * sensitivity : 0.0f;
+	float rotY = abs(rx) > deadZone ? (rx / 32768.0f) * sensitivity : 0.0f;
+
+	Vector3 rotation = camera->GetRotate();
+	rotation.x += rotX;
+	rotation.y += rotY;
+
+	// X軸回転に制限をかける（真上向いたり真下向いたりしないように）
+	const float limitX = 1.5f; // ≒ 85度くらい
+	rotation.x = std::clamp(rotation.x, -limitX, limitX);
+
+	camera->SetRotate(rotation);
 }
 

@@ -5,6 +5,8 @@
 #include "Camera.h"
 #include "ModelManager.h"
 #include "Input.h"
+#include "externals/imgui/imgui.h"
+#include <algorithm>
 
 class Player {
 public:
@@ -26,6 +28,8 @@ public:
 private:
 
 	void HandleGamePadMove();
+	void HandleCameraControl();
+
 
 	Camera* camera = nullptr;
 
