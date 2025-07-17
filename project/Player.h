@@ -3,6 +3,7 @@
 #include <memory>
 #include "Object3d.h"
 #include "Camera.h"
+#include "ModelManager.h"
 
 class Player {
 public:

@@ -4,6 +4,7 @@ void Player::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	object_ = std::make_unique<Object3d>();
 	object_->Initialize(common, dxCommon);
 	object_->SetModel("sphere.obj");
+	ModelManager::GetInstance()->LoadModel("sphere.obj", dxCommon);
 }
 
 void Player::Update() {
