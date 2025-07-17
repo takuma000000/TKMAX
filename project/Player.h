@@ -4,6 +4,7 @@
 #include "Object3d.h"
 #include "Camera.h"
 #include "ModelManager.h"
+#include "Input.h"
 
 class Player {
 public:
@@ -23,6 +24,9 @@ public:
 	void SetParentScene(BaseScene* parentScene);
 
 private:
+
+	void HandleGamePadMove();
+
 	Camera* camera = nullptr;
 
 	BaseScene* parentScene_ = nullptr;

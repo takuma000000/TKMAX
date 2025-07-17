@@ -8,6 +8,7 @@ void Player::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 }
 
 void Player::Update() {
+	HandleGamePadMove();
 	object_->Update();
 }
 
@@ -46,3 +47,22 @@ void Player::SetParentScene(BaseScene* scene) {
 	// 必要な処理を書く、例：
 	parentScene_ = scene;
 }
+
+void Player::HandleGamePadMove() {
+	Input* input = Input::GetInstance();
+
+	const float moveSpeed = 0.1f;
+	const SHORT deadZone = 8000;
+
+	SHORT lx = input->GetLeftStickX();
+	SHORT ly = input->GetLeftStickY();
+
+	float moveX = abs(lx) > deadZone ? (lx / 32768.0f) * moveSpeed : 0.0f;
+	float moveZ = abs(ly) > deadZone ? (ly / 32768.0f) * moveSpeed : 0.0f;
+
+	Vector3 pos = object_->GetTranslate();
+	pos.x += moveX;
+	pos.z += moveZ;
+	object_->SetTranslate(pos);
+}
+
