@@ -73,7 +73,7 @@ void Player::HandleCameraControl() {
 
 	Input* input = Input::GetInstance();
 
-	const float sensitivity = 0.005f; // 回転感度（調整してOK）
+	const float sensitivity = 0.02f; // 回転感度（調整してOK）
 	const SHORT deadZone = 8000;
 
 	SHORT rx = input->GetRightStickX();
