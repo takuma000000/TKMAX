@@ -9,7 +9,7 @@ void Player::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 
 void Player::Update() {
 	HandleGamePadMove();
-	HandleCameraControl();
+	//HandleCameraControl();
 	HandleFollowCamera();
 	object_->Update();
 }
@@ -53,18 +53,20 @@ void Player::SetParentScene(BaseScene* scene) {
 void Player::HandleGamePadMove() {
 	Input* input = Input::GetInstance();
 
-	const float moveSpeed = 0.1f;
+	const float moveSpeed = 0.2f;
 	const SHORT deadZone = 8000;
 
 	SHORT lx = input->GetLeftStickX();
 	SHORT ly = input->GetLeftStickY();
 
-	float moveX = abs(lx) > deadZone ? (lx / 32768.0f) * moveSpeed : 0.0f;
-	float moveZ = abs(ly) > deadZone ? (ly / 32768.0f) * moveSpeed : 0.0f;
+	float stickX = abs(lx) > deadZone ? (lx / 32768.0f) : 0.0f;
+	float stickY = abs(ly) > deadZone ? (ly / 32768.0f) : 0.0f;
+
+	if (stickX == 0.0f && stickY == 0.0f) return;
 
 	Vector3 pos = object_->GetTranslate();
-	pos.x += moveX;
-	pos.z += moveZ;
+	pos.x += stickX * moveSpeed;
+	pos.y -= -stickY * moveSpeed;
 	object_->SetTranslate(pos);
 }
 
@@ -102,7 +104,7 @@ void Player::HandleFollowCamera() {
 
 	// カメラの回転から方向を求める（Y軸回転だけ使う）
 	Vector3 camRot = camera->GetRotate();
-	float distance = 10.0f;   // プレイヤーからの距離
+	float distance = 40.0f;   // プレイヤーからの距離
 	float height = 4.0f;      // プレイヤーより高い位置
 
 	// 回転角度からカメラの方向を計算（XZ平面）
