@@ -67,7 +67,7 @@ void GameScene::Update()
 	// camera->ImGuiDebug();
 	//sprite->Update();
 	//object3d->Update();
-	//ground_->Update();
+	ground_->Update();
 	//anotherObject3d->Update();
 	player_->Update();
 	// ライトの更新
@@ -82,10 +82,10 @@ void GameScene::Update()
 	//*-*-*-*-*-*-*-*-*-*-*
 	// object3d
 	//*-*-*-*-*-*-*-*-*-*-*
-	UpdateObjectTransform(object3d, { 0.0f, 0.0f, 00.0f }, { 0.0f,1.6f,0.0f }, { 1.0f, 1.0f, 1.0f });
+	/*UpdateObjectTransform(object3d, { 0.0f, 0.0f, 00.0f }, { 0.0f,1.6f,0.0f }, { 1.0f, 1.0f, 1.0f });
 	///   translate       ///     rotate      ///       scale       ///
 
-	UpdateObjectTransform(ground_, { 0.0f, 0.0f, 0.0f }, { 0.0f,1.6f,0.0f }, { 1.0f, 1.0f, 1.0f });
+	UpdateObjectTransform(ground_, { 0.0f, 0.0f, 0.0f }, { 0.0f,1.6f,0.0f }, { 1.0f, 1.0f, 1.0f });*/
 
 
 	// 
@@ -105,7 +105,7 @@ void GameScene::Draw()
 
 	//sprite->Draw();  // textureSrvHandleGPU は必要に応じて設定
 	//object3d->Draw(dxCommon);
-	//ground_->Draw(dxCommon);
+	ground_->Draw(dxCommon);
 	//anotherObject3d->Draw(dxCommon);
 	player_->Draw(dxCommon);
 
@@ -180,6 +180,7 @@ void GameScene::InitializeObjects()
 	player_ = std::make_unique<Player>();
 	player_->Initialize(Object3dCommon::GetInstance(), dxCommon);
 	player_->SetPosition({ 0.0f, 0.0f, 0.0f }); // 初期位置
+	player_->SetParentScene(this);
 
 	/*anotherObject3d = std::make_unique<Object3d>();
 	anotherObject3d->Initialize(Object3dCommon::GetInstance(), dxCommon);
@@ -194,7 +195,7 @@ void GameScene::InitializeCamera()
 	//Object3d共通部の初期化
 	camera = std::make_unique<Camera>();
 	camera->SetRotate({ 0.0f,0.0f,0.0f });
-	camera->SetTranslate({ 0.0f,0.0f,-0.0f });
+	camera->SetTranslate({ 0.0f,0.0f,-25.0f });
 
 	object3d->SetCamera(camera.get());
 	ground_->SetCamera(camera.get());
@@ -263,6 +264,23 @@ void GameScene::ImGuiDebug()
 	}
 	ImGui::Text("Active Particles: %d", totalParticles);
 	ImGui::Text("ParticleGroup Count: %d", ParticleManager::GetInstance()->GetParticleGroups().size());
+	ImGui::End();
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	player_->ImGuiDebug();
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	ImGui::Begin("ground");
+	Vector3 groundTranslate = ground_->GetTranslate();
+	Vector3 groundRotate = ground_->GetRotate();
+	Vector3 groundScale = ground_->GetScale();
+	if (ImGui::DragFloat3("Translate", &groundTranslate.x, 0.01f)) {
+		ground_->SetTranslate(groundTranslate);
+	}
+	if (ImGui::DragFloat3("Rotate", &groundRotate.x, 0.01f)) {
+		ground_->SetRotate(groundRotate);
+	}
+	if (ImGui::DragFloat3("Scale", &groundScale.x, 0.01f)) {
+		ground_->SetScale(groundScale);
+	}
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	ImGui::Begin("Camera");
