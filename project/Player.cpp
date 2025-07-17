@@ -2,8 +2,11 @@
 
 
 void Player::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
+	common_ = common;
+	dxCommon_ = dxCommon;
+
 	object_ = std::make_unique<Object3d>();
-	object_->Initialize(common, dxCommon);
+	object_->Initialize(common_, dxCommon_);
 	object_->SetModel("sphere.obj");
 }
 
@@ -11,6 +14,17 @@ void Player::Update() {
 	HandleGamePadMove();
 	//HandleCameraControl();
 	HandleFollowCamera();
+
+	HandleShooting(); // 先にプレイヤーの操作より下に置くと自然
+	for (auto it = bullets_.begin(); it != bullets_.end(); ) {
+		(*it)->Update();
+		if ((*it)->IsDead()) {
+			it = bullets_.erase(it);
+		} else {
+			++it;
+		}
+	}
+
 	object_->Update();
 }
 
@@ -39,6 +53,10 @@ void Player::ImGuiDebug() {
 
 void Player::Draw(DirectXCommon* dxCommon) {
 	object_->Draw(dxCommon);
+
+	for (auto& bullet : bullets_) {
+		bullet->Draw(dxCommon);
+	}
 }
 
 void Player::SetPosition(const Vector3& pos) {
@@ -123,5 +141,39 @@ void Player::HandleFollowCamera() {
 	};
 	camera->SetTranslate(cameraPos);
 }
+
+void Player::HandleShooting() {
+	Input* input = Input::GetInstance();
+	if (input->TriggerButton(XINPUT_GAMEPAD_RIGHT_SHOULDER)) {
+		auto bullet = std::make_unique<PlayerBullet>();
+		bullet->Initialize(common_, dxCommon_);
+
+		Vector3 startPos = object_->GetTranslate();
+		bullet->SetPosition(startPos);
+
+		if (enemy_) {
+			Vector3 enemyPos = enemy_->GetWorldPosition();
+			Vector3 dir = enemyPos - startPos;
+			float length = MyMath::Length(dir);
+
+			if (length < 0.01f) {
+				dir = { 0, 0, 1 }; // fallback
+			} else {
+				dir = MyMath::Normalize(dir);
+			}
+
+			bullet->SetVelocity(dir * 0.5f);
+		} else {
+			bullet->SetVelocity({ 0, 0, 0.5f });
+		}
+
+		bullet->SetCamera(camera);
+		bullet->SetEnemy(enemy_);
+		bullets_.push_back(std::move(bullet));
+	}
+}
+
+
+
 
 

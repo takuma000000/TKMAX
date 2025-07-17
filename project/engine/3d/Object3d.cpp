@@ -370,10 +370,10 @@ void Object3d::SpotLight(DirectXCommon* dxCommon)
 	spotLightResource->Map(0, nullptr, reinterpret_cast<void**>(&spotLightData));
 	//デフォルト値を書き込んでおく
 	spotLightData->color = { 1.0f,1.0f,1.0f,1.0f };
-	spotLightData->position = { 0.0f,10.0f,0.0f };
+	spotLightData->position = { 0.0f,50.0f,0.0f };
 	spotLightData->intensity = 4.0f;//光の強さ
 	spotLightData->direction = MyMath::Normalize({ 0.0f, -1.0f, 0.0f });
-	spotLightData->distance = 30.0f;
+	spotLightData->distance = 80.0f;
 	spotLightData->decay = 2.0f;
 	spotLightData->cosAngle = std::cos(std::numbers::pi_v<float> / 3.0f);
 	spotLightData->cosFalloffStart = std::cos(std::numbers::pi_v<float> / 3.0f);

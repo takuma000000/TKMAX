@@ -27,7 +27,7 @@ void GameScene::Initialize()
 
 	// ──────────────── パーティクルの初期化 ───────────────
 	ParticleManager::GetInstance()->Initialize(dxCommon, srvManager, camera.get());
-	ParticleManager::GetInstance()->CreateParticleGroup("uv", "./resources/gradationLine.png", ParticleManager::ParticleType::CYLINDER);
+	ParticleManager::GetInstance()->CreateParticleGroup("uv", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
 	particleEmitter = std::make_unique<ParticleEmitter>();
 	particleEmitter->Initialize("uv", { 0.0f,2.5f,10.0f });
 
@@ -72,6 +72,7 @@ void GameScene::Update()
 	player_->Update();
 	// ライトの更新
 	directionalLight_->Update();
+	enemy_->Update();
 
 	UpdatePerformanceInfo(); // FPSの更新
 
@@ -108,9 +109,10 @@ void GameScene::Draw()
 	ground_->Draw(dxCommon);
 	//anotherObject3d->Draw(dxCommon);
 	player_->Draw(dxCommon);
+	enemy_->Draw(dxCommon);
 
 	// 
-	//ParticleManager::GetInstance()->Draw();
+	ParticleManager::GetInstance()->Draw();
 
 	//skybox_->Draw(camera->GetViewMatrix(), camera->GetProjectionMatrix());// スカイボックスの描画
 
@@ -176,15 +178,19 @@ void GameScene::InitializeObjects()
 	ground_->SetModel("terrain.obj");
 	ground_->SetParentScene(this);
 
-	//プレイヤー
+	// GameScene::InitializeObjects() 内
+	enemy_ = std::make_unique<Enemy>();
+	enemy_->Initialize(Object3dCommon::GetInstance(), dxCommon);
+	enemy_->SetPosition({ 1.0f, 5.0f, 10.0f });
+	enemy_->SetParentScene(this);
+	enemy_->SetCamera(camera.get());
+
 	player_ = std::make_unique<Player>();
 	player_->Initialize(Object3dCommon::GetInstance(), dxCommon);
-	player_->SetPosition({ 0.0f, 0.0f, 0.0f }); // 初期位置
+	player_->SetPosition({ 0.0f, 0.0f, 0.0f });
 	player_->SetParentScene(this);
+	player_->SetEnemy(enemy_.get()); // ←こっちを後にする
 
-	/*anotherObject3d = std::make_unique<Object3d>();
-	anotherObject3d->Initialize(Object3dCommon::GetInstance(), dxCommon);
-	anotherObject3d->SetModel("plane.obj");*/
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -200,6 +206,7 @@ void GameScene::InitializeCamera()
 	object3d->SetCamera(camera.get());
 	ground_->SetCamera(camera.get());
 	player_->SetCamera(camera.get());
+	enemy_->SetCamera(camera.get());
 }
 
 void GameScene::ImGuiDebug()
@@ -267,6 +274,14 @@ void GameScene::ImGuiDebug()
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	player_->ImGuiDebug();
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	enemy_->ImGuiDebug();
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	ImGui::Begin("Bullet Debug");
+	for (const auto& bullet : player_->GetBullets()) {
+		ImGui::Text(bullet->IsHit() ? "true" : "false");
+	}
+	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	ImGui::Begin("ground");
 	Vector3 groundTranslate = ground_->GetTranslate();

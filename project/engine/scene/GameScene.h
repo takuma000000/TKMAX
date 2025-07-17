@@ -21,6 +21,7 @@
 #include <SkyBox.h>
 
 #include "Player.h"
+#include "Enemy.h"
 
 class GameScene : public BaseScene
 {
@@ -114,6 +115,7 @@ private:
 
 	std::unique_ptr<Skybox> skybox_;// スカイボックス
 	std::unique_ptr<Player> player_ = nullptr;
+	std::unique_ptr<Enemy> enemy_ = nullptr;
 
 };
 
