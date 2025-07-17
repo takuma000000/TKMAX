@@ -29,7 +29,7 @@ private:
 
 	void HandleGamePadMove();
 	void HandleCameraControl();
-
+	void HandleFollowCamera();
 
 	Camera* camera = nullptr;
 

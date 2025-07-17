@@ -10,6 +10,7 @@ void Player::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 void Player::Update() {
 	HandleGamePadMove();
 	HandleCameraControl();
+	HandleFollowCamera();
 	object_->Update();
 }
 
@@ -92,4 +93,33 @@ void Player::HandleCameraControl() {
 
 	camera->SetRotate(rotation);
 }
+
+void Player::HandleFollowCamera() {
+	if (!camera) return;
+
+	// プレイヤーの位置取得
+	Vector3 playerPos = object_->GetTranslate();
+
+	// カメラの回転から方向を求める（Y軸回転だけ使う）
+	Vector3 camRot = camera->GetRotate();
+	float distance = 10.0f;   // プレイヤーからの距離
+	float height = 4.0f;      // プレイヤーより高い位置
+
+	// 回転角度からカメラの方向を計算（XZ平面）
+	float angleY = camRot.y;
+	Vector3 offset = {
+		sinf(angleY) * -distance,
+		height,
+		cosf(angleY) * -distance
+	};
+
+	// カメラ位置を設定（プレイヤーに追従）
+	Vector3 cameraPos = {
+		playerPos.x + offset.x,
+		playerPos.y + offset.y,
+		playerPos.z + offset.z
+	};
+	camera->SetTranslate(cameraPos);
+}
+
 
