@@ -55,39 +55,16 @@ void GameScene::Update()
 
 	ResetDrawCallCount();
 	UpdateMemory(); // メモリ使用量の更新
-
-	//particleEmitter->Update();
-	//particleEmitter->Emit();
-
 	// ────────────────────────────────────────
 	// 各オブジェクトの更新処理
 	// ────────────────────────────────────────
 	camera->Update();
-
-	// camera->ImGuiDebug();
-	//sprite->Update();
-	//object3d->Update();
 	ground_->Update();
-	//anotherObject3d->Update();
 	player_->Update();
-	// ライトの更新
 	directionalLight_->Update();
 	enemy_->Update();
 
 	UpdatePerformanceInfo(); // FPSの更新
-
-	// ────────────────────────────────────────
-	// 移動・回転（加算）・スケール更新
-	// ────────────────────────────────────────
-
-	//*-*-*-*-*-*-*-*-*-*-*
-	// object3d
-	//*-*-*-*-*-*-*-*-*-*-*
-	/*UpdateObjectTransform(object3d, { 0.0f, 0.0f, 00.0f }, { 0.0f,1.6f,0.0f }, { 1.0f, 1.0f, 1.0f });
-	///   translate       ///     rotate      ///       scale       ///
-
-	UpdateObjectTransform(ground_, { 0.0f, 0.0f, 0.0f }, { 0.0f,1.6f,0.0f }, { 1.0f, 1.0f, 1.0f });*/
-
 
 	// 
 	ParticleManager::GetInstance()->Update();
@@ -99,23 +76,15 @@ void GameScene::Update()
 
 void GameScene::Draw()
 {
-
 	//Draw
 	SpriteCommon::GetInstance()->DrawSetCommon();
 	Object3dCommon::GetInstance()->DrawSetCommon();
 
-	//sprite->Draw();  // textureSrvHandleGPU は必要に応じて設定
-	//object3d->Draw(dxCommon);
 	ground_->Draw(dxCommon);
-	//anotherObject3d->Draw(dxCommon);
 	player_->Draw(dxCommon);
 	enemy_->Draw(dxCommon);
 
-	// 
 	ParticleManager::GetInstance()->Draw();
-
-	//skybox_->Draw(camera->GetViewMatrix(), camera->GetProjectionMatrix());// スカイボックスの描画
-
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -123,8 +92,6 @@ void GameScene::Draw()
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeAudio()
 {
-	//AudioManager::GetInstance()->LoadSound("fanfare", "fanfare.wav");
-	//AudioManager::GetInstance()->PlaySound("fanfare");
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -166,7 +133,7 @@ void GameScene::LoadModels()
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeObjects()
 {
-	//オブzヘクト
+	//オブジェクト
 	object3d = std::make_unique<Object3d>();
 	object3d->Initialize(Object3dCommon::GetInstance(), dxCommon);
 	object3d->SetModel("sphere.obj");
@@ -190,7 +157,6 @@ void GameScene::InitializeObjects()
 	player_->SetPosition({ 0.0f, 0.0f, 0.0f });
 	player_->SetParentScene(this);
 	player_->SetEnemy(enemy_.get()); // ←こっちを後にする
-
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -333,8 +299,6 @@ void GameScene::ImGuiDebug()
 	DrawButtonBar("LB", Input::GetInstance()->PushButton(XINPUT_GAMEPAD_LEFT_SHOULDER), ImVec4(0.6f, 0.2f, 0.8f, 1.0f)); // 紫
 	DrawButtonBar("RB", Input::GetInstance()->PushButton(XINPUT_GAMEPAD_RIGHT_SHOULDER), ImVec4(1.0f, 0.6f, 0.0f, 1.0f)); // オレンジ
 	ImGui::End();
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	//skybox_->ImGuiUpdate();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 

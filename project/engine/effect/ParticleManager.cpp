@@ -388,26 +388,54 @@ void ParticleManager::Emit(const std::string name, Vector3& pos, uint32_t count)
 	}
 }
 
-ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate)
-{
-	std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);//位置の範囲を指定
-	std::uniform_real_distribution<float> distColor(0.0f, 1.0f);//色の範囲を指定
-	std::uniform_real_distribution<float> distRotate(-std::numbers::pi_v<float>, std::numbers::pi_v<float>);//回転の範囲を指定
-	std::uniform_real_distribution<float> distScale(0.4f, 1.5f);//スケールの範囲を指定
-	//一定時間で消えるようにする
-	std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
-	Particle particle;
-	particle.transform.scale = { 1.0f,1.0f,1.0f };//スケールを指定
-	particle.transform.rotate = { 0.0f,0.0f,0.0f };//回転を指定
-	//位置と速度を[-1,1]でランダムに初期化
-	Vector3 randomTranslate{ distribution(randomEngine),distribution(randomEngine),distribution(randomEngine) };
-	particle.transform.translate = translate;//位置を指定
-	particle.velocity = { 0.0f,0.0f,0.0f };//速度を指定
-	particle.color = { 1.0f,1.0f,1.0f,1.0f };//色を指定
-	particle.lifeTime = 1.0f;//生存時間を指定
-	particle.currentTime = 0.0f;//経過時間を指定
+ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate) {
+	std::uniform_real_distribution<float> distColor(0.8f, 1.0f);
+	std::uniform_real_distribution<float> distVelocity(-0.15f, 0.15f);
+	std::uniform_real_distribution<float> distScale(1.0f, 2.0f);
+
+	// 追加：発生位置をばらけさせる範囲
+	std::uniform_real_distribution<float> distOffsetX(-0.3f, 0.3f);
+	std::uniform_real_distribution<float> distOffsetY(0.0f, 0.5f);  // 上方向だけ
+	std::uniform_real_distribution<float> distOffsetZ(-0.3f, 0.3f);
+
+	Particle particle{};
+
+	// 敵の上でランダムにばらけた発生位置
+	Vector3 offset = {
+		distOffsetX(randomEngine),
+		distOffsetY(randomEngine),
+		distOffsetZ(randomEngine)
+	};
+	particle.transform.translate = translate + offset;
+
+	// 大きめのスケール
+	float scale = distScale(randomEngine);
+	particle.transform.scale = { scale, scale, scale };
+
+	// ランダムな方向に広がる
+	particle.velocity = {
+		distVelocity(randomEngine),
+		distVelocity(randomEngine),
+		distVelocity(randomEngine)
+	};
+
+	// 色は赤〜オレンジ系
+	particle.color = {
+		distColor(randomEngine),                // R
+		distColor(randomEngine) * 0.5f,         // G
+		0.0f,                                   // B
+		1.0f                                    // A
+	};
+
+	// 寿命短め
+	particle.lifeTime = 0.4f;
+	particle.currentTime = 0.0f;
+
 	return particle;
 }
+
+
+
 
 void ParticleManager::CreateRingVertices()
 {
