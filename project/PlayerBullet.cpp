@@ -14,30 +14,38 @@ void PlayerBullet::Update() {
 	Vector3 pos = object_->GetTranslate();
 	pos = pos + velocity_;
 	object_->SetTranslate(pos);
+
 	// 敵が存在する場合、当たり判定チェック
 	if (enemy_) {
-		// 敵のワールド座標を取得
+		// 敵のワールド座標（モデルの中心）を取得
 		Vector3 enemyPos = enemy_->GetWorldPosition();
-		// 敵のスケールから最大軸を使ってヒット判定半径を算出（+0.5fで調整）
-		Vector3 enemyScale = enemy_->GetScale();
-		float hitRadius = std::max({ enemyScale.x, enemyScale.y, enemyScale.z }) * 0.5f + 0.5f;
-		// 弾と敵の距離が一定未満ならヒットと判定
-		if (MyMath::Length(pos - enemyPos) < hitRadius) {
-			isHit_ = true;// ヒットフラグを立てる
+
+		// 固定の当たり判定半径（スケールに依存しない）
+		const float hitRadius = 1.8f; // 見た目に合わせて調整
+
+		// 距離を計算して当たり判定
+		float dist = MyMath::Length(pos - enemyPos);
+		if (dist < hitRadius) {
+			isHit_ = true; // ヒットフラグを立てる
+
 			// ヒット時にパーティクルを発生させる
 			ParticleManager::GetInstance()->Emit("uv", pos, 30);
+
 			// 弾を消す
 			isDead_ = true;
 			return;
 		}
 	}
+
 	// 画面外に出たら弾を消す（Z軸方向100.0fを超えたら死亡）
 	if (pos.z > 100.0f) {
 		isDead_ = true;
 	}
+
 	// Object3dの更新処理
 	object_->Update();
 }
+
 
 
 void PlayerBullet::Draw(DirectXCommon* dxCommon) {
