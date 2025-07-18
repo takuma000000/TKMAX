@@ -16,7 +16,9 @@ public:
 	void SetPosition(const Vector3& pos);
 	void SetParentScene(BaseScene* scene);
 	Vector3 GetWorldPosition() const;
-
+	Vector3 GetScale() const {
+		return object_ ? object_->GetScale() : Vector3{ 1.0f, 1.0f, 1.0f };
+	}
 
 private:
 	std::unique_ptr<Object3d> object_;
