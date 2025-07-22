@@ -1,6 +1,7 @@
 #define NOMINMAX
 #include "PlayerBullet.h"
 #include <engine/effect/ParticleManager.h>
+#include "AABB.h"
 
 void PlayerBullet::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	object_ = std::make_unique<Object3d>();
@@ -10,39 +11,44 @@ void PlayerBullet::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 }
 
 void PlayerBullet::Update() {
-	// 現在位置を取得し、速度分だけ進める
+	// 現在の座標を取得して、速度分だけ進める
 	Vector3 pos = object_->GetTranslate();
 	pos = pos + velocity_;
 	object_->SetTranslate(pos);
 
-	// 敵が存在する場合、当たり判定チェック
+	// 敵が存在するなら当たり判定チェック
 	if (enemy_) {
-		// 敵のワールド座標（モデルの中心）を取得
+		// 弾の座標とスケールを取得
+		Vector3 bulletPos = object_->GetTranslate();
+		Vector3 bulletScale = object_->GetScale();
+
+		// 敵のワールド座標とスケールを取得
 		Vector3 enemyPos = enemy_->GetWorldPosition();
+		Vector3 enemyScale = enemy_->GetScale();
 
-		// 固定の当たり判定半径（スケールに依存しない）
-		const float hitRadius = 1.8f; // 見た目に合わせて調整
+		// 弾と敵のAABB（軸に沿ったバウンディングボックス）を作成
+		AABB bulletBox(bulletPos, bulletScale);
+		AABB enemyBox(enemyPos, enemyScale);
 
-		// 距離を計算して当たり判定
-		float dist = MyMath::Length(pos - enemyPos);
-		if (dist < hitRadius) {
-			isHit_ = true; // ヒットフラグを立てる
-
-			// ヒット時にパーティクルを発生させる
-			ParticleManager::GetInstance()->Emit("uv", pos, 30);
-
-			// 弾を消す
+		// AABB同士の当たり判定を行う
+		if (bulletBox.IsCollidingWithAABB(enemyBox)) {
+			// 当たったらフラグを立てて削除対象にする
+			isHit_ = true;
 			isDead_ = true;
-			return;
+
+			// パーティクルを発生させる
+			ParticleManager::GetInstance()->Emit("uv", bulletPos, 30);
+
+			return; // 一度当たったらそれ以上の処理はしない
 		}
 	}
 
-	// 画面外に出たら弾を消す（Z軸方向100.0fを超えたら死亡）
+	// 一定距離（Z方向）を超えたら弾を削除する
 	if (pos.z > 100.0f) {
 		isDead_ = true;
 	}
 
-	// Object3dの更新処理
+	// Object3d の更新処理（行列など）
 	object_->Update();
 }
 
