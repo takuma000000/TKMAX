@@ -34,7 +34,7 @@ void GameScene::Initialize()
 	// ──────────────── スカイボックスの初期化 ───────────────
 	skybox_ = std::make_unique<Skybox>();
 	skybox_->Initialize(dxCommon, srvManager, "resources/rostock_laage_airport_4k.dds");
-
+	skybox_->SetCamera(camera.get());
 }
 
 void GameScene::Finalize()
@@ -66,7 +66,7 @@ void GameScene::Update()
 
 	// camera->ImGuiDebug();
 	sprite->Update();
-	//object3d->Update();
+	object3d->Update();
 	//ground_->Update();
 	//anotherObject3d->Update();
 	// ライトの更新
@@ -81,7 +81,6 @@ void GameScene::Update()
 	//*-*-*-*-*-*-*-*-*-*-*
 	// object3d
 	//*-*-*-*-*-*-*-*-*-*-*
-	UpdateObjectTransform(object3d, { 0.0f, 0.0f, 00.0f }, { 0.0f,1.6f,0.0f }, { 1.0f, 1.0f, 1.0f });
 	///   translate       ///     rotate      ///       scale       ///
 
 	UpdateObjectTransform(ground_, { 0.0f, 0.0f, 0.0f }, { 0.0f,1.6f,0.0f }, { 1.0f, 1.0f, 1.0f });
@@ -103,14 +102,14 @@ void GameScene::Draw()
 	Object3dCommon::GetInstance()->DrawSetCommon();
 
 	sprite->Draw();  // textureSrvHandleGPU は必要に応じて設定
-	//object3d->Draw(dxCommon);
+	object3d->Draw(dxCommon);
 	//ground_->Draw(dxCommon);
 	//anotherObject3d->Draw(dxCommon);
 
 	// 
 	ParticleManager::GetInstance()->Draw();
 
-	skybox_->Draw(camera->GetViewMatrix(), camera->GetProjectionMatrix());// スカイボックスの描画
+	skybox_->Draw();// スカイボックスの描画
 
 	// ライト情報をシェーダーなどに適用（必要に応じて実装）
 	Vector4 lightColor = directionalLight_->GetColor();
@@ -195,8 +194,6 @@ void GameScene::InitializeCamera()
 
 	object3d->SetCamera(camera.get());
 	ground_->SetCamera(camera.get());
-	//skybox_->SetCamera(camera.get());
-	//anotherObject3d->SetCamera(camera.get());
 }
 
 void GameScene::ImGuiDebug()

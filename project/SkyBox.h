@@ -9,18 +9,20 @@
 
 #include "TextureManager.h"
 #include "DirectXCommon.h"
+#include "Camera.h"
 
 class DirectXCommon;
 
 class Skybox {
 public:
 	void Initialize(DirectXCommon* dxCommon, SrvManager* srvManager, const std::string& texturePath);
-	void Draw(const Matrix4x4& view, const Matrix4x4& projection);
+	void Draw();
 
 	//ImGui
 	void ImGuiUpdate();
 
 	void SetScale(const Vector3& scale) { scale_ = scale; }
+	void SetCamera(Camera* camera) { camera_ = camera; }
 
 	// 定数バッファ用構造体
 	struct TransformationMatrix {
@@ -44,6 +46,8 @@ private:
 	};
 
 	DirectXCommon* dxCommon_ = nullptr;
+	Camera* camera_ = nullptr;
+
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer_;
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView_{};
 	UINT vertexCount_ = 0;
@@ -59,7 +63,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialBuffer_;
 	Material* mappedMaterial_ = nullptr;
 
-	Vector3 scale_ = { 5.0f, 5.0f, 5.0f }; // デフォルトスケール
+	Vector3 scale_ = { 100.0f, 100.0f, 100.0f }; // デフォルトスケール
 	Vector3 rotation_ = { 0.0f, 0.0f, 0.0f }; // デフォルト回転
 	Vector3 translation_ = { 0.0f, 0.0f, 0.0f }; // デフォルト位置
 

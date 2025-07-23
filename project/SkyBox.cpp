@@ -176,36 +176,40 @@ void Skybox::CreatePipelineState() {
 	assert(SUCCEEDED(hr));
 }
 
-void Skybox::Draw(const Matrix4x4& view, const Matrix4x4& projection) {
+void Skybox::Draw() {
+	if (!camera_) return;
+
 	ID3D12GraphicsCommandList* cmdList = dxCommon_->GetCommandList();
 	cmdList->SetPipelineState(pipelineState_.Get());
 	cmdList->SetGraphicsRootSignature(rootSignature_.Get());
 	cmdList->IASetVertexBuffers(0, 1, &vertexBufferView_);
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	// スカイボックスなのでカメラ位置だけ除去
-	Matrix4x4 camView = view;
-	camView.m[3][0] = 0.0f;
-	camView.m[3][1] = 0.0f;
-	camView.m[3][2] = 0.0f;
+	// カメラの View / Projection を取得してスカイボックス用に調整
+	Matrix4x4 view = camera_->GetViewMatrix();
+	Matrix4x4 proj = camera_->GetProjectionMatrix();
 
-	Matrix4x4 scaleMatrix = MyMath::MakeScaleMatrix(scale_);
-	Matrix4x4 worldMatrix = scaleMatrix;
+	// カメラ位置除去
+	view.m[3][0] = 0.0f;
+	view.m[3][1] = 0.0f;
+	view.m[3][2] = 0.0f;
 
-	// 💡ここが一番大事！
-	mappedData_->viewProjection = MyMath::Multiply(camView, projection);
-	mappedData_->world = worldMatrix;
+	Matrix4x4 world = MyMath::MakeScaleMatrix(scale_);
+
+	mappedData_->viewProjection = MyMath::Multiply(view, proj);
+	mappedData_->world = world;
 
 	cmdList->SetGraphicsRootConstantBufferView(0, constantBuffer_->GetGPUVirtualAddress());
 	cmdList->SetGraphicsRootConstantBufferView(1, materialBuffer_->GetGPUVirtualAddress());
 	cmdList->SetGraphicsRootDescriptorTable(2, srvHandleGPU_);
+
 	cmdList->DrawInstanced(vertexCount_, 1, 0, 0);
 }
 
 void Skybox::ImGuiUpdate()
 {
 	ImGui::Begin("Skybox");
-	ImGui::DragFloat3("Scale", &scale_.x, 0.1f, 0.0f, 10.0f);
+	ImGui::DragFloat3("Scale", &scale_.x, 0.1f, 0.0f, 100.0f);
 	/*ImGui::DragFloat3("Rotation", &rotation_.x, 0.1f, 0.0f, 360.0f);
 	ImGui::DragFloat3("Translation", &translation_.x, 0.1f, -10.0f, 10.0f);*/
 	ImGui::End();
