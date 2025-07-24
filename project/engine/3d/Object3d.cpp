@@ -41,6 +41,7 @@ void Object3d::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommo
 	CameraResource(dxCommon_);
 	PointLight(dxCommon_);
 	SpotLight(dxCommon_);
+	Environment(dxCommon_);
 
 	//.objの参照しているテクスチャファイル読み込み
 	TextureManager::GetInstance()->LoadTexture(modelData.material.textureFilePath);
@@ -160,6 +161,12 @@ void Object3d::Draw(DirectXCommon* dxCommon)
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(5, pointLightResource->GetGPUVirtualAddress());
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(6, spotLightResource->GetGPUVirtualAddress());
 
+	if (environmentSrvHandleGPU_.ptr != 0) {
+		dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(7, environmentSrvHandleGPU_);
+	}
+
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(8, environment->GetGPUVirtualAddress());
+
 
 	// ここで model_ のテクスチャを適用する
 	if (model_) {
@@ -180,6 +187,13 @@ void Object3d::SetModel(const std::string& filePath)
 void Object3d::SetParentScene(BaseScene* parentScene)
 {
 	parentScene_ = parentScene;
+}
+
+void Object3d::SetEnvironment(const std::string& filename) {
+	environmentSrvHandleGPU_ = TextureManager::GetInstance()->GetSrvHandleGPU(filename);
+	if (environmentData) {
+		environmentData->useEnvironment = true;
+	}
 }
 
 MaterialData Object3d::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)
@@ -377,4 +391,15 @@ void Object3d::SpotLight(DirectXCommon* dxCommon)
 	spotLightData->decay = 2.0f;
 	spotLightData->cosAngle = std::cos(std::numbers::pi_v<float> / 3.0f);
 	spotLightData->cosFalloffStart = std::cos(std::numbers::pi_v<float> / 3.0f);
+}
+
+void Object3d::Environment(DirectXCommon* dxCommon)
+{
+	dxCommon_ = dxCommon;
+	//環境マップのリソースを作る
+	environment = dxCommon_->CreateBufferResource(sizeof(EnvironmentEX));
+	//書き込むためのアドレスを取得
+	environment->Map(0, nullptr, reinterpret_cast<void**>(&environmentData));
+	//デフォルト値を書き込んでおく
+	environmentData->useEnvironment = false;
 }
