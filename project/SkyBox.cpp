@@ -179,7 +179,7 @@ void Skybox::CreatePipelineState() {
 void Skybox::Draw() {
 	if (!camera_) return;
 
-	translation_ = camera_->GetTranslate();// カメラの位置をスカイボックスの位置に設定
+	translation_ = camera_->GetTranslate(); // カメラ位置＝スカイボックスの位置
 
 	ID3D12GraphicsCommandList* cmdList = dxCommon_->GetCommandList();
 	cmdList->SetPipelineState(pipelineState_.Get());
@@ -187,20 +187,24 @@ void Skybox::Draw() {
 	cmdList->IASetVertexBuffers(0, 1, &vertexBufferView_);
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	// カメラの View / Projection を取得してスカイボックス用に調整
+	// ViewMatrixの位置成分を無効化（スカイボックスが固定されるように）
 	Matrix4x4 view = camera_->GetViewMatrix();
-	Matrix4x4 proj = camera_->GetProjectionMatrix();
-	// カメラ位置除去
 	view.m[3][0] = 0.0f;
 	view.m[3][1] = 0.0f;
 	view.m[3][2] = 0.0f;
+
+	Matrix4x4 proj = camera_->GetProjectionMatrix();
 	Matrix4x4 world = MyMath::MakeAffineMatrix(scale_, rotation_, translation_);
+
 	mappedData_->viewProjection = MyMath::Multiply(view, proj);
 	mappedData_->world = world;
 
 	cmdList->SetGraphicsRootConstantBufferView(0, constantBuffer_->GetGPUVirtualAddress());
 	cmdList->SetGraphicsRootConstantBufferView(1, materialBuffer_->GetGPUVirtualAddress());
-	cmdList->SetGraphicsRootDescriptorTable(2, srvHandleGPU_);
+
+	if (srvHandleGPU_.ptr != 0) {
+		cmdList->SetGraphicsRootDescriptorTable(2, srvHandleGPU_);
+	}
 
 	cmdList->DrawInstanced(vertexCount_, 1, 0, 0);
 }

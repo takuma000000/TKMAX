@@ -142,7 +142,11 @@ PixelShaderOutput main(VertexShaderOutput input)
         float3 spotLight_Specular = gSpotLight.color.rgb * gSpotLight.intensity * spotLight_SpecularPow * factor_Spot * float3(1.0f, 1.0f, 1.0f) * falloffFactor;
         
         
-        
+       
+        float3 cameraToPosition = normalize(input.worldPosition - gCamera.worldPosition);
+        float3 reflectedVector = reflect(cameraToPosition, normalize(input.normal));
+        float4 environmentColor = gEnvironmentTexture.Sample(gSampler, reflectedVector);
+        output.color.rgb += environmentColor.rgb;
         
         output.color.rgb = directionalLight_Diffuse + directionalLight_Specular + pointLight_Diffuse + pointLight_Specular + spotLight_Diffuse + spotLight_Specular;
 
@@ -150,20 +154,11 @@ PixelShaderOutput main(VertexShaderOutput input)
         output.color.a = gMaterial.color.a * textureColor.a;
 
         
-       // output.color.a = textureColor.a;
+       
     }
     else
     {
         output.color = gMaterial.color * textureColor;
-    }
-    
-    if (environment.useEnvironment)
-    {
-        float3 cameraToPosition = normalize(input.worldPosition - gCamera.worldPosition);
-        float3 reflectedVector = reflect(cameraToPosition, normalize(input.normal));
-        float3 environmentColor = gEnvironmentTexture.Sample(gSampler, reflectedVector);
-    
-        output.color.rgb += environmentColor.rgb;
     }
         
     if (output.color.a < 0.5f)
