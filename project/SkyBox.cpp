@@ -179,6 +179,8 @@ void Skybox::CreatePipelineState() {
 void Skybox::Draw() {
 	if (!camera_) return;
 
+	translation_ = camera_->GetTranslate();// カメラの位置をスカイボックスの位置に設定
+
 	ID3D12GraphicsCommandList* cmdList = dxCommon_->GetCommandList();
 	cmdList->SetPipelineState(pipelineState_.Get());
 	cmdList->SetGraphicsRootSignature(rootSignature_.Get());
@@ -188,14 +190,11 @@ void Skybox::Draw() {
 	// カメラの View / Projection を取得してスカイボックス用に調整
 	Matrix4x4 view = camera_->GetViewMatrix();
 	Matrix4x4 proj = camera_->GetProjectionMatrix();
-
 	// カメラ位置除去
 	view.m[3][0] = 0.0f;
 	view.m[3][1] = 0.0f;
 	view.m[3][2] = 0.0f;
-
-	Matrix4x4 world = MyMath::MakeScaleMatrix(scale_);
-
+	Matrix4x4 world = MyMath::MakeAffineMatrix(scale_, rotation_, translation_);
 	mappedData_->viewProjection = MyMath::Multiply(view, proj);
 	mappedData_->world = world;
 

@@ -110,11 +110,6 @@ void GameScene::Draw()
 	ParticleManager::GetInstance()->Draw();
 
 	skybox_->Draw();// スカイボックスの描画
-
-	// ライト情報をシェーダーなどに適用（必要に応じて実装）
-	Vector4 lightColor = directionalLight_->GetColor();
-	Vector3 lightDirection = directionalLight_->GetDirection();
-	float lightIntensity = directionalLight_->GetIntensity();
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -190,7 +185,7 @@ void GameScene::InitializeCamera()
 	//Object3d共通部の初期化
 	camera = std::make_unique<Camera>();
 	camera->SetRotate({ 0.0f,0.0f,0.0f });
-	camera->SetTranslate({ 0.0f,0.0f,-0.0f });
+	camera->SetTranslate({ 0.0f,0.0f,-25.0f });
 
 	object3d->SetCamera(camera.get());
 	ground_->SetCamera(camera.get());
@@ -261,14 +256,17 @@ void GameScene::ImGuiDebug()
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	ImGui::Begin("Camera");
-	Vector3 camPos = camera->GetTranslate();
+	/*Vector3 camPos = camera->GetTranslate();
 	if (ImGui::DragFloat3("Position", &camPos.x, 0.1f, -50, 50.0f)) {
 		camera->SetTranslate(camPos);
 	}
 	Vector3 camRot = camera->GetRotate();
 	if (ImGui::DragFloat3("Rotation", &camRot.x, 0.1f, -30.0f, 30.0f)) {
 		camera->SetRotate(camRot);
-	}
+	}*/
+
+	camera->ImGuiDebug();
+	
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	ImGui::Begin("GamePad");
