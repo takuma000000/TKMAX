@@ -76,7 +76,8 @@ void GameScene::Update()
 
 	Vector3 direction = directionalLight_->GetDirection();
 
-	
+#ifdef DEBUG
+
 	ImGui::Begin("Object3d");
 	if (ImGui::DragFloat3("Object3dRotate", &object3dRotate.x, 0.01f))
 	{
@@ -124,6 +125,8 @@ void GameScene::Update()
 	ImGui::End();
 
 	dxCommon->ImGuiDebug();
+
+#endif // DEBUG
 
 }
 
