@@ -164,7 +164,7 @@ void GameScene::InitializeObjects()
 
 	object3d = std::make_unique<Object3d>();
 	object3d->Initialize(Object3dCommon::GetInstance(), dxCommon);
-	object3d->SetModel("axis.obj");
+	object3d->SetModel("sphere.obj");
 	object3d->SetParentScene(this);
 	object3d->SetEnvironment("resources/rostock_laage_airport_4k.dds");
 

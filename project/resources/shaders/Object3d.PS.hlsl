@@ -144,19 +144,21 @@ PixelShaderOutput main(VertexShaderOutput input)
         
        
    
-        if (environment)
-        {
-            float3 cameraToPosition = normalize(input.worldPosition - gCamera.worldPosition);
-            float3 reflectedVector = reflect(cameraToPosition, normalize(input.normal));
-            float4 environmentColor = gEnvironmentTexture.Sample(gSampler, reflectedVector);
-            output.color.rgb = environmentColor.rgb; // ← 加算ではなく単色で出してみる！
-        }
+        //if (environment)
+       // {
+        float3 cameraToPosition = normalize(input.worldPosition - gCamera.worldPosition);
+        float3 reflectedVector = reflect(cameraToPosition, normalize(input.normal));
+        float4 environmentColor = gEnvironmentTexture.Sample(gSampler, reflectedVector);
+       
+       // }
 
         
 
         
         output.color.rgb = directionalLight_Diffuse + directionalLight_Specular + pointLight_Diffuse + pointLight_Specular + spotLight_Diffuse + spotLight_Specular;
 
+        output.color.rgb += environmentColor.rgb;
+        
         // アルファ（おまけで適用）
         output.color.a = gMaterial.color.a * textureColor.a;
 
