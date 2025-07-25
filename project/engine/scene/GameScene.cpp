@@ -34,7 +34,7 @@ void GameScene::Initialize()
 	// ──────────────── スカイボックスの初期化 ───────────────
 	skybox_ = std::make_unique<Skybox>();
 	skybox_->Initialize(dxCommon, srvManager, "resources/rostock_laage_airport_4k.dds");
-
+	skybox_->SetCamera(camera.get());
 }
 
 void GameScene::Finalize()
@@ -66,7 +66,7 @@ void GameScene::Update()
 
 	// camera->ImGuiDebug();
 	sprite->Update();
-	//object3d->Update();
+	object3d->Update();
 	//ground_->Update();
 	//anotherObject3d->Update();
 	// ライトの更新
@@ -81,7 +81,6 @@ void GameScene::Update()
 	//*-*-*-*-*-*-*-*-*-*-*
 	// object3d
 	//*-*-*-*-*-*-*-*-*-*-*
-	UpdateObjectTransform(object3d, { 0.0f, 0.0f, 00.0f }, { 0.0f,1.6f,0.0f }, { 1.0f, 1.0f, 1.0f });
 	///   translate       ///     rotate      ///       scale       ///
 
 	UpdateObjectTransform(ground_, { 0.0f, 0.0f, 0.0f }, { 0.0f,1.6f,0.0f }, { 1.0f, 1.0f, 1.0f });
@@ -103,19 +102,14 @@ void GameScene::Draw()
 	Object3dCommon::GetInstance()->DrawSetCommon();
 
 	sprite->Draw();  // textureSrvHandleGPU は必要に応じて設定
-	//object3d->Draw(dxCommon);
+	object3d->Draw(dxCommon);
 	//ground_->Draw(dxCommon);
 	//anotherObject3d->Draw(dxCommon);
 
 	// 
 	ParticleManager::GetInstance()->Draw();
 
-	skybox_->Draw(camera->GetViewMatrix(), camera->GetProjectionMatrix());// スカイボックスの描画
-
-	// ライト情報をシェーダーなどに適用（必要に応じて実装）
-	Vector4 lightColor = directionalLight_->GetColor();
-	Vector3 lightDirection = directionalLight_->GetDirection();
-	float lightIntensity = directionalLight_->GetIntensity();
+	skybox_->Draw();// スカイボックスの描画
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -138,6 +132,7 @@ void GameScene::LoadTextures()
 	TextureManager::GetInstance()->LoadTexture("./resources/circle.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/sphere.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/gradationLine.png");
+	TextureManager::GetInstance()->LoadTexture("resources/rostock_laage_airport_4k.dds");
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -171,6 +166,7 @@ void GameScene::InitializeObjects()
 	object3d->Initialize(Object3dCommon::GetInstance(), dxCommon);
 	object3d->SetModel("sphere.obj");
 	object3d->SetParentScene(this);
+	object3d->SetEnvironment("resources/rostock_laage_airport_4k.dds");
 
 	//地面
 	ground_ = std::make_unique<Object3d>();
@@ -191,12 +187,10 @@ void GameScene::InitializeCamera()
 	//Object3d共通部の初期化
 	camera = std::make_unique<Camera>();
 	camera->SetRotate({ 0.0f,0.0f,0.0f });
-	camera->SetTranslate({ 0.0f,0.0f,-0.0f });
+	camera->SetTranslate({ 0.0f,0.0f,-25.0f });
 
 	object3d->SetCamera(camera.get());
 	ground_->SetCamera(camera.get());
-	//skybox_->SetCamera(camera.get());
-	//anotherObject3d->SetCamera(camera.get());
 }
 
 void GameScene::ImGuiDebug()
@@ -264,14 +258,17 @@ void GameScene::ImGuiDebug()
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	ImGui::Begin("Camera");
-	Vector3 camPos = camera->GetTranslate();
+	/*Vector3 camPos = camera->GetTranslate();
 	if (ImGui::DragFloat3("Position", &camPos.x, 0.1f, -50, 50.0f)) {
 		camera->SetTranslate(camPos);
 	}
 	Vector3 camRot = camera->GetRotate();
 	if (ImGui::DragFloat3("Rotation", &camRot.x, 0.1f, -30.0f, 30.0f)) {
 		camera->SetRotate(camRot);
-	}
+	}*/
+
+	camera->ImGuiDebug();
+
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	ImGui::Begin("GamePad");

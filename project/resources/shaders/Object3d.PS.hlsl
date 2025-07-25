@@ -2,6 +2,7 @@
 
 Texture2D<float4> gTexture : register(t0);
 SamplerState gSampler : register(s0);
+TextureCube<float4> gEnvironmentTexture : register(t1);
 
 struct Material
 {
@@ -58,6 +59,14 @@ struct SpotLight
 };
 
 ConstantBuffer<SpotLight> gSpotLight : register(b4);
+
+struct Environment
+{
+    bool useEnvironment;
+    float3 padding;
+};
+
+ConstantBuffer<Environment> environment : register(b5);
 
 PixelShaderOutput main(VertexShaderOutput input)
 {
@@ -133,21 +142,34 @@ PixelShaderOutput main(VertexShaderOutput input)
         float3 spotLight_Specular = gSpotLight.color.rgb * gSpotLight.intensity * spotLight_SpecularPow * factor_Spot * float3(1.0f, 1.0f, 1.0f) * falloffFactor;
         
         
+       
+   
+        //if (environment)
+       // {
+        float3 cameraToPosition = normalize(input.worldPosition - gCamera.worldPosition);
+        float3 reflectedVector = reflect(cameraToPosition, normalize(input.normal));
+        float4 environmentColor = gEnvironmentTexture.Sample(gSampler, reflectedVector);
+       
+       // }
+
         
+
         
         output.color.rgb = directionalLight_Diffuse + directionalLight_Specular + pointLight_Diffuse + pointLight_Specular + spotLight_Diffuse + spotLight_Specular;
 
+        output.color.rgb += environmentColor.rgb;
+        
         // アルファ（おまけで適用）
         output.color.a = gMaterial.color.a * textureColor.a;
 
         
-       // output.color.a = textureColor.a;
+       
     }
     else
     {
         output.color = gMaterial.color * textureColor;
     }
-
+        
     if (output.color.a < 0.5f)
     {
         discard;
