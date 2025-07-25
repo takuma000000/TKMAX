@@ -132,6 +132,7 @@ void GameScene::LoadTextures()
 	TextureManager::GetInstance()->LoadTexture("./resources/circle.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/sphere.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/gradationLine.png");
+	TextureManager::GetInstance()->LoadTexture("resources/rostock_laage_airport_4k.dds");
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -163,7 +164,7 @@ void GameScene::InitializeObjects()
 
 	object3d = std::make_unique<Object3d>();
 	object3d->Initialize(Object3dCommon::GetInstance(), dxCommon);
-	object3d->SetModel("sphere.obj");
+	object3d->SetModel("axis.obj");
 	object3d->SetParentScene(this);
 	object3d->SetEnvironment("resources/rostock_laage_airport_4k.dds");
 

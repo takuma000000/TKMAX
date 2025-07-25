@@ -401,5 +401,5 @@ void Object3d::Environment(DirectXCommon* dxCommon)
 	//書き込むためのアドレスを取得
 	environment->Map(0, nullptr, reinterpret_cast<void**>(&environmentData));
 	//デフォルト値を書き込んでおく
-	environmentData->useEnvironment = false;
+	environmentData->useEnvironment = true;
 }
