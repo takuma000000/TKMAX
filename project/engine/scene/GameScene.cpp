@@ -34,7 +34,7 @@ void GameScene::Initialize()
 	// ──────────────── スカイボックスの初期化 ───────────────
 	skybox_ = std::make_unique<Skybox>();
 	skybox_->Initialize(dxCommon, srvManager, "resources/rostock_laage_airport_4k.dds");
-
+	skybox_->SetCamera(camera.get());
 }
 
 void GameScene::Finalize()
@@ -85,6 +85,8 @@ void GameScene::Draw()
 	enemy_->Draw(dxCommon);
 
 	ParticleManager::GetInstance()->Draw();
+
+	skybox_->Draw();// スカイボックスの描画
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -105,6 +107,7 @@ void GameScene::LoadTextures()
 	TextureManager::GetInstance()->LoadTexture("./resources/circle.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/sphere.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/gradationLine.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/rostock_laage_airport_4k.dds");
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -138,6 +141,7 @@ void GameScene::InitializeObjects()
 	object3d->Initialize(Object3dCommon::GetInstance(), dxCommon);
 	object3d->SetModel("sphere.obj");
 	object3d->SetParentScene(this);
+	object3d->SetEnvironment("resources/rostock_laage_airport_4k.dds");
 
 	//地面
 	ground_ = std::make_unique<Object3d>();
@@ -156,7 +160,7 @@ void GameScene::InitializeObjects()
 	player_->Initialize(Object3dCommon::GetInstance(), dxCommon);
 	player_->SetPosition({ 0.0f, 0.0f, 0.0f });
 	player_->SetParentScene(this);
-	player_->SetEnemy(enemy_.get()); // ←こっちを後にする
+	player_->SetEnemy(enemy_.get());
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -265,14 +269,17 @@ void GameScene::ImGuiDebug()
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	ImGui::Begin("Camera");
-	Vector3 camPos = camera->GetTranslate();
+	/*Vector3 camPos = camera->GetTranslate();
 	if (ImGui::DragFloat3("Position", &camPos.x, 0.1f, -50, 50.0f)) {
 		camera->SetTranslate(camPos);
 	}
 	Vector3 camRot = camera->GetRotate();
 	if (ImGui::DragFloat3("Rotation", &camRot.x, 0.1f, -30.0f, 30.0f)) {
 		camera->SetRotate(camRot);
-	}
+	}*/
+
+	camera->ImGuiDebug();
+
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	ImGui::Begin("GamePad");

@@ -83,9 +83,14 @@ struct SpotLightEX {
 	float padding[2];
 };
 
-struct CameraForGPU{
+struct CameraForGPU {
 	Vector3 worldPosition;//カメラの位置
 	float padding;//16byte境界に合わせるためのパディング
+};
+
+struct EnvironmentEX {
+	bool useEnvironment = false; // 環境マップを使用するかどうか
+	Vector3 padding;
 };
 
 class Object3d
@@ -114,6 +119,7 @@ public:
 	void SetModel(Model* model) { this->model_ = model; }
 	void SetCamera(Camera* camera) { this->camera = camera; }
 	void SetParentScene(BaseScene* parentScene);
+	void SetEnvironment(const std::string& filename);
 
 private:
 	Object3dCommon* object3dCommon = nullptr;
@@ -166,6 +172,14 @@ private:
 	//データを書き込む
 	CameraForGPU* cameraData = nullptr;
 
+	// 映り込み
+	Microsoft::WRL::ComPtr<ID3D12Resource> environment;
+	// 環境マップデータ
+	EnvironmentEX* environmentData = nullptr;
+	// 環境マップ...GPUハンドル
+	D3D12_GPU_DESCRIPTOR_HANDLE environmentSrvHandleGPU_;
+
+
 	//VertexResource関数
 	void VertexResource(DirectXCommon* dxCommon);
 	//materialResource関数
@@ -180,6 +194,8 @@ private:
 	void PointLight(DirectXCommon* dxCommon);
 	//SpotLight関数
 	void SpotLight(DirectXCommon* dxCommon);
+	//Environment関数
+	void Environment(DirectXCommon* dxCommon);
 
 	Transform transform;
 	Transform cameraTransform;
