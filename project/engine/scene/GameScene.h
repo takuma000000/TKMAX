@@ -115,7 +115,7 @@ private:
 
 	std::unique_ptr<Skybox> skybox_;// スカイボックス
 	std::unique_ptr<Player> player_ = nullptr;
-	std::unique_ptr<Enemy> enemy_ = nullptr;
+	std::vector<std::unique_ptr<Enemy>> enemies_;
 
 };
 

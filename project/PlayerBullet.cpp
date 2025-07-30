@@ -17,7 +17,7 @@ void PlayerBullet::Update() {
 	object_->SetTranslate(pos);
 
 	// 敵が存在するなら当たり判定チェック
-	if (enemy_) {
+	if (enemy_ && !enemy_->IsDead()) {
 		// 弾の座標とスケールを取得
 		Vector3 bulletPos = object_->GetTranslate();
 		Vector3 bulletScale = object_->GetScale();
@@ -35,6 +35,7 @@ void PlayerBullet::Update() {
 			// 当たったらフラグを立てて削除対象にする
 			isHit_ = true;
 			isDead_ = true;
+			enemy_->OnHit();
 
 			// パーティクルを発生させる
 			ParticleManager::GetInstance()->Emit("uv", bulletPos, 30);

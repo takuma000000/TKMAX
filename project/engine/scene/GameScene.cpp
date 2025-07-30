@@ -1,7 +1,8 @@
+#define NOMINMAX
 #include "GameScene.h"
 
 #include "externals/imgui/imgui.h"
-
+#include <limits>
 #include <algorithm>
 #include "MyMath.h"
 #include <psapi.h>
@@ -54,42 +55,71 @@ void GameScene::Update()
 	Input::GetInstance()->Update();
 
 	ResetDrawCallCount();
-	UpdateMemory(); // メモリ使用量の更新
-	// ────────────────────────────────────────
-	// 各オブジェクトの更新処理
-	// ────────────────────────────────────────
+	UpdateMemory();
+
 	camera->Update();
 	ground_->Update();
 	player_->Update();
 	directionalLight_->Update();
-	enemy_->Update();
+
+	for (auto& enemy : enemies_) {
+		enemy->Update();// 敵の更新
+	}
+	for (auto it = enemies_.begin(); it != enemies_.end(); ) {
+		(*it)->Update();// 敵の更新
+
+		if ((*it)->IsDead()) {
+			player_->RemoveEnemyIfDead();
+			it = enemies_.erase(it); // 死亡したら削除
+		} else {
+			++it;// 次の敵へ
+		}
+	}
+
+	if (player_) {
+		Enemy* closestEnemy = nullptr;
+		float closestDistance = std::numeric_limits<float>::max();
+
+		Vector3 playerPos = player_->GetPosition();
+
+		for (auto& enemy : enemies_) {
+			if (!enemy->IsDead()) {
+				float dist = MyMath::Length(enemy->GetWorldPosition() - playerPos);
+				if (dist < closestDistance) {
+					closestDistance = dist;
+					closestEnemy = enemy.get();
+				}
+			}
+		}
+
+		player_->SetEnemy(closestEnemy); // 生きてる最も近い敵を再設定
+	}
+
 	object3d->Update();
-
-	UpdatePerformanceInfo(); // FPSの更新
-
-	// 
 	ParticleManager::GetInstance()->Update();
 
-	// ────────────────────────────────────────
+	UpdatePerformanceInfo();
 	ImGuiDebug();
-	// ────────────────────────────────────────
 }
+
 
 void GameScene::Draw()
 {
-	//Draw
 	SpriteCommon::GetInstance()->DrawSetCommon();
 	Object3dCommon::GetInstance()->DrawSetCommon();
 
 	ground_->Draw(dxCommon);
 	player_->Draw(dxCommon);
-	enemy_->Draw(dxCommon);
+
+	for (auto& enemy : enemies_) {
+		enemy->Draw(dxCommon);
+	}
+
 	object3d->Draw(dxCommon);
-
 	ParticleManager::GetInstance()->Draw();
-
-	skybox_->Draw();// スカイボックスの描画
+	skybox_->Draw();
 }
+
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 // ゲーム内のサウンドをロード＆再生する
@@ -138,32 +168,48 @@ void GameScene::LoadModels()
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeObjects()
 {
-	//オブジェクト
+	// object3d
 	object3d = std::make_unique<Object3d>();
 	object3d->Initialize(Object3dCommon::GetInstance(), dxCommon);
 	object3d->SetModel("sphere.obj");
 	object3d->SetParentScene(this);
 	object3d->SetEnvironment("./resources/rostock_laage_airport_4k.dds");
 
-	//地面
+	// ground
 	ground_ = std::make_unique<Object3d>();
 	ground_->Initialize(Object3dCommon::GetInstance(), dxCommon);
 	ground_->SetModel("terrain.obj");
 	ground_->SetParentScene(this);
 
-	// GameScene::InitializeObjects() 内
-	enemy_ = std::make_unique<Enemy>();
-	enemy_->Initialize(Object3dCommon::GetInstance(), dxCommon);
-	enemy_->SetPosition({ 1.0f, 5.0f, 10.0f });
-	enemy_->SetParentScene(this);
-	enemy_->SetCamera(camera.get());
-
+	// player
 	player_ = std::make_unique<Player>();
 	player_->Initialize(Object3dCommon::GetInstance(), dxCommon);
 	player_->SetPosition({ 0.0f, 0.0f, 0.0f });
 	player_->SetParentScene(this);
-	player_->SetEnemy(enemy_.get());
-	
+
+	// enemies（5体をランダムに配置）
+	const int enemyCount = 5;
+	for (int i = 0; i < enemyCount; ++i) {
+		auto enemy = std::make_unique<Enemy>();
+		enemy->Initialize(Object3dCommon::GetInstance(), dxCommon);
+
+		Vector3 pos = {
+			static_cast<float>(rand() % 20 - 10), // X: -10〜10
+			5.0f,                                 // Y: 地面から少し浮かせる
+			20.0f + static_cast<float>(i * 5)     // Z: プレイヤーより奥へ（20, 25, 30...）
+		};
+
+		enemy->SetPosition(pos);
+		enemy->SetParentScene(this);
+		enemy->SetCamera(camera.get());
+
+		enemies_.push_back(std::move(enemy));
+	}
+
+	// 1体だけプレイヤーに設定（必要なら複数対応へ）
+	if (!enemies_.empty()) {
+		player_->SetEnemy(enemies_.front().get());
+	}
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -171,7 +217,6 @@ void GameScene::InitializeObjects()
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeCamera()
 {
-	//Object3d共通部の初期化
 	camera = std::make_unique<Camera>();
 	camera->SetRotate({ 0.0f,0.0f,0.0f });
 	camera->SetTranslate({ 0.0f,0.0f,-25.0f });
@@ -179,8 +224,12 @@ void GameScene::InitializeCamera()
 	object3d->SetCamera(camera.get());
 	ground_->SetCamera(camera.get());
 	player_->SetCamera(camera.get());
-	enemy_->SetCamera(camera.get());
+
+	for (auto& enemy : enemies_) {
+		enemy->SetCamera(camera.get());
+	}
 }
+
 
 void GameScene::ImGuiDebug()
 {
@@ -248,7 +297,11 @@ void GameScene::ImGuiDebug()
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	player_->ImGuiDebug();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	enemy_->ImGuiDebug();
+	for (size_t i = 0; i < enemies_.size(); ++i) {
+		ImGui::PushID(static_cast<int>(i));
+		enemies_[i]->ImGuiDebug();
+		ImGui::PopID();
+	}
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	ImGui::Begin("Bullet Debug");
 	for (const auto& bullet : player_->GetBullets()) {

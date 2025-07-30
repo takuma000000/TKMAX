@@ -58,5 +58,16 @@ void Enemy::ImGuiDebug() {
 		object_->SetScale(scale);
 	}
 
+	ImGui::Text("HP: %d", hp_);
+	ImGui::Text("Dead: %s", isDead_ ? "true" : "false");
+
 	ImGui::End();
+}
+
+void Enemy::OnHit()
+{
+	hp_--;
+	if (hp_ <= 0) {
+		isDead_ = true;
+	}
 }

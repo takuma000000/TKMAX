@@ -51,6 +51,13 @@ void Player::ImGuiDebug() {
 	ImGui::End();
 }
 
+void Player::RemoveEnemyIfDead()
+{
+	if (enemy_ && enemy_->IsDead()) {
+		enemy_ = nullptr;
+	}
+}
+
 
 void Player::Draw(DirectXCommon* dxCommon) {
 	object_->Draw(dxCommon);

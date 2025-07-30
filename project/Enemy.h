@@ -12,6 +12,9 @@ public:
 	void Draw(DirectXCommon* dxCommon);
 	void ImGuiDebug();
 
+	void OnHit(); // 弾が当たったとき呼ぶ
+	bool IsDead() const { return isDead_; }
+
 	void SetCamera(Camera* camera);
 	void SetPosition(const Vector3& pos);
 	void SetParentScene(BaseScene* scene);
@@ -24,4 +27,7 @@ private:
 	std::unique_ptr<Object3d> object_;
 	Camera* camera = nullptr;
 	BaseScene* parentScene_ = nullptr;
+
+	int hp_ = 3;
+	bool isDead_ = false;
 };

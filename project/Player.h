@@ -18,8 +18,14 @@ public:
 	void Draw(DirectXCommon* dxCommon);
 	void ImGuiDebug();
 
+	void RemoveEnemyIfDead();
+
 	const std::list<std::unique_ptr<PlayerBullet>>& GetBullets() const {
 		return bullets_;
+	}
+
+	Vector3 GetPosition() const {
+		return object_ ? object_->GetTranslate() : Vector3();
 	}
 
 	void SetCamera(Camera* camera) 
