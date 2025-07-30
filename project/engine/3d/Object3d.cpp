@@ -52,6 +52,14 @@ void Object3d::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommo
 
 	this->camera = object3dCommon->GetDefaultCamera();
 
+	environmentSrvHandleGPU_.ptr = 0;
+
+	// Object3d::Initialize()
+	environmentSrvHandleGPU_ = TextureManager::GetInstance()->GetSrvHandleGPU("./resources/rostock_laage_airport_4k.dds");
+	if (environmentData) {
+		environmentData->useEnvironment = false;
+	}
+
 }
 
 void Object3d::Update()
@@ -401,5 +409,5 @@ void Object3d::Environment(DirectXCommon* dxCommon)
 	//書き込むためのアドレスを取得
 	environment->Map(0, nullptr, reinterpret_cast<void**>(&environmentData));
 	//デフォルト値を書き込んでおく
-	environmentData->useEnvironment = true;
+	environmentData->useEnvironment = false;
 }

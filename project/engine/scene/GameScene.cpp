@@ -59,10 +59,11 @@ void GameScene::Update()
 	// 各オブジェクトの更新処理
 	// ────────────────────────────────────────
 	camera->Update();
-	ground_->Update();
+	//ground_->Update();
 	player_->Update();
 	directionalLight_->Update();
-	enemy_->Update();
+	//enemy_->Update();
+	object3d->Update();
 
 	UpdatePerformanceInfo(); // FPSの更新
 
@@ -80,9 +81,10 @@ void GameScene::Draw()
 	SpriteCommon::GetInstance()->DrawSetCommon();
 	Object3dCommon::GetInstance()->DrawSetCommon();
 
-	ground_->Draw(dxCommon);
+	//ground_->Draw(dxCommon);
 	player_->Draw(dxCommon);
-	enemy_->Draw(dxCommon);
+	//enemy_->Draw(dxCommon);
+	object3d->Draw(dxCommon);
 
 	ParticleManager::GetInstance()->Draw();
 
@@ -141,7 +143,7 @@ void GameScene::InitializeObjects()
 	object3d->Initialize(Object3dCommon::GetInstance(), dxCommon);
 	object3d->SetModel("sphere.obj");
 	object3d->SetParentScene(this);
-	object3d->SetEnvironment("resources/rostock_laage_airport_4k.dds");
+	object3d->SetEnvironment("./resources/rostock_laage_airport_4k.dds");
 
 	//地面
 	ground_ = std::make_unique<Object3d>();
@@ -161,6 +163,7 @@ void GameScene::InitializeObjects()
 	player_->SetPosition({ 0.0f, 0.0f, 0.0f });
 	player_->SetParentScene(this);
 	player_->SetEnemy(enemy_.get());
+	
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*

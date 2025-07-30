@@ -8,6 +8,7 @@ void Player::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	object_ = std::make_unique<Object3d>();
 	object_->Initialize(common_, dxCommon_);
 	object_->SetModel("sphere.obj");
+	//object_->SetEnvironment("./resources/rostock_laage_airport_4k.dds");
 }
 
 void Player::Update() {
