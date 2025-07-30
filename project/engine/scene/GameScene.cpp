@@ -59,10 +59,10 @@ void GameScene::Update()
 	// 各オブジェクトの更新処理
 	// ────────────────────────────────────────
 	camera->Update();
-	//ground_->Update();
+	ground_->Update();
 	player_->Update();
 	directionalLight_->Update();
-	//enemy_->Update();
+	enemy_->Update();
 	object3d->Update();
 
 	UpdatePerformanceInfo(); // FPSの更新
@@ -81,9 +81,9 @@ void GameScene::Draw()
 	SpriteCommon::GetInstance()->DrawSetCommon();
 	Object3dCommon::GetInstance()->DrawSetCommon();
 
-	//ground_->Draw(dxCommon);
+	ground_->Draw(dxCommon);
 	player_->Draw(dxCommon);
-	//enemy_->Draw(dxCommon);
+	enemy_->Draw(dxCommon);
 	object3d->Draw(dxCommon);
 
 	ParticleManager::GetInstance()->Draw();
