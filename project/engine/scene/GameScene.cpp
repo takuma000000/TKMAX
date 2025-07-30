@@ -52,55 +52,33 @@ void GameScene::Finalize()
 
 void GameScene::Update()
 {
+	// 入力処理
 	Input::GetInstance()->Update();
 
+	// 描画コール・メモリの初期化
 	ResetDrawCallCount();
 	UpdateMemory();
 
+	// 敵の更新と削除
+	UpdateEnemies();
+	// 最も近い敵をプレイヤーに設定
+	UpdateClosestEnemy();
+
+	// プレイヤーと環境
 	camera->Update();
 	ground_->Update();
 	player_->Update();
 	directionalLight_->Update();
 
-	for (auto& enemy : enemies_) {
-		enemy->Update();// 敵の更新
-	}
-	for (auto it = enemies_.begin(); it != enemies_.end(); ) {
-		(*it)->Update();// 敵の更新
-
-		if ((*it)->IsDead()) {
-			player_->RemoveEnemyIfDead();
-			it = enemies_.erase(it); // 死亡したら削除
-		} else {
-			++it;// 次の敵へ
-		}
-	}
-
-	if (player_) {
-		Enemy* closestEnemy = nullptr;
-		float closestDistance = std::numeric_limits<float>::max();
-
-		Vector3 playerPos = player_->GetPosition();
-
-		for (auto& enemy : enemies_) {
-			if (!enemy->IsDead()) {
-				float dist = MyMath::Length(enemy->GetWorldPosition() - playerPos);
-				if (dist < closestDistance) {
-					closestDistance = dist;
-					closestEnemy = enemy.get();
-				}
-			}
-		}
-
-		player_->SetEnemy(closestEnemy); // 生きてる最も近い敵を再設定
-	}
-
+	// その他のオブジェクト・パーティクルの更新
 	object3d->Update();
 	ParticleManager::GetInstance()->Update();
 
+	// パフォーマンス情報・デバッグUI
 	UpdatePerformanceInfo();
 	ImGuiDebug();
 }
+
 
 
 void GameScene::Draw()
@@ -187,29 +165,7 @@ void GameScene::InitializeObjects()
 	player_->SetPosition({ 0.0f, 0.0f, 0.0f });
 	player_->SetParentScene(this);
 
-	// enemies（5体をランダムに配置）
-	const int enemyCount = 5;
-	for (int i = 0; i < enemyCount; ++i) {
-		auto enemy = std::make_unique<Enemy>();
-		enemy->Initialize(Object3dCommon::GetInstance(), dxCommon);
-
-		Vector3 pos = {
-			static_cast<float>(rand() % 20 - 10), // X: -10〜10
-			5.0f,                                 // Y: 地面から少し浮かせる
-			20.0f + static_cast<float>(i * 5)     // Z: プレイヤーより奥へ（20, 25, 30...）
-		};
-
-		enemy->SetPosition(pos);
-		enemy->SetParentScene(this);
-		enemy->SetCamera(camera.get());
-
-		enemies_.push_back(std::move(enemy));
-	}
-
-	// 1体だけプレイヤーに設定（必要なら複数対応へ）
-	if (!enemies_.empty()) {
-		player_->SetEnemy(enemies_.front().get());
-	}
+	InitializeEnemies();// 敵の初期化
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -395,3 +351,66 @@ void GameScene::UpdateMemory()
 		memoryHistoryIndex_ = (memoryHistoryIndex_ + 1) % kMemoryHistorySize;
 	}
 }
+
+void GameScene::UpdateEnemies()
+{
+	for (auto& enemy : enemies_) {
+		enemy->Update();// 敵の更新
+	}
+	for (auto it = enemies_.begin(); it != enemies_.end(); ) {
+		(*it)->Update();// 敵の更新
+
+		if ((*it)->IsDead()) {
+			player_->RemoveEnemyIfDead();
+			it = enemies_.erase(it); // 死亡したら削除
+		} else {
+			++it;// 次の敵へ
+		}
+	}
+}
+
+void GameScene::UpdateClosestEnemy()
+{
+	if (!player_) return;
+	Enemy* closestEnemy = nullptr;
+	float closestDistance = std::numeric_limits<float>::max();
+	Vector3 playerPos = player_->GetPosition();
+
+	for (auto& enemy : enemies_) {
+		if (!enemy->IsDead()) {
+			float dist = MyMath::Length(enemy->GetWorldPosition() - playerPos);
+			if (dist < closestDistance) {
+				closestDistance = dist;
+				closestEnemy = enemy.get();
+			}
+		}
+	}
+	player_->SetEnemy(closestEnemy);
+}
+
+void GameScene::InitializeEnemies() {
+	// enemies（5体をランダムに配置）
+	const int enemyCount = 5;
+	for (int i = 0; i < enemyCount; ++i) {
+		auto enemy = std::make_unique<Enemy>();
+		enemy->Initialize(Object3dCommon::GetInstance(), dxCommon);
+
+		Vector3 pos = {
+			static_cast<float>(rand() % 20 - 10), // X: -10〜10
+			5.0f,                                 // Y: 地面から少し浮かせる
+			20.0f + static_cast<float>(i * 5)     // Z: プレイヤーより奥へ（20, 25, 30...）
+		};
+
+		enemy->SetPosition(pos);
+		enemy->SetParentScene(this);
+		enemy->SetCamera(camera.get());
+
+		enemies_.push_back(std::move(enemy));
+	}
+
+	// 1体だけプレイヤーに設定（必要なら複数対応へ）
+	if (!enemies_.empty()) {
+		player_->SetEnemy(enemies_.front().get());
+	}
+}
+

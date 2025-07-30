@@ -92,6 +92,10 @@ private: // ──────────────────── 更新�
 	//メモリ使用量
 	void UpdateMemory();
 
+	void UpdateEnemies();
+	void UpdateClosestEnemy();
+	void InitializeEnemies();
+
 private:
 	DirectXCommon* dxCommon = nullptr;
 	SrvManager* srvManager = nullptr;
