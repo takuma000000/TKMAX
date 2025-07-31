@@ -34,7 +34,7 @@ void GameScene::Initialize()
 
 	// ──────────────── スカイボックスの初期化 ───────────────
 	skybox_ = std::make_unique<Skybox>();
-	skybox_->Initialize(dxCommon, srvManager, "resources/rostock_laage_airport_4k.dds");
+	skybox_->Initialize(dxCommon, srvManager, "resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
 	skybox_->SetCamera(camera.get());
 }
 
@@ -64,6 +64,8 @@ void GameScene::Update()
 	// 最も近い敵をプレイヤーに設定
 	UpdateClosestEnemy();
 
+	ImGuiDebug();
+
 	// プレイヤーと環境
 	camera->Update();
 	ground_->Update();
@@ -76,7 +78,7 @@ void GameScene::Update()
 
 	// パフォーマンス情報・デバッグUI
 	UpdatePerformanceInfo();
-	ImGuiDebug();
+
 }
 
 
@@ -118,6 +120,9 @@ void GameScene::LoadTextures()
 	TextureManager::GetInstance()->LoadTexture("./resources/sphere.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/gradationLine.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/rostock_laage_airport_4k.dds");
+	TextureManager::GetInstance()->LoadTexture("./resources/test.dds");
+	TextureManager::GetInstance()->LoadTexture("./resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
+	TextureManager::GetInstance()->LoadTexture("./resources/Ground.png");
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -139,6 +144,7 @@ void GameScene::LoadModels()
 	ModelManager::GetInstance()->LoadModel("axis.obj", dxCommon);
 	ModelManager::GetInstance()->LoadModel("sphere.obj", dxCommon);
 	ModelManager::GetInstance()->LoadModel("terrain.obj", dxCommon);
+	ModelManager::GetInstance()->LoadModel("ground.obj", dxCommon);
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -151,12 +157,12 @@ void GameScene::InitializeObjects()
 	object3d->Initialize(Object3dCommon::GetInstance(), dxCommon);
 	object3d->SetModel("sphere.obj");
 	object3d->SetParentScene(this);
-	object3d->SetEnvironment("./resources/rostock_laage_airport_4k.dds");
+	object3d->SetEnvironment("./resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
 
 	// ground
 	ground_ = std::make_unique<Object3d>();
 	ground_->Initialize(Object3dCommon::GetInstance(), dxCommon);
-	ground_->SetModel("terrain.obj");
+	ground_->SetModel("ground.obj");
 	ground_->SetParentScene(this);
 
 	// player
@@ -175,7 +181,7 @@ void GameScene::InitializeCamera()
 {
 	camera = std::make_unique<Camera>();
 	camera->SetRotate({ 0.0f,0.0f,0.0f });
-	camera->SetTranslate({ 0.0f,0.0f,-25.0f });
+	camera->SetTranslate({ 0.0f,0.0f,-30.0f });
 
 	object3d->SetCamera(camera.get());
 	ground_->SetCamera(camera.get());
@@ -281,16 +287,16 @@ void GameScene::ImGuiDebug()
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	ImGui::Begin("Camera");
-	/*Vector3 camPos = camera->GetTranslate();
+	Vector3 camPos = camera->GetTranslate();
 	if (ImGui::DragFloat3("Position", &camPos.x, 0.1f, -50, 50.0f)) {
 		camera->SetTranslate(camPos);
 	}
 	Vector3 camRot = camera->GetRotate();
 	if (ImGui::DragFloat3("Rotation", &camRot.x, 0.1f, -30.0f, 30.0f)) {
 		camera->SetRotate(camRot);
-	}*/
+	}
 
-	camera->ImGuiDebug();
+	//camera->ImGuiDebug();
 
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
