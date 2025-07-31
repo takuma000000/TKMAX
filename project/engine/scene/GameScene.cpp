@@ -76,6 +76,12 @@ void GameScene::Update()
 	object3d->Update();
 	ParticleManager::GetInstance()->Update();
 
+	// SPACEキーでパーティクルテスト発生
+	if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
+		Vector3 emitPos = { 0.0f, 2.5f, 10.0f }; // 空中で見やすい位置
+		ParticleManager::GetInstance()->Emit("uv", emitPos, 20); // 20個発生
+	}
+
 	// パフォーマンス情報・デバッグUI
 	UpdatePerformanceInfo();
 
@@ -96,8 +102,8 @@ void GameScene::Draw()
 	}
 
 	object3d->Draw(dxCommon);
-	ParticleManager::GetInstance()->Draw();
 	skybox_->Draw();
+	ParticleManager::GetInstance()->Draw();
 }
 
 

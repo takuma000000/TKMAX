@@ -389,18 +389,20 @@ void ParticleManager::Emit(const std::string name, Vector3& pos, uint32_t count)
 }
 
 ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate) {
+	// 色のばらつき
 	std::uniform_real_distribution<float> distColor(0.8f, 1.0f);
 	std::uniform_real_distribution<float> distVelocity(-0.15f, 0.15f);
+	std::uniform_real_distribution<float> distVelocityY(0.1f, 0.3f); // 上方向に強め
 	std::uniform_real_distribution<float> distScale(1.0f, 2.0f);
+	std::uniform_real_distribution<float> distLifeTime(0.6f, 1.2f);   // 寿命に幅を持たせる
 
-	// 追加：発生位置をばらけさせる範囲
 	std::uniform_real_distribution<float> distOffsetX(-0.3f, 0.3f);
-	std::uniform_real_distribution<float> distOffsetY(0.0f, 0.5f);  // 上方向だけ
+	std::uniform_real_distribution<float> distOffsetY(0.0f, 0.5f);
 	std::uniform_real_distribution<float> distOffsetZ(-0.3f, 0.3f);
 
 	Particle particle{};
 
-	// 敵の上でランダムにばらけた発生位置
+	// ランダムな発生位置
 	Vector3 offset = {
 		distOffsetX(randomEngine),
 		distOffsetY(randomEngine),
@@ -408,27 +410,27 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& randomE
 	};
 	particle.transform.translate = translate + offset;
 
-	// 大きめのスケール
+	// ランダムなスケール
 	float scale = distScale(randomEngine);
 	particle.transform.scale = { scale, scale, scale };
 
-	// ランダムな方向に広がる
+	// 上方向に浮かぶように速度を設定
 	particle.velocity = {
 		distVelocity(randomEngine),
-		distVelocity(randomEngine),
+		distVelocityY(randomEngine),
 		distVelocity(randomEngine)
 	};
 
-	// 色は赤〜オレンジ系
+	// 赤〜オレンジ〜黄系（少し青や白を混ぜても可）
 	particle.color = {
-		distColor(randomEngine),                // R
-		distColor(randomEngine) * 0.5f,         // G
-		0.0f,                                   // B
-		1.0f                                    // A
+		distColor(randomEngine),                  // R
+		distColor(randomEngine) * 0.5f,           // G
+		distColor(randomEngine) * 0.2f,           // B
+		1.0f                                      // A
 	};
 
-	// 寿命短め
-	particle.lifeTime = 0.4f;
+	// 寿命を長めに（違和感を減らす）
+	particle.lifeTime = distLifeTime(randomEngine); // 0.6f〜1.2fの範囲
 	particle.currentTime = 0.0f;
 
 	return particle;
