@@ -38,6 +38,9 @@ public:
 	void SetPosition(const Vector3& pos);
 	void SetParentScene(BaseScene* parentScene);
 	void SetEnemy(Enemy* enemy) { enemy_ = enemy; }
+	void SetAllEnemies(std::vector<std::unique_ptr<Enemy>>* enemies) {
+		allEnemies_ = enemies;
+	}
 
 
 private:
@@ -55,4 +58,5 @@ private:
 	BaseScene* parentScene_ = nullptr;
 	std::unique_ptr<Object3d> object_;
 	std::list<std::unique_ptr<PlayerBullet>> bullets_;
+	std::vector<std::unique_ptr<Enemy>>* allEnemies_ = nullptr;
 };

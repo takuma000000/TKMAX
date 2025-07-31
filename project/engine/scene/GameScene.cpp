@@ -157,7 +157,7 @@ void GameScene::InitializeObjects()
 	object3d->Initialize(Object3dCommon::GetInstance(), dxCommon);
 	object3d->SetModel("sphere.obj");
 	object3d->SetParentScene(this);
-	object3d->SetEnvironment("./resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
+	//object3d->SetEnvironment("./resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
 
 	// ground
 	ground_ = std::make_unique<Object3d>();
@@ -170,6 +170,7 @@ void GameScene::InitializeObjects()
 	player_->Initialize(Object3dCommon::GetInstance(), dxCommon);
 	player_->SetPosition({ 0.0f, 0.0f, 0.0f });
 	player_->SetParentScene(this);
+
 
 	InitializeEnemies();// 敵の初期化
 }
@@ -392,6 +393,7 @@ void GameScene::UpdateClosestEnemy()
 		}
 	}
 	player_->SetEnemy(closestEnemy);
+	player_->SetAllEnemies(&enemies_);
 }
 
 void GameScene::InitializeEnemies() {
