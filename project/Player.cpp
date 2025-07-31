@@ -12,9 +12,8 @@ void Player::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 }
 
 void Player::Update() {
-	HandleGamePadMove();
-	//HandleCameraControl();
-	HandleFollowCamera();
+	HandleGamePadMove(); // ゲームパッドのスティック入力で移動
+	HandleFollowCamera(); // カメラの追従処理
 
 	HandleShooting(); // 先にプレイヤーの操作より下に置くと自然
 	for (auto it = bullets_.begin(); it != bullets_.end(); ) {
@@ -76,6 +75,10 @@ void Player::SetParentScene(BaseScene* scene) {
 	parentScene_ = scene;
 }
 
+void Player::StartCameraShake(int frameCount) {
+	cameraShakeFrame_ = frameCount;
+}
+
 void Player::HandleGamePadMove() {
 	Input* input = Input::GetInstance();
 
@@ -125,15 +128,11 @@ void Player::HandleCameraControl() {
 void Player::HandleFollowCamera() {
 	if (!camera) return;
 
-	// プレイヤーの位置取得
 	Vector3 playerPos = object_->GetTranslate();
-
-	// カメラの回転から方向を求める（Y軸回転だけ使う）
 	Vector3 camRot = camera->GetRotate();
-	float distance = 40.0f;   // プレイヤーからの距離
-	float height = 4.0f;      // プレイヤーより高い位置
+	float distance = 40.0f;
+	float height = 4.0f;
 
-	// 回転角度からカメラの方向を計算（XZ平面）
 	float angleY = camRot.y;
 	Vector3 offset = {
 		sinf(angleY) * -distance,
@@ -141,14 +140,20 @@ void Player::HandleFollowCamera() {
 		cosf(angleY) * -distance
 	};
 
-	// カメラ位置を設定（プレイヤーに追従）
-	Vector3 cameraPos = {
-		playerPos.x + offset.x,
-		playerPos.y + offset.y,
-		playerPos.z + offset.z
-	};
+	// --- シェイクオフセット加算 ---
+	if (cameraShakeFrame_ > 0) {
+		cameraShakeOffset_.x = (rand() % 100 - 50) / 500.0f; // ±0.1くらい
+		cameraShakeOffset_.y = (rand() % 100 - 50) / 500.0f;
+		cameraShakeOffset_.z = (rand() % 100 - 50) / 500.0f;
+		cameraShakeFrame_--;
+	} else {
+		cameraShakeOffset_ = { 0, 0, 0 };
+	}
+
+	Vector3 cameraPos = playerPos + offset + cameraShakeOffset_;
 	camera->SetTranslate(cameraPos);
 }
+
 
 void Player::HandleShooting() {
 	Input* input = Input::GetInstance();
@@ -177,6 +182,7 @@ void Player::HandleShooting() {
 
 		bullet->SetCamera(camera);
 		bullet->SetEnemy(enemy_);
+		bullet->SetPlayer(this);
 		bullets_.push_back(std::move(bullet));
 	}
 
@@ -196,6 +202,7 @@ void Player::HandleShooting() {
 			bullet->SetVelocity(dir * 0.5f);
 			bullet->SetCamera(camera);
 			bullet->SetEnemy(enemy.get());
+			bullet->SetPlayer(this);
 
 			bullets_.push_back(std::move(bullet));
 		}

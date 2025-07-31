@@ -1,9 +1,11 @@
 #pragma once
 
 #include <memory>
-	#include "Object3d.h"
+#include "Object3d.h"
 #include "Vector3.h"
 #include "Enemy.h"
+
+class Player;
 
 class PlayerBullet {
 public:
@@ -22,8 +24,11 @@ public:
 		}
 	}
 	void SetEnemy(Enemy* enemy) { enemy_ = enemy; }
+	void SetPlayer(Player* player) { player_ = player; }
 
 private:
+	Player* player_ = nullptr;
+
 	std::unique_ptr<Object3d> object_;
 	Vector3 velocity_{};
 	bool isDead_ = false;

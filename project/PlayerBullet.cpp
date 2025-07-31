@@ -2,6 +2,7 @@
 #include "PlayerBullet.h"
 #include <engine/effect/ParticleManager.h>
 #include "AABB.h"
+#include "Player.h"
 
 void PlayerBullet::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	object_ = std::make_unique<Object3d>();
@@ -36,9 +37,13 @@ void PlayerBullet::Update() {
 			isHit_ = true;
 			isDead_ = true;
 			enemy_->OnHit();
-
 			// パーティクルを発生させる
 			ParticleManager::GetInstance()->Emit("uv", bulletPos, 30);
+
+			// シェイクトリガー
+			if (player_) {
+				player_->StartCameraShake(10); // ←ここに追加
+			}
 
 			return; // 一度当たったらそれ以上の処理はしない
 		}

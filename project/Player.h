@@ -41,7 +41,7 @@ public:
 	void SetAllEnemies(std::vector<std::unique_ptr<Enemy>>* enemies) {
 		allEnemies_ = enemies;
 	}
-
+	void StartCameraShake(int frameCount);
 
 private:
 
@@ -59,4 +59,7 @@ private:
 	std::unique_ptr<Object3d> object_;
 	std::list<std::unique_ptr<PlayerBullet>> bullets_;
 	std::vector<std::unique_ptr<Enemy>>* allEnemies_ = nullptr;
+
+	Vector3 cameraShakeOffset_ = { 0, 0, 0 };
+	int cameraShakeFrame_ = 0;
 };

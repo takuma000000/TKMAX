@@ -294,17 +294,7 @@ void GameScene::ImGuiDebug()
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	ImGui::Begin("Camera");
-	Vector3 camPos = camera->GetTranslate();
-	if (ImGui::DragFloat3("Position", &camPos.x, 0.1f, -50, 50.0f)) {
-		camera->SetTranslate(camPos);
-	}
-	Vector3 camRot = camera->GetRotate();
-	if (ImGui::DragFloat3("Rotation", &camRot.x, 0.1f, -30.0f, 30.0f)) {
-		camera->SetRotate(camRot);
-	}
-
-	//camera->ImGuiDebug();
-
+	camera->ImGuiDebug();
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	ImGui::Begin("GamePad");
