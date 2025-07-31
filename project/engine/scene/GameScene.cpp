@@ -201,6 +201,9 @@ void GameScene::ImGuiDebug()
 
 	Vector3 direction = directionalLight_->GetDirection();
 
+#ifdef _DEBUG
+
+
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	ImGui::Begin("Object3d");
 	if (ImGui::DragFloat3("Object3dRotate", &object3dRotate.x, 0.01f))
@@ -325,6 +328,8 @@ void GameScene::ImGuiDebug()
 	DrawButtonBar("RB", Input::GetInstance()->PushButton(XINPUT_GAMEPAD_RIGHT_SHOULDER), ImVec4(1.0f, 0.6f, 0.0f, 1.0f)); // オレンジ
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#endif // DEBUG
 }
 
 // ──────────────────────────────────────────────
