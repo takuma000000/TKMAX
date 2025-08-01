@@ -13,6 +13,17 @@ void Enemy::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 }
 
 void Enemy::Update() {
+	if (!stopMove_) {
+		Vector3 pos = object_->GetTranslate();
+		pos += velocity_;
+
+		if (pos.z <= stopZ_) {
+			pos.z = stopZ_;     // ぴったり止める
+			stopMove_ = true;   // 移動停止
+		}
+
+		object_->SetTranslate(pos);
+	}
 	object_->Update();
 }
 
