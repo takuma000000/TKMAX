@@ -397,11 +397,10 @@ void GameScene::InitializeEnemies() {
 	for (int i = 0; i < enemyCount; ++i) {
 		auto enemy = std::make_unique<Enemy>();
 		enemy->Initialize(Object3dCommon::GetInstance(), dxCommon);
-
 		Vector3 pos = {
-			static_cast<float>(rand() % 20 - 10), // X: -10〜10
+			static_cast<float>(rand() % 81 - 40), // X: -40〜40 に拡大
 			5.0f,                                 // Y
-			100.0f + static_cast<float>(i * 10)   // Zをもっと奥（100, 110, 120, ...）
+			100.0f + static_cast<float>(i * 10)   // Z: 奥（100, 110, 120...）
 		};
 
 		enemy->SetPosition(pos);
