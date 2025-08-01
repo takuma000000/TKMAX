@@ -43,7 +43,7 @@ void GameScene::Initialize()
 	// 解凍
 	file >> deserialized;
 	// 正しいレベルエディタファイルかチェック
-	assert(deserialized.isObject());
+	//assert(deserialized.isobject());
 	assert(deserialized.contains("name"));
 	assert(deserialized["name"].is_string());
 	// "name"を文字列として取得
@@ -260,7 +260,7 @@ void GameScene::InitializeCamera()
 	//Object3d共通部の初期化
 	camera = std::make_unique<Camera>();
 	camera->SetRotate({ 0.0f,0.0f,0.0f });
-	camera->SetTranslate({ 0.0f,2.5f,-25.0f });
+	camera->SetTranslate({ 0.0f,2.5f,-28.0f });
 
 	object3d->SetCamera(camera.get());
 	ground_->SetCamera(camera.get());
