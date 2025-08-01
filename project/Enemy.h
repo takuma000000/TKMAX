@@ -32,6 +32,6 @@ private:
 	bool isDead_ = false;
 
 	Vector3 velocity_ = { 0.0f, 0.0f, -0.1f }; // 毎フレームの移動量（Z方向に手前）
-	float stopZ_ = 5.0f;                      // このZ座標になったら止まる
-	bool stopMove_ = false;                  // 到達フラグ
+	float stopZ_ = 30.0f;                      // このZ座標になったら止まる
+	bool stopMove_ = false;                    // 到達フラグ
 };

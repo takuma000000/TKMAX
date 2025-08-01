@@ -393,7 +393,6 @@ void GameScene::UpdateClosestEnemy()
 }
 
 void GameScene::InitializeEnemies() {
-	// enemies（5体をランダムに配置）
 	const int enemyCount = 5;
 	for (int i = 0; i < enemyCount; ++i) {
 		auto enemy = std::make_unique<Enemy>();
@@ -401,8 +400,8 @@ void GameScene::InitializeEnemies() {
 
 		Vector3 pos = {
 			static_cast<float>(rand() % 20 - 10), // X: -10〜10
-			5.0f,                                 // Y: 地面から少し浮かせる
-			20.0f + static_cast<float>(i * 5)     // Z: プレイヤーより奥へ（20, 25, 30...）
+			5.0f,                                 // Y
+			100.0f + static_cast<float>(i * 10)   // Zをもっと奥（100, 110, 120, ...）
 		};
 
 		enemy->SetPosition(pos);
@@ -412,7 +411,6 @@ void GameScene::InitializeEnemies() {
 		enemies_.push_back(std::move(enemy));
 	}
 
-	// 1体だけプレイヤーに設定（必要なら複数対応へ）
 	if (!enemies_.empty()) {
 		player_->SetEnemy(enemies_.front().get());
 	}

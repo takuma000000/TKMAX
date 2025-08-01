@@ -15,17 +15,19 @@ void Enemy::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 void Enemy::Update() {
 	if (!stopMove_) {
 		Vector3 pos = object_->GetTranslate();
-		pos += velocity_;
+		pos += velocity_; // Z方向に進む
 
 		if (pos.z <= stopZ_) {
-			pos.z = stopZ_;     // ぴったり止める
-			stopMove_ = true;   // 移動停止
+			pos.z = stopZ_;    // 指定Zで止める
+			stopMove_ = true;  // 停止フラグ
 		}
 
 		object_->SetTranslate(pos);
 	}
+
 	object_->Update();
 }
+
 
 void Enemy::Draw(DirectXCommon* dxCommon) {
 	object_->Draw(dxCommon);
