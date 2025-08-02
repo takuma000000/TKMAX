@@ -338,7 +338,10 @@ void ParticleManager::WriteResource()
 
 void ParticleManager::CreateParticleGroup(const std::string& name, const std::string& textureFilePath, ParticleType type)
 {
-	assert(particleGroups.find(name) == particleGroups.end());
+	// すでに存在するなら何もしない（安全な再呼び出し対応）
+	if (particleGroups.find(name) != particleGroups.end()) {
+		return;
+	}
 
 	ParticleGroup newGroup;
 	newGroup.materialData.textureFilePath = textureFilePath;
@@ -359,6 +362,7 @@ void ParticleManager::CreateParticleGroup(const std::string& name, const std::st
 
 	particleGroups[name] = newGroup;
 }
+
 
 void ParticleManager::MakeBillboardMatrix()
 {
