@@ -79,6 +79,10 @@ void Object3d::Update()
 	wvpData->World = worldMatrix;
 	wvpData->WorldInverseTranspose = MyMath::Inverse4x4(worldMatrix);
 
+#ifdef DEBUG
+
+
+
 	// ---- ImGui のライト設定 ----
 	ImGui::Begin("Light Settings");
 
@@ -146,6 +150,8 @@ void Object3d::Update()
 
 
 	ImGui::End();
+
+#endif // DEBUG
 }
 
 
