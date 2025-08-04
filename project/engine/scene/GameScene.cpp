@@ -73,7 +73,6 @@ void GameScene::Update()
 	directionalLight_->Update();
 
 	// その他のオブジェクト・パーティクルの更新
-	object3d->Update();
 	ParticleManager::GetInstance()->Update();
 
 	// SPACEキーでパーティクルテスト発生
@@ -87,8 +86,6 @@ void GameScene::Update()
 
 }
 
-
-
 void GameScene::Draw()
 {
 	SpriteCommon::GetInstance()->DrawSetCommon();
@@ -101,7 +98,6 @@ void GameScene::Draw()
 		enemy->Draw(dxCommon);
 	}
 
-	object3d->Draw(dxCommon);
 	skybox_->Draw();
 	ParticleManager::GetInstance()->Draw();
 }
@@ -158,13 +154,6 @@ void GameScene::LoadModels()
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeObjects()
 {
-	// object3d
-	object3d = std::make_unique<Object3d>();
-	object3d->Initialize(Object3dCommon::GetInstance(), dxCommon);
-	object3d->SetModel("sphere.obj");
-	object3d->SetParentScene(this);
-	//object3d->SetEnvironment("./resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
-
 	// ground
 	ground_ = std::make_unique<Object3d>();
 	ground_->Initialize(Object3dCommon::GetInstance(), dxCommon);
@@ -176,7 +165,6 @@ void GameScene::InitializeObjects()
 	player_->Initialize(Object3dCommon::GetInstance(), dxCommon);
 	player_->SetPosition({ 0.0f, 0.0f, 0.0f });
 	player_->SetParentScene(this);
-
 
 	InitializeEnemies();// 敵の初期化
 }
@@ -190,7 +178,6 @@ void GameScene::InitializeCamera()
 	camera->SetRotate({ 0.0f,0.0f,0.0f });
 	camera->SetTranslate({ 0.0f,0.0f,-30.0f });
 
-	object3d->SetCamera(camera.get());
 	ground_->SetCamera(camera.get());
 	player_->SetCamera(camera.get());
 
@@ -202,30 +189,9 @@ void GameScene::InitializeCamera()
 
 void GameScene::ImGuiDebug()
 {
-	Vector3 object3dRotate = object3d->GetRotate();
-	Vector3 object3dTranslate = object3d->GetTranslate();
-	Vector3 object3dScale = object3d->GetScale();
-
-	Vector3 direction = directionalLight_->GetDirection();
 
 #ifdef _DEBUG
 
-
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	ImGui::Begin("Object3d");
-	if (ImGui::DragFloat3("Object3dRotate", &object3dRotate.x, 0.01f))
-	{
-		object3d->SetRotate(object3dRotate);
-	}
-	if (ImGui::DragFloat3("Object3dTranslate", &object3dTranslate.x, 0.01f))
-	{
-		object3d->SetTranslate(object3dTranslate);
-	}
-	if (ImGui::DragFloat3("Object3dScale", &object3dScale.x, 0.01f))
-	{
-		object3d->SetScale(object3dScale);
-	}
-	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	ImGui::Begin("Info");
 	ImGui::Text("FPS : %.2f", fps_);
@@ -296,6 +262,16 @@ void GameScene::ImGuiDebug()
 	}
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	ImGui::Begin("Enemy Status");
+	ImGui::Text("Defeated: %d / %d", defeatedEnemyCount_, maxEnemyCount_);
+
+	float progress = 0.0f;
+	if (maxEnemyCount_ > 0) {
+		progress = static_cast<float>(defeatedEnemyCount_) / static_cast<float>(maxEnemyCount_);
+	}
+	ImGui::ProgressBar(progress, ImVec2(200, 20), "Defeat Progress");
+	ImGui::End();
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	ImGui::Begin("Camera");
 	camera->ImGuiDebug();
 	ImGui::End();
@@ -349,74 +325,109 @@ void GameScene::UpdateObjectTransform(std::unique_ptr<Object3d>& obj, const Vect
 
 void GameScene::UpdateMemory()
 {
+	// ───────────────────────────────────────────────
+	// ● 現在のメモリ使用量（MB）を取得し、履歴に記録する
+	// ───────────────────────────────────────────────
+
 	PROCESS_MEMORY_COUNTERS pmc{};
 	if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
-		// 現在のメモリ使用量（MB）
+
+		// ───── 使用中メモリ（MB単位）を計算 ─────
 		float memoryUsageMB = static_cast<float>(pmc.WorkingSetSize) / (1024.0f * 1024.0f);
 
-		// リングバッファで履歴を更新
+		// ───── リングバッファ形式で履歴を更新 ─────
 		memoryHistory_[memoryHistoryIndex_] = memoryUsageMB;
-		memoryHistoryIndex_ = (memoryHistoryIndex_ + 1) % kMemoryHistorySize;
+		memoryHistoryIndex_ = (memoryHistoryIndex_ + 1) % kMemoryHistorySize; // インデックスを循環
 	}
 }
 
+
 void GameScene::UpdateEnemies()
 {
-	for (auto& enemy : enemies_) {
-		enemy->Update();// 敵の更新
-	}
+	// ───────────────────────────────────────────────
+	// ● 敵の状態を更新し、死亡したものは削除＆カウント
+	// ───────────────────────────────────────────────
+
 	for (auto it = enemies_.begin(); it != enemies_.end(); ) {
-		(*it)->Update();// 敵の更新
+		(*it)->Update(); // 各敵の状態を更新
 
 		if ((*it)->IsDead()) {
-			player_->RemoveEnemyIfDead();
-			it = enemies_.erase(it); // 死亡したら削除
+			defeatedEnemyCount_++;          // 倒した敵の数を加算（ImGui表示用）
+			player_->RemoveEnemyIfDead();  // プレイヤーが保持する敵参照をリセット
+			it = enemies_.erase(it);       // 死亡した敵をリストから削除（イテレータ無効化に注意）
 		} else {
-			++it;// 次の敵へ
+			++it; // 次の敵へ
 		}
 	}
 }
 
+
 void GameScene::UpdateClosestEnemy()
 {
-	if (!player_) return;
-	Enemy* closestEnemy = nullptr;
-	float closestDistance = std::numeric_limits<float>::max();
-	Vector3 playerPos = player_->GetPosition();
+	// ───────────────────────────────────────────────
+	// ● プレイヤーに最も近い敵を検出し、ターゲットとして設定する
+	// ───────────────────────────────────────────────
 
+	if (!player_) return; // プレイヤーが未初期化なら処理中止
+
+	Enemy* closestEnemy = nullptr; // 最も近い敵（nullptrで初期化）
+	float closestDistance = std::numeric_limits<float>::max(); // 距離の最小値（初期は最大値）
+	Vector3 playerPos = player_->GetPosition(); // プレイヤーの現在位置を取得
+
+	// ───── 敵リストを走査して、最も近い生存中の敵を探す ─────
 	for (auto& enemy : enemies_) {
-		if (!enemy->IsDead()) {
-			float dist = MyMath::Length(enemy->GetWorldPosition() - playerPos);
+		if (!enemy->IsDead()) { // 死んでいない敵に限定
+			float dist = MyMath::Length(enemy->GetWorldPosition() - playerPos); // 距離を計算
+
+			// これまでで最も近いなら更新
 			if (dist < closestDistance) {
 				closestDistance = dist;
 				closestEnemy = enemy.get();
 			}
 		}
 	}
-	player_->SetEnemy(closestEnemy);
-	player_->SetAllEnemies(&enemies_);
+
+	// ───── 検出結果をプレイヤーに通知 ─────
+	player_->SetEnemy(closestEnemy);          // 最も近い敵をターゲットとして設定
+	player_->SetAllEnemies(&enemies_);        // 全敵リストを共有（全体攻撃などで利用）
 }
 
+
 void GameScene::InitializeEnemies() {
-	const int enemyCount = 5;
+	// ───────────────────────────────────────────────
+	// ● 敵の初期化
+	// ───────────────────────────────────────────────
+
+	const int enemyCount = 5;          // 出現させる敵の総数
+	maxEnemyCount_ = enemyCount;       // ImGui用に最大数を保持（倒した数の進捗バー表示に使用）
+
 	for (int i = 0; i < enemyCount; ++i) {
+		// 敵インスタンスを生成
 		auto enemy = std::make_unique<Enemy>();
 		enemy->Initialize(Object3dCommon::GetInstance(), dxCommon);
-		Vector3 pos = {
-			static_cast<float>(rand() % 81 - 40), // X: -40〜40 に拡大
-			5.0f,                                 // Y
-			100.0f + static_cast<float>(i * 10)   // Z: 奥（100, 110, 120...）
-		};
 
+		// 初期位置を設定
+		Vector3 pos = {
+			static_cast<float>(rand() % 81 - 40),  // X座標: -40〜+40のランダム配置
+			5.0f,                                  // Y座標: 空中に浮かせる
+			100.0f + static_cast<float>(i * 10)    // Z座標: 奥から順に間隔を空けて配置
+		};
 		enemy->SetPosition(pos);
+
+		// 各種参照を設定（親シーン・カメラ）
 		enemy->SetParentScene(this);
 		enemy->SetCamera(camera.get());
 
+		// 敵リストに追加
 		enemies_.push_back(std::move(enemy));
 	}
 
+	// ───────────────────────────────────────────────
+	// ● 最初のターゲット敵をプレイヤーに設定
+	// ───────────────────────────────────────────────
 	if (!enemies_.empty()) {
 		player_->SetEnemy(enemies_.front().get());
 	}
 }
+
 

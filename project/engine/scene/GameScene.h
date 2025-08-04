@@ -103,8 +103,6 @@ private:
 	std::unique_ptr<Sprite> sprite = nullptr;
 	std::unique_ptr<Camera> camera = nullptr;
 
-	std::unique_ptr<Object3d> object3d = nullptr;
-	std::unique_ptr<Object3d> anotherObject3d = nullptr;
 	//地面
 	std::unique_ptr<Object3d> ground_ = nullptr;
 
@@ -121,5 +119,7 @@ private:
 	std::unique_ptr<Player> player_ = nullptr;
 	std::vector<std::unique_ptr<Enemy>> enemies_;
 
+	int defeatedEnemyCount_ = 0;// 倒した敵の数
+	int maxEnemyCount_ = 0;// 最大敵数
 };
 
