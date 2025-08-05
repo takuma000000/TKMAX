@@ -299,6 +299,16 @@ void GameScene::ImGuiDebug()
 	DrawButtonBar("Back", Input::GetInstance()->PushButton(XINPUT_GAMEPAD_BACK), ImVec4(1.0f, 1.0f, 1.0f, 1.0f)); // 白
 	DrawButtonBar("LB", Input::GetInstance()->PushButton(XINPUT_GAMEPAD_LEFT_SHOULDER), ImVec4(0.6f, 0.2f, 0.8f, 1.0f)); // 紫
 	DrawButtonBar("RB", Input::GetInstance()->PushButton(XINPUT_GAMEPAD_RIGHT_SHOULDER), ImVec4(1.0f, 0.6f, 0.0f, 1.0f)); // オレンジ
+	// RT表示（シアン）
+	float rtValue = static_cast<float>(Input::GetInstance()->GetRightTrigger()) / 255.0f;
+	ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.0f, 1.0f, 1.0f, 1.0f));
+	ImGui::ProgressBar(rtValue, ImVec2(200, 0), "RT");
+	ImGui::PopStyleColor();
+	// LT表示（マゼンタ）
+	float ltValue = static_cast<float>(Input::GetInstance()->GetLeftTrigger()) / 255.0f;
+	ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(1.0f, 0.0f, 1.0f, 1.0f));
+	ImGui::ProgressBar(ltValue, ImVec2(200, 0), "LT");
+	ImGui::PopStyleColor();
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 

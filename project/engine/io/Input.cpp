@@ -95,6 +95,16 @@ SHORT Input::GetRightStickY()
 	return controllerState.Gamepad.sThumbRY;
 }
 
+BYTE Input::GetRightTrigger()
+{
+	return controllerState.Gamepad.bRightTrigger;
+}
+
+BYTE Input::GetLeftTrigger()
+{
+	return controllerState.Gamepad.bLeftTrigger;
+}
+
 //// トリガー入力
 //BYTE Input::GetLeftTrigger()
 //{

@@ -37,6 +37,11 @@ public:
 	SHORT GetRightStickX();
 	SHORT GetRightStickY();
 
+	// 左トリガーの取得
+	BYTE GetRightTrigger();
+	// 右トリガーの取得
+	BYTE GetLeftTrigger();
+
 	// 追加: 振動を設定
 	void SetVibration(WORD leftMotor, WORD rightMotor);
 
