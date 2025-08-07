@@ -47,6 +47,9 @@ void Player::ImGuiDebug() {
 		object_->SetScale(scale);
 	}
 
+	ImGui::Text("Special Attack: %s", canUseSpecial_ ? "READY" : "NOT READY"); // 一撃必殺の使用可能状態を表示
+
+
 	ImGui::End();
 }
 
@@ -157,6 +160,8 @@ void Player::HandleFollowCamera() {
 
 void Player::HandleShooting() {
 	Input* input = Input::GetInstance();
+
+	// RBボタン：通常弾
 	if (input->TriggerButton(XINPUT_GAMEPAD_RIGHT_SHOULDER)) {
 		auto bullet = std::make_unique<PlayerBullet>();
 		bullet->Initialize(common_, dxCommon_);
@@ -207,6 +212,31 @@ void Player::HandleShooting() {
 			bullets_.push_back(std::move(bullet));
 		}
 	}
+
+	// RTボタン：一撃必殺（最も近い敵に必中弾）
+	if (input->GetRightTrigger() > 128 && canUseSpecial_ && enemy_ && !enemy_->IsDead()) {
+		auto bullet = std::make_unique<PlayerBullet>();
+		bullet->Initialize(common_, dxCommon_);
+
+		Vector3 startPos = object_->GetTranslate();
+		Vector3 enemyPos = enemy_->GetWorldPosition();
+		Vector3 dir = MyMath::Normalize(enemyPos - startPos);
+
+		bullet->SetPosition(startPos);
+		bullet->SetVelocity(dir * 0.5f);
+		bullet->SetCamera(camera);
+		bullet->SetEnemy(enemy_);
+		bullet->SetPlayer(this);
+
+		// ★ ここ追加！ 特殊弾として記録
+		bullet->SetSpecialAttack(true);
+
+		bullets_.push_back(std::move(bullet));
+
+		canUseSpecial_ = false;
+	}
+
+
 
 }
 

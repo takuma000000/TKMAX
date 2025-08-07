@@ -25,6 +25,7 @@ public:
 	}
 	void SetEnemy(Enemy* enemy) { enemy_ = enemy; }
 	void SetPlayer(Player* player) { player_ = player; }
+	void SetSpecialAttack(bool flag) { isSpecialAttack_ = flag; }
 
 private:
 	Player* player_ = nullptr;
@@ -35,4 +36,6 @@ private:
 	bool isHit_ = false;
 
 	Enemy* enemy_ = nullptr;
+
+	bool isSpecialAttack_ = false; // 一撃必殺フラグ
 };

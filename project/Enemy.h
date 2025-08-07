@@ -13,6 +13,7 @@ public:
 	void ImGuiDebug();
 
 	void OnHit(); // 弾が当たったとき呼ぶ
+	void OnHitWithDamage(int damage); // 特殊攻撃（ダメージ指定）
 	bool IsDead() const { return isDead_; }
 
 	void SetCamera(Camera* camera);

@@ -19,6 +19,7 @@ public:
 	void ImGuiDebug();
 
 	void RemoveEnemyIfDead();
+	void EnableSpecialAttack() { canUseSpecial_ = true; } // 一撃必殺を使用可能にする
 
 	const std::list<std::unique_ptr<PlayerBullet>>& GetBullets() const {
 		return bullets_;
@@ -62,4 +63,6 @@ private:
 
 	Vector3 cameraShakeOffset_ = { 0, 0, 0 };
 	int cameraShakeFrame_ = 0;
+
+	bool canUseSpecial_ = false; // 一撃必殺が使用可能かどうか
 };

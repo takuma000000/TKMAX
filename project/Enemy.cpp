@@ -84,3 +84,11 @@ void Enemy::OnHit()
 		isDead_ = true;
 	}
 }
+
+void Enemy::OnHitWithDamage(int damage)
+{
+	hp_ -= damage;
+	if (hp_ <= 0) {
+		isDead_ = true;
+	}
+}

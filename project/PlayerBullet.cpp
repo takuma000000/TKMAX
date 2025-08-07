@@ -33,19 +33,27 @@ void PlayerBullet::Update() {
 
 		// AABB同士の当たり判定を行う
 		if (bulletBox.IsCollidingWithAABB(enemyBox)) {
-			// 当たったらフラグを立てて削除対象にする
 			isHit_ = true;
 			isDead_ = true;
-			enemy_->OnHit();
-			// パーティクルを発生させる
+
+			// パーティクル発生
 			ParticleManager::GetInstance()->Emit("uv", bulletPos, 30);
 
-			// シェイクトリガー
-			if (player_) {
-				player_->StartCameraShake(10); // ←ここに追加
+			// 正しい順序：敵がまだ死んでない場合のみダメージ処理
+			if (enemy_ && !enemy_->IsDead()) {
+				if (isSpecialAttack_) {
+					enemy_->OnHitWithDamage(100);
+				} else {
+					enemy_->OnHit();
+				}
 			}
 
-			return; // 一度当たったらそれ以上の処理はしない
+			// カメラシェイク
+			if (player_) {
+				player_->StartCameraShake(10);
+			}
+
+			return;
 		}
 	}
 
