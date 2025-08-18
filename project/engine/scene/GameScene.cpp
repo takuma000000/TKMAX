@@ -61,6 +61,12 @@ void GameScene::Update()
 
 	// 敵の更新と削除
 	UpdateEnemies();
+
+	if (enemies_.empty()) {
+		sceneManager_->SetNextScene(new GameClearScene(dxCommon, srvManager));
+		return; // 遷移後は以降の処理をスキップ
+	}
+
 	// 最も近い敵をプレイヤーに設定
 	UpdateClosestEnemy();
 

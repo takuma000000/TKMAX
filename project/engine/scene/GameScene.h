@@ -19,6 +19,8 @@
 #include "engine/effect/ParticlerEmitter.h"
 #include "engine/func/math/Vector3.h"
 #include <SkyBox.h>
+#include "GameClearScene.h"
+#include "SceneManager.h"
 
 #include "Player.h"
 #include "Enemy.h"
