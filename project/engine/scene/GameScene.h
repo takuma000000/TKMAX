@@ -24,6 +24,7 @@
 
 #include "Player.h"
 #include "Enemy.h"
+#include "EnemySpawner.h"
 
 class GameScene : public BaseScene
 {
@@ -97,6 +98,12 @@ private: // ──────────────────── 更新�
 	void UpdateEnemies();
 	void UpdateClosestEnemy();
 	void InitializeEnemies();
+
+	// Wave管理 ===
+	enum class WavePhase { W1, W2, W3, Done };
+	WavePhase wavePhase_ = WavePhase::W1;
+	void SpawnCurrentWave();   // 現在のwavePhase_に応じてスポーン
+	void GoToNextWave();       // wavePhase_を進める
 
 private:
 	DirectXCommon* dxCommon = nullptr;

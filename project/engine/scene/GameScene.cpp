@@ -63,8 +63,14 @@ void GameScene::Update()
 	UpdateEnemies();
 
 	if (enemies_.empty()) {
-		sceneManager_->SetNextScene(new GameClearScene(dxCommon, srvManager));
-		return; // 遷移後は以降の処理をスキップ
+		if (wavePhase_ != WavePhase::Done) {
+			GoToNextWave(); // 次Waveを出す
+			// 次Waveを出した直後は以降の処理を普通に継続（returnしない）
+		} else {
+			// 全Wave終了→ほんとに空なのでクリア
+			sceneManager_->SetNextScene(new GameClearScene(dxCommon, srvManager));
+			return;
+		}
 	}
 
 	// 最も近い敵をプレイヤーに設定
@@ -383,7 +389,6 @@ void GameScene::UpdateEnemies()
 	}
 }
 
-
 void GameScene::UpdateClosestEnemy()
 {
 	/// ───────────────────────────────────────────────
@@ -414,42 +419,64 @@ void GameScene::UpdateClosestEnemy()
 	player_->SetAllEnemies(&enemies_);        // 全敵リストを共有（全体攻撃などで利用）
 }
 
-
 void GameScene::InitializeEnemies() {
-	/// ───────────────────────────────────────────────
-	/// ● 敵の初期化
-	/// ───────────────────────────────────────────────
+	enemies_.clear();
+	defeatedEnemyCount_ = 0;   // ついでに進捗をリセット
+	maxEnemyCount_ = 0;        // 全Wave合計で加算していく
 
-	const int enemyCount = 5;          // 出現させる敵の総数
-	maxEnemyCount_ = enemyCount;       // ImGui用に最大数を保持（倒した数の進捗バー表示に使用）
+	wavePhase_ = WavePhase::W1; // Wave1から
+	SpawnCurrentWave();         // ★ 最初のWaveだけ出す（ここでmaxEnemyCount_も加算）
 
-	for (int i = 0; i < enemyCount; ++i) {
-		// 敵インスタンスを生成
-		auto enemy = std::make_unique<Enemy>();
-		enemy->Initialize(Object3dCommon::GetInstance(), dxCommon);
-
-		// 初期位置を設定
-		Vector3 pos = {
-			static_cast<float>(rand() % 81 - 40),  // X座標: -40〜+40のランダム配置
-			5.0f,                                  // Y座標: 空中に浮かせる
-			100.0f + static_cast<float>(i * 10)    // Z座標: 奥から順に間隔を空けて配置
-		};
-		enemy->SetPosition(pos);
-
-		// 各種参照を設定（親シーン・カメラ）
-		enemy->SetParentScene(this);
-		enemy->SetCamera(camera.get());
-
-		// 敵リストに追加
-		enemies_.push_back(std::move(enemy));
-	}
-
-	// ───────────────────────────────────────────────
-	// ● 最初のターゲット敵をプレイヤーに設定
-	// ───────────────────────────────────────────────
 	if (!enemies_.empty()) {
 		player_->SetEnemy(enemies_.front().get());
+		player_->SetAllEnemies(&enemies_);
 	}
 }
 
+void GameScene::SpawnCurrentWave() {
+	// Cameraはこの時点でnullptrでもOK（後でInitializeCameraで一括セット）
+	auto camPtr = camera ? camera.get() : nullptr;
 
+	switch (wavePhase_) {
+	case WavePhase::W1: {
+		// Line: 5体
+		EnemySpawner::SpawnLine(enemies_, 5, /*y*/5.0f, /*z*/120.0f,
+			/*xStart*/-20.0f, /*xStep*/10.0f,
+			dxCommon, camPtr, this);
+		maxEnemyCount_ += 5;
+		break;
+	}
+	case WavePhase::W2: {
+		// V: 中央1 + 左右各3 = 7体
+		EnemySpawner::SpawnV(enemies_, 3, /*y*/6.0f, /*z*/160.0f,
+			/*xCenter*/0.0f, /*xStep*/8.0f, /*zStep*/6.0f,
+			dxCommon, camPtr, this);
+		maxEnemyCount_ += 7;
+		break;
+	}
+	case WavePhase::W3: {
+		// Column: 6体
+		EnemySpawner::SpawnColumn(enemies_, 6, /*x*/25.0f,
+			/*zStart*/200.0f, /*zStep*/10.0f,
+			/*yStart*/4.0f, /*yStep*/0.5f,
+			dxCommon, camPtr, this);
+		maxEnemyCount_ += 6;
+		break;
+	}
+	case WavePhase::Done:
+		// 何もしない
+		break;
+	}
+}
+
+void GameScene::GoToNextWave() {
+	if (wavePhase_ == WavePhase::W1) {
+		wavePhase_ = WavePhase::W2;
+		SpawnCurrentWave();
+	} else if (wavePhase_ == WavePhase::W2) {
+		wavePhase_ = WavePhase::W3;
+		SpawnCurrentWave();
+	} else if (wavePhase_ == WavePhase::W3) {
+		wavePhase_ = WavePhase::Done; // 最終Waveまで終了
+	}
+}
