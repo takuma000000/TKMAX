@@ -61,6 +61,9 @@ private:
 	std::list<std::unique_ptr<PlayerBullet>> bullets_;
 	std::vector<std::unique_ptr<Enemy>>* allEnemies_ = nullptr;
 
+	Enemy* lastLockedEnemy_ = nullptr;  // 直前にロック表示していた敵
+	bool rtHeld_ = false;  // RTをいま保持中か
+
 	Vector3 cameraShakeOffset_ = { 0, 0, 0 };
 	int cameraShakeFrame_ = 0;
 

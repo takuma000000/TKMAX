@@ -15,6 +15,27 @@ void Player::Update() {
 	HandleGamePadMove(); // ゲームパッドのスティック入力で移動
 	HandleFollowCamera(); // カメラの追従処理
 
+	// RTホールド中はターゲットをロック表示（切り替わり時は前の敵を解除）
+	{
+		Input* input = Input::GetInstance();
+		Enemy* cur = (enemy_ && !enemy_->IsDead()) ? enemy_ : nullptr;
+
+		bool hold = (input->GetRightTrigger() > 128 && canUseSpecial_);
+
+		// ターゲットが切り替わったら前のロックを解除
+		if (lastLockedEnemy_ && lastLockedEnemy_ != cur) {
+			lastLockedEnemy_->SetLocked(false);
+		}
+
+		if (cur && hold) {
+			cur->SetLocked(true);
+			lastLockedEnemy_ = cur;
+		} else {
+			if (cur) cur->SetLocked(false);
+			lastLockedEnemy_ = nullptr;
+		}
+	}
+
 	HandleShooting(); // 先にプレイヤーの操作より下に置くと自然
 	for (auto it = bullets_.begin(); it != bullets_.end(); ) {
 		(*it)->Update();
@@ -214,30 +235,39 @@ void Player::HandleShooting() {
 	}
 
 	// RTボタン：一撃必殺（最も近い敵に必中弾）
-	if (input->GetRightTrigger() > 128 && canUseSpecial_ && enemy_ && !enemy_->IsDead()) {
-		auto bullet = std::make_unique<PlayerBullet>();
-		bullet->Initialize(common_, dxCommon_);
+	const bool pressed = (input->GetRightTrigger() > 128);
 
-		Vector3 startPos = object_->GetTranslate();
-		Vector3 enemyPos = enemy_->GetWorldPosition();
-		Vector3 dir = MyMath::Normalize(enemyPos - startPos);
-
-		bullet->SetPosition(startPos);
-		bullet->SetVelocity(dir * 0.5f);
-		bullet->SetCamera(camera);
-		bullet->SetEnemy(enemy_);
-		bullet->SetPlayer(this);
-
-		// ★ ここ追加！ 特殊弾として記録
-		bullet->SetSpecialAttack(true);
-
-		bullets_.push_back(std::move(bullet));
-
-		canUseSpecial_ = false;
+	// 押している間：ホールド状態にする（発射はしない）
+	if (pressed && canUseSpecial_ && enemy_ && !enemy_->IsDead()) {
+		rtHeld_ = true;
+		// ロックの見た目は Update() 側で既にONにしている
 	}
 
+	// 離した瞬間：発射
+	if (!pressed && rtHeld_) {
+		if (canUseSpecial_ && enemy_ && !enemy_->IsDead()) {
+			auto bullet = std::make_unique<PlayerBullet>();
+			bullet->Initialize(common_, dxCommon_);
 
+			Vector3 startPos = object_->GetTranslate();
+			Vector3 enemyPos = enemy_->GetWorldPosition();
+			Vector3 dir = MyMath::Normalize(enemyPos - startPos);
 
+			bullet->SetPosition(startPos);
+			bullet->SetVelocity(dir * 0.5f);
+			bullet->SetCamera(camera);
+			bullet->SetEnemy(enemy_);
+			bullet->SetPlayer(this);
+			bullet->SetSpecialAttack(true);
+
+			bullets_.push_back(std::move(bullet));
+
+			// 見た目のロックは解除
+			enemy_->SetLocked(false);
+			canUseSpecial_ = false;
+		}
+		rtHeld_ = false; // 次に備えて解除
+	}
 }
 
 

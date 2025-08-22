@@ -10,24 +10,30 @@ void Enemy::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	if (camera) {
 		object_->SetCamera(camera);
 	}
+
+	baseScale_ = object_->GetScale(); // 元のスケールを保持
 }
 
 void Enemy::Update() {
 	if (!stopMove_) {
 		Vector3 pos = object_->GetTranslate();
-		pos += velocity_; // Z方向に進む
-
-		if (pos.z <= stopZ_) {
-			pos.z = stopZ_;    // 指定Zで止める
-			stopMove_ = true;  // 停止フラグ
-		}
-
+		pos += velocity_;
+		if (pos.z <= stopZ_) { pos.z = stopZ_; stopMove_ = true; }
 		object_->SetTranslate(pos);
+	}
+
+	// ロック中のパルス（見た目でロックを示す）
+	if (isLocked_) {
+		pulseT_ += 0.12f; // 速さは好みで
+		float s = 1.0f + 0.15f * sinf(pulseT_);
+		object_->SetScale({ baseScale_.x * s, baseScale_.y * s, baseScale_.z * s });
+	} else {
+		// ロック解除時は元に戻す
+		object_->SetScale(baseScale_);
 	}
 
 	object_->Update();
 }
-
 
 void Enemy::Draw(DirectXCommon* dxCommon) {
 	object_->Draw(dxCommon);
