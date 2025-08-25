@@ -81,6 +81,12 @@ void GameScene::Update()
 	// プレイヤーと環境
 	camera->Update();
 
+	// Skybox をX軸方向にゆっくり回転
+	skyPitch_ -= skyRotSpeedX_;
+	if (skyPitch_ > 6.2831853f) skyPitch_ -= 6.2831853f;
+	if (skyPitch_ < 0.0f)       skyPitch_ += 6.2831853f;
+	skybox_->SetRotation({ skyPitch_, 0.0f, 0.0f });
+
 	// ---- ground scroll (robust, no overlap) ----
 	{
 		const int   N = static_cast<int>(groundTiles_.size());
@@ -372,6 +378,11 @@ void GameScene::ImGuiDebug()
 	ImGui::PopStyleColor();
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
+	ImGui::Begin("Skybox");
+	ImGui::DragFloat("Rot Speed X", &skyRotSpeedX_, 0.0001f, -0.02f, 0.02f);
+	ImGui::Text("Pitch: %.3f rad", skyPitch_);
+	ImGui::End();
+	////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #endif // _DEBUG
 }

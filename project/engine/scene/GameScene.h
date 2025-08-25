@@ -135,5 +135,8 @@ private:
 	float groundTileLen_ = 299.0f;   // ground.obj の奥行きに合わせて調整
 	float groundScroll_ = 0.6f;     // 前進感の速さ
 	float groundOffset_ = 0.0f;     // スクロール用オフセット
+
+	float skyPitch_ = 0.0f;        // X軸回転量
+	float skyRotSpeedX_ = 0.002f;  // X軸回転速度
 };
 

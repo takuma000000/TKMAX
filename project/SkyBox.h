@@ -23,6 +23,7 @@ public:
 
 	void SetScale(const Vector3& scale) { scale_ = scale; }
 	void SetCamera(Camera* camera) { camera_ = camera; }
+	void SetRotation(const Vector3& rot) { rotation_ = rot; }
 
 	// 定数バッファ用構造体
 	struct TransformationMatrix {
