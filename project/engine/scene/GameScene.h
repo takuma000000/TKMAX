@@ -130,5 +130,10 @@ private:
 
 	int defeatedEnemyCount_ = 0;// 倒した敵の数
 	int maxEnemyCount_ = 0;// 最大敵数
+
+	std::vector<std::unique_ptr<Object3d>> groundTiles_;
+	float groundTileLen_ = 299.0f;   // ground.obj の奥行きに合わせて調整
+	float groundScroll_ = 0.6f;     // 前進感の速さ
+	float groundOffset_ = 0.0f;     // スクロール用オフセット
 };
 

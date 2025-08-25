@@ -80,7 +80,39 @@ void GameScene::Update()
 
 	// プレイヤーと環境
 	camera->Update();
-	ground_->Update();
+
+	// ---- ground scroll (robust, no overlap) ----
+	{
+		const int   N = static_cast<int>(groundTiles_.size());
+		const float L = groundTileLen_;        // タイル長（後でBで調整できるようにする）
+		const float speed = groundScroll_;         // スクロール速度（+で -Z方向へ流したいなら符号を合わせる）
+		const float epsilon = 0.001f;                // ごく小さい隙間でZファイト回避（見えない程度）
+
+		// 累積距離を更新
+		groundOffset_ += speed;
+		if (groundOffset_ >= N * L) groundOffset_ -= N * L;
+		if (groundOffset_ < 0.0f) groundOffset_ += N * L;
+
+		// いま「何枚ぶん」進んだか（整数）と「端数」（小数）に分解
+		const int   k = static_cast<int>(groundOffset_ / L);  // 0..N-1
+		const float frac = groundOffset_ - static_cast<float>(k) * L; // 0..L
+
+		// 先頭インデックス（カメラ手前のタイル）を k にし、手前→奥の順に配置
+		for (int j = 0; j < N; ++j) {
+			const int idx = (k + j) % N;      // 描画するタイル配列のインデックス
+			float z = -L                      // 手前の基準を -L に
+				+ j * L                   // 1枚ごとに+Lずつ奥へ
+				- frac                    // 端数ぶんだけ全体を -Z に流す
+				- epsilon * j;            // ★ タイル間に極小隙間（重なり防止）
+
+			Vector3 t = groundTiles_[idx]->GetTranslate();
+			t.z = z;
+			groundTiles_[idx]->SetTranslate(t);
+			groundTiles_[idx]->Update();
+		}
+	}
+
+
 	player_->Update();
 	directionalLight_->Update();
 
@@ -103,7 +135,8 @@ void GameScene::Draw()
 	SpriteCommon::GetInstance()->DrawSetCommon();
 	Object3dCommon::GetInstance()->DrawSetCommon();
 
-	ground_->Draw(dxCommon);
+	for (auto& g : groundTiles_) g->Draw(dxCommon);
+
 	player_->Draw(dxCommon);
 
 	for (auto& enemy : enemies_) {
@@ -113,7 +146,6 @@ void GameScene::Draw()
 	skybox_->Draw();
 	ParticleManager::GetInstance()->Draw();
 }
-
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 // ゲーム内のサウンドをロード＆再生する
@@ -166,11 +198,17 @@ void GameScene::LoadModels()
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeObjects()
 {
-	// ground
-	ground_ = std::make_unique<Object3d>();
-	ground_->Initialize(Object3dCommon::GetInstance(), dxCommon);
-	ground_->SetModel("ground.obj");
-	ground_->SetParentScene(this);
+	// --- ground: タイルを3枚並べる ---
+	groundTiles_.clear();
+	const int tileCount = 3;
+	for (int i = 0; i < tileCount; ++i) {
+		auto g = std::make_unique<Object3d>();
+		g->Initialize(Object3dCommon::GetInstance(), dxCommon);
+		g->SetModel("ground.obj");
+		g->SetParentScene(this);
+		g->SetTranslate({ 0.0f, -2.0f,  (float)i * groundTileLen_ }); // 少し下げる
+		groundTiles_.push_back(std::move(g));
+	}
 
 	// player
 	player_ = std::make_unique<Player>();
@@ -190,7 +228,10 @@ void GameScene::InitializeCamera()
 	camera->SetRotate({ 0.0f,0.0f,0.0f });
 	camera->SetTranslate({ 0.0f,0.0f,-30.0f });
 
-	ground_->SetCamera(camera.get());
+	ground_ = nullptr; // 既存は使わない（誤参照防止）
+	for (auto& g : groundTiles_) {
+		g->SetCamera(camera.get());
+	}
 	player_->SetCamera(camera.get());
 
 	for (auto& enemy : enemies_) {
@@ -260,18 +301,26 @@ void GameScene::ImGuiDebug()
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	ImGui::Begin("ground");
-	Vector3 groundTranslate = ground_->GetTranslate();
-	Vector3 groundRotate = ground_->GetRotate();
-	Vector3 groundScale = ground_->GetScale();
-	if (ImGui::DragFloat3("Translate", &groundTranslate.x, 0.01f)) {
-		ground_->SetTranslate(groundTranslate);
+	for (size_t i = 0; i < groundTiles_.size(); ++i) {
+		ImGui::PushID(static_cast<int>(i)); // IDを分ける
+		Vector3 t = groundTiles_[i]->GetTranslate();
+		Vector3 r = groundTiles_[i]->GetRotate();
+		Vector3 s = groundTiles_[i]->GetScale();
+		if (ImGui::DragFloat3("Translate", &t.x, 0.01f)) {
+			groundTiles_[i]->SetTranslate(t);
+		}
+		if (ImGui::DragFloat3("Rotate", &r.x, 0.01f)) {
+			groundTiles_[i]->SetRotate(r);
+		}
+		if (ImGui::DragFloat3("Scale", &s.x, 0.01f)) {
+			groundTiles_[i]->SetScale(s);
+		}
+		ImGui::Separator();
+		ImGui::PopID();
 	}
-	if (ImGui::DragFloat3("Rotate", &groundRotate.x, 0.01f)) {
-		ground_->SetRotate(groundRotate);
-	}
-	if (ImGui::DragFloat3("Scale", &groundScale.x, 0.01f)) {
-		ground_->SetScale(groundScale);
-	}
+	ImGui::DragFloat("Tile Length (L)", &groundTileLen_, 0.1f, 10.0f, 1000.0f); // 実寸に近い範囲で
+	ImGui::DragFloat("Scroll Speed", &groundScroll_, 0.01f, -5.0f, 5.0f);
+	ImGui::DragFloat("Offset", &groundOffset_, 0.1f, 0.0f, groundTileLen_ * groundTiles_.size());
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	ImGui::Begin("Enemy Status");
