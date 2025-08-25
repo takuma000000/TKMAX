@@ -105,6 +105,9 @@ private: // ──────────────────── 更新�
 	void SpawnCurrentWave();   // 現在のwavePhase_に応じてスポーン
 	void GoToNextWave();       // wavePhase_を進める
 
+	void UpdateSkyboxRotationX(); // スカイボックスをX軸方向に回転
+	void UpdateGroundScroll(); // 地面タイルのスクロール更新
+
 private:
 	DirectXCommon* dxCommon = nullptr;
 	SrvManager* srvManager = nullptr;

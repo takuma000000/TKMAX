@@ -81,43 +81,11 @@ void GameScene::Update()
 	// プレイヤーと環境
 	camera->Update();
 
-	// Skybox をX軸方向にゆっくり回転
-	skyPitch_ -= skyRotSpeedX_;
-	if (skyPitch_ > 6.2831853f) skyPitch_ -= 6.2831853f;
-	if (skyPitch_ < 0.0f)       skyPitch_ += 6.2831853f;
-	skybox_->SetRotation({ skyPitch_, 0.0f, 0.0f });
+	// Skybox 回転
+	UpdateSkyboxRotationX();
 
-	// ---- ground scroll (robust, no overlap) ----
-	{
-		const int   N = static_cast<int>(groundTiles_.size());
-		const float L = groundTileLen_;        // タイル長（後でBで調整できるようにする）
-		const float speed = groundScroll_;         // スクロール速度（+で -Z方向へ流したいなら符号を合わせる）
-		const float epsilon = 0.001f;                // ごく小さい隙間でZファイト回避（見えない程度）
-
-		// 累積距離を更新
-		groundOffset_ += speed;
-		if (groundOffset_ >= N * L) groundOffset_ -= N * L;
-		if (groundOffset_ < 0.0f) groundOffset_ += N * L;
-
-		// いま「何枚ぶん」進んだか（整数）と「端数」（小数）に分解
-		const int   k = static_cast<int>(groundOffset_ / L);  // 0..N-1
-		const float frac = groundOffset_ - static_cast<float>(k) * L; // 0..L
-
-		// 先頭インデックス（カメラ手前のタイル）を k にし、手前→奥の順に配置
-		for (int j = 0; j < N; ++j) {
-			const int idx = (k + j) % N;      // 描画するタイル配列のインデックス
-			float z = -L                      // 手前の基準を -L に
-				+ j * L                   // 1枚ごとに+Lずつ奥へ
-				- frac                    // 端数ぶんだけ全体を -Z に流す
-				- epsilon * j;            // ★ タイル間に極小隙間（重なり防止）
-
-			Vector3 t = groundTiles_[idx]->GetTranslate();
-			t.z = z;
-			groundTiles_[idx]->SetTranslate(t);
-			groundTiles_[idx]->Update();
-		}
-	}
-
+	// ---- ground scroll ----
+	UpdateGroundScroll();
 
 	player_->Update();
 	directionalLight_->Update();
@@ -540,3 +508,47 @@ void GameScene::GoToNextWave() {
 		wavePhase_ = WavePhase::Done; // 最終Waveまで終了
 	}
 }
+
+void GameScene::UpdateSkyboxRotationX()
+{
+	constexpr float kTwoPi = 6.2831853f;
+
+	// X軸回転を更新
+	skyPitch_ -= skyRotSpeedX_;
+	if (skyPitch_ > kTwoPi)  skyPitch_ -= kTwoPi;
+	if (skyPitch_ < 0.0f)    skyPitch_ += kTwoPi;
+
+	// Skybox に適用
+	skybox_->SetRotation({ skyPitch_, 0.0f, 0.0f });
+}
+
+void GameScene::UpdateGroundScroll() {
+	const int   N = static_cast<int>(groundTiles_.size());
+	if (N == 0) return;
+
+	const float L = groundTileLen_;
+	const float speed = groundScroll_;
+	const float epsilon = 0.001f; // タイル間にごく小さな隙間を入れてZ-fighting防止
+
+	// 累積オフセット更新
+	groundOffset_ += speed;
+	const float loop = N * L;
+	if (groundOffset_ >= loop) groundOffset_ -= loop;
+	if (groundOffset_ < 0.0f)  groundOffset_ += loop;
+
+	// いまどのタイルが先頭か（整数部）と端数（小数部）
+	const int   k = static_cast<int>(groundOffset_ / L);
+	const float frac = groundOffset_ - static_cast<float>(k) * L;
+
+	// 配置
+	for (int j = 0; j < N; ++j) {
+		const int idx = (k + j) % N;
+		float z = -L + j * L - frac - epsilon * j;
+
+		Vector3 t = groundTiles_[idx]->GetTranslate();
+		t.z = z;
+		groundTiles_[idx]->SetTranslate(t);
+		groundTiles_[idx]->Update();
+	}
+}
+
