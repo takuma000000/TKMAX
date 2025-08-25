@@ -105,23 +105,37 @@ void Player::StartCameraShake(int frameCount) {
 
 void Player::HandleGamePadMove() {
 	Input* input = Input::GetInstance();
-
-	const float moveSpeed = 0.2f;
+	const float moveSpeed = 0.25f;
 	const SHORT deadZone = 8000;
 
 	SHORT lx = input->GetLeftStickX();
 	SHORT ly = input->GetLeftStickY();
-
 	float stickX = abs(lx) > deadZone ? (lx / 32768.0f) : 0.0f;
 	float stickY = abs(ly) > deadZone ? (ly / 32768.0f) : 0.0f;
 
-	if (stickX == 0.0f && stickY == 0.0f) return;
-
 	Vector3 pos = object_->GetTranslate();
+	// XYのみ移動（Zはレール固定）
 	pos.x += stickX * moveSpeed;
 	pos.y -= -stickY * moveSpeed;
+	pos.z = 0.0f; // レール固定
+
+	// 範囲クランプ
+	pos.x = std::clamp(pos.x, moveMin_.x, moveMax_.x);
+	pos.y = std::clamp(pos.y, moveMin_.y, moveMax_.y);
+
 	object_->SetTranslate(pos);
+
+	// バンク角（ロール）をスティックに応じてスムージング
+	float targetBank = -stickX * 0.35f; // 左で左に傾く
+	// 簡易クリティックダンピング
+	float k = 0.25f, d = 0.45f;
+	bankVel_ += (targetBank - bankAngle_) * k - bankVel_ * d;
+	bankAngle_ += bankVel_;
+	Vector3 rot = object_->GetRotate();
+	rot.z = bankAngle_; // ロール
+	object_->SetRotate(rot);
 }
+
 
 void Player::HandleCameraControl() {
 	if (!camera) return;
