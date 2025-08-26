@@ -73,7 +73,7 @@ void GameScene::Update()
 				boss_->Initialize(Object3dCommon::GetInstance(), dxCommon);
 				boss_->SetCamera(camera.get());
 				boss_->SetParentScene(this);
-				boss_->SetPosition({ 0, 0, 200 }); // 奥から出現
+				boss_->SetPosition({ 0, 0, 100 }); // 奥から出現
 			} else {
 				// ボスが死んだらクリア
 				if (boss_ && boss_->IsDead()) {
@@ -208,6 +208,7 @@ void GameScene::InitializeObjects()
 	player_->Initialize(Object3dCommon::GetInstance(), dxCommon);
 	player_->SetPosition({ 0.0f, 0.0f, 0.0f });
 	player_->SetParentScene(this);
+	player_->SetEnemy(boss_.get()); // 最初はボスはいないのでnullptr
 
 	InitializeEnemies();// 敵の初期化
 }
@@ -442,6 +443,13 @@ void GameScene::UpdateClosestEnemy()
 	/// ● プレイヤーに最も近い敵を検出し、ターゲットとして設定する
 	/// ───────────────────────────────────────────────
 
+	 // ボス戦中は常にボスをターゲット
+	if (bossBattle_ && boss_ && !boss_->IsDead()) {
+		player_->SetEnemy(boss_.get());
+		//player_->SetAllEnemies(nullptr); // LBの全体攻撃を封じたいなら
+		return;
+	}
+
 	if (!player_) return; // プレイヤーが未初期化なら処理中止
 
 	Enemy* closestEnemy = nullptr; // 最も近い敵（nullptrで初期化）
@@ -487,7 +495,7 @@ void GameScene::SpawnCurrentWave() {
 	switch (wavePhase_) {
 	case WavePhase::W1: {
 		// Line: 5体
-		EnemySpawner::SpawnLine(enemies_, 5, /*y*/5.0f, /*z*/120.0f,
+		EnemySpawner::SpawnLine(enemies_, 5, /*y*/5.0f, /*z*/60.0f,
 			/*xStart*/-20.0f, /*xStep*/10.0f,
 			dxCommon, camPtr, this);
 		maxEnemyCount_ += 5;
@@ -495,7 +503,7 @@ void GameScene::SpawnCurrentWave() {
 	}
 	case WavePhase::W2: {
 		// V: 中央1 + 左右各3 = 7体
-		EnemySpawner::SpawnV(enemies_, 3, /*y*/6.0f, /*z*/160.0f,
+		EnemySpawner::SpawnV(enemies_, 3, /*y*/6.0f, /*z*/80.0f,
 			/*xCenter*/0.0f, /*xStep*/8.0f, /*zStep*/6.0f,
 			dxCommon, camPtr, this);
 		maxEnemyCount_ += 7;
@@ -504,7 +512,7 @@ void GameScene::SpawnCurrentWave() {
 	case WavePhase::W3: {
 		// Column: 6体
 		EnemySpawner::SpawnColumn(enemies_, 6, /*x*/25.0f,
-			/*zStart*/200.0f, /*zStep*/10.0f,
+			/*zStart*/100.0f, /*zStep*/10.0f,
 			/*yStart*/4.0f, /*yStep*/0.5f,
 			dxCommon, camPtr, this);
 		maxEnemyCount_ += 6;

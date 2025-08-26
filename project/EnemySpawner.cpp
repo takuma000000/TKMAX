@@ -60,5 +60,4 @@ namespace EnemySpawner {
 			enemies.push_back(std::move(e));
 		}
 	}
-
-} // namespace EnemySpawner
+}

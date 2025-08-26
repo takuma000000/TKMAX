@@ -25,7 +25,7 @@ void PlayerBullet::Update() {
 
 		// 敵のワールド座標とスケールを取得
 		Vector3 enemyPos = enemy_->GetWorldPosition();
-		Vector3 enemyScale = enemy_->GetScale();
+		Vector3 enemyScale = enemy_->GetColliderScale();
 
 		// 弾と敵のAABB（軸に沿ったバウンディングボックス）を作成
 		AABB bulletBox(bulletPos, bulletScale);

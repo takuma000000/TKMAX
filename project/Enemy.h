@@ -16,6 +16,9 @@ public:
 	void OnHitWithDamage(int damage); // 特殊攻撃（ダメージ指定）
 	bool IsDead() const { return isDead_; }
 
+	// 既存 Enemy クラスの public: に追記
+	bool IsLocked() const { return isLocked_; }
+
 	// HP設定
 	void SetHP(int hp) {
 		hp_ = hp;
@@ -27,14 +30,17 @@ public:
 	}
 	// スケール変更
 	void SetScale(const Vector3& scale) {
-		baseScale_ = scale;
-		if (object_) object_->SetScale(scale);
+		baseScale_ = scale; // 元のスケールを更新
+		colliderScale_ = scale; // 当たり判定用スケールも更新
+		if (object_) object_->SetScale(scale); // Object3d にも反映
 	}
 
 	void SetCamera(Camera* camera);
 	void SetPosition(const Vector3& pos);
 	void SetParentScene(BaseScene* scene);
 	void SetLocked(bool v) { isLocked_ = v; if (!v) pulseT_ = 0.0f; }
+	Vector3 GetColliderScale() const { return colliderScale_; }
+	void SetColliderScale(const Vector3& s) { colliderScale_ = s; }
 	Vector3 GetWorldPosition() const;
 	Vector3 GetScale() const {
 		return object_ ? object_->GetScale() : Vector3{ 1.0f, 1.0f, 1.0f };
@@ -56,4 +62,6 @@ private:
 	bool  isLocked_ = false;
 	float pulseT_ = 0.0f;   // パルス用の位相
 	Vector3 baseScale_ = { 1.0f,1.0f,1.0f }; // 元のスケールを保持
+
+	Vector3 colliderScale_ = { 1.0f, 1.0f, 1.0f }; // 当たり判定用スケール
 };
