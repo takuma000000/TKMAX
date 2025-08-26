@@ -7,7 +7,7 @@ void Player::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 
 	object_ = std::make_unique<Object3d>();
 	object_->Initialize(common_, dxCommon_);
-	object_->SetModel("sphere.obj");
+	object_->SetModel("jett.obj");
 	object_->SetEnvironment("./resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
 }
 
