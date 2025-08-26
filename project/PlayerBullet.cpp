@@ -14,6 +14,18 @@ void PlayerBullet::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 void PlayerBullet::Update() {
 	// 現在の座標を取得して、速度分だけ進める
 	Vector3 pos = object_->GetTranslate();
+
+	// ▼ 完全追従：毎フレーム、目標の現在位置へ向けて速度ベクトルを再設定
+	if (isHoming_ && enemy_ && !enemy_->IsDead()) {
+		Vector3 enemyPos = enemy_->GetWorldPosition();
+		Vector3 dir = enemyPos - pos;
+		float len = MyMath::Length(dir);
+		if (len > 0.001f) {
+			dir = MyMath::Normalize(dir);
+			velocity_ = dir * homingSpeed_; // 速度の大きさは一定、向きだけ更新
+		}
+	}
+
 	pos = pos + velocity_;
 	object_->SetTranslate(pos);
 

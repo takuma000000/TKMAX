@@ -26,6 +26,7 @@ public:
 	void SetEnemy(Enemy* enemy) { enemy_ = enemy; }
 	void SetPlayer(Player* player) { player_ = player; }
 	void SetSpecialAttack(bool flag) { isSpecialAttack_ = flag; }
+	void SetHoming(bool enable, float speed) { isHoming_ = enable; homingSpeed_ = speed; }
 
 private:
 	Player* player_ = nullptr;
@@ -38,4 +39,7 @@ private:
 	Enemy* enemy_ = nullptr;
 
 	bool isSpecialAttack_ = false; // 一撃必殺フラグ
+
+	bool  isHoming_ = false;
+	float homingSpeed_ = 0.6f; // 追従弾の速度（調整可）
 };

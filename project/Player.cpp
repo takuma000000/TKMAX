@@ -196,6 +196,38 @@ void Player::HandleFollowCamera() {
 void Player::HandleShooting() {
 	Input* input = Input::GetInstance();
 
+	// ▼ LT：完全追従弾（強ホーミング）
+	bool ltPressed = (input->GetLeftTrigger() > 128);
+	if (ltPressed && !ltHeld_) {
+		auto bullet = std::make_unique<PlayerBullet>();
+		bullet->Initialize(common_, dxCommon_);
+
+		Vector3 startPos = object_->GetTranslate();
+		bullet->SetPosition(startPos);
+
+		// 追従対象：現在のenemy_（GameScene側で最も近い敵が設定されている想定）
+		bullet->SetEnemy(enemy_);               // ← ターゲット
+		bullet->SetHoming(true, 0.6f);          // ← 完全追従ON（速度は好みで）
+		bullet->SetCamera(camera);
+		bullet->SetPlayer(this);
+
+		// 初速は一応ターゲット方向、enemy_がいなければ前方
+		if (enemy_ && !enemy_->IsDead()) {
+			Vector3 dir = enemy_->GetWorldPosition() - startPos;
+			float len = MyMath::Length(dir);
+			bullet->SetVelocity((len > 0.01f ? MyMath::Normalize(dir) : Vector3{ 0,0,1 }) * 0.6f);
+		} else {
+			bullet->SetVelocity({ 0,0,0.6f });
+		}
+
+		bullets_.push_back(std::move(bullet));
+	}
+	if (!ltPressed) {
+		ltHeld_ = false; // 離したら解放（次の押下で1発だけ出る）
+	} else {
+		ltHeld_ = true;
+	}
+
 	// RBボタン：通常弾
 	if (input->TriggerButton(XINPUT_GAMEPAD_RIGHT_SHOULDER)) {
 		auto bullet = std::make_unique<PlayerBullet>();
