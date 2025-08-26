@@ -489,40 +489,73 @@ void GameScene::InitializeEnemies() {
 }
 
 void GameScene::SpawnCurrentWave() {
-	// Cameraはこの時点でnullptrでもOK（後でInitializeCameraで一括セット）
 	auto camPtr = camera ? camera.get() : nullptr;
 
 	switch (wavePhase_) {
 	case WavePhase::W1: {
-		// Line: 5体
-		EnemySpawner::SpawnLine(enemies_, 5, /*y*/5.0f, /*z*/60.0f,
-			/*xStart*/-20.0f, /*xStep*/10.0f,
-			dxCommon, camPtr, this);
+		// W1: 直進停止（密度で圧）＋HP控えめ
+		EnemySpawner::SpawnLine(
+			enemies_, 5, /*y*/5.0f, /*z*/60.0f, -20.0f, 10.0f,
+			dxCommon, camPtr, this,
+			[&](Enemy& e) {
+				e.SetBehavior(EnemyBehavior::StraightStop);
+				e.SetVelocity({ 0,0,-0.25f });
+				e.SetStopZ(30.0f);
+				e.SetHP(2);
+				e.SetScale({ 1.1f,1.1f,1.1f });
+			}
+		);
 		maxEnemyCount_ += 5;
 		break;
 	}
 	case WavePhase::W2: {
-		// V: 中央1 + 左右各3 = 7体
-		EnemySpawner::SpawnV(enemies_, 3, /*y*/6.0f, /*z*/80.0f,
-			/*xCenter*/0.0f, /*xStep*/8.0f, /*zStep*/6.0f,
-			dxCommon, camPtr, this);
-		maxEnemyCount_ += 7;
+		// W2: サイン蛇行で避けにくく
+		EnemySpawner::SpawnV(
+			enemies_, 3, /*y*/6.0f, /*z*/80.0f, 0.0f, 8.0f, 6.0f,
+			dxCommon, camPtr, this,
+			[&](Enemy& e) {
+				e.SetBehavior(EnemyBehavior::SineX);
+				e.SetVelocity({ 0,0,-0.22f });
+				e.SetStopZ(32.0f);
+				e.SetSineParams(/*ampX*/6.0f, /*freq*/1.6f);
+				e.SetHP(3);
+			}
+		);
+		maxEnemyCount_ += 7; // 中央1 + 左右3*2
 		break;
 	}
 	case WavePhase::W3: {
-		// Column: 6体
-		EnemySpawner::SpawnColumn(enemies_, 6, /*x*/25.0f,
-			/*zStart*/100.0f, /*zStep*/10.0f,
-			/*yStart*/4.0f, /*yStep*/0.5f,
-			dxCommon, camPtr, this);
+		// W3: 追尾＋左右ストレーフ混在で圧を上げる
+		EnemySpawner::SpawnColumn(
+			enemies_, 6, /*x*/25.0f, 100.0f, 10.0f, 4.0f, 0.5f,
+			dxCommon, camPtr, this,
+			[&](Enemy& e) {
+				// 交互にパターン変える例
+				static int idx = 0;
+				if ((idx++ % 2) == 0) {
+					e.SetBehavior(EnemyBehavior::ChasePlayer);
+					e.SetVelocity({ 0,0,-0.20f });
+					e.SetStopZ(34.0f);
+					// 追尾用にプレイヤー位置の参照を渡す
+					e.SetPlayerGetter([this]() { return player_->GetPosition(); });
+					e.SetHP(3);
+				} else {
+					e.SetBehavior(EnemyBehavior::StrafeLtoR);
+					e.SetVelocity({ 0,0,-0.25f });
+					e.SetStopZ(31.0f);
+					e.SetStrafeX(-18.0f, 18.0f, 0.45f);
+					e.SetHP(4);
+				}
+			}
+		);
 		maxEnemyCount_ += 6;
 		break;
 	}
 	case WavePhase::Done:
-		// 何もしない
 		break;
 	}
 }
+
 
 void GameScene::GoToNextWave() {
 	if (wavePhase_ == WavePhase::W1) {

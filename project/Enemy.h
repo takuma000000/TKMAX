@@ -5,6 +5,14 @@
 #include "BaseScene.h"
 #include "externals/imgui/imgui.h"
 
+enum class EnemyBehavior {
+	StraightStop,   // いまの「Z手前に進んでstopZで止まる」
+	SineX,          // Xをサイン波で揺らしながら前進
+	StrafeLtoR,     // Xを左右往復（矩形波）しながら前進
+	ChasePlayer,    // プレイヤー方向にじわっと追尾
+	/// ここに将来：ShootOnly / Kamikaze なども追加可
+};
+
 class Enemy {
 public:
 	void Initialize(Object3dCommon* common, DirectXCommon* dxCommon);
@@ -46,6 +54,23 @@ public:
 		return object_ ? object_->GetScale() : Vector3{ 1.0f, 1.0f, 1.0f };
 	}
 
+	// --- 設定系を追加 ---
+	void SetBehavior(EnemyBehavior b) { behavior_ = b; }
+	void SetVelocity(const Vector3& v) { velocity_ = v; }
+	void SetStopZ(float z) { stopZ_ = z; }
+	void SetSineParams(float ampX, float freq) { sineAmpX_ = ampX; sineFreq_ = freq; }
+	void SetStrafeX(float left, float right, float speed) {
+		strafeLeft_ = left; strafeRight_ = right; strafeSpeed_ = speed;
+		if (strafePosX_ == 0.0f) strafePosX_ = left;
+	}
+	void SetPlayerRef(const Vector3* playerPos) { playerPos_ = playerPos; } // 追尾用（参照だけ）
+
+	// 将来の発射フック（今は未使用）
+	void SetCanShoot(bool v, float interval) { canShoot_ = v; shootInterval_ = interval; }
+
+	void SetPlayerGetter(std::function<Vector3()> getter) { playerGetter_ = std::move(getter); }
+
+
 private:
 	std::unique_ptr<Object3d> object_;
 	Camera* camera = nullptr;
@@ -64,4 +89,30 @@ private:
 	Vector3 baseScale_ = { 1.0f,1.0f,1.0f }; // 元のスケールを保持
 
 	Vector3 colliderScale_ = { 1.0f, 1.0f, 1.0f }; // 当たり判定用スケール
+
+	EnemyBehavior behavior_ = EnemyBehavior::StraightStop;
+
+	// 共通
+	float t_ = 0.0f;
+
+	// Sine 用
+	float sineAmpX_ = 0.0f;
+	float sineFreq_ = 1.0f;
+	float startX_ = 0.0f; // 初期Xを保持
+
+	// Strafe 用
+	float strafeLeft_ = -10.0f, strafeRight_ = 10.0f, strafeSpeed_ = 0.2f;
+	float strafePosX_ = 0.0f;
+	int   strafeDir_ = +1;
+
+	// 追尾用
+	const Vector3* playerPos_ = nullptr;
+	float chaseSpeed_ = 0.07f;
+
+	// 将来の射撃用
+	bool  canShoot_ = false;
+	float shootInterval_ = 120.0f; // フレーム
+	float shootTimer_ = 0.0f;
+
+	std::function<Vector3()> playerGetter_;
 };
