@@ -64,12 +64,23 @@ void GameScene::Update()
 
 	if (enemies_.empty()) {
 		if (wavePhase_ != WavePhase::Done) {
-			GoToNextWave(); // 次Waveを出す
-			// 次Waveを出した直後は以降の処理を普通に継続（returnしない）
+			GoToNextWave();
 		} else {
-			// 全Wave終了→ほんとに空なのでクリア
-			sceneManager_->SetNextScene(new GameClearScene(dxCommon, srvManager));
-			return;
+			if (!bossBattle_) {
+				// ボス戦突入！
+				bossBattle_ = true;
+				boss_ = std::make_unique<BossEnemy>();
+				boss_->Initialize(Object3dCommon::GetInstance(), dxCommon);
+				boss_->SetCamera(camera.get());
+				boss_->SetParentScene(this);
+				boss_->SetPosition({ 0, 0, 200 }); // 奥から出現
+			} else {
+				// ボスが死んだらクリア
+				if (boss_ && boss_->IsDead()) {
+					sceneManager_->SetNextScene(new GameClearScene(dxCommon, srvManager));
+					return;
+				}
+			}
 		}
 	}
 
@@ -89,6 +100,10 @@ void GameScene::Update()
 
 	player_->Update();
 	directionalLight_->Update();
+
+	if (bossBattle_ && boss_) {
+		boss_->Update();
+	}
 
 	// その他のオブジェクト・パーティクルの更新
 	ParticleManager::GetInstance()->Update();
@@ -115,6 +130,10 @@ void GameScene::Draw()
 
 	for (auto& enemy : enemies_) {
 		enemy->Draw(dxCommon);
+	}
+
+	if (bossBattle_ && boss_) {
+		boss_->Draw(dxCommon);
 	}
 
 	skybox_->Draw();

@@ -16,6 +16,21 @@ public:
 	void OnHitWithDamage(int damage); // 特殊攻撃（ダメージ指定）
 	bool IsDead() const { return isDead_; }
 
+	// HP設定
+	void SetHP(int hp) {
+		hp_ = hp;
+		maxHP_ = hp;
+	}
+	// モデル差し替え
+	void SetModel(const std::string& modelName) {
+		if (object_) object_->SetModel(modelName);
+	}
+	// スケール変更
+	void SetScale(const Vector3& scale) {
+		baseScale_ = scale;
+		if (object_) object_->SetScale(scale);
+	}
+
 	void SetCamera(Camera* camera);
 	void SetPosition(const Vector3& pos);
 	void SetParentScene(BaseScene* scene);
@@ -31,6 +46,7 @@ private:
 	BaseScene* parentScene_ = nullptr;
 
 	int hp_ = 3;
+	int maxHP_ = 3;
 	bool isDead_ = false;
 
 	Vector3 velocity_ = { 0.0f, 0.0f, -0.1f }; // 毎フレームの移動量（Z方向に手前）

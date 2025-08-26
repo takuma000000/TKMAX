@@ -25,6 +25,7 @@
 #include "Player.h"
 #include "Enemy.h"
 #include "EnemySpawner.h"
+#include "BossEnemy.h"
 
 class GameScene : public BaseScene
 {
@@ -141,5 +142,8 @@ private:
 
 	float skyPitch_ = 0.0f;        // X軸回転量
 	float skyRotSpeedX_ = 0.002f;  // X軸回転速度
+
+	bool bossBattle_ = false;         // ボス戦フラグ
+	std::unique_ptr<BossEnemy> boss_; // ボス敵
 };
 
