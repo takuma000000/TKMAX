@@ -71,9 +71,11 @@ void GameScene::Update()
 				bossBattle_ = true;
 				boss_ = std::make_unique<BossEnemy>();
 				boss_->Initialize(Object3dCommon::GetInstance(), dxCommon);
-				boss_->SetCamera(camera.get());
+				//boss_->SetCamera(camera.get());
 				boss_->SetParentScene(this);
+				boss_->SetPlayer([this]() { return player_->GetPosition(); });
 				boss_->SetPosition({ 0, 0, 100 }); // 奥から出現
+				boss_->SetCamera(camera.get()); // カメラセット
 			} else {
 				// ボスが死んだらクリア
 				if (boss_ && boss_->IsDead()) {
@@ -538,7 +540,7 @@ void GameScene::SpawnCurrentWave() {
 					e.SetVelocity({ 0,0,-0.20f });
 					e.SetStopZ(34.0f);
 					// 追尾用にプレイヤー位置の参照を渡す
-					e.SetPlayerGetter([this]() { return player_->GetPosition(); });
+					e.SetPlayer([this]() { return player_->GetPosition(); });
 					e.SetHP(3);
 				} else {
 					e.SetBehavior(EnemyBehavior::StrafeLtoR);

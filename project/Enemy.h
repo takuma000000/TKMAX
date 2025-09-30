@@ -53,6 +53,9 @@ public:
 	Vector3 GetScale() const {
 		return object_ ? object_->GetScale() : Vector3{ 1.0f, 1.0f, 1.0f };
 	}
+	const std::function<Vector3()>& GetPlayer() const { return playerGetter_; }
+	int GetHP() const { return hp_; }
+	int GetMaxHP() const { return maxHP_; }
 
 	// --- 設定系を追加 ---
 	void SetBehavior(EnemyBehavior b) { behavior_ = b; }
@@ -68,7 +71,7 @@ public:
 	// 将来の発射フック（今は未使用）
 	void SetCanShoot(bool v, float interval) { canShoot_ = v; shootInterval_ = interval; }
 
-	void SetPlayerGetter(std::function<Vector3()> getter) { playerGetter_ = std::move(getter); }
+	void SetPlayer(std::function<Vector3()> getter) { playerGetter_ = std::move(getter); }
 
 
 private:
