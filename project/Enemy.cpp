@@ -4,8 +4,8 @@
 void Enemy::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	object_ = std::make_unique<Object3d>();
 	object_->Initialize(common, dxCommon);
-	object_->SetModel("sphere.obj"); // モデル名は適宜変更
-	ModelManager::GetInstance()->LoadModel("sphere.obj", dxCommon);
+	object_->SetModel("enemy.obj"); // モデル名は適宜変更
+	ModelManager::GetInstance()->LoadModel("enemy.obj", dxCommon);
 
 	if (camera) {
 		object_->SetCamera(camera);

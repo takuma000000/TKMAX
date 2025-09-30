@@ -73,9 +73,9 @@ void GameScene::Update()
 				boss_->Initialize(Object3dCommon::GetInstance(), dxCommon);
 				//boss_->SetCamera(camera.get());
 				boss_->SetParentScene(this);
-				boss_->SetPlayer([this]() { return player_->GetPosition(); });
-				boss_->SetPosition({ 0, 0, 100 }); // 奥から出現
 				boss_->SetCamera(camera.get()); // カメラセット
+				boss_->SetPlayer([this]() { return player_->GetPosition(); });
+				boss_->SetPosition({ 0, 0, 200 }); // 奥から出現
 			} else {
 				// ボスが死んだらクリア
 				if (boss_ && boss_->IsDead()) {
@@ -187,6 +187,7 @@ void GameScene::LoadModels()
 	ModelManager::GetInstance()->LoadModel("terrain.obj", dxCommon);
 	ModelManager::GetInstance()->LoadModel("ground.obj", dxCommon);
 	ModelManager::GetInstance()->LoadModel("jett.obj", dxCommon);
+	ModelManager::GetInstance()->LoadModel("enemy.obj", dxCommon);
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*

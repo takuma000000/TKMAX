@@ -5,7 +5,7 @@
 void BossEnemy::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	Enemy::Initialize(common, dxCommon);
 
-	SetModel("sphere.obj");
+	SetModel("enemy.obj");
 	SetHP(80);                              // HPを大きく
 	SetScale({ 5.0f, 5.0f, 5.0f });
 	SetColliderScale({ 5.0f, 5.0f, 5.0f });

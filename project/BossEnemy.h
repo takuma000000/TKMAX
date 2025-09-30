@@ -1,5 +1,6 @@
 #pragma once
 #include "Enemy.h"
+#include "Camera.h"
 
 class BossEnemy : public Enemy {
 public:
@@ -7,6 +8,10 @@ public:
 	void Update();
 
 private:
+
+
+	Camera* camera_ = nullptr;
+
 	// フェーズ管理
 	enum class Phase { P1, P2, P3 };
 	Phase phase_ = Phase::P1;
@@ -17,10 +22,10 @@ private:
 	float stageT_ = 0.0f;
 
 	// 移動用
-	float theta_ = 0.0f; // 周回角度
-	float orbitR_ = 20.0f;   // 周回半径
+	float theta_ = 0.0f;     // 周回角度
+	float orbitR_ = 35.0f;   // 周回半径
 	float orbitOmega_ = 0.7f;// 周回角速度
-	float dzMin_ = 6.0f;     // プレイヤーより常に奥にいる差
+	float dzMin_ = 45.0f;    // プレイヤーより常に奥にいる差
 
 	// パラメータ
 	float maxSpeed_ = 0.6f;
