@@ -481,7 +481,7 @@ void GameScene::InitializeEnemies() {
 	maxEnemyCount_ = 0;        // 全Wave合計で加算していく
 
 	wavePhase_ = WavePhase::W1; // Wave1から
-	SpawnCurrentWave();         // ★ 最初のWaveだけ出す（ここでmaxEnemyCount_も加算）
+	SpawnCurrentWave();         // 最初のWaveだけ出す（ここでmaxEnemyCount_も加算）
 
 	if (!enemies_.empty()) {
 		player_->SetEnemy(enemies_.front().get());
