@@ -110,6 +110,12 @@ void GameScene::Update()
 	// その他のオブジェクト・パーティクルの更新
 	ParticleManager::GetInstance()->Update();
 
+	for (auto it = bossBullets_.begin(); it != bossBullets_.end(); ) {
+		(*it)->Update();
+		if ((*it)->IsDead()) it = bossBullets_.erase(it);
+		else ++it;
+	}
+
 	// SPACEキーでパーティクルテスト発生
 	if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
 		Vector3 emitPos = { 0.0f, 2.5f, 10.0f }; // 空中で見やすい位置
@@ -138,8 +144,19 @@ void GameScene::Draw()
 		boss_->Draw(dxCommon);
 	}
 
+	for (auto& b : bossBullets_) {
+		b->Draw(dxCommon);
+	}
+
 	skybox_->Draw();
 	ParticleManager::GetInstance()->Draw();
+}
+
+void GameScene::SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float speed, int damage, int lifeFrame)
+{
+	auto b = std::make_unique<BossBullet>();
+	b->Initialize(Object3dCommon::GetInstance(), dxCommon, camera.get(), pos, dir, speed, damage, lifeFrame);
+	bossBullets_.push_back(std::move(b));
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*

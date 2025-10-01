@@ -26,6 +26,7 @@
 #include "Enemy.h"
 #include "EnemySpawner.h"
 #include "BossEnemy.h"
+#include "BossBullet.h"
 
 class GameScene : public BaseScene
 {
@@ -37,6 +38,11 @@ public:
 	void Finalize() override;
 	void Update() override;
 	void Draw() override;
+
+	void SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float speed, int damage, int lifeFrame);
+	Camera* GetCameraPtr() { return camera.get(); }
+	DirectXCommon* GetDX() { return dxCommon; }
+	Player* GetPlayerPtr() { return player_.get(); }
 
 private:// ──────────────────── 初期化処理 ────────────────────
 
@@ -145,5 +151,6 @@ private:
 
 	bool bossBattle_ = false;         // ボス戦フラグ
 	std::unique_ptr<BossEnemy> boss_; // ボス敵
+	std::vector<std::unique_ptr<BossBullet>> bossBullets_;
 };
 

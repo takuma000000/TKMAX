@@ -1,6 +1,14 @@
 #include "BossEnemy.h"
 #include <cmath>
 #include "MyMath.h"
+#include "GameScene.h" // 追加：弾スポーンのため
+
+// 安全正規化
+static Vector3 SafeNormalize(const Vector3& v, const Vector3& fallback = { 0,0,-1 }) {
+	float len = MyMath::Length(v);
+	if (len < 1e-5f) return fallback;
+	return MyMath::Normalize(v);
+}
 
 void BossEnemy::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	Enemy::Initialize(common, dxCommon);
@@ -61,7 +69,7 @@ void BossEnemy::UpdatePhase() {
 	else phase_ = Phase::P1;
 }
 
-void BossEnemy::UpdateMovement(const Vector3& playerPos, const Vector3& playerVel) {
+void BossEnemy::UpdateMovement(const Vector3& playerPos, const Vector3& /*playerVel*/) {
 	theta_ += orbitOmega_ * (phase_ == Phase::P3 ? 1.5f : 1.0f);
 
 	Vector3 ring = { orbitR_ * cosf(theta_), 0.0f, orbitR_ * sinf(theta_) };
@@ -75,7 +83,7 @@ void BossEnemy::UpdateMovement(const Vector3& playerPos, const Vector3& playerVe
 
 	Vector3 desired = (dist > 0.001f) ? MyMath::Normalize(toT) * maxSpeed_ : Vector3{ 0,0,0 };
 	if (dist < arriveRadius_) {
-		desired = desired * (dist / arriveRadius_);  // ★ *=をやめてこれに
+		desired = desired * (dist / arriveRadius_);
 	}
 	pos += desired;
 	SetPosition(pos);
@@ -100,7 +108,7 @@ void BossEnemy::UpdateAttack(float dt, const Vector3& playerPos) {
 void BossEnemy::SelectNextAttack() {
 	switch (phase_) {
 	case Phase::P1: currentAttack_ = AttackType::Beam; break;
-	case Phase::P2: currentAttack_ = AttackType::Fan; break;
+	case Phase::P2: currentAttack_ = AttackType::Fan;  break;
 	case Phase::P3: currentAttack_ = AttackType::Rapid; break;
 	}
 }
@@ -109,17 +117,47 @@ void BossEnemy::FireBegin() {
 	// TODO: テレグラフ演出（光るエフェクトなど）
 }
 
-void BossEnemy::FireTick(float dt, const Vector3& playerPos) {
+void BossEnemy::FireTick(float /*dt*/, const Vector3& playerPos) {
+	// 親シーンから弾を生やす
+	auto* gs = dynamic_cast<GameScene*>(GetParentScene());
+	if (!gs) return;
+
+	const Vector3 myPos = GetWorldPosition();
+
 	switch (currentAttack_) {
-	case AttackType::Beam:
-		// TODO: playerPosに向かってビームを生成
+	case AttackType::Beam: {
+		// 3フレームに1発、プレイヤーに向けて直射（長寿命＆遅い）
+		if (static_cast<int>(stageT_) % 3 == 0) {
+			Vector3 dir = SafeNormalize(playerPos - myPos, { 0,0,-1 });
+			gs->SpawnEnemyBullet(myPos, dir, /*speed*/0.7f, /*dmg*/2, /*life*/240);
+		}
 		break;
-	case AttackType::Fan:
-		// TODO: 扇状に弾を生成
+	}
+	case AttackType::Fan: {
+		// 10フレームに1回、扇状に5発
+		if (static_cast<int>(stageT_) % 10 == 0) {
+			Vector3 forward = SafeNormalize(playerPos - myPos, { 0,0,-1 });
+			// XZ 平面の右ベクトル
+			Vector3 right = SafeNormalize(Vector3{ forward.z, 0.0f, -forward.x }, { 1,0,0 });
+			const int   N = 5;
+			const float spread = 0.35f;
+			for (int i = 0; i < N; ++i) {
+				float t = (i - (N - 1) * 0.5f); // -2..+2
+				Vector3 dir = SafeNormalize(forward + right * (t * spread));
+				gs->SpawnEnemyBullet(myPos, dir, /*speed*/0.9f, /*dmg*/1, /*life*/180);
+			}
+		}
 		break;
-	case AttackType::Rapid:
-		// TODO: ランダム方向に連射
+	}
+	case AttackType::Rapid: {
+		// 毎フレーム、高速・短命の連射（プレイヤー方向＋微ランダム）
+		float jx = std::sinf(stageT_ * 0.7f) * 0.2f;
+		float jz = std::cosf(stageT_ * 0.5f) * 0.2f;
+		Vector3 base = SafeNormalize(playerPos - myPos, { 0,0,-1 });
+		Vector3 dir = SafeNormalize(Vector3{ base.x + jx, base.y, base.z + jz });
+		gs->SpawnEnemyBullet(myPos, dir, /*speed*/1.4f, /*dmg*/1, /*life*/120);
 		break;
+	}
 	}
 }
 

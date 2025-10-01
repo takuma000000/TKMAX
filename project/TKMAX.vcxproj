@@ -164,6 +164,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   <ItemGroup>
     <ClInclude Include="AABB.h" />
     <ClInclude Include="AbstractSceneFactory.h" />
+    <ClInclude Include="BossBullet.h" />
     <ClInclude Include="BossEnemy.h" />
     <ClInclude Include="DirectionalLight.h" />
     <ClInclude Include="Enemy.h" />

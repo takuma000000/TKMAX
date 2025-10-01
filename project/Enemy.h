@@ -73,6 +73,7 @@ public:
 
 	void SetPlayer(std::function<Vector3()> getter) { playerGetter_ = std::move(getter); }
 
+	BaseScene* GetParentScene() const { return parentScene_; }
 
 private:
 	std::unique_ptr<Object3d> object_;
