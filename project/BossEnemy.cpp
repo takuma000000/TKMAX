@@ -38,6 +38,20 @@ void BossEnemy::Update() {
 	} else {
 		SetScale({ 5.0f, 5.0f, 5.0f });
 	}
+
+	Enemy::Update();
+}
+
+void BossEnemy::ImGuiDebug()
+{
+	ImGui::Begin("Boss");
+	ImGui::Text("HP: %d / %d", GetHP(), GetMaxHP());
+	ImGui::Text("Phase: %s", (phase_ == Phase::P1) ? "P1" : (phase_ == Phase::P2) ? "P2" : "P3");
+	ImGui::Text("Attack: %s", (currentAttack_ == AttackType::Beam) ? "Beam" :
+		(currentAttack_ == AttackType::Fan) ? "Fan" : "Rapid");
+	ImGui::Text("Stage: %s (%.1f)", (stage_ == ActStage::Telegraph) ? "Telegraph" :
+		(stage_ == ActStage::Fire) ? "Fire" : "Cooldown", stageT_);
+	ImGui::End();
 }
 
 void BossEnemy::UpdatePhase() {

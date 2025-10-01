@@ -7,6 +7,8 @@ public:
 	void Initialize(Object3dCommon* common, DirectXCommon* dxCommon);
 	void Update();
 
+	void ImGuiDebug();
+
 private:
 
 

@@ -286,10 +286,8 @@ void GameScene::ImGuiDebug()
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	player_->ImGuiDebug();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	for (size_t i = 0; i < enemies_.size(); ++i) {
-		ImGui::PushID(static_cast<int>(i));
-		enemies_[i]->ImGuiDebug();
-		ImGui::PopID();
+	if (boss_) {
+		boss_->ImGuiDebug();
 	}
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	ImGui::Begin("Bullet Debug");
@@ -323,6 +321,12 @@ void GameScene::ImGuiDebug()
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	ImGui::Begin("Enemy Status");
 	ImGui::Text("Defeated: %d / %d", defeatedEnemyCount_, maxEnemyCount_);
+
+	for (size_t i = 0; i < enemies_.size(); ++i) {
+		ImGui::PushID(static_cast<int>(i));
+		enemies_[i]->ImGuiDebug();
+		ImGui::PopID();
+	}
 
 	float progress = 0.0f;
 	if (maxEnemyCount_ > 0) {
@@ -414,7 +418,6 @@ void GameScene::UpdateMemory()
 		memoryHistoryIndex_ = (memoryHistoryIndex_ + 1) % kMemoryHistorySize; // インデックスを循環
 	}
 }
-
 
 void GameScene::UpdateEnemies()
 {
@@ -559,7 +562,6 @@ void GameScene::SpawnCurrentWave() {
 		break;
 	}
 }
-
 
 void GameScene::GoToNextWave() {
 	if (wavePhase_ == WavePhase::W1) {

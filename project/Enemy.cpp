@@ -130,7 +130,7 @@ void Enemy::ImGuiDebug() {
 		object_->SetScale(scale);
 	}
 
-	ImGui::Text("HP: %d", hp_);
+	ImGui::Text("N_EnemyHP: %d", hp_);
 	ImGui::Text("Dead: %s", isDead_ ? "true" : "false");
 
 	ImGui::End();
