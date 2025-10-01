@@ -16,7 +16,7 @@ void BossEnemy::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	SetModel("enemy.obj");
 	SetHP(80);                              // HPを大きく
 	SetScale({ 5.0f, 5.0f, 5.0f });
-	SetColliderScale({ 5.0f, 5.0f, 5.0f });
+	SetColliderScale({ 7.5f, 7.5f, 7.5f });
 }
 
 void BossEnemy::Update() {
@@ -43,8 +43,10 @@ void BossEnemy::Update() {
 		blinkT_ += 0.2f;
 		float s = 1.0f + 0.2f * sinf(blinkT_);
 		SetScale({ 5.0f * s, 5.0f * s, 5.0f * s });
+		SetColliderScale({ 5.0f * s, 5.0f * s, 5.0f * s }); // 見た目と同じだけ当たりも膨らます
 	} else {
 		SetScale({ 5.0f, 5.0f, 5.0f });
+		SetColliderScale({ 5.5f, 5.5f, 5.5f }); // 平常時は少しだけ大きめ
 	}
 
 	Enemy::Update();
@@ -52,13 +54,19 @@ void BossEnemy::Update() {
 
 void BossEnemy::ImGuiDebug()
 {
+	// 当たり判定スケールを編集できるようにする
+	Vector3 col = GetColliderScale();
+
 	ImGui::Begin("Boss");
-	ImGui::Text("HP: %d / %d", GetHP(), GetMaxHP());
-	ImGui::Text("Phase: %s", (phase_ == Phase::P1) ? "P1" : (phase_ == Phase::P2) ? "P2" : "P3");
+	ImGui::Text("HP: %d / %d", GetHP(), GetMaxHP()); // HP表示
+	ImGui::Text("Phase: %s", (phase_ == Phase::P1) ? "P1" : (phase_ == Phase::P2) ? "P2" : "P3"); // フェーズ表示
 	ImGui::Text("Attack: %s", (currentAttack_ == AttackType::Beam) ? "Beam" :
-		(currentAttack_ == AttackType::Fan) ? "Fan" : "Rapid");
+		(currentAttack_ == AttackType::Fan) ? "Fan" : "Rapid"); // 攻撃表示
 	ImGui::Text("Stage: %s (%.1f)", (stage_ == ActStage::Telegraph) ? "Telegraph" :
-		(stage_ == ActStage::Fire) ? "Fire" : "Cooldown", stageT_);
+		(stage_ == ActStage::Fire) ? "Fire" : "Cooldown", stageT_); // ステージ表示
+	if (ImGui::DragFloat3("ColliderScale", &col.x, 0.05f, 0.1f, 50.0f)) { // スケール編集
+		SetColliderScale(col); // 当たり判定スケール更新
+	}
 	ImGui::End();
 }
 
