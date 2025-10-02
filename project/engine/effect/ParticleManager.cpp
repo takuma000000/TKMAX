@@ -92,39 +92,47 @@ void ParticleManager::Draw()
 	dxCommon_->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
 	dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	for (std::unordered_map<std::string, ParticleGroup>::iterator particleGroupIterator = particleGroups.begin(); particleGroupIterator != particleGroups.end();) {
+	for (auto it = particleGroups.begin(); it != particleGroups.end(); ++it) {
+		ParticleGroup& group = it->second;
 
-		//マテリアル用のリソースを作る。今回はcolor1つ分のサイズを用意する
+		// ① インスタンス0なら描かない
+		if (group.kNumInstance == 0) {
+			continue;
+		}
+
+		// ② 必要ならモデル頂点数0も弾く
+		const UINT vtxCountNormal = (UINT)modelData.vertices.size();
+		const UINT vtxCountRing = (UINT)ringModelData.vertices.size();
+		const UINT vtxCountCylinder = (UINT)cylinderModelData.vertices.size();
+
+		// マテリアルCB（毎ループ生成は重いので最終的には使い回し推奨）
 		materialResource = dxCommon_->CreateBufferResource(sizeof(Material));
-		//マテリアルにデータを書き込む
 		Material* materialData = nullptr;
-		//書き込むためのアドレスを取得
 		materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
-		//今回は白を書き込んでみる
-		materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+		materialData->color = Vector4(1, 1, 1, 1);
 		materialData->enableLighting = true;
 		materialData->uvTransform = MyMath::MakeIdentity4x4();
 
-		dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource.Get()->GetGPUVirtualAddress());
-		dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(1, srvManager_->GetGPUDescriptorHandle(particleGroupIterator->second.srvIndex));
-		dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, srvManager_->GetGPUDescriptorHandle(particleGroupIterator->second.materialData.textureIndex));
+		dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+		dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(1, srvManager_->GetGPUDescriptorHandle(group.srvIndex));
+		dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, srvManager_->GetGPUDescriptorHandle(group.materialData.textureIndex));
 
-		ParticleGroup& group = particleGroupIterator->second;//グループの取得
-		// 頂点バッファ切り替え
 		if (group.type == ParticleType::NORMAL) {
+			if (vtxCountNormal == 0) continue;
 			dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
-			dxCommon_->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), group.kNumInstance, 0, 0);
+			dxCommon_->GetCommandList()->DrawInstanced(vtxCountNormal, group.kNumInstance, 0, 0);
 		} else if (group.type == ParticleType::RING) {
+			if (vtxCountRing == 0) continue;
 			dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &ringVertexBufferView);
-			dxCommon_->GetCommandList()->DrawInstanced(UINT(ringModelData.vertices.size()), group.kNumInstance, 0, 0);
+			dxCommon_->GetCommandList()->DrawInstanced(vtxCountRing, group.kNumInstance, 0, 0);
 		} else if (group.type == ParticleType::CYLINDER) {
+			if (vtxCountCylinder == 0) continue;
 			dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &cylinderVertexBufferView);
-			dxCommon_->GetCommandList()->DrawInstanced(UINT(cylinderModelData.vertices.size()), group.kNumInstance, 0, 0);
+			dxCommon_->GetCommandList()->DrawInstanced(vtxCountCylinder, group.kNumInstance, 0, 0);
 		}
-
-		++particleGroupIterator;
 	}
 }
+
 
 void ParticleManager::CreatePipeline()
 {
