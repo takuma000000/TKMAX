@@ -14,19 +14,19 @@
 #include "Model.h"
 #include "ModelCommon.h"
 #include "ModelManager.h"
-#include "DirectionalLight.h"
-#include "engine/effect/ParticleManager.h"
-#include "engine/effect/ParticlerEmitter.h"
+#include "engine/effect/light/DirectionalLight.h"
+#include "engine/effect/particle/ParticleManager.h"
+#include "engine/effect/particle/ParticlerEmitter.h"
 #include "engine/func/math/Vector3.h"
 #include <SkyBox.h>
 #include "GameClearScene.h"
 #include "SceneManager.h"
 
-#include "Player.h"
-#include "Enemy.h"
-#include "EnemySpawner.h"
-#include "BossEnemy.h"
-#include "BossBullet.h"
+#include "application/player/Player.h"
+#include "application/enemy/Enemy.h"
+#include "application/enemy/EnemySpawner.h"
+#include "application/boss/BossEnemy.h"
+#include "application/boss/BossBullet.h"
 
 class GameScene : public BaseScene
 {

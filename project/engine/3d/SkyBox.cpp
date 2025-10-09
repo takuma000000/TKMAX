@@ -138,9 +138,9 @@ void Skybox::CreatePipelineState() {
 	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
 
 	Microsoft::WRL::ComPtr<IDxcBlob> vsBlob;
-	vsBlob = dxCommon_->CompileShader(L"SkyBox.VS.hlsl", L"vs_6_0");
+	vsBlob = dxCommon_->CompileShader(L"resources/shaders/SkyBox.VS.hlsl", L"vs_6_0");
 	Microsoft::WRL::ComPtr<IDxcBlob> psBlob;
-	psBlob = dxCommon_->CompileShader(L"SkyBox.PS.hlsl", L"ps_6_0");
+	psBlob = dxCommon_->CompileShader(L"resources/shaders/SkyBox.PS.hlsl", L"ps_6_0");
 
 	assert(vsBlob != nullptr);
 	assert(psBlob != nullptr);

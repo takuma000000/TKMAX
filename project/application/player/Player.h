@@ -6,7 +6,7 @@
 #include "ModelManager.h"
 #include "PlayerBullet.h"
 #include "Input.h"
-#include "Enemy.h"
+#include "application/enemy/Enemy.h"
 #include "externals/imgui/imgui.h"
 #include <algorithm>
 #include <list>

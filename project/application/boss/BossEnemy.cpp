@@ -1,7 +1,7 @@
-#include "BossEnemy.h"
+#include "application/boss/BossEnemy.h"
 #include <cmath>
 #include "MyMath.h"
-#include "GameScene.h" // 追加：弾スポーンのため
+#include "application/scene/GameScene.h" // 追加：弾スポーンのため
 
 // 安全正規化
 static Vector3 SafeNormalize(const Vector3& v, const Vector3& fallback = { 0,0,-1 }) {

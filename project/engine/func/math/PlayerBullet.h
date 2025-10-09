@@ -3,7 +3,7 @@
 #include <memory>
 #include "Object3d.h"
 #include "Vector3.h"
-#include "Enemy.h"
+#include "application/enemy/Enemy.h"
 
 class Player;
 

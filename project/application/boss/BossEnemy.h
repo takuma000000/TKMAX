@@ -1,5 +1,5 @@
 #pragma once
-#include "Enemy.h"
+#include "application/enemy/Enemy.h"
 #include "Camera.h"
 
 class BossEnemy : public Enemy {

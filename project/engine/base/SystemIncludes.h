@@ -4,7 +4,7 @@
 #include "TextureManager.h"
 #include "SrvManager.h"
 #include "DirectXCommon.h"
-#include "DirectionalLight.h"
+#include "engine/effect/light/DirectionalLight.h"
 #include "Object3dCommon.h"
 #include "SpriteCommon.h"
 #include "ModelManager.h"

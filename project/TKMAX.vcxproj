@@ -113,11 +113,11 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AABB.cpp" />
-    <ClCompile Include="BossEnemy.cpp" />
-    <ClCompile Include="DirectionalLight.cpp" />
-    <ClCompile Include="Enemy.cpp" />
-    <ClCompile Include="EnemySpawner.cpp" />
+    <ClCompile Include="engine\func\math\AABB.cpp" />
+    <ClCompile Include="application\boss\BossEnemy.cpp" />
+    <ClCompile Include="engine\effect\light\DirectionalLight.cpp" />
+    <ClCompile Include="application\enemy\Enemy.cpp" />
+    <ClCompile Include="application\enemy\EnemySpawner.cpp" />
     <ClCompile Include="engine\scene\BaseScene.cpp" />
     <ClCompile Include="engine\audio\AudioManager.cpp" />
     <ClCompile Include="engine\3d\Camera.cpp" />
@@ -134,15 +134,15 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\func\common\Logger.cpp" />
     <ClCompile Include="engine\base\Framework.cpp" />
     <ClCompile Include="engine\imgui\ImGuiManager.cpp" />
-    <ClCompile Include="engine\scene\GameScene.cpp" />
-    <ClCompile Include="GameClearScene.cpp" />
-    <ClCompile Include="LightManager.cpp" />
+    <ClCompile Include="application\scene\GameScene.cpp" />
+    <ClCompile Include="application\scene\GameClearScene.cpp" />
+    <ClCompile Include="engine\effect\light\LightManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="engine\3d\Model.cpp" />
     <ClCompile Include="engine\3d\ModelCommon.cpp" />
     <ClCompile Include="engine\3d\ModelManager.cpp" />
     <ClCompile Include="engine\func\math\MyMath.cpp" />
-    <ClCompile Include="engine\3d\Object3d.cpp" />
+    <ClCompile Include="resources\shaders\Object3d.cpp" />
     <ClCompile Include="engine\3d\Object3dCommon.cpp" />
     <ClCompile Include="engine\2d\Sprite.cpp" />
     <ClCompile Include="engine\2d\SpriteCommon.cpp" />
@@ -150,25 +150,25 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\2d\TextureManager.cpp" />
     <ClCompile Include="engine\base\WindowsAPI.cpp" />
     <ClCompile Include="engine\scene\MyGame.cpp" />
-    <ClCompile Include="engine\effect\ParticleManager.cpp" />
-    <ClCompile Include="engine\effect\ParticlerEmitter.cpp" />
+    <ClCompile Include="engine\effect\particle\ParticleManager.cpp" />
+    <ClCompile Include="engine\effect\particle\ParticlerEmitter.cpp" />
     <ClCompile Include="engine\base\SrvManager.cpp" />
     <ClCompile Include="engine\scene\SceneFactory.cpp" />
     <ClCompile Include="engine\scene\SceneManager.cpp" />
-    <ClCompile Include="engine\scene\TitleScene.cpp" />
-    <ClCompile Include="Player.cpp" />
-    <ClCompile Include="PlayerBullet.cpp" />
-    <ClCompile Include="SkyBox.cpp" />
-    <ClCompile Include="SystemIncludes.cpp" />
+    <ClCompile Include="application\scene\TitleScene.cpp" />
+    <ClCompile Include="application\player\Player.cpp" />
+    <ClCompile Include="application\player\PlayerBullet.cpp" />
+    <ClCompile Include="engine\3d\SkyBox.cpp" />
+    <ClCompile Include="engine\base\SystemIncludes.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AABB.h" />
-    <ClInclude Include="AbstractSceneFactory.h" />
-    <ClInclude Include="BossBullet.h" />
-    <ClInclude Include="BossEnemy.h" />
-    <ClInclude Include="DirectionalLight.h" />
-    <ClInclude Include="Enemy.h" />
-    <ClInclude Include="EnemySpawner.h" />
+    <ClInclude Include="engine\func\math\AABB.h" />
+    <ClInclude Include="engine\scene\AbstractSceneFactory.h" />
+    <ClInclude Include="application\boss\BossBullet.h" />
+    <ClInclude Include="application\boss\BossEnemy.h" />
+    <ClInclude Include="engine\effect\light\DirectionalLight.h" />
+    <ClInclude Include="application\enemy\Enemy.h" />
+    <ClInclude Include="application\enemy\EnemySpawner.h" />
     <ClInclude Include="engine\scene\BaseScene.h" />
     <ClInclude Include="engine\audio\AudioManager.h" />
     <ClInclude Include="engine\3d\Camera.h" />
@@ -200,20 +200,20 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\base\Framework.h" />
     <ClInclude Include="engine\imgui\ImGuiManager.h" />
     <ClInclude Include="engine\scene\MyGame.h" />
-    <ClInclude Include="engine\effect\ParticleManager.h" />
-    <ClInclude Include="engine\effect\ParticlerEmitter.h" />
+    <ClInclude Include="engine\effect\particle\ParticleManager.h" />
+    <ClInclude Include="engine\effect\particle\ParticlerEmitter.h" />
     <ClInclude Include="engine\base\SrvManager.h" />
-    <ClInclude Include="engine\scene\GameScene.h" />
+    <ClInclude Include="application\scene\GameScene.h" />
     <ClInclude Include="engine\scene\SceneFactory.h" />
     <ClInclude Include="engine\scene\SceneManager.h" />
-    <ClInclude Include="engine\scene\TitleScene.h" />
-    <ClInclude Include="GameClearScene.h" />
-    <ClInclude Include="LightManager.h" />
+    <ClInclude Include="application\scene\TitleScene.h" />
+    <ClInclude Include="application\scene\GameClearScene.h" />
+    <ClInclude Include="engine\effect\light\LightManager.h" />
     <ClInclude Include="engine\func\math\Vector4.h" />
-    <ClInclude Include="Player.h" />
-    <ClInclude Include="PlayerBullet.h" />
-    <ClInclude Include="SkyBox.h" />
-    <ClInclude Include="SystemIncludes.h" />
+    <ClInclude Include="application\player\Player.h" />
+    <ClInclude Include="engine\func\math\PlayerBullet.h" />
+    <ClInclude Include="engine\3d\SkyBox.h" />
+    <ClInclude Include="engine\base\SystemIncludes.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
@@ -227,19 +227,19 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Particle.hlsli" />
+    <None Include="resources\shaders\Particle.hlsli" />
     <None Include="resources\shaders\Object3d.hlsli" />
     <None Include="resources\shaders\Sprite.hlsli" />
-    <None Include="SkyBox.hlsli" />
+    <None Include="resources\shaders\SkyBox.hlsli" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Particle.PS.hlsl">
+    <FxCompile Include="resources\shaders\Particle.PS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
-    <FxCompile Include="Particle.VS.hlsl">
+    <FxCompile Include="resources\shaders\Particle.VS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -265,13 +265,13 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </FxCompile>
-    <FxCompile Include="SkyBox.PS.hlsl">
+    <FxCompile Include="resources\shaders\SkyBox.PS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
-    <FxCompile Include="SkyBox.VS.hlsl">
+    <FxCompile Include="resources\shaders\SkyBox.VS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
