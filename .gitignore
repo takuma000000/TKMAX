@@ -52,7 +52,7 @@ artifacts/
 StyleCopReport.xml
 
 # Files built by Visual Studio
-
+# 削除済み
 
 # Chutzpah Test files
 _Chutzpah*
