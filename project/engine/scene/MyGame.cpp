@@ -23,7 +23,7 @@ void MyGame::Initialize()
 	sceneManager_->SetSceneFactory(sceneFactory_.get());
 
 	//最初のシーンを設定
-	sceneManager_->SetNextScene(sceneFactory_->CreateScene("GAME"));
+	sceneManager_->SetNextScene(sceneFactory_->CreateScene("TITLE"));
 
 	assert(dxCommon.get() != nullptr && "DirectXCommon is nullptr in MyGame::Initialize");
 	assert(srvManager.get() != nullptr && "SrvManager is nullptr in MyGame::Initialize");
