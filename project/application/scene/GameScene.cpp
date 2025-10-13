@@ -8,6 +8,17 @@
 #include <psapi.h>
 #include <Input.h>
 
+// easeOutBack (t: 0〜1)
+// 最後に少しオーバーシュートしてから止まる
+static float easeOutBack(float t) {
+	const float c1 = 1.70158f;      // オーバーシュートの強さ
+	const float c3 = c1 + 1.0f;
+	float f = t - 1.0f;
+	return 1.0f + c3 * std::powf(f, 3.0f) + c1 * std::powf(f, 2.0f);
+}
+
+
+
 void GameScene::Initialize()
 {
 	// ──────────────── NULLチェック ────────────────
@@ -37,25 +48,24 @@ void GameScene::Initialize()
 	skybox_->Initialize(dxCommon, srvManager, "resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
 	skybox_->SetCamera(camera.get());
 
-	// === Iris sprite (白円) : 開く側 ===
 	iris_ = std::make_unique<Sprite>();
 	iris_->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/circle2.png");
 
-	// 中央配置
+	// 画面中央に配置 & 対角長を最大に
 	iris_->SetAnchorPoint({ 0.5f, 0.5f });
 	iris_->SetPosition({ WindowsAPI::kClientWidth * 0.5f, WindowsAPI::kClientHeight * 0.5f });
 
-	// 対角スタート
+	// 画面対角から最大スケールを計算
 	const float diag = std::sqrt(
 		float(WindowsAPI::kClientWidth) * float(WindowsAPI::kClientWidth) +
 		float(WindowsAPI::kClientHeight) * float(WindowsAPI::kClientHeight)
 	);
-	irisScale_ = diag * 1.1f;
-	irisSpeed_ = 1800.0f;
-	iris_->SetSize({ irisScale_, irisScale_ });
+	irisMaxScale_ = diag * 2.0f;    // TitleSceneと対に合わせる
 
-	// ★ 追加：不透明白を明示（透け防止）
-	iris_->SetColor({ 1, 1, 1, 1 });
+	irisStartScale_ = irisMaxScale_; // 最初は覆った状態
+	irisEndScale_ = 0.0f;          // 最終的に消える
+	irisScale_ = irisStartScale_;
+	iris_->SetSize({ irisScale_, irisScale_ });
 }
 
 void GameScene::Finalize()
@@ -127,18 +137,23 @@ void GameScene::Update()
 		boss_->Update();
 	}
 
-	// --- Iris 開く処理 ---
 	if (irisOpening_) {
-		irisScale_ -= irisSpeed_ * 0.016f;
-		if (irisScale_ <= irisMin_) {
+		irisT_ += 0.016f / std::max(irisDuration_, 0.001f);
+		if (irisT_ > 1.0f) irisT_ = 1.0f;
+
+		// easeOutBack を使用
+		float eased = easeOutBack(irisT_);
+		irisScale_ = irisStartScale_ + (irisEndScale_ - irisStartScale_) * eased;
+
+		iris_->SetSize({ irisScale_, irisScale_ });
+		iris_->Update();
+
+		if (irisT_ >= 1.0f) {
 			irisOpening_ = false;
-			irisScale_ = 0.0f;
-		}
-		if (iris_) {
-			iris_->SetSize({ irisScale_, irisScale_ });
-			iris_->Update(); // ★ これが必須！
+			irisScale_ = irisEndScale_;
 		}
 	}
+
 
 	// その他のオブジェクト・パーティクルの更新
 	ParticleManager::GetInstance()->Update();

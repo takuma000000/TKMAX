@@ -6,6 +6,13 @@
 #include <cmath>
 #include "externals/imgui/imgui.h"
 
+// easeInBack（t:0〜1）
+static float easeInBack(float t) {
+	const float c1 = 1.70158f;
+	const float c3 = c1 + 1.0f;
+	return c3 * t * t * t - c1 * t * t;
+}
+
 void TitleScene::Initialize()
 {
 	camera = std::make_unique<Camera>();
@@ -61,6 +68,10 @@ void TitleScene::Initialize()
 	// ★余白に絶対負けない“核オプション”
 	//   基本の対角に 1.8〜2.0 倍をかける。これで端がチラ見えする余地を潰す。
 	irisMax_ = diag * 2.0f;   // ← まずは 2.0f。まだなら 2.2f に
+
+	irisStartScale_ = irisScale_; // 最初のスケール（小さめ）
+	irisEndScale_ = irisMax_;     // 最後に覆うサイズ
+
 
 	// 開始サイズ & 速度（お好みで）
 	irisScale_ = 10.0f;
@@ -185,25 +196,26 @@ void TitleScene::Update()
 	}
 
 	if (irisClosing_) {
-		irisScale_ += irisSpeed_ * 0.016f;
+		// 時間経過
+		irisT_ += 0.016f / std::max(irisDuration_, 0.001f);
+		if (irisT_ > 1.0f) irisT_ = 1.0f;
+
+		// easeInBack で補間
+		float eased = easeInBack(irisT_);
+		irisScale_ = irisStartScale_ + (irisEndScale_ - irisStartScale_) * eased;
+
 		iris_->SetSize({ irisScale_, irisScale_ });
 		iris_->Update();
 
-		if (irisClosing_) {
-			irisScale_ += irisSpeed_ * 0.016f;
-			iris_->SetSize({ irisScale_, irisScale_ });
-			iris_->Update();
-
-			if (irisScale_ >= irisMax_) {
-				if (++irisHoldFrames_ >= 4) { // 3〜6 推奨。完全に覆った絵が確実に1回描画される
-					sceneManager_->SetNextScene(new GameScene(dxCommon, srvManager));
-					return;
-				}
-			} else {
-				irisHoldFrames_ = 0;
+		// 覆い終わったら数フレームホールド後に遷移
+		if (irisT_ >= 1.0f) {
+			if (++irisHoldFrames_ >= 4) {
+				sceneManager_->SetNextScene(new GameScene(dxCommon, srvManager));
+				return;
 			}
 		}
 	}
+
 
 
 

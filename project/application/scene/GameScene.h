@@ -155,9 +155,16 @@ private:
 
 	// Iris（開く）用
 	std::unique_ptr<Sprite> iris_ = nullptr;
-	bool   irisOpening_ = true;    // ゲーム開始時は「開く」から
-	float  irisScale_ = 5.0f;    // 大きく始めて
-	float  irisSpeed_ = 3.2f;    // 縮小速度
-	float  irisMin_ = 0.0f;    // ここまで小さくなったら消す
+	bool   irisOpening_ = true;
+	float  irisScale_ = 5.0f;
+	float  irisSpeed_ = 3.2f;
+	float  irisMin_ = 0.0f;
+
+	// ★追加
+	float  irisT_ = 0.0f;            // 進行度(0→1)
+	float  irisDuration_ = 0.8f;     // アニメ全体の長さ(秒)
+	float  irisStartScale_ = 0.0f;   // 開始スケール（覆った状態）
+	float  irisEndScale_ = 0.0f;   // 最終スケール（Initializeでセット）
+	float  irisMaxScale_ = 0.0f;   // 画面対角ベース
 };
 

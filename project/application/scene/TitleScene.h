@@ -91,4 +91,10 @@ private:
 	float irisSpeed_ = 2.8f;    // 拡大速度（好みで調整）
 	float irisMax_ = 4.5f;    // これを超えたら画面を覆ったとみなす
 	int irisHoldFrames_ = 0;
+
+	float irisT_ = 0.0f;           // 進行度(0→1)
+	float irisDuration_ = 0.8f;    // アニメ時間(秒)
+	float irisStartScale_ = 10.0f; // 開始サイズ
+	float irisEndScale_ = 0.0f;    // 目標（Initializeでセット）
+
 };
