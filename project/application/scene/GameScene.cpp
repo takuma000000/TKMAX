@@ -36,6 +36,26 @@ void GameScene::Initialize()
 	skybox_ = std::make_unique<Skybox>();
 	skybox_->Initialize(dxCommon, srvManager, "resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
 	skybox_->SetCamera(camera.get());
+
+	// === Iris sprite (白円) : 開く側 ===
+	iris_ = std::make_unique<Sprite>();
+	iris_->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/circle2.png");
+
+	// 中央配置
+	iris_->SetAnchorPoint({ 0.5f, 0.5f });
+	iris_->SetPosition({ WindowsAPI::kClientWidth * 0.5f, WindowsAPI::kClientHeight * 0.5f });
+
+	// 対角スタート
+	const float diag = std::sqrt(
+		float(WindowsAPI::kClientWidth) * float(WindowsAPI::kClientWidth) +
+		float(WindowsAPI::kClientHeight) * float(WindowsAPI::kClientHeight)
+	);
+	irisScale_ = diag * 1.1f;
+	irisSpeed_ = 1800.0f;
+	iris_->SetSize({ irisScale_, irisScale_ });
+
+	// ★ 追加：不透明白を明示（透け防止）
+	iris_->SetColor({ 1, 1, 1, 1 });
 }
 
 void GameScene::Finalize()
@@ -107,6 +127,19 @@ void GameScene::Update()
 		boss_->Update();
 	}
 
+	// --- Iris 開く処理 ---
+	if (irisOpening_) {
+		irisScale_ -= irisSpeed_ * 0.016f;
+		if (irisScale_ <= irisMin_) {
+			irisOpening_ = false;
+			irisScale_ = 0.0f;
+		}
+		if (iris_) {
+			iris_->SetSize({ irisScale_, irisScale_ });
+			iris_->Update(); // ★ これが必須！
+		}
+	}
+
 	// その他のオブジェクト・パーティクルの更新
 	ParticleManager::GetInstance()->Update();
 
@@ -129,28 +162,23 @@ void GameScene::Update()
 
 void GameScene::Draw()
 {
-	SpriteCommon::GetInstance()->DrawSetCommon();
+	// 3Dまとめ
 	Object3dCommon::GetInstance()->DrawSetCommon();
-
 	for (auto& g : groundTiles_) g->Draw(dxCommon);
-
 	player_->Draw(dxCommon);
-
-	for (auto& enemy : enemies_) {
-		enemy->Draw(dxCommon);
-	}
-
-	if (bossBattle_ && boss_) {
-		boss_->Draw(dxCommon);
-	}
-
-	for (auto& b : bossBullets_) {
-		b->Draw(dxCommon);
-	}
-
-	skybox_->Draw();
+	for (auto& enemy : enemies_) enemy->Draw(dxCommon);
+	if (bossBattle_ && boss_) boss_->Draw(dxCommon);
+	for (auto& b : bossBullets_) b->Draw(dxCommon);
+	if (skybox_) skybox_->Draw();
 	ParticleManager::GetInstance()->Draw();
+
+	// ---- 最前面の白円は Sprite パスで最後に描く ----
+	if (irisOpening_ && iris_) {
+		SpriteCommon::GetInstance()->DrawSetCommon();
+		iris_->Draw();
+	}
 }
+
 
 void GameScene::SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float speed, int damage, int lifeFrame)
 {
@@ -175,6 +203,7 @@ void GameScene::LoadTextures()
 	TextureManager::GetInstance()->LoadTexture("./resources/uvChecker.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/pokemon.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/circle.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/circle2.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/sphere.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/gradationLine.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/rostock_laage_airport_4k.dds");

@@ -69,7 +69,7 @@ private:
 		Swoop      // たまに手前へ急降下→復帰
 	};
 
-	// ▼ 追加: 敵のパラメータ
+	// 敵のパラメータ
 	EnemyMotion enemyMotion_ = EnemyMotion::EightXZ;
 	float enemyRadius_ = 8.0f;
 	float enemyBaseY_ = 2.0f;
@@ -83,4 +83,12 @@ private:
 
 	// ▼ 追加: 1体だけ置いてるコンテナ
 	std::vector<std::unique_ptr<Object3d>> titleEnemies_;
+
+	// Iris（白円）トランジション
+	std::unique_ptr<Sprite> iris_ = nullptr;
+	bool irisClosing_ = false;   // trueで「閉じる」演出中
+	float irisScale_ = 0.2f;    // 開始スケール（小さめ）
+	float irisSpeed_ = 2.8f;    // 拡大速度（好みで調整）
+	float irisMax_ = 4.5f;    // これを超えたら画面を覆ったとみなす
+	int irisHoldFrames_ = 0;
 };

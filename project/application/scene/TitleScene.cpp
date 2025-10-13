@@ -13,6 +13,7 @@ void TitleScene::Initialize()
 	camera->SetTranslate({ 0.0f, camY_, -30.0f });
 
 	TextureManager::GetInstance()->LoadTexture("./resources/circle.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/circle2.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/title_kuraran.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/rostock_laage_airport_4k.dds");
 
@@ -38,6 +39,34 @@ void TitleScene::Initialize()
 	skybox_ = std::make_unique<Skybox>();
 	skybox_->Initialize(dxCommon, srvManager, "resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
 	skybox_->SetCamera(camera.get());
+
+	// === Iris sprite (白円) ===
+	iris_ = std::make_unique<Sprite>();
+	// circle2.png が好みならこっちの行を使う： "./resources/circle2.png"
+	iris_->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/circle2.png");
+	iris_->SetPosition({ 0.0f, 0.0f });     // 画面中央
+	iris_->SetSize({ irisScale_, irisScale_ }); // 最初は小さく
+	iris_->SetColor({ 1,1,1,1 });           // 白・不透明
+
+	// 画面中央に配置 & 対角長を最大に
+	iris_->SetAnchorPoint({ 0.5f, 0.5f });
+	iris_->SetPosition({ WindowsAPI::kClientWidth * 0.5f, WindowsAPI::kClientHeight * 0.5f });
+
+	// 画面を覆うための最大スケール（対角）
+	const float diag = std::sqrt(
+		float(WindowsAPI::kClientWidth) * float(WindowsAPI::kClientWidth) +
+		float(WindowsAPI::kClientHeight) * float(WindowsAPI::kClientHeight)
+	);
+
+	// ★余白に絶対負けない“核オプション”
+	//   基本の対角に 1.8〜2.0 倍をかける。これで端がチラ見えする余地を潰す。
+	irisMax_ = diag * 2.0f;   // ← まずは 2.0f。まだなら 2.2f に
+
+	// 開始サイズ & 速度（お好みで）
+	irisScale_ = 10.0f;
+	irisSpeed_ = 3500.0f;  // 速め
+
+	iris_->SetSize({ irisScale_, irisScale_ });
 
 	// タイトル敵を1体だけ置く
 	titleEnemies_.clear();
@@ -149,12 +178,34 @@ void TitleScene::Update()
 	camera->Update();
 	sprite->Update();
 
-	if (Input::GetInstance()->TriggerKey(DIK_SPACE) ||
-		Input::GetInstance()->TriggerButton(XINPUT_GAMEPAD_A))
-	{
-		sceneManager_->SetNextScene(new GameScene(dxCommon, srvManager));
-		return;
+	// SPACE / A でアイリス（閉）開始
+	if (!irisClosing_ && (Input::GetInstance()->TriggerKey(DIK_SPACE) ||
+		Input::GetInstance()->TriggerButton(XINPUT_GAMEPAD_A))) {
+		irisClosing_ = true;
 	}
+
+	if (irisClosing_) {
+		irisScale_ += irisSpeed_ * 0.016f;
+		iris_->SetSize({ irisScale_, irisScale_ });
+		iris_->Update();
+
+		if (irisClosing_) {
+			irisScale_ += irisSpeed_ * 0.016f;
+			iris_->SetSize({ irisScale_, irisScale_ });
+			iris_->Update();
+
+			if (irisScale_ >= irisMax_) {
+				if (++irisHoldFrames_ >= 4) { // 3〜6 推奨。完全に覆った絵が確実に1回描画される
+					sceneManager_->SetNextScene(new GameScene(dxCommon, srvManager));
+					return;
+				}
+			} else {
+				irisHoldFrames_ = 0;
+			}
+		}
+	}
+
+
 
 	constexpr float kTwoPi = 6.2831853f;
 	skyPitch_ -= skyRotSpeedX_;
@@ -187,13 +238,14 @@ void TitleScene::Update()
 
 void TitleScene::Draw()
 {
-	SpriteCommon::GetInstance()->DrawSetCommon();
+	// 3Dは3Dでまとめて
 	Object3dCommon::GetInstance()->DrawSetCommon();
-
 	if (heli_) heli_->Draw(dxCommon);
-	for (auto& e : titleEnemies_) {
-		e->Draw(dxCommon);
-	}
-	if (sprite) sprite->Draw();
+	for (auto& e : titleEnemies_) e->Draw(dxCommon);
 	if (skybox_) skybox_->Draw();
+
+	// ---- ここで Sprite パイプラインに戻す ----
+	SpriteCommon::GetInstance()->DrawSetCommon();
+	if (sprite) sprite->Draw();     // タイトル画像
+	if (iris_)  iris_->Draw();      // 白円(アイリス)
 }

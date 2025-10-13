@@ -59,10 +59,11 @@ void SpriteCommon::GenerateRootSignature() {
 
 	//Samplerの設定
 	D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
-	staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;//バイリニアフィルタ
-	staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;//0～1の範囲外をリピート
-	staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;//0～1の範囲外をリピート
-	staticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;//0～1の範囲外をリピート
+	// SpriteCommon::GenerateRootSignature()
+	staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+	staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP; // ← WRAP→CLAMP
+	staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP; // ← WRAP→CLAMP
+	staticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP; // ← WRAP→CLAMP
 	staticSamplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;//比較しない
 	staticSamplers[0].MaxLOD = D3D12_FLOAT32_MAX;//ありったけのMipMapを使う
 	staticSamplers[0].ShaderRegister = 0;//レジスタ番号0を使う
@@ -105,12 +106,11 @@ void SpriteCommon::GenerateRootSignature() {
 	resterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
 
 	//DepthStencilStateの設定
-	//Depthの機能を有効化する
-	depthStencilDesc.DepthEnable = true;
-	//書き込みします
-	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-	//比較関数はLessEqual。つまり、近ければ描画される
-	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	// SpriteCommon::GenerateRootSignature() のDepthStencil設定付近
+	depthStencilDesc.DepthEnable = FALSE;                         // ← true を false に
+	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;   // ← ALL を ZERO に
+	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;  // ← LessEqual を AlwaysでもOK
+
 }
 
 void SpriteCommon::GenerateGraficsPipeline() {
@@ -126,10 +126,30 @@ void SpriteCommon::GenerateGraficsPipeline() {
 	inputLayoutDesc.pInputElementDescs = inputElementDescs;
 	inputLayoutDesc.NumElements = _countof(inputElementDescs);
 
+	// ==============================
+	// アルファブレンド設定を追加
+	// ==============================
+	D3D12_RENDER_TARGET_BLEND_DESC alphaBlendDesc{};
+	alphaBlendDesc.BlendEnable = TRUE;
+	alphaBlendDesc.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+	alphaBlendDesc.SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	alphaBlendDesc.DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	alphaBlendDesc.BlendOp = D3D12_BLEND_OP_ADD;
+	alphaBlendDesc.SrcBlendAlpha = D3D12_BLEND_ONE;
+	alphaBlendDesc.DestBlendAlpha = D3D12_BLEND_ZERO;
+	alphaBlendDesc.BlendOpAlpha = D3D12_BLEND_OP_ADD;
+
+	blendDesc.AlphaToCoverageEnable = FALSE;
+	blendDesc.IndependentBlendEnable = FALSE;
+	blendDesc.RenderTarget[0] = alphaBlendDesc;
+
+	// ==============================
+	// 残りの設定
+	// ==============================
 	graphicPipelineStateDesc.pRootSignature = rootSignature.Get();
 	graphicPipelineStateDesc.InputLayout = inputLayoutDesc;
-	graphicPipelineStateDesc.VS = { vertexShaderBlob->GetBufferPointer(),vertexShaderBlob->GetBufferSize() };
-	graphicPipelineStateDesc.PS = { pixelShaderBlob->GetBufferPointer(),pixelShaderBlob->GetBufferSize() };
+	graphicPipelineStateDesc.VS = { vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize() };
+	graphicPipelineStateDesc.PS = { pixelShaderBlob->GetBufferPointer(),  pixelShaderBlob->GetBufferSize() };
 	graphicPipelineStateDesc.BlendState = blendDesc;
 	graphicPipelineStateDesc.RasterizerState = resterizerDesc;
 	graphicPipelineStateDesc.NumRenderTargets = 1;
@@ -137,9 +157,9 @@ void SpriteCommon::GenerateGraficsPipeline() {
 	graphicPipelineStateDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	graphicPipelineStateDesc.SampleDesc.Count = 1;
 	graphicPipelineStateDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
-	//DepthStencilの設定
 	graphicPipelineStateDesc.DepthStencilState = depthStencilDesc;
 	graphicPipelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
 	hr = dxCommon_->GetDevice()->CreateGraphicsPipelineState(&graphicPipelineStateDesc, IID_PPV_ARGS(&graphicsPipelineState));
 	assert(SUCCEEDED(hr));
 }

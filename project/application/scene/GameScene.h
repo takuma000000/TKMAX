@@ -152,5 +152,12 @@ private:
 	bool bossBattle_ = false;         // ボス戦フラグ
 	std::unique_ptr<BossEnemy> boss_; // ボス敵
 	std::vector<std::unique_ptr<BossBullet>> bossBullets_;
+
+	// Iris（開く）用
+	std::unique_ptr<Sprite> iris_ = nullptr;
+	bool   irisOpening_ = true;    // ゲーム開始時は「開く」から
+	float  irisScale_ = 5.0f;    // 大きく始めて
+	float  irisSpeed_ = 3.2f;    // 縮小速度
+	float  irisMin_ = 0.0f;    // ここまで小さくなったら消す
 };
 
