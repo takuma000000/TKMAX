@@ -1,4 +1,5 @@
 #include "Player.h"
+#include <engine/effect/particle/ParticleManager.h>
 
 
 void Player::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
@@ -9,6 +10,16 @@ void Player::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	object_->Initialize(common_, dxCommon_);
 	object_->SetModel("jett.obj");
 	object_->SetEnvironment("./resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
+
+	TextureManager::GetInstance()->LoadTexture("./resources/circle.png");
+
+	// パーティクルグループ作成
+	ParticleManager::GetInstance()->CreateParticleGroup(
+		"jetSmoke", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
+
+	Vector3 jetPos = object_->GetTranslate();
+	jetPos.z -= 2.0f; // 機体の後方
+	jetEmitter_.Initialize("jetSmoke", jetPos); // ← 一度だけ初期化
 }
 
 void Player::Update() {
@@ -46,6 +57,14 @@ void Player::Update() {
 			++it;
 		}
 	}
+
+	// ---- ジェット煙 ----
+	Vector3 jetPos = object_->GetTranslate();
+	jetPos.z -= 2.0f;  // 機体のケツあたり
+	jetEmitter_.SetPosition(jetPos);  // 新しく追加する関数
+	jetEmitter_.Update();             // 1フレームごとに放出チェック
+
+	ParticleManager::GetInstance()->Update();
 
 	object_->Update();
 }

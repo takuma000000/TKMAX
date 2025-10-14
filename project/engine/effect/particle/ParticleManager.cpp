@@ -467,6 +467,26 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 		float g = 0.8f + 0.2f * cos(hue * 6.283f);
 		float b = 1.0f - 0.3f * sin(hue * 3.142f);
 		p.color = { r, g, b, 1.0f };
+	} else if (groupName == "jetSmoke") {
+		// ※ここを強化
+		std::uniform_real_distribution<float> velX(-0.05f, 0.05f); // わずかな横ブレ
+		std::uniform_real_distribution<float> velY(0.10f, 0.25f);  // やや上向き
+		std::uniform_real_distribution<float> velZ(-45.0f, -25.0f); // 後方へ一気に（画面手前へ）
+
+		p.velocity = { velX(rng), velY(rng), velZ(rng) };
+
+		std::uniform_real_distribution<float> scl(0.5f, 1.0f);
+		float sc = scl(rng);
+		p.transform.scale = { sc, sc, sc };
+
+		// 尾を保つために寿命を延ばす
+		p.lifeTime = std::uniform_real_distribution<float>(1.5f, 2.5f)(rng);
+		p.currentTime = 0.0f;
+
+		// グレイの煙
+		std::uniform_real_distribution<float> gray(0.6f, 0.8f);
+		float c = gray(rng);
+		p.color = { c, c, c, 1.0f };
 	} else {
 		// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 		std::uniform_real_distribution<float> velX(-0.15f, 0.15f);

@@ -10,6 +10,7 @@
 #include "externals/imgui/imgui.h"
 #include <algorithm>
 #include <list>
+#include <engine/effect/particle/ParticlerEmitter.h>
 
 class Player {
 public:
@@ -87,4 +88,6 @@ private:
 	Vector3 moveMax_ = { 20.0f,  8.0f, 0.0f };
 
 	bool ltHeld_ = false; // LTの押下状態ラッチ
+
+	ParticleEmitter jetEmitter_;
 };

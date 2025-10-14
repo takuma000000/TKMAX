@@ -13,6 +13,10 @@ public:
 
 	void Update();
 
+	void SetPosition(const Vector3& pos) {
+		emitter.transform.translate = pos;
+	};
+
 private:
 
 	struct Emitter {
