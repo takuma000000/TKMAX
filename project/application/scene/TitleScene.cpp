@@ -12,13 +12,16 @@ void TitleScene::Initialize()
 	camera->SetRotate({ 0.0f, 0.0f, 0.0f });
 	camera->SetTranslate({ 0.0f, camY_, -30.0f });
 
+	// ------------ テクスチャ読み込み --------------
 	TextureManager::GetInstance()->LoadTexture("./resources/circle.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/circle2.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/title_kuraran.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/rostock_laage_airport_4k.dds");
-
+	//--------------------------------------------
+	// ------------ モデル読み込み --------------
 	ModelManager::GetInstance()->LoadModel("jett.obj", dxCommon);
 	ModelManager::GetInstance()->LoadModel("enemy.obj", dxCommon);
+	//-----------------------------------------
 
 	heli_ = std::make_unique<Object3d>();
 	heli_->Initialize(Object3dCommon::GetInstance(), dxCommon);
