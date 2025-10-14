@@ -295,9 +295,6 @@ void BossEnemy::SelectNextAttackUtility(const Vector3& playerPos) {
 	sameAttackChain_ = (lastAttack_ == next) ? (sameAttackChain_ + 1) : 0;
 	lastAttack_ = next;
 	currentAttack_ = next;
-
-	// ★必要ならここでデバッグ保存（可視化を入れている場合）
-	// dbg_.dist = dist; dbg_.align = align01; ... dbg_.sBeam = sBeam; dbg_.chosen = ...
 }
 
 
