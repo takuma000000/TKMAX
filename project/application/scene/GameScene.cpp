@@ -32,6 +32,17 @@ void GameScene::Initialize()
 	particleEmitter = std::make_unique<ParticleEmitter>();
 	particleEmitter->Initialize("uv", { 0.0f,2.5f,10.0f });
 
+	// 開幕用：うっすら光が吸い込まれるリング
+	ParticleManager::GetInstance()->CreateParticleGroup(
+		"irisOpen", "./resources/gradationLine.png",
+		ParticleManager::ParticleType::RING
+	);
+
+	// 花火用：放射状に飛ぶ粒（通常クアッド）
+	ParticleManager::GetInstance()->CreateParticleGroup(
+		"irisFire", "./resources/circle.png",
+		ParticleManager::ParticleType::NORMAL
+	);
 	// ──────────────── スカイボックスの初期化 ───────────────
 	skybox_ = std::make_unique<Skybox>();
 	skybox_->Initialize(dxCommon, srvManager, "resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
@@ -127,11 +138,58 @@ void GameScene::Update()
 		boss_->Update();
 	}
 
+	// これまで: if (irisOpening_) { ... emitFireworkPending_ の遅延 ... }
 	if (irisOpening_) {
-		irisScale_ = irisTween_.Update(0.016f);
+		// 共通の経過タイム：開始時刻からの積算
+		emitOpenElapsed_ += dt;
+
+		// ── リング（開始から emitOpenDelaySec_ 秒後に一度だけ） ──
+		if (emitOpenBurst_ && emitOpenElapsed_ >= emitOpenDelaySec_) {
+			emitOpenBurst_ = false;
+
+			// カメラ前方の少し奥に発生させる
+			const Matrix4x4 camW = camera->GetWorldMatrix();
+			Vector3 camPos = { camW.m[3][0], camW.m[3][1], camW.m[3][2] };
+			Vector3 camFwd = MyMath::Normalize(Vector3{ camW.m[2][0], camW.m[2][1], camW.m[2][2] });
+			const float depth = 20.0f;
+
+			Vector3 centerInFront = camPos + camFwd * depth;
+			centerInFront.y -= 0.1f;
+
+			// 吸い込みリングを即時発生
+			ParticleManager::GetInstance()->Emit("irisOpen", centerInFront, 60);
+
+			// 花火も同じ場所で出したいので座標を覚えておく
+			lastEmitPos_ = centerInFront;
+
+			// 旧仕様の「リング後からカウント」用は使わないためリセットだけ
+			emitFireworkPending_ = true;        // フラグは立てたまま
+			emitFireworkElapsed_ = 0.0f;        // 以後は使わない（念のため初期化）
+		}
+
+		// ── 花火（開始から emitFireworkDelaySec_ 秒後に一度だけ） ──
+		// ※「リング後ではなく開始から」の基準に変更
+		if (emitFireworkPending_ && emitOpenElapsed_ >= emitFireworkDelaySec_) {
+			emitFireworkPending_ = false;
+
+			// 同じ位置で出す（カメラ前を毎フレ計算したい場合は lastEmitPos_ ではなく再計算でもOK）
+			ParticleManager::GetInstance()->Emit("irisFire", lastEmitPos_, 80);
+		}
+
+		// ── アイリスの見た目更新（従来どおり） ──
+		irisScale_ = irisTween_.Update(0.016f);     // 実 deltaTime があるならそれを使うと安定
 		iris_->SetSize({ irisScale_, irisScale_ });
 		iris_->Update();
-		if (irisTween_.Finished()) irisOpening_ = false;
+
+		if (irisShadow_) {
+			irisShadow_->SetSize({ irisScale_ * 1.02f, irisShadow_->GetSize().y });
+			irisShadow_->Update();
+		}
+
+		// ツイーン完了でオープニング終了
+		if (irisTween_.Finished()) {
+			irisOpening_ = false;
+		}
 	}
 
 	// その他のオブジェクト・パーティクルの更新

@@ -16,6 +16,10 @@ public:
 		CYLINDER,
 	};
 
+	/*struct Material {
+		Vector4 color;
+	};*/
+
 	struct Transform
 	{
 		Vector3 scale;
@@ -99,7 +103,7 @@ public:
 
 	std::unordered_map<std::string, ParticleGroup> GetParticleGroups() { return particleGroups; }
 
-	Particle MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate);
+	Particle MakeNewParticle(std::mt19937& randomEngine, const std::string& groupName, const Vector3& translate);
 
 	//Ring関数
 	void CreateRingVertices();
@@ -159,5 +163,8 @@ private:
 	const float kOuterRadius = 1.0f;
 	const float kInnerRadius = 0.2f;
 	const float radianPerDivide = 2.0f * std::numbers::pi_v<float> / float(kRingDivide);
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> materialCB_;  // 永続CB
+	Material* materialCPU_ = nullptr;                    // マップしたポインタ
 };
 

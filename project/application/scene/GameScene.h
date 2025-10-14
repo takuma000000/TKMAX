@@ -169,5 +169,17 @@ private:
 	float  irisMaxScale_ = 0.0f;   // 画面対角ベース
 
 	Ease::Tween irisTween_; // Iris用イージング
+	bool emitOpenBurst_ = true; // 開いた瞬間にエフェクトを出すか
+	std::unique_ptr<Sprite> irisShadow_ = nullptr; // Irisの影
+	float emitOpenDelaySec_ = 0.7f;  // 開始から何秒遅らせるか（お好み）
+	float emitOpenElapsed_ = 0.0f;   // 経過時間
+	const float dt = 0.016f; // 可変なら実測のdeltaTimeを使ってOK
+
+	// 花火用
+	bool  emitFireworkPending_ = false; // 花火を出すか
+	float emitFireworkDelaySec_ = 0.7f; // 開始から何秒遅らせるか（お好み）
+	float emitFireworkElapsed_ = 0.0f; // 経過時間
+	Vector3 lastEmitPos_ = { 0.0f, 0.0f, 0.0f }; // 最後にエフェクトを出した位置
+
 };
 
