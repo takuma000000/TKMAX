@@ -26,6 +26,13 @@ void ParticleManager::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager
 	acc.area.min = { -1.0f,-1.00f,-1.0f };
 	acc.area.max = { 1.0f,1.0f,1.0f };
 
+	// --- 永続マテリアルCB作成 ---
+	materialCB_ = dxCommon_->CreateBufferResource(sizeof(Material));
+
+	// 一度だけマップして使い回す
+	materialCB_->Map(0, nullptr, reinterpret_cast<void**>(&materialCPU_));
+	assert(materialCPU_); // 念のためチェック
+
 	//ランダムエンジンの初期化
 	std::random_device seedGenerator;
 	std::mt19937 randomEngine(seedGenerator());
@@ -88,9 +95,16 @@ void ParticleManager::Update()
 
 void ParticleManager::Draw()
 {
-	dxCommon_->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
-	dxCommon_->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
-	dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	auto* cmd = dxCommon_->GetCommandList();
+
+	// 共通セット
+	cmd->SetGraphicsRootSignature(rootSignature.Get());
+	cmd->SetPipelineState(graphicsPipelineState.Get());
+	cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	const UINT vtxCountNormal = static_cast<UINT>(modelData.vertices.size());
+	const UINT vtxCountRing = static_cast<UINT>(ringModelData.vertices.size());
+	const UINT vtxCountCylinder = static_cast<UINT>(cylinderModelData.vertices.size());
 
 	for (auto it = particleGroups.begin(); it != particleGroups.end(); ++it) {
 		ParticleGroup& group = it->second;
@@ -100,38 +114,36 @@ void ParticleManager::Draw()
 			continue;
 		}
 
-		// ② 必要ならモデル頂点数0も弾く
-		const UINT vtxCountNormal = (UINT)modelData.vertices.size();
-		const UINT vtxCountRing = (UINT)ringModelData.vertices.size();
-		const UINT vtxCountCylinder = (UINT)cylinderModelData.vertices.size();
+		// ② モデル頂点数0も弾く（型ごと）
+		if (group.type == ParticleType::NORMAL && vtxCountNormal == 0) continue;
+		if (group.type == ParticleType::RING && vtxCountRing == 0) continue;
+		if (group.type == ParticleType::CYLINDER && vtxCountCylinder == 0) continue;
 
-		// マテリアルCB（毎ループ生成は重いので最終的には使い回し推奨）
-		materialResource = dxCommon_->CreateBufferResource(sizeof(Material));
-		Material* materialData = nullptr;
-		materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
-		materialData->color = Vector4(1, 1, 1, 1);
-		materialData->enableLighting = true;
-		materialData->uvTransform = MyMath::MakeIdentity4x4();
+		// ③ 永続CBに値を書くだけ（Create/Releaseしない）
+		//    ※ Initialize() で materialCB_ を UploadHeap で作って materialCPU_ を永続Map済み
+		materialCPU_->color = Vector4(1, 1, 1, 1);
+		materialCPU_->enableLighting = true;
+		materialCPU_->uvTransform = MyMath::MakeIdentity4x4();
 
-		dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-		dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(1, srvManager_->GetGPUDescriptorHandle(group.srvIndex));
-		dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, srvManager_->GetGPUDescriptorHandle(group.materialData.textureIndex));
+		// ④ ルートバインド
+		cmd->SetGraphicsRootConstantBufferView(0, materialCB_->GetGPUVirtualAddress());
+		cmd->SetGraphicsRootDescriptorTable(1, srvManager_->GetGPUDescriptorHandle(group.srvIndex));                     // 粒子個別のSRV（頂点/インスタンス用など）
+		cmd->SetGraphicsRootDescriptorTable(2, srvManager_->GetGPUDescriptorHandle(group.materialData.textureIndex));    // テクスチャ
 
+		// ⑤ VB切替 & DrawInstanced
 		if (group.type == ParticleType::NORMAL) {
-			if (vtxCountNormal == 0) continue;
-			dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
-			dxCommon_->GetCommandList()->DrawInstanced(vtxCountNormal, group.kNumInstance, 0, 0);
+			cmd->IASetVertexBuffers(0, 1, &vertexBufferView);
+			cmd->DrawInstanced(vtxCountNormal, group.kNumInstance, 0, 0);
 		} else if (group.type == ParticleType::RING) {
-			if (vtxCountRing == 0) continue;
-			dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &ringVertexBufferView);
-			dxCommon_->GetCommandList()->DrawInstanced(vtxCountRing, group.kNumInstance, 0, 0);
+			cmd->IASetVertexBuffers(0, 1, &ringVertexBufferView);
+			cmd->DrawInstanced(vtxCountRing, group.kNumInstance, 0, 0);
 		} else if (group.type == ParticleType::CYLINDER) {
-			if (vtxCountCylinder == 0) continue;
-			dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &cylinderVertexBufferView);
-			dxCommon_->GetCommandList()->DrawInstanced(vtxCountCylinder, group.kNumInstance, 0, 0);
+			cmd->IASetVertexBuffers(0, 1, &cylinderVertexBufferView);
+			cmd->DrawInstanced(vtxCountCylinder, group.kNumInstance, 0, 0);
 		}
 	}
 }
+
 
 
 void ParticleManager::CreatePipeline()
@@ -387,65 +399,92 @@ void ParticleManager::MakeBillboardMatrix()
 
 void ParticleManager::Emit(const std::string name, Vector3& pos, uint32_t count)
 {
-	// 登録済みのパーティクルグループかチェックしてassert
 	assert(particleGroups.find(name) != particleGroups.end());
-
-	// 指定されたパーティクルグループを取得
 	ParticleGroup& group = particleGroups[name];
 
-	// パーティクルを生成してグループに追加
 	for (uint32_t i = 0; i < count; ++i) {
-		Particle newParticle = MakeNewParticle(randomEngine, pos);
+		Particle newParticle = MakeNewParticle(randomEngine, name, pos); // ← name を渡す
 		group.particles.push_back(newParticle);
 	}
 }
 
-ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate) {
-	// 色のばらつき
-	std::uniform_real_distribution<float> distColor(0.8f, 1.0f);
-	std::uniform_real_distribution<float> distVelocity(-0.15f, 0.15f);
-	std::uniform_real_distribution<float> distVelocityY(0.1f, 0.3f); // 上方向に強め
-	std::uniform_real_distribution<float> distScale(1.0f, 2.0f);
-	std::uniform_real_distribution<float> distLifeTime(0.6f, 1.2f);   // 寿命に幅を持たせる
 
-	std::uniform_real_distribution<float> distOffsetX(-0.3f, 0.3f);
-	std::uniform_real_distribution<float> distOffsetY(0.0f, 0.5f);
-	std::uniform_real_distribution<float> distOffsetZ(-0.3f, 0.3f);
+ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, const std::string& groupName, const Vector3& center)
+{
+	Particle p{};
 
-	Particle particle{};
+	// 共通：発生位置を中心±オフセット
+	std::uniform_real_distribution<float> offXY(-0.3f, 0.3f);
+	std::uniform_real_distribution<float> offZ(-0.3f, 0.3f);
+	Vector3 offset{ offXY(rng), offXY(rng) * 0.6f, offZ(rng) };
+	p.transform.translate = center + offset;
 
-	// ランダムな発生位置
-	Vector3 offset = {
-		distOffsetX(randomEngine),
-		distOffsetY(randomEngine),
-		distOffsetZ(randomEngine)
-	};
-	particle.transform.translate = translate + offset;
+	if (groupName == "irisOpen") {
+		// ── 開幕用：中心へ“吸い込む”柔らかい粒 ──
+		// 方向＝中心へ向かう（= -offset の方向）
+		Vector3 dir = MyMath::Normalize(-offset);
+		std::uniform_real_distribution<float> spd(0.06f, 0.14f);
+		float s = spd(rng);
+		p.velocity = dir * s;
 
-	// ランダムなスケール
-	float scale = distScale(randomEngine);
-	particle.transform.scale = { scale, scale, scale };
+		// 小さめ＆短命、青白〜白
+		std::uniform_real_distribution<float> scl(0.6f, 1.2f);
+		float sc = scl(rng);
+		p.transform.scale = { sc, sc, sc };
 
-	// 上方向に浮かぶように速度を設定
-	particle.velocity = {
-		distVelocity(randomEngine),
-		distVelocityY(randomEngine),
-		distVelocity(randomEngine)
-	};
+		float life = std::uniform_real_distribution<float>(0.35f, 0.65f)(rng);
+		p.lifeTime = life; p.currentTime = 0.0f;
 
-	// 赤〜オレンジ〜黄系（少し青や白を混ぜても可）
-	particle.color = {
-		distColor(randomEngine),                  // R
-		distColor(randomEngine) * 0.5f,           // G
-		distColor(randomEngine) * 0.2f,           // B
-		1.0f                                      // A
-	};
+		float c = std::uniform_real_distribution<float>(0.85f, 1.0f)(rng);
+		p.color = { 0.85f * c, 0.90f * c, 1.00f, 1.0f };
+	} else if (groupName == "irisFire") {
+		// --- 花火演出（画面全体に放射） ---
+		// 広い範囲にオフセット
+		std::uniform_real_distribution<float> offXY(-20.0f, 20.0f);
+		std::uniform_real_distribution<float> offZ(-20.0f, 20.0f);
+		Vector3 offset = { offXY(rng), offXY(rng), offZ(rng) };
 
-	// 寿命を長めに（違和感を減らす）
-	particle.lifeTime = distLifeTime(randomEngine); // 0.6f〜1.2fの範囲
-	particle.currentTime = 0.0f;
+		// ランダム方向ベクトル（正規化）
+		Vector3 dir = MyMath::Normalize(offset);
 
-	return particle;
+		// 強めの速度
+		std::uniform_real_distribution<float> spd(0.5f, 2.5f);
+		p.velocity = dir * spd(rng);
+
+		// 大小ランダム
+		std::uniform_real_distribution<float> scl(0.8f, 1.6f);
+		float sc = scl(rng);
+		p.transform.scale = { sc, sc, sc };
+
+		// 寿命長め（広く散っても見えるように）
+		std::uniform_real_distribution<float> life(0.8f, 1.5f);
+		p.lifeTime = life(rng);
+		p.currentTime = 0.0f;
+
+		// 明るくランダムカラー（花火っぽく）
+		float hue = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+		float r = 0.9f + 0.1f * sin(hue * 6.283f);
+		float g = 0.8f + 0.2f * cos(hue * 6.283f);
+		float b = 1.0f - 0.3f * sin(hue * 3.142f);
+		p.color = { r, g, b, 1.0f };
+	} else {
+		// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
+		std::uniform_real_distribution<float> velX(-0.15f, 0.15f);
+		std::uniform_real_distribution<float> velY(0.10f, 0.30f);
+		p.velocity = { velX(rng), velY(rng), velX(rng) };
+
+		float sc = std::uniform_real_distribution<float>(1.0f, 2.0f)(rng);
+		p.transform.scale = { sc, sc, sc };
+
+		float life = std::uniform_real_distribution<float>(0.6f, 1.2f)(rng);
+		p.lifeTime = life; p.currentTime = 0.0f;
+
+		float base = std::uniform_real_distribution<float>(0.8f, 1.0f)(rng);
+		p.color = { base, base * 0.5f, base * 0.2f, 1.0f };
+	}
+
+	p.transform.rotate = { 0,0,0 }; // 使ってなければ0で
+	return p;
 }
 
 

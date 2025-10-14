@@ -43,6 +43,11 @@ struct Vector3 final {
 		return Vector3(this->x / scalar, this->y / scalar, this->z / scalar);
 	}
 
+	// 単項マイナス演算子（符号反転）
+	Vector3 operator-() const {
+		return Vector3(-x, -y, -z);
+	}
+
 	Vector3& operator+=(const Vector3& other) {
 		this->x += other.x;
 		this->y += other.y;
