@@ -23,6 +23,8 @@ public:
 			object_->SetCamera(camera);
 		}
 	}
+
+	Enemy* GetEnemy() const { return enemy_; }
 	void SetEnemy(Enemy* enemy) { enemy_ = enemy; }
 	void SetPlayer(Player* player) { player_ = player; }
 	void SetSpecialAttack(bool flag) { isSpecialAttack_ = flag; }

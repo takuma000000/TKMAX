@@ -524,20 +524,21 @@ void GameScene::UpdateEnemies()
 	/// ───────────────────────────────────────────────
 
 	for (auto it = enemies_.begin(); it != enemies_.end(); ) {
-		(*it)->Update(); // 各敵の状態を更新
+		Enemy* e = it->get();      // erase 前に生存中の生ポインタを保持
+		e->Update();
 
-		if ((*it)->IsDead()) {
-			defeatedEnemyCount_++;          // 倒した敵の数を加算（ImGui表示用）
-			player_->RemoveEnemyIfDead();  // プレイヤーが保持する敵参照をリセット
+		if (e->IsDead()) {
+			// 死亡していたら
+			player_->OnEnemyDestroyed(e); // プレイヤーに通知
 
-			// 3体倒したら必殺技解放
+			++defeatedEnemyCount_;          // 倒した数をカウント
 			if (defeatedEnemyCount_ == 3) {
 				player_->EnableSpecialAttack();
 			}
 
-			it = enemies_.erase(it);       // 死亡した敵をリストから削除（イテレータ無効化に注意）
+			it = enemies_.erase(it);        // erase でイテレータが無効化されるので注意
 		} else {
-			++it; // 次の敵へ
+			++it;
 		}
 	}
 }

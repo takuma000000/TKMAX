@@ -21,6 +21,18 @@ public:
 	void RemoveEnemyIfDead();
 	void EnableSpecialAttack() { canUseSpecial_ = true; } // 一撃必殺を使用可能にする
 
+	void OnEnemyDestroyed(Enemy* e) {
+		if (enemy_ == e) {
+			enemy_ = nullptr;
+		}
+		for (auto& b : bullets_) {
+			if (!b) continue;
+			if (b->GetEnemy() == e) { // 弾が追従していた敵が破壊された
+				b->SetEnemy(nullptr);
+			}
+		}
+	}
+
 	const std::list<std::unique_ptr<PlayerBullet>>& GetBullets() const {
 		return bullets_;
 	}

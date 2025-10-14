@@ -14,6 +14,7 @@ void Player::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 void Player::Update() {
 	HandleGamePadMove(); // ゲームパッドのスティック入力で移動
 	HandleFollowCamera(); // カメラの追従処理
+	RemoveEnemyIfDead(); // 敵が死んでたら参照をクリア
 
 	// RTホールド中はターゲットをロック表示（切り替わり時は前の敵を解除）
 	{
