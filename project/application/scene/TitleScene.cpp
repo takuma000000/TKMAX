@@ -89,6 +89,10 @@ void TitleScene::Initialize()
 		titleEnemies_.push_back(std::move(e));
 	}
 
+
+	//---------------パーティクル----------------
+	ParticleManager::GetInstance()->Initialize(dxCommon, srvManager, camera.get());
+	//-----------------------------------------
 }
 
 void TitleScene::Finalize()
@@ -210,6 +214,8 @@ void TitleScene::Update()
 	if (skyPitch_ < 0.0f)    skyPitch_ += kTwoPi;
 	skybox_->SetRotation({ skyPitch_, 0.0f, 0.0f });
 
+	ParticleManager::GetInstance()->Update();
+
 #ifdef _DEBUG
 	// === ImGui ===
 	ImGui::Begin("Title Heli (Background)");
@@ -245,4 +251,6 @@ void TitleScene::Draw()
 	SpriteCommon::GetInstance()->DrawSetCommon();
 	if (sprite) sprite->Draw();     // タイトル画像
 	if (iris_)  iris_->Draw();      // 白円(アイリス)
+
+	ParticleManager::GetInstance()->Draw();
 }
