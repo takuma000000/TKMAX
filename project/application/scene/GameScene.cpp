@@ -8,17 +8,6 @@
 #include <psapi.h>
 #include <Input.h>
 
-// easeOutBack (t: 0〜1)
-// 最後に少しオーバーシュートしてから止まる
-static float easeOutBack(float t) {
-	const float c1 = 1.70158f;      // オーバーシュートの強さ
-	const float c3 = c1 + 1.0f;
-	float f = t - 1.0f;
-	return 1.0f + c3 * std::powf(f, 3.0f) + c1 * std::powf(f, 2.0f);
-}
-
-
-
 void GameScene::Initialize()
 {
 	// ──────────────── NULLチェック ────────────────
@@ -66,6 +55,7 @@ void GameScene::Initialize()
 	irisEndScale_ = 0.0f;          // 最終的に消える
 	irisScale_ = irisStartScale_;
 	iris_->SetSize({ irisScale_, irisScale_ });
+	irisTween_.Reset(/*start*/ irisMaxScale_, /*end*/ 0.0f, /*sec*/ 0.8f, Ease::Type::OutBack);
 }
 
 void GameScene::Finalize()
@@ -138,22 +128,11 @@ void GameScene::Update()
 	}
 
 	if (irisOpening_) {
-		irisT_ += 0.016f / std::max(irisDuration_, 0.001f);
-		if (irisT_ > 1.0f) irisT_ = 1.0f;
-
-		// easeOutBack を使用
-		float eased = easeOutBack(irisT_);
-		irisScale_ = irisStartScale_ + (irisEndScale_ - irisStartScale_) * eased;
-
+		irisScale_ = irisTween_.Update(0.016f);
 		iris_->SetSize({ irisScale_, irisScale_ });
 		iris_->Update();
-
-		if (irisT_ >= 1.0f) {
-			irisOpening_ = false;
-			irisScale_ = irisEndScale_;
-		}
+		if (irisTween_.Finished()) irisOpening_ = false;
 	}
-
 
 	// その他のオブジェクト・パーティクルの更新
 	ParticleManager::GetInstance()->Update();

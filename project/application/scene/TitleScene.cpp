@@ -6,13 +6,6 @@
 #include <cmath>
 #include "externals/imgui/imgui.h"
 
-// easeInBack（t:0〜1）
-static float easeInBack(float t) {
-	const float c1 = 1.70158f;
-	const float c3 = c1 + 1.0f;
-	return c3 * t * t * t - c1 * t * t;
-}
-
 void TitleScene::Initialize()
 {
 	camera = std::make_unique<Camera>();
@@ -78,6 +71,8 @@ void TitleScene::Initialize()
 	irisSpeed_ = 3500.0f;  // 速め
 
 	iris_->SetSize({ irisScale_, irisScale_ });
+	// 開始時にセット（覆い切るサイズを irisMax_ とする）
+	irisTween_.Reset(/*start*/ irisScale_, /*end*/ irisMax_, /*sec*/ 0.8f, Ease::Type::InBack);
 
 	// タイトル敵を1体だけ置く
 	titleEnemies_.clear();
@@ -196,28 +191,15 @@ void TitleScene::Update()
 	}
 
 	if (irisClosing_) {
-		// 時間経過
-		irisT_ += 0.016f / std::max(irisDuration_, 0.001f);
-		if (irisT_ > 1.0f) irisT_ = 1.0f;
-
-		// easeInBack で補間
-		float eased = easeInBack(irisT_);
-		irisScale_ = irisStartScale_ + (irisEndScale_ - irisStartScale_) * eased;
-
+		irisScale_ = irisTween_.Update(0.016f); // 1フレーム分の進行
 		iris_->SetSize({ irisScale_, irisScale_ });
 		iris_->Update();
 
-		// 覆い終わったら数フレームホールド後に遷移
-		if (irisT_ >= 1.0f) {
-			if (++irisHoldFrames_ >= 4) {
-				sceneManager_->SetNextScene(new GameScene(dxCommon, srvManager));
-				return;
-			}
+		if (irisTween_.Finished()) {
+			sceneManager_->SetNextScene(new GameScene(dxCommon, srvManager));
+			return;
 		}
 	}
-
-
-
 
 	constexpr float kTwoPi = 6.2831853f;
 	skyPitch_ -= skyRotSpeedX_;

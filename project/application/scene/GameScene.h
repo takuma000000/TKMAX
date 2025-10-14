@@ -27,6 +27,7 @@
 #include "application/enemy/EnemySpawner.h"
 #include "application/boss/BossEnemy.h"
 #include "application/boss/BossBullet.h"
+#include <Easing.h>
 
 class GameScene : public BaseScene
 {
@@ -166,5 +167,7 @@ private:
 	float  irisStartScale_ = 0.0f;   // 開始スケール（覆った状態）
 	float  irisEndScale_ = 0.0f;   // 最終スケール（Initializeでセット）
 	float  irisMaxScale_ = 0.0f;   // 画面対角ベース
+
+	Ease::Tween irisTween_; // Iris用イージング
 };
 

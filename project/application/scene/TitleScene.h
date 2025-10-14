@@ -19,7 +19,8 @@
 #include "Input.h"
 #include "SceneManager.h"
 #include "GameScene.h"
-#include <SkyBox.h>
+#include <SkyBox.h> 
+#include <Easing.h>
 
 class TitleScene : public BaseScene
 {
@@ -96,5 +97,7 @@ private:
 	float irisDuration_ = 0.8f;    // アニメ時間(秒)
 	float irisStartScale_ = 10.0f; // 開始サイズ
 	float irisEndScale_ = 0.0f;    // 目標（Initializeでセット）
+
+	Ease::Tween irisTween_; // イージング関数
 
 };
