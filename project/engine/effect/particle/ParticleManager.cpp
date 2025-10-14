@@ -487,6 +487,26 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 		std::uniform_real_distribution<float> gray(0.6f, 0.8f);
 		float c = gray(rng);
 		p.color = { c, c, c, 1.0f };
+	} else if (groupName == "bulletTrail") {
+		// ─ 弾の光の尾 ─
+		std::uniform_real_distribution<float> velX(-0.05f, 0.05f);
+		std::uniform_real_distribution<float> velY(-0.05f, 0.05f);
+		std::uniform_real_distribution<float> velZ(-2.5f, -0.5f);
+
+		p.velocity = { velX(rng), velY(rng), velZ(rng) };
+
+		// 細めで短命
+		std::uniform_real_distribution<float> scl(0.1f, 0.25f);
+		float sc = scl(rng);
+		p.transform.scale = { sc, sc, sc };
+
+		p.lifeTime = std::uniform_real_distribution<float>(0.2f, 0.4f)(rng);
+		p.currentTime = 0.0f;
+
+		// 光色（白〜青）
+		std::uniform_real_distribution<float> hue(0.8f, 1.0f);
+		float c = hue(rng);
+		p.color = { 0.4f * c, 0.6f * c, 1.0f, 1.0f };
 	} else {
 		// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 		std::uniform_real_distribution<float> velX(-0.15f, 0.15f);

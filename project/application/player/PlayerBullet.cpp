@@ -9,6 +9,10 @@ void PlayerBullet::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	object_->Initialize(common, dxCommon);
 	object_->SetModel("sphere.obj");
 	object_->SetScale({ 0.2f, 0.2f, 0.2f });
+
+	// パーティクルエミッタ初期化
+	Vector3 start = object_->GetTranslate();
+	trailEmitter_.Initialize("bulletTrail", start);
 }
 
 void PlayerBullet::Update() {
@@ -28,6 +32,8 @@ void PlayerBullet::Update() {
 
 	pos = pos + velocity_;
 	object_->SetTranslate(pos);
+	trailEmitter_.SetPosition(pos);
+	trailEmitter_.Update(); // 毎フレーム放出
 
 	// 敵が存在するなら当たり判定チェック
 	if (enemy_ && !enemy_->IsDead()) {

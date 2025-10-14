@@ -4,6 +4,7 @@
 #include "Object3d.h"
 #include "Vector3.h"
 #include "application/enemy/Enemy.h"
+#include <engine/effect/particle/ParticlerEmitter.h>
 
 class Player;
 
@@ -44,4 +45,6 @@ private:
 
 	bool  isHoming_ = false;
 	float homingSpeed_ = 0.6f; // 追従弾の速度（調整可）
+
+	ParticleEmitter trailEmitter_; // 弾の軌跡パーティクル
 };

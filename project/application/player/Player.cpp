@@ -15,7 +15,9 @@ void Player::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 
 	// パーティクルグループ作成
 	ParticleManager::GetInstance()->CreateParticleGroup(
-		"jetSmoke", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
+		"jetSmoke", "./resources/circle.png", ParticleManager::ParticleType::NORMAL); // 煙
+	ParticleManager::GetInstance()->CreateParticleGroup(
+		"bulletTrail", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL); // 弾の軌跡
 
 	Vector3 jetPos = object_->GetTranslate();
 	jetPos.z -= 2.0f; // 機体の後方
