@@ -164,27 +164,67 @@ void BossEnemy::UpdatePhase() {
 	else phase_ = Phase::P1;
 }
 
+// ─────────────────────────────────────────────
+// 1) 移動：P1は一度プレイヤー前に寄ってから静止
+//    P2はゆるい円運動、P3は左右往復
+// ─────────────────────────────────────────────
 // BossEnemy.cpp
 void BossEnemy::UpdateMovement(const Vector3& playerPos, const Vector3& /*playerVel*/)
 {
-	// ===== 共通：近づきすぎ防止のパラメータ（距離ベースで柔らかく） =====
-	const float kNoCloseRad = 8.0f;  // プレイヤーにこれ以上近づかない半径
-	const float kPushFactor = 0.6f;  // 押し戻し係数
-	const float kArriveRad = arriveRadius_;
-	const float kMaxSpeedP3 = 1.2f;  // P3の見た目用スピード（往復）
-	const float kMaxSpeed = std::max(0.6f, maxSpeed_); // 既存値を尊重
+	// =========================
+	// P1: 一度だけ前方アンカーを確定 → ゆっくり寄る → 到達後は完全停止（追従なし）
+	// =========================
+	{
+		// 関数内staticでP1用アンカーを記憶（フェーズがP1を離れたら無効化）
+		static bool     p1AnchorValid = false;
+		static Vector3  p1Anchor = { 0,0,0 };
 
+		if (phase_ == Phase::P1) {
+			// 初回だけアンカーを確定（プレイヤーの“少し前”）
+			if (!p1AnchorValid) {
+				const float kFrontZ = 20.0f;                 // 前に出る距離
+				p1Anchor = playerPos + Vector3{ 0.0f, 0.0f, kFrontZ };
+				p1AnchorValid = true;
+			}
+
+			// アンカーへ“ゆっくり寄る”。到達後は完全停止。
+			const float kMaxSpeed = 0.8f;                    // 接近スピード
+			const float kStopRad = 1.5f;                    // 到達判定半径
+			const float kArrive = arriveRadius_;           // 減速開始距離
+
+			Vector3 pos = GetWorldPosition();
+			Vector3 toT = p1Anchor - pos;
+			float   dist = MyMath::Length(toT);
+
+			if (dist <= kStopRad) {
+				SetPosition(p1Anchor);                       // 固定
+			} else {
+				Vector3 desired = (dist > 1e-4f) ? MyMath::Normalize(toT) * kMaxSpeed : Vector3{ 0,0,0 };
+				if (dist < kArrive) {
+					desired = desired * (dist / kArrive);    // 線形減速（*=は使わない）
+				}
+				pos = pos + desired;
+				SetPosition(pos);
+			}
+			return;
+		} else {
+			// P1を離れたら次回のためにアンカーを無効化
+			p1AnchorValid = false;
+		}
+	}
+
+	// =========================
+	// P3: 左右往復（行ったり来たり）
+	// =========================
 	if (phase_ == Phase::P3) {
-		// ─────────────────────────────────────────
-		// フェーズ3：決まった範囲を行ったり来たり（左右＋微小上下）
-		// ─────────────────────────────────────────
-		const float kCenterOffsetZ = 20.0f;  // プレイヤー前方に基準点
+		const float kCenterOffsetZ = 20.0f;  // 前方に基準点
 		const float kRangeX = 18.0f;  // 左右幅
-		const float kRangeY = 3.0f;   // 上下ゆらぎ幅
+		const float kRangeY = 3.0f;   // 上下ゆらぎ
 		const float kOmegaX = 0.05f;  // 左右往復速度
 		const float kOmegaY = 0.035f; // 上下ゆらぎ速度
+		const float kMaxSpeed = 1.2f;
+		const float kArrive = arriveRadius_;
 
-		// 適度に速く
 		theta_ += kOmegaX;
 
 		Vector3 center = playerPos + Vector3{ 0.0f, 0.0f, kCenterOffsetZ };
@@ -192,71 +232,48 @@ void BossEnemy::UpdateMovement(const Vector3& playerPos, const Vector3& /*player
 		float offY = kRangeY * std::sinf(theta_ * (kOmegaY / kOmegaX) + 1.2345f);
 		Vector3 target = center + Vector3{ offX, offY, 0.0f };
 
-		// 近づきすぎ防止（距離ベース）
-		{
-			Vector3 posToPlayer = GetWorldPosition() - playerPos;
-			float   d = MyMath::Length(posToPlayer);
-			if (d < kNoCloseRad && d > 1e-4f) {
-				Vector3 pushDir = MyMath::Normalize(posToPlayer);
-				target += pushDir * (kNoCloseRad - d) * kPushFactor;
-			}
-		}
-
-		// 到達減速
 		Vector3 pos = GetWorldPosition();
 		Vector3 toT = target - pos;
 		float   dist = MyMath::Length(toT);
 
-		Vector3 desired = (dist > 1e-4f) ? MyMath::Normalize(toT) * kMaxSpeedP3 : Vector3{ 0,0,0 };
-		if (dist < kArriveRad) desired *= (dist / kArriveRad);
-
-		pos += desired;
+		Vector3 desired = (dist > 1e-4f) ? MyMath::Normalize(toT) * kMaxSpeed : Vector3{ 0,0,0 };
+		if (dist < kArrive) desired = desired * (dist / kArrive);
+		pos = pos + desired;
 		SetPosition(pos);
 		return;
 	}
 
-	// ─────────────────────────────────────────
-	// P1 / P2：前方オフセット中心に“ゆる円”で周回しつつ到達減速
-	// （既存パラメータを活かす）
-	// ─────────────────────────────────────────
-	// フェーズでゆらぎを控えめ〜普通に
-	float rJit = (phase_ == Phase::P2 ? orbitR_Jitter_ * 0.6f : orbitR_Jitter_ * 0.3f);
-	float omgJit = (phase_ == Phase::P2 ? orbitOmega_Jitter_ * 0.6f : orbitOmega_Jitter_ * 0.3f);
-
-	float r = orbitR_ + (Rand01() * 2.0f - 1.0f) * rJit;
-	float omg = orbitOmega_ + (Rand01() * 2.0f - 1.0f) * omgJit;
-
-	// 角度進行（速すぎる初期値のときでもジッターで多少なら馴染む）
-	theta_ += omg;
-
-	// 円の中心を少し前に（既存の dzMin_ を利用）
-	Vector3 center = playerPos + Vector3{ 0.0f, 0.0f, dzMin_ };
-
-	// 円周上の相対位置（XZ）
-	Vector3 ring = { r * std::cos(theta_), 0.0f, r * std::sin(theta_) };
-	Vector3 target = center + ring;
-
-	// 近づきすぎ防止（距離ベース）
+	// =========================
+	// P2: 前方オフセット中心の“ゆる円”
+	// =========================
 	{
-		Vector3 posToPlayer = GetWorldPosition() - playerPos;
-		float   d = MyMath::Length(posToPlayer);
-		if (d < kNoCloseRad && d > 1e-4f) {
-			Vector3 pushDir = MyMath::Normalize(posToPlayer);
-			target += pushDir * (kNoCloseRad - d) * kPushFactor;
-		}
+		float rJit = orbitR_Jitter_ * 0.6f;
+		float omgJit = orbitOmega_Jitter_ * 0.6f;
+
+		float r = orbitR_ + (Rand01() * 2.0f - 1.0f) * rJit;
+		float omg = 0.05f + (Rand01() * 2.0f - 1.0f) * omgJit; // 見やすい角速度
+		const float kMaxSpeed = std::max(0.8f, maxSpeed_);
+		const float kArrive = arriveRadius_;
+
+		theta_ += omg;
+
+		Vector3 center = playerPos + Vector3{ 0.0f, 0.0f, dzMin_ };
+		Vector3 ring = { r * std::cosf(theta_), 0.0f, r * std::sinf(theta_) };
+		Vector3 target = center + ring;
+
+		Vector3 pos = GetWorldPosition();
+		Vector3 toT = target - pos;
+		float   dist = MyMath::Length(toT);
+
+		Vector3 desired = (dist > 1e-4f) ? MyMath::Normalize(toT) * kMaxSpeed : Vector3{ 0,0,0 };
+		if (dist < kArrive) desired = desired * (dist / kArrive);
+		pos = pos + desired;
+		SetPosition(pos);
 	}
-
-	// 到達減速でスムーズに
-	Vector3 pos = GetWorldPosition();
-	Vector3 toT = target - pos;
-	float   dist = MyMath::Length(toT);
-
-	Vector3 desired = (dist > 1e-4f) ? MyMath::Normalize(toT) * kMaxSpeed : Vector3{ 0,0,0 };
-	if (dist < kArriveRad) desired *= (dist / kArriveRad);
-
-	pos += desired;
-	SetPosition(pos);
 }
+
+
+
 
 void BossEnemy::UpdateAttack(float dt, const Vector3& playerPos) {
 	stageT_ += dt;
@@ -284,6 +301,14 @@ void BossEnemy::SelectNextAttackUtility(const Vector3& playerPos) {
 	const Vector3 me = GetWorldPosition();
 	const Vector3 toPlayer = playerPos - me;
 	const float   dist = MyMath::Length(toPlayer);
+
+	if (phase_ == Phase::P1) {
+		currentAttack_ = AttackType::Beam;
+		cdBeam_.t = cdBeam_.cool; // クールダウンは通常通り進める
+		sameAttackChain_ = (lastAttack_ == AttackType::Beam) ? (sameAttackChain_ + 1) : 0;
+		lastAttack_ = AttackType::Beam;
+		return;
+	}
 
 	// 正面ベクトル（必要なら将来ここを実向きに合わせて更新）
 	const Vector3 forward = SafeNormalize(Vector3{ 0,0,1 });
@@ -371,16 +396,39 @@ void BossEnemy::FireBegin() {
 	// テレグラフ演出など任意
 }
 
-void BossEnemy::FireTick(float /*dt*/, const Vector3& playerPos) {
+// ─────────────────────────────────────────────
+// 3) 発射：P1は低頻度・低速・低威力のBeamのみ
+// ─────────────────────────────────────────────
+void BossEnemy::FireTick(float /*dt*/, const Vector3& playerPos)
+{
 	auto* gs = dynamic_cast<GameScene*>(GetParentScene());
 	if (!gs) return;
 
 	const Vector3 myPos = GetWorldPosition();
-	const Vector3 aimPos = PredictPlayer(playerPos); // 簡易先読み
 
+	// 既存の安全正規化
+	auto SafeNormalize = [](const Vector3& v, const Vector3& fallback) {
+		float len = MyMath::Length(v);
+		if (len < 1e-5f) return fallback;
+		return MyMath::Normalize(v);
+		};
+
+	// 先読み
+	const Vector3 aimPos = PredictPlayer(playerPos);
+
+	// ---------- P1: やさしいBeamだけ ----------
+	if (phase_ == Phase::P1) {
+		// およそ0.4秒に1発（24フレームおき）
+		if (static_cast<int>(stageT_) % 24 == 0) {
+			Vector3 dir = SafeNormalize(aimPos - myPos, { 0,0,-1 });
+			gs->SpawnEnemyBullet(myPos, dir, /*speed*/0.55f, /*damage*/1, /*life*/150);
+		}
+		return;
+	}
+
+	// ---------- P2/P3: 既存の攻撃ロジック ----------
 	switch (currentAttack_) {
 	case AttackType::Beam: {
-		// 3fに1発、やや遅い・長寿命の直射（先読み方向）
 		if (static_cast<int>(stageT_) % 3 == 0) {
 			Vector3 dir = SafeNormalize(aimPos - myPos, { 0,0,-1 });
 			gs->SpawnEnemyBullet(myPos, dir, 0.7f, 2, 240);
@@ -388,41 +436,51 @@ void BossEnemy::FireTick(float /*dt*/, const Vector3& playerPos) {
 		break;
 	}
 	case AttackType::Fan: {
-		// 10fに1回、扇状にN発。散開角に毎回微ゆらぎ
+		Vector3 forward = SafeNormalize(aimPos - myPos, { 0,0,-1 });
+		Vector3 right = SafeNormalize(Vector3{ forward.z, 0.0f, -forward.x }, { 1,0,0 });
 		if (static_cast<int>(stageT_) % 10 == 0) {
-			Vector3 forward = SafeNormalize(aimPos - myPos, { 0,0,-1 });
-			Vector3 right = SafeNormalize(Vector3{ forward.z, 0.0f, -forward.x }, { 1,0,0 });
-
 			int   N = std::max(3, fanCount_);
-			float spread = fanSpread_ * (0.9f + 0.2f * Rand01()); // ±10%ゆらぎ
-
+			float spread = fanSpread_ * (0.9f + 0.2f * Rand01());
 			for (int i = 0; i < N; ++i) {
-				float t = (i - (N - 1) * 0.5f); // -k..+k
-				Vector3 dir = SafeNormalize(forward + right * (t * spread));
+				float t = (i - (N - 1) * 0.5f);
+				Vector3 dir = SafeNormalize(forward + right * (t * spread), { 0,0,-1 });
 				gs->SpawnEnemyBullet(myPos, dir, 0.9f, 1, 180);
 			}
 		}
 		break;
 	}
 	case AttackType::Rapid: {
-		// 毎フレーム、短命・高速の連射（ジッターを動的変化）
 		float jx = std::sinf(stageT_ * 0.7f) * rapidJitterX_;
 		float jz = std::cosf(stageT_ * 0.5f) * rapidJitterZ_;
 		Vector3 base = SafeNormalize(aimPos - myPos, { 0,0,-1 });
-		Vector3 dir = SafeNormalize(Vector3{ base.x + jx, base.y, base.z + jz });
+		Vector3 dir = SafeNormalize(Vector3{ base.x + jx, base.y, base.z + jz }, { 0,0,-1 });
 		gs->SpawnEnemyBullet(myPos, dir, 1.4f, 1, 120);
 		break;
 	}
 	}
 }
 
+
 void BossEnemy::FireEnd() {
 	// 終了演出など任意
 }
 
-float BossEnemy::TelegraphTime() const { return (phase_ == Phase::P3) ? 30.0f : 45.0f; }
-float BossEnemy::FireTime()      const { return (phase_ == Phase::P3) ? 90.0f : 60.0f; }
-float BossEnemy::CooldownTime()  const { return (phase_ == Phase::P1) ? 90.0f : (phase_ == Phase::P2 ? 60.0f : 45.0f); }
+// ─────────────────────────────────────────────
+// 4) テレグラフ時間：P1は長め（ため）
+// ─────────────────────────────────────────────
+float BossEnemy::TelegraphTime() const {
+	if (phase_ == Phase::P1) return 60.0f;   // ゆっくり構える
+	return (phase_ == Phase::P3) ? 30.0f : 45.0f;
+}
+
+float BossEnemy::FireTime() const {
+	if (phase_ == Phase::P1) return 40.0f;   // 優しめ
+	return (phase_ == Phase::P3) ? 90.0f : 60.0f;
+}
+float BossEnemy::CooldownTime() const {
+	if (phase_ == Phase::P1) return 120.0f;  // しっかり休憩
+	return (phase_ == Phase::P2) ? 60.0f : 45.0f;
+}
 
 // BossEnemy.cpp（追記：ヘルパー）
 const char* BossEnemy::AttackName(AttackType at) const {
