@@ -38,7 +38,7 @@ void Player::Update() {
 		Input* input = Input::GetInstance();
 		Enemy* cur = (enemy_ && !enemy_->IsDead()) ? enemy_ : nullptr;
 
-		bool hold = (input->GetRightTrigger() > 128 && canUseSpecial_);
+		bool hold = (input->GetRightTrigger() > 128) && (canUseSpecial_ || debugUnlimitedSpecial_);
 
 		// ターゲットが切り替わったら前のロックを解除
 		if (lastLockedEnemy_ && lastLockedEnemy_ != cur) {
@@ -95,6 +95,7 @@ void Player::ImGuiDebug() {
 	}
 
 	ImGui::Text("Special Attack: %s", canUseSpecial_ ? "READY" : "NOT READY"); // 一撃必殺の使用可能状態を表示
+	ImGui::Checkbox("Unlimited RT (Debug)", &debugUnlimitedSpecial_);
 
 
 	ImGui::End();
@@ -315,13 +316,13 @@ void Player::HandleShooting() {
 	const bool pressed = (input->GetRightTrigger() > 128);
 
 	// 押している間：ホールド状態にする（発射はしない）
-	if (pressed && canUseSpecial_ && enemy_ && !enemy_->IsDead()) {
+	if (pressed && (canUseSpecial_ || debugUnlimitedSpecial_) && enemy_ && !enemy_->IsDead()) {
 		rtHeld_ = true; // ロックの見た目は Update() 側でON
 	}
 
 	// 離した瞬間：発射
 	if (!pressed && rtHeld_) {
-		if (canUseSpecial_ && enemy_ && !enemy_->IsDead()) {
+		if ((canUseSpecial_ || debugUnlimitedSpecial_) && enemy_ && !enemy_->IsDead()) {
 			auto bullet = std::make_unique<PlayerBullet>();
 			bullet->Initialize(common_, dxCommon_);
 
@@ -343,7 +344,9 @@ void Player::HandleShooting() {
 
 			// 見た目のロックは解除
 			enemy_->SetLocked(false);
-			canUseSpecial_ = false;
+			if (!debugUnlimitedSpecial_) {
+				canUseSpecial_ = false;
+			}
 		}
 		rtHeld_ = false; // 次に備えて解除
 	}

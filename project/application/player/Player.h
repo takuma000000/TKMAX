@@ -90,4 +90,6 @@ private:
 	bool ltHeld_ = false; // LTの押下状態ラッチ
 
 	ParticleEmitter jetEmitter_;
+
+	bool debugUnlimitedSpecial_ = false; // ImGuiでONならRTを無制限発射
 };
