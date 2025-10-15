@@ -5,6 +5,7 @@
 #include "Vector3.h"
 #include "application/enemy/Enemy.h"
 #include <engine/effect/particle/ParticlerEmitter.h>
+#include <string>
 
 class Player;
 
@@ -23,6 +24,13 @@ public:
 		if (object_) {
 			object_->SetCamera(camera);
 		}
+	}
+
+	void SetTrailGroup(const std::string& group) {
+		trailGroup_ = group;
+		// 位置は現在地で再初期化（生成直後や途中でもOK）
+		Vector3 pos = object_ ? object_->GetTranslate() : Vector3{};
+		trailEmitter_.Initialize(trailGroup_, pos);
 	}
 
 	Enemy* GetEnemy() const { return enemy_; }
@@ -47,4 +55,5 @@ private:
 	float homingSpeed_ = 0.6f; // 追従弾の速度（調整可）
 
 	ParticleEmitter trailEmitter_; // 弾の軌跡パーティクル
+	std::string trailGroup_ = "bulletTrail"; // 既定
 };

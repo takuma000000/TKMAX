@@ -10,9 +10,9 @@ void PlayerBullet::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	object_->SetModel("sphere.obj");
 	object_->SetScale({ 0.2f, 0.2f, 0.2f });
 
-	// パーティクルエミッタ初期化
+	// 既定グループで一旦初期化（あとで SetTrailGroup で上書き可）
 	Vector3 start = object_->GetTranslate();
-	trailEmitter_.Initialize("bulletTrail", start);
+	trailEmitter_.Initialize(trailGroup_, start);
 }
 
 void PlayerBullet::Update() {

@@ -501,26 +501,70 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 		col3 = col3 * brightness;
 
 		p.color = { col3.x, col3.y, col3.z, 1.0f };
-	} else if (groupName == "bulletTrail") {
-		// ─ 弾の光の尾 ─
-		std::uniform_real_distribution<float> velX(-0.05f, 0.05f);
-		std::uniform_real_distribution<float> velY(-0.05f, 0.05f);
-		std::uniform_real_distribution<float> velZ(-2.5f, -0.5f);
-
+	} else if (groupName == "trail_rb") {
+		// RB：青いスパーク（クールで安定）
+		std::uniform_real_distribution<float> velX(-0.03f, 0.03f);
+		std::uniform_real_distribution<float> velY(-0.03f, 0.03f);
+		std::uniform_real_distribution<float> velZ(-2.0f, -0.6f);
 		p.velocity = { velX(rng), velY(rng), velZ(rng) };
 
-		// 細めで短命
-		std::uniform_real_distribution<float> scl(0.1f, 0.25f);
-		float sc = scl(rng);
+		float sc = std::uniform_real_distribution<float>(0.10f, 0.22f)(rng);
 		p.transform.scale = { sc, sc, sc };
-
-		p.lifeTime = std::uniform_real_distribution<float>(0.2f, 0.4f)(rng);
+		p.lifeTime = std::uniform_real_distribution<float>(0.20f, 0.35f)(rng);
 		p.currentTime = 0.0f;
 
-		// 光色（白〜青）
-		std::uniform_real_distribution<float> hue(0.8f, 1.0f);
-		float c = hue(rng);
-		p.color = { 0.4f * c, 0.6f * c, 1.0f, 1.0f };
+		// 青～水色
+		float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+		Vector3 col = { 0.2f + 0.1f * t, 0.5f + 0.3f * t, 1.0f };
+		p.color = { 0.1f, 0.3f, 1.0f, 1.0f };  // 鮮やかな青（R10%, G30%, B100%）
+	} else if (groupName == "trail_lb") {
+		// LB：黄〜金色の尾（エネルギー感）
+		std::uniform_real_distribution<float> velX(-0.02f, 0.02f);
+		std::uniform_real_distribution<float> velY(-0.02f, 0.02f);
+		std::uniform_real_distribution<float> velZ(-2.2f, -0.8f);
+		p.velocity = { velX(rng), velY(rng), velZ(rng) };
+
+		float sc = std::uniform_real_distribution<float>(0.12f, 0.26f)(rng);
+		p.transform.scale = { sc, sc, sc };
+		p.lifeTime = std::uniform_real_distribution<float>(0.25f, 0.45f)(rng);
+		p.currentTime = 0.0f;
+
+		// 明るい黄～金色
+		float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+		Vector3 col = { 1.0f, 0.8f + 0.2f * t, 0.1f + 0.2f * t };
+		p.color = { 1.0f, 0.9f, 0.1f, 1.0f };  // ほぼ純黄色（R100%, G90%, B10%）
+	} else if (groupName == "trail_rt") {
+		// RT：赤い尾（情熱・攻撃的）
+		std::uniform_real_distribution<float> velX(-0.015f, 0.015f);
+		std::uniform_real_distribution<float> velY(-0.015f, 0.015f);
+		std::uniform_real_distribution<float> velZ(-2.8f, -1.2f);
+		p.velocity = { velX(rng), velY(rng), velZ(rng) };
+
+		float sc = std::uniform_real_distribution<float>(0.20f, 0.40f)(rng);
+		p.transform.scale = { sc, sc, sc };
+		p.lifeTime = std::uniform_real_distribution<float>(0.35f, 0.60f)(rng);
+		p.currentTime = 0.0f;
+
+		// 純赤～オレンジ寄り
+		float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+		Vector3 col = { 1.0f, 0.2f + 0.3f * t, 0.1f };
+		p.color = { 1.0f, 0.05f, 0.05f, 1.0f };  // 強い赤（R100%, G5%, B5%）
+	} else if (groupName == "trail_lt") {
+		// LT：黄緑系（視認性が高く色弱でも区別しやすい）
+		std::uniform_real_distribution<float> velX(-0.02f, 0.02f);
+		std::uniform_real_distribution<float> velY(-0.02f, 0.02f);
+		std::uniform_real_distribution<float> velZ(-2.5f, -1.0f);
+		p.velocity = { velX(rng), velY(rng), velZ(rng) };
+
+		float sc = std::uniform_real_distribution<float>(0.15f, 0.30f)(rng);
+		p.transform.scale = { sc, sc, sc };
+		p.lifeTime = std::uniform_real_distribution<float>(0.3f, 0.6f)(rng);
+		p.currentTime = 0.0f;
+
+		// 黄緑〜緑
+		float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+		Vector3 col = { 0.4f + 0.3f * t, 1.0f, 0.3f + 0.3f * t };
+		p.color = { 1.0f, 1.0f, 1.0f, 1.0f };  // 純白
 	} else {
 		// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 		std::uniform_real_distribution<float> velX(-0.15f, 0.15f);

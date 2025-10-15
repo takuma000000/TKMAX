@@ -16,8 +16,12 @@ void Player::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	// パーティクルグループ作成
 	ParticleManager::GetInstance()->CreateParticleGroup(
 		"jetSmoke", "./resources/circle.png", ParticleManager::ParticleType::NORMAL); // 煙
-	ParticleManager::GetInstance()->CreateParticleGroup(
-		"bulletTrail", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL); // 弾の軌跡
+	// 例：Player::Initialize()
+	ParticleManager::GetInstance()->CreateParticleGroup("trail_rb", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
+	ParticleManager::GetInstance()->CreateParticleGroup("trail_lb", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
+	ParticleManager::GetInstance()->CreateParticleGroup("trail_rt", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
+	ParticleManager::GetInstance()->CreateParticleGroup("trail_lt", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
+
 
 	Vector3 jetPos = object_->GetTranslate();
 	jetPos.z -= 2.0f; // 機体の後方
@@ -242,15 +246,14 @@ void Player::HandleShooting() {
 			bullet->SetVelocity({ 0,0,0.6f });
 		}
 
+		// ★ LT専用の軌跡
+		bullet->SetTrailGroup("trail_lt");
+
 		bullets_.push_back(std::move(bullet));
 	}
-	if (!ltPressed) {
-		ltHeld_ = false; // 離したら解放（次の押下で1発だけ出る）
-	} else {
-		ltHeld_ = true;
-	}
+	ltHeld_ = ltPressed; // 離したら解放（次の押下で1発だけ出る）
 
-	// RBボタン：通常弾
+	// ▼ RB：通常弾
 	if (input->TriggerButton(XINPUT_GAMEPAD_RIGHT_SHOULDER)) {
 		auto bullet = std::make_unique<PlayerBullet>();
 		bullet->Initialize(common_, dxCommon_);
@@ -268,7 +271,6 @@ void Player::HandleShooting() {
 			} else {
 				dir = MyMath::Normalize(dir);
 			}
-
 			bullet->SetVelocity(dir * 0.5f);
 		} else {
 			bullet->SetVelocity({ 0, 0, 0.5f });
@@ -277,10 +279,14 @@ void Player::HandleShooting() {
 		bullet->SetCamera(camera);
 		bullet->SetEnemy(enemy_);
 		bullet->SetPlayer(this);
+
+		// ★ RB専用の軌跡
+		bullet->SetTrailGroup("trail_rb");
+
 		bullets_.push_back(std::move(bullet));
 	}
 
-	// LBボタン：全敵必中弾
+	// ▼ LB：全敵必中弾
 	if (input->TriggerButton(XINPUT_GAMEPAD_LEFT_SHOULDER) && allEnemies_) {
 		for (auto& enemy : *allEnemies_) {
 			if (enemy->IsDead()) continue;
@@ -298,17 +304,19 @@ void Player::HandleShooting() {
 			bullet->SetEnemy(enemy.get());
 			bullet->SetPlayer(this);
 
+			// ★ LB専用の軌跡
+			bullet->SetTrailGroup("trail_lb");
+
 			bullets_.push_back(std::move(bullet));
 		}
 	}
 
-	// RTボタン：一撃必殺（最も近い敵に必中弾）
+	// ▼ RT：一撃必殺（最も近い敵に必中弾）
 	const bool pressed = (input->GetRightTrigger() > 128);
 
 	// 押している間：ホールド状態にする（発射はしない）
 	if (pressed && canUseSpecial_ && enemy_ && !enemy_->IsDead()) {
-		rtHeld_ = true;
-		// ロックの見た目は Update() 側で既にONにしている
+		rtHeld_ = true; // ロックの見た目は Update() 側でON
 	}
 
 	// 離した瞬間：発射
@@ -327,6 +335,9 @@ void Player::HandleShooting() {
 			bullet->SetEnemy(enemy_);
 			bullet->SetPlayer(this);
 			bullet->SetSpecialAttack(true);
+
+			// ★ RT専用の軌跡
+			bullet->SetTrailGroup("trail_rt");
 
 			bullets_.push_back(std::move(bullet));
 
