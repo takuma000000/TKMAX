@@ -164,27 +164,96 @@ void BossEnemy::UpdatePhase() {
 	else phase_ = Phase::P1;
 }
 
-void BossEnemy::UpdateMovement(const Vector3& playerPos, const Vector3& /*playerVel*/) {
-	// フェーズが上がるほど軌道にゆらぎを入れて読みづらく
-	float rJit = (phase_ == Phase::P3 ? orbitR_Jitter_ * 1.0f : (phase_ == Phase::P2 ? orbitR_Jitter_ * 0.6f : orbitR_Jitter_ * 0.3f));
-	float omgJit = (phase_ == Phase::P3 ? orbitOmega_Jitter_ : (phase_ == Phase::P2 ? orbitOmega_Jitter_ * 0.6f : orbitOmega_Jitter_ * 0.3f));
+// BossEnemy.cpp
+void BossEnemy::UpdateMovement(const Vector3& playerPos, const Vector3& /*playerVel*/)
+{
+	// ===== 共通：近づきすぎ防止のパラメータ（距離ベースで柔らかく） =====
+	const float kNoCloseRad = 8.0f;  // プレイヤーにこれ以上近づかない半径
+	const float kPushFactor = 0.6f;  // 押し戻し係数
+	const float kArriveRad = arriveRadius_;
+	const float kMaxSpeedP3 = 1.2f;  // P3の見た目用スピード（往復）
+	const float kMaxSpeed = std::max(0.6f, maxSpeed_); // 既存値を尊重
+
+	if (phase_ == Phase::P3) {
+		// ─────────────────────────────────────────
+		// フェーズ3：決まった範囲を行ったり来たり（左右＋微小上下）
+		// ─────────────────────────────────────────
+		const float kCenterOffsetZ = 20.0f;  // プレイヤー前方に基準点
+		const float kRangeX = 18.0f;  // 左右幅
+		const float kRangeY = 3.0f;   // 上下ゆらぎ幅
+		const float kOmegaX = 0.05f;  // 左右往復速度
+		const float kOmegaY = 0.035f; // 上下ゆらぎ速度
+
+		// 適度に速く
+		theta_ += kOmegaX;
+
+		Vector3 center = playerPos + Vector3{ 0.0f, 0.0f, kCenterOffsetZ };
+		float offX = kRangeX * std::sinf(theta_);
+		float offY = kRangeY * std::sinf(theta_ * (kOmegaY / kOmegaX) + 1.2345f);
+		Vector3 target = center + Vector3{ offX, offY, 0.0f };
+
+		// 近づきすぎ防止（距離ベース）
+		{
+			Vector3 posToPlayer = GetWorldPosition() - playerPos;
+			float   d = MyMath::Length(posToPlayer);
+			if (d < kNoCloseRad && d > 1e-4f) {
+				Vector3 pushDir = MyMath::Normalize(posToPlayer);
+				target += pushDir * (kNoCloseRad - d) * kPushFactor;
+			}
+		}
+
+		// 到達減速
+		Vector3 pos = GetWorldPosition();
+		Vector3 toT = target - pos;
+		float   dist = MyMath::Length(toT);
+
+		Vector3 desired = (dist > 1e-4f) ? MyMath::Normalize(toT) * kMaxSpeedP3 : Vector3{ 0,0,0 };
+		if (dist < kArriveRad) desired *= (dist / kArriveRad);
+
+		pos += desired;
+		SetPosition(pos);
+		return;
+	}
+
+	// ─────────────────────────────────────────
+	// P1 / P2：前方オフセット中心に“ゆる円”で周回しつつ到達減速
+	// （既存パラメータを活かす）
+	// ─────────────────────────────────────────
+	// フェーズでゆらぎを控えめ〜普通に
+	float rJit = (phase_ == Phase::P2 ? orbitR_Jitter_ * 0.6f : orbitR_Jitter_ * 0.3f);
+	float omgJit = (phase_ == Phase::P2 ? orbitOmega_Jitter_ * 0.6f : orbitOmega_Jitter_ * 0.3f);
 
 	float r = orbitR_ + (Rand01() * 2.0f - 1.0f) * rJit;
 	float omg = orbitOmega_ + (Rand01() * 2.0f - 1.0f) * omgJit;
 
+	// 角度進行（速すぎる初期値のときでもジッターで多少なら馴染む）
 	theta_ += omg;
 
-	Vector3 ring = { r * cosf(theta_), 0.0f, r * sinf(theta_) };
-	Vector3 target = playerPos + ring;
+	// 円の中心を少し前に（既存の dzMin_ を利用）
+	Vector3 center = playerPos + Vector3{ 0.0f, 0.0f, dzMin_ };
 
-	if (target.z < playerPos.z + dzMin_) target.z = playerPos.z + dzMin_;
+	// 円周上の相対位置（XZ）
+	Vector3 ring = { r * std::cos(theta_), 0.0f, r * std::sin(theta_) };
+	Vector3 target = center + ring;
 
+	// 近づきすぎ防止（距離ベース）
+	{
+		Vector3 posToPlayer = GetWorldPosition() - playerPos;
+		float   d = MyMath::Length(posToPlayer);
+		if (d < kNoCloseRad && d > 1e-4f) {
+			Vector3 pushDir = MyMath::Normalize(posToPlayer);
+			target += pushDir * (kNoCloseRad - d) * kPushFactor;
+		}
+	}
+
+	// 到達減速でスムーズに
 	Vector3 pos = GetWorldPosition();
 	Vector3 toT = target - pos;
-	float dist = MyMath::Length(toT);
+	float   dist = MyMath::Length(toT);
 
-	Vector3 desired = (dist > 0.001f) ? MyMath::Normalize(toT) * maxSpeed_ : Vector3{ 0,0,0 };
-	if (dist < arriveRadius_) desired = desired * (dist / arriveRadius_);
+	Vector3 desired = (dist > 1e-4f) ? MyMath::Normalize(toT) * kMaxSpeed : Vector3{ 0,0,0 };
+	if (dist < kArriveRad) desired *= (dist / kArriveRad);
+
 	pos += desired;
 	SetPosition(pos);
 }

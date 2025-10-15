@@ -54,4 +54,12 @@ struct Vector3 final {
 		this->z += other.z;
 		return *this; // 自分自身を返す
 	}
+
+	// スカラー乗算代入演算子
+	Vector3& operator*=(float scalar) {
+		this->x *= scalar;
+		this->y *= scalar;
+		this->z *= scalar;
+		return *this;
+	}
 };
