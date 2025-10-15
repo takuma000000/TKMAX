@@ -468,25 +468,39 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 		float b = 1.0f - 0.3f * sin(hue * 3.142f);
 		p.color = { r, g, b, 1.0f };
 	} else if (groupName == "jetSmoke") {
-		// ※ここを強化
-		std::uniform_real_distribution<float> velX(-0.05f, 0.05f); // わずかな横ブレ
-		std::uniform_real_distribution<float> velY(0.10f, 0.25f);  // やや上向き
-		std::uniform_real_distribution<float> velZ(-45.0f, -25.0f); // 後方へ一気に（画面手前へ）
-
+		std::uniform_real_distribution<float> velX(-0.05f, 0.05f);
+		std::uniform_real_distribution<float> velY(0.10f, 0.25f);
+		std::uniform_real_distribution<float> velZ(-45.0f, -25.0f);
 		p.velocity = { velX(rng), velY(rng), velZ(rng) };
 
 		std::uniform_real_distribution<float> scl(0.5f, 1.0f);
 		float sc = scl(rng);
 		p.transform.scale = { sc, sc, sc };
 
-		// 尾を保つために寿命を延ばす
 		p.lifeTime = std::uniform_real_distribution<float>(1.5f, 2.5f)(rng);
 		p.currentTime = 0.0f;
 
-		// グレイの煙
-		std::uniform_real_distribution<float> gray(0.6f, 0.8f);
-		float c = gray(rng);
-		p.color = { c, c, c, 1.0f };
+		// --- ランダムカラー煙：温～冷まで ---
+		// 0.0 = 灰 (冷) ～ 1.0 = オレンジ白 (温)
+		float hueType = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+
+		Vector3 col3;
+		if (hueType < 0.33f) {
+			// 冷たい灰～青系
+			col3 = { 0.75f, 0.78f, 0.85f };
+		} else if (hueType < 0.66f) {
+			// 標準的な白煙（少し黄味）
+			col3 = { 0.88f, 0.86f, 0.80f };
+		} else {
+			// 暖かいオレンジ～クリーム系
+			col3 = { 0.95f, 0.90f, 0.82f };
+		}
+
+		// 明度を少しランダムに
+		float brightness = std::uniform_real_distribution<float>(0.8f, 1.0f)(rng);
+		col3 = col3 * brightness;
+
+		p.color = { col3.x, col3.y, col3.z, 1.0f };
 	} else if (groupName == "bulletTrail") {
 		// ─ 弾の光の尾 ─
 		std::uniform_real_distribution<float> velX(-0.05f, 0.05f);
