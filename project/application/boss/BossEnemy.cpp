@@ -244,32 +244,38 @@ void BossEnemy::UpdateMovement(const Vector3& playerPos, const Vector3& /*player
 	}
 
 	// =========================
-	// P2: 前方オフセット中心の“ゆる円”
-	// =========================
-	{
-		float rJit = orbitR_Jitter_ * 0.6f;
-		float omgJit = orbitOmega_Jitter_ * 0.6f;
+// P2: 決まった範囲で左右往復（ゆっくり）
+// =========================
+	if (phase_ == Phase::P2) {
+		// 左右往復の進行
+		theta_ += p2OmegaX_;
 
-		float r = orbitR_ + (Rand01() * 2.0f - 1.0f) * rJit;
-		float omg = 0.05f + (Rand01() * 2.0f - 1.0f) * omgJit; // 見やすい角速度
-		const float kMaxSpeed = std::max(0.8f, maxSpeed_);
-		const float kArrive = arriveRadius_;
-
-		theta_ += omg;
-
+		// 目標の中心は「プレイヤーの少し前」
 		Vector3 center = playerPos + Vector3{ 0.0f, 0.0f, dzMin_ };
-		Vector3 ring = { r * std::cosf(theta_), 0.0f, r * std::sinf(theta_) };
-		Vector3 target = center + ring;
+
+		// 左右 & 上下のオフセット（左右は往復、上下は微ゆらぎ）
+		float offX = p2RangeX_ * std::sinf(theta_);
+		float offY = p2RangeY_ * std::sinf(theta_ * (p2OmegaY_ / p2OmegaX_) + 0.73f);
+
+		Vector3 target = center + Vector3{ offX, offY, 0.0f };
+
+		// 到達減速つきのシーク
+		const float kMaxSpeed = p2MaxSpeed_;
+		const float kArrive = arriveRadius_;
 
 		Vector3 pos = GetWorldPosition();
 		Vector3 toT = target - pos;
 		float   dist = MyMath::Length(toT);
 
 		Vector3 desired = (dist > 1e-4f) ? MyMath::Normalize(toT) * kMaxSpeed : Vector3{ 0,0,0 };
-		if (dist < kArrive) desired = desired * (dist / kArrive);
+		if (dist < kArrive) {
+			desired = desired * (dist / kArrive);  // 線形減速
+		}
 		pos = pos + desired;
 		SetPosition(pos);
+		return;
 	}
+
 }
 
 

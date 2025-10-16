@@ -117,6 +117,12 @@ private:
 		int   chosen = 0; // 0:Beam,1:Fan,2:Rapid
 	} dbg_;
 
+	float p2RangeX_ = 12.0f;   // 左右幅（±）
+	float p2RangeY_ = 1.5f;    // 上下ゆらぎ
+	float p2OmegaX_ = 0.03f;   // 左右往復の角速度（遅め）
+	float p2OmegaY_ = 0.02f;   // 上下ゆらぎの角速度
+	float p2MaxSpeed_ = 0.8f;  // 追従（目標位置への移動）最大速度
+
 	// 直近履歴（視覚化）
 	static constexpr int kHist = 16;
 	std::array<int, kHist> history_{};
