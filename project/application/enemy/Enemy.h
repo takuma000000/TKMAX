@@ -66,13 +66,11 @@ public:
 		strafeLeft_ = left; strafeRight_ = right; strafeSpeed_ = speed;
 		if (strafePosX_ == 0.0f) strafePosX_ = left;
 	}
-	void SetPlayerRef(const Vector3* playerPos) { playerPos_ = playerPos; } // 追尾用（参照だけ）
-
+	void SetPlayerRef(const Vector3* playerPos) { playerPos_ = playerPos; } // 追尾用
 	// 将来の発射フック（今は未使用）
 	void SetCanShoot(bool v, float interval) { canShoot_ = v; shootInterval_ = interval; }
-
 	void SetPlayer(std::function<Vector3()> getter) { playerGetter_ = std::move(getter); }
-
+	void SetSinePhase(float rad) { sinePhase_ = rad; }
 	BaseScene* GetParentScene() const { return parentScene_; }
 
 private:
@@ -119,4 +117,6 @@ private:
 	float shootTimer_ = 0.0f;
 
 	std::function<Vector3()> playerGetter_;
+
+	float sinePhase_ = 0.0f;  // SineX用の位相(ラジアン)
 };

@@ -615,16 +615,25 @@ void GameScene::SpawnCurrentWave() {
 		break;
 	}
 	case WavePhase::W2: {
-		// W2: サイン蛇行で避けにくく
+		// W2: サイン蛇行で避けにくく（重なり防止で位相＆停止Zを個体別にオフセット）
+		int idx = 0;                 // 個体インデックス（ラムダ内でインクリメント）
+		const float phaseStep = 0.7f; // 位相刻み（ラジアン）
+		const float stopStep = 0.6f; // 停止Zのズラし量
+
 		EnemySpawner::SpawnV(
 			enemies_, 3, /*y*/6.0f, /*z*/80.0f, 0.0f, 8.0f, 6.0f,
 			dxCommon, camPtr, this,
 			[&](Enemy& e) {
 				e.SetBehavior(EnemyBehavior::SineX);
 				e.SetVelocity({ 0,0,-0.22f });
-				e.SetStopZ(32.0f);
 				e.SetSineParams(/*ampX*/6.0f, /*freq*/1.6f);
+
+				// ★ここが追加：個体ごとに位相と停止Zを少しずつズラす
+				e.SetSinePhase(phaseStep * float(idx));
+				e.SetStopZ(32.0f + stopStep * float(idx % 3));
+
 				e.SetHP(3);
+				++idx;
 			}
 		);
 		maxEnemyCount_ += 7; // 中央1 + 左右3*2

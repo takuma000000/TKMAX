@@ -31,7 +31,7 @@ void Enemy::Update() {
 	case EnemyBehavior::SineX: {
 		t_ += 0.05f;
 		pos.z += velocity_.z; // 手前へ
-		pos.x = startX_ + std::sinf(t_ * sineFreq_) * sineAmpX_;
+		pos.x = startX_ + std::sinf(sinePhase_ + t_ * sineFreq_) * sineAmpX_;
 		if (pos.z <= stopZ_) { pos.z = stopZ_; }
 		break;
 	}
