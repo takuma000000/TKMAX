@@ -76,7 +76,7 @@ void PlayerBullet::Update() {
 	}
 
 	// 一定距離（Z方向）を超えたら弾を削除する
-	if (pos.z > 100.0f) {
+	if (pos.z > 50.0f) {
 		isDead_ = true;
 	}
 
