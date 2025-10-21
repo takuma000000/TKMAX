@@ -67,6 +67,16 @@ void GameScene::Initialize()
 	irisScale_ = irisStartScale_;
 	iris_->SetSize({ irisScale_, irisScale_ });
 	irisTween_.Reset(/*start*/ irisMaxScale_, /*end*/ 0.0f, /*sec*/ 0.8f, Ease::Type::OutBack);
+
+	// ゲームスタート文字
+	startSprite_ = std::make_unique<Sprite>();
+	startSprite_->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/start.png");
+	startSprite_->SetAnchorPoint({ 0.5f, 0.5f }); // 中央基準
+	startSprite_->SetPosition({ startStartPos_.x, startStartPos_.y });
+	startSprite_->SetSize({ 100, 100 }); // 画像サイズに合わせ調整
+	startSprite_->SetColor({ 1,1,1,1 }); // アルファ1で開始
+	startTween_.Reset(0.0f, 1.0f, startDuration_, Ease::Type::OutBack);
+
 }
 
 void GameScene::Finalize()
@@ -190,6 +200,101 @@ void GameScene::Update()
 		if (irisTween_.Finished()) {
 			irisOpening_ = false;
 		}
+
+		// ── カメラインロ：アイリスが終わったら一度だけ回転ツイーンを開始 ──
+		if (!irisOpening_ && !camIntroActive_ && !camIntroDone_) {
+			camIntroActive_ = true;
+			// 横向き（camYawStart_）→ 正面（camYawEnd_）へ、OutBackで camIntroDuration_ 秒
+			camYawTween_.Reset(camYawStart_, camYawEnd_, camIntroDuration_, Ease::Type::OutBack);
+		}
+	}
+
+	// ── カメラインロ：ツイーンでカメラ回転を更新 ──
+	if (camIntroActive_) {
+		// 60FPS想定の固定デルタ。可変デルタがあるなら dt を使ってOK
+		const float delta = 0.016f;
+
+		float yawNow = camYawTween_.Update(delta);
+
+		// 進捗0..1を安全に出す
+		float denom = std::max(0.0001f, (camYawEnd_ - camYawStart_));
+		float t01 = std::clamp((yawNow - camYawStart_) / denom, 0.0f, 1.0f);
+
+		// ピッチも少しだけ動かしたい場合（固定で良ければ start=end に）
+		float pitchNow = MyMath::Lerp(camPitchStart_, camPitchEnd_, t01);
+
+		// カメラの回転を適用（位置は従来のFollowでOK）
+		camera->SetRotate({ pitchNow, yawNow, 0.0f });
+
+		if (camYawTween_.Finished()) {
+			camIntroActive_ = false;
+			camIntroDone_ = true;
+			// 念のため最終姿勢を明示
+			camera->SetRotate({ camPitchEnd_, camYawEnd_, 0.0f });
+		}
+	}
+
+	// --- カメラアクションが終わったら、start.png を一度だけ出す ---
+	if (camIntroDone_ && !startPlayed_) {
+		startPlayed_ = true;          // 二度目以降は発火させない
+		startVisible_ = true;
+		startSlideIn_ = true;
+		startFadeOut_ = false;        // 念のためリセット
+		startHoldElapsed_ = 0.0f;
+		startAlpha_ = 1.0f;
+		startSprite_->SetColor({ 1,1,1,startAlpha_ });
+		startSprite_->SetPosition({ startStartPos_.x, startEndPos_.y });
+		startTween_.Reset(0.0f, 1.0f, startDuration_, Ease::Type::OutBack);
+	}
+
+	// スライドイン
+	if (startSlideIn_) {
+		startT_ = startTween_.Update(dt);
+
+		// 発光：滑り込み中は PI を1周して明→通常へ
+		if (startGlowOn_) {
+			float glow = 1.0f + startGlowAmp_ * std::sin(startT_ * MyMath::GetPI());
+			startSprite_->SetColor({ glow, glow, glow, startAlpha_ });          // 発光を白成分で乗算
+		} else {
+			startSprite_->SetColor({ 1,1,1,startAlpha_ });
+		}
+
+		float x = MyMath::Lerp(startStartPos_.x, startEndPos_.x, startT_);
+		float y = startEndPos_.y;
+		startSprite_->SetPosition({ x, y });
+		startSprite_->Update();
+
+		if (startTween_.Finished()) {
+			startSlideIn_ = false;
+			startHoldElapsed_ = 0.0f; // 到着後の静止タイマー開始
+		}
+	} else if (startVisible_) {
+
+		// 中央での呼吸発光（だんだん弱くなる）
+		if (!startFadeOut_ && startGlowOn_) {
+			float t01 = (startHoldSec_ > 0.0f) ? std::min(startHoldElapsed_ / startHoldSec_, 1.0f) : 1.0f;
+			float decay = 1.0f - 0.7f * t01; // 経過で発光を弱める
+			float glow = 1.0f + decay * 0.20f * std::sin(startHoldElapsed_ * startGlowSpeed_);
+			startSprite_->SetColor({ glow, glow, glow, startAlpha_ });
+		}
+
+		// 到着後：静止→フェードアウト
+		if (!startFadeOut_) {
+			startHoldElapsed_ += dt;
+			if (startHoldElapsed_ >= startHoldSec_) {
+				startFadeOut_ = true;
+			}
+		}
+		if (startFadeOut_) {
+			startAlpha_ -= dt / startFadeSec_;
+			if (startAlpha_ <= 0.0f) {
+				startAlpha_ = 0.0f;
+				startVisible_ = false; // 完全に消す
+				gameplayLocked_ = false; // ゲームプレイ解放
+			}
+			startSprite_->SetColor({ 1,1,1,startAlpha_ });
+		}
+		startSprite_->Update();
 	}
 
 	// その他のオブジェクト・パーティクルの更新
@@ -224,10 +329,14 @@ void GameScene::Draw()
 	if (skybox_) skybox_->Draw();
 	ParticleManager::GetInstance()->Draw();
 
+	SpriteCommon::GetInstance()->DrawSetCommon();
 	// ---- 最前面の白円は Sprite パスで最後に描く ----
 	if (irisOpening_ && iris_) {
-		SpriteCommon::GetInstance()->DrawSetCommon();
 		iris_->Draw();
+	}
+
+	if (startVisible_) {
+		startSprite_->Draw();
 	}
 }
 
@@ -262,6 +371,7 @@ void GameScene::LoadTextures()
 	TextureManager::GetInstance()->LoadTexture("./resources/test.dds");
 	TextureManager::GetInstance()->LoadTexture("./resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
 	TextureManager::GetInstance()->LoadTexture("./resources/Ground.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/start.png");
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -321,7 +431,7 @@ void GameScene::InitializeObjects()
 void GameScene::InitializeCamera()
 {
 	camera = std::make_unique<Camera>();
-	camera->SetRotate({ 0.0f,0.0f,0.0f });
+	camera->SetRotate({ camPitchStart_, camYawStart_, 0.0f });
 	camera->SetTranslate({ 0.0f,0.0f,-30.0f });
 
 	ground_ = nullptr; // 既存は使わない（誤参照防止）

@@ -178,8 +178,44 @@ private:
 	// 花火用
 	bool  emitFireworkPending_ = false; // 花火を出すか
 	float emitFireworkDelaySec_ = 0.7f; // 開始から何秒遅らせるか（お好み）
-	float emitFireworkElapsed_ = 0.0f; // 経過時間
+	float emitFireworkElapsed_ = 0.0f; // 経過時間 
 	Vector3 lastEmitPos_ = { 0.0f, 0.0f, 0.0f }; // 最後にエフェクトを出した位置
+
+	std::unique_ptr<Sprite> startSprite_;  // 「ゲームスタート」スプライト
+	float startT_ = 0.0f;                  // イージング進行度(0→1)
+	bool startSlideIn_ = false;             // スライド中フラグ
+	bool startVisible_ = false; // 表示も最初はしない（演出終了後に出す）
+	bool startPlayed_ = false; // 一度だけ出すためのフラグ
+	Vector2 startStartPos_ = { WindowsAPI::kClientWidth + 400.0f, WindowsAPI::kClientHeight * 0.5f }; // 右外
+	Vector2 startEndPos_ = { WindowsAPI::kClientWidth * 0.5f, WindowsAPI::kClientHeight * 0.5f };   // 中央
+	Ease::Tween startTween_;               // イージング
+	float startDuration_ = 1.0f;           // アニメ時間
+	float startHoldSec_ = 5.0f;     // 中央で静止して見せる時間(秒)
+	float startHoldElapsed_ = 0.0f; // 経過
+	bool  startFadeOut_ = false;    // フェードアウト中か
+	float startFadeSec_ = 0.6f;     // フェード時間(秒)
+	float startAlpha_ = 1.0f;       // 現在アルファ
+
+	float startGlowAmp_ = 0.8f;  // どれだけ明るくオーバーシュートするか（0.3～0.8目安）
+	float startGlowSpeed_ = 10.0f; // 中央到達後の“呼吸”スピード
+	bool  startGlowOn_ = true;  // ON/OFF
+
+	// ゲーム開始ロック：true の間は敵/プレイヤー/弾など一切更新しない
+	bool gameplayLocked_ = true;
+
+	// --- ここから追加: カメラインロ用 ---
+	bool  camIntroActive_ = false;   // いま回転中か
+	bool  camIntroDone_ = false;   // 一度やったら終了
+	Ease::Tween camYawTween_;        // ヨー回転用ツイーン(スカラー)
+	float camIntroDuration_ = 1.2f;  // かけたい時間(秒)
+
+	// 始点/終点角度（お好みで調整）
+	float camYawStart_ = -1.2f;    // 開始時に横を向かせる（-約69度）
+	float camYawEnd_ = 0.0f;     // 最終的に+Zを向く前提(=0)
+
+	// ピッチを少しだけ変化させたいなら
+	float camPitchStart_ = 0.12f;    // ほんのり俯瞰で始める
+	float camPitchEnd_ = 0.05f;    // 少しだけ水平へ
 
 };
 
