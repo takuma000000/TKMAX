@@ -42,6 +42,12 @@ public:
 		AABB area;//範囲
 	};
 
+	/// <summary>
+	/// <summary>AABBと点の当たり判定を行う関数。</summary>
+	/// </summary>
+	/// <param name="aabb"></param>
+	/// <param name="point"></param>
+	/// <returns></returns>
 	bool IsCollision(const AABB& aabb, const Vector3& point) {
 		return (point.x >= aabb.min.x && point.x <= aabb.max.x) &&
 			(point.y >= aabb.min.y && point.y <= aabb.max.y) &&
@@ -74,43 +80,73 @@ public:
 	};
 
 
+	///<summary>ParticleManagerのインスタンスを取得します。</summary>
 	static ParticleManager* GetInstance();
 
+	/// <summary>
+	/// <summary>ParticleManagerを初期化します。</summary>
+	/// </summary>
+	/// <param name="dxCommon"></param>
+	/// <param name="srvManager"></param>
+	/// <param name="camera"></param>
 	void Initialize(DirectXCommon* dxCommon, SrvManager* srvManager, Camera* camera);
 
+	///<summary>ParticleManagerの終了処理を行います。</summary>
 	void Update();
-
+	///<summary>ParticleManagerの描画処理を行います。</summary>
 	void Draw();
 
 	//パイプライン生成
+	/// <summary>パイプラインを生成します。</summary>
 	void CreatePipeline();
 	//ルートシグネイチャー
+	/// <summary>ルートシグネチャーを生成します。</summary>
 	void CreateRootSigunature();
 	//VertexData
+	/// <summary>頂点データを初期化します。</summary>
 	void InitializeVD();
 	//VertexResource
+	/// <summary>頂点リソースを生成します。</summary>
 	void CreateVR();
+	/// <summary>頂点バッファビューを生成します。</summary>
 	//VertexBufferView
 	void CreateVB();
+	/// <summary>マテリアルリソースを生成します。</summary>
 	//Resource
 	void WriteResource();
 
 	//パーティクルグループの作成
+	/// <summary>パーティクルグループを作成します。</summary>
 	void CreateParticleGroup(const std::string& name, const std::string& textureFilePath, ParticleType type);
 
 	//billboardマトリクスの計算
+	/// <summary>ビルボードマトリクスを作成します。</summary>
 	void MakeBillboardMatrix();
 
 	//パーティクルの発生
+	/// <summary>パーティクルを発生させます。</summary>
 	void Emit(const std::string name, Vector3& pos, uint32_t count);
 
+	/// <summary>
+	/// <summary>パーティクルグループの取得。</summary>
+	/// </summary>
+	/// <returns></returns>
 	std::unordered_map<std::string, ParticleGroup> GetParticleGroups() { return particleGroups; }
 
+	/// <summary>
+	/// <summary>新しいパーティクルを作成します。</summary>
+	/// </summary>
+	/// <param name="randomEngine"></param>
+	/// <param name="groupName"></param>
+	/// <param name="translate"></param>
+	/// <returns></returns>
 	Particle MakeNewParticle(std::mt19937& randomEngine, const std::string& groupName, const Vector3& translate);
 
 	//Ring関数
+	/// <summary>リング頂点を作成します。</summary>
 	void CreateRingVertices();
 	//Cylinder関数
+	/// <summary>シリンダー頂点を作成します。</summary>
 	void CreateCylinderVertices();
 
 private:

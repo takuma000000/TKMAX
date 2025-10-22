@@ -31,9 +31,13 @@ class TitleScene : public BaseScene
 public:
 	TitleScene(DirectXCommon* dxCommon, SrvManager* srvManager) : dxCommon(dxCommon), srvManager(srvManager) {}
 
+	/// <summary>タイトルシーンを初期化します。</summary>
 	void Initialize() override;
+	/// <summary>タイトルシーンを終了します。</summary>
 	void Finalize() override;
+	/// <summary>タイトルシーンを更新します。</summary>
 	void Update() override;
+	/// <summary>タイトルシーンを描画します。</summary>
 	void Draw() override;
 
 private:

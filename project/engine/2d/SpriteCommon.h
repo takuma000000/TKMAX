@@ -10,25 +10,31 @@ class SpriteCommon
 {
 
 public://メンバ関数...初期化
-
+	/// <summary>シングルトンインスタンスを取得します。</summary>
 	static SpriteCommon* instance;
 	//シングルトンインスタンスの取得
 	static SpriteCommon* GetInstance();
 
+	/// <summary>スプライト共通機能を初期化します。</summary>
+	/// <param name="dxCommon">DirectX共通。</param>
 	void Initialize(DirectXCommon* dxCommon);
-
+	/// <summary>スプライト共通機能を終了します。</summary>
 	void Finalize();
 
 	//共通描画設定
+	/// <summary>スプライト描画の共通設定を行います。</summary>
 	void DrawSetCommon();
 
 private://メンバ関数
 	//ルートシグネチャの生成
+	/// <summary>ルートシグネチャを生成します。</summary>
 	void GenerateRootSignature();
 	//グラフィックスパイプラインの生成
+	/// <summary>グラフィックスパイプラインを生成します。</summary>
 	void GenerateGraficsPipeline();
 
 public://getter
+	/// <summary>DirectXCommonのゲッター。</summary>
 	DirectXCommon* GetDxCommon() const { return dxCommon_; }
 
 private:

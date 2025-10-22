@@ -18,14 +18,24 @@
 //=============================================================
 class Player {
 public:
+
+	/// <summary>プレイヤーを初期化します。</summary>
+	/// <param name="common">Object3d共通。</param>
+	/// <param name="dxCommon">DirectX共通。</param>
 	void Initialize(Object3dCommon* common, DirectXCommon* dxCommon);
+	/// <summary>プレイヤーを更新します。</summary>
 	void Update();
+	/// <summary>プレイヤーを描画します。</summary>
 	void Draw(DirectXCommon* dxCommon);
+	/// <summary>デバッグ用ImGui表示。</summary>
 	void ImGuiDebug();
 
+	/// <summary>敵が死亡していたらリストから削除します。</summary>
 	void RemoveEnemyIfDead();
+	/// <summary>一撃必殺を使用可能にします。</summary>
 	void EnableSpecialAttack() { canUseSpecial_ = true; } // 一撃必殺を使用可能にする
 
+	/// <summary>敵が破壊されたときの処理。</summary>
 	void OnEnemyDestroyed(Enemy* e) {
 		if (enemy_ == e) {
 			enemy_ = nullptr;
@@ -38,14 +48,17 @@ public:
 		}
 	}
 
+	/// <summary>弾のリストを取得します。</summary>
 	const std::list<std::unique_ptr<PlayerBullet>>& GetBullets() const {
 		return bullets_;
 	}
 
+	/// <summary>プレイヤーの位置を取得します。</summary>
 	Vector3 GetPosition() const {
 		return object_ ? object_->GetTranslate() : Vector3();
 	}
 
+	/// <summary>カメラを設定します。</summary>
 	void SetCamera(Camera* camera) 
 	{
 		this->camera = camera;
@@ -53,19 +66,28 @@ public:
 			object_->SetCamera(camera);
 		}
 	}
+	/// <summary>プレイヤーの位置を設定します。</summary>
 	void SetPosition(const Vector3& pos);
+	/// <summary>親シーンを設定します。</summary>
 	void SetParentScene(BaseScene* parentScene);
+	/// <summary>敵を設定します。</summary>
 	void SetEnemy(Enemy* enemy) { enemy_ = enemy; }
+	/// <summary>全敵リストを設定します。</summary>
 	void SetAllEnemies(std::vector<std::unique_ptr<Enemy>>* enemies) {
 		allEnemies_ = enemies;
 	}
+	/// <summary>カメラシェイクを開始します。</summary>
 	void StartCameraShake(int frameCount);
 
 private:
 
+	/// <summary>ゲームパッドの入力に基づいてプレイヤーを移動させます。</summary>
 	void HandleGamePadMove();
+	/// <summary>カメラ制御を処理します。</summary>
 	void HandleCameraControl();
+	/// <summary>追従カメラを処理します。</summary>
 	void HandleFollowCamera();
+	/// <summary>射撃処理を行います。</summary>
 	void HandleShooting();
 
 	Camera* camera = nullptr;

@@ -114,24 +114,41 @@ public://メンバ関数
 	Object3d();
 	~Object3d();
 
+	/// <summary>初期化を行います。</summary>
+	/// <param name="object3dCommon">3D共通。</param>
+	/// <param name="dxCommon">DirectX共通。</param>
 	void Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommon);
+	/// <summary>更新処理を行います。</summary>
 	void Update();
+	/// <summary>更新処理を行います。</summary>
 	void Draw(DirectXCommon* dxCommon);
+	/// <summary>更新処理を行います。</summary>
 	void SetModel(const std::string& filePath);
 
 public:
 	//getter
+	/// <summary>スケール、回転、平行移動の取得。</summary>
 	const Vector3& GetScale() const { return transform.scale; }
+	/// <summary>回転の取得。</summary>
 	const Vector3& GetRotate() const { return transform.rotate; }
+	/// <summary>平行移動の取得。</summary>
 	const Vector3& GetTranslate() const { return transform.translate; }
+	/// <summary>アクティブオブジェクト数の取得。</summary>
 	static int GetActiveCount() { return activeCount_; }
 	//setter
+	/// <summary>スケール、回転、平行移動の設定。</summary>
 	void SetScale(const Vector3& scale) { this->transform.scale = scale; }
+	/// <summary>回転の設定。</summary>
 	void SetRotate(const Vector3& rotate) { this->transform.rotate = rotate; }
+	/// <summary>平行移動の設定。</summary>
 	void SetTranslate(const Vector3& translate) { this->transform.translate = translate; }
+	/// <summary>モデルの設定。</summary>
 	void SetModel(Model* model) { this->model_ = model; }
+	/// <summary>カメラの設定。</summary>
 	void SetCamera(Camera* camera) { this->camera = camera; }
+	/// <summary>親シーンの設定。</summary>
 	void SetParentScene(BaseScene* parentScene);
+	/// <summary>環境マップの設定。</summary>
 	void SetEnvironment(const std::string& filename);
 
 private:
@@ -144,8 +161,14 @@ private:
 	ModelData modelData;
 
 	//.mtlファイル読み込み
+	/// <summary>.mtlファイルを読み込みます。</summary>
+	/// <param name="directoryPath">ディレクトリパス。</param>
+	/// /// <param name="filename">ファイル名。</param>
 	static MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
 	//.objファイル読み込み
+	/// <summary>.objファイルを読み込みます。</summary>
+	/// <param name="directoryPath">ディレクトリパス。</param>
+	/// /// <param name="filename">ファイル名。</param>
 	static ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename);
 
 	//頂点リソースを作る
@@ -194,20 +217,36 @@ private:
 
 
 	//VertexResource関数
+	///<summary>頂点リソースを作成します。</summary>
+	///<param name="dxCommon">DirectX共通。</param>
 	void VertexResource(DirectXCommon* dxCommon);
 	//materialResource関数
+	///<summary>マテリアルリソースを作成します。</summary>
+	///<param name="dxCommon">DirectX共通。</param>
 	void MaterialResource(DirectXCommon* dxCommon);
 	//wvpResource関数
+	///<summary>WVPリソースを作成します。</summary>
+	///<param name="dxCommon">DirectX共通。</param>
 	void WVPResource(DirectXCommon* dxCommon);
 	//cameraResource関数
+	///<summary>カメラリソースを作成します。</summary>
+	///<param name="dxCommon">DirectX共通。</param>
 	void CameraResource(DirectXCommon* dxCommon);
 	//Light関数
+	///<summary>ライトリソースを作成します。</summary>
+	///<param name="dxCommon">DirectX共通。</param>
 	void Light(DirectXCommon* dxCommon);
 	//PointLight関数
+	///<summary>Pointライトリソースを作成します。</summary>
+	///<param name="dxCommon">DirectX共通。</param>
 	void PointLight(DirectXCommon* dxCommon);
 	//SpotLight関数
+	///<summary>Spotライトリソースを作成します。</summary>
+	///<param name="dxCommon">DirectX共通。</param>
 	void SpotLight(DirectXCommon* dxCommon);
 	//Environment関数
+	///<summary>環境マップリソースを作成します。</summary>
+	///<param name="dxCommon">DirectX共通。</param>
 	void Environment(DirectXCommon* dxCommon);
 
 	Transform transform;

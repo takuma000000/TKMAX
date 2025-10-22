@@ -21,8 +21,10 @@ private:
 	ModelData modelData;
 
 	// .mtlファイル読み込み
+	/// <summary>.mtlファイルを読み込みます。</summary>
 	static MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
 	// .objファイル読み込み
+	/// <summary>.objファイルを読み込みます。</summary>
 	static ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename);
 
 	// 頂点リソースを作る
@@ -38,8 +40,10 @@ private:
 	Material* materialData = nullptr;
 
 	// VertexResource関数
+	///<summary>頂点リソースを作成します。</summary>
 	void VertexResource(DirectXCommon* dxCommon);
 	// MaterialResource関数
+	///<summary>マテリアルリソースを作成します。</summary>
 	void MaterialResource(DirectXCommon* dxCommon);
 
 	// Transform情報
@@ -87,17 +91,29 @@ public://メンバ関数
 	}
 
 	// モデルの初期化
+	/// <summary>モデルを初期化します。</summary>
+	/// <param name="modelCommon">モデル共通。</param>
+	/// <param name="dxCommon">DirectX共通。</param>
+	/// <param name="directorypath">.obj のディレクトリ。</param>
+	/// <param name="filename">.obj ファイル名。</param>
 	void Initialize(ModelCommon* modelCommon, DirectXCommon* dxCommon, const std::string& directorypath, const std::string& filename);
 	// モデルを描画
+	/// <summary>モデルを描画します。</summary>
 	void Draw();
 
 	// getter
+	/// <summary>スケール、回転、平行移動の取得。</summary>
 	const Vector3& GetScale() const { return transform.scale; }
+	/// <summary>回転の取得。</summary>
 	const Vector3& GetRotate() const { return transform.rotate; }
+	/// <summary>平行移動の取得。</summary>
 	const Vector3& GetTranslate() const { return transform.translate; }
 
 	// setter
+	/// <summary>スケール、回転、平行移動の設定。</summary>
 	void SetScale(const Vector3& scale) { this->transform.scale = scale; }
+	/// <summary>回転の設定。</summary>
 	void SetRotate(const Vector3& rotate) { this->transform.rotate = rotate; }
+	/// <summary>平行移動の設定。</summary>
 	void SetTranslate(const Vector3& translate) { this->transform.translate = translate; }
 };

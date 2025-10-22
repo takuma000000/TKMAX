@@ -40,14 +40,22 @@ public:
 	GameScene(DirectXCommon* dxCommon, SrvManager* srvManager) : dxCommon(dxCommon), srvManager(srvManager) {}
 	~GameScene() = default;
 
+	/// <summary>ゲーム本編シーンを初期化します。</summary>
 	void Initialize() override;
+	/// <summary>ゲーム本編シーンを終了します。</summary>
 	void Finalize() override;
+	/// <summary>ゲーム本編シーンを更新します。</summary>
 	void Update() override;
+	/// <summary>ゲーム本編シーンを描画します。</summary>
 	void Draw() override;
 
+	/// <summary>ボス弾を生成して管理リストへ追加します。</summary>
 	void SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float speed, int damage, int lifeFrame);
+	/// <summary>最も近い敵を取得します。</summary>
 	Camera* GetCameraPtr() { return camera.get(); }
+	/// <summary>DirectXCommonを取得します。</summary>
 	DirectXCommon* GetDX() { return dxCommon; }
+	/// <summary>プレイヤーのポインタを取得します。</summary>
 	Player* GetPlayerPtr() { return player_.get(); }
 
 private:// ──────────────────── 初期化処理 ────────────────────
@@ -106,19 +114,26 @@ private: // ──────────────────── 更新�
 	void UpdateObjectTransform(std::unique_ptr<Object3d>& obj, const Vector3& translate, const Vector3& rotate, const Vector3& scale);
 
 	//メモリ使用量
+	/// <summary>メモリ使用量を計測・履歴化します。</summary>
 	void UpdateMemory();
-
+	/// <summary>敵群の更新を行います。</summary>
 	void UpdateEnemies();
+	/// <summary>最も近い敵を更新します。</summary>
 	void UpdateClosestEnemy();
+	/// <summary>敵の初期化を行います。</summary>
 	void InitializeEnemies();
 
 	// Wave管理 ===
 	enum class WavePhase { W1, W2, W3, Done };
 	WavePhase wavePhase_ = WavePhase::W1;
+	/// <summary>現在のwavePhase_に応じて敵をスポーンします。</summary>
 	void SpawnCurrentWave();   // 現在のwavePhase_に応じてスポーン
+	/// <summary>wavePhase_を進めます。</summary>
 	void GoToNextWave();       // wavePhase_を進める
 
+	/// <summary>スカイボックスのX回転を更新します。</summary>
 	void UpdateSkyboxRotationX(); // スカイボックスをX軸方向に回転
+	/// <summary>地面タイルのスクロールを更新します。</summary>
 	void UpdateGroundScroll(); // 地面タイルのスクロール更新
 
 private:
@@ -226,7 +241,5 @@ private:
 	bool irisClosing_ = false;
 	Ease::Tween irisCloseTween_;
 	float irisCloseScale_ = 0.0f;
-
-
 };
 

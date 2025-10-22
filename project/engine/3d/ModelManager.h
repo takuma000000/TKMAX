@@ -36,14 +36,23 @@ private:
 
 public:
 	//シングルトンインスタンスの取得
+	/// <summary>シングルトンインスタンスを取得します。</summary>
 	static ModelManager* GetInstance();
 	//終了
+	/// <summary>モデルマネージャを終了します。</summary>
 	void Finalize();
 	//初期化
+	/// <summary>モデルマネージャを初期化します。</summary>
+	/// <param name="dxCommon">DirectX共通。</param>
 	void Initialize(DirectXCommon* dxCommon);
 	//モデルのファイルに読み込み
+	/// <summary>モデルをファイルから読み込みます。</summary>
+	/// <param name="filePath">モデルファイルのパス。</param>
+	/// <param name="dxCommon">DirectX共通。</param>
 	void LoadModel(const std::string& filePath, DirectXCommon* dxCommon);
 	//モデルの検索
+	/// <summary>モデルを検索します。</summary>
+	/// <param name="filePath">モデルファイルのパス。</param>
 	Model* FindModel(const std::string& filePath);
 
 };

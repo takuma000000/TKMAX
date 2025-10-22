@@ -9,18 +9,37 @@
 class WindowsAPI
 {
 public://getter
+	/// <summary>
+	/// <para>HWNDを取得します。</para>
+	/// </summary>
+	/// <returns></returns>
 	HWND GetHwnd() const { return hwnd; }
+	/// <summary>
+	/// <para>HINSTANCEを取得します。</para>
+	/// </summary>
+	/// <returns></returns>
 	HINSTANCE GetHInstance() const { return wc.hInstance; }
 
 public://静的メンバ関数
+	/// <summary>
+	/// <para>ウィンドウプロシージャ</para>
+	/// </summary>
+	/// <param name="hwnd"></param>
+	/// <param name="msg"></param>
+	/// <param name="wparam"></param>
+	/// <param name="lparam"></param>
+	/// <returns></returns>
 	static LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
 public://メンバ関数
 	//初期化
+	/// <summary>ウィンドウを初期化します。</summary>
 	void Initialize();
 	//更新
+	/// <summary>ウィンドウを更新します。</summary>
 	void Update();
 	//終了
+	/// <summary>ウィンドウを終了します。</summary>
 	void Finalize();
 
 public://定数
@@ -30,6 +49,7 @@ public://定数
 
 public:
 	//メッセージの処理
+	/// <summary>メッセージの処理を行います。</summary>
 	bool ProcessMessage();
 
 private:

@@ -41,20 +41,26 @@ class AudioManager
 public:
 
 	// 初期化と終了
+	/// <summary>オーディオマネージャを初期化します。</summary>
 	void Initialize();
+	///<summary>オーディオマネージャを終了します。</summary>
 	void Finalize();
 
 	// 音声データの読み込み
+	/// <summary>音声データを読み込みます。</summary>
 	bool LoadSound(const std::string& key, const std::string& filename);
 
 	// 音声データの再生
+	/// <summary>音声データを再生します。</summary>
 	void PlaySound(const std::string& key);
 
 	// 音声データの解放
+	/// <summary>音声データを解放します。</summary>
 	void UnloadSound(const std::string& key);
 
 	static AudioManager* instance;
 	//シングルトンインスタンスの取得
+	/// <summary>シングルトンインスタンスを取得します。</summary>
 	static AudioManager* GetInstance();
 
 private:
@@ -65,6 +71,7 @@ private:
 	std::unordered_map<std::string, SoundData> soundMap;
 
 	// WAVファイル読み込み
+	/// <summary>WAVファイルを読み込みます。</summary>
 	SoundData LoadWaveFile(const std::string& filename);
 
 	////シングルトン-----------------------------------------------

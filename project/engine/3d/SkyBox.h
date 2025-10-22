@@ -19,14 +19,24 @@ class DirectXCommon;
 //=============================================================
 class Skybox {
 public:
+	/// <summary>スカイボックスを初期化します。</summary>
+	/// <param name="dxCommon">DirectX共通。</param>
+	/// <param name="srvManager">SRVマネージャ。</param>
+	/// <param name="texturePath">使用するキューブマップのパス。</param>
 	void Initialize(DirectXCommon* dxCommon, SrvManager* srvManager, const std::string& texturePath);
+	/// <summary>スカイボックスを描画します。</summary>
 	void Draw();
 
 	//ImGui
+	/// <summary>ImGuiでスカイボックスのパラメータを更新します。</summary>
 	void ImGuiUpdate();
 
+	///<summary>スカイボックスの位置、回転、スケールを設定します。</summary>
+	///<param name="position">位置ベクトル。</param>
 	void SetScale(const Vector3& scale) { scale_ = scale; }
+	///<param name="position">位置ベクトル。</param>
 	void SetCamera(Camera* camera) { camera_ = camera; }
+	///<param name="position">位置ベクトル。</param>
 	void SetRotation(const Vector3& rot) { rotation_ = rot; }
 
 	// 定数バッファ用構造体
@@ -88,11 +98,15 @@ private:
 	/// <summary>
 	/// 生成関数
 	/// </summary>
+	/// <param name="dxCommon">DirectX共通。</param>
 	void CreateVertexBuffer();// 頂点バッファ生成
+	/// <param name="srvManager">SRVマネージャ。</param>
 	void CreateRootSignature();// RootSignature生成
+	///<param name="texturePath">使用するキューブマップのパス。</param>
 	void CreatePipelineState();// PSO生成
 
 	//cameraResource関数
+	///<param name="dxCommon">DirectX共通。</param>
 	void CameraResource(DirectXCommon* dxCommon);
 
 };

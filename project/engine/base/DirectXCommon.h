@@ -26,58 +26,101 @@ public:
 	};
 
 	// -------------------- 初期化 --------------------
+	///<param name="windowsAPI">WindowsAPIクラスのポインタ</param>
+	///<summary>DirectXCommonの初期化を行う関数</summary>
 	void Initialize(WindowsAPI* windowsAPI);
+	///<summary>DirectXCommonの終了処理を行う関数</summary>
 	void InitializeDevice();
+	///<summary>DirectXCommonの終了処理を行う関数</summary>
 	void InitializeCommand();
+	///<summary>DirectXCommonの終了処理を行う関数</summary>
 	void InitializeRTV();
+	///<summary>DirectXCommonの終了処理を行う関数</summary>
 	void InitializeDSV();
+	///<summary>DirectXCommonの終了処理を行う関数</summary>
 	void InitializeFence();
+	///<summary>DirectXCommonの終了処理を行う関数</summary>
 	void InitializeViewport();
+	///<summary>DirectXCommonの終了処理を行う関数</summary>
 	void InitializeScissorRect();
 
 	// -------------------- 描画 --------------------
+	///<summary>描画前処理を行う関数</summary>
 	void PreDraw();
+	///<summary>描画後処理を行う関数</summary>
 	void PostDraw();
+	///<summary>DirectXCommonの終了処理を行う関数</summary>
 	void ImGuiDebug();
 
 	// -------------------- デスクリプタヒープ生成 --------------------
+	///<summary>スワップチェーンの生成を行う関数</summary>
 	void GenerateSwapChain();
+	///<summary>レンダーターゲットビューの生成を行う関数</summary>
 	void GenerateZBuffer();
+	///<summary>デスクリプタヒープの生成を行う関数</summary>
 	void GenerateDescpitorHeap();
+	///<summary>DXCの生成を行う関数</summary>
 	void GenerateDXC();
 
 	// -------------------- リソース生成 --------------------
+	///<summary>バッファリソースの生成を行う関数</summary>
+	///<param name="sizeInBytes">バッファサイズ（バイト単位）</param>
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizeInBytes);
+	///<summary>テクスチャリソースの生成を行う関数</summary>
+	///<param name="metadata">テクスチャメタデータ</param>
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(const DirectX::TexMetadata& metadata);
+	///<summary>テクスチャデータのアップロードを行う関数</summary>
+	///<param name="texture">テクスチャリソース</param>
 	Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages);
+	///<summary>レンダーターゲット用テクスチャリソースの生成を行う関数</summary>
+	///<param name="width">テクスチャ幅</param>
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateRenderTextureResource(Microsoft::WRL::ComPtr<ID3D12Device>, uint32_t width, uint32_t height, DXGI_FORMAT format, const Vector4& clearColor);
+	///<summary>レンダーターゲットビューの生成を行う関数</summary>
 	void CreateRenderTextureResourceRTV();
+	///<summary>深度ビューの生成を行う関数</summary>
+	//<summary>深度SRVの生成を行う関数</summary>
 	void CreateDepthSRV();
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
 
 	// -------------------- シェーダ関連 --------------------
+	///<summary>シェーダのコンパイルを行う関数</summary>
+	///<param name="filePath">シェーダファイルのパス</param>
+	///<param name="profile">シェーダプロファイル</param>
 	Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(const std::wstring& filePath, const wchar_t* profile);
+	///<summary>ルートシグネチャの生成を行う関数</summary>
 	void CreateRootSignatureDX();
+	///<summary>パイプラインステートの生成を行う関数</summary>
 	void CreatePipelineStateDX();
 
 	// -------------------- Getter --------------------
+	///<summary>デバイスのゲッター</summary>
 	ID3D12Device* GetDevice() const { return device.Get(); }
+	///<summary>コマンドリストのゲッター</summary>
 	ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
+	///<summary>コマンドキューのゲッター</summary>
 	D3D12_VIEWPORT GetViewport() const { return viewport; }
+	///<summary>シザー矩形のゲッター</summary>
 	D3D12_RECT GetRect() const { return scissorRect; }
+	///<summary>デスクリプタサイズのゲッター</summary>
 	uint32_t GetDescriptorSizeRTV() const { return descriptorSizeRTV; }
+	///<summary>デスクリプタサイズのゲッター</summary>
 	uint32_t GetDescriptorSizeDSV() const { return descriptorSizeDSV; }
+	///<summary>デスクリプタサイズのゲッター</summary>
 	size_t GetBackBufferCount() const { return backBufferChange; }
+	///<summary>DSVハンドルのゲッター</summary>
 	D3D12_CPU_DESCRIPTOR_HANDLE GetDSVHandle() const {
 		return dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	}
+	///<summary>現在のRTVハンドルのゲッター</summary>
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentRTVHandle() const {
 		UINT index = swapChain->GetCurrentBackBufferIndex();
 		return rtvHandles[index];
 	}
 
 private:
+	///<summary>固定FPS制御の初期化を行う関数</summary>
 	void InitializeFixFPS();
+	///<summary>固定FPS制御の更新を行う関数</summary>
 	void UpdateFixFPS();
 
 	// -------------------- DirectX関連 --------------------

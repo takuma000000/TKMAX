@@ -11,6 +11,16 @@
 //=============================================================
 class BossBullet {
 public:
+
+	/// <summary>ボス弾を初期化します。</summary>
+	/// <param name="common">Object3d共通。</param>
+	/// <param name="dx">DirectX共通。</param>
+	/// <param name="cam">カメラ。</param>
+	/// <param name="pos">初期位置。</param>
+	/// <param name="dir">進行方向（正規化推奨）。</param>
+	/// <param name="speed">速度。</param>
+	/// <param name="damage">与ダメージ。</param>
+	/// <param name="lifeFrame">寿命フレーム。</param>
 	void Initialize(Object3dCommon* common, DirectXCommon* dx, Camera* cam,
 		const Vector3& pos, const Vector3& dir,
 		float speed, int damage, int lifeFrame) {
@@ -27,6 +37,7 @@ public:
 		life_ = lifeFrame;
 	}
 
+	/// <summary>弾を更新します（移動・寿命判定）。</summary>
 	void Update() {
 		if (dead_) return;
 		Vector3 p = obj_->GetTranslate();
@@ -38,13 +49,23 @@ public:
 		if (--life_ <= 0) dead_ = true;
 	}
 
+	/// <summary>弾を描画します。</summary>
+	/// <param name="dx">DirectX共通。</param>
 	void Draw(DirectXCommon* dx) {
 		if (!dead_) obj_->Draw(dx);
 	}
 
+	/// <summary>弾が消滅済みかを返します。</summary>
+	/// <returns>消滅なら true。</returns>
 	bool IsDead() const { return dead_; }
+
+	/// <summary>この弾のダメージ量を返します。</summary>
 	int  Damage()  const { return damage_; }
+
+	/// <summary>現在位置を返します。</summary>
 	const Vector3& GetPos() const { return obj_->GetTranslate(); }
+
+	/// <summary>当たり半径を返します。</summary>
 	float Radius() const { return 0.6f; } // 簡易当たり半径
 
 private:

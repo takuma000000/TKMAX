@@ -19,62 +19,95 @@ enum class EnemyBehavior {
 
 class Enemy {
 public:
+
+	/// <summary>敵を初期化します。</summary>
+	/// <param name="common">Object3d共通。</param>
 	void Initialize(Object3dCommon* common, DirectXCommon* dxCommon);
+
+	/// <summary>敵を更新します。</summary>
 	void Update();
+	/// <summary>敵を描画します。</summary>
 	void Draw(DirectXCommon* dxCommon);
+	/// <summary>デバッグ用ImGui表示。</summary>
 	void ImGuiDebug();
 
+	/// <summary>弾が当たったときの処理。</summary>
 	void OnHit(); // 弾が当たったとき呼ぶ
+	/// <summary>特殊攻撃でダメージを指定して当たったときの処理。</summary>
 	void OnHitWithDamage(int damage); // 特殊攻撃（ダメージ指定）
+	/// <summary>敵が死亡したかどうかを取得します。</summary>
 	bool IsDead() const { return isDead_; }
-
-	// 既存 Enemy クラスの public: に追記
+	/// <summary>敵がロックオンされているかどうかを取得します。</summary>
 	bool IsLocked() const { return isLocked_; }
 
 	// HP設定
+	/// <summary>HPを設定します（最大HPも更新）。</summary>
 	void SetHP(int hp) {
 		hp_ = hp;
 		maxHP_ = hp;
 	}
 	// モデル差し替え
+	/// <summary>モデルを設定します。</summary>
 	void SetModel(const std::string& modelName) {
 		if (object_) object_->SetModel(modelName);
 	}
 	// スケール変更
+	/// <summary>スケールを設定します（当たり判定用スケールも更新）。</summary>
 	void SetScale(const Vector3& scale) {
 		baseScale_ = scale; // 元のスケールを更新
 		colliderScale_ = scale; // 当たり判定用スケールも更新
 		if (object_) object_->SetScale(scale); // Object3d にも反映
 	}
 
+	/// <summary>カメラを設定します。</summary>
 	void SetCamera(Camera* camera);
+	/// <summary>位置を設定します。</summary>
 	void SetPosition(const Vector3& pos);
+	/// <summary>親シーンを設定します。</summary>
 	void SetParentScene(BaseScene* scene);
+	/// <summary>ワールド位置を設定します。</summary>
 	void SetLocked(bool v) { isLocked_ = v; if (!v) pulseT_ = 0.0f; }
+	/// <summary>当たり判定用スケールを取得します。</summary>
 	Vector3 GetColliderScale() const { return colliderScale_; }
+	/// <summary>当たり判定用スケールを取得します。</summary>
 	void SetColliderScale(const Vector3& s) { colliderScale_ = s; }
+	/// <summary>当たり判定用スケールを取得します。</summary>
 	Vector3 GetWorldPosition() const;
+	/// <summary>当たり判定用スケールを取得します。</summary>
 	Vector3 GetScale() const {
 		return object_ ? object_->GetScale() : Vector3{ 1.0f, 1.0f, 1.0f };
 	}
+	/// <summary>当たり判定用スケールを取得します。</summary>
 	const std::function<Vector3()>& GetPlayer() const { return playerGetter_; }
+	/// <summary>当たり判定用スケールを取得します。</summary>
 	int GetHP() const { return hp_; }
+	/// <summary>当たり判定用スケールを取得します。</summary>
 	int GetMaxHP() const { return maxHP_; }
 
 	// --- 設定系を追加 ---
+	/// <summary>挙動タイプを設定します。</summary>
 	void SetBehavior(EnemyBehavior b) { behavior_ = b; }
+	/// <summary>速度を設定します。</summary>
 	void SetVelocity(const Vector3& v) { velocity_ = v; }
+	/// <summary>停止Z座標を設定します。</summary>
 	void SetStopZ(float z) { stopZ_ = z; }
+	/// <summary>SineX用のパラメータを設定します。</summary>
 	void SetSineParams(float ampX, float freq) { sineAmpX_ = ampX; sineFreq_ = freq; }
+	/// <summary>StrafeLtoR用のパラメータを設定します。</summary>
 	void SetStrafeX(float left, float right, float speed) {
 		strafeLeft_ = left; strafeRight_ = right; strafeSpeed_ = speed;
 		if (strafePosX_ == 0.0f) strafePosX_ = left;
 	}
+	/// <summary>追尾用プレイヤー位置参照を設定します。</summary>
 	void SetPlayerRef(const Vector3* playerPos) { playerPos_ = playerPos; } // 追尾用
 	// 将来の発射フック（今は未使用）
+	/// <summary>射撃可能フラグとインターバルを設定します。</summary>
 	void SetCanShoot(bool v, float interval) { canShoot_ = v; shootInterval_ = interval; }
+	/// <summary>プレイヤー位置取得関数を設定します。</summary>
 	void SetPlayer(std::function<Vector3()> getter) { playerGetter_ = std::move(getter); }
+	/// <summary>SineX用の位相を設定します。</summary>
 	void SetSinePhase(float rad) { sinePhase_ = rad; }
+	/// <summary>親シーンを取得します。</summary>
 	BaseScene* GetParentScene() const { return parentScene_; }
 
 private:

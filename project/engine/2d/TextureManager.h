@@ -41,15 +41,21 @@ private:
 
 public:
 	//シングルトンインスタンスの取得
+	/// <summary>シングルトンインスタンスを取得します。</summary>
 	static TextureManager* GetInstance();
 	//終了
+	/// <summary>テクスチャマネージャを終了します。</summary>
 	void Finalize();
 
 	//初期化
+	/// <summary>テクスチャマネージャを初期化します。</summary>
+	/// <param name="dxCommon">DirectX共通。</param>
+	/// <param name="srvManager">SRVマネージャ。</param>
 	void Initialize(DirectXCommon* dxCommon, SrvManager* srvManager);
 
 public: //テクスチャファイル読み込み関数
 	//テクスチャファイルの読み込み
+	/// <summary>テクスチャファイルを読み込みます。</summary>
 	void LoadTexture(const std::string& filePath);
 
 
@@ -98,11 +104,17 @@ public:
 	std::unordered_map<std::string, TextureData> textureDatas;
 
 public:
+	/// <summary>ファイルパスからSRVインデックスを取得します。</summary>
+	/// <param name="filePath">テクスチャのファイルパス。</param>
 	uint32_t GetTextureIndexByFilePath(const std::string& filePath);
 	//テクスチャ番号からGPUハンドルを取得
+	/// <summary>ファイルパスからGPUハンドルを取得します。</summary>
+	/// <param name="filePath">テクスチャのファイルパス。</param>
 	D3D12_GPU_DESCRIPTOR_HANDLE GetSrvHandleGPU(const std::string& filePath);
 
 	//メタデータを取得
+	/// <summary>ファイルパスからメタデータを取得します。</summary>
+	/// <param name="filePath">テクスチャのファイルパス。</param>
 	const DirectX::TexMetadata& GetMetadata(const std::string& filePath);
 
 };
