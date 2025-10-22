@@ -5,6 +5,10 @@
 #include <random>
 #include "externals/imgui/imgui.h"
 
+//=============================================================
+// BossEnemyクラス
+// ボスの挙動と攻撃を制御するクラス。
+//=============================================================
 class BossEnemy : public Enemy {
 public:
 	void Initialize(Object3dCommon* common, DirectXCommon* dxCommon);

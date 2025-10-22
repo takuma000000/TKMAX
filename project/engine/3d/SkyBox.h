@@ -13,6 +13,10 @@
 
 class DirectXCommon;
 
+//=============================================================
+// Skyboxクラス
+// 背景のキューブマップ（スカイボックス）を描画するクラス。
+//=============================================================
 class Skybox {
 public:
 	void Initialize(DirectXCommon* dxCommon, SrvManager* srvManager, const std::string& texturePath);
@@ -30,18 +34,21 @@ public:
 		Matrix4x4 viewProjection;
 		Matrix4x4 world;
 	};
+	// マテリアル用構造体
 	struct Material {
 		Vector4 color;
 		uint32_t enableLighting;
 		Matrix4x4 uvTransform;
 		float shininess;
 	};
+	// GPU用カメラ構造体
 	struct CameraForGPU {
 		Vector3 worldPosition;//カメラの位置
 		float padding;//16byte境界に合わせるためのパディング
 	};
 
 private:
+	// 頂点構造体
 	struct Vertex {
 		Vector3 position;
 	};

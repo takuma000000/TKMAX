@@ -7,6 +7,10 @@ class Model;
 class ModelCommon;
 class DirectXCommon;
 
+//=============================================================
+// ModelManagerクラス
+// モデルの生成・管理を行うシングルトンクラス。
+//=============================================================
 class ModelManager
 {
 private:

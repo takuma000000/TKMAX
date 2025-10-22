@@ -162,7 +162,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\base\SystemIncludes.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Easing.h" />
+    <ClInclude Include="engine\func\math\Easing.h" />
     <ClInclude Include="engine\func\math\AABB.h" />
     <ClInclude Include="engine\scene\AbstractSceneFactory.h" />
     <ClInclude Include="application\boss\BossBullet.h" />

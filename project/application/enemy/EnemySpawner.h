@@ -8,6 +8,10 @@ class Camera;
 class DirectXCommon;
 class BaseScene;
 
+//=============================================================
+// EnemySpawner名前空間
+// 敵の生成処理をまとめたユーティリティ。
+//=============================================================
 namespace EnemySpawner {
 
 	using EnemyConfig = std::function<void(Enemy&)>;

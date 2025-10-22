@@ -1,6 +1,9 @@
 #pragma once
 
-// Graphics
+//=============================================================
+// SystemIncludesヘッダ
+// プロジェクトで共通して使用する主要なヘッダをまとめたファイル。
+//=============================================================
 #include "TextureManager.h"
 #include "SrvManager.h"
 #include "DirectXCommon.h"

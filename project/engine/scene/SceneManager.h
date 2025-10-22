@@ -3,6 +3,10 @@
 #include "DirectXCommon.h"
 #include "AbstractSceneFactory.h"
 
+//=============================================================
+// SceneManagerクラス
+// シーンの管理を行うクラス。
+//=============================================================
 class SceneManager
 {
 public:

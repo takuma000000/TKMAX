@@ -11,11 +11,13 @@ class Model;
 class Camera;
 class BaseScene;
 
+//頂点構造体
 struct Vector2 {
 	float x;
 	float y;
 };
 
+//座標変換情報
 struct Transform {
 	Vector3 scale;
 	Vector3 rotate;
@@ -29,12 +31,14 @@ struct VertexData {
 	Vector3 normal;
 };
 
+//マテリアルデータ
 struct MaterialData {
 	std::string textureFilePath;
 	//テクスチャ番号
 	uint32_t textureIndex = 0;
 };
 
+//モデルデータ
 struct ModelData {
 	std::vector<VertexData> vertices;
 	MaterialData material;
@@ -56,12 +60,14 @@ struct TransformationMatrix {
 	Matrix4x4 WorldInverseTranspose;
 };
 
+//ライト構造体
 struct DirectionalLightEX {
 	Vector4 color;
 	Vector3 direction;
 	float intensity;
 };
 
+//PointLight構造体
 struct PointLightEX {
 	Vector4 color;
 	Vector3 position;
@@ -71,6 +77,7 @@ struct PointLightEX {
 	float padding[2];
 };
 
+//SpotLight構造体
 struct SpotLightEX {
 	Vector4 color;
 	Vector3 position;
@@ -83,16 +90,22 @@ struct SpotLightEX {
 	float padding[2];
 };
 
+//カメラ構造体
 struct CameraForGPU {
 	Vector3 worldPosition;//カメラの位置
 	float padding;//16byte境界に合わせるためのパディング
 };
 
+// 環境マップ構造体
 struct EnvironmentEX {
 	bool useEnvironment = false; // 環境マップを使用するかどうか
 	Vector3 padding;
 };
 
+//=============================================================
+// Object3dクラス
+// 3Dオブジェクトの描画・変換・ライト設定を行うクラス。
+//=============================================================
 class Object3d
 {
 

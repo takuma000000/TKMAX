@@ -1,6 +1,10 @@
 #pragma once
 #include "ParticleManager.h"
 
+//=============================================================
+// ParticleEmitterクラス
+// パーティクルの発生位置・頻度を管理するクラス。
+//=============================================================
 class ParticleEmitter
 {
 private:
@@ -18,7 +22,7 @@ public:
 	};
 
 private:
-
+	//エミッター構造体
 	struct Emitter {
 		ParticleManager::Transform transform;
 		uint32_t count;

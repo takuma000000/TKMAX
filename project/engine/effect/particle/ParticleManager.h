@@ -6,6 +6,10 @@
 #include <random>
 #include <numbers>
 
+//=============================================================
+// ParticleManagerクラス
+// パーティクルの生成・更新・描画を管理するクラス。
+//=============================================================
 class ParticleManager
 {
 public:
@@ -20,18 +24,19 @@ public:
 		Vector4 color;
 	};*/
 
+	//座標変換情報
 	struct Transform
 	{
 		Vector3 scale;
 		Vector3 rotate;
 		Vector3 translate;
 	};
-
+	//軸合わせ用AABB構造体
 	struct AABB {
 		Vector3 min;//最小点
 		Vector3 max;//最大点
 	};
-
+	//加速度構造体
 	struct Acc {
 		Vector3 acc;//加速度
 		AABB area;//範囲
@@ -42,14 +47,13 @@ public:
 			(point.y >= aabb.min.y && point.y <= aabb.max.y) &&
 			(point.z >= aabb.min.z && point.z <= aabb.max.z);
 	}
-
+	//GPU用パーティクル構造体
 	struct ParticleForGPU {
 		Matrix4x4 wvp;
 		Matrix4x4 World;
 		Vector4 color;
 	};
-
-
+	//パーティクル構造体
 	struct Particle {
 		Transform transform;
 		Vector3 velocity;
@@ -58,8 +62,7 @@ public:
 		float lifeTime;
 		float currentTime;
 	};
-
-
+	//パーティクルグループ構造体
 	struct ParticleGroup {
 		MaterialData materialData;
 		std::list<Particle> particles;

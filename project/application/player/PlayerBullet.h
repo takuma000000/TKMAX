@@ -9,6 +9,10 @@
 
 class Player;
 
+//=============================================================
+// PlayerBulletクラス
+// プレイヤーの弾を管理するクラス。
+//=============================================================
 class PlayerBullet {
 public:
 	void Initialize(Object3dCommon* common, DirectXCommon* dxCommon);

@@ -12,9 +12,15 @@
 #include "MyMath.h"
 #include "SystemIncludes.h"
 
+//=============================================================
+// DirectXCommonクラス
+// DirectX12の初期化・描画・リソース管理を行うクラス。
+//=============================================================
 class DirectXCommon
 {
 public:
+	
+	// OutlineParameter構造体
 	struct OutlineParameter {
 		Matrix4x4 projectionInverse;
 	};
@@ -127,7 +133,9 @@ private:
 	OutlineParameter* outlineMappedData_ = nullptr;
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> thresholdBuffer_;
-	struct ThresholdParam { float threshold; float padding[3]; };
+	// ThresholdParam構造体
+	struct ThresholdParam { float threshold; float padding[3]; }; // 16バイトアライメントのためにパディングを追加
+
 	ThresholdParam* thresholdMappedData_ = nullptr;
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> renderTextureResource;

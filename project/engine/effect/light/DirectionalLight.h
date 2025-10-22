@@ -2,6 +2,10 @@
 #include "engine/func/math/Vector3.h"
 #include "engine/func/math/Vector4.h"
 
+//=============================================================
+// DirectionalLightクラス
+// 平行光源の色・方向・強度を管理するクラス。
+//=============================================================
 class DirectionalLight {
 
 public:

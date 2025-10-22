@@ -30,6 +30,10 @@
 #include "application/boss/BossBullet.h"
 #include <Easing.h>
 
+//=============================================================
+// GameSceneクラス
+// ゲーム本編を管理するシーンクラス。
+//=============================================================
 class GameScene : public BaseScene
 {
 public:

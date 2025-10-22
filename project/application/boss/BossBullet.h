@@ -5,6 +5,10 @@
 #include "Camera.h"
 #include "engine/func/math/Vector3.h"
 
+//=============================================================
+// BossBulletクラス
+// ボスの弾を管理するクラス。
+//=============================================================
 class BossBullet {
 public:
 	void Initialize(Object3dCommon* common, DirectXCommon* dx, Camera* cam,

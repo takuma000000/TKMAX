@@ -3,6 +3,10 @@
 #include "DirectXCommon.h"
 #include "SrvManager.h"
 
+//=============================================================
+// GameClearSceneクラス
+// ゲームクリア画面を管理するシーンクラス。
+//=============================================================
 class GameClearScene : public BaseScene {
 public:
 	GameClearScene(DirectXCommon* dxCommon, SrvManager* srvManager)

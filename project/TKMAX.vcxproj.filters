@@ -298,7 +298,7 @@
     <ClInclude Include="externals\imgui\imstb_truetype.h">
       <Filter>externals\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="Easing.h">
+    <ClInclude Include="engine\func\math\Easing.h">
       <Filter>engine\func\math</Filter>
     </ClInclude>
   </ItemGroup>

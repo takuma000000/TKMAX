@@ -2,6 +2,10 @@
 #include "AbstractSceneFactory.h"
 #include "Framework.h"
 
+//=============================================================
+// SceneFactoryクラス
+// シーン生成を行うクラス。
+//=============================================================
 class SceneFactory : public AbstractSceneFactory
 {
 public:

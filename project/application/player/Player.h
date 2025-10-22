@@ -12,6 +12,10 @@
 #include <list>
 #include <engine/effect/particle/ParticlerEmitter.h>
 
+//=============================================================
+// Playerクラス
+// プレイヤーの動作を制御するクラス。
+//=============================================================
 class Player {
 public:
 	void Initialize(Object3dCommon* common, DirectXCommon* dxCommon);

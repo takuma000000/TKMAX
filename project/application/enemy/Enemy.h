@@ -5,6 +5,10 @@
 #include "BaseScene.h"
 #include "externals/imgui/imgui.h"
 
+//=============================================================
+// Enemyクラス
+// 通常敵の挙動と当たり判定を管理するクラス。
+//=============================================================
 enum class EnemyBehavior {
 	StraightStop,   // いまの「Z手前に進んでstopZで止まる」
 	SineX,          // Xをサイン波で揺らしながら前進

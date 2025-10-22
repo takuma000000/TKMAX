@@ -13,6 +13,10 @@
 #undef max
 #endif
 
+//=============================================================
+// Ease名前空間
+// イージング計算関数およびトゥイーン処理をまとめた名前空間。
+//=============================================================
 namespace Ease {
 
 	// 0..1 を安全にクランプ
@@ -137,6 +141,7 @@ namespace Ease {
 	// 値 a→b を t(0..1) で補間（便利関数）
 	inline float Lerp(float a, float b, float t) { return a + (b - a) * t; }
 
+	// Tween構造体
 	// 時間ベースのトゥイーン便利構造体：Update(dt) で値を返す
 	struct Tween {
 		float start = 0.0f;
