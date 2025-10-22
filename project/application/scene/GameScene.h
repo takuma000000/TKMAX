@@ -20,6 +20,7 @@
 #include "engine/func/math/Vector3.h"
 #include <SkyBox.h>
 #include "GameClearScene.h"
+#include "TitleScene.h"
 #include "SceneManager.h"
 
 #include "application/player/Player.h"
@@ -216,6 +217,12 @@ private:
 	// ピッチを少しだけ変化させたいなら
 	float camPitchStart_ = 0.12f;    // ほんのり俯瞰で始める
 	float camPitchEnd_ = 0.05f;    // 少しだけ水平へ
+
+	// Iris閉じ（タイトル戻り用）
+	bool irisClosing_ = false;
+	Ease::Tween irisCloseTween_;
+	float irisCloseScale_ = 0.0f;
+
 
 };
 

@@ -68,6 +68,11 @@ void GameScene::Initialize()
 	iris_->SetSize({ irisScale_, irisScale_ });
 	irisTween_.Reset(/*start*/ irisMaxScale_, /*end*/ 0.0f, /*sec*/ 0.8f, Ease::Type::OutBack);
 
+	// タイトル戻り用アイリス
+	irisCloseScale_ = 0.0f;
+	irisCloseTween_.Reset(0.0f, irisMaxScale_, 0.8f, Ease::Type::InBack);
+
+
 	// ゲームスタート文字
 	startSprite_ = std::make_unique<Sprite>();
 	startSprite_->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/start.png");
@@ -312,6 +317,23 @@ void GameScene::Update()
 		ParticleManager::GetInstance()->Emit("uv", emitPos, 20); // 20個発生
 	}
 
+	// ─── Tキーでタイトルに戻る（アイリス閉じ演出つき）───
+	if (!irisClosing_ && Input::GetInstance()->TriggerKey(DIK_T)) {
+		irisClosing_ = true;
+		irisCloseTween_.Reset(0.0f, irisMaxScale_, 0.8f, Ease::Type::InBack);
+	}
+
+	if (irisClosing_) {
+		irisCloseScale_ = irisCloseTween_.Update(0.016f);
+		iris_->SetSize({ irisCloseScale_, irisCloseScale_ });
+		iris_->Update();
+
+		if (irisCloseTween_.Finished()) {
+			sceneManager_->SetNextScene(new TitleScene(dxCommon, srvManager));
+			return;
+		}
+	}
+
 	// パフォーマンス情報・デバッグUI
 	UpdatePerformanceInfo();
 
@@ -333,6 +355,10 @@ void GameScene::Draw()
 	// ---- 最前面の白円は Sprite パスで最後に描く ----
 	if (irisOpening_ && iris_) {
 		iris_->Draw();
+	}
+
+	if (irisClosing_ && iris_) {
+		iris_->Draw(); // 閉じる
 	}
 
 	if (startVisible_) {
