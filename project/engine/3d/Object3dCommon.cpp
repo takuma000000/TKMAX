@@ -17,7 +17,7 @@ void Object3dCommon::Initialize(DirectXCommon* dxCommon)
 	//引数で受け取ってメンバ変数に記録する
 	dxCommon_ = dxCommon;
 
-	GenerateGraficsPipeline();
+	GenerateGraficsPipeline(); //グラフィックスパイプライン生成
 }
 
 void Object3dCommon::Finalize()
@@ -28,29 +28,29 @@ void Object3dCommon::Finalize()
 
 void Object3dCommon::DrawSetCommon()
 {
-	dxCommon_->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
-	dxCommon_->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
-	dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	dxCommon_->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get()); //ルートシグネチャセット
+	dxCommon_->GetCommandList()->SetPipelineState(graphicsPipelineState.Get()); //パイプラインステートセット
+	dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); //プリミティブトポロジーセット
 }
 
 void Object3dCommon::GenerateRootSignature()
 {
-	descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+	descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT; //入力アセンブラで頂点レイアウトを使う
 
-	D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
+	D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {}; //DescriptorRange作成
 	descriptorRange[0].BaseShaderRegister = 0;//0から始まる
 	descriptorRange[0].NumDescriptors = 1;//数は1つ
 	descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;//SRVを使う
 	descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;//Offsetを自動計算
 
-	D3D12_DESCRIPTOR_RANGE descriptorRange2[1] = {};
+	D3D12_DESCRIPTOR_RANGE descriptorRange2[1] = {}; //DescriptorRange作成
 	descriptorRange2[0].BaseShaderRegister = 1;//1から始まる
 	descriptorRange2[0].NumDescriptors = 1;//数は1つ
 	descriptorRange2[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;//SRVを使う
 	descriptorRange2[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;//Offsetを自動計算
 
 	//RootParameter作成。PixelShaderのMaterialとVertexShaderのTransform
-	D3D12_ROOT_PARAMETER rootParameters[9] = {};
+	D3D12_ROOT_PARAMETER rootParameters[9] = {}; //ルートパラメータは全部で9個
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;	//CBVを使う
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;	//PixelShaderで使う
 	rootParameters[0].Descriptor.ShaderRegister = 0;	//レジスタ番号0とバインド
@@ -120,7 +120,8 @@ void Object3dCommon::GenerateRootSignature()
 	//バイナリを元に生成
 	hr = dxCommon_->GetDevice()->CreateRootSignature(0, signatureBlog->GetBufferPointer(), signatureBlog->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
 	assert(SUCCEEDED(hr));
-
+	
+	// inputLayoutの設定
 	inputElementDescs[0].SemanticName = "POSITION";
 	inputElementDescs[0].SemanticIndex = 0;
 	inputElementDescs[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
@@ -134,10 +135,10 @@ void Object3dCommon::GenerateRootSignature()
 	inputElementDescs[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
 	inputElementDescs[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
 
-	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL; //RGBA全てのチャンネルを描画
 
-	resterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
-	resterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
+	resterizerDesc.CullMode = D3D12_CULL_MODE_NONE; //カリングしない
+	resterizerDesc.FillMode = D3D12_FILL_MODE_SOLID; //塗りつぶし
 
 	//DepthStencilStateの設定
 	//Depthの機能を有効化する
@@ -150,17 +151,19 @@ void Object3dCommon::GenerateRootSignature()
 
 void Object3dCommon::GenerateGraficsPipeline()
 {
-	GenerateRootSignature();
+	GenerateRootSignature(); //ルートシグネチャ生成
 
 	HRESULT hr;
 
-	vertexShaderBlob = dxCommon_->CompileShader(L"resources/shaders/Object3d.VS.hlsl", L"vs_6_0");
-	pixelShaderBlob = dxCommon_->CompileShader(L"resources/shaders/Object3d.PS.hlsl", L"ps_6_0");
+	vertexShaderBlob = dxCommon_->CompileShader(L"resources/shaders/Object3d.VS.hlsl", L"vs_6_0"); //頂点シェーダ生成
+	pixelShaderBlob = dxCommon_->CompileShader(L"resources/shaders/Object3d.PS.hlsl", L"ps_6_0"); //ピクセルシェーダ生成
 
+	//グラフィックスパイプライン設定
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
 	inputLayoutDesc.pInputElementDescs = inputElementDescs;
 	inputLayoutDesc.NumElements = _countof(inputElementDescs);
 
+	//グラフィックスパイプライン設定
 	graphicPipelineStateDesc.pRootSignature = rootSignature.Get();
 	graphicPipelineStateDesc.InputLayout = inputLayoutDesc;
 	graphicPipelineStateDesc.VS = { vertexShaderBlob->GetBufferPointer(),vertexShaderBlob->GetBufferSize() };

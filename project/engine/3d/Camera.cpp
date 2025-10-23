@@ -2,6 +2,7 @@
 #include "Object3d.h"
 
 Camera::Camera()
+	//初期化
 	:transform({ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} })
 	, fovY(0.45f)
 	, aspectRatio(float(WindowsAPI::kClientWidth) / float(WindowsAPI::kClientHeight))

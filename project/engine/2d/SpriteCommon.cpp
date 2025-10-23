@@ -7,11 +7,11 @@
 using namespace Logger;
 
 
-SpriteCommon* SpriteCommon::instance = nullptr;
+SpriteCommon* SpriteCommon::instance = nullptr; //シングルトンインスタンスの初期化
 
 SpriteCommon* SpriteCommon::GetInstance()
 {
-	if (instance == nullptr) {
+	if (instance == nullptr) { //インスタンスがなければ生成
 		instance = new SpriteCommon;
 	}
 	return instance;
@@ -21,19 +21,19 @@ void SpriteCommon::Initialize(DirectXCommon* dxCommon) {
 	//引数で受け取ってメンバ変数に記録する
 	dxCommon_ = dxCommon;
 
-	GenerateGraficsPipeline();
+	GenerateGraficsPipeline(); //グラフィックスパイプライン生成
 }
 
 void SpriteCommon::Finalize()
 {
-	delete instance;
-	instance = nullptr;
+	delete instance; //インスタンスの破棄
+	instance = nullptr; //ポインタをnullptrに戻す
 }
 
 void SpriteCommon::GenerateRootSignature() {
-	descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+	descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT; //入力アセンブラで頂点レイアウトを使う
 
-	D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
+	D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {}; //DescriptorRange作成
 	descriptorRange[0].BaseShaderRegister = 0;//0から始まる
 	descriptorRange[0].NumDescriptors = 1;//数は1つ
 	descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;//SRVを使う
@@ -58,9 +58,8 @@ void SpriteCommon::GenerateRootSignature() {
 	descriptionRootSignature.NumParameters = _countof(rootParameters);	//配列の長さ
 
 	//Samplerの設定
-	D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
-	// SpriteCommon::GenerateRootSignature()
-	staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+	D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {}; //Samplerは1つだけ
+	staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR; //線形補間
 	staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP; // ← WRAP→CLAMP
 	staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP; // ← WRAP→CLAMP
 	staticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP; // ← WRAP→CLAMP
@@ -87,6 +86,7 @@ void SpriteCommon::GenerateRootSignature() {
 	hr = dxCommon_->GetDevice()->CreateRootSignature(0, signatureBlog->GetBufferPointer(), signatureBlog->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
 	assert(SUCCEEDED(hr));
 
+	//入力レイアウトの設定
 	inputElementDescs[0].SemanticName = "POSITION";
 	inputElementDescs[0].SemanticIndex = 0;
 	inputElementDescs[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
@@ -102,11 +102,10 @@ void SpriteCommon::GenerateRootSignature() {
 
 	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 
-	resterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
-	resterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
+	resterizerDesc.CullMode = D3D12_CULL_MODE_NONE; //カリングしない
+	resterizerDesc.FillMode = D3D12_FILL_MODE_SOLID; //塗りつぶし
 
 	//DepthStencilStateの設定
-	// SpriteCommon::GenerateRootSignature() のDepthStencil設定付近
 	depthStencilDesc.DepthEnable = FALSE;                         // ← true を false に
 	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;   // ← ALL を ZERO に
 	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;  // ← LessEqual を AlwaysでもOK
@@ -115,13 +114,14 @@ void SpriteCommon::GenerateRootSignature() {
 
 void SpriteCommon::GenerateGraficsPipeline() {
 
-	GenerateRootSignature();
+	GenerateRootSignature(); //ルートシグネチャ生成
 
 	HRESULT hr;
 
-	vertexShaderBlob = dxCommon_->CompileShader(L"resources/shaders/Sprite.VS.hlsl", L"vs_6_0");
-	pixelShaderBlob = dxCommon_->CompileShader(L"resources/shaders/Sprite.PS.hlsl", L"ps_6_0");
+	vertexShaderBlob = dxCommon_->CompileShader(L"resources/shaders/Sprite.VS.hlsl", L"vs_6_0"); // 頂点シェーダ生成
+	pixelShaderBlob = dxCommon_->CompileShader(L"resources/shaders/Sprite.PS.hlsl", L"ps_6_0"); // ピクセルシェーダ生成
 
+	// 入力レイアウトの設定
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
 	inputLayoutDesc.pInputElementDescs = inputElementDescs;
 	inputLayoutDesc.NumElements = _countof(inputElementDescs);
@@ -165,8 +165,7 @@ void SpriteCommon::GenerateGraficsPipeline() {
 }
 
 void SpriteCommon::DrawSetCommon(){
-	dxCommon_->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
-	dxCommon_->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
-	dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
+	dxCommon_->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get()); //ルートシグネチャ設定
+	dxCommon_->GetCommandList()->SetPipelineState(graphicsPipelineState.Get()); //パイプラインステート設定
+	dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); //プリミティブ形状設定（三角形リスト）
 }

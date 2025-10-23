@@ -27,15 +27,16 @@ void TextureManager::LoadTexture(const std::string& filePath) {
 	// テクスチャ上限チェック
 	assert(srvManager_->Available());
 
+	// 画像読み込み
 	DirectX::ScratchImage image{};
 	std::wstring filePathW = ConvertString(filePath);
 	HRESULT hr = S_FALSE;
 
 	// 拡張子がDDSかで分岐
-	if (filePath.ends_with(".dds")) {
+	if (filePath.ends_with(".dds")) { // DDSファイル
 		hr = DirectX::LoadFromDDSFile(filePathW.c_str(), DirectX::DDS_FLAGS_NONE, nullptr, image);
 	}
-	else {
+	else { // WIC対応ファイル
 		hr = DirectX::LoadFromWICFile(filePathW.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
 	}
 	assert(SUCCEEDED(hr));
@@ -44,8 +45,10 @@ void TextureManager::LoadTexture(const std::string& filePath) {
 	DirectX::ScratchImage mipImages{};
 
 	// 圧縮フォーマットなら一旦解凍
-	if (DirectX::IsCompressed(image.GetMetadata().format)) {
-		DirectX::ScratchImage decompressed{};
+	if (DirectX::IsCompressed(image.GetMetadata().format)) { // 圧縮フォーマット
+		DirectX::ScratchImage decompressed{}; // 解凍後画像
+
+		// 解凍
 		hr = DirectX::Decompress(
 			image.GetImages(),
 			image.GetImageCount(),
@@ -54,6 +57,7 @@ void TextureManager::LoadTexture(const std::string& filePath) {
 			decompressed);
 		assert(SUCCEEDED(hr));
 
+		// MipMap生成
 		hr = DirectX::GenerateMipMaps(
 			decompressed.GetImages(),
 			decompressed.GetImageCount(),
@@ -63,7 +67,7 @@ void TextureManager::LoadTexture(const std::string& filePath) {
 			mipImages);
 		assert(SUCCEEDED(hr));
 	}
-	else {
+	else { // 非圧縮フォーマット
 		// 非圧縮ならそのまま
 		hr = DirectX::GenerateMipMaps(
 			image.GetImages(),
@@ -78,10 +82,9 @@ void TextureManager::LoadTexture(const std::string& filePath) {
 	// テクスチャ情報作成
 	TextureData textureData{};
 	
-
+	// メタデータ取得
 	textureData.metadata = mipImages.GetMetadata();
 	textureData.resource = dxCommon_->CreateTextureResource(textureData.metadata);
-
 	textureData.srvIndex = srvManager_->Allocate();
 	textureData.srvHnadleCPU = srvManager_->GetCPUDescriptorHandle(textureData.srvIndex);
 	textureData.srvHnadleGPU = srvManager_->GetGPUDescriptorHandle(textureData.srvIndex);
@@ -91,63 +94,28 @@ void TextureManager::LoadTexture(const std::string& filePath) {
 	srvDesc.Format = textureData.metadata.format;
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
-	if (textureData.metadata.IsCubemap()) {
+	if (textureData.metadata.IsCubemap()) { // キューブマップ
 		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
 		srvDesc.TextureCube.MostDetailedMip = 0;
 		srvDesc.TextureCube.MipLevels = UINT_MAX;
 		srvDesc.TextureCube.ResourceMinLODClamp = 0.0f;
 	}
-	else {
+	else { // 2Dテクスチャ
 		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 		srvDesc.Texture2D.MipLevels = UINT(textureData.metadata.mipLevels);
 	}
 
 	// SRV生成
 	dxCommon_->GetDevice()->CreateShaderResourceView(textureData.resource.Get(), &srvDesc, textureData.srvHnadleCPU);
-
+	// テクスチャデータ転送
 	textureData.intermediateResource = dxCommon_->UploadTextureData(textureData.resource.Get(), mipImages);
 
 	// 登録
 	textureDatas.emplace(filePath, std::move(textureData));
 }
 
-
-
-//Microsoft::WRL::ComPtr<ID3D12Resource> TextureManager::CreateTextureResource(const DirectX::TexMetadata& metadata)
-//{
-//	//metadataを基にResourceの設定
-//	D3D12_RESOURCE_DESC resourceDesc{};
-//	resourceDesc.Width = UINT(metadata.width);//Textureの幅
-//	resourceDesc.Height = UINT(metadata.height);//Textureの高さ
-//	resourceDesc.MipLevels = UINT(metadata.mipLevels);//mipmapの数
-//	resourceDesc.DepthOrArraySize = UINT(metadata.arraySize);//奥行き or 配列Textureの配列数
-//	resourceDesc.Format = metadata.format;//TextureのFormat
-//	resourceDesc.SampleDesc.Count = 1;//サンプリングカウント。1固定
-//	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION(metadata.dimension);//Textureの次元数。
-//
-//	//利用するHeapの作成。非常に特殊な運用。
-//	D3D12_HEAP_PROPERTIES heapProperties{};
-//	heapProperties.Type = D3D12_HEAP_TYPE_CUSTOM;//細かい設定を行う
-//	heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;//WriteBackポリシーでCPUアクセス可能
-//	heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;//プロセッサの近くに配置
-//
-//	//Resourceの生成
-//	Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr;
-//	HRESULT hr = dxCommon_->GetDevice()->CreateCommittedResource(
-//		&heapProperties,//Heapの設定
-//		D3D12_HEAP_FLAG_NONE,//Heapの特殊な設定。特になし
-//		&resourceDesc,//Resouceの設定
-//		D3D12_RESOURCE_STATE_GENERIC_READ,//初回のResourceState。	Textureは基本読むだけ
-//		nullptr,//Clear最適値。使わないのでnullptr
-//		IID_PPV_ARGS(&resource)//作成するResourceポインタへのポインタ
-//	);
-//	assert(SUCCEEDED(hr));
-//	return resource;
-//}
-
 uint32_t TextureManager::GetTextureIndexByFilePath(const std::string& filePath)
 {
-
 	//読み込み済みテクスチャを検索
 	if (textureDatas.contains(filePath)) {
 		//読み込み済みなら要素番号を返す
@@ -184,7 +152,5 @@ TextureManager* TextureManager::GetInstance() {
 }
 
 void TextureManager::Finalize() {
-	//delete instance;
-	//instance = nullptr;
-
+	
 }

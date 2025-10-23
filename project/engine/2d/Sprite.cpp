@@ -8,17 +8,17 @@
 
 Sprite::Sprite()
 {
-	++activeCount_;
+	++activeCount_; //アクティブスプライト数をインクリメント
 }
 
 Sprite::~Sprite()
 {
-	--activeCount_;
+	--activeCount_; //アクティブスプライト数をデクリメント
 }
 
 void Sprite::SetParentScene(BaseScene* parentScene)
 {
-	parentScene_ = parentScene;
+	parentScene_ = parentScene; //親シーンを設定
 }
 
 void Sprite::Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, std::string textureFilePath) {
@@ -44,8 +44,9 @@ void Sprite::Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, std
 	indexBufferView.SizeInBytes = sizeof(uint32_t) * 6;
 	//インデックスはuint32_tとする
 	indexBufferView.Format = DXGI_FORMAT_R32_UINT;
-	//
+	//書き込むためのアドレスを取得
 	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
+	//書き込むためのアドレスを取得
 	indexResource->Map(0, nullptr, reinterpret_cast<void**>(&indexData));
 
 	//マテリアルリソースを作る
@@ -56,6 +57,7 @@ void Sprite::Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, std
 	materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	//SprightはLightingしないのでfalseを設定する
 	materialData->enableLighting = false;
+	//UV変換行列は単位行列を設定する
 	materialData->uvTransform = MyMath::MakeIdentity4x4();
 
 	//座標変換行列リソースを作る
@@ -64,10 +66,11 @@ void Sprite::Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, std
 	transformationMatrixResource->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixData));
 	//単位行列を書き込んでおく
 	transformationMatrixData->wvp = MyMath::MakeIdentity4x4();
+	// 単位行列を書き込んでおく
 	transformationMatrixData->World = MyMath::MakeIdentity4x4();
 
-	transformSprite = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-	cameraTransform = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f} ,{0.0f,0.0f,-10.0f} };
+	transformSprite = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} }; // スプライトの変換情報
+	cameraTransform = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f} ,{0.0f,0.0f,-10.0f} }; // カメラの変換情報
 
 	//単位行列を書き込んでおく
 	textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
@@ -75,27 +78,27 @@ void Sprite::Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, std
 
 void Sprite::Update() {
 
-	float left = 0.0f - anchorPoint.x;
-	float right = 1.0f - anchorPoint.x;
-	float top = 0.0f - anchorPoint.y;
-	float bottom = 1.0f - anchorPoint.y;
+	float left = 0.0f - anchorPoint.x; // アンカーポイントを考慮した左端座標
+	float right = 1.0f - anchorPoint.x; // アンカーポイントを考慮した右端座標
+	float top = 0.0f - anchorPoint.y; // アンカーポイントを考慮した上端座標
+	float bottom = 1.0f - anchorPoint.y; // アンカーポイントを考慮した下端座標
 
 	//左右反転
-	if (isFlipX_) {
-		left = -left;
-		right = -right;
+	if (isFlipX_) { // 左右反転
+		left = -left; // 左端と右端を入れ替え
+		right = -right; // 右端と左端を入れ替え
 	}
 	//上下反転
-	if (isFlipY_) {
-		top = -top;
-		bottom = -bottom;
+	if (isFlipY_) { // 上下反転
+		top = -top; // 上端と下端を入れ替え
+		bottom = -bottom; // 下端と上端を入れ替え
 	}
 
-	const DirectX::TexMetadata& metadata = TextureManager::GetInstance()->GetMetadata(textureFilePath);
-	float tex_left = textureLeftTop.x / metadata.width;
-	float tex_right = (textureLeftTop.x + textureSize.x) / metadata.width;
-	float tex_top = textureLeftTop.y / metadata.height;
-	float tex_bottom = (textureLeftTop.y + textureSize.y) / metadata.height;
+	const DirectX::TexMetadata& metadata = TextureManager::GetInstance()->GetMetadata(textureFilePath); // テクスチャのメタデータを取得
+	float tex_left = textureLeftTop.x / metadata.width; // テクスチャの左端UV座標
+	float tex_right = (textureLeftTop.x + textureSize.x) / metadata.width; // テクスチャの右端UV座標
+	float tex_top = textureLeftTop.y / metadata.height; // テクスチャの上端UV座標
+	float tex_bottom = (textureLeftTop.y + textureSize.y) / metadata.height; // テクスチャの下端UV座標
 
 	//左下
 	vertexData[0].position = { left,bottom,0.0f,1.0f };
@@ -114,7 +117,7 @@ void Sprite::Update() {
 	vertexData[3].texcoord = { tex_right,tex_top };
 	vertexData[3].normal = { 0.0f,0.0f,-1.0f };
 
-	//
+	//インデックスデータ
 	indexData[0] = 0;
 	indexData[1] = 1;
 	indexData[2] = 2;
@@ -122,12 +125,15 @@ void Sprite::Update() {
 	indexData[4] = 3;
 	indexData[5] = 2;
 
+	//座標変換行列の計算
 	Matrix4x4 worldMatrixSprite = MyMath::MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
+	// ビュー行列は単位行列
 	Matrix4x4 viewMatrixSprite = MyMath::MakeIdentity4x4();
+	// 射影行列は直交投影行列
 	Matrix4x4 projectionMatrixSprite = MyMath::MakeOrthographicMatrix(0.0f, 0.0f, float(WindowsAPI::kClientWidth), float(WindowsAPI::kClientHeight), 0.0f, 100.0f);
 
-	transformationMatrixData->wvp = MyMath::Multiply(worldMatrixSprite, MyMath::Multiply(viewMatrixSprite, projectionMatrixSprite));
-	transformationMatrixData->World = worldMatrixSprite;
+	transformationMatrixData->wvp = MyMath::Multiply(worldMatrixSprite, MyMath::Multiply(viewMatrixSprite, projectionMatrixSprite)); // WVP行列の計算
+	transformationMatrixData->World = worldMatrixSprite; // ワールド行列の設定
 
 	//反映処理
 	transformSprite.translate = { position.x,position.y,0.0f };
@@ -139,8 +145,8 @@ void Sprite::Update() {
 }
 
 void Sprite::Draw() {
-	if (parentScene_) {
-		parentScene_->AddDrawCallCount();
+	if (parentScene_) { //親シーンが設定されていれば
+		parentScene_->AddDrawCallCount(); //DrawCall数を加算
 	}
 
 	//VertexBufferViewを設定
@@ -159,15 +165,15 @@ void Sprite::Draw() {
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 	//座標変換行列CBufferの場所を設定
 	Transform uvTransformSprite{
-	{1.0f,1.0f,1.0f},
-	{0.0f,0.0f,0.0f},
-	{0.0f,0.0f,0.0f},
+	{1.0f,1.0f,1.0f}, // scale
+	{0.0f,0.0f,0.0f}, // rotate
+	{0.0f,0.0f,0.0f}, // translate
 	};
 
-	Matrix4x4 uvTransformMatrix = MyMath::MakeScaleMatrix(uvTransformSprite.scale);
-	uvTransformMatrix = MyMath::Multiply(uvTransformMatrix, MyMath::MakeRotateZMatrix(uvTransformSprite.rotate.z));
-	uvTransformMatrix = MyMath::Multiply(uvTransformMatrix, MyMath::MakeTranslateMatrix(uvTransformSprite.translate));
-	materialData->uvTransform = uvTransformMatrix;
+	Matrix4x4 uvTransformMatrix = MyMath::MakeScaleMatrix(uvTransformSprite.scale); // スケーリング行列を作成
+	uvTransformMatrix = MyMath::Multiply(uvTransformMatrix, MyMath::MakeRotateZMatrix(uvTransformSprite.rotate.z)); // Z回転行列を掛ける
+	uvTransformMatrix = MyMath::Multiply(uvTransformMatrix, MyMath::MakeTranslateMatrix(uvTransformSprite.translate)); // 平行移動行列を掛ける
+	materialData->uvTransform = uvTransformMatrix; // UV変換行列を更新
 
 	//SRVのDescriptorTableの先頭を設定
 	dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(textureFilePath));
@@ -191,8 +197,8 @@ void Sprite::AdjustTextureSize()
 	//テクスチャデータを取得
 	const DirectX::TexMetadata& metadata = TextureManager::GetInstance()->GetMetadata(textureFilePath);
 
-	textureSize.x = static_cast<float>(metadata.width);
-	textureSize.y = static_cast<float>(metadata.height);
+	textureSize.x = static_cast<float>(metadata.width); //テクスチャの幅を取得
+	textureSize.y = static_cast<float>(metadata.height); //テクスチャの高さを取得
 	//画像サイズをテクスチャサイズに合わせる
 	size = textureSize;
 }
