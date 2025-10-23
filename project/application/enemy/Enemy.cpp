@@ -135,15 +135,6 @@ void Enemy::ImGuiDebug() {
 	ImGui::End();
 }
 
-void Enemy::OnHit()
-{
-	hp_--; // ダメージ1
-	// HPが0になったら
-	if (hp_ <= 0) {
-		isDead_ = true; // 死亡フラグ立てる
-	}
-}
-
 void Enemy::OnHitWithDamage(int damage)
 {
 	hp_ -= damage; // 指定ダメージ分減らす

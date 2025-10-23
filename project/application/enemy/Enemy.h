@@ -31,8 +31,6 @@ public:
 	/// <summary>デバッグ用ImGui表示。</summary>
 	void ImGuiDebug();
 
-	/// <summary>弾が当たったときの処理。</summary>
-	void OnHit(); // 弾が当たったとき呼ぶ
 	/// <summary>特殊攻撃でダメージを指定して当たったときの処理。</summary>
 	void OnHitWithDamage(int damage); // 特殊攻撃（ダメージ指定）
 	/// <summary>敵が死亡したかどうかを取得します。</summary>

@@ -62,7 +62,7 @@ void PlayerBullet::Update() {
 				if (isSpecialAttack_) {
 					enemy_->OnHitWithDamage(100);
 				} else {
-					enemy_->OnHit();
+					enemy_->OnHitWithDamage(1);
 				}
 			}
 
