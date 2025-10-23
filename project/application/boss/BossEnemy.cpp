@@ -3,29 +3,12 @@
 #include "MyMath.h"
 #include "application/scene/GameScene.h"
 
-// 既存の安全正規化（そのまま利用）
-static Vector3 SafeNormalize(const Vector3& v, const Vector3& fallback = { 0,0,-1 }) {
-	float len = MyMath::Length(v);
-	if (len < 1e-5f) return fallback;
-	return MyMath::Normalize(v);
+void BossEnemy::TickCooldowns() {
+	cdBeam_.t = std::max(0.0f, cdBeam_.t - 1.0f); // フレーム基準
+	cdFan_.t = std::max(0.0f, cdFan_.t - 1.0f); // フレーム基準
+	cdRapid_.t = std::max(0.0f, cdRapid_.t - 1.0f); // フレーム基準
 }
 
-float BossEnemy::Rand01() {
-	std::uniform_real_distribution<float> dist(0.0f, 1.0f);
-	return dist(rng_);
-}
-void BossEnemy::TickCooldowns() {
-	cdBeam_.t = std::max(0.0f, cdBeam_.t - 1.0f);
-	cdFan_.t = std::max(0.0f, cdFan_.t - 1.0f);
-	cdRapid_.t = std::max(0.0f, cdRapid_.t - 1.0f);
-}
-float BossEnemy::DotXZ(const Vector3& a, const Vector3& b) const {
-	Vector3 aa{ a.x, 0, a.z }, bb{ b.x, 0, b.z };
-	float la = MyMath::Length(aa), lb = MyMath::Length(bb);
-	if (la < 1e-5f || lb < 1e-5f) return 0.0f;
-	aa = aa * (1.0f / la); bb = bb * (1.0f / lb);
-	return aa.x * bb.x + aa.z * bb.z;
-}
 Vector3 BossEnemy::PredictPlayer(const Vector3& playerPos) const {
 	// 1フレーム=約1/60秒想定。弾速目安に合わせて先読み距離を控えめに。
 	float lookAhead = 6.0f; // フレーム
@@ -33,32 +16,32 @@ Vector3 BossEnemy::PredictPlayer(const Vector3& playerPos) const {
 }
 float BossEnemy::PhaseBiasFor(AttackType at) const {
 	switch (phase_) {
-	case Phase::P1:
-		if (at == AttackType::Beam)  return phaseBiasBeam_;
-		if (at == AttackType::Fan)   return 0.4f;
-		return 0.2f;
-	case Phase::P2:
-		if (at == AttackType::Fan)   return phaseBiasFan_;
-		if (at == AttackType::Beam)  return 0.6f;
-		return 0.5f;
-	case Phase::P3:
-		if (at == AttackType::Rapid) return phaseBiasRapid_;
-		if (at == AttackType::Fan)   return 0.7f;
-		return 0.4f;
+	case Phase::P1: // 初期フェーズ
+		if (at == AttackType::Beam)  return phaseBiasBeam_; // ビーム強化
+		if (at == AttackType::Fan)   return 0.4f; // 扇弱体化
+		return 0.2f; // 連射弱体化
+	case Phase::P2: // 中間フェーズ
+		if (at == AttackType::Fan)   return phaseBiasFan_; // 扇強化
+		if (at == AttackType::Beam)  return 0.6f; // ビーム中間
+		return 0.5f; //	連射中間
+	case Phase::P3: // 最終フェーズ
+		if (at == AttackType::Rapid) return phaseBiasRapid_; // 連射強化
+		if (at == AttackType::Fan)   return 0.7f; // 扇中間
+		return 0.4f; // ビーム弱体化
 	}
 	return 0.0f;
 }
 
 void BossEnemy::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
-	Enemy::Initialize(common, dxCommon);
-	SetModel("enemy.obj");
-	SetHP(80);
-	SetScale({ 5.0f, 5.0f, 5.0f });
-	SetColliderScale({ 7.5f, 7.5f, 7.5f });
+	Enemy::Initialize(common, dxCommon); // 基底初期化
+	SetModel("enemy.obj"); // モデル設定
+	SetHP(80); // HP設定
+	SetScale({ 5.0f, 5.0f, 5.0f }); // スケール設定
+	SetColliderScale({ 7.5f, 7.5f, 7.5f }); // 当たり判定スケール設定
 }
 
 void BossEnemy::Update() {
-	if (IsDead()) return;
+	if (IsDead()) return; // 死亡済みなら更新しない
 
 	// プレイヤー位置（既存の GetPlayer ラムダ）を利用
 	Vector3 playerPos{ 0,0,0 };
@@ -73,18 +56,18 @@ void BossEnemy::Update() {
 	UpdateMovement(playerPos, playerVelFiltered_);    // 軌道に微ゆらぎを加えつつ追従
 	UpdateAttack(1.0f, playerPos);                    // 攻撃FSMは存続（Telegraph/Fire/Cooldown）
 
-	// ロック時の演出（既存）
+	// ロック時の演出
 	if (IsLocked()) {
-		blinkT_ += 0.2f;
-		float s = 1.0f + 0.2f * sinf(blinkT_);
-		SetScale({ 5.0f * s, 5.0f * s, 5.0f * s });
-		SetColliderScale({ 5.0f * s, 5.0f * s, 5.0f * s });
+		blinkT_ += 0.2f;// 位相進行
+		float s = 1.0f + 0.2f * sinf(blinkT_); // 脈動スケール
+		SetScale({ 5.0f * s, 5.0f * s, 5.0f * s }); // スケール変更
+		SetColliderScale({ 5.0f * s, 5.0f * s, 5.0f * s }); // 当たり判定スケール変更
 	} else {
-		SetScale({ 5.0f, 5.0f, 5.0f });
-		SetColliderScale({ 5.5f, 5.5f, 5.5f });
+		SetScale({ 5.0f, 5.0f, 5.0f }); // 通常スケール
+		SetColliderScale({ 5.5f, 5.5f, 5.5f }); // 通常当たり判定スケール
 	}
 
-	Enemy::Update();
+	Enemy::Update(); // 基底更新
 }
 
 // BossEnemy.cpp 内 ImGuiDebug() を拡張（可視化パネル）
@@ -158,6 +141,7 @@ void BossEnemy::ImGuiDebug() {
 }
 
 void BossEnemy::UpdatePhase() {
+	// HPに応じてフェーズを切り替え
 	int hp = GetHP();
 	if (hp <= 30) phase_ = Phase::P3;
 	else if (hp <= 60) phase_ = Phase::P2;
@@ -192,13 +176,14 @@ void BossEnemy::UpdateMovement(const Vector3& playerPos, const Vector3& /*player
 			const float kStopRad = 1.5f;                    // 到達判定半径
 			const float kArrive = arriveRadius_;           // 減速開始距離
 
-			Vector3 pos = GetWorldPosition();
-			Vector3 toT = p1Anchor - pos;
-			float   dist = MyMath::Length(toT);
+			Vector3 pos = GetWorldPosition(); // 現在位置
+			Vector3 toT = p1Anchor - pos; // 目標へのベクトル
+			float   dist = MyMath::Length(toT); // 目標までの距離
 
+			// 到達判定
 			if (dist <= kStopRad) {
 				SetPosition(p1Anchor);                       // 固定
-			} else {
+			} else { // 到達していないなら接近
 				Vector3 desired = (dist > 1e-4f) ? MyMath::Normalize(toT) * kMaxSpeed : Vector3{ 0,0,0 };
 				if (dist < kArrive) {
 					desired = desired * (dist / kArrive);    // 線形減速（*=は使わない）
@@ -225,21 +210,25 @@ void BossEnemy::UpdateMovement(const Vector3& playerPos, const Vector3& /*player
 		const float kMaxSpeed = 1.2f;
 		const float kArrive = arriveRadius_;
 
-		theta_ += kOmegaX;
+		theta_ += kOmegaX; // 左右往復の進行
 
+		// 目標の中心は「プレイヤーの少し前」
 		Vector3 center = playerPos + Vector3{ 0.0f, 0.0f, kCenterOffsetZ };
 		float offX = kRangeX * std::sinf(theta_);
 		float offY = kRangeY * std::sinf(theta_ * (kOmegaY / kOmegaX) + 1.2345f);
 		Vector3 target = center + Vector3{ offX, offY, 0.0f };
 
+		// 到達減速つきのシーク
 		Vector3 pos = GetWorldPosition();
 		Vector3 toT = target - pos;
 		float   dist = MyMath::Length(toT);
 
+		// シークベクトル計算
 		Vector3 desired = (dist > 1e-4f) ? MyMath::Normalize(toT) * kMaxSpeed : Vector3{ 0,0,0 };
 		if (dist < kArrive) desired = desired * (dist / kArrive);
 		pos = pos + desired;
 		SetPosition(pos);
+
 		return;
 	}
 
@@ -257,16 +246,19 @@ void BossEnemy::UpdateMovement(const Vector3& playerPos, const Vector3& /*player
 		float offX = p2RangeX_ * std::sinf(theta_);
 		float offY = p2RangeY_ * std::sinf(theta_ * (p2OmegaY_ / p2OmegaX_) + 0.73f);
 
+		// 目標位置
 		Vector3 target = center + Vector3{ offX, offY, 0.0f };
 
 		// 到達減速つきのシーク
 		const float kMaxSpeed = p2MaxSpeed_;
 		const float kArrive = arriveRadius_;
 
+		// シークベクトル計算
 		Vector3 pos = GetWorldPosition();
 		Vector3 toT = target - pos;
 		float   dist = MyMath::Length(toT);
 
+		// シークベクトル計算
 		Vector3 desired = (dist > 1e-4f) ? MyMath::Normalize(toT) * kMaxSpeed : Vector3{ 0,0,0 };
 		if (dist < kArrive) {
 			desired = desired * (dist / kArrive);  // 線形減速
@@ -278,22 +270,25 @@ void BossEnemy::UpdateMovement(const Vector3& playerPos, const Vector3& /*player
 
 }
 
-
-
-
 void BossEnemy::UpdateAttack(float dt, const Vector3& playerPos) {
+	// ステージ時間進行
 	stageT_ += dt;
+	// クールダウン進行
 	TickCooldowns();
 
+	// ステージ遷移
 	switch (stage_) {
-	case ActStage::Telegraph:
+	case ActStage::Telegraph: // 予備動作
+		// 予備動作完了で発射へ
 		if (stageT_ >= TelegraphTime()) { stage_ = ActStage::Fire; stageT_ = 0; FireBegin(); }
 		break;
-	case ActStage::Fire:
+	case ActStage::Fire: // 発射中
+		// 発射中処理
 		FireTick(dt, playerPos);
 		if (stageT_ >= FireTime()) { stage_ = ActStage::Cooldown; stageT_ = 0; FireEnd(); }
 		break;
-	case ActStage::Cooldown:
+	case ActStage::Cooldown: // クールダウン
+		// クールダウン完了で次の攻撃へ
 		if (stageT_ >= CooldownTime()) {
 			stage_ = ActStage::Telegraph; stageT_ = 0;
 			SelectNextAttackUtility(playerPos); // ← ここでAI選択
@@ -308,6 +303,7 @@ void BossEnemy::SelectNextAttackUtility(const Vector3& playerPos) {
 	const Vector3 toPlayer = playerPos - me;
 	const float   dist = MyMath::Length(toPlayer);
 
+	// P1はビーム一択
 	if (phase_ == Phase::P1) {
 		currentAttack_ = AttackType::Beam;
 		cdBeam_.t = cdBeam_.cool; // クールダウンは通常通り進める
@@ -317,9 +313,9 @@ void BossEnemy::SelectNextAttackUtility(const Vector3& playerPos) {
 	}
 
 	// 正面ベクトル（必要なら将来ここを実向きに合わせて更新）
-	const Vector3 forward = SafeNormalize(Vector3{ 0,0,1 });
+	const Vector3 forward = MyMath::SafeNormalize(Vector3{ 0,0,1 });
 	// XZ平面での正対度 [-1..1] → [0..1] に射影
-	float align01 = DotXZ(forward, toPlayer); // -1..1
+	float align01 = MyMath::DotOnXZ(forward, toPlayer); // -1..1
 	align01 = align01 * 0.5f + 0.5f;          // 0..1
 
 	// ===== 2) 距離適性（各技が得意な距離帯） =====
@@ -328,11 +324,13 @@ void BossEnemy::SelectNextAttackUtility(const Vector3& playerPos) {
 		const float t = std::abs(d - center) / width;
 		return std::max(0.0f, 1.0f - t); // 0..1
 		};
+	// 各技の距離適性
 	const float fitBeam = distPref(dist, 45.0f, 30.0f); // 遠〜中
 	const float fitFan = distPref(dist, 32.0f, 18.0f); // 中
 	const float fitRapid = distPref(dist, 18.0f, 16.0f); // 近
 
 	// ===== 3) フェーズ・バイアス（“今はこの技を出したい”） =====
+	// フェーズごとに設定されたバイアス値を取得
 	const float biasBeam = PhaseBiasFor(AttackType::Beam);
 	const float biasFan = PhaseBiasFor(AttackType::Fan);
 	const float biasRapid = PhaseBiasFor(AttackType::Rapid);
@@ -342,6 +340,7 @@ void BossEnemy::SelectNextAttackUtility(const Vector3& playerPos) {
 	auto chainPenalty = [&](AttackType at) -> float {
 		return (lastAttack_ == at && sameAttackChain_ >= maxSameChain_) ? 0.7f : 0.0f;
 		};
+	// 各技のペナルティ計算
 	const float penBeamCD = cdPenalty(cdBeam_);
 	const float penFanCD = cdPenalty(cdFan_);
 	const float penRapidCD = cdPenalty(cdRapid_);
@@ -350,7 +349,7 @@ void BossEnemy::SelectNextAttackUtility(const Vector3& playerPos) {
 	const float penRapidCh = chainPenalty(AttackType::Rapid);
 
 	// ===== 5) ゆらぎ（毎回ちょっと違う選択にするためのノイズ） =====
-	const float jitter = (Rand01() * 2.0f - 1.0f) * jitterAmplitude_; // ±jitterAmplitude_
+	const float jitter = (MyMath::Rand01() * 2.0f - 1.0f) * jitterAmplitude_; // ±jitterAmplitude_
 
 	// ===== 6) 最終スコア（見やすい形に分解して合算） =====
 	const float sBeam =
@@ -361,37 +360,41 @@ void BossEnemy::SelectNextAttackUtility(const Vector3& playerPos) {
 		penBeamCD - penBeamCh;        // ペナルティ
 
 	const float sFan =
-		wDistFan_ * fitFan +
-		wAlignFan_ * align01 +
-		biasFan +
-		jitter -
-		penFanCD - penFanCh;
+		wDistFan_ * fitFan + // 距離適性
+		wAlignFan_ * align01 + // 正対
+		biasFan + // フェーズバイアス
+		jitter - // ゆらぎ
+		penFanCD - penFanCh; // ペナルティ
 
 	const float sRapid =
-		wDistRapid_ * fitRapid +
-		wAlignRapid_ * align01 +
-		biasRapid +
-		jitter -
-		penRapidCD - penRapidCh;
+		wDistRapid_ * fitRapid + // 距離適性
+		wAlignRapid_ * align01 + // 正対
+		biasRapid + // フェーズバイアス
+		jitter - // ゆらぎ
+		penRapidCD - penRapidCh; // ペナルティ
 
 	// ===== 7) 選択（僅差の時は微小ノイズでタイブレーク） =====
 	AttackType next = AttackType::Beam;
 	float best = sBeam;
 
+	// ヘルパーラムダ：スコア比較＋更新
 	auto consider = [&](AttackType at, float s) {
 		// 同点付近での固定化防止：極小ノイズを足して比較
-		const float epsBreak = 1e-4f * (Rand01() - 0.5f);
+		const float epsBreak = 1e-4f * (MyMath::Rand01() - 0.5f);
 		if (s + epsBreak > best) { best = s; next = at; }
 		};
 	consider(AttackType::Fan, sFan);
 	consider(AttackType::Rapid, sRapid);
 
 	// ===== 8) 選択結果の反映（CD/連続回数/現行技） =====
+
+	// 選択履歴に記録
 	switch (next) {
-	case AttackType::Beam:  cdBeam_.t = cdBeam_.cool;  break;
+	case AttackType::Beam:  cdBeam_.t = cdBeam_.cool;  break; 
 	case AttackType::Fan:   cdFan_.t = cdFan_.cool;   break;
 	case AttackType::Rapid: cdRapid_.t = cdRapid_.cool; break;
 	}
+	// 連続回数更新
 	sameAttackChain_ = (lastAttack_ == next) ? (sameAttackChain_ + 1) : 0;
 	lastAttack_ = next;
 	currentAttack_ = next;
@@ -407,10 +410,12 @@ void BossEnemy::FireBegin() {
 // ─────────────────────────────────────────────
 void BossEnemy::FireTick(float /*dt*/, const Vector3& playerPos)
 {
+	// シーン取得
 	auto* gs = dynamic_cast<GameScene*>(GetParentScene());
+	// 安全確認
 	if (!gs) return;
 
-	const Vector3 myPos = GetWorldPosition();
+	const Vector3 myPos = GetWorldPosition(); // 自分の位置
 
 	// 既存の安全正規化
 	auto SafeNormalize = [](const Vector3& v, const Vector3& fallback) {
@@ -434,19 +439,21 @@ void BossEnemy::FireTick(float /*dt*/, const Vector3& playerPos)
 
 	// ---------- P2/P3: 既存の攻撃ロジック ----------
 	switch (currentAttack_) {
-	case AttackType::Beam: {
+	case AttackType::Beam: { // ビーム
+		// およそ0.05秒に1発（3フレームおき）
 		if (static_cast<int>(stageT_) % 3 == 0) {
 			Vector3 dir = SafeNormalize(aimPos - myPos, { 0,0,-1 });
 			gs->SpawnEnemyBullet(myPos, dir, 0.7f, 2, 240);
 		}
 		break;
 	}
-	case AttackType::Fan: {
+	case AttackType::Fan: { // 扇状
 		Vector3 forward = SafeNormalize(aimPos - myPos, { 0,0,-1 });
 		Vector3 right = SafeNormalize(Vector3{ forward.z, 0.0f, -forward.x }, { 1,0,0 });
+		// およそ0.16秒に1発（10フレームおき）
 		if (static_cast<int>(stageT_) % 10 == 0) {
 			int   N = std::max(3, fanCount_);
-			float spread = fanSpread_ * (0.9f + 0.2f * Rand01());
+			float spread = fanSpread_ * (0.9f + 0.2f * MyMath::Rand01());
 			for (int i = 0; i < N; ++i) {
 				float t = (i - (N - 1) * 0.5f);
 				Vector3 dir = SafeNormalize(forward + right * (t * spread), { 0,0,-1 });
@@ -455,7 +462,8 @@ void BossEnemy::FireTick(float /*dt*/, const Vector3& playerPos)
 		}
 		break;
 	}
-	case AttackType::Rapid: {
+	case AttackType::Rapid: { // 連射
+		// およそ0.1秒に1発（6フレームおき）
 		float jx = std::sinf(stageT_ * 0.7f) * rapidJitterX_;
 		float jz = std::cosf(stageT_ * 0.5f) * rapidJitterZ_;
 		Vector3 base = SafeNormalize(aimPos - myPos, { 0,0,-1 });
@@ -465,7 +473,6 @@ void BossEnemy::FireTick(float /*dt*/, const Vector3& playerPos)
 	}
 	}
 }
-
 
 void BossEnemy::FireEnd() {
 	// 終了演出など任意
@@ -490,6 +497,7 @@ float BossEnemy::CooldownTime() const {
 
 // BossEnemy.cpp（追記：ヘルパー）
 const char* BossEnemy::AttackName(AttackType at) const {
+	// ヘルパー：攻撃タイプ名取得
 	switch (at) {
 	case AttackType::Beam:  return "Beam";
 	case AttackType::Fan:   return "Fan";
@@ -498,6 +506,6 @@ const char* BossEnemy::AttackName(AttackType at) const {
 	return "?";
 }
 void BossEnemy::PushHistory(AttackType at) {
-	history_[histIndex_] = (at == AttackType::Beam ? 0 : (at == AttackType::Fan ? 1 : 2));
-	histIndex_ = (histIndex_ + 1) % kHist;
+	history_[histIndex_] = (at == AttackType::Beam ? 0 : (at == AttackType::Fan ? 1 : 2)); // 0:Beam, 1:Fan, 2:Rapid
+	histIndex_ = (histIndex_ + 1) % kHist; // 循環インクリメント
 }

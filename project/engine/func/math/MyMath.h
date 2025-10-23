@@ -91,4 +91,10 @@ public:
 	static Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip);
 
 	static Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip);
+
+	static Vector3 SafeNormalize(const Vector3& v, const Vector3& fallback = { 0,0,-1 });
+
+	static float DotOnXZ(const Vector3& a, const Vector3& b);
+
+	static float Rand01();
 };

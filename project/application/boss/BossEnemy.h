@@ -125,16 +125,8 @@ private:
 	/// <summary>クールダウン時間（Cooldown）の秒数を返します。</summary>
 	float CooldownTime() const;
 
-	// 補助
-
-	/// <summary>0..1の一様乱数を返します。</summary>
-	float Rand01();                   // 0..1
-
 	/// <summary>各攻撃のクールダウンを進めます。</summary>
 	void  TickCooldowns();            // CDを進める
-
-	/// <summary>XZ平面での内積を計算します。</summary>
-	float DotXZ(const Vector3& a, const Vector3& b) const;
 
 	/// <summary>プレイヤーの先読み位置を返します。</summary>
 	Vector3 PredictPlayer(const Vector3& playerPos) const; // 先読み

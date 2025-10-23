@@ -17,13 +17,13 @@ void ImGuiManager::Initialize(WindowsAPI* winApp, DirectXCommon* dxCommon)
 
 	//イチゴ色
 	
-	SetColorStrawberry();
+	//SetColorStrawberry();
 
 	//ホワイトタイガー色
 	//SetColorWhiteTiger();
 
 	//レインボー キラキラ✨
-	//SetColorRainbow();
+	SetColorRainbow();
 
 	///===========================================================
 

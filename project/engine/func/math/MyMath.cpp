@@ -1,4 +1,10 @@
 #include "MyMath.h"
+#include <random>
+
+namespace {
+	// 乱数エンジンを共有
+	static std::mt19937 s_rng{ std::random_device{}() };
+}
 
 // π
 float MyMath::GetPI() { return (float)M_PI; }
@@ -491,4 +497,26 @@ Matrix4x4  MyMath::MakePerspectiveFovMatrix(float fovY, float aspectRatio, float
 	result.m[3][3] = 0.0f;
 
 	return result;
+}
+
+Vector3 MyMath::SafeNormalize(const Vector3& v, const Vector3& fallback) {
+	float len = MyMath::Length(v);
+	if (len < 1e-5f) return fallback;
+	return MyMath::Normalize(v);
+}
+
+float MyMath::DotOnXZ(const Vector3& a, const Vector3& b) {
+	Vector3 aa{ a.x, 0, a.z };
+	Vector3 bb{ b.x, 0, b.z };
+	float la = MyMath::Length(aa);
+	float lb = MyMath::Length(bb);
+	if (la < 1e-5f || lb < 1e-5f) return 0.0f;
+	aa = aa * (1.0f / la);
+	bb = bb * (1.0f / lb);
+	return aa.x * bb.x + aa.z * bb.z;
+}
+
+float MyMath::Rand01() {
+	std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+	return dist(s_rng);
 }

@@ -72,14 +72,10 @@ public:
 	///<summary>テクスチャデータのアップロードを行う関数</summary>
 	///<param name="texture">テクスチャリソース</param>
 	Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages);
-	///<summary>レンダーターゲット用テクスチャリソースの生成を行う関数</summary>
-	///<param name="width">テクスチャ幅</param>
-	Microsoft::WRL::ComPtr<ID3D12Resource> CreateRenderTextureResource(Microsoft::WRL::ComPtr<ID3D12Device>, uint32_t width, uint32_t height, DXGI_FORMAT format, const Vector4& clearColor);
-	///<summary>レンダーターゲットビューの生成を行う関数</summary>
-	void CreateRenderTextureResourceRTV();
-	///<summary>深度ビューの生成を行う関数</summary>
-	//<summary>深度SRVの生成を行う関数</summary>
-	void CreateDepthSRV();
+	///<summary>デスクリプタヒープの生成を行う関数</summary>
+	///<param name="heapType">ヒープタイプ</param>
+	///<param name="numDescriptors">デスクリプタ数</param>
+	///<param name="shaderVisible">シェーダから見えるかどうか</param>
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
 
 	// -------------------- シェーダ関連 --------------------
@@ -87,11 +83,6 @@ public:
 	///<param name="filePath">シェーダファイルのパス</param>
 	///<param name="profile">シェーダプロファイル</param>
 	Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(const std::wstring& filePath, const wchar_t* profile);
-	///<summary>ルートシグネチャの生成を行う関数</summary>
-	void CreateRootSignatureDX();
-	///<summary>パイプラインステートの生成を行う関数</summary>
-	void CreatePipelineStateDX();
-
 	// -------------------- Getter --------------------
 	///<summary>デバイスのゲッター</summary>
 	ID3D12Device* GetDevice() const { return device.Get(); }
@@ -124,11 +115,11 @@ private:
 	void UpdateFixFPS();
 
 	// -------------------- DirectX関連 --------------------
-	Microsoft::WRL::ComPtr<ID3D12Device> device;
-	Microsoft::WRL::ComPtr<IDXGIFactory7> dxgiFactory;
-	Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain;
-	Microsoft::WRL::ComPtr<ID3D12Debug1> debugController;
-	Microsoft::WRL::ComPtr<IDXGIAdapter4> useAdapter;
+	Microsoft::WRL::ComPtr<ID3D12Device> device; // D3D12デバイス
+	Microsoft::WRL::ComPtr<IDXGIFactory7> dxgiFactory; // DXGIファクトリ
+	Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain; // スワップチェーン
+	Microsoft::WRL::ComPtr<ID3D12Debug1> debugController; // デバッグコントローラ
+	Microsoft::WRL::ComPtr<IDXGIAdapter4> useAdapter; // 使用アダプタ
 
 	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> commandAllocator;
 	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList;
