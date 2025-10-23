@@ -7,11 +7,12 @@
 
 namespace EnemySpawner {
 
+	// "1直線状" に敵をスポーン
 	void SpawnLine(std::vector<std::unique_ptr<Enemy>>& enemies,
 		int count, float y, float z,
 		float xStart, float xStep,
 		DirectXCommon* dx, Camera* cam, BaseScene* parent, EnemyConfig config) {
-		for (int i = 0; i < count; ++i) {
+		for (int i = 0; i < count; ++i) { // 敵の生成と初期化
 			auto e = std::make_unique<Enemy>();
 			e->Initialize(Object3dCommon::GetInstance(), dx);
 			e->SetPosition({ xStart + xStep * i, y, z });
@@ -22,12 +23,13 @@ namespace EnemySpawner {
 		}
 	}
 
+	// "V字型" に敵をスポーン
 	void SpawnV(std::vector<std::unique_ptr<Enemy>>& enemies,
 		int countPerSide, float y, float z,
 		float xCenter, float xStep, float zStep,
 		DirectXCommon* dx, Camera* cam, BaseScene* parent, EnemyConfig config) {
 		// 中央
-			{
+			{ // 敵の生成と初期化
 				auto e = std::make_unique<Enemy>();
 				e->Initialize(Object3dCommon::GetInstance(), dx);
 				e->SetPosition({ xCenter, y, z });
@@ -37,7 +39,7 @@ namespace EnemySpawner {
 				enemies.push_back(std::move(e));
 			}
 			// 左右展開
-			for (int i = 1; i <= countPerSide; ++i) {
+			for (int i = 1; i <= countPerSide; ++i) { // 敵の生成と初期化
 				for (int side = -1; side <= 1; side += 2) {
 					auto e = std::make_unique<Enemy>();
 					e->Initialize(Object3dCommon::GetInstance(), dx);
@@ -50,11 +52,12 @@ namespace EnemySpawner {
 			}
 	}
 
+	// "1列柱状" に敵をスポーン
 	void SpawnColumn(std::vector<std::unique_ptr<Enemy>>& enemies,
 		int count, float x, float zStart, float zStep,
 		float yStart, float yStep,
 		DirectXCommon* dx, Camera* cam, BaseScene* parent, EnemyConfig config) {
-		for (int i = 0; i < count; ++i) {
+		for (int i = 0; i < count; ++i) { // 敵の生成と初期化
 			auto e = std::make_unique<Enemy>();
 			e->Initialize(Object3dCommon::GetInstance(), dx);
 			e->SetPosition({ x, yStart + yStep * i, zStart + zStep * i });
