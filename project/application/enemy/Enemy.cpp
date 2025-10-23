@@ -2,11 +2,12 @@
 #include "ModelManager.h"
 
 void Enemy::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
-	object_ = std::make_unique<Object3d>();
-	object_->Initialize(common, dxCommon);
+	object_ = std::make_unique<Object3d>(); // Object3d のインスタンスを生成
+	object_->Initialize(common, dxCommon); // 初期化
 	object_->SetModel("enemy.obj"); // モデル名は適宜変更
-	ModelManager::GetInstance()->LoadModel("enemy.obj", dxCommon);
+	ModelManager::GetInstance()->LoadModel("enemy.obj", dxCommon); // モデル読み込み
 
+	// カメラ設定
 	if (camera) {
 		object_->SetCamera(camera);
 	}
@@ -20,22 +21,22 @@ void Enemy::Update() {
 	// ---- 位置更新（挙動別）----
 	Vector3 pos = object_->GetTranslate();
 
-	switch (behavior_) {
-	case EnemyBehavior::StraightStop: {
+	switch (behavior_) { // 挙動別移動
+	case EnemyBehavior::StraightStop: { // 既存の挙動
 		if (!stopMove_) {
 			pos += velocity_;
 			if (pos.z <= stopZ_) { pos.z = stopZ_; stopMove_ = true; }
 		}
 		break;
 	}
-	case EnemyBehavior::SineX: {
+	case EnemyBehavior::SineX: { // Xをサイン波で揺らしながら前進
 		t_ += 0.05f;
 		pos.z += velocity_.z; // 手前へ
 		pos.x = startX_ + std::sinf(sinePhase_ + t_ * sineFreq_) * sineAmpX_;
 		if (pos.z <= stopZ_) { pos.z = stopZ_; }
 		break;
 	}
-	case EnemyBehavior::StrafeLtoR: {
+	case EnemyBehavior::StrafeLtoR: { // Xを左右往復しながら前進
 		pos.z += velocity_.z;
 		// 簡易左右往復
 		strafePosX_ += strafeSpeed_ * strafeDir_;
@@ -45,7 +46,7 @@ void Enemy::Update() {
 		if (pos.z <= stopZ_) { pos.z = stopZ_; }
 		break;
 	}
-	case EnemyBehavior::ChasePlayer: {
+	case EnemyBehavior::ChasePlayer: { // プレイヤー方向にじわっと追尾
 		pos.z += velocity_.z;
 		if (playerGetter_) {
 			Vector3 toP = playerGetter_() - pos;
@@ -63,14 +64,14 @@ void Enemy::Update() {
 
 	}
 
-	object_->SetTranslate(pos);
+	object_->SetTranslate(pos); // 位置反映
 
 	// ---- ロック中のパルス（既存）----
 	if (isLocked_) {
 		pulseT_ += 0.12f;
 		float s = 1.0f + 0.15f * sinf(pulseT_);
 		object_->SetScale({ baseScale_.x * s, baseScale_.y * s, baseScale_.z * s });
-	} else {
+	} else { // 通常スケールに戻す
 		object_->SetScale(baseScale_);
 	}
 
@@ -79,40 +80,38 @@ void Enemy::Update() {
 		shootTimer_++;
 		if (shootTimer_ >= shootInterval_) {
 			shootTimer_ = 0.0f;
-			// TODO: ここで parentScene_ 経由などで EnemyBullet を生成
-			// 例）親に「(pos, 進行方向)」を通知して生成してもらう
 		}
 	}
 
-	object_->Update();
+	object_->Update(); // Object3d の更新
 }
 
 
 void Enemy::Draw(DirectXCommon* dxCommon) {
-	object_->Draw(dxCommon);
+	object_->Draw(dxCommon); // Object3d の描画
 }
 
 void Enemy::SetCamera(Camera* camera) {
-	this->camera = camera;
+	this->camera = camera; // メンバ変数に保存
 	if (object_) {
-		object_->SetCamera(camera);
+		object_->SetCamera(camera); // Object3d に反映
 	}
 }
 
 void Enemy::SetPosition(const Vector3& pos) {
-	object_->SetTranslate(pos);
+	object_->SetTranslate(pos); // 位置設定
 }
 
 void Enemy::SetParentScene(BaseScene* scene) {
-	parentScene_ = scene;
+	parentScene_ = scene; // メンバ変数に保存
 }
 
 Vector3 Enemy::GetWorldPosition() const {
-	return object_->GetTranslate();
+	return object_->GetTranslate(); // ワールド位置を返す
 }
 
 void Enemy::ImGuiDebug() {
-	if (!object_) return;
+	if (!object_) return; //
 
 	ImGui::Begin("Enemy");
 
@@ -138,16 +137,18 @@ void Enemy::ImGuiDebug() {
 
 void Enemy::OnHit()
 {
-	hp_--;
+	hp_--; // ダメージ1
+	// HPが0になったら
 	if (hp_ <= 0) {
-		isDead_ = true;
+		isDead_ = true; // 死亡フラグ立てる
 	}
 }
 
 void Enemy::OnHitWithDamage(int damage)
 {
-	hp_ -= damage;
+	hp_ -= damage; // 指定ダメージ分減らす
+	// HPが0になったら
 	if (hp_ <= 0) {
-		isDead_ = true;
+		isDead_ = true; // 死亡フラグ立てる
 	}
 }
