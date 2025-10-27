@@ -16,14 +16,13 @@ void ImGuiManager::Initialize(WindowsAPI* winApp, DirectXCommon* dxCommon)
 	///ImGuiの色設定場所===========================================
 
 	//イチゴ色
-	
-	//SetColorStrawberry();
+	SetColorStrawberry();
 
 	//ホワイトタイガー色
 	//SetColorWhiteTiger();
 
 	//レインボー キラキラ✨
-	SetColorRainbow();
+	//SetColorRainbow();
 
 	///===========================================================
 
@@ -84,6 +83,7 @@ void ImGuiManager::End()
 
 void ImGuiManager::Draw()
 {
+	// コマンドリストの取得
 	ID3D12GraphicsCommandList* commandList = dxCommon_->GetCommandList();
 
 	//デスクリプタヒープの配列をセットするコマンド
@@ -206,8 +206,9 @@ void ImGuiManager::SetColorRainbow()
 	style.WindowRounding = 19.0f; // ウィンドウの角を丸くする
 	style.FrameRounding = 4.0f;  // フレームの角を丸くする
 
-	ImVec4* colors = style.Colors;
+	ImVec4* colors = style.Colors; // 色配列へのポインタ取得
 
+	// 🌈 **ウィンドウとテキスト**
 	colors[ImGuiCol_Text] = ImVec4(1.0f, 0.0f, 1.0f, 1.0f);
 	colors[ImGuiCol_WindowBg] = ImVec4(0.0f, 1.0f, 1.0f, 0.95f);
 	colors[ImGuiCol_Border] = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);

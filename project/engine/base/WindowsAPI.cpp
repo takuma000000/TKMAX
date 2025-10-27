@@ -43,6 +43,7 @@ LRESULT CALLBACK WindowsAPI::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPAR
 
 void WindowsAPI::Initialize()
 {
+	//COMライブラリの初期化
 	CoInitializeEx(0, COINIT_MULTITHREADED);
 	//システムターマーの分解能を上げる
 	timeBeginPeriod(1);
@@ -93,20 +94,20 @@ void WindowsAPI::Update()
 
 void WindowsAPI::Finalize()
 {
-	CloseWindow(hwnd);
-	CoUninitialize();
+	CloseWindow(hwnd); // ウィンドウを閉じる
+	CoUninitialize(); // COMライブラリの終了
 }
 
 bool WindowsAPI::ProcessMessage()
 {
 	MSG msg{};
 
-	if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
+	if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) { // メッセージがあるか確認
+		TranslateMessage(&msg); // 仮想キーコードを文字コードに変換
+		DispatchMessage(&msg); // ウィンドウプロシージャにメッセージを送る
 	}
 
-	if (msg.message == WM_QUIT) {
+	if (msg.message == WM_QUIT) { // WM_QUITメッセージが来たら終了
 		return true;
 	}
 

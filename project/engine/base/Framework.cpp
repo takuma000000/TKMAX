@@ -15,7 +15,7 @@ void Framework::Initialize()
 	//シーンマネージャの生成
 	sceneManager_ = std::make_unique<SceneManager>();
 
-
+	// WindowsAPI の初期化
 	windowsAPI = std::make_unique<WindowsAPI>();
 	windowsAPI->Initialize();
 
@@ -23,6 +23,7 @@ void Framework::Initialize()
 	dxCommon = std::make_unique<DirectXCommon>();
 	dxCommon->Initialize(windowsAPI.get());
 
+	// SRVマネージャの初期化
 	srvManager = std::make_unique<SrvManager>();
 	srvManager->Initialize(dxCommon.get());
 	assert(srvManager != nullptr && "SrvManager initialization failed");
@@ -30,24 +31,21 @@ void Framework::Initialize()
 
 	//テクスチャマネージャの初期化
 	TextureManager::GetInstance()->Initialize(dxCommon.get(), srvManager.get());
-
+	// モデルマネージャの初期化
 	ModelManager::GetInstance()->Initialize(dxCommon.get());
-
+	// オーディオマネージャの初期化
 	AudioManager::GetInstance()->Initialize(); // AudioManagerを初期化
 
 	Object3dCommon::GetInstance()->Initialize(dxCommon.get()); // Object3dCommonを初期化
 	SpriteCommon::GetInstance()->Initialize(dxCommon.get()); // SpriteCommonを初期化
-
 	Input::GetInstance()->Initialize(windowsAPI.get()); // Inputを初期化
-
 }
 
 void Framework::Finalize()
 {
+	windowsAPI->Finalize(); // WindowsAPI の終了
 
-	windowsAPI->Finalize();
-
-	Input::GetInstance()->Finalize();
+	Input::GetInstance()->Finalize(); // Inputの終了
 }
 
 void Framework::Update()

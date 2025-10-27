@@ -280,6 +280,7 @@ Vector3 MyMath::Transform(const Vector3& vector, const Matrix4x4& matrix) {
 	return result;
 }
 
+// 回転行列X
 Matrix4x4 MyMath::MakeRotateXMatrix(float radian) {
 	Matrix4x4 rotationMatrix = {};
 
@@ -306,6 +307,7 @@ Matrix4x4 MyMath::MakeRotateXMatrix(float radian) {
 	return rotationMatrix;
 }
 
+// 回転行列Y
 Matrix4x4 MyMath::MakeRotateYMatrix(float radian) {
 	Matrix4x4 rotationMatrix = {};
 
@@ -332,6 +334,7 @@ Matrix4x4 MyMath::MakeRotateYMatrix(float radian) {
 	return rotationMatrix;
 }
 
+// 回転行列Z
 Matrix4x4 MyMath::MakeRotateZMatrix(float radian) {
 	Matrix4x4 rotationMatrix = {};
 
@@ -358,6 +361,7 @@ Matrix4x4 MyMath::MakeRotateZMatrix(float radian) {
 	return rotationMatrix;
 }
 
+// 回転行列XYZ
 Matrix4x4 MyMath::MakeRotateMatrix(Vector3 rotate) {
 
 	Matrix4x4 rotateXYZMatrix = Multiply(
@@ -427,6 +431,7 @@ Matrix4x4 MyMath::MakeViewportMatrix(
 	return viewportMatrix;
 }
 
+// 単位行列
 Matrix4x4  MyMath::MakeIdentity4x4() {
 
 	Matrix4x4 identity;
@@ -442,6 +447,7 @@ Matrix4x4  MyMath::MakeIdentity4x4() {
 
 }
 
+// 直交投影行列
 Matrix4x4  MyMath::MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip) {
 	Matrix4x4 mat;
 
@@ -468,6 +474,7 @@ Matrix4x4  MyMath::MakeOrthographicMatrix(float left, float top, float right, fl
 	return mat;
 }
 
+// 透視投影行列
 Matrix4x4  MyMath::MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip) {
 	float tanHalfFovY = tanf(fovY * 0.5f);
 	float scaleX = 1.0f / (aspectRatio * tanHalfFovY);
@@ -499,12 +506,14 @@ Matrix4x4  MyMath::MakePerspectiveFovMatrix(float fovY, float aspectRatio, float
 	return result;
 }
 
+// 安全な正規化
 Vector3 MyMath::SafeNormalize(const Vector3& v, const Vector3& fallback) {
 	float len = MyMath::Length(v);
 	if (len < 1e-5f) return fallback;
 	return MyMath::Normalize(v);
 }
 
+// XZ平面上のドット積
 float MyMath::DotOnXZ(const Vector3& a, const Vector3& b) {
 	Vector3 aa{ a.x, 0, a.z };
 	Vector3 bb{ b.x, 0, b.z };
@@ -516,6 +525,7 @@ float MyMath::DotOnXZ(const Vector3& a, const Vector3& b) {
 	return aa.x * bb.x + aa.z * bb.z;
 }
 
+// 0.0〜1.0の範囲の乱数を生成
 float MyMath::Rand01() {
 	std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 	return dist(s_rng);

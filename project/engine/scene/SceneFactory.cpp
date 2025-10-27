@@ -13,9 +13,8 @@ BaseScene* SceneFactory::CreateScene(const std::string& sceneName)
 	} else if (sceneName == "GAME") {
 		newScene = new GameScene(dxCommon, srvManager);	//GameSceneを生成
 	} else if (sceneName == "CLEAR") {
-		return new GameClearScene(dxCommon, srvManager);
+		return new GameClearScene(dxCommon, srvManager); //GameClearSceneを生成
 	}
-
 
 	return newScene;
 }

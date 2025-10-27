@@ -18,15 +18,18 @@ void Input::Initialize(WindowsAPI* windowsAPI)
 {
 	HRESULT result;
 
-	this->winApp = windowsAPI;
+	this->winApp = windowsAPI; // WindowsAPIのポインタを保存
 
+	// DirectInputの初期化
 	result = DirectInput8Create(winApp->GetHInstance(), DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&directInput, nullptr);
 	assert(SUCCEEDED(result));
-
+	// キーボードデバイスの生成
 	result = directInput->CreateDevice(GUID_SysKeyboard, &keyboard, NULL);
 	assert(SUCCEEDED(result));
+	// デバイスの設定
 	result = keyboard->SetDataFormat(&c_dfDIKeyboard);
 	assert(SUCCEEDED(result));
+	// 協調レベルの設定
 	result = keyboard->SetCooperativeLevel(winApp->GetHwnd(), DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
 	assert(SUCCEEDED(result));
 }
@@ -56,6 +59,7 @@ bool Input::PushKey(BYTE keyNumber)
 	return (key[keyNumber] & 0x80) != 0;
 }
 
+// キーボードのトリガー判定
 bool Input::TriggerKey(BYTE keyNumber)
 {
 	return !(keyPre[keyNumber] & 0x80) && (key[keyNumber] & 0x80);
@@ -67,6 +71,7 @@ bool Input::PushButton(WORD button)
 	return (controllerState.Gamepad.wButtons & button) != 0;
 }
 
+// ゲームパッドのトリガー判定
 bool Input::TriggerButton(WORD button)
 {
 	return !(prevControllerState.Gamepad.wButtons & button) &&
@@ -79,6 +84,7 @@ SHORT Input::GetLeftStickX()
 	return controllerState.Gamepad.sThumbLX;
 }
 
+// Y軸の取得
 SHORT Input::GetLeftStickY()
 {
 	return controllerState.Gamepad.sThumbLY;
@@ -90,35 +96,28 @@ SHORT Input::GetRightStickX()
 	return controllerState.Gamepad.sThumbRX;
 }
 
+// Y軸の取得
 SHORT Input::GetRightStickY()
 {
 	return controllerState.Gamepad.sThumbRY;
 }
 
+// トリガー入力
 BYTE Input::GetRightTrigger()
 {
 	return controllerState.Gamepad.bRightTrigger;
 }
 
+// トリガー入力
 BYTE Input::GetLeftTrigger()
 {
 	return controllerState.Gamepad.bLeftTrigger;
 }
 
-//// トリガー入力
-//BYTE Input::GetLeftTrigger()
-//{
-//	return controllerState.Gamepad.bLeftTrigger;
-//}
-//
-//BYTE Input::GetRightTrigger()
-//{
-//	return controllerState.Gamepad.bRightTrigger;
-//}
-
 // コントローラーの振動
 void Input::SetVibration(WORD leftMotor, WORD rightMotor)
 {
+	// 振動の設定
 	XINPUT_VIBRATION vibration;
 	ZeroMemory(&vibration, sizeof(XINPUT_VIBRATION));
 	vibration.wLeftMotorSpeed = leftMotor;

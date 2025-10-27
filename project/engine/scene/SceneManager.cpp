@@ -36,7 +36,7 @@ void SceneManager::Draw()
 
 SceneManager::~SceneManager()
 {
-	if (scene_) {
+	if (scene_) { // シーンが存在する場合のみ解放
 		scene_->Finalize();
 		delete scene_;
 		scene_ = nullptr; // ポインタを無効化
