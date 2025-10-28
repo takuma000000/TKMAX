@@ -21,6 +21,7 @@
 #include "GameScene.h"
 #include <SkyBox.h> 
 #include <Easing.h>
+#include "application/scene/GameOverScene.h"
 
 //=============================================================
 // TitleSceneクラス
@@ -44,9 +45,8 @@ private:
 	DirectXCommon* dxCommon = nullptr;
 	SrvManager* srvManager = nullptr;
 
-	// 既存
-	std::unique_ptr<Sprite> sprite = nullptr;
-	std::unique_ptr<Camera> camera = nullptr;
+	std::unique_ptr<Sprite> sprite = nullptr; // 2Dスプライト共通
+	std::unique_ptr<Camera> camera = nullptr; // カメラ
 
 	// 背景用の自機（ヘリ）
 	std::unique_ptr<Object3d> heli_ = nullptr;
@@ -90,7 +90,7 @@ private:
 	// 内部タイマー（ヘリ用とは別にして独立させる）
 	float enemyTime_ = 0.0f;
 
-	// ▼ 追加: 1体だけ置いてるコンテナ
+	// 1体だけ置いてるコンテナ
 	std::vector<std::unique_ptr<Object3d>> titleEnemies_;
 
 	// Iris（白円）トランジション
@@ -107,5 +107,4 @@ private:
 	float irisEndScale_ = 0.0f;    // 目標（Initializeでセット）
 
 	Ease::Tween irisTween_; // イージング関数
-
 };

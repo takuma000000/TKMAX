@@ -140,6 +140,9 @@
     <ClCompile Include="externals\imgui\imgui_widgets.cpp">
       <Filter>externals\imgui</Filter>
     </ClCompile>
+    <ClCompile Include="application\scene\GameOverScene.cpp">
+      <Filter>application\scene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -300,6 +303,9 @@
     </ClInclude>
     <ClInclude Include="engine\func\math\Easing.h">
       <Filter>engine\func\math</Filter>
+    </ClInclude>
+    <ClInclude Include="application\scene\GameOverScene.h">
+      <Filter>application\scene</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

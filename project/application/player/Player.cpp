@@ -23,10 +23,11 @@ void Player::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	ParticleManager::GetInstance()->CreateParticleGroup("trail_rt", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
 	ParticleManager::GetInstance()->CreateParticleGroup("trail_lt", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
 
-	// ---- ジェット煙エミッター初期化 ----
-	Vector3 jetPos = object_->GetTranslate();
-	jetPos.z -= 2.0f; // 機体の後方
-	jetEmitter_.Initialize("jetSmoke", jetPos); // ← 一度だけ初期化
+	if (enableJetSmoke_) {
+		Vector3 jetPos = object_->GetTranslate();
+		jetPos.z -= 2.0f;           // 機体のケツあたり
+		jetEmitter_.Initialize("jetSmoke", jetPos);
+	}
 }
 
 void Player::Update() {
@@ -67,11 +68,12 @@ void Player::Update() {
 	}
 
 	// ---- ジェット煙 ----
-	Vector3 jetPos = object_->GetTranslate();
-	jetPos.z -= 2.0f;  // 機体のケツあたり
-	jetEmitter_.SetPosition(jetPos);  // 新しく追加する関数
-	jetEmitter_.Update();             // 1フレームごとに放出チェック
-
+	if (enableJetSmoke_) {
+		Vector3 jetPos = object_->GetTranslate();
+		jetPos.z -= 2.0f;
+		jetEmitter_.SetPosition(jetPos);
+		jetEmitter_.Update();
+	}
 
 	ParticleManager::GetInstance()->Update(); // パーティクルマネージャー更新
 

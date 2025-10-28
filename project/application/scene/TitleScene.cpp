@@ -97,7 +97,6 @@ void TitleScene::Initialize()
 
 void TitleScene::Finalize()
 {
-	TextureManager::GetInstance()->Finalize();
 }
 
 void TitleScene::Update()
@@ -186,10 +185,9 @@ void TitleScene::Update()
 		e->Update();
 	}
 
-	dirLight_->Update();
-
-	camera->Update();
-	sprite->Update();
+	dirLight_->Update(); // 平行光源更新
+	camera->Update(); // カメラ更新
+	sprite->Update(); // タイトル画像更新
 
 	// SPACE / A でアイリス（閉）開始
 	if (!irisClosing_ && (Input::GetInstance()->TriggerKey(DIK_SPACE) ||
@@ -206,6 +204,12 @@ void TitleScene::Update()
 			sceneManager_->SetNextScene(new GameScene(dxCommon, srvManager));
 			return;
 		}
+	}
+
+	// Yキーでゲームオーバーシーンへ
+	if (Input::GetInstance()->TriggerKey(DIK_Y)) {
+		sceneManager_->SetNextScene(new GameOverScene(dxCommon, srvManager));
+		return;
 	}
 
 	constexpr float kTwoPi = 6.2831853f;

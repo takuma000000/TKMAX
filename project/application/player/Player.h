@@ -58,6 +58,10 @@ public:
 		return object_ ? object_->GetTranslate() : Vector3();
 	}
 
+	/// <summary>ジェット噴射の有効/無効を設定します。</summary>
+	/// <param name="enable">有効にする場合はtrue、無効にする場合はfalse。</param>
+	void SetEnableJetSmoke(bool enable) { enableJetSmoke_ = enable; }
+
 	/// <summary>カメラを設定します。</summary>
 	void SetCamera(Camera* camera) 
 	{
@@ -118,4 +122,6 @@ private:
 	ParticleEmitter jetEmitter_;
 
 	bool debugUnlimitedSpecial_ = false; // ImGuiでONならRTを無制限発射
+
+	bool enableJetSmoke_ = true; // デフォルトON
 };
