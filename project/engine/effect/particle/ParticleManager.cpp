@@ -233,7 +233,7 @@ void ParticleManager::CreateRootSigunature()
 	//RootSignature作成
 	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
 	descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-	
+
 	//DescriptorRange作成。PixelShaderのTexture用
 	D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
 	descriptorRange[0].BaseShaderRegister = 0;//0から始まる
@@ -578,6 +578,26 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 		float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
 		Vector3 col = { 0.4f + 0.3f * t, 1.0f, 0.3f + 0.3f * t };
 		p.color = { 1.0f, 1.0f, 1.0f, 1.0f };  // 純白
+	} else if (groupName == "damageSpark") { //── 故障スパーク ──
+		// 放射状に高速で飛ぶ、短命、明るくチカチカ
+		std::uniform_real_distribution<float> dir(-1.0f, 1.0f);
+		Vector3 v = { dir(rng), dir(rng) * 0.6f, dir(rng) };
+		Vector3 n = (MyMath::Length(v) > 0.001f) ? MyMath::Normalize(v) : Vector3{ 0,0,1 };
+		float spd = std::uniform_real_distribution<float>(1.2f, 2.4f)(rng);
+		p.velocity = n * spd;
+
+		float sc = std::uniform_real_distribution<float>(0.08f, 0.18f)(rng);
+		p.transform.scale = { sc, sc, sc };
+
+		p.lifeTime = std::uniform_real_distribution<float>(0.18f, 0.35f)(rng);
+		p.currentTime = 0.0f;
+
+		// 強い黄～白（火花）
+		float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+		float r = 1.0f;
+		float g = 0.85f + 0.15f * t;
+		float b = 0.1f + 0.2f * (1.0f - t);
+		p.color = { r, g, b, 1.0f };
 	} else { // 上記意外
 		// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 		std::uniform_real_distribution<float> velX(-0.15f, 0.15f);

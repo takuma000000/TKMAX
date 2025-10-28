@@ -11,19 +11,19 @@ void Player::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	object_->SetModel("jett.obj");
 	object_->SetEnvironment("./resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
 
-	TextureManager::GetInstance()->LoadTexture("./resources/circle.png"); // 煙用テクスチャ
+	TextureManager::GetInstance()->LoadTexture("./resources/damageSpark.png");
 
 	// パーティクルグループ作成
 	ParticleManager::GetInstance()->CreateParticleGroup(
-		"jetSmoke", "./resources/circle.png", ParticleManager::ParticleType::NORMAL); // 煙
+		"jetSmoke", "./resources/circle.png", ParticleManager::ParticleType::NORMAL); // ジェット煙
+	ParticleManager::GetInstance()->CreateParticleGroup(
+		"damageSpark", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL); // 故障スパーク（バチバチ）
+	ParticleManager::GetInstance()->CreateParticleGroup("trail_rb", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL); // 弾の軌跡
+	ParticleManager::GetInstance()->CreateParticleGroup("trail_lb", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL); // 弾の軌跡
+	ParticleManager::GetInstance()->CreateParticleGroup("trail_rt", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL); // 弾の軌跡
+	ParticleManager::GetInstance()->CreateParticleGroup("trail_lt", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL); // 弾の軌跡
 
-	// パーティクルグループ作成
-	ParticleManager::GetInstance()->CreateParticleGroup("trail_rb", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
-	ParticleManager::GetInstance()->CreateParticleGroup("trail_lb", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
-	ParticleManager::GetInstance()->CreateParticleGroup("trail_rt", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
-	ParticleManager::GetInstance()->CreateParticleGroup("trail_lt", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
-
-	if (enableJetSmoke_) {
+	if (enableJetSmoke_) { // ジェット煙初期化
 		Vector3 jetPos = object_->GetTranslate();
 		jetPos.z -= 2.0f;           // 機体のケツあたり
 		jetEmitter_.Initialize("jetSmoke", jetPos);
@@ -67,8 +67,10 @@ void Player::Update() {
 		}
 	}
 
-	// ---- ジェット煙 ----
-	if (enableJetSmoke_) {
+	Death(); // 撃墜処理
+
+	// ---- ジェット煙（HPが0なら停止）----
+	if (enableJetSmoke_ && hp_ > 0) {
 		Vector3 jetPos = object_->GetTranslate();
 		jetPos.z -= 2.0f;
 		jetEmitter_.SetPosition(jetPos);
@@ -76,18 +78,17 @@ void Player::Update() {
 	}
 
 	ParticleManager::GetInstance()->Update(); // パーティクルマネージャー更新
-
 	object_->Update(); // プレイヤー本体更新
 }
 
 void Player::ImGuiDebug() {
 	if (!object_) return;
 
-	ImGui::Begin("Player");
-
 	Vector3 pos = object_->GetTranslate();
 	Vector3 rot = object_->GetRotate();
 	Vector3 scale = object_->GetScale();
+
+	ImGui::Begin("Player");
 
 	if (ImGui::DragFloat3("Position", &pos.x, 0.01f)) {
 		object_->SetTranslate(pos);
@@ -98,10 +99,13 @@ void Player::ImGuiDebug() {
 	if (ImGui::DragFloat3("Scale", &scale.x, 0.01f)) {
 		object_->SetScale(scale);
 	}
-
+	ImGui::Separator(); // 区切り線
 	ImGui::Text("Special Attack: %s", canUseSpecial_ ? "READY" : "NOT READY"); // 一撃必殺の使用可能状態を表示
 	ImGui::Checkbox("Unlimited RT (Debug)", &debugUnlimitedSpecial_);
-
+	ImGui::Separator(); // 区切り線
+	ImGui::Text("HP: %d", hp_);// 1
+	ImGui::SameLine();// 1 と 2 を同じ行に配置
+	if (ImGui::Button("Reset HP")) { hp_ = 1; } // 2
 
 	ImGui::End();
 }
@@ -113,6 +117,143 @@ void Player::RemoveEnemyIfDead()
 	}
 }
 
+void Player::Death()
+{
+	// ---- HPが0になったら「故障スパーク → 撃墜」二段階 ----
+	if (hp_ <= 0) {
+		const float dt = 1.0f / 60.0f;
+
+		// まだ死亡演出に入ってなければ、故障スパークから開始
+		if (deathPhase_ == DeathPhase::None) {
+			deathPhase_ = DeathPhase::FaultSparks;
+			isDead_ = true;        // 以後の通常操作を停止
+			faultTimer_ = 0.0f;
+			faultFrameCounter_ = 0;
+			flyInit_ = false;
+		}
+
+		// === フェーズ1：故障スパーク（機体の周囲に複数スポット）===
+		if (deathPhase_ == DeathPhase::FaultSparks) {
+			faultTimer_ += dt;
+			++faultFrameCounter_;
+
+			// 調整用ローカル（必要なら後でImGui化）
+			const float kSpreadRadius = 2.0f; // 機体中心からどれくらい外側まで
+			const int   kSpotCount = 6;    // 同時に噴くスポット数
+
+			// 一定フレーム毎にスパーク発生 & カメラシェイク
+			if ((faultFrameCounter_ % std::max(1, faultTickInterval_)) == 0) {
+
+				// 1スポットあたりの粒数（全体の発生数を均等割）
+				const int perSpot = std::max(1, faultBurstPerTick_ / std::max(1, kSpotCount));
+
+				// 簡易乱数ユーティリティ
+				auto frand = [](float a, float b) {
+					return a + (b - a) * (static_cast<float>(rand()) / static_cast<float>(RAND_MAX));
+					};
+
+				Vector3 base = object_->GetTranslate(); // 機体中心
+
+				for (int i = 0; i < kSpotCount; ++i) {
+					// ランダムな方向ベクトル（球面上）＋半径ランダム
+					Vector3 dir = { frand(-1.f, 1.f), frand(-1.f, 1.f), frand(-1.f, 1.f) };
+					if (MyMath::Length(dir) < 0.001f) dir = { 0,0,1 };
+					dir = MyMath::Normalize(dir);
+
+					float r = kSpreadRadius * frand(0.25f, 1.0f); // 内側～外側へ散らす
+					Vector3 p = base + dir * r;                   // スポット位置
+
+					// Emitの第2引数は非const参照なのでローカル変数を渡す
+					ParticleManager::GetInstance()->Emit("damageSpark", p, perSpot);
+				}
+
+				// “激しさ”演出：軽めシェイクを継続
+				StartCameraShake(20);
+			}
+
+			// ほんの少しだけ姿勢が乱れる感じ（お好み）
+			Vector3 rot = object_->GetRotate();
+			rot.z += 0.02f; // バンク方向に微揺れ
+			object_->SetRotate(rot);
+
+			object_->Update(); // 故障中も更新
+
+			// 規定時間でフェーズ2へ
+			if (faultTimer_ >= faultDuration_) {
+				deathPhase_ = DeathPhase::FlyAway;
+			}
+			return; // 故障中は他処理停止
+		}
+
+		// === フェーズ2：緩やかな吹き飛び（穏やか版） ===
+		if (deathPhase_ == DeathPhase::FlyAway) {
+			if (!flyInit_) {
+				flyInit_ = true;
+
+				// 横ブレ・上向き控えめ、+Zへ
+				float side = (rand() % 200 - 100) / 100.0f;   // -1..1
+				float up = 0.15f + (rand() % 100) / 100.0f * 0.20f; // 0.15..0.35
+				Vector3 dir = MyMath::Normalize(Vector3{ side * 0.25f, up, 1.6f });
+
+				deathVelocity_ = dir * 0.55f;
+
+				deathRotateSpeed_.x = 0.03f + (rand() % 30) / 100.0f;
+				deathRotateSpeed_.y = 0.04f + (rand() % 30) / 100.0f;
+				deathRotateSpeed_.z = 0.05f + (rand() % 30) / 100.0f;
+
+				// スパーク直後は余韻の弱シェイク
+				StartCameraShake(60);
+
+				// パーティクル少なめの爆散
+				Vector3 pos = object_->GetTranslate();
+				ParticleManager::GetInstance()->Emit("uv", pos, 20);
+
+				deathTimer_ = 0.0f;
+			}
+
+			deathTimer_ += dt; // 経過時間更新
+
+			// ゆっくり減速しつつ、わずかに浮き
+			deathVelocity_ *= 0.992f;
+			deathVelocity_.y += 0.02f * dt;
+
+			// 速度上限
+			const float maxSpeed = 1.2f;
+			float sp = MyMath::Length(deathVelocity_);
+			if (sp > maxSpeed) {
+				deathVelocity_ = MyMath::Normalize(deathVelocity_) * maxSpeed;
+			}
+
+			// 位置
+			Vector3 pos = object_->GetTranslate();
+			pos += deathVelocity_;
+			object_->SetTranslate(pos);
+
+			// 緩いスピン
+			float t = std::clamp(deathTimer_ / deathDuration_, 0.0f, 1.0f);
+			Vector3 rot = object_->GetRotate();
+			float spinScale = 1.0f + 0.3f * (1.0f - std::cosf(t * MyMath::GetPI()));
+			rot.x += deathRotateSpeed_.x * spinScale;
+			rot.y += deathRotateSpeed_.y * spinScale;
+			rot.z += deathRotateSpeed_.z * spinScale;
+			object_->SetRotate(rot);
+
+			// ほんの少し縮小
+			Vector3 sc = object_->GetScale();
+			sc *= 0.999f;
+			object_->SetScale(sc);
+
+			// まばらなチリ
+			if (static_cast<int>(deathTimer_ * 60.0f) % 10 == 0) {
+				Vector3 ep = object_->GetTranslate();
+				ParticleManager::GetInstance()->Emit("uv", ep, 2);
+			}
+
+			object_->Update();
+			return; // 撃墜中は他処理停止
+		}
+	}
+}
 
 void Player::Draw(DirectXCommon* dxCommon) {
 	object_->Draw(dxCommon); // プレイヤー本体描画
@@ -168,7 +309,6 @@ void Player::HandleGamePadMove() {
 	object_->SetRotate(rot); // 回転設定
 }
 
-
 void Player::HandleCameraControl() {
 	if (!camera) return;
 
@@ -217,7 +357,7 @@ void Player::HandleFollowCamera() {
 	// --- シェイクオフセット加算 ---
 	if (cameraShakeFrame_ > 0) { // シェイク中
 		// ランダムなオフセットを生成
-		cameraShakeOffset_.x = (rand() % 100 - 50) / 500.0f; 
+		cameraShakeOffset_.x = (rand() % 100 - 50) / 500.0f;
 		cameraShakeOffset_.y = (rand() % 100 - 50) / 500.0f;
 		cameraShakeOffset_.z = (rand() % 100 - 50) / 500.0f;
 		cameraShakeFrame_--;
@@ -228,7 +368,6 @@ void Player::HandleFollowCamera() {
 	Vector3 cameraPos = playerPos + offset + cameraShakeOffset_; // 最終的なカメラ位置
 	camera->SetTranslate(cameraPos); // カメラ位置設定
 }
-
 
 void Player::HandleShooting() {
 	Input* input = Input::GetInstance();
@@ -286,7 +425,7 @@ void Player::HandleShooting() {
 		} else { // ターゲットがいないなら前方
 			bullet->SetVelocity({ 0, 0, 0.5f });
 		}
-	
+
 		bullet->SetCamera(camera); // カメラ設定
 		bullet->SetEnemy(enemy_); // ターゲット設定
 		bullet->SetPlayer(this); // プレイヤー設定
@@ -304,7 +443,7 @@ void Player::HandleShooting() {
 			// 敵ごとに弾を生成
 			auto bullet = std::make_unique<PlayerBullet>();
 			bullet->Initialize(common_, dxCommon_);
-	
+
 			Vector3 startPos = object_->GetTranslate(); // 発射位置
 			Vector3 enemyPos = enemy->GetWorldPosition(); // 敵位置
 			Vector3 dir = MyMath::Normalize(enemyPos - startPos); // 方向計算
@@ -363,8 +502,3 @@ void Player::HandleShooting() {
 		rtHeld_ = false; // 次に備えて解除
 	}
 }
-
-
-
-
-

@@ -1,5 +1,6 @@
 #pragma once
 
+#define NOMINMAX
 #include <memory>
 #include "Object3d.h"
 #include "Camera.h"
@@ -48,6 +49,16 @@ public:
 		}
 	}
 
+	/// <summary>ダメージを与えます。</summary>
+	/// <param name="value">ダメージ値。</param>
+	void Damage(int value) {
+		hp_ -= value;
+		if (hp_ < 0) hp_ = 0;
+	}
+
+	/// <summary>撃墜関数</summary>
+	void Death();
+
 	/// <summary>弾のリストを取得します。</summary>
 	const std::list<std::unique_ptr<PlayerBullet>>& GetBullets() const {
 		return bullets_;
@@ -58,9 +69,17 @@ public:
 		return object_ ? object_->GetTranslate() : Vector3();
 	}
 
+	/// <summary>プレイヤーのHPを取得します。</summary>
+	/// <returns>HP値。</returns>
+	int GetHP() const { return hp_; }
+
 	/// <summary>ジェット噴射の有効/無効を設定します。</summary>
 	/// <param name="enable">有効にする場合はtrue、無効にする場合はfalse。</param>
 	void SetEnableJetSmoke(bool enable) { enableJetSmoke_ = enable; }
+
+	/// <summary>プレイヤーのHPを設定します。</summary>
+	/// <param name="hp">HP値。</param>
+	void SetHP(int hp) { hp_ = hp; }
 
 	/// <summary>カメラを設定します。</summary>
 	void SetCamera(Camera* camera) 
@@ -82,6 +101,8 @@ public:
 	}
 	/// <summary>カメラシェイクを開始します。</summary>
 	void StartCameraShake(int frameCount);
+
+	enum class DeathPhase { None, FaultSparks, FlyAway }; // 撃墜演出フェーズ
 
 private:
 
@@ -124,4 +145,22 @@ private:
 	bool debugUnlimitedSpecial_ = false; // ImGuiでONならRTを無制限発射
 
 	bool enableJetSmoke_ = true; // デフォルトON
+
+	int hp_ = 1; // 初期HP
+
+	// 撃墜演出用
+	bool   isDead_ = false;                // 撃墜モード中
+	Vector3 deathVelocity_ = { 0,0,0 };      // 速度
+	Vector3 deathRotateSpeed_ = { 0,0,0 };   // 回転速度
+	float  deathTimer_ = 0.0f;             // 経過時間(秒想定)
+	float  deathDuration_ = 2.6f;          // 強制演出の長さ（好みで）
+	// デス演出ステート管理
+	DeathPhase deathPhase_ = DeathPhase::None;
+	// 故障スパーク段階の管理
+	float faultTimer_ = 0.0f;
+	float faultDuration_ = 1.3f;   // 何秒間スパークさせるか（ImGuiで調整可）
+	int   faultBurstPerTick_ = 12; // 1回あたり粒の発生数（ImGuiで調整可）
+	int   faultTickInterval_ = 2;  // 何フレームごとに出すか
+	int   faultFrameCounter_ = 0;
+	bool  flyInit_ = false; // FlyAway移行時の一度きり初期化フラグ
 };

@@ -72,7 +72,6 @@ void GameScene::Initialize()
 	irisCloseScale_ = 0.0f;
 	irisCloseTween_.Reset(0.0f, irisMaxScale_, 0.8f, Ease::Type::InBack);
 
-
 	// ゲームスタート文字
 	startSprite_ = std::make_unique<Sprite>();
 	startSprite_->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/start.png");
@@ -334,9 +333,13 @@ void GameScene::Update()
 		}
 	}
 
+	// ─── キーボードのYキーでプレイヤーのHPを0にする（デバッグ用）───
+	if (Input::GetInstance()->TriggerKey(DIK_Y)) {
+		if (player_) player_->SetHP(0);
+	}
+
 	// パフォーマンス情報・デバッグUI
 	UpdatePerformanceInfo();
-
 }
 
 void GameScene::Draw()
