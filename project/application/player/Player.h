@@ -49,6 +49,9 @@ public:
 		}
 	}
 
+	/// <summary>プレイヤーが撃墜されているかどうかを取得します。</summary>
+	bool IsDead() const { return isDead_; }
+
 	/// <summary>ダメージを与えます。</summary>
 	/// <param name="value">ダメージ値。</param>
 	void Damage(int value) {
@@ -72,6 +75,13 @@ public:
 	/// <summary>プレイヤーのHPを取得します。</summary>
 	/// <returns>HP値。</returns>
 	int GetHP() const { return hp_; }
+
+	/// <summary>プレイヤーの回転を取得します。</summary>
+	const Vector3& GetRotation() const { return object_->GetRotate(); }
+
+	/// <summary>プレイヤーの回転を設定します。</summary>
+	/// <param name="r">回転値。</param>
+	void SetRotation(const Vector3& r) { object_->SetRotate(r); }
 
 	/// <summary>ジェット噴射の有効/無効を設定します。</summary>
 	/// <param name="enable">有効にする場合はtrue、無効にする場合はfalse。</param>

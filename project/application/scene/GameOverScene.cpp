@@ -4,6 +4,8 @@
 #include "SceneManager.h"
 #include "engine/2d/SpriteCommon.h"
 #include "engine/3d/Object3dCommon.h"
+#include "application/scene/TitleScene.h"
+#include <SkyBox.h>
 
 // #include "TitleScene.h"
 // #include "GameScene.h"
@@ -32,6 +34,50 @@ void GameOverScene::Initialize()
 	player_->SetCamera(camera_.get());
 	player_->SetPosition({ 0.0f, 0.0f, 0.0f }); // 初期位置
 	player_->SetEnableJetSmoke(false); // ジェット噴射無効
+	player_->SetPosition({ 0.0f, -1.6f, 5.0f });
+	player_->SetRotation({ 0.25f, 0.0f, 1.35f });
+	// 故障スポット（ローカル）：左右翼根元, 胴体下, 胴体横, 尾部 など
+	faultLocal_ = {
+		{  1.2f,  0.1f,  0.2f },  // 右翼根元
+		{ -1.1f,  0.0f, -0.1f },  // 左翼根元
+		{  0.2f, -0.6f,  0.0f },  // 胴体下
+		{  0.0f,  0.2f, -1.0f },  // 胴体後方
+		{ -0.3f,  0.4f,  1.1f },  // ノーズ側面
+	};
+	faultCD_.assign(faultLocal_.size(), 0.0f);
+	faultNext_.resize(faultLocal_.size());
+	for (auto& t : faultNext_) {
+		t = 0.08f + (rand() % 60) / 1000.0f; // 0.08〜0.14s の初期待機
+	}
+
+	// --- skybox ---
+	skybox_ = std::make_unique<Skybox>();
+	skybox_->Initialize(dxCommon_, srvManager_, "resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
+	skybox_->SetCamera(camera_.get());
+
+	// --- Iris（Title/GameScene と同一仕様）---
+	iris_ = std::make_unique<Sprite>();
+	iris_->Initialize(SpriteCommon::GetInstance(), dxCommon_, "./resources/circle2.png");
+	iris_->SetAnchorPoint({ 0.5f, 0.5f });
+	iris_->SetPosition({ WindowsAPI::kClientWidth * 0.5f, WindowsAPI::kClientHeight * 0.5f });
+
+	// 画面対角から最大スケールを計算（対角×2.0f）
+	const float diag = std::sqrt(
+		float(WindowsAPI::kClientWidth) * float(WindowsAPI::kClientWidth) +
+		float(WindowsAPI::kClientHeight) * float(WindowsAPI::kClientHeight)
+	);
+	irisMaxScale_ = diag * 2.0f;
+
+	// 入場は「覆った状態 → 0」へ（OutBack, 0.8s）
+	irisScale_ = irisMaxScale_;
+	iris_->SetSize({ irisScale_, irisScale_ });
+	irisOpenTween_.Reset(/*start*/ irisMaxScale_, /*end*/ 0.0f, /*sec*/ 0.8f, Ease::Type::OutBack);
+
+	// --- 墜落用パーティクルグループ作成（circle.pngでOK） ---
+	auto* PM = ParticleManager::GetInstance();
+	PM->CreateParticleGroup("crashFlame", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
+	// 予備：火花（damageSpark）も使う
+	PM->CreateParticleGroup("damageSpark", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
 }
 
 void GameOverScene::Finalize()
@@ -41,12 +87,152 @@ void GameOverScene::Finalize()
 
 void GameOverScene::Update()
 {
-	//Input::GetInstance()->Update();
+	Input::GetInstance()->Update();
 
 	if (player_) { player_->Update(); }
 	if (camera_) { camera_->Update(); }
 	if (dirLight_) { dirLight_->Update(); }
 	ParticleManager::GetInstance()->Update();
+
+	// ─── アイリス開き（入場） ───
+	if (irisOpening_) {
+		irisScale_ = irisOpenTween_.Update(0.016f);
+		iris_->SetSize({ irisScale_, irisScale_ });
+		iris_->Update();
+
+		if (irisOpenTween_.Finished()) {
+			irisOpening_ = false;
+		}
+	}
+	// ─── Tキーでタイトルへ戻る（アイリス閉じ：InBack/0.8s） ───
+	if (!irisClosing_ && Input::GetInstance()->TriggerKey(DIK_T)) {
+		irisClosing_ = true;
+		irisCloseTween_.Reset(/*start*/ 0.0f, /*end*/ irisMaxScale_, /*sec*/ 0.8f, Ease::Type::InBack);
+	}
+
+	if (irisClosing_) {
+		float s = irisCloseTween_.Update(0.016f);
+		iris_->SetSize({ s, s });
+		iris_->Update();
+
+		if (irisCloseTween_.Finished()) {
+			sceneManager_->SetNextScene(new TitleScene(dxCommon_, srvManager_));
+			return;
+		}
+	}
+
+	// ─── スカイボックス回転 ───
+	constexpr float kTwoPi = 6.2831853f;
+	skyPitch_ -= skyRotSpeedX_;
+	if (skyPitch_ > kTwoPi)  skyPitch_ -= kTwoPi;
+	if (skyPitch_ < 0.0f)    skyPitch_ += kTwoPi;
+	// Xだけ回す
+	if (skybox_) {
+		skybox_->SetRotation({ skyPitch_, 0.0f, 0.0f });
+	}
+
+	// --- 墜落中の失速スピン（常時回転）---
+	if (tumbleActive_ && player_) {
+		const float dt = 1.0f / 60.0f; // あなたのシーンは固定フレーム刻みでOK
+		Vector3 r = player_->GetRotation();
+		r.x += (tumbleSpeed_.x + ((rand() % 100 - 50) / 5000.0f)) * dt;
+		r.y += tumbleSpeed_.y * dt;
+		r.z += tumbleSpeed_.z * dt;
+		player_->SetRotation(r);
+	}
+
+	// --- 常時：細い炎柱（複数点） ---
+	{
+		const int kSpotsPerFrame = 3;        // 毎フレ 2〜3点から
+		const int kPerSpotCount = 3;        // 各点 2〜3粒（粒自体が太いので十分）
+		const float radiusMin = 0.3f;        // 出火リングの内半径
+		const float radiusMax = 1.1f;        // 出火リングの外半径
+
+		Vector3 base = player_->GetPosition() + crashOffset_;
+		for (int i = 0; i < kSpotsPerFrame; ++i) {
+			float r = radiusMin + (rand() / float(RAND_MAX)) * (radiusMax - radiusMin);
+			float th = (rand() / float(RAND_MAX)) * 6.2831853f; // 0..2π
+			Vector3 spot = {
+				base.x + r * cosf(th),
+				base.y + ((rand() / float(RAND_MAX)) * 0.25f - 0.12f), // Yも微揺らし
+				base.z + r * sinf(th)
+			};
+			ParticleManager::GetInstance()->Emit("crashFlame", spot, kPerSpotCount);
+		}
+	}
+
+	// --- 故障スポットからの炎＆火花（中心固定をやめる） ---
+	{
+		// フレームごとの総量予算（重さ対策）
+		int flameBudget = perFrameFlameBudget_;
+		int sparkBudget = perFrameSparkBudget_;
+
+		// 機体の回転を行列化（ローカル→ワールド）
+		const Vector3 r = player_->GetRotation();
+		Matrix4x4 R = MyMath::MakeRotateMatrix(r);
+		const Vector3 basePos = player_->GetPosition();
+
+		const float dt = 1.0f / 60.0f;
+		for (size_t i = 0; i < faultLocal_.size(); ++i) {
+			// クールダウン進行
+			faultCD_[i] = std::max(0.0f, faultCD_[i] - dt);
+			if (faultCD_[i] > 0.0f) continue;
+
+			// ローカル点を回転→ワールドへ
+			Vector3 w = MyMath::TransformNormal(faultLocal_[i], R) + basePos;
+
+			// 炎と火花を小出し（“所々が壊れてる”見た目）
+			int flameN = 2 + rand() % 2;  // 2〜3
+			int sparkN = 1 + rand() % 2;  // 1〜2
+
+			// 予算チェック（重ければスキップ）
+			if (flameBudget > 0) {
+				int n = std::min(flameN, flameBudget);
+				ParticleManager::GetInstance()->Emit("crashFlame", w, n);
+				flameBudget -= n;
+			}
+			if (sparkBudget > 0) {
+				int n = std::min(sparkN, sparkBudget);
+				ParticleManager::GetInstance()->Emit("damageSpark", w, n);
+				sparkBudget -= n;
+			}
+
+			// 次回までの間隔をランダムに（0.06〜0.16s）
+			faultCD_[i] = 0.06f + (rand() % 100) / 1000.0f;
+
+			if (flameBudget <= 0 && sparkBudget <= 0) break; // そのフレームは打ち止め
+		}
+	}
+
+	// --- たまに：ド派手バースト（炎＋火花） ---
+	{
+		const float dt = 1.0f / 60.0f;
+		flameTimer_ += dt;
+		if (flameTimer_ >= flameInterval_) {
+			flameTimer_ = 0.0f;
+			flameInterval_ = 0.35f + (rand() % 250) / 1000.0f; // 0.35〜0.60秒
+
+			Vector3 base = player_->GetPosition() + crashOffset_;
+
+			// バーストはリング上に6〜8点を一気に点火
+			int burstSpots = 6 + rand() % 3; // 6〜8
+			for (int i = 0; i < burstSpots; ++i) {
+				float r = 0.25f + (rand() / float(RAND_MAX)) * 1.0f; // 0.25〜1.25
+				float th = (2.0f * 3.1415926f / burstSpots) * i + (rand() / float(RAND_MAX)) * 0.5f;
+				Vector3 p = {
+					base.x + r * cosf(th),
+					base.y + ((rand() / float(RAND_MAX)) * 0.3f - 0.15f),
+					base.z + r * sinf(th)
+				};
+
+				// 炎 本体（派手に）
+				ParticleManager::GetInstance()->Emit("crashFlame", p, 10);  // 1点10粒 × 6〜8点 = 60〜80粒
+
+				// 火花を添える（ギラッと光を足す）
+				ParticleManager::GetInstance()->Emit("damageSpark", p, 6);
+			}
+		}
+	}
 }
 
 void GameOverScene::Draw()
@@ -54,11 +240,15 @@ void GameOverScene::Draw()
 	// 3D
 	Object3dCommon::GetInstance()->DrawSetCommon();
 	if (player_) { player_->Draw(dxCommon_); }
+	if (skybox_) { skybox_->Draw(); }
 
 	// パーティクル描画
 	ParticleManager::GetInstance()->Draw();
 
 	// 2D（任意のオーバーレイ）
 	SpriteCommon::GetInstance()->DrawSetCommon();
+	if ((irisOpening_ || irisClosing_) && iris_) {
+		iris_->Draw(); // 常に最前面
+	}
 	//if (gameOverSprite_) { gameOverSprite_->Draw(); }
 }

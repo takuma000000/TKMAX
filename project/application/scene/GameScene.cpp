@@ -316,6 +316,35 @@ void GameScene::Update()
 		ParticleManager::GetInstance()->Emit("uv", emitPos, 20); // 20個発生
 	}
 
+	// ─── プレイヤー死亡時のGameOver遷移 ───
+	if (player_ && player_->IsDead()) {
+		// 死亡フェーズが始まった瞬間にカウント開始
+		if (!playerDeathStarted_) {
+			playerDeathStarted_ = true;
+			playerDeathElapsed_ = 0.0f;
+		} else {
+			playerDeathElapsed_ += dt;
+
+			// クルクル（FlyAway）開始から約4秒後にシーン遷移
+			if (playerDeathElapsed_ >= 4.0f && !irisClosing_) {
+				irisClosing_ = true;
+				irisCloseTween_.Reset(0.0f, irisMaxScale_, 0.8f, Ease::Type::InBack);
+			}
+		}
+	}
+
+	// アイリス閉じ中は進行してGameOverへ
+	if (irisClosing_) {
+		irisCloseScale_ = irisCloseTween_.Update(0.016f);
+		iris_->SetSize({ irisCloseScale_, irisCloseScale_ });
+		iris_->Update();
+
+		if (irisCloseTween_.Finished()) {
+			sceneManager_->SetNextScene(new GameOverScene(dxCommon, srvManager));
+			return;
+		}
+	}
+
 	// ─── Tキーでタイトルに戻る（アイリス閉じ演出つき）───
 	if (!irisClosing_ && Input::GetInstance()->TriggerKey(DIK_T)) {
 		irisClosing_ = true;

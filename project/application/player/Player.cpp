@@ -30,6 +30,7 @@ void Player::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	}
 }
 
+
 void Player::Update() {
 	HandleGamePadMove(); // ゲームパッドのスティック入力で移動
 	HandleFollowCamera(); // カメラの追従処理

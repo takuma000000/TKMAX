@@ -415,12 +415,16 @@ void ParticleManager::Emit(const std::string name, Vector3& pos, uint32_t count)
 	assert(particleGroups.find(name) != particleGroups.end());
 	ParticleGroup& group = particleGroups[name]; // パーティクルグループの参照を取得
 
-	for (uint32_t i = 0; i < count; ++i) { // 指定数分パーティクル生成
-		Particle newParticle = MakeNewParticle(randomEngine, name, pos); // ← name を渡す
+	const size_t kHardCap = std::max<size_t>(group.kNumInstance, 200); // 下限200
+	for (uint32_t i = 0; i < count; ++i) {
+		// 超過してたら古い順に削除（重さ対策）
+		while (group.particles.size() >= kHardCap) {
+			group.particles.pop_front();
+		}
+		Particle newParticle = MakeNewParticle(randomEngine, name, pos);
 		group.particles.push_back(newParticle);
 	}
 }
-
 
 ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, const std::string& groupName, const Vector3& center)
 {
@@ -597,6 +601,28 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 		float r = 1.0f;
 		float g = 0.85f + 0.15f * t;
 		float b = 0.1f + 0.2f * (1.0f - t);
+		p.color = { r, g, b, 1.0f };
+	} else if (groupName == "crashFlame") {
+		// 基本は上向き。横に少し拡散して“躍る”感じ
+		std::uniform_real_distribution<float> velX(-0.06f, 0.06f);
+		std::uniform_real_distribution<float> velY(1.20f, 2.40f); // ↑ ぐっと強く
+		std::uniform_real_distribution<float> velZ(-0.06f, 0.06f);
+		p.velocity = { velX(rng), velY(rng), velZ(rng) };
+
+		// 粒は大きめ（炎舌が見えるサイズ）
+		float sc = std::uniform_real_distribution<float>(0.28f, 0.55f)(rng);
+		p.transform.scale = { sc, sc, sc };
+
+		// ほんの少し長命（バースト直後の見栄えを持たせる）
+		p.lifeTime = std::uniform_real_distribution<float>(0.35f, 0.60f)(rng);
+		p.currentTime = 0.0f;
+
+		// “灼熱コア”～“黄炎”に振る（加算でギラッと出る）
+		// tが小さいほど赤寄りコア、tが大きいほど黄寄り
+		float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+		float r = 1.0f;
+		float g = 0.55f + 0.40f * (1.0f - t);  // 0.95..0.55
+		float b = 0.05f + 0.20f * t;           // 0.05..0.25
 		p.color = { r, g, b, 1.0f };
 	} else { // 上記意外
 		// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──

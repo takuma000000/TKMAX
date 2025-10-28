@@ -210,7 +210,7 @@ private:
 	Vector2 startEndPos_ = { WindowsAPI::kClientWidth * 0.5f, WindowsAPI::kClientHeight * 0.5f };   // 中央
 	Ease::Tween startTween_;               // イージング
 	float startDuration_ = 1.0f;           // アニメ時間
-	float startHoldSec_ = 5.0f;     // 中央で静止して見せる時間(秒)
+	float startHoldSec_ = 2.0f;     // 中央で静止して見せる時間(秒)
 	float startHoldElapsed_ = 0.0f; // 経過
 	bool  startFadeOut_ = false;    // フェードアウト中か
 	float startFadeSec_ = 0.6f;     // フェード時間(秒)
@@ -241,5 +241,8 @@ private:
 	bool irisClosing_ = false;
 	Ease::Tween irisCloseTween_;
 	float irisCloseScale_ = 0.0f;
+
+	float playerDeathElapsed_ = 0.0f;
+	bool playerDeathStarted_ = false;
 };
 
