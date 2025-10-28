@@ -645,6 +645,28 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 		p.currentTime = 0.0f;
 
 		return p;
+	} else if (groupName == "fallStreakUp") {
+		Particle p{};
+
+		// 下→上に向かうストリーク
+		p.transform.scale = { 0.10f, 2.6f, 1.0f };
+		p.transform.rotate = { 0.0f, 0.0f, 0.0f };
+		p.transform.translate = center;
+
+		// ゆっくり上昇（反対方向）
+		float vx = ((rand() % 40) - 20) / 800.0f;
+		float vz = ((rand() % 40) - 20) / 1200.0f;
+		float vy = (1.2f + (rand() % 40) / 100.0f);  // +1.2 ～ +1.6
+		p.velocity = { vx, vy, vz };
+
+		// 色は上昇らしく少し淡く
+		p.color = { 1.2f, 0.25f, 0.15f, 1.0f };
+
+		// 寿命長め
+		p.lifeTime = 10.0f + (rand() % 80) / 100.0f;
+		p.currentTime = 0.0f;
+
+		return p;
 	} else { // 上記意外
 		// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 		std::uniform_real_distribution<float> velX(-0.15f, 0.15f);

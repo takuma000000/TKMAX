@@ -81,6 +81,9 @@ void GameOverScene::Initialize()
 	PM->CreateParticleGroup("damageSpark", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
 	// --- 流星/降下ストリーク（縦に細長い線） ---
 	PM->CreateParticleGroup("fallStreak", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
+	// 予備：上向き流星/昇天ストリーク
+	PM->CreateParticleGroup("fallStreakUp", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
+
 
 	// スプライト生成
 	overSprite_ = std::make_unique<Sprite>();
@@ -315,6 +318,32 @@ void GameOverScene::Update()
 
 				Vector3 spawn = camPos + camRight * xSpread + camFwd * zDepth + camUp * yHeight;
 				ParticleManager::GetInstance()->Emit("fallStreak", spawn, 1);
+			}
+		}
+	}
+
+	// === 画面下から上へ昇るストリーク（逆流するような演出） ===
+	{
+		static int frameToggleUp = 0;
+		frameToggleUp ^= 1; // 上下で交互に発生させる
+		if (frameToggleUp) { /* 今フレームは生成しない */ } else {
+			const int kSpawnPerFrameUp = 5; // 数は少なめで控えめに
+
+			const Matrix4x4 camW = camera_->GetWorldMatrix();
+			Vector3 camPos = { camW.m[3][0], camW.m[3][1], camW.m[3][2] };
+			Vector3 camRight = MyMath::Normalize({ camW.m[0][0], camW.m[0][1], camW.m[0][2] });
+			Vector3 camUp = MyMath::Normalize({ camW.m[1][0], camW.m[1][1], camW.m[1][2] });
+			Vector3 camFwd = MyMath::Normalize({ camW.m[2][0], camW.m[2][1], camW.m[2][2] });
+
+			for (int i = 0; i < kSpawnPerFrameUp; ++i) {
+				// 横幅ランダムに散らす
+				float xSpread = ((rand() % 5200) - 2600) / 100.0f;  // -26 ～ +26
+				float zDepth = 16.0f + (rand() % 1600) / 40.0f;    // 16 ～ 56
+				// 画面下のさらに下から湧かせる（上昇距離を確保）
+				float yLow = -12.0f - (rand() % 400) / 20.0f;       // -12 ～ -32
+
+				Vector3 spawn = camPos + camRight * xSpread + camFwd * zDepth + camUp * yLow;
+				ParticleManager::GetInstance()->Emit("fallStreakUp", spawn, 1);
 			}
 		}
 	}
