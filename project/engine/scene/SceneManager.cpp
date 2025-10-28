@@ -41,5 +41,4 @@ SceneManager::~SceneManager()
 		delete scene_;
 		scene_ = nullptr; // ポインタを無効化
 	}
-
 }
