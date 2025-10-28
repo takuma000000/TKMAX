@@ -14,6 +14,7 @@ void GameOverScene::Initialize()
 {
 	ModelManager::GetInstance()->LoadModel("jett.obj", dxCommon_);
 	TextureManager::GetInstance()->LoadTexture("./resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
+	TextureManager::GetInstance()->LoadTexture("./resources/over.png");
 
 	// --- カメラ ---
 	camera_ = std::make_unique<Camera>();
@@ -78,6 +79,21 @@ void GameOverScene::Initialize()
 	PM->CreateParticleGroup("crashFlame", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
 	// 予備：火花（damageSpark）も使う
 	PM->CreateParticleGroup("damageSpark", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
+
+	// スプライト生成
+	overSprite_ = std::make_unique<Sprite>();
+	overSprite_->Initialize(SpriteCommon::GetInstance(), dxCommon_, "./resources/over.png");
+	overSprite_->SetAnchorPoint({ 0.5f, 0.5f });
+	overSprite_->SetPosition({ WindowsAPI::kClientWidth * 0.5f, WindowsAPI::kClientHeight * 0.5f });
+
+	// アルファ0で開始（見えない状態）
+	overSprite_->SetColor({ 1, 1, 1, 0 });
+
+	// フェードイン（0→1, 0.7秒, OutQuad）& スケール（0.8→1.0, 0.7秒, OutBack）
+	overAlphaTween_.Reset(0.0f, 1.0f, 0.7f, Ease::Type::OutQuad);
+	overScaleTween_.Reset(0.8f, 1.0f, 0.7f, Ease::Type::OutBack);
+
+	overActive_ = true;
 }
 
 void GameOverScene::Finalize()
@@ -233,6 +249,31 @@ void GameOverScene::Update()
 			}
 		}
 	}
+
+	// === GAME OVER 表示（フェードインのみ） ===
+	if (overActive_ && overSprite_) {
+		const float dt = 1.0f / 60.0f;                  // 固定デルタで十分
+		overAlpha_ = overAlphaTween_.Update(dt);
+		overScale_ = overScaleTween_.Update(dt);
+
+		// アルファ反映（RGBは1のまま、アルファだけTween）
+		overSprite_->SetColor({ 1, 1, 1, overAlpha_ });
+
+		// スケール反映（SetSize を使っているならベースサイズ×スケール）
+		// 画像サイズを使わない設計なら transform に合わせる実装でもOK。
+		// ここでは SetSize ベースを想定して 800×800 を基準例に。
+		const float baseW = 800.0f;
+		const float baseH = 800.0f;
+		overSprite_->SetSize({ baseW * overScale_, baseH * overScale_ });
+
+		overSprite_->Update();
+
+		// 終了してもフェードアウトはしない → overActive_は false にしてもそのまま描画は継続
+		if (overAlphaTween_.Finished() && overScaleTween_.Finished()) {
+			overActive_ = false; // アニメ終了。以後は静止表示
+		}
+	}
+
 }
 
 void GameOverScene::Draw()
@@ -250,5 +291,7 @@ void GameOverScene::Draw()
 	if ((irisOpening_ || irisClosing_) && iris_) {
 		iris_->Draw(); // 常に最前面
 	}
-	//if (gameOverSprite_) { gameOverSprite_->Draw(); }
+	if (overSprite_) {
+		overSprite_->Draw();
+	}
 }

@@ -61,8 +61,8 @@ void TitleScene::Initialize()
 		float(WindowsAPI::kClientHeight) * float(WindowsAPI::kClientHeight)
 	);
 
-	// ★余白に絶対負けない“核オプション”
-	//   基本の対角に 1.8〜2.0 倍をかける。これで端がチラ見えする余地を潰す。
+	// 余白に絶対負けない“核オプション”
+	// 基本の対角に 1.8〜2.0 倍をかける。これで端がチラ見えする余地を潰す。
 	irisMax_ = diag * 2.0f;   // ← まずは 2.0f。まだなら 2.2f に
 
 	irisStartScale_ = irisScale_; // 最初のスケール（小さめ）
@@ -89,7 +89,6 @@ void TitleScene::Initialize()
 		titleEnemies_.push_back(std::move(e));
 	}
 
-
 	//---------------パーティクル----------------
 	ParticleManager::GetInstance()->Initialize(dxCommon, srvManager, camera.get());
 	//-----------------------------------------
@@ -101,8 +100,6 @@ void TitleScene::Finalize()
 
 void TitleScene::Update()
 {
-
-
 	ResetDrawCallCount();
 	UpdatePerformanceInfo();
 

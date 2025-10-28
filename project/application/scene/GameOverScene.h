@@ -71,6 +71,14 @@ private:
 	int perFrameFlameBudget_ = 40;
 	int perFrameSparkBudget_ = 25;
 
-	// GAME OVER の文字を出したいとき用
-	//std::unique_ptr<Sprite> gameOverSprite_;
+	// === 「GAME OVER」スプライト ===
+	std::unique_ptr<Sprite> overSprite_;
+
+	// フェードイン（0→1）とスケール（0.8→1.0）
+	Ease::Tween overAlphaTween_;
+	Ease::Tween overScaleTween_;
+
+	bool overActive_ = false;   // アニメ進行フラグ
+	float overAlpha_ = 0.0f;    // 現アルファ
+	float overScale_ = 1.0f;    // 現スケール
 };
