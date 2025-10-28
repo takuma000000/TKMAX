@@ -280,7 +280,7 @@ void GameScene::Update()
 			float decay = 1.0f - 0.7f * t01; // 経過で発光を弱める
 			float glow = 1.0f + decay * 0.20f * std::sin(startHoldElapsed_ * startGlowSpeed_);
 			startSprite_->SetColor({ glow, glow, glow, startAlpha_ });
-		}
+		}	
 
 		// 到着後：静止→フェードアウト
 		if (!startFadeOut_) {

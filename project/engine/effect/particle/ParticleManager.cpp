@@ -3,7 +3,6 @@
 #include "MyMath.h"
 #include <numbers>
 
-
 ParticleManager* ParticleManager::instance = nullptr;
 
 ParticleManager* ParticleManager::GetInstance()
@@ -384,7 +383,7 @@ void ParticleManager::CreateParticleGroup(const std::string& name, const std::st
 	uint32_t srvIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
 	newGroup.materialData.textureIndex = srvIndex;
 	// インスタンシング用バッファ作成
-	newGroup.kNumInstance = 100;
+	newGroup.kNumInstance = kNumMaxInstance;
 	size_t bufferSize = sizeof(ParticleForGPU) * newGroup.kNumInstance;
 	newGroup.instancingResource = dxCommon_->CreateBufferResource(bufferSize);
 	newGroup.instancingResource->Map(0, nullptr, reinterpret_cast<void**>(&newGroup.instancingData));
@@ -624,6 +623,28 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 		float g = 0.55f + 0.40f * (1.0f - t);  // 0.95..0.55
 		float b = 0.05f + 0.20f * t;           // 0.05..0.25
 		p.color = { r, g, b, 1.0f };
+	} else if (groupName == "fallStreak") {
+		Particle p{};
+
+		// 線を少し長く
+		p.transform.scale = { 0.10f, 2.6f, 1.0f };
+		p.transform.rotate = { 0.0f, 0.0f, 0.0f };
+		p.transform.translate = center;
+
+		// ほぼ垂直にゆっくり落下（見やすさ重視）
+		float vx = ((rand() % 40) - 20) / 800.0f;     // ±0.025
+		float vz = ((rand() % 40) - 20) / 1200.0f;    // ±0.016
+		float vy = -(1.2f + (rand() % 40) / 100.0f);  // -1.2 ～ -1.6
+		p.velocity = { vx, vy, vz };
+
+		// 深紅
+		p.color = { 1.35f, 0.10f, 0.06f, 1.0f };
+
+		// 画面下まで十分に保つ寿命
+		p.lifeTime = 10.0f + (rand() % 80) / 100.0f; // 10.0 ～ 10.8秒
+		p.currentTime = 0.0f;
+
+		return p;
 	} else { // 上記意外
 		// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 		std::uniform_real_distribution<float> velX(-0.15f, 0.15f);

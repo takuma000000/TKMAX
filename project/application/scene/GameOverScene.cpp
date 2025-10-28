@@ -79,6 +79,8 @@ void GameOverScene::Initialize()
 	PM->CreateParticleGroup("crashFlame", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
 	// 予備：火花（damageSpark）も使う
 	PM->CreateParticleGroup("damageSpark", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
+	// --- 流星/降下ストリーク（縦に細長い線） ---
+	PM->CreateParticleGroup("fallStreak", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
 
 	// スプライト生成
 	overSprite_ = std::make_unique<Sprite>();
@@ -98,7 +100,7 @@ void GameOverScene::Initialize()
 
 void GameOverScene::Finalize()
 {
-	
+
 }
 
 void GameOverScene::Update()
@@ -250,30 +252,72 @@ void GameOverScene::Update()
 		}
 	}
 
-	// === GAME OVER 表示（フェードインのみ） ===
+	// === GAME OVER 表示（フェードイン＋深紅の鼓動発光） ===
 	if (overActive_ && overSprite_) {
-		const float dt = 1.0f / 60.0f;                  // 固定デルタで十分
+		const float dt = 1.0f / 60.0f;
 		overAlpha_ = overAlphaTween_.Update(dt);
 		overScale_ = overScaleTween_.Update(dt);
 
-		// アルファ反映（RGBは1のまま、アルファだけTween）
-		overSprite_->SetColor({ 1, 1, 1, overAlpha_ });
+		static float glowTimer = 0.0f;
+		glowTimer += dt;
 
-		// スケール反映（SetSize を使っているならベースサイズ×スケール）
-		// 画像サイズを使わない設計なら transform に合わせる実装でもOK。
-		// ここでは SetSize ベースを想定して 800×800 を基準例に。
+		// ── 鼓動テンポやや速め（3.8f）：心臓のようにドクドク動く
+		float s = 0.5f + 0.5f * std::sin(glowTimer * 3.8f);
+		float t01 = std::pow(s, 2.3f); // 明るい瞬間を鋭く（呼吸というより脈）
+
+		// 深紅補間：ワインレッド→血の赤（R強ブースト、G少量、Bほぼ0）
+		//   dark   : 黒と赤の中間（重く沈む）
+		//   bright : 深紅〜血の赤（発光寄り）
+		const Vector4 dark = { 0.35f, 0.00f, 0.00f, overAlpha_ }; // 黒寄りの赤
+		const Vector4 bright = { 1.60f, 0.08f, 0.02f, overAlpha_ }; // 深紅（R1.6で強ブースト）
+
+		Vector4 color = {
+			dark.x + (bright.x - dark.x) * t01,
+			dark.y + (bright.y - dark.y) * t01,
+			dark.z + (bright.z - dark.z) * t01,
+			overAlpha_
+		};
+
+		// 青殺し＋赤支配を確実に
+		color.y *= 0.6f; // 緑をさらに抑える
+		color.z *= 0.3f; // 青をほぼ潰す
+
+		overSprite_->SetColor(color);
+
+		// スケール反映
 		const float baseW = 800.0f;
 		const float baseH = 800.0f;
 		overSprite_->SetSize({ baseW * overScale_, baseH * overScale_ });
 
 		overSprite_->Update();
-
-		// 終了してもフェードアウトはしない → overActive_は false にしてもそのまま描画は継続
-		if (overAlphaTween_.Finished() && overScaleTween_.Finished()) {
-			overActive_ = false; // アニメ終了。以後は静止表示
-		}
 	}
 
+	// === 画面上から下へ降るストリーク（流星風） ===
+	{
+		static int frameToggle = 0;
+		frameToggle ^= 1;                  // 1フレームおきに生成（密度を下げる）
+		if (frameToggle) { /* 今フレは生成しない */ } else {
+			const int kSpawnPerFrame = 7;  // 12 → 7 に減らす（間隔を空ける）
+
+			const Matrix4x4 camW = camera_->GetWorldMatrix();
+			Vector3 camPos = { camW.m[3][0], camW.m[3][1], camW.m[3][2] };
+			Vector3 camRight = MyMath::Normalize({ camW.m[0][0], camW.m[0][1], camW.m[0][2] });
+			Vector3 camUp = MyMath::Normalize({ camW.m[1][0], camW.m[1][1], camW.m[1][2] });
+			Vector3 camFwd = MyMath::Normalize({ camW.m[2][0], camW.m[2][1], camW.m[2][2] });
+
+			for (int i = 0; i < kSpawnPerFrame; ++i) {
+				// 横幅を広げてバラけさせる（±26前後）
+				float xSpread = ((rand() % 5200) - 2600) / 100.0f;  // 約 -26.0 ～ +26.0
+				// 手前～やや奥までの帯
+				float zDepth = 16.0f + (rand() % 1600) / 40.0f;    // 16 ～ 56
+				// 画面上端よりさらに上から湧かせる（落ちてくる距離を確保）
+				float yHeight = 10.0f + (rand() % 400) / 20.0f;     // 10 ～ 30
+
+				Vector3 spawn = camPos + camRight * xSpread + camFwd * zDepth + camUp * yHeight;
+				ParticleManager::GetInstance()->Emit("fallStreak", spawn, 1);
+			}
+		}
+	}
 }
 
 void GameOverScene::Draw()
