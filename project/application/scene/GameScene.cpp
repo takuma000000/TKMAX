@@ -81,6 +81,11 @@ void GameScene::Initialize()
 	startSprite_->SetColor({ 1,1,1,1 }); // アルファ1で開始
 	startTween_.Reset(0.0f, 1.0f, startDuration_, Ease::Type::OutBack);
 
+	reticle_ = std::make_unique<Reticle>();
+	reticle_->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/reticle.png");
+	reticle_->SetSize({ 150.0f,150.0f });               // お好み
+	reticle_->SetAngularSpeed(1.8f);          // 1.8rad/sec でくるくる回す
+
 }
 
 void GameScene::Finalize()
@@ -367,6 +372,10 @@ void GameScene::Update()
 		if (player_) player_->SetHP(0);
 	}
 
+	if (reticle_) {
+		reticle_->Update(dt);
+	}
+
 	// パフォーマンス情報・デバッグUI
 	UpdatePerformanceInfo();
 }
@@ -394,7 +403,11 @@ void GameScene::Draw()
 	}
 
 	if (startVisible_) {
-		startSprite_->Draw();
+		startSprite_->Draw(); // ゲームスタート文字
+	}
+
+	if (reticle_) {
+		reticle_->Draw(); // エイムマーク
 	}
 }
 
@@ -430,6 +443,7 @@ void GameScene::LoadTextures()
 	TextureManager::GetInstance()->LoadTexture("./resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
 	TextureManager::GetInstance()->LoadTexture("./resources/Ground.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/start.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/reticle.png");
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*

@@ -29,6 +29,7 @@
 #include "application/boss/BossEnemy.h"
 #include "application/boss/BossBullet.h"
 #include <Easing.h>
+#include "Reticle.h" 
 
 //=============================================================
 // GameSceneクラス
@@ -244,5 +245,7 @@ private:
 
 	float playerDeathElapsed_ = 0.0f;
 	bool playerDeathStarted_ = false;
+
+	std::unique_ptr<Reticle> reticle_; // 照準
 };
 

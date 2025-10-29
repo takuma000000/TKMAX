@@ -143,6 +143,7 @@
     <ClCompile Include="application\scene\GameOverScene.cpp">
       <Filter>application\scene</Filter>
     </ClCompile>
+    <ClCompile Include="Reticle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -306,6 +307,10 @@
     </ClInclude>
     <ClInclude Include="application\scene\GameOverScene.h">
       <Filter>application\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Reticle.h" />
+    <ClInclude Include="Vector2.h">
+      <Filter>engine\func\math</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
