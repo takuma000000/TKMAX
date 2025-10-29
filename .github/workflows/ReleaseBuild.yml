@@ -2,7 +2,7 @@ name: ReleaseBuild
 on:
   push:
     branches:
-      - master
+      - master_Game
 
 env:
   # リポジトリのルートディレクトリを基点としたソリューションファイルのパス
