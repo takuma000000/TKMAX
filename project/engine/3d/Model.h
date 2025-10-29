@@ -47,7 +47,7 @@ private:
 	void MaterialResource(DirectXCommon* dxCommon);
 
 	// Transform情報
-	Transform transform;
+	Transform transform{ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
 
 public:
 
