@@ -98,22 +98,6 @@ private:// ──────────────────── 初期�
 
 private: // ──────────────────── 更新処理 ────────────────────
 
-	/**
-	* @brief 指定した Object3d の Transform を更新する
-	* @param obj 更新対象の Object3d
-	* @param translate 新しい座標
-	* @param rotate 回転角の加算値
-	* @param scale スケール値
-	*
-	* ───────────────────────────────────────────
-	* obj の移動・回転・スケールをまとめて更新する
-	* obj->SetTranslate(translate);
-	* obj->SetRotate(obj->GetRotate() + rotate);
-	* obj->SetScale(scale);
-	* ───────────────────────────────────────────
-	*/
-	void UpdateObjectTransform(std::unique_ptr<Object3d>& obj, const Vector3& translate, const Vector3& rotate, const Vector3& scale);
-
 	//メモリ使用量
 	/// <summary>メモリ使用量を計測・履歴化します。</summary>
 	void UpdateMemory();

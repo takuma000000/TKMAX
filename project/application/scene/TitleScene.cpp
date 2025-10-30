@@ -234,7 +234,6 @@ void TitleScene::Update()
 	if (ImGui::Button("Apply Camera")) {
 		camera->SetTranslate({ 0.0f, camY_, -camDist_ });
 		camera->Update();
-
 	}
 	ImGui::End();
 #endif // _DEBUG

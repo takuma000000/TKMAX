@@ -98,7 +98,7 @@ void GameOverScene::Initialize()
 	overAlphaTween_.Reset(0.0f, 1.0f, 0.7f, Ease::Type::OutQuad);
 	overScaleTween_.Reset(0.8f, 1.0f, 0.7f, Ease::Type::OutBack);
 
-	overActive_ = true;
+	overActive_ = true; // アニメ進行フラグON
 }
 
 void GameOverScene::Finalize()

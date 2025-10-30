@@ -85,7 +85,11 @@ void GameScene::Initialize()
 	reticle_->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/reticle.png");
 	reticle_->SetSize({ 150.0f,150.0f });               // お好み
 	reticle_->SetAngularSpeed(1.8f);          // 1.8rad/sec でくるくる回す
-
+	reticle_->EnableRainbow(true); // 虹色発光ON
+	reticle_->SetHueSpeed(0.1f);     // 速さ 
+	reticle_->SetSaturation(1.0f);   // 彩度
+	reticle_->SetValue(1.3f);        // 輝度(1.2〜1.5で“発光”らしく)
+	reticle_->SetPulse(0.35f, 5.0f); // 明滅(振幅, 周波数Hz)
 }
 
 void GameScene::Finalize()
@@ -659,26 +663,10 @@ void GameScene::ImGuiDebug()
 	ImGui::Text("Pitch: %.3f rad", skyPitch_);
 	ImGui::End();
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #endif // _DEBUG
-}
-
-// ──────────────────────────────────────────────
-// ● 指定した Object3d の Transform を更新する
-// ──────────────────────────────────────────────
-// - 更新対象の Object3d の座標・回転・スケールを設定）
-// ──────────────────────────────────────────────
-/**
- * @param obj       [in/out] 更新対象の Object3d
- * @param translate [in]     新しい座標
- * @param rotate    [in]     新しい回転角（加算処理なし）
- * @param scale     [in]     スケール値（直接上書き）
- */
-void GameScene::UpdateObjectTransform(std::unique_ptr<Object3d>& obj, const Vector3& translate, const Vector3& rotate, const Vector3& scale)
-{
-	obj->SetTranslate(translate);
-	obj->SetRotate(rotate);
-	obj->SetScale(scale);
 }
 
 void GameScene::UpdateMemory()
