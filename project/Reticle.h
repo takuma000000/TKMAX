@@ -80,8 +80,6 @@ public:
 		for (auto& sp : layers_) sp->Draw();
 	}
 
-	
-
 	// ==== setters ====
 	void SetPosition(const Vec2& p) { position_ = p; for (auto& sp : layers_) if (sp) sp->SetPosition(p); }
 	void SetSize(const Vec2& s) { size_ = s; for (auto& sp : layers_) if (sp) sp->SetSize(s); }
