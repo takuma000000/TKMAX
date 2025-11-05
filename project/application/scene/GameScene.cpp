@@ -83,13 +83,13 @@ void GameScene::Initialize()
 
 	reticle_ = std::make_unique<Reticle>();
 	reticle_->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/reticle.png");
-	reticle_->SetSize({ 150.0f,150.0f });               // お好み
-	reticle_->SetAngularSpeed(1.8f);          // 1.8rad/sec でくるくる回す
+	reticle_->SetSize({ 150.0f,150.0f }); // レティクルサイズ
+	reticle_->SetAngularSpeed(1.8f); // 回転速度
 	reticle_->EnableRainbow(true); // 虹色発光ON
-	reticle_->SetHueSpeed(0.1f);     // 速さ 
-	reticle_->SetSaturation(1.0f);   // 彩度
-	reticle_->SetValue(1.3f);        // 輝度(1.2〜1.5で“発光”らしく)
-	reticle_->SetPulse(0.35f, 5.0f); // 明滅(振幅, 周波数Hz)
+	reticle_->SetHueSpeed(0.15f); // 色相変化速度
+	reticle_->SetSaturation(0.95f); // 彩度
+	reticle_->SetValue(0.90f); // 明度
+	reticle_->SetPulse(0.20f, 1.6f); // 呼吸パルス設定
 }
 
 void GameScene::Finalize()

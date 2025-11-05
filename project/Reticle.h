@@ -54,21 +54,25 @@ public:
 			layers_[i]->SetRotation(angleRad_ * (i == 1 ? 1.0f : (i == 2 ? -1.0f : 0.5f)));
 		}
 
-		// ==== 虹色発光処理 ====
+		// ==== 黄〜橙グラデーション発光（リメイク風リング） ====
 		if (rainbow_) {
-			// ベース白
-			layers_[0]->SetColor({ 1.0f, 1.0f, 1.0f, 0.7f });
+			const float baseHue = 0.12f; // 中心色：黄
+			const float hueRange = 0.05f; // 揺れ幅：±0.05（黄→橙の間）
 
-			// レイヤー1（順方向のHue回転）
-			float r1, g1, b1;
-			HSVtoRGB(fmodf(time_ * hueSpeed_ * 1.0f, 1.0f), sat_, val_, r1, g1, b1);
-			layers_[1]->SetColor({ r1, g1, b1, 0.6f });
+			float hue = baseHue + hueRange * std::sin(time_ * hueSpeed_ * 0.25f);
 
-			// レイヤー2（逆方向＋明滅）
-			float pulse = 1.0f + pulseAmp_ * std::sin(2.0f * 3.14159265f * pulseFreq_ * time_);
-			float r2, g2, b2;
-			HSVtoRGB(fmodf(1.0f - time_ * hueSpeed_ * 0.8f, 1.0f), sat_, val_ * pulse, r2, g2, b2);
-			layers_[2]->SetColor({ r2, g2, b2, 0.5f });
+			float r, g, b;
+			HSVtoRGB(hue, sat_, val_, r, g, b);
+
+			// 内側（やや強め）
+			layers_[1]->SetColor({ r, g, b, 0.70f });
+
+			// 外周（少しオレンジ寄り＆呼吸パルス）
+			float pulse = 1.0f + pulseAmp_ * std::sin(time_ * pulseFreq_ * 0.5f);
+			float hueOuter = hue - 0.02f; // ほんの少し赤方向へ
+			float ro, go, bo;
+			HSVtoRGB(hueOuter, sat_, std::min(val_ * 1.02f, 0.98f), ro, go, bo);
+			layers_[2]->SetColor({ ro, go, bo, 0.45f * pulse });
 		}
 
 		for (auto& sp : layers_) sp->Update();
