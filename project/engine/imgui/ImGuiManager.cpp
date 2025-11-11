@@ -16,6 +16,31 @@ void ImGuiManager::Initialize(WindowsAPI* winApp, DirectXCommon* dxCommon)
 	//ImGuoのコンテキストを生成
 	ImGui::CreateContext();
 
+	// ImGuiドッキング
+	ImGuiIO& io = ImGui::GetIO();
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
+	// ===============================
+	// ▼ 日本語フォントの追加
+	// ===============================
+	io.Fonts->AddFontDefault(); // デフォルト英語フォント
+
+	// 日本語フォントを読み込む
+	ImFont* font = io.Fonts->AddFontFromFileTTF(
+		"C:/Windows/Fonts/meiryo.ttc",   // Windows標準のメイリオ
+		18.0f,                           // フォントサイズ
+		nullptr,
+		io.Fonts->GetGlyphRangesJapanese() // 日本語文字範囲
+	);
+
+	// 読み込み成功したら日本語フォントを既定に設定
+	if (font) {
+		io.FontDefault = font;
+	} else {
+		OutputDebugStringA("[ImGui] 日本語フォントの読み込みに失敗しました\\n");
+	}
+
+
 	///ImGuiの色設定場所===========================================
 
 	//イチゴ色
@@ -28,8 +53,6 @@ void ImGuiManager::Initialize(WindowsAPI* winApp, DirectXCommon* dxCommon)
 	//SetColorRainbow();
 
 	///===========================================================
-
-
 
 	//Win32用の初期化
 	ImGui_ImplWin32_Init(winApp_->GetHwnd());
@@ -52,10 +75,6 @@ void ImGuiManager::Initialize(WindowsAPI* winApp, DirectXCommon* dxCommon)
 		srvHeap_->GetCPUDescriptorHandleForHeapStart(), // SRVのCPU側のハンドル
 		srvHeap_->GetGPUDescriptorHandleForHeapStart() // SRVのGPU側のハンドル
 	);
-
-	//ImGuiドッキング
-	ImGuiIO& io = ImGui::GetIO();
-	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 }
 
 void ImGuiManager::Finalize()

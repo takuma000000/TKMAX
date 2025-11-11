@@ -531,7 +531,7 @@ void GameScene::ImGuiDebug()
 #ifdef _DEBUG
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	ImGui::Begin("Info");
+	ImGui::Begin("info");
 	ImGui::Text("FPS : %.2f", fps_);
 	ImGui::Separator();
 	ImGui::Text("FrameTime : %.2f ms", frameTimeMs_);

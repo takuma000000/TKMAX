@@ -89,7 +89,7 @@ void Player::ImGuiDebug() {
 	Vector3 rot = object_->GetRotate();
 	Vector3 scale = object_->GetScale();
 
-	ImGui::Begin("Player");
+	ImGui::Begin("プレイヤー");
 
 	if (ImGui::DragFloat3("Position", &pos.x, 0.01f)) {
 		object_->SetTranslate(pos);
