@@ -373,36 +373,64 @@ void Player::HandleFollowCamera() {
 void Player::HandleShooting() {
 	Input* input = Input::GetInstance();
 
-	// ▼ LT：完全追従弾（強ホーミング）
+	// ▼ LT：ロケット風の大弧→合流→以後ホーミング
 	bool ltPressed = (input->GetLeftTrigger() > 128);
-	if (ltPressed && !ltHeld_) { // 押した瞬間だけ発射
+	if (ltPressed && !ltHeld_) {
 		auto bullet = std::make_unique<PlayerBullet>();
 		bullet->Initialize(common_, dxCommon_);
 
 		Vector3 startPos = object_->GetTranslate();
 		bullet->SetPosition(startPos);
-
-
-		bullet->SetEnemy(enemy_);               // ターゲット
-		bullet->SetHoming(true, 0.6f);          // 完全追従ON（速度は好みで）
-		bullet->SetCamera(camera); // カメラ設定
-		bullet->SetPlayer(this); // プレイヤー設定
-
-		// 初速は一応ターゲット方向、enemy_がいなければ前方
-		if (enemy_ && !enemy_->IsDead()) { // ターゲットがいるなら
-			Vector3 dir = enemy_->GetWorldPosition() - startPos;
-			float len = MyMath::Length(dir);
-			bullet->SetVelocity((len > 0.01f ? MyMath::Normalize(dir) : Vector3{ 0,0,1 }) * 0.6f);
-		} else { // ターゲットがいないなら前方
-			bullet->SetVelocity({ 0,0,0.6f });
-		}
-
-		// LT専用の軌道
+		bullet->SetEnemy(enemy_);
+		bullet->SetHoming(true, 0.6f);   // 以後は既存ホーミング
+		bullet->SetCamera(camera);
+		bullet->SetPlayer(this);
 		bullet->SetTrailGroup("trail_lt");
 
-		bullets_.push_back(std::move(bullet)); // 弾リストに追加
+		// --- 敵方向ベース ---
+		Vector3 toEnemyDir = { 0,0,1 };
+		float   distToEnemy = 12.0f;
+		if (enemy_ && !enemy_->IsDead()) {
+			Vector3 toEnemy = enemy_->GetWorldPosition() - startPos;
+			distToEnemy = std::max(4.0f, MyMath::Length(toEnemy));
+			toEnemyDir = (distToEnemy > 0.01f) ? MyMath::Normalize(toEnemy) : Vector3{ 0,0,1 };
+		}
+		// 右方向（Y軸回り90度）: (z,0,-x) を正規化
+		Vector3 right = { toEnemyDir.z, 0.0f, -toEnemyDir.x };
+		float rl = MyMath::Length(right);
+		right = (rl > 0.001f) ? (right * (1.0f / rl)) : Vector3{ 1,0,0 };
+
+		// “敵が画面右側なら右へ回り込む”サイド決定（見た目が気持ちいい）
+		int side = +1; // 右回り
+		if (enemy_ && !enemy_->IsDead()) {
+			Vector3 toEnemy = enemy_->GetWorldPosition() - startPos;
+			float lateral = MyMath::DotOnXZ(right, MyMath::Normalize(Vector3{ toEnemy.x,0,toEnemy.z }));
+			side = (lateral >= 0.0f) ? +1 : -1;
+		}
+
+		// --- ロケットっぽい大弧パラメータ（距離で自動スケール） ---
+		float reach = std::clamp(distToEnemy * 0.75f, 8.0f, 18.0f); // 合流まで前進
+		float sweep = std::clamp(distToEnemy * 0.40f, 6.0f, 12.0f); // 横張り
+		float lift = std::clamp(distToEnemy * 0.22f, 2.5f, 6.0f);  // 上げ
+		float spawnDuration = std::clamp(distToEnemy * 0.02f, 0.32f, 0.55f); // 弧を見せる時間
+
+		// --- 制御点（P0→P1で勢いよく横・上へ、P2で敵側へ向き直し、P3で合流） ---
+		Vector3 p0 = startPos;
+		Vector3 p3 = startPos + toEnemyDir * reach; // 合流点（敵手前）
+		// 立ち上がりは強めに外へ
+		Vector3 p1 = p0 + right * (side * sweep) + Vector3{ 0.0f, lift * 0.7f, 0.0f }
+		+ toEnemyDir * (reach * 0.25f);
+		// 戻りはまだ外側を保ちつつ敵方向へ
+		Vector3 p2 = p3 - right * (side * sweep * 0.85f) + Vector3{ 0.0f, lift, 0.0f };
+
+		// ベジェ後の突入速度（以降は既存ホーミングが上書き）
+		Vector3 velocityAfter = toEnemyDir * 0.6f;
+
+		bullet->StartSpawnBezier(p0, p1, p2, p3, spawnDuration, velocityAfter);
+
+		bullets_.push_back(std::move(bullet));
 	}
-	ltHeld_ = ltPressed; // 離したら解放（次の押下で1発だけ出る）
+	ltHeld_ = ltPressed;
 
 	// ▼ RB：通常弾
 	if (input->TriggerButton(XINPUT_GAMEPAD_RIGHT_SHOULDER)) {

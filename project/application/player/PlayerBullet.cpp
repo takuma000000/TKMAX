@@ -1,4 +1,6 @@
 #define NOMINMAX
+#include "MyMath.h"
+
 #include "PlayerBullet.h"
 #include <engine/effect/particle/ParticleManager.h>
 #include "AABB.h"
@@ -17,6 +19,9 @@ void PlayerBullet::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 }
 
 void PlayerBullet::Update() {
+
+	UpdateSpawnBezier(); // 発射の「出方」曲線更新
+
 	// 現在の座標を取得して、速度分だけ進める
 	Vector3 pos = object_->GetTranslate();
 
@@ -97,4 +102,39 @@ void PlayerBullet::SetPosition(const Vector3& pos) {
 
 void PlayerBullet::SetVelocity(const Vector3& vel) {
 	velocity_ = vel; // 速度設定
+}
+
+void PlayerBullet::StartSpawnBezier(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float duration, const Vector3& velocityAfter)
+{
+	bezP0_ = p0; bezP1_ = p1; bezP2_ = p2; bezP3_ = p3;
+	spawnDuration_ = std::max(0.001f, duration);
+	spawnT_ = 0.0f;
+	isSpawningCurve_ = true;
+	postSpawnVelocity_ = velocityAfter;
+	// ベジェ中は速度を使わないので一旦ゼロでもOK（好み）
+	velocity_ = { 0,0,0 };
+}
+
+void PlayerBullet::UpdateSpawnBezier()
+{
+	const float dt = 1.0f / 60.0f;
+
+	// --- 発射の“出方”をベジェで演出 ---
+	if (isSpawningCurve_) {
+		spawnT_ += dt / spawnDuration_;
+		float t = std::clamp(spawnT_, 0.0f, 1.0f);
+
+		Vector3 newPos = MyMath::Bezier3(bezP0_, bezP1_, bezP2_, bezP3_, t);
+		object_->SetTranslate(newPos);
+		trailEmitter_.SetPosition(newPos);
+		trailEmitter_.Update();
+
+		if (t >= 1.0f) {
+			isSpawningCurve_ = false;
+			velocity_ = postSpawnVelocity_; // ベジェ終了後の速度（以降は既存ホーミングへ）
+		} else {
+			// ベジェ中はほかの処理をスキップ（当たり判定を効かせたいなら return を外す）
+			return;
+		}
+	}
 }

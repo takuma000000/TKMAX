@@ -88,13 +88,26 @@ public:
 	//単位行列
 	static Matrix4x4 MakeIdentity4x4();
 
+	// 直交投影行列
 	static Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip);
 
+	// 透視投影行列
 	static Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip);
 
+	// 安全な正規化（ゼロベクトル対策）
 	static Vector3 SafeNormalize(const Vector3& v, const Vector3& fallback = { 0,0,-1 });
 
+	// XZ平面上での内積計算
 	static float DotOnXZ(const Vector3& a, const Vector3& b);
 
+	// 0.0～1.0の範囲でランダムな浮動小数点数を生成
 	static float Rand01();
+
+	// ベジエ曲線（3次元）
+	static Vector3 Bezier3(
+		const Vector3& p0,
+		const Vector3& p1,
+		const Vector3& p2,
+		const Vector3& p3,
+		float t);
 };

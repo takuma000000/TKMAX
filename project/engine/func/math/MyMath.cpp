@@ -530,3 +530,13 @@ float MyMath::Rand01() {
 	std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 	return dist(s_rng);
 }
+
+Vector3 MyMath::Bezier3(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float t)
+{
+	Vector3 a = Vector3Lerp(p0, p1, t);
+	Vector3 b = Vector3Lerp(p1, p2, t);
+	Vector3 c = Vector3Lerp(p2, p3, t);
+	Vector3 d = Vector3Lerp(a, b, t);
+	Vector3 e = Vector3Lerp(b, c, t);
+	return Vector3Lerp(d, e, t);
+}

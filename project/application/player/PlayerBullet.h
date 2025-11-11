@@ -59,6 +59,8 @@ public:
 	void SetSpecialAttack(bool flag) { isSpecialAttack_ = flag; }
 	/// <summary>ホーミング設定。</summary>
 	void SetHoming(bool enable, float speed) { isHoming_ = enable; homingSpeed_ = speed; }
+	/// <summary>発射の「出方」曲線を開始します。</summary>
+	void StartSpawnBezier(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float duration, const Vector3& velocityAfter);
 
 private:
 	Player* player_ = nullptr;
@@ -74,7 +76,15 @@ private:
 
 	bool  isHoming_ = false;
 	float homingSpeed_ = 0.6f; // 追従弾の速度（調整可）
+	bool isSpawningCurve_ = false;    // 発射の「出方」曲線フェーズ中か
+	float spawnT_ = 0.0f;            // 0..1 の補間量
+	float spawnDuration_ = 0.25f;    // 出方にかける秒数（調整可）
+	Vector3 bezP0_, bezP1_, bezP2_, bezP3_; // ベジェ制御点
+	Vector3 postSpawnVelocity_ = { 0,0,0 };   // 曲線フェーズ終了後に引き継ぐ速度
 
 	ParticleEmitter trailEmitter_; // 弾の軌跡パーティクル
-	std::string trailGroup_ = "bulletTrail"; // 既定
+	std::string trailGroup_ = "bulletTrail"; // デフォルトのパーティクルグループ名
+
+	/// <summary>発射の「出方」曲線を更新します。</summary>
+	void UpdateSpawnBezier();
 };
