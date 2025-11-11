@@ -152,8 +152,11 @@ private:
 	Enemy* lastLockedEnemy_ = nullptr;  // 直前にロック表示していた敵
 	bool rtHeld_ = false;  // RTをいま保持中か
 
+	// --- カメラシェイク ---
 	Vector3 cameraShakeOffset_ = { 0, 0, 0 };
 	int cameraShakeFrame_ = 0;
+	float shakeBaseStrength_ = 1.0f;   // 基本のシェイク強度
+	float shakeZoomBoost_ = 8.0f;   // ズーム時の追加倍率
 
 	bool canUseSpecial_ = false; // 一撃必殺が使用可能かどうか
 

@@ -107,6 +107,10 @@ void Player::ImGuiDebug() {
 	ImGui::Text("HP: %d", hp_);// 1
 	ImGui::SameLine();// 1 と 2 を同じ行に配置
 	if (ImGui::Button("Reset HP")) { hp_ = 1; } // 2
+	ImGui::SeparatorText("Camera Shake");
+	ImGui::SliderFloat("Base Strength", &shakeBaseStrength_, 0.0f, 5.0f); // ベースとなるカメラシェイク強度
+	ImGui::SliderFloat("Zoom Boost", &shakeZoomBoost_, 0.0f, 15.0f); // ズーム時の追加倍率
+	ImGui::Text("Current Gain : %.2f", shakeBaseStrength_ + (1.0f - camZoom_) * shakeZoomBoost_); // 現在の倍率を表示
 
 	ImGui::End();
 }
@@ -496,6 +500,7 @@ void Player::LTShoot()
 
 		// === LT押下時の一時カメラズーム開始 ===
 		ZoomCamera(); // ズーム処理
+		StartCameraShake(10);
 	}
 	ltHeld_ = ltPressed;
 }
@@ -541,15 +546,20 @@ void Player::UpdateCameraFollowThirdPerson(float dt) {
 		std::cosf(angleY) * -distance
 	};
 
-	// 既存のカメラシェイク
+	// ---- カメラシェイク処理 ----
 	if (cameraShakeFrame_ > 0) {
-		cameraShakeOffset_.x = (rand() % 100 - 50) / 500.0f;
-		cameraShakeOffset_.y = (rand() % 100 - 50) / 500.0f;
-		cameraShakeOffset_.z = (rand() % 100 - 50) / 500.0f;
+		float zoomKick = std::max(0.0f, 1.0f - camZoom_);
+		float shakeGain = shakeBaseStrength_ + zoomKick * shakeZoomBoost_;
+
+		cameraShakeOffset_.x = ((rand() % 100 - 50) / 500.0f) * shakeGain;
+		cameraShakeOffset_.y = ((rand() % 100 - 50) / 500.0f) * shakeGain;
+		cameraShakeOffset_.z = ((rand() % 100 - 50) / 500.0f) * shakeGain;
+
 		cameraShakeFrame_--;
 	} else {
 		cameraShakeOffset_ = { 0,0,0 };
 	}
+
 
 	Vector3 cameraPos = playerPos + offset + cameraShakeOffset_;
 	camera->SetTranslate(cameraPos);
@@ -560,9 +570,9 @@ void Player::ZoomCamera()
 	// === LT押下時の一時カメラズーム（連打安定版） ===
 	const float kInTarget = 0.82f;  // 寄り先
 	const float kInTime = 0.12f;  // 再ターゲット時の寄り時間（短め）
-	const float kOutTime = 0.25f;  // 戻り時間（※下で使用中）
+	const float kOutTime = 0.25f;  // 戻り時間
 	const float kHoldUnit = 1.5f;  // 1回の押下で与えるホールド秒
-	const float kHoldMax = 0.20f;  // ← 連打してもここまで（上限）
+	const float kHoldMax = 1.2f;  // ← 連打してもここまで（上限）
 
 	if (!ltZoomActive_) {
 		// まだズームしていなければ通常起動
