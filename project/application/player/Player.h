@@ -121,12 +121,18 @@ private:
 
 	/// <summary>ゲームパッドの入力に基づいてプレイヤーを移動させます。</summary>
 	void HandleGamePadMove();
-	/// <summary>カメラ制御を処理します。</summary>
-	void HandleCameraControl();
 	/// <summary>追従カメラを処理します。</summary>
 	void HandleFollowCamera();
 	/// <summary>射撃処理を行います。</summary>
 	void HandleShooting();
+	/// <summary>RB弾を更新します。</summary>
+	void RBShoot();
+	/// <summary>RT弾を更新します。</summary>
+	void RTShoot();
+	/// <summary>LB弾を更新します。</summary>
+	void LBShoot();
+	/// <summary>LT弾を更新します。</summary>
+	void LTShoot();
 
 	Camera* camera = nullptr;
 	Object3dCommon* common_ = nullptr;

@@ -310,36 +310,6 @@ void Player::HandleGamePadMove() {
 	object_->SetRotate(rot); // 回転設定
 }
 
-void Player::HandleCameraControl() {
-	if (!camera) return;
-
-	Input* input = Input::GetInstance();
-
-	const float sensitivity = 0.02f; // 回転感度（調整してOK）
-	const SHORT deadZone = 8000; // デッドゾーン
-
-	// 右スティックの入力取得
-	SHORT rx = input->GetRightStickX();
-	SHORT ry = input->GetRightStickY();
-
-	// デッドゾーン処理
-	float rotX = abs(ry) > deadZone ? -(ry / 32768.0f) * sensitivity : 0.0f;
-	float rotY = abs(rx) > deadZone ? (rx / 32768.0f) * sensitivity : 0.0f;
-
-	// カメラ回転更新
-	Vector3 rotation = camera->GetRotate();
-
-	// 回転加算
-	rotation.x += rotX;
-	rotation.y += rotY;
-
-	// X軸回転に制限をかける（真上向いたり真下向いたりしないように）
-	const float limitX = 1.5f; // 約85度
-	rotation.x = std::clamp(rotation.x, -limitX, limitX);
-
-	camera->SetRotate(rotation); // カメラ回転設定
-}
-
 void Player::HandleFollowCamera() {
 	if (!camera) return;
 
@@ -371,8 +341,126 @@ void Player::HandleFollowCamera() {
 }
 
 void Player::HandleShooting() {
-	Input* input = Input::GetInstance();
+	RBShoot(); // RB弾処理
+	RTShoot(); // RT弾処理
+	LBShoot(); // LB弾処理
+	LTShoot(); // LT弾処理
+}
 
+void Player::RBShoot()
+{
+	Input* input = Input::GetInstance();
+	// ▼ RB：通常弾
+	if (input->TriggerButton(XINPUT_GAMEPAD_RIGHT_SHOULDER)) {
+		auto bullet = std::make_unique<PlayerBullet>();
+		bullet->Initialize(common_, dxCommon_);
+
+		Vector3 startPos = object_->GetTranslate(); // 発射位置
+		bullet->SetPosition(startPos); // 弾位置設定
+
+		if (enemy_) { // ターゲットがいるならそっち向ける
+			Vector3 enemyPos = enemy_->GetWorldPosition();
+			Vector3 dir = enemyPos - startPos;
+			float length = MyMath::Length(dir);
+
+			if (length < 0.01f) { // 長さがほぼ0なら
+				dir = { 0, 0, 1 };
+			} else { // 正常な場合
+				dir = MyMath::Normalize(dir);
+			}
+			bullet->SetVelocity(dir * 0.5f);
+		} else { // ターゲットがいないなら前方
+			bullet->SetVelocity({ 0, 0, 0.5f });
+		}
+
+		bullet->SetCamera(camera); // カメラ設定
+		bullet->SetEnemy(enemy_); // ターゲット設定
+		bullet->SetPlayer(this); // プレイヤー設定
+
+		// RB専用の軌跡
+		bullet->SetTrailGroup("trail_rb");
+
+		bullets_.push_back(std::move(bullet)); // 弾リストに追加
+	}
+}
+
+void Player::RTShoot()
+{
+	Input* input = Input::GetInstance();
+	// RT：一撃必殺（最も近い敵に必中弾）
+	const bool pressed = (input->GetRightTrigger() > 128);
+
+	// 押している間：ホールド状態にする（発射はしない）
+	if (pressed && (canUseSpecial_ || debugUnlimitedSpecial_) && enemy_ && !enemy_->IsDead()) {
+		rtHeld_ = true; // ロックの見た目は Update() 側でON
+	}
+
+	// 離した瞬間：発射
+	if (!pressed && rtHeld_) {
+		if ((canUseSpecial_ || debugUnlimitedSpecial_) && enemy_ && !enemy_->IsDead()) {
+			auto bullet = std::make_unique<PlayerBullet>();
+			bullet->Initialize(common_, dxCommon_);
+
+			Vector3 startPos = object_->GetTranslate(); // 発射位置
+			Vector3 enemyPos = enemy_->GetWorldPosition(); // 敵位置
+			Vector3 dir = MyMath::Normalize(enemyPos - startPos); // 方向計算
+
+			// 弾設定
+			bullet->SetPosition(startPos); // 弾位置設定
+			bullet->SetVelocity(dir * 0.5f); // 速度設定
+			bullet->SetCamera(camera); // カメラ設定
+			bullet->SetEnemy(enemy_); // 敵設定
+			bullet->SetPlayer(this); // プレイヤー設定
+			bullet->SetSpecialAttack(true); // 一撃必殺フラグON
+
+			// RT専用の軌跡
+			bullet->SetTrailGroup("trail_rt");
+
+			bullets_.push_back(std::move(bullet)); // 弾リストに追加
+
+			// 見た目のロックは解除
+			enemy_->SetLocked(false);
+			if (!debugUnlimitedSpecial_) { // 一撃必殺使用済みにする
+				canUseSpecial_ = false;
+			}
+		}
+		rtHeld_ = false; // 次に備えて解除
+	}
+}
+
+void Player::LBShoot()
+{
+	Input* input = Input::GetInstance();
+	// ▼ LB：全敵必中弾
+	if (input->TriggerButton(XINPUT_GAMEPAD_LEFT_SHOULDER) && allEnemies_) {
+		for (auto& enemy : *allEnemies_) { // 全敵ループ
+			if (enemy->IsDead()) continue;
+			// 敵ごとに弾を生成
+			auto bullet = std::make_unique<PlayerBullet>();
+			bullet->Initialize(common_, dxCommon_);
+
+			Vector3 startPos = object_->GetTranslate(); // 発射位置
+			Vector3 enemyPos = enemy->GetWorldPosition(); // 敵位置
+			Vector3 dir = MyMath::Normalize(enemyPos - startPos); // 方向計算
+
+			// 弾設定
+			bullet->SetPosition(startPos); // 弾位置設定
+			bullet->SetVelocity(dir * 0.5f); // 速度設定
+			bullet->SetCamera(camera); // カメラ設定
+			bullet->SetEnemy(enemy.get()); // 敵設定
+			bullet->SetPlayer(this); // プレイヤー設定
+
+			// LB専用の軌跡
+			bullet->SetTrailGroup("trail_lb");
+
+			bullets_.push_back(std::move(bullet)); // 弾リストに追加
+		}
+	}
+}
+
+void Player::LTShoot()
+{
+	Input* input = Input::GetInstance();
 	// ▼ LT：ロケット風の大弧→合流→以後ホーミング
 	bool ltPressed = (input->GetLeftTrigger() > 128);
 	if (ltPressed && !ltHeld_) {
@@ -431,103 +519,4 @@ void Player::HandleShooting() {
 		bullets_.push_back(std::move(bullet));
 	}
 	ltHeld_ = ltPressed;
-
-	// ▼ RB：通常弾
-	if (input->TriggerButton(XINPUT_GAMEPAD_RIGHT_SHOULDER)) {
-		auto bullet = std::make_unique<PlayerBullet>();
-		bullet->Initialize(common_, dxCommon_);
-
-		Vector3 startPos = object_->GetTranslate(); // 発射位置
-		bullet->SetPosition(startPos); // 弾位置設定
-
-		if (enemy_) { // ターゲットがいるならそっち向ける
-			Vector3 enemyPos = enemy_->GetWorldPosition();
-			Vector3 dir = enemyPos - startPos;
-			float length = MyMath::Length(dir);
-
-			if (length < 0.01f) { // 長さがほぼ0なら
-				dir = { 0, 0, 1 };
-			} else { // 正常な場合
-				dir = MyMath::Normalize(dir);
-			}
-			bullet->SetVelocity(dir * 0.5f);
-		} else { // ターゲットがいないなら前方
-			bullet->SetVelocity({ 0, 0, 0.5f });
-		}
-
-		bullet->SetCamera(camera); // カメラ設定
-		bullet->SetEnemy(enemy_); // ターゲット設定
-		bullet->SetPlayer(this); // プレイヤー設定
-
-		// RB専用の軌跡
-		bullet->SetTrailGroup("trail_rb");
-
-		bullets_.push_back(std::move(bullet)); // 弾リストに追加
-	}
-
-	// ▼ LB：全敵必中弾
-	if (input->TriggerButton(XINPUT_GAMEPAD_LEFT_SHOULDER) && allEnemies_) {
-		for (auto& enemy : *allEnemies_) { // 全敵ループ
-			if (enemy->IsDead()) continue;
-			// 敵ごとに弾を生成
-			auto bullet = std::make_unique<PlayerBullet>();
-			bullet->Initialize(common_, dxCommon_);
-
-			Vector3 startPos = object_->GetTranslate(); // 発射位置
-			Vector3 enemyPos = enemy->GetWorldPosition(); // 敵位置
-			Vector3 dir = MyMath::Normalize(enemyPos - startPos); // 方向計算
-
-			// 弾設定
-			bullet->SetPosition(startPos); // 弾位置設定
-			bullet->SetVelocity(dir * 0.5f); // 速度設定
-			bullet->SetCamera(camera); // カメラ設定
-			bullet->SetEnemy(enemy.get()); // 敵設定
-			bullet->SetPlayer(this); // プレイヤー設定
-
-			// LB専用の軌跡
-			bullet->SetTrailGroup("trail_lb");
-
-			bullets_.push_back(std::move(bullet)); // 弾リストに追加
-		}
-	}
-
-	// RT：一撃必殺（最も近い敵に必中弾）
-	const bool pressed = (input->GetRightTrigger() > 128);
-
-	// 押している間：ホールド状態にする（発射はしない）
-	if (pressed && (canUseSpecial_ || debugUnlimitedSpecial_) && enemy_ && !enemy_->IsDead()) {
-		rtHeld_ = true; // ロックの見た目は Update() 側でON
-	}
-
-	// 離した瞬間：発射
-	if (!pressed && rtHeld_) {
-		if ((canUseSpecial_ || debugUnlimitedSpecial_) && enemy_ && !enemy_->IsDead()) {
-			auto bullet = std::make_unique<PlayerBullet>();
-			bullet->Initialize(common_, dxCommon_);
-
-			Vector3 startPos = object_->GetTranslate(); // 発射位置
-			Vector3 enemyPos = enemy_->GetWorldPosition(); // 敵位置
-			Vector3 dir = MyMath::Normalize(enemyPos - startPos); // 方向計算
-
-			// 弾設定
-			bullet->SetPosition(startPos); // 弾位置設定
-			bullet->SetVelocity(dir * 0.5f); // 速度設定
-			bullet->SetCamera(camera); // カメラ設定
-			bullet->SetEnemy(enemy_); // 敵設定
-			bullet->SetPlayer(this); // プレイヤー設定
-			bullet->SetSpecialAttack(true); // 一撃必殺フラグON
-
-			// RT専用の軌跡
-			bullet->SetTrailGroup("trail_rt");
-
-			bullets_.push_back(std::move(bullet)); // 弾リストに追加
-
-			// 見た目のロックは解除
-			enemy_->SetLocked(false);
-			if (!debugUnlimitedSpecial_) { // 一撃必殺使用済みにする
-				canUseSpecial_ = false;
-			}
-		}
-		rtHeld_ = false; // 次に備えて解除
-	}
 }
