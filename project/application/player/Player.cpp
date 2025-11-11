@@ -441,68 +441,69 @@ void Player::LBShoot()
 void Player::LTShoot()
 {
 	Input* input = Input::GetInstance();
-	// ▼ LT：ロケット風の大弧→合流→以後ホーミング
-	bool ltPressed = (input->GetLeftTrigger() > 128);
-	if (ltPressed && !ltHeld_) {
+	if ((input->GetLeftTrigger() > 128) && !ltHeld_) {
 		auto bullet = std::make_unique<PlayerBullet>();
 		bullet->Initialize(common_, dxCommon_);
 
-		Vector3 startPos = object_->GetTranslate();
-		bullet->SetPosition(startPos);
+		Vector3 p0 = object_->GetTranslate();
+		bullet->SetPosition(p0);
 		bullet->SetEnemy(enemy_);
-		bullet->SetHoming(true, 0.6f);   // 以後は既存ホーミング
+		bullet->SetHoming(true, 0.60f);        // ベジェ終了後に効く追尾速度
 		bullet->SetCamera(camera);
 		bullet->SetPlayer(this);
 		bullet->SetTrailGroup("trail_lt");
 
-		// --- 敵方向ベース ---
+		// --- 敵方向基準（いなければ前方） ---
 		Vector3 toEnemyDir = { 0,0,1 };
 		float   distToEnemy = 12.0f;
 		if (enemy_ && !enemy_->IsDead()) {
-			Vector3 toEnemy = enemy_->GetWorldPosition() - startPos;
-			distToEnemy = std::max(4.0f, MyMath::Length(toEnemy));
-			toEnemyDir = (distToEnemy > 0.01f) ? MyMath::Normalize(toEnemy) : Vector3{ 0,0,1 };
+			Vector3 v = enemy_->GetWorldPosition() - p0;
+			distToEnemy = std::max(4.0f, MyMath::Length(v));
+			toEnemyDir = (distToEnemy > 0.01f) ? MyMath::Normalize(v) : Vector3{ 0,0,1 };
 		}
-		// 右方向（Y軸回り90度）: (z,0,-x) を正規化
+
+		// 右方向（Y軸回り 90°回転）
 		Vector3 right = { toEnemyDir.z, 0.0f, -toEnemyDir.x };
 		float rl = MyMath::Length(right);
-		right = (rl > 0.001f) ? (right * (1.0f / rl)) : Vector3{ 1,0,0 };
+		right = (rl > 0.001f) ? right * (1.0f / rl) : Vector3{ 1,0,0 };
 
-		// “敵が画面右側なら右へ回り込む”サイド決定（見た目が気持ちいい）
-		int side = +1; // 右回り
+		// 画面右側の敵なら右回り、左なら左回り
+		int side = +1;
 		if (enemy_ && !enemy_->IsDead()) {
-			Vector3 toEnemy = enemy_->GetWorldPosition() - startPos;
-			float lateral = MyMath::DotOnXZ(right, MyMath::Normalize(Vector3{ toEnemy.x,0,toEnemy.z }));
+			Vector3 v = enemy_->GetWorldPosition() - p0;
+			float lateral = MyMath::DotOnXZ(right, MyMath::Normalize(Vector3{ v.x,0,v.z }));
 			side = (lateral >= 0.0f) ? +1 : -1;
 		}
 
-		// --- ロケットっぽい大弧パラメータ（距離で自動スケール） ---
-		float reach = std::clamp(distToEnemy * 0.75f, 8.0f, 18.0f); // 合流まで前進
-		float sweep = std::clamp(distToEnemy * 0.40f, 6.0f, 12.0f); // 横張り
-		float lift = std::clamp(distToEnemy * 0.22f, 2.5f, 6.0f);  // 上げ
-		float spawnDuration = std::clamp(distToEnemy * 0.02f, 0.32f, 0.55f); // 弧を見せる時間
+		// --- 大きな弧のパラメータ（距離で自動スケール） ---
+		float reach = std::clamp(distToEnemy * 1.10f, 18.0f, 48.0f); // Z前進量（合流点まで）
+		float sweep = std::clamp(distToEnemy * 1.00f, 18.0f, 40.0f); // 横張り（画面外へ）
+		float lift = std::clamp(distToEnemy * 0.60f, 8.0f, 22.0f); // 上げ量（上にもはみ出す）
+		float bezTime = std::clamp(distToEnemy * 0.10f, 0.5f, 2.5f);// 弧を長く見せる
 
-		// --- 制御点（P0→P1で勢いよく横・上へ、P2で敵側へ向き直し、P3で合流） ---
-		Vector3 p0 = startPos;
-		Vector3 p3 = startPos + toEnemyDir * reach; // 合流点（敵手前）
-		// 立ち上がりは強めに外へ
-		Vector3 p1 = p0 + right * (side * sweep) + Vector3{ 0.0f, lift * 0.7f, 0.0f }
+		// 制御点：P0(開始) → P1(強く外へ) → P2(外を保ちつつ敵方向へ) → P3(敵手前で合流)
+		Vector3 p3 = p0 + toEnemyDir * reach;
+		Vector3 p1 = p0 + right * (side * sweep)
+			+ Vector3{ 0.0f, lift * 0.7f, 0.0f }
 		+ toEnemyDir * (reach * 0.25f);
-		// 戻りはまだ外側を保ちつつ敵方向へ
-		Vector3 p2 = p3 - right * (side * sweep * 0.85f) + Vector3{ 0.0f, lift, 0.0f };
+		Vector3 p2 = p3 - right * (side * sweep * 0.85f)
+			+ Vector3{ 0.0f, lift, 0.0f };
 
-		// ベジェ後の突入速度（以降は既存ホーミングが上書き）
-		Vector3 velocityAfter = toEnemyDir * 0.6f;
+		// ベジェ後は軽く前へ押し出してからホーミング
+		Vector3 vAfter = toEnemyDir * 0.40f; // 前方速度
+		// ベジェ弾道開始
+		bullet->StartSpawnBezier(p0, p1, p2, p3, bezTime, vAfter);
+		// ホーミング設定
+		bullet->SetHomingDelay(0.12f); // ベジェ完了から追尾開始までの遅延時間
 
-		bullet->StartSpawnBezier(p0, p1, p2, p3, spawnDuration, velocityAfter);
 
 		bullets_.push_back(std::move(bullet));
 
-		// === LT押下時の一時カメラズーム開始 ===
-		ZoomCamera(); // ズーム処理
+		// 見せ場用の軽いズーム＆シェイク
+		ZoomCamera();
 		StartCameraShake(10);
 	}
-	ltHeld_ = ltPressed;
+	ltHeld_ = (input->GetLeftTrigger() > 128);
 }
 
 void Player::UpdateCameraFollowThirdPerson(float dt) {
@@ -567,12 +568,12 @@ void Player::UpdateCameraFollowThirdPerson(float dt) {
 
 void Player::ZoomCamera()
 {
-	// === LT押下時の一時カメラズーム（連打安定版） ===
-	const float kInTarget = 0.82f;  // 寄り先
+	// === LT押下時の一時カメラズーム ===
+	const float kInTarget = 0.75f; // ズーム到達目標値
 	const float kInTime = 0.12f;  // 再ターゲット時の寄り時間（短め）
 	const float kOutTime = 0.25f;  // 戻り時間
 	const float kHoldUnit = 1.5f;  // 1回の押下で与えるホールド秒
-	const float kHoldMax = 1.2f;  // ← 連打してもここまで（上限）
+	const float kHoldMax = 1.2f;  // 連打してもここまで（上限）
 
 	if (!ltZoomActive_) {
 		// まだズームしていなければ通常起動

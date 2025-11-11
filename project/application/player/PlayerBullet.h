@@ -1,11 +1,16 @@
 #pragma once
 
+#undef max
+#undef min
+
+#define NOMINMAX
+#include <algorithm>
+#include <string>
 #include <memory>
 #include "Object3d.h"
 #include "Vector3.h"
 #include "application/enemy/Enemy.h"
 #include <engine/effect/particle/ParticlerEmitter.h>
-#include <string>
 
 class Player;
 
@@ -29,18 +34,21 @@ public:
 	bool IsHit() const { return isHit_; }
 
 	/// <summary>弾が当たったときの処理。</summary>
+	bool IsDead() const { return isDead_; }
+
+	// setter
+	/// <summary>発射の「出方」曲線を開始します。</summary>
+	void StartSpawnBezier(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float duration, const Vector3& velocityAfter);
+	/// <summary>弾が当たったときの処理。</summary>
 	void SetPosition(const Vector3& pos);
 	/// <summary>弾の速度を設定します。</summary>
 	void SetVelocity(const Vector3& vel);
-	/// <summary>弾が当たったときの処理。</summary>
-	bool IsDead() const { return isDead_; }
 	/// <summary>弾が当たったときの処理。</summary>
 	void SetCamera(Camera* camera) {
 		if (object_) {
 			object_->SetCamera(camera);
 		}
 	}
-
 	/// <summary>弾の軌跡パーティクルのグループを設定します。</summary>
 	void SetTrailGroup(const std::string& group) {
 		trailGroup_ = group;
@@ -48,9 +56,6 @@ public:
 		Vector3 pos = object_ ? object_->GetTranslate() : Vector3{};
 		trailEmitter_.Initialize(trailGroup_, pos);
 	}
-
-	/// <summary>弾が当たったときの処理。</summary>
-	Enemy* GetEnemy() const { return enemy_; }
 	/// <summary>弾が当たったときの処理。</summary>
 	void SetEnemy(Enemy* enemy) { enemy_ = enemy; }
 	/// <summary>弾が当たったときの処理。</summary>
@@ -59,8 +64,12 @@ public:
 	void SetSpecialAttack(bool flag) { isSpecialAttack_ = flag; }
 	/// <summary>ホーミング設定。</summary>
 	void SetHoming(bool enable, float speed) { isHoming_ = enable; homingSpeed_ = speed; }
-	/// <summary>発射の「出方」曲線を開始します。</summary>
-	void StartSpawnBezier(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float duration, const Vector3& velocityAfter);
+	/// <summary>ホーミング遅延時間設定。</summary>
+	void  SetHomingDelay(float sec) { homingDelay_ = std::max(0.0f, sec); }
+
+	// getter
+	/// <summary>弾が当たったときの処理。</summary>
+	Enemy* GetEnemy() const { return enemy_; }
 
 private:
 	Player* player_ = nullptr;
@@ -76,6 +85,7 @@ private:
 
 	bool  isHoming_ = false;
 	float homingSpeed_ = 0.6f; // 追従弾の速度（調整可）
+	float homingDelay_ = 0.0f;     // 追尾開始までの遅延秒
 	bool isSpawningCurve_ = false;    // 発射の「出方」曲線フェーズ中か
 	float spawnT_ = 0.0f;            // 0..1 の補間量
 	float spawnDuration_ = 0.25f;    // 出方にかける秒数（調整可）

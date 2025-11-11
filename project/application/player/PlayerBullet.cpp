@@ -118,6 +118,8 @@ void PlayerBullet::StartSpawnBezier(const Vector3& p0, const Vector3& p1, const 
 void PlayerBullet::UpdateSpawnBezier()
 {
 	const float dt = 1.0f / 60.0f;
+	// 現在の座標を取得して、速度分だけ進める
+	Vector3 pos = object_->GetTranslate();
 
 	// --- 発射の“出方”をベジェで演出 ---
 	if (isSpawningCurve_) {
@@ -135,6 +137,20 @@ void PlayerBullet::UpdateSpawnBezier()
 		} else {
 			// ベジェ中はほかの処理をスキップ（当たり判定を効かせたいなら return を外す）
 			return;
+		}
+	}
+
+	if (isHoming_ && homingDelay_ > 0.0f) {
+		homingDelay_ -= (1.0f / 60.0f);
+	}
+
+	if (isHoming_ && homingDelay_ <= 0.0f && enemy_ && !enemy_->IsDead()) {
+		Vector3 enemyPos = enemy_->GetWorldPosition();
+		Vector3 dir = enemyPos - pos;
+		float len = MyMath::Length(dir);
+		if (len > 0.001f) {
+			dir = MyMath::Normalize(dir);
+			velocity_ = dir * homingSpeed_;
 		}
 	}
 }

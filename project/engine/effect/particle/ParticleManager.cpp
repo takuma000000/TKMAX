@@ -577,10 +577,10 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 		p.lifeTime = std::uniform_real_distribution<float>(0.3f, 0.6f)(rng);
 		p.currentTime = 0.0f;
 
-		// 黄緑〜緑
+		// 純赤～オレンジ寄り
 		float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
-		Vector3 col = { 0.4f + 0.3f * t, 1.0f, 0.3f + 0.3f * t };
-		p.color = { 1.0f, 1.0f, 1.0f, 1.0f };  // 純白
+		Vector3 col = { 1.0f, 0.2f + 0.3f * t, 0.1f };
+		p.color = { 1.0f, 0.05f, 0.05f, 1.0f };  // 強い赤（R100%, G5%, B5%）
 	} else if (groupName == "damageSpark") { //── 故障スパーク ──
 		// 放射状に高速で飛ぶ、短命、明るくチカチカ
 		std::uniform_real_distribution<float> dir(-1.0f, 1.0f);
