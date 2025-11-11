@@ -8,7 +8,10 @@
 #include "ModelManager.h"
 #include "Camera.h"
 
+#ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"
+#endif
+
 #include <numbers>
 #include "BaseScene.h"
 

@@ -3,7 +3,10 @@
 #include "Object3d.h"
 #include "Camera.h"
 #include "BaseScene.h"
+
+#ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"
+#endif
 
 //=============================================================
 // Enemyクラス

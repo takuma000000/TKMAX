@@ -3,7 +3,10 @@
 #include "Camera.h"
 #include <array>
 #include <random>
+
+#ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"
+#endif
 
 //=============================================================
 // BossEnemyクラス

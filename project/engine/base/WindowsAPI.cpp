@@ -2,10 +2,7 @@
 
 #include "WindowsAPI.h"
 #include <cstdint>
-//#include "externals/imgui/imgui.h"
 #include <iostream>
-#include <externals/imgui/imgui_impl_win32.h>
-
 #include "Framework.h"
 extern Framework* gFramework; // グローバルポインタでFrameworkを参照
 

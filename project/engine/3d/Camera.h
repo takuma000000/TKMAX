@@ -3,7 +3,9 @@
 #include "Object3d.h"
 #include "Matrix4x4.h"
 
+#ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"
+#endif
 
 //=============================================================
 // Cameraクラス

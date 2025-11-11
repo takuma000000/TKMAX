@@ -1,7 +1,10 @@
 #include "Skybox.h"
 #include <externals/DirectXTex/d3dx12.h>
 #include <dxcapi.h> // DXC関連
+
+#ifdef USE_IMGUI
 #include "externals/imGui/imgui.h"
+#endif
 
 void Skybox::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager, const std::string& texturePath) {
 	dxCommon_ = dxCommon;

@@ -4,7 +4,10 @@
 #include "SceneManager.h"
 #include <algorithm>
 #include <cmath>
+
+#ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"
+#endif
 
 void TitleScene::Initialize()
 {

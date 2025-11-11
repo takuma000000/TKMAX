@@ -1,5 +1,8 @@
 #include "BaseScene.h"
+
+#ifdef USE_IMGUI
 #include <externals/imgui/imgui.h>
+#endif
 
 void BaseScene::Initialize()
 {

@@ -3,8 +3,11 @@
 #include "DirectXCommon.h"
 #include "MyMath.h"
 #include "TextureManager.h"
-#include "externals/imgui/imgui.h"
 #include "BaseScene.h"
+
+#ifdef USE_IMGUI
+#include "externals/imgui/imgui.h"
+#endif
 
 Sprite::Sprite()
 {

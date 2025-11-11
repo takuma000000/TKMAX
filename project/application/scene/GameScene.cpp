@@ -1,7 +1,10 @@
 #define NOMINMAX
 #include "GameScene.h"
 
+#ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"
+#endif
+
 #include <limits>
 #include <algorithm>
 #include "MyMath.h"

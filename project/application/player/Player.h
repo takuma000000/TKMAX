@@ -8,10 +8,13 @@
 #include "PlayerBullet.h"
 #include "Input.h"
 #include "application/enemy/Enemy.h"
-#include "externals/imgui/imgui.h"
 #include <algorithm>
 #include <list>
 #include <engine/effect/particle/ParticlerEmitter.h>
+
+#ifdef USE_IMGUI
+#include "externals/imgui/imgui.h"
+#endif
 
 //=============================================================
 // Playerクラス

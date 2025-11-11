@@ -8,7 +8,10 @@
 #include "DirectXCommon.h"
 #include "WindowsAPI.h"
 #include "Input.h"
+
+#ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"
+#endif
 
 class Reticle {
 public:
