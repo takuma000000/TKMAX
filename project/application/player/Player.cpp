@@ -311,33 +311,13 @@ void Player::HandleGamePadMove() {
 }
 
 void Player::HandleFollowCamera() {
-	if (!camera) return;
+	const float dt = 1.0f / 60.0f; // 必要ならあなたの時間管理に合わせて
 
-	Vector3 playerPos = object_->GetTranslate(); // プレイヤー位置取得
-	Vector3 camRot = camera->GetRotate(); // カメラ回転取得
-	float distance = 40.0f; // カメラとプレイヤーの距離
-	float height = 4.0f; // カメラの高さ
-
-	float angleY = camRot.y; // カメラのY軸回転（ラジアン）
-	Vector3 offset = { // カメラのオフセット計算
-		sinf(angleY) * -distance, // Xオフセット
-		height, // Yオフセット（高さ固定）
-		cosf(angleY) * -distance // Zオフセット
-	};
-
-	// --- シェイクオフセット加算 ---
-	if (cameraShakeFrame_ > 0) { // シェイク中
-		// ランダムなオフセットを生成
-		cameraShakeOffset_.x = (rand() % 100 - 50) / 500.0f;
-		cameraShakeOffset_.y = (rand() % 100 - 50) / 500.0f;
-		cameraShakeOffset_.z = (rand() % 100 - 50) / 500.0f;
-		cameraShakeFrame_--;
-	} else {
-		cameraShakeOffset_ = { 0, 0, 0 }; // シェイク終了
+	if (ltFpvActive_) {
+		UpdateCameraLTFirstPerson(dt);
+		return;
 	}
-
-	Vector3 cameraPos = playerPos + offset + cameraShakeOffset_; // 最終的なカメラ位置
-	camera->SetTranslate(cameraPos); // カメラ位置設定
+	UpdateCameraFollowThirdPerson(dt);
 }
 
 void Player::HandleShooting() {
@@ -517,6 +497,60 @@ void Player::LTShoot()
 		bullet->StartSpawnBezier(p0, p1, p2, p3, spawnDuration, velocityAfter);
 
 		bullets_.push_back(std::move(bullet));
+
+		ltFpvActive_ = true; // LT発射で一時的にFPVモードへ
+		ltFpvTimer_ = ltFpvDuration_; // タイマーリセット
 	}
 	ltHeld_ = ltPressed;
+}
+
+void Player::UpdateCameraLTFirstPerson(float dt) {
+	if (!camera) return;
+
+	// ---- 自機の鼻先あたりにカメラを置く ----
+	Vector3 playerPos = object_->GetTranslate();
+	Vector3 camPos = playerPos + ltFpvOffset_;
+	camera->SetTranslate(camPos);
+
+	// ---- 前方(Z方向)を向く（敵には追従しない）----
+	Vector3 dir = { 0, 0, 1 }; // 常にZ方向を見る
+	float yaw = std::atan2f(dir.x, dir.z); // → 0
+	float pitch = std::atan2f(-dir.y, std::sqrt(dir.x * dir.x + dir.z * dir.z)); // → 0
+	camera->SetRotate({ pitch, yaw, 0.0f }); // 実質{0,0,0}
+
+	// ---- タイマーで自動復帰 ----
+	ltFpvTimer_ -= dt;
+	if (ltFpvTimer_ <= 0.0f) {
+		ltFpvActive_ = false;
+	}
+}
+
+void Player::UpdateCameraFollowThirdPerson(float dt) {
+	if (!camera) return;
+
+	Vector3 playerPos = object_->GetTranslate();
+	Vector3 camRot = camera->GetRotate();
+
+	float distance = 40.0f;
+	float height = 4.0f;
+	float angleY = camRot.y;
+
+	Vector3 offset = {
+		std::sinf(angleY) * -distance,
+		height,
+		std::cosf(angleY) * -distance
+	};
+
+	// 既存のカメラシェイク
+	if (cameraShakeFrame_ > 0) {
+		cameraShakeOffset_.x = (rand() % 100 - 50) / 500.0f;
+		cameraShakeOffset_.y = (rand() % 100 - 50) / 500.0f;
+		cameraShakeOffset_.z = (rand() % 100 - 50) / 500.0f;
+		cameraShakeFrame_--;
+	} else {
+		cameraShakeOffset_ = { 0,0,0 };
+	}
+
+	Vector3 cameraPos = playerPos + offset + cameraShakeOffset_;
+	camera->SetTranslate(cameraPos);
 }
