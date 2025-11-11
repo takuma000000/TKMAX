@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <list>
 #include <engine/effect/particle/ParticlerEmitter.h>
+#include "Easing.h"
 
 #ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"
@@ -133,10 +134,10 @@ private:
 	void LBShoot();
 	/// <summary>LT弾を更新します。</summary>
 	void LTShoot();
-	/// <summary>カメラの更新（LT一人称視点）を行います。</summary>
-	void UpdateCameraLTFirstPerson(float dt);
 	/// <summary>カメラの更新（第三者視点追従）を行います。</summary>
 	void UpdateCameraFollowThirdPerson(float dt);
+	/// <summary>カメラの更新（LTズーム）を行います。</summary>
+	void ZoomCamera();
 
 	Camera* camera = nullptr;
 	Object3dCommon* common_ = nullptr;
@@ -187,10 +188,11 @@ private:
 	int   faultFrameCounter_ = 0;
 	bool  flyInit_ = false; // FlyAway移行時の一度きり初期化フラグ
 
-	// LTで起動する一人称視点用
-	bool  ltFpvActive_ = false;   // LTで一人称に入っているか
-	float ltFpvTimer_ = 0.0f;    // 残り時間
-	float ltFpvDuration_ = 3.0f;    // 一人称を維持する秒数
-	// 視点の微調整
-	Vector3 ltFpvOffset_ = { 0.0f, 0.25f, 0.15f }; // 第一引数：位置オフセット, 第二引数：注視点オフセット, 第三引数：FOVオフセット
+	// --- LT一時ズーム ---
+	bool ltZoomActive_ = false;   // ズーム中フラグ
+	Ease::Tween ltZoomTween_;            // 0..1 の係数トゥイーン
+	float camZoom_ = 1.0f;         // 現在のズーム係数（1=通常）
+	float ltZoomHold_ = 0.0f;      // 最小倍率でホールドする秒数
+	Vector3 camSavedPos_; // カメラ位置保存用
+	Vector3 camSavedRot_; // カメラ回転保存用
 };

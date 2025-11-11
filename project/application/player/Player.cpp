@@ -311,12 +311,8 @@ void Player::HandleGamePadMove() {
 }
 
 void Player::HandleFollowCamera() {
-	const float dt = 1.0f / 60.0f; // 必要ならあなたの時間管理に合わせて
-
-	if (ltFpvActive_) {
-		UpdateCameraLTFirstPerson(dt);
-		return;
-	}
+	const float dt = 1.0f / 60.0f;
+	// FPV分岐はしない（ズームは追従側で処理）
 	UpdateCameraFollowThirdPerson(dt);
 }
 
@@ -498,31 +494,10 @@ void Player::LTShoot()
 
 		bullets_.push_back(std::move(bullet));
 
-		ltFpvActive_ = true; // LT発射で一時的にFPVモードへ
-		ltFpvTimer_ = ltFpvDuration_; // タイマーリセット
+		// === LT押下時の一時カメラズーム開始 ===
+		ZoomCamera(); // ズーム処理
 	}
 	ltHeld_ = ltPressed;
-}
-
-void Player::UpdateCameraLTFirstPerson(float dt) {
-	if (!camera) return;
-
-	// ---- 自機の鼻先あたりにカメラを置く ----
-	Vector3 playerPos = object_->GetTranslate();
-	Vector3 camPos = playerPos + ltFpvOffset_;
-	camera->SetTranslate(camPos);
-
-	// ---- 前方(Z方向)を向く（敵には追従しない）----
-	Vector3 dir = { 0, 0, 1 }; // 常にZ方向を見る
-	float yaw = std::atan2f(dir.x, dir.z); // → 0
-	float pitch = std::atan2f(-dir.y, std::sqrt(dir.x * dir.x + dir.z * dir.z)); // → 0
-	camera->SetRotate({ pitch, yaw, 0.0f }); // 実質{0,0,0}
-
-	// ---- タイマーで自動復帰 ----
-	ltFpvTimer_ -= dt;
-	if (ltFpvTimer_ <= 0.0f) {
-		ltFpvActive_ = false;
-	}
 }
 
 void Player::UpdateCameraFollowThirdPerson(float dt) {
@@ -531,10 +506,35 @@ void Player::UpdateCameraFollowThirdPerson(float dt) {
 	Vector3 playerPos = object_->GetTranslate();
 	Vector3 camRot = camera->GetRotate();
 
-	float distance = 40.0f;
-	float height = 4.0f;
-	float angleY = camRot.y;
+	// ベース値は従来どおり
+	const float baseDistance = 40.0f;
+	const float baseHeight = 4.0f;
 
+	// ---- LT一時ズームの更新 ----
+	if (ltZoomActive_) {
+		camZoom_ = ltZoomTween_.Update(dt);  // 係数を更新
+		// 最小到達＆ホールドが残っていれば消化
+		if (ltZoomTween_.Finished() && ltZoomTween_.end < ltZoomTween_.start) {
+			if (ltZoomHold_ > 0.0f) {
+				ltZoomHold_ -= dt;
+			} else {
+				// 逆方向に戻すトゥイーン開始（0.25秒で 0.82→1.0）
+				ltZoomTween_.Reset(ltZoomTween_.end, 1.0f, 0.25f, Ease::Type::OutCubic);
+			}
+		}
+		// 完全に戻り切ったら終了
+		if (ltZoomTween_.Finished() && ltZoomTween_.end == 1.0f) {
+			ltZoomActive_ = false;
+			camZoom_ = 1.0f;
+		}
+	} else {
+		camZoom_ = 1.0f;
+	}
+
+	float distance = baseDistance * camZoom_;
+	float height = baseHeight; // 高さは据え置き（必要なら *camZoom_ でもOK）
+
+	float angleY = camRot.y;
 	Vector3 offset = {
 		std::sinf(angleY) * -distance,
 		height,
@@ -553,4 +553,41 @@ void Player::UpdateCameraFollowThirdPerson(float dt) {
 
 	Vector3 cameraPos = playerPos + offset + cameraShakeOffset_;
 	camera->SetTranslate(cameraPos);
+}
+
+void Player::ZoomCamera()
+{
+	// === LT押下時の一時カメラズーム（連打安定版） ===
+	const float kInTarget = 0.82f;  // 寄り先
+	const float kInTime = 0.12f;  // 再ターゲット時の寄り時間（短め）
+	const float kOutTime = 0.25f;  // 戻り時間（※下で使用中）
+	const float kHoldUnit = 1.5f;  // 1回の押下で与えるホールド秒
+	const float kHoldMax = 0.20f;  // ← 連打してもここまで（上限）
+
+	if (!ltZoomActive_) {
+		// まだズームしていなければ通常起動
+		ltZoomActive_ = true;
+		ltZoomTween_.Reset(1.0f, kInTarget, 0.18f, Ease::Type::OutCubic);
+		ltZoomHold_ = kHoldUnit; // 初回ホールド
+		return;
+	}
+
+	// 既にズーム中
+	const bool isInPhase = (ltZoomTween_.end < ltZoomTween_.start);  // IN方向
+	const bool finished = ltZoomTween_.Finished();
+
+	if (isInPhase) {
+		if (!finished) {
+			// まだ「寄りアニメ」進行中 → 何もしない（Resetしない）
+			// ※ここでResetすると戻りが始まらず伸び続ける原因になる
+			return;
+		}
+		// INが完了して「HOLD中」→ ホールドを上限まで延長（積み上げない）
+		ltZoomHold_ = std::min(kHoldMax, std::max(ltZoomHold_, kHoldUnit));
+		return;
+	}
+
+	// ここに来るのは「OUT（戻り）中」→ 現在値から再びINへ
+	ltZoomTween_.Reset(camZoom_, kInTarget, kInTime, Ease::Type::OutCubic);
+	ltZoomHold_ = kHoldUnit; // 再度短くホールド
 }
