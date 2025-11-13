@@ -19,10 +19,7 @@ void Player::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 		[this]() { return object_->GetTranslate(); },
 		[this]() { return object_->GetRotate().y; }
 	);
-	// 距離・高さオフセット（好みで ImGui 連携も可）
-	//reticle_->SetOffsets(50.0f, 0.0f);
-
-	TextureManager::GetInstance()->LoadTexture("./resources/damageSpark.png");
+	reticle_->GetCenterWorldPos(); // 中心位置取得用
 
 	// パーティクルグループ作成
 	ParticleManager::GetInstance()->CreateParticleGroup(
@@ -303,37 +300,49 @@ void Player::StartCameraShake(int frameCount) {
 }
 
 void Player::HandleGamePadMove() {
-	Input* input = Input::GetInstance(); // 入力取得
-	const float moveSpeed = 0.25f; // 移動速度調整用
-	const SHORT deadZone = 8000; // デッドゾーン
+	if (!object_) return;
 
-	SHORT lx = input->GetLeftStickX(); // 左スティックX
-	SHORT ly = input->GetLeftStickY(); // 左スティックY
-	float stickX = abs(lx) > deadZone ? (lx / 32768.0f) : 0.0f; // デッドゾーン処理
-	float stickY = abs(ly) > deadZone ? (ly / 32768.0f) : 0.0f; // デッドゾーン処理
+	// 現在位置
+	Vector3 pos = object_->GetTranslate();
+	Vector3 target = pos;
 
-	Vector3 pos = object_->GetTranslate(); // 現在位置取得
+	// --- 1) レティクルの位置をターゲットにする ---
+	if (reticle_) {
+		// レティクル中心（Normalレイヤー）のワールド座標
+		Vector3 aim = reticle_->GetCenterWorldPos();
 
-	// XYのみ移動（Zはレール固定）
-	pos.x += stickX * moveSpeed;
-	pos.y -= -stickY * moveSpeed;
-	pos.z = 0.0f; // レール固定
+		// レールシューターなので Z は固定、X/Y だけ寄せる
+		target.x = std::clamp(aim.x, moveMin_.x, moveMax_.x);
+		target.y = std::clamp(aim.y, moveMin_.y, moveMax_.y);
+		target.z = 0.0f;
+	}
 
-	// 範囲クランプ
-	pos.x = std::clamp(pos.x, moveMin_.x, moveMax_.x);
-	pos.y = std::clamp(pos.y, moveMin_.y, moveMax_.y);
+	// --- 2) 紐っぽく「遅れてついていく」追従 ---
+	const float follow = 0.12f; // 0～1 小さいほどゆっくり（お好みで調整）
 
-	object_->SetTranslate(pos); // 位置設定
+	Vector3 newPos = pos;
+	newPos.x = MyMath::Lerp(pos.x, target.x, follow);
+	newPos.y = MyMath::Lerp(pos.y, target.y, follow);
+	newPos.z = 0.0f; // レール固定
 
-	// バンク角（ロール）をスティックに応じてスムージング
-	float targetBank = -stickX * 0.35f; // 左で左に傾く
+	// 範囲内にクランプ
+	newPos.x = std::clamp(newPos.x, moveMin_.x, moveMax_.x);
+	newPos.y = std::clamp(newPos.y, moveMin_.y, moveMax_.y);
+
+	// --- 3) 動きに合わせて機体をバンクさせる ---
+	float vx = newPos.x - pos.x;           // 今フレームのX方向速度
+	float targetBank = -vx * 0.8f;         // 左に動くと左に傾く（係数はお好み）
+
 	// 簡易クリティックダンピング
 	float k = 0.25f, d = 0.45f;
-	bankVel_ += (targetBank - bankAngle_) * k - bankVel_ * d; // 速度更新
-	bankAngle_ += bankVel_; // 角度更新
-	Vector3 rot = object_->GetRotate(); // 現在回転取得
-	rot.z = bankAngle_; // ロール
-	object_->SetRotate(rot); // 回転設定
+	bankVel_ += (targetBank - bankAngle_) * k - bankVel_ * d;
+	bankAngle_ += bankVel_;
+
+	object_->SetTranslate(newPos);
+
+	Vector3 rot = object_->GetRotate();
+	rot.z = bankAngle_;
+	object_->SetRotate(rot);
 }
 
 void Player::HandleFollowCamera() {
@@ -501,15 +510,21 @@ void Player::LTShoot()
 		float reach = std::clamp(distToEnemy * 1.10f, 18.0f, 48.0f); // Z前進量（合流点まで）
 		float sweep = std::clamp(distToEnemy * 1.00f, 18.0f, 40.0f); // 横張り（画面外へ）
 		float lift = std::clamp(distToEnemy * 0.60f, 8.0f, 22.0f); // 上げ量（上にもはみ出す）
-		float bezTime = std::clamp(distToEnemy * 0.10f, 0.5f, 2.5f);// 弧を長く見せる
+		float bezTime = std::clamp(distToEnemy * 0.16f, 1.2f, 3.5f); // ベジェ飛行時間
 
 		// 制御点：P0(開始) → P1(強く外へ) → P2(外を保ちつつ敵方向へ) → P3(敵手前で合流)
-		Vector3 p3 = p0 + toEnemyDir * reach;
+		Vector3 enemyPos = (enemy_ && !enemy_->IsDead())
+			? enemy_->GetWorldPosition()
+			: p0 + toEnemyDir * reach; // 保険で前方
+		// P3 を「敵位置」にする（敵に向かって弧のまま当たる）
+		Vector3 p3 = enemyPos;
+		// P1, P2 は今まで通りだけど、終点がp3に変わったので弧が自然に敵に吸い込まれる
 		Vector3 p1 = p0 + right * (side * sweep)
 			+ Vector3{ 0.0f, lift * 0.7f, 0.0f }
 		+ toEnemyDir * (reach * 0.25f);
 		Vector3 p2 = p3 - right * (side * sweep * 0.85f)
 			+ Vector3{ 0.0f, lift, 0.0f };
+
 
 		// ベジェ後は軽く前へ押し出してからホーミング
 		Vector3 vAfter = toEnemyDir * 0.40f; // 前方速度

@@ -82,15 +82,13 @@ void PlayerBullet::Update() {
 	}
 
 	// 一定距離（Z方向）を超えたら弾を削除する
-	if (pos.z > 50.0f) {
+	if (pos.z > 70.0f) {
 		isDead_ = true; // 弾を削除
 	}
 
 	// Object3d の更新処理
 	object_->Update();
 }
-
-
 
 void PlayerBullet::Draw(DirectXCommon* dxCommon) {
 	object_->Draw(dxCommon); // 3Dオブジェクトの描画
@@ -133,10 +131,7 @@ void PlayerBullet::UpdateSpawnBezier()
 
 		if (t >= 1.0f) {
 			isSpawningCurve_ = false;
-			velocity_ = postSpawnVelocity_; // ベジェ終了後の速度（以降は既存ホーミングへ）
-		} else {
-			// ベジェ中はほかの処理をスキップ（当たり判定を効かせたいなら return を外す）
-			return;
+			velocity_ = postSpawnVelocity_;
 		}
 	}
 

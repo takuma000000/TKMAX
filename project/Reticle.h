@@ -52,37 +52,6 @@ public:
 		initLayer(layers_[2], modelSmall);
 	}
 
-	// 参照元（Playerなど）から位置とヨー角をもらう
-	void BindOwner(std::function<Vector3(void)> getWorldPos,
-		std::function<float(void)>   getYawRad)
-	{
-		getPos_ = std::move(getWorldPos);
-		getYaw_ = std::move(getYawRad);
-	}
-
-	// カメラを反映
-	void SetCamera(Camera* cam) {
-		cam_ = cam;
-		for (auto& L : layers_) if (L.obj) L.obj->SetCamera(cam_);
-	}
-
-	// 前方距離セット（3層まとめて）
-	void SetDepths(float big, float normal, float mini) {
-		layers_[0].forward = big;
-		layers_[1].forward = normal;
-		layers_[2].forward = mini;
-	}
-
-	// 回転速度セット（rad/s、+で反時計回り）3層まとめて
-	void SetSpin(float big, float normal, float mini) {
-		layers_[0].spinSpeed = big;
-		layers_[1].spinSpeed = normal;
-		layers_[2].spinSpeed = mini;
-	}
-
-	// 全体の有効/無効
-	void SetVisible(bool v) { visible_ = v; }
-
 	// 毎フレ更新
 	void Update(float dt) {
 		if (!visible_ || !getPos_ || !getYaw_) return;
@@ -103,12 +72,12 @@ public:
 			camUp = MyMath::Normalize({ W.m[1][0], W.m[1][1], W.m[1][2] });
 		}
 
-		// --- 2) 右スティック入力 → 累積オフセット更新 ---
+		// --- 2) 左スティック入力 → 累積オフセット更新 ---
 		if (stickControl_) {
 			auto* in = Input::GetInstance();
 
-			float rx = static_cast<float>(in->GetRightStickX());
-			float ry = static_cast<float>(in->GetRightStickY());
+			float rx = static_cast<float>(in->GetLeftStickX());
+			float ry = static_cast<float>(in->GetLeftStickY());
 
 			// デッドゾーン
 			const float dz = stickDeadZone_;
@@ -174,6 +143,54 @@ public:
 		for (auto& L : layers_) {
 			if (L.obj && L.visible) L.obj->Draw(dx);
 		}
+	}
+
+	// 参照元（Playerなど）から位置とヨー角をもらう
+	void BindOwner(std::function<Vector3(void)> getWorldPos,
+		std::function<float(void)>   getYawRad)
+	{
+		getPos_ = std::move(getWorldPos);
+		getYaw_ = std::move(getYawRad);
+	}
+
+	// カメラを反映
+	void SetCamera(Camera* cam) {
+		cam_ = cam;
+		for (auto& L : layers_) if (L.obj) L.obj->SetCamera(cam_);
+	}
+
+	// 前方距離セット（3層まとめて）
+	void SetDepths(float big, float normal, float mini) {
+		layers_[0].forward = big;
+		layers_[1].forward = normal;
+		layers_[2].forward = mini;
+	}
+
+	// 回転速度セット（rad/s、+で反時計回り）3層まとめて
+	void SetSpin(float big, float normal, float mini) {
+		layers_[0].spinSpeed = big;
+		layers_[1].spinSpeed = normal;
+		layers_[2].spinSpeed = mini;
+	}
+
+	// 全体の有効/無効
+	void SetVisible(bool v) { visible_ = v; }
+
+	// 中心（Normalレイヤー）のワールド座標を返す
+	Vector3 GetCenterWorldPos() const {
+		// 通常レイヤーがあればそれを使う
+		if (layers_[1].obj) {
+			return layers_[1].obj->GetTranslate();
+		}
+		// 念のためBigレイヤーでもフォールバック
+		if (layers_[0].obj) {
+			return layers_[0].obj->GetTranslate();
+		}
+		// それも無ければオーナー位置を返す
+		if (getPos_) {
+			return getPos_();
+		}
+		return Vector3{};
 	}
 
 #ifdef USE_IMGUI

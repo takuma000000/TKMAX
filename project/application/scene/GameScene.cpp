@@ -437,6 +437,7 @@ void GameScene::LoadTextures()
 	TextureManager::GetInstance()->LoadTexture("./resources/Ground.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/start.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/reticle.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/damageSpark.png");
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
