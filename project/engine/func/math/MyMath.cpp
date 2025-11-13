@@ -525,6 +525,12 @@ float MyMath::DotOnXZ(const Vector3& a, const Vector3& b) {
 	return aa.x * bb.x + aa.z * bb.z;
 }
 
+// ドット積
+float MyMath::Dot(const Vector3& a, const Vector3& b)
+{
+	return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
 // 0.0〜1.0の範囲の乱数を生成
 float MyMath::Rand01() {
 	std::uniform_real_distribution<float> dist(0.0f, 1.0f);

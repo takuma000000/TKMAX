@@ -1,137 +1,276 @@
 #pragma once
 #define NOMINMAX
 #include <memory>
-#include <algorithm>
-#include <cmath>
-#include "engine/2d/Sprite.h"
-#include "SpriteCommon.h"
+#include <functional>
+#include <array>
+#include <string>
+#include "Object3d.h"
+#include "Object3dCommon.h"
 #include "DirectXCommon.h"
+#include "Camera.h"
+#include "engine/func/math/Vector3.h"
+#include "MyMath.h"
+#include "engine/io/Input.h"
+#include <algorithm>
 #include "WindowsAPI.h"
-#include "Input.h"
 
 #ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"
 #endif
 
+// =============================================================
+// 3D Reticle クラス（パンツァードラグーン風・多層回転）
+//  - Player（等）から「世界位置」と「ヨー角[rad]」をコールバックで受け取る
+//  - +Z を前方とする前提で、前方距離を層ごとにズラして配置
+//  - 各層は個別に回転速度/スケール/可視を持つ
+//  - ImGuiでリアルタイム調整可（#define USE_IMGUI が必要）
+// =============================================================
 class Reticle {
 public:
-	using Vec2 = Sprite::Vector2;
-
 	Reticle() = default;
 	~Reticle() = default;
 
-	void Initialize(SpriteCommon* spriteCommon, DirectXCommon* dx,
-		const char* texPath = "./resources/reticle.png")
+	// ---------- API ----------
+	// 初期化：モデル名は3層分を渡す。省略時は *_big/normal/small を使用
+	void Initialize(Object3dCommon* common, DirectXCommon* dx,
+		const char* modelBig = "reticle_big.obj",
+		const char* modelNorm = "reticle_normal.obj",
+		const char* modelSmall = "reticle_small.obj")
 	{
-		for (int i = 0; i < 3; ++i) {
-			layers_[i] = std::make_unique<Sprite>();
-			layers_[i]->Initialize(spriteCommon, dx, texPath);
-			layers_[i]->SetAnchorPoint({ 0.5f, 0.5f });
-			layers_[i]->SetSize(size_);
-			layers_[i]->SetPosition(position_);
-		}
+		common_ = common; dx_ = dx;
+
+		auto initLayer = [&](Layer& L, const char* model) {
+			L.obj = std::make_unique<Object3d>();
+			L.obj->Initialize(common_, dx_);
+			L.obj->SetModel(model);
+			L.obj->SetScale(L.scale);
+			if (cam_) L.obj->SetCamera(cam_);
+			};
+
+		initLayer(layers_[0], modelBig);
+		initLayer(layers_[1], modelNorm);
+		initLayer(layers_[2], modelSmall);
 	}
 
-	void Update(float dt)
+	// 参照元（Playerなど）から位置とヨー角をもらう
+	void BindOwner(std::function<Vector3(void)> getWorldPos,
+		std::function<float(void)>   getYawRad)
 	{
-		Input* input = Input::GetInstance();
-
-		float rx = static_cast<float>(input->GetRightStickX());
-		float ry = static_cast<float>(input->GetRightStickY());
-		if (std::fabs(rx) < deadZone_) rx = 0.0f;
-		if (std::fabs(ry) < deadZone_) ry = 0.0f;
-
-		Vec2 v{ rx / 32768.0f, -(ry / 32768.0f) };
-		position_.x += v.x * speedPixelPerSec_ * dt;
-		position_.y += v.y * speedPixelPerSec_ * dt;
-		position_.x = std::clamp(position_.x, 0.0f, static_cast<float>(WindowsAPI::kClientWidth));
-		position_.y = std::clamp(position_.y, 0.0f, static_cast<float>(WindowsAPI::kClientHeight));
-
-		angleRad_ += angularSpeedRadPerSec_ * dt;
-		time_ += dt;
-
-		// 全レイヤーに共通設定を適用
-		for (int i = 0; i < 3; ++i) {
-			layers_[i]->SetPosition(position_);
-			layers_[i]->SetSize(size_);
-			layers_[i]->SetRotation(angleRad_ * (i == 1 ? 1.0f : (i == 2 ? -1.0f : 0.5f)));
-		}
-
-		// ==== 黄〜橙グラデーション発光（リメイク風リング） ====
-		if (rainbow_) {
-			const float baseHue = 0.12f; // 中心色：黄
-			const float hueRange = 0.05f; // 揺れ幅：±0.05（黄→橙の間）
-
-			float hue = baseHue + hueRange * std::sin(time_ * hueSpeed_ * 0.25f);
-
-			float r, g, b;
-			HSVtoRGB(hue, sat_, val_, r, g, b);
-
-			// 内側（やや強め）
-			layers_[1]->SetColor({ r, g, b, 0.70f });
-
-			// 外周（少しオレンジ寄り＆呼吸パルス）
-			float pulse = 1.0f + pulseAmp_ * std::sin(time_ * pulseFreq_ * 0.5f);
-			float hueOuter = hue - 0.02f; // ほんの少し赤方向へ
-			float ro, go, bo;
-			HSVtoRGB(hueOuter, sat_, std::min(val_ * 1.02f, 0.98f), ro, go, bo);
-			layers_[2]->SetColor({ ro, go, bo, 0.45f * pulse });
-		}
-
-		for (auto& sp : layers_) sp->Update();
+		getPos_ = std::move(getWorldPos);
+		getYaw_ = std::move(getYawRad);
 	}
 
-	void Draw()
-	{
-		if (!visible_) return;
-		for (auto& sp : layers_) sp->Draw();
+	// カメラを反映
+	void SetCamera(Camera* cam) {
+		cam_ = cam;
+		for (auto& L : layers_) if (L.obj) L.obj->SetCamera(cam_);
 	}
 
-	// ==== setters ====
-	void SetPosition(const Vec2& p) { position_ = p; for (auto& sp : layers_) if (sp) sp->SetPosition(p); }
-	void SetSize(const Vec2& s) { size_ = s; for (auto& sp : layers_) if (sp) sp->SetSize(s); }
-	void SetAngularSpeed(float radPerSec) { angularSpeedRadPerSec_ = radPerSec; }
+	// 前方距離セット（3層まとめて）
+	void SetDepths(float big, float normal, float mini) {
+		layers_[0].forward = big;
+		layers_[1].forward = normal;
+		layers_[2].forward = mini;
+	}
+
+	// 回転速度セット（rad/s、+で反時計回り）3層まとめて
+	void SetSpin(float big, float normal, float mini) {
+		layers_[0].spinSpeed = big;
+		layers_[1].spinSpeed = normal;
+		layers_[2].spinSpeed = mini;
+	}
+
+	// 全体の有効/無効
 	void SetVisible(bool v) { visible_ = v; }
-	void EnableRainbow(bool e = true) { rainbow_ = e; }
-	void SetHueSpeed(float hps) { hueSpeed_ = hps; }
-	void SetSaturation(float s) { sat_ = std::clamp(s, 0.f, 1.f); }
-	void SetValue(float v) { val_ = std::max(0.f, v); }
-	void SetPulse(float amp, float freq) { pulseAmp_ = amp; pulseFreq_ = freq; }
+
+	// 毎フレ更新
+	void Update(float dt) {
+		if (!visible_ || !getPos_ || !getYaw_) return;
+
+		// 自機（またはオーナー）の基準
+		const Vector3 base = getPos_();
+		const float ownerYaw = getYaw_();
+
+		// +Z を前方としたヨー回転の前方
+		const float yaw = ownerYaw + yawOffset_;
+		const Vector3 fwd = { std::sinf(yaw), 0.0f, std::cosf(yaw) };
+
+		// --- 1) カメラのRight/Upベクトル（正規化）を一度だけ求める ---
+		Vector3 camRight = { 1,0,0 }, camUp = { 0,1,0 };
+		if (cam_) {
+			const auto& W = cam_->GetWorldMatrix();
+			camRight = MyMath::Normalize({ W.m[0][0], W.m[0][1], W.m[0][2] });
+			camUp = MyMath::Normalize({ W.m[1][0], W.m[1][1], W.m[1][2] });
+		}
+
+		// --- 2) 右スティック入力 → 累積オフセット更新 ---
+		if (stickControl_) {
+			auto* in = Input::GetInstance();
+
+			float rx = static_cast<float>(in->GetRightStickX());
+			float ry = static_cast<float>(in->GetRightStickY());
+
+			// デッドゾーン
+			const float dz = stickDeadZone_;
+			if (std::fabs(rx) < dz) rx = 0; else rx = (rx > 0 ? rx - dz : rx + dz);
+			if (std::fabs(ry) < dz) ry = 0; else ry = (ry > 0 ? ry - dz : ry + dz);
+
+			float norm = 32767.0f - dz;
+			if (norm < 1.0f) norm = 1.0f;
+			rx /= norm;
+			ry /= norm;
+
+			// 累積（速度 = 倒し量 * 距離/秒）
+			curX_ += rx * stickMovePerSec_ * dt;
+			curY_ += ry * stickMovePerSec_ * dt;
+
+			// --- ★画面外に出ないようにクランプ（画面全体を範囲に） ---
+			const float w = static_cast<float>(WindowsAPI::kClientWidth);
+			const float h = static_cast<float>(WindowsAPI::kClientHeight);
+			const float halfW = w * 0.5f;
+			const float halfH = h * 0.5f;
+			curX_ = std::clamp(curX_, -halfW, halfW);
+			curY_ = std::clamp(curY_, -halfH, halfH);
+		}
+
+		// --- 3) 各レイヤに反映 ---
+		for (auto& L : layers_) {
+			if (!L.obj) continue;
+
+			// 前方＋右/上オフセット
+			const float forward = (invertForward_ ? -L.forward : L.forward);
+			Vector3 pos = base + fwd * forward;
+			pos = pos + camRight * curX_ + camUp * curY_;  // ★ここを累積値で
+			pos.y += up_;
+			L.obj->SetTranslate(pos);
+
+			// 向き：プレイヤーのヨーに合わせるか
+			Vector3 rot = L.obj->GetRotate();
+			rot.y = alignToOwnerYaw_ ? yaw : rot.y;
+			L.obj->SetRotate(rot);
+
+			// 自己回転（Z or Y）
+			L.selfAngle += L.spinSpeed * dt;
+			if (selfSpinAxisY_) {
+				Vector3 r = L.obj->GetRotate();
+				r.y += L.spinSpeed * dt;
+				L.obj->SetRotate(r);
+			} else {
+				Vector3 r = L.obj->GetRotate();
+				r.z = L.selfAngle;
+				L.obj->SetRotate(r);
+			}
+
+			// スケール反映
+			L.obj->SetScale(L.scale);
+
+			L.obj->Update();
+		}
+	}
+
+	// 描画
+	void Draw(DirectXCommon* dx) {
+		if (!visible_) return;
+		for (auto& L : layers_) {
+			if (L.obj && L.visible) L.obj->Draw(dx);
+		}
+	}
+
+#ifdef USE_IMGUI
+	void ImGuiDebug() {
+		if (ImGui::CollapsingHeader("Reticle 3D (Panzer style)")) {
+			ImGui::Checkbox("Visible", &visible_);
+			ImGui::Checkbox("Align To Owner Yaw", &alignToOwnerYaw_);
+			ImGui::Checkbox("Invert Forward (+Z/-Z)", &invertForward_);
+			ImGui::Checkbox("Self Spin Axis = Y (else Z)", &selfSpinAxisY_);
+			ImGui::DragFloat("Up Offset", &up_, 0.01f, -20.0f, 20.0f);
+			ImGui::DragFloat("Yaw Offset (rad)", &yawOffset_, 0.001f, -3.14159f, 3.14159f);
+
+			if (ImGui::Button("Preset: Panzer-ish")) {
+				// ユーザー指定の好み（例）：距離と回転を逆回転で段差
+				layers_[0].forward = 50.0f;  layers_[0].spinSpeed = 1.6f;
+				layers_[1].forward = 56.0f;  layers_[1].spinSpeed = -1.0f;
+				layers_[2].forward = 59.5f;  layers_[2].spinSpeed = 2.2f;
+				layers_[0].scale = { 1.10f,1.10f,1.10f };
+				layers_[1].scale = { 1.00f,1.00f,1.00f };
+				layers_[2].scale = { 0.90f,0.90f,0.90f };
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Preset: Tight")) {
+				layers_[0].forward = 35.0f; layers_[1].forward = 40.0f; layers_[2].forward = 44.0f;
+				layers_[0].spinSpeed = 1.2f; layers_[1].spinSpeed = -0.8f; layers_[2].spinSpeed = 1.8f;
+			}
+
+			// 各レイヤ
+			static const char* names[3] = { "Big", "Normal", "Small" };
+			for (int i = 0; i < 3; ++i) {
+				if (ImGui::TreeNode(names[i])) {
+					ImGui::Checkbox("Visible", &layers_[i].visible);
+					ImGui::DragFloat("Forward", &layers_[i].forward, 0.1f, -500.0f, 500.0f);
+					ImGui::DragFloat3("Scale", &layers_[i].scale.x, 0.01f, 0.01f, 20.0f);
+					ImGui::DragFloat("Spin Speed (rad/s)", &layers_[i].spinSpeed, 0.01f, -20.0f, 20.0f);
+					ImGui::TreePop();
+				}
+			}
+		}
+	}
+#endif
 
 private:
-	std::unique_ptr<Sprite> layers_[3]; // 3層構成
-	Vec2  position_{ WindowsAPI::kClientWidth * 0.5f, WindowsAPI::kClientHeight * 0.5f };
-	Vec2  size_{ 150.0f, 150.0f };
-	float speedPixelPerSec_ = 900.0f;
-	float deadZone_ = 5000.0f;
-	float angleRad_ = 0.0f;
-	float angularSpeedRadPerSec_ = 1.8f;
-	float time_ = 0.0f;
-	bool  visible_ = true;
-	bool  rainbow_ = true;
+	struct Layer {
+		std::unique_ptr<Object3d> obj;
 
-	// 虹色用パラメータ
-	float hueSpeed_ = 0.5f;
-	float sat_ = 1.0f;
-	float val_ = 1.2f;
-	float pulseAmp_ = 0.25f;
-	float pulseFreq_ = 4.0f;
+		// 配置
+		float   forward = 0.0f;                 // 前方距離（+Z想定）
+		Vector3 scale = Vector3(1.0f, 1.0f, 1.0f);
 
-	static void HSVtoRGB(float h, float s, float v, float& r, float& g, float& b)
-	{
-		h = fmodf(h, 1.0f); if (h < 0) h += 1.0f;
-		float i = floorf(h * 6.0f);
-		float f = h * 6.0f - i;
-		float p = v * (1.0f - s);
-		float q = v * (1.0f - f * s);
-		float t = v * (1.0f - (1.0f - f) * s);
-		switch (static_cast<int>(i) % 6) {
-		case 0: r = v; g = t; b = p; break;
-		case 1: r = q; g = v; b = p; break;
-		case 2: r = p; g = v; b = t; break;
-		case 3: r = p; g = q; b = v; break;
-		case 4: r = t; g = p; b = v; break;
-		case 5: r = v; g = p; b = q; break;
-		}
-	}
+		// 回転
+		float   spinSpeed = 0.0f;               // 自己回転速度（rad/s）
+		float   selfAngle = 0.0f;               // 自己回転角（Z回転時に使用）
+
+		// 表示
+		bool    visible = true;
+	};
+
+	Object3dCommon* common_ = nullptr;
+	DirectXCommon* dx_ = nullptr;
+	Camera* cam_ = nullptr;
+
+	// 呼び出し元からもらう情報
+	std::function<Vector3(void)> getPos_;
+	std::function<float(void)>   getYaw_;
+
+	// 3層
+	std::array<Layer, 3> layers_ = {
+	/// 引数 : 第一引数=nullptr（後で初期化）, 第二引数=前方距離, 第三引数=スケール, 第四引数=回転速度(rad/s), 第五引数=初期角度, 第六引数=表示
+	Layer{nullptr, 20.0f, {1.6f,1.6f,1.6f},  1.6f, 0.0f, true},
+	Layer{nullptr, 26.0f, {1.5f,1.5f,1.5f}, -1.0f, 0.0f, true},
+	Layer{nullptr, 29.5f, {1.7f,1.7f,1.7f},  2.2f, 0.0f, true}
+	};
+
+	// 全体パラメータ
+	bool   visible_ = true;
+	bool   alignToOwnerYaw_ = true;    // レティクルのY回転を自機ヨーに合わせる
+	bool   invertForward_ = false;   // +Z/-Zの反転（座標系の食い違いに対応）
+	bool   selfSpinAxisY_ = false;   // 自己回転軸：true=Y, false=Z
+	float  up_ = 0.0f;    // 上下オフセット
+	float  yawOffset_ = 0.0f;    // 自機ヨーに加算する微調整
+
+	// --- Right Stick control ---
+	bool  stickControl_ = true;     // 右スティックで動かす ON/OFF
+	float stickDeadZone_ = 8000.0f; // デッドゾーン（XInputの生値）
+	float stickSensitivity_ = 0.000040f; // 感度（正規化後に掛ける係数）
+	float stickMaxOffset_ = 8.0f;   // オフセット最大距離（ワールド単位）
+
+	// --- Right Stick accumulate mode ---
+	float curX_ = 0.0f;             // 累積オフセット（右/左, ワールド距離）
+	float curY_ = 0.0f;             // 累積オフセット（上/下, ワールド距離）
+	float stickMovePerSec_ = 20.0f; // スティック全倒しで1秒間に動く距離（ワールド単位）
+	float stickFriction_ = 0.0f;    // 0なら戻らない。>0で徐々に中央へ（/sec）
+
+	bool  screenClamp_ = true;        // 画面クランプON/OFF
+	float cursorXpx_ = -1.0f;       // 画面上のカーソルX(px) 初回に中央へ初期化
+	float cursorYpx_ = -1.0f;       // 画面上のカーソルY(px)
+	float movePxPerSec_ = 1000.0f;     // 全倒しでの移動速度（px/sec）
+	float fovYRad_ = 60.0f * 3.14159265f / 180.0f; // 垂直FOV（rad）※ImGuiで調整可
 };

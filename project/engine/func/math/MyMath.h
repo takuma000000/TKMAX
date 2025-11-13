@@ -100,6 +100,9 @@ public:
 	// XZ平面上での内積計算
 	static float DotOnXZ(const Vector3& a, const Vector3& b);
 
+	// 内積計算
+	static float Dot(const Vector3& a, const Vector3& b);
+
 	// 0.0～1.0の範囲でランダムな浮動小数点数を生成
 	static float Rand01();
 

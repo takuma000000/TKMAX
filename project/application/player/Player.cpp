@@ -11,6 +11,17 @@ void Player::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	object_->SetModel("jett.obj");
 	object_->SetEnvironment("./resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
 
+	reticle_ = std::make_unique<Reticle>();
+	reticle_->Initialize(common_, dxCommon_, "reticle_big.obj"); // モデル指定可
+	if (camera) reticle_->SetCamera(camera);
+	// Player から位置とヨー角(radians)を渡す（循環依存を避けるためコールバック）
+	reticle_->BindOwner(
+		[this]() { return object_->GetTranslate(); },
+		[this]() { return object_->GetRotate().y; }
+	);
+	// 距離・高さオフセット（好みで ImGui 連携も可）
+	//reticle_->SetOffsets(50.0f, 0.0f);
+
 	TextureManager::GetInstance()->LoadTexture("./resources/damageSpark.png");
 
 	// パーティクルグループ作成
@@ -78,6 +89,8 @@ void Player::Update() {
 		jetEmitter_.Update();
 	}
 
+	if (reticle_) reticle_->Update(0.016f);
+
 	ParticleManager::GetInstance()->Update(); // パーティクルマネージャー更新
 	object_->Update(); // プレイヤー本体更新
 }
@@ -112,6 +125,13 @@ void Player::ImGuiDebug() {
 	ImGui::SliderFloat("Zoom Boost", &shakeZoomBoost_, 0.0f, 15.0f); // ズーム時の追加倍率
 	ImGui::Text("Current Gain : %.2f", shakeBaseStrength_ + (1.0f - camZoom_) * shakeZoomBoost_); // 現在の倍率を表示
 
+	ImGui::End();
+
+	ImGui::Begin("レティクル");
+	if (reticle_) {
+		ImGui::Separator();
+		reticle_->ImGuiDebug();
+	}
 	ImGui::End();
 }
 
@@ -262,6 +282,8 @@ void Player::Death()
 
 void Player::Draw(DirectXCommon* dxCommon) {
 	object_->Draw(dxCommon); // プレイヤー本体描画
+
+	if (reticle_) reticle_->Draw(dxCommon); // 3Dレティクル描画
 
 	for (auto& bullet : bullets_) {
 		bullet->Draw(dxCommon); // 弾描画

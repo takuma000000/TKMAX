@@ -12,6 +12,7 @@
 #include <list>
 #include <engine/effect/particle/ParticlerEmitter.h>
 #include "Easing.h"
+#include "Reticle.h"
 
 #ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"
@@ -99,9 +100,8 @@ public:
 	void SetCamera(Camera* camera) 
 	{
 		this->camera = camera;
-		if (object_) {
-			object_->SetCamera(camera);
-		}
+		if (object_) { object_->SetCamera(camera); }
+		if (reticle_) { reticle_->SetCamera(camera); }
 	}
 	/// <summary>プレイヤーの位置を設定します。</summary>
 	void SetPosition(const Vector3& pos);
@@ -198,4 +198,8 @@ private:
 	float ltZoomHold_ = 0.0f;      // 最小倍率でホールドする秒数
 	Vector3 camSavedPos_; // カメラ位置保存用
 	Vector3 camSavedRot_; // カメラ回転保存用
+
+	std::unique_ptr<Reticle> reticle_;   // 3Dレティクル用Object3d
+	float reticleDistance_ = 50.0f;         // 自機から前方への距離
+	float reticleUpOffset_ = 0.0f;          // 必要なら少し上げる
 };

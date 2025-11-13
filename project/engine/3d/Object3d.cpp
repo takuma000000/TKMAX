@@ -32,7 +32,7 @@ void Object3d::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommo
 	dxCommon_ = dxCommon;
 
 	transform.scale = { 1.0f, 1.0f, 1.0f }; //スケール0.1倍
-	transform.rotate = { 0.0f, 1.6f, 0.0f }; //Y軸に90度回転
+	transform.rotate = { 0.0f, 0.0f, 0.0f };
 
 	//モデル読み込み
 	modelData = LoadObjFile("resources", "plane.obj"); //.objファイル読み込み
@@ -355,7 +355,7 @@ void Object3d::Light(DirectXCommon* dxCommon)
 	//デフォルト値を書き込んでおく
 	directionalLightData->color = { 1.0f,1.0f,1.0f,1.0f }; // 白色光
 	directionalLightData->direction = { 1.0f, 0.0f, 0.0f }; // 斜め上から光を当てる
-	directionalLightData->intensity = 0.0f;//光の強さ
+	directionalLightData->intensity = 1.0f;//光の強さ
 }
 
 void Object3d::PointLight(DirectXCommon* dxCommon)

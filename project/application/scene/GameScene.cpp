@@ -83,16 +83,6 @@ void GameScene::Initialize()
 	startSprite_->SetSize({ 100, 100 }); // 画像サイズに合わせ調整
 	startSprite_->SetColor({ 1,1,1,1 }); // アルファ1で開始
 	startTween_.Reset(0.0f, 1.0f, startDuration_, Ease::Type::OutBack);
-
-	reticle_ = std::make_unique<Reticle>();
-	reticle_->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/reticle.png");
-	reticle_->SetSize({ 150.0f,150.0f }); // レティクルサイズ
-	reticle_->SetAngularSpeed(1.8f); // 回転速度
-	reticle_->EnableRainbow(true); // 虹色発光ON
-	reticle_->SetHueSpeed(0.15f); // 色相変化速度
-	reticle_->SetSaturation(0.95f); // 彩度
-	reticle_->SetValue(0.90f); // 明度
-	reticle_->SetPulse(0.20f, 1.6f); // 呼吸パルス設定
 }
 
 void GameScene::Finalize()
@@ -379,16 +369,14 @@ void GameScene::Update()
 		if (player_) player_->SetHP(0);
 	}
 
-	if (reticle_) {
-		reticle_->Update(dt);
-	}
-
 	// パフォーマンス情報・デバッグUI
 	UpdatePerformanceInfo();
 }
 
 void GameScene::Draw()
 {
+	if (skybox_) skybox_->Draw();
+
 	// 3Dまとめ
 	Object3dCommon::GetInstance()->DrawSetCommon();
 	for (auto& g : groundTiles_) g->Draw(dxCommon);
@@ -396,9 +384,11 @@ void GameScene::Draw()
 	for (auto& enemy : enemies_) enemy->Draw(dxCommon);
 	if (bossBattle_ && boss_) boss_->Draw(dxCommon);
 	for (auto& b : bossBullets_) b->Draw(dxCommon);
-	if (skybox_) skybox_->Draw();
+
+	// パーティクル描画
 	ParticleManager::GetInstance()->Draw();
 
+	// スプライトまとめ
 	SpriteCommon::GetInstance()->DrawSetCommon();
 	// ---- 最前面の白円は Sprite パスで最後に描く ----
 	if (irisOpening_ && iris_) {
@@ -411,10 +401,6 @@ void GameScene::Draw()
 
 	if (startVisible_) {
 		startSprite_->Draw(); // ゲームスタート文字
-	}
-
-	if (reticle_) {
-		reticle_->Draw(); // エイムマーク
 	}
 }
 
@@ -475,6 +461,9 @@ void GameScene::LoadModels()
 	ModelManager::GetInstance()->LoadModel("ground.obj", dxCommon);
 	ModelManager::GetInstance()->LoadModel("jett.obj", dxCommon);
 	ModelManager::GetInstance()->LoadModel("enemy.obj", dxCommon);
+	ModelManager::GetInstance()->LoadModel("reticle_big.obj", dxCommon);
+	ModelManager::GetInstance()->LoadModel("reticle_normal.obj", dxCommon);
+	ModelManager::GetInstance()->LoadModel("reticle_small.obj", dxCommon);
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -779,7 +768,7 @@ void GameScene::SpawnCurrentWave() {
 			[&](Enemy& e) {
 				e.SetBehavior(EnemyBehavior::StraightStop);
 				e.SetVelocity({ 0,0,-0.25f });
-				e.SetStopZ(30.0f);
+				e.SetStopZ(60.0f);
 				e.SetHP(2);
 				e.SetScale({ 1.1f,1.1f,1.1f });
 			}
@@ -803,7 +792,7 @@ void GameScene::SpawnCurrentWave() {
 
 				// ★ここが追加：個体ごとに位相と停止Zを少しずつズラす
 				e.SetSinePhase(phaseStep * float(idx));
-				e.SetStopZ(32.0f + stopStep * float(idx % 3));
+				e.SetStopZ(60.0f + stopStep * float(idx % 3));
 
 				e.SetHP(3);
 				++idx;
@@ -830,7 +819,7 @@ void GameScene::SpawnCurrentWave() {
 				} else {
 					e.SetBehavior(EnemyBehavior::StrafeLtoR);
 					e.SetVelocity({ 0,0,-0.25f });
-					e.SetStopZ(31.0f);
+					e.SetStopZ(60.0f);
 					e.SetStrafeX(-18.0f, 18.0f, 0.45f);
 					e.SetHP(4);
 				}
