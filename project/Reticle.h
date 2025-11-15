@@ -4,6 +4,9 @@
 #include <functional>
 #include <array>
 #include <string>
+#include <algorithm>
+#include <cmath>
+
 #include "Object3d.h"
 #include "Object3dCommon.h"
 #include "DirectXCommon.h"
@@ -11,33 +14,34 @@
 #include "engine/func/math/Vector3.h"
 #include "MyMath.h"
 #include "engine/io/Input.h"
-#include <algorithm>
 #include "WindowsAPI.h"
 
 #ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"
 #endif
 
-// =============================================================
-// 3D Reticle クラス（パンツァードラグーン風・多層回転）
-//  - Player（等）から「世界位置」と「ヨー角[rad]」をコールバックで受け取る
-//  - +Z を前方とする前提で、前方距離を層ごとにズラして配置
-//  - 各層は個別に回転速度/スケール/可視を持つ
-//  - ImGuiでリアルタイム調整可（#define USE_IMGUI が必要）
-// =============================================================
+//============================================================
+// 3D Reticle（パンツァードラグーン風・四層モデル）
+//============================================================
 class Reticle {
 public:
 	Reticle() = default;
 	~Reticle() = default;
 
-	// ---------- API ----------
-	// 初期化：モデル名は3層分を渡す。省略時は *_big/normal/small を使用
-	void Initialize(Object3dCommon* common, DirectXCommon* dx,
+	// --------------------------------------------------
+	// 初期化
+	// --------------------------------------------------
+	void Initialize(
+		Object3dCommon* common,
+		DirectXCommon* dx,
 		const char* modelBig = "reticle_big.obj",
-		const char* modelNorm = "reticle_normal.obj",
-		const char* modelSmall = "reticle_small.obj")
+		const char* modelMid = "reticle_normal.obj",
+		const char* modelSmall = "reticle_small.obj",
+		const char* modelFar = "reticle_small.obj" // 4枚目は small 流用
+	)
 	{
-		common_ = common; dx_ = dx;
+		common_ = common;
+		dx_ = dx;
 
 		auto initLayer = [&](Layer& L, const char* model) {
 			L.obj = std::make_unique<Object3d>();
@@ -47,32 +51,40 @@ public:
 			if (cam_) L.obj->SetCamera(cam_);
 			};
 
-		initLayer(layers_[0], modelBig);
-		initLayer(layers_[1], modelNorm);
-		initLayer(layers_[2], modelSmall);
+		initLayer(layers_[0], modelBig);   // 手前（最大）
+		initLayer(layers_[1], modelMid);   // 2番目
+		initLayer(layers_[2], modelSmall); // 3番目
+		initLayer(layers_[3], modelFar);   // 一番奥
 	}
 
+	// --------------------------------------------------
 	// 毎フレ更新
+	// --------------------------------------------------
 	void Update(float dt) {
 		if (!visible_ || !getPos_ || !getYaw_) return;
 
-		// 自機（またはオーナー）の基準
-		const Vector3 base = getPos_();
-		const float ownerYaw = getYaw_();
+		// 初回のみ
+		if (!baseInitialized_) {
+			basePos_ = getPos_();
+			baseInitialized_ = true;
+		}
 
-		// +Z を前方としたヨー回転の前方
-		const float yaw = ownerYaw + yawOffset_;
-		const Vector3 fwd = { std::sinf(yaw), 0.0f, std::cosf(yaw) };
-
-		// --- 1) カメラのRight/Upベクトル（正規化）を一度だけ求める ---
-		Vector3 camRight = { 1,0,0 }, camUp = { 0,1,0 };
+		//--------------------------------------------------
+		// 1) カメラのRight/Up取得
+		//--------------------------------------------------
+		Vector3 camRight = { 1,0,0 };
+		Vector3 camUp = { 0,1,0 };
 		if (cam_) {
 			const auto& W = cam_->GetWorldMatrix();
 			camRight = MyMath::Normalize({ W.m[0][0], W.m[0][1], W.m[0][2] });
 			camUp = MyMath::Normalize({ W.m[1][0], W.m[1][1], W.m[1][2] });
 		}
 
-		// --- 2) 左スティック入力 → 累積オフセット更新 ---
+		//--------------------------------------------------
+		// 2) スティック入力 → curX_/curY_ は「累積」
+		//--------------------------------------------------
+		bool hasStickInput = false;
+
 		if (stickControl_) {
 			auto* in = Input::GetInstance();
 
@@ -84,41 +96,111 @@ public:
 			if (std::fabs(rx) < dz) rx = 0; else rx = (rx > 0 ? rx - dz : rx + dz);
 			if (std::fabs(ry) < dz) ry = 0; else ry = (ry > 0 ? ry - dz : ry + dz);
 
+			// 正規化
 			float norm = 32767.0f - dz;
 			if (norm < 1.0f) norm = 1.0f;
 			rx /= norm;
 			ry /= norm;
 
-			// 累積（速度 = 倒し量 * 距離/秒）
-			curX_ += rx * stickMovePerSec_ * dt;
-			curY_ += ry * stickMovePerSec_ * dt;
+			// 2乗カーブでスムーズ化
+			float lx = rx * std::fabs(rx);
+			float ly = ry * std::fabs(ry);
 
-			// --- ★画面外に出ないようにクランプ（画面全体を範囲に） ---
+			hasStickInput = (std::fabs(lx) > 0.00001f || std::fabs(ly) > 0.00001f);
+
+			// 累積
+			curX_ += lx * stickMovePerSec_ * dt;
+			curY_ += ly * stickMovePerSec_ * dt;
+
+			// 範囲制限（画面サイズ基準）
 			const float w = static_cast<float>(WindowsAPI::kClientWidth);
 			const float h = static_cast<float>(WindowsAPI::kClientHeight);
 			const float halfW = w * 0.5f;
 			const float halfH = h * 0.5f;
+
 			curX_ = std::clamp(curX_, -halfW, halfW);
 			curY_ = std::clamp(curY_, -halfH, halfH);
 		}
 
-		// --- 3) 各レイヤに反映 ---
-		for (auto& L : layers_) {
+		//--------------------------------------------------
+		// 3) 離した瞬間に内部リセット（カクつき防止）
+		//--------------------------------------------------
+		{
+			static bool prev = false;
+			if (!hasStickInput && prev) {
+				basePos_ = getPos_();
+				curX_ = 0.0f;
+				curY_ = 0.0f;
+			}
+			prev = hasStickInput;
+		}
+
+		//--------------------------------------------------
+		// 4) プレイヤーの向き ＋ スティックを含めた「射線方向」
+		//--------------------------------------------------
+		const float ownerYaw = getYaw_();
+		const float yaw = ownerYaw + yawOffset_;
+
+		// プレイヤーの純粋な前方（+Z 前提）
+		Vector3 fwd = { std::sinf(yaw), 0.0f, std::cosf(yaw) };
+
+		// スティック入力を少しだけ方向に混ぜて「狙っている方向」にする
+		Vector3 aimDir = fwd;
+		aimDir += camRight * (curX_ * 0.03f);   // 横
+		aimDir += camUp * (curY_ * 0.03f);   // 縦
+
+		if (MyMath::Length(aimDir) < 0.001f) {
+			aimDir = fwd;
+		}
+		aimDir = MyMath::Normalize(aimDir);
+
+		// ☆ 起点は毎フレームのプレイヤー位置（ほんとに「playerから伸びる」）
+		Vector3 origin = getPos_();
+
+		// 一番奥の狙い点（ここまで線を伸ばす）
+		float maxDist = 48.0f;  // ちょい長めに（好みで 35〜60）
+		Vector3 aimPoint = origin + aimDir * maxDist;
+
+		//--------------------------------------------------
+		// 5) 線分 origin→aimPoint を割合で割って、4枚並べる
+		//    手前ほどプレイヤー寄り・奥ほど遠く＆小さく
+		//--------------------------------------------------
+		float t[4] = {
+			0.22f, // 手前
+			0.36f,
+			0.50f,
+			0.64f // 奥
+		};
+
+		for (int i = 0; i < 4; ++i) {
+			auto& L = layers_[i];
 			if (!L.obj) continue;
 
-			// 前方＋右/上オフセット
-			const float forward = (invertForward_ ? -L.forward : L.forward);
-			Vector3 pos = base + fwd * forward;
-			pos = pos + camRight * curX_ + camUp * curY_;  // ★ここを累積値で
-			pos.y += up_;
+			float ti = t[i];
+
+			// 線形補間 origin + (aimPoint - origin) * t
+			Vector3 pos = {
+				origin.x + (aimPoint.x - origin.x) * ti,
+				origin.y + (aimPoint.y - origin.y) * ti,
+				origin.z + (aimPoint.z - origin.z) * ti
+			};
+
+			pos.y += up_;   // 全体の上下オフセット（ImGuiで弄れるやつ）
+
 			L.obj->SetTranslate(pos);
 
-			// 向き：プレイヤーのヨーに合わせるか
+			// 真ん中あたりを「中心」とみなして Player が追尾する
+			// （GetCenterWorldPos() は layer[1] を返しているので、
+			//   2番目のレイヤーが「ロック中心」になるイメージ）
+
+			// 向きはプレイヤーのヨーに合わせる
 			Vector3 rot = L.obj->GetRotate();
-			rot.y = alignToOwnerYaw_ ? yaw : rot.y;
+			if (alignToOwnerYaw_) {
+				rot.y = yaw;
+			}
 			L.obj->SetRotate(rot);
 
-			// 自己回転（Z or Y）
+			// 自己回転
 			L.selfAngle += L.spinSpeed * dt;
 			if (selfSpinAxisY_) {
 				Vector3 r = L.obj->GetRotate();
@@ -130,14 +212,16 @@ public:
 				L.obj->SetRotate(r);
 			}
 
-			// スケール反映
+			// スケール
 			L.obj->SetScale(L.scale);
 
 			L.obj->Update();
 		}
 	}
 
+	// --------------------------------------------------
 	// 描画
+	// --------------------------------------------------
 	void Draw(DirectXCommon* dx) {
 		if (!visible_) return;
 		for (auto& L : layers_) {
@@ -145,87 +229,66 @@ public:
 		}
 	}
 
-	// 参照元（Playerなど）から位置とヨー角をもらう
-	void BindOwner(std::function<Vector3(void)> getWorldPos,
+	// --------------------------------------------------
+	// 参照元（Player）から世界座標とヨー角を受け取る
+	// --------------------------------------------------
+	void BindOwner(
+		std::function<Vector3(void)> getWorldPos,
 		std::function<float(void)>   getYawRad)
 	{
 		getPos_ = std::move(getWorldPos);
 		getYaw_ = std::move(getYawRad);
 	}
 
-	// カメラを反映
+	// --------------------------------------------------
+	// カメラを設定
+	// --------------------------------------------------
 	void SetCamera(Camera* cam) {
 		cam_ = cam;
-		for (auto& L : layers_) if (L.obj) L.obj->SetCamera(cam_);
+		for (auto& L : layers_) {
+			if (L.obj) L.obj->SetCamera(cam_);
+		}
 	}
 
-	// 前方距離セット（3層まとめて）
-	void SetDepths(float big, float normal, float mini) {
-		layers_[0].forward = big;
-		layers_[1].forward = normal;
-		layers_[2].forward = mini;
-	}
-
-	// 回転速度セット（rad/s、+で反時計回り）3層まとめて
-	void SetSpin(float big, float normal, float mini) {
-		layers_[0].spinSpeed = big;
-		layers_[1].spinSpeed = normal;
-		layers_[2].spinSpeed = mini;
-	}
-
-	// 全体の有効/無効
-	void SetVisible(bool v) { visible_ = v; }
-
-	// 中心（Normalレイヤー）のワールド座標を返す
+	//---------------------------------------------------
+	// 中心座標取得（Player が追尾する基準）
+	//---------------------------------------------------
 	Vector3 GetCenterWorldPos() const {
-		// 通常レイヤーがあればそれを使う
-		if (layers_[1].obj) {
-			return layers_[1].obj->GetTranslate();
-		}
-		// 念のためBigレイヤーでもフォールバック
-		if (layers_[0].obj) {
-			return layers_[0].obj->GetTranslate();
-		}
-		// それも無ければオーナー位置を返す
-		if (getPos_) {
-			return getPos_();
-		}
-		return Vector3{};
+		// 今回は 2番目レイヤー(= index 1)を「中心」と扱う
+		if (layers_[1].obj) return layers_[1].obj->GetTranslate();
+		if (layers_[0].obj) return layers_[0].obj->GetTranslate();
+		if (getPos_) return getPos_();
+		return {};
 	}
 
 #ifdef USE_IMGUI
 	void ImGuiDebug() {
-		if (ImGui::CollapsingHeader("Reticle 3D (Panzer style)")) {
+		if (ImGui::CollapsingHeader("Reticle 3D")) {
 			ImGui::Checkbox("Visible", &visible_);
 			ImGui::Checkbox("Align To Owner Yaw", &alignToOwnerYaw_);
-			ImGui::Checkbox("Invert Forward (+Z/-Z)", &invertForward_);
-			ImGui::Checkbox("Self Spin Axis = Y (else Z)", &selfSpinAxisY_);
+			ImGui::Checkbox("Invert Forward", &invertForward_);
+			ImGui::Checkbox("Self Spin Axis = Y", &selfSpinAxisY_);
 			ImGui::DragFloat("Up Offset", &up_, 0.01f, -20.0f, 20.0f);
-			ImGui::DragFloat("Yaw Offset (rad)", &yawOffset_, 0.001f, -3.14159f, 3.14159f);
+			ImGui::DragFloat("Yaw Offset", &yawOffset_, 0.001f, -3.14f, 3.14f);
 
-			if (ImGui::Button("Preset: Panzer-ish")) {
-				// ユーザー指定の好み（例）：距離と回転を逆回転で段差
-				layers_[0].forward = 50.0f;  layers_[0].spinSpeed = 1.6f;
-				layers_[1].forward = 56.0f;  layers_[1].spinSpeed = -1.0f;
-				layers_[2].forward = 59.5f;  layers_[2].spinSpeed = 2.2f;
-				layers_[0].scale = { 1.10f,1.10f,1.10f };
-				layers_[1].scale = { 1.00f,1.00f,1.00f };
-				layers_[2].scale = { 0.90f,0.90f,0.90f };
-			}
-			ImGui::SameLine();
-			if (ImGui::Button("Preset: Tight")) {
-				layers_[0].forward = 35.0f; layers_[1].forward = 40.0f; layers_[2].forward = 44.0f;
-				layers_[0].spinSpeed = 1.2f; layers_[1].spinSpeed = -0.8f; layers_[2].spinSpeed = 1.8f;
-			}
+			for (int i = 0; i < 4; ++i) {
+				auto& L = layers_[i];
+				char name[32];
+				sprintf_s(name, "Layer %d", i);
+				if (ImGui::TreeNode(name)) {
 
-			// 各レイヤ
-			static const char* names[3] = { "Big", "Normal", "Small" };
-			for (int i = 0; i < 3; ++i) {
-				if (ImGui::TreeNode(names[i])) {
-					ImGui::Checkbox("Visible", &layers_[i].visible);
-					ImGui::DragFloat("Forward", &layers_[i].forward, 0.1f, -500.0f, 500.0f);
-					ImGui::DragFloat3("Scale", &layers_[i].scale.x, 0.01f, 0.01f, 20.0f);
-					ImGui::DragFloat("Spin Speed (rad/s)", &layers_[i].spinSpeed, 0.01f, -20.0f, 20.0f);
+					// ▼ 位置表示（読み取り専用）
+					if (L.obj) {
+						Vector3 pos = L.obj->GetTranslate();
+						ImGui::Text("Pos: (%.2f, %.2f, %.2f)", pos.x, pos.y, pos.z);
+					} else {
+						ImGui::Text("Pos: (---, ---, ---)");
+					}
+
+					ImGui::Checkbox("Visible", &L.visible);
+					ImGui::DragFloat("Forward", &L.forward, 0.1f, -200.f, 200.f);
+					ImGui::DragFloat3("Scale", &L.scale.x, 0.01f, 0.01f, 10.f);
+					ImGui::DragFloat("SpinSpeed", &L.spinSpeed, 0.01f, -20.f, 20.f);
 					ImGui::TreePop();
 				}
 			}
@@ -234,60 +297,57 @@ public:
 #endif
 
 private:
+	//--------------------------------------------------
+	// 各レイヤ
+	//--------------------------------------------------
 	struct Layer {
 		std::unique_ptr<Object3d> obj;
 
-		// 配置
-		float   forward = 0.0f;                 // 前方距離（+Z想定）
-		Vector3 scale = Vector3(1.0f, 1.0f, 1.0f);
+		float   forward = 0.0f;         // 今は使ってないがImGui用に残す
+		Vector3 scale = { 1,1,1 };
 
-		// 回転
-		float   spinSpeed = 0.0f;               // 自己回転速度（rad/s）
-		float   selfAngle = 0.0f;               // 自己回転角（Z回転時に使用）
+		float   spinSpeed = 0.0f;
+		float   selfAngle = 0.0f;
 
-		// 表示
 		bool    visible = true;
 	};
 
+	//--------------------------------------------------
+	// 内部データ
+	//--------------------------------------------------
 	Object3dCommon* common_ = nullptr;
 	DirectXCommon* dx_ = nullptr;
 	Camera* cam_ = nullptr;
 
-	// 呼び出し元からもらう情報
 	std::function<Vector3(void)> getPos_;
 	std::function<float(void)>   getYaw_;
 
-	// 3層
-	std::array<Layer, 3> layers_ = {
-	/// 引数 : 第一引数=nullptr（後で初期化）, 第二引数=前方距離, 第三引数=スケール, 第四引数=回転速度(rad/s), 第五引数=初期角度, 第六引数=表示
-	Layer{nullptr, 20.0f, {1.6f,1.6f,1.6f},  1.6f, 0.0f, true},
-	Layer{nullptr, 26.0f, {1.5f,1.5f,1.5f}, -1.0f, 0.0f, true},
-	Layer{nullptr, 29.5f, {1.7f,1.7f,1.7f},  2.2f, 0.0f, true}
+	// 手前→奥の順に4層
+	std::array<Layer, 4> layers_ = { // 第一引数: Object3dポインタ 第二引数: 前後位置（ImGui用） 第三引数: スケール　第四引数: 自己回転速度　第五引数: 自己回転角度　第六引数: 表示/非表示
+		Layer{ nullptr, 0.0f, {1.80f, 1.80f, 1.80f},  2.5f, 0.0f, true }, // 0: 一番手前
+		Layer{ nullptr, 0.0f, {1.55f, 1.55f, 1.55f}, -2.3f, 0.0f, true }, // 1
+		Layer{ nullptr, 0.0f, {1.48f, 1.48f, 1.48f},  2.5f, 0.0f, true }, // 2
+		Layer{ nullptr, 0.0f, {1.20f, 1.20f, 1.20f}, -2.3f, 0.0f, true }  // 3: 奥
 	};
 
-	// 全体パラメータ
-	bool   visible_ = true;
-	bool   alignToOwnerYaw_ = true;    // レティクルのY回転を自機ヨーに合わせる
-	bool   invertForward_ = false;   // +Z/-Zの反転（座標系の食い違いに対応）
-	bool   selfSpinAxisY_ = false;   // 自己回転軸：true=Y, false=Z
-	float  up_ = 0.0f;    // 上下オフセット
-	float  yawOffset_ = 0.0f;    // 自機ヨーに加算する微調整
+	// 全体設定
+	bool  visible_ = true;
+	bool  alignToOwnerYaw_ = true;
+	bool  invertForward_ = false;
+	bool  selfSpinAxisY_ = false;
+	float up_ = 0.0f;
+	float yawOffset_ = 0.0f;
 
-	// --- Right Stick control ---
-	bool  stickControl_ = true;     // 右スティックで動かす ON/OFF
-	float stickDeadZone_ = 8000.0f; // デッドゾーン（XInputの生値）
-	float stickSensitivity_ = 0.000040f; // 感度（正規化後に掛ける係数）
-	float stickMaxOffset_ = 8.0f;   // オフセット最大距離（ワールド単位）
+	// 累積オフセット
+	float curX_ = 0.0f;
+	float curY_ = 0.0f;
+	float stickMovePerSec_ = 20.0f;
+	float stickDeadZone_ = 8000.0f;
 
-	// --- Right Stick accumulate mode ---
-	float curX_ = 0.0f;             // 累積オフセット（右/左, ワールド距離）
-	float curY_ = 0.0f;             // 累積オフセット（上/下, ワールド距離）
-	float stickMovePerSec_ = 20.0f; // スティック全倒しで1秒間に動く距離（ワールド単位）
-	float stickFriction_ = 0.0f;    // 0なら戻らない。>0で徐々に中央へ（/sec）
+	// 基準座標
+	Vector3 basePos_ = { 0,0,0 };
+	bool    baseInitialized_ = false;
 
-	bool  screenClamp_ = true;        // 画面クランプON/OFF
-	float cursorXpx_ = -1.0f;       // 画面上のカーソルX(px) 初回に中央へ初期化
-	float cursorYpx_ = -1.0f;       // 画面上のカーソルY(px)
-	float movePxPerSec_ = 1000.0f;     // 全倒しでの移動速度（px/sec）
-	float fovYRad_ = 60.0f * 3.14159265f / 180.0f; // 垂直FOV（rad）※ImGuiで調整可
+	// 右スティック制御
+	bool stickControl_ = true;
 };

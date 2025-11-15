@@ -162,8 +162,8 @@ private:
 
 	float bankAngle_ = 0.0f;      // 現在の傾き（ロール）
 	float bankVel_ = 0.0f;      // 補間用
-	Vector3 moveMin_ = { -20.0f, -3.0f, 0.0f }; // 移動範囲（Zは固定）
-	Vector3 moveMax_ = { 20.0f,  8.0f, 0.0f };
+	Vector3 moveMin_ = { -100.0f, -20.0f, 0.0f }; // 移動範囲（Zは固定）
+	Vector3 moveMax_ = { 100.0f,  20.0f, 0.0f };
 
 	bool ltHeld_ = false; // LTの押下状態ラッチ
 

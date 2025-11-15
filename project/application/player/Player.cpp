@@ -302,44 +302,80 @@ void Player::StartCameraShake(int frameCount) {
 void Player::HandleGamePadMove() {
 	if (!object_) return;
 
+	// --- 左スティック入力（今は移動には使ってないけど、将来用に残しておく） ---
+	Input* input = Input::GetInstance();
+	float lx = static_cast<float>(input->GetLeftStickX());
+	float ly = static_cast<float>(input->GetLeftStickY());
+
+	const float dz = 8000.0f;
+	bool hasInput =
+		(std::fabs(lx) > dz) || (std::fabs(ly) > dz);
+
 	// 現在位置
 	Vector3 pos = object_->GetTranslate();
-	Vector3 target = pos;
+	Vector3 newPos = pos;
+	bool movingThisFrame = false; // 今フレームで実際に動いたかどうか
 
-	// --- 1) レティクルの位置をターゲットにする ---
+	// --- 常に「レティクルの位置」を目標に寄っていく ---
 	if (reticle_) {
-		// レティクル中心（Normalレイヤー）のワールド座標
+		Vector3 target = pos;
+
+		// レティクル中心のワールド座標
 		Vector3 aim = reticle_->GetCenterWorldPos();
 
 		// レールシューターなので Z は固定、X/Y だけ寄せる
 		target.x = std::clamp(aim.x, moveMin_.x, moveMax_.x);
 		target.y = std::clamp(aim.y, moveMin_.y, moveMax_.y);
 		target.z = 0.0f;
+
+		Vector3 diff = { target.x - pos.x, target.y - pos.y, 0.0f };
+		float dist2 = diff.x * diff.x + diff.y * diff.y;
+		const float stopDist = 0.02f; // これ以下なら「くっついた」とみなす
+
+		if (dist2 > stopDist * stopDist) {
+			// まだ離れているあいだは紐っぽく寄っていく
+			const float follow = 0.12f; // 小さいほどもっさり
+			newPos.x = MyMath::Lerp(pos.x, target.x, follow);
+			newPos.y = MyMath::Lerp(pos.y, target.y, follow);
+			newPos.z = 0.0f;
+			movingThisFrame = true;
+		} else {
+			// ほぼ一致したら完全にターゲット位置にスナップして停止
+			newPos = target;
+		}
+
+		// 範囲内にクランプ
+		newPos.x = std::clamp(newPos.x, moveMin_.x, moveMax_.x);
+		newPos.y = std::clamp(newPos.y, moveMin_.y, moveMax_.y);
 	}
 
-	// --- 2) 紐っぽく「遅れてついていく」追従 ---
-	const float follow = 0.12f; // 0～1 小さいほどゆっくり（お好みで調整）
+	// ---- バンク処理 ----
+	float vx = newPos.x - pos.x; // 今フレームのX方向速度
 
-	Vector3 newPos = pos;
-	newPos.x = MyMath::Lerp(pos.x, target.x, follow);
-	newPos.y = MyMath::Lerp(pos.y, target.y, follow);
-	newPos.z = 0.0f; // レール固定
+	if (movingThisFrame) {
+		// 動いているときは従来どおりスプリングでバンク
+		float targetBank = -vx * 0.8f; // 左に動くと左に傾く
 
-	// 範囲内にクランプ
-	newPos.x = std::clamp(newPos.x, moveMin_.x, moveMax_.x);
-	newPos.y = std::clamp(newPos.y, moveMin_.y, moveMax_.y);
+		float k = 0.25f;
+		float d = 0.45f;
+		bankVel_ += (targetBank - bankAngle_) * k - bankVel_ * d;
+		bankAngle_ += bankVel_;
+	} else {
+		// 止まっているフレームでは「正面(0)」に戻す＋履歴リセット
+		float resetK = 0.25f;
+		float resetD = 0.5f;
+		bankVel_ += (0.0f - bankAngle_) * resetK - bankVel_ * resetD;
+		bankAngle_ += bankVel_;
 
-	// --- 3) 動きに合わせて機体をバンクさせる ---
-	float vx = newPos.x - pos.x;           // 今フレームのX方向速度
-	float targetBank = -vx * 0.8f;         // 左に動くと左に傾く（係数はお好み）
+		// ほぼ0になったらピタッと0固定して過去方向を完全に消す
+		if (std::fabs(bankAngle_) < 0.001f && std::fabs(bankVel_) < 0.001f) {
+			bankAngle_ = 0.0f;
+			bankVel_ = 0.0f;
+		}
+	}
 
-	// 簡易クリティックダンピング
-	float k = 0.25f, d = 0.45f;
-	bankVel_ += (targetBank - bankAngle_) * k - bankVel_ * d;
-	bankAngle_ += bankVel_;
-
+	// 位置と回転反映
 	object_->SetTranslate(newPos);
-
 	Vector3 rot = object_->GetRotate();
 	rot.z = bankAngle_;
 	object_->SetRotate(rot);

@@ -379,7 +379,7 @@ void GameScene::Draw()
 
 	// 3Dまとめ
 	Object3dCommon::GetInstance()->DrawSetCommon();
-	for (auto& g : groundTiles_) g->Draw(dxCommon);
+	//for (auto& g : groundTiles_) g->Draw(dxCommon);
 	player_->Draw(dxCommon);
 	for (auto& enemy : enemies_) enemy->Draw(dxCommon);
 	if (bossBattle_ && boss_) boss_->Draw(dxCommon);
