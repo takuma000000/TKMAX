@@ -26,6 +26,9 @@ public:
 	/// <summary>デバッグ用ImGui表示。</summary>
 	void ImGuiDebug();
 
+	/// <summary>現在のフェーズを取得します。</summary>
+	int GetPhase() const { return static_cast<int>(phase_); }
+
 private:
 	Camera* camera_ = nullptr;
 

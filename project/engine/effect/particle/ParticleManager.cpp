@@ -667,6 +667,41 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 		p.currentTime = 0.0f;
 
 		return p;
+	} else if (groupName == "fw_launch") {
+		// 上にまっすぐ伸びる光の線
+		p.transform.scale = { 1.5f, 3.5f, 1.5f };
+		p.velocity = { 0, 18.0f + (float)(rand() % 5), 0 };
+		p.color = { 1.0f, 0.8f, 0.3f, 1.0f };
+		p.lifeTime = 0.40f;
+	} else if (groupName == "fw_flash") {
+		// 爆発直後のまぶしい閃光
+		p.transform.scale = { 5.0f, 5.0f, 5.0f };
+		p.velocity = { 0, 0, 0 };
+		p.color = { 1, 1, 1, 1 };
+		p.lifeTime = 0.2f;
+	} else if (groupName == "fw_burst") {
+		// 花火本体（放射状）
+		float a1 = (float)rand() / RAND_MAX * 6.28f;
+		float a2 = (float)rand() / RAND_MAX * 3.14f;
+
+		Vector3 dir;
+		dir.x = std::cos(a1) * std::sin(a2);
+		dir.y = std::cos(a2) * 0.8f; // 上に散りすぎ防止
+		dir.z = std::sin(a1) * std::sin(a2);
+
+		float spd = 10.0f + ((float)rand() / RAND_MAX * 12.0f);
+		p.velocity = dir * spd;
+
+		float sc = 1.5f + ((float)rand() / RAND_MAX * 1.2f);
+		p.transform.scale = { sc, sc, sc };
+
+		// カラフル！（鮮やか〜中間）
+		float r = 0.4f + ((float)rand() / RAND_MAX * 0.6f);
+		float g = 0.4f + ((float)rand() / RAND_MAX * 0.6f);
+		float b = 0.4f + ((float)rand() / RAND_MAX * 0.6f);
+
+		p.color = { r, g, b, 1.0f };
+		p.lifeTime = 3.0f;
 	} else { // 上記意外
 		// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 		std::uniform_real_distribution<float> velX(-0.15f, 0.15f);

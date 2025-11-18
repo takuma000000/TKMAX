@@ -46,6 +46,12 @@ void GameScene::Initialize()
 		"irisFire", "./resources/circle.png",
 		ParticleManager::ParticleType::NORMAL
 	);
+
+	// 花火用：打ち上げ＆閃光＆爆発
+	ParticleManager::GetInstance()->CreateParticleGroup("fw_launch", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
+	ParticleManager::GetInstance()->CreateParticleGroup("fw_flash", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
+	ParticleManager::GetInstance()->CreateParticleGroup("fw_burst", "./resources/firework_star.png", ParticleManager::ParticleType::NORMAL);
+
 	// ──────────────── スカイボックスの初期化 ───────────────
 	skybox_ = std::make_unique<Skybox>();
 	skybox_->Initialize(dxCommon, srvManager, "resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
@@ -166,6 +172,16 @@ void GameScene::Update()
 
 	if (bossBattle_ && boss_) {
 		boss_->Update();
+
+		// P2突入時にBGMを1回だけ再生
+		if (!bossP2BgmPlayed_) {
+			int phase = boss_->GetPhase(); // P1=0, P2=1, P3=2
+
+			if (phase == 1) { // P2
+				AudioManager::GetInstance()->PlaySound("bossP2");
+				bossP2BgmPlayed_ = true;   // 2回目以降は鳴らさない
+			}
+		}
 	}
 
 	// これまで: if (irisOpening_) { ... emitFireworkPending_ の遅延 ... }
@@ -438,6 +454,9 @@ void GameScene::SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float s
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeAudio()
 {
+	auto* audio = AudioManager::GetInstance();
+	audio->Initialize();
+	audio->LoadSound("bossP2", "FLASHness.wav"); // ボス戦フェーズ2用BGM ( FLASHness / NEURAY )
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -459,6 +478,7 @@ void GameScene::LoadTextures()
 	TextureManager::GetInstance()->LoadTexture("./resources/start.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/reticle.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/damageSpark.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/firework_star.png");
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -541,12 +561,12 @@ void GameScene::ImGuiDebug()
 #ifdef _DEBUG
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	ImGui::Begin("info");
+	ImGui::Begin("情報");
 	ImGui::Text("FPS : %.2f", fps_);
 	ImGui::Separator();
-	ImGui::Text("FrameTime : %.2f ms", frameTimeMs_);
+	ImGui::Text("フレーム時間 : %.2f ms", frameTimeMs_);
 	ImGui::Separator();
-	ImGui::Text("DrawCall : %d", drawCallCount_);
+	ImGui::Text("DrawCall 回数 : %d", drawCallCount_);
 	ImGui::Separator();
 	// メモリ使用量取得
 	PROCESS_MEMORY_COUNTERS pmc{};
@@ -554,12 +574,12 @@ void GameScene::ImGuiDebug()
 		// WorkingSetSize = 実際にメモリ上に展開されているサイズ
 		size_t memoryUsageKB = pmc.WorkingSetSize / 1024; // KB
 		size_t memoryUsageMB = memoryUsageKB / 1024; // MB
-		ImGui::Text("Memory Usage : %zu KB / %zu MB", memoryUsageKB, memoryUsageMB);
+		ImGui::Text("メモリ使用量 : %zu KB / %zu MB", memoryUsageKB, memoryUsageMB);
 	}
 	ImGui::Text("MB");
 	ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(1.0f, 0.0f, 0.0f, 1.0f)); // 赤色
 	ImGui::PlotLines(
-		"##MemoryPlot",
+		"メモリ推移",
 		memoryHistory_.data(),
 		kMemoryHistorySize,
 		memoryHistoryIndex_,
@@ -570,8 +590,8 @@ void GameScene::ImGuiDebug()
 	);
 	ImGui::PopStyleColor();
 	ImGui::Separator();
-	ImGui::Text("Active Sprite : %d", Sprite::GetActiveCount());
-	ImGui::Text("Active Object3D : %d", Object3d::GetActiveCount());
+	ImGui::Text("Active Sprite 数 : %d", Sprite::GetActiveCount());
+	ImGui::Text("Active Object3D 数 : %d", Object3d::GetActiveCount());
 	ImGui::Separator();
 	int totalParticles = 0;
 	for (const auto& pair : ParticleManager::GetInstance()->GetParticleGroups()) {
@@ -989,30 +1009,30 @@ bool GameScene::UpdateClearSequence(float dt)
 {
 	clearTimer_ += dt;
 
+	// skyboxはずっと回し続ける
 	UpdateSkyboxRotationX();
+
+	// 花火用タイマー（クリア演出中だけ使うローカル static）
+	static float fireTimer = 0.0f;
 
 	switch (clearPhase_) {
 
 	case ClearPhase::CamZoom: // カメラ寄せ
 	{
-		// ズームにかける時間（ちょっと長めにしてもOK）
-		const float zoomDuration = 1.2f;  // 好きなら 1.0f のままでもOK
+		// 1秒かけて寄る
+		float t = std::clamp(clearTimer_ / 1.0f, 0.0f, 1.0f);
 
-		// 0 → 1 のタイマー
-		float t = std::clamp(clearTimer_ / zoomDuration, 0.0f, 1.0f);
-
-		// イージングをかける（OutBack でちょいオーバーシュート気味にしても良いし、
-		// もし気になるなら OutQuad / InOutQuad みたいなのにしてもOK）
-		float e = Ease::OutBack(t);
-
-		// イージング済みの係数 e でカメラ位置を補間
-		Vector3 camPos = MyMath::Vector3Lerp(clearCamStartPos_, clearCamTargetPos_, e);
+		// カメラ位置を線形補間
+		Vector3 camPos = MyMath::Vector3Lerp(clearCamStartPos_, clearCamTargetPos_, t);
 		camera->SetTranslate(camPos);
 		camera->Update();
 
 		if (t >= 1.0f) {
 			clearPhase_ = ClearPhase::PlayerFly;
 			clearTimer_ = 0.0f;
+
+			// ★プレイヤー飛び始め時に花火タイマーリセット
+			fireTimer = 0.0f;
 		}
 		break;
 	}
@@ -1023,19 +1043,82 @@ bool GameScene::UpdateClearSequence(float dt)
 		camera->SetTranslate(clearCamTargetPos_);
 		camera->Update();
 
-		// 0 → 1 のタイマー（＝飛ばして見せる時間）
-		float t = std::clamp(clearTimer_ / clearPlayerFlyMinTime_, 0.0f, 1.0f);
-
-		// 最初ゆっくり → 中盤スピード出て → 最後またゆっくり
-		float e = Ease::InOutQuad(t);  // InOutSine とかでもOK
-
-		// イージング済み係数で開始位置→目標位置を補間
-		Vector3 pos = MyMath::Vector3Lerp(clearPlayerStartPos_, clearPlayerTargetPos_, e);
+		// プレイヤーを奥(+Z想定)へ進める
+		Vector3 pos = player_->GetPosition();
+		pos.z += clearPlayerSpeed_ * dt;
 		player_->SetPosition(pos);
-		player_->UpdateVisualOnly(); // 入力無しで見た目だけ更新
 
-		// 1.0 まで行ったらアイリス閉じフェーズへ
-		if (t >= 1.0f) {
+		// 入力処理などは行わず、見た目用に行列だけ更新
+		player_->UpdateVisualOnly();
+
+		// ============================
+		// 花火演出（打ち上げ花火版）
+		// ============================
+
+		// ランダム範囲ヘルパー
+		auto randRange = [](float min, float max) {
+			return min + (max - min) * MyMath::Rand01();
+			};
+
+		// 「次の花火が上がるまでの時間」をランダムで決める用
+		// （このstaticはこの関数の中で1回だけ初期化されて生き続ける）
+		static float fireInterval = randRange(0.8f, 1.6f); // 0.8〜1.6秒のどこか
+
+		fireTimer += dt;
+
+		if (fireTimer >= fireInterval) {
+			fireTimer = 0.0f;
+			// 次回用に、また別の間隔をランダム決定
+			fireInterval = randRange(0.8f, 1.6f);
+
+			// ─────────────────────────────
+			// カメラ基準で「画面内っぽい範囲」にランダム配置
+			// ─────────────────────────────
+			const Matrix4x4 camW = camera->GetWorldMatrix();
+			Vector3 camPos = { camW.m[3][0], camW.m[3][1], camW.m[3][2] };
+			Vector3 camFwd = MyMath::Normalize({ camW.m[2][0], camW.m[2][1], camW.m[2][2] });
+			Vector3 camRight = MyMath::Normalize({ camW.m[0][0], camW.m[0][1], camW.m[0][2] });
+			Vector3 camUp = MyMath::Normalize({ camW.m[1][0], camW.m[1][1], camW.m[1][2] });
+
+			// 画面のアスペクト比に合わせた「横：縦」の広がり
+			float aspect = static_cast<float>(WindowsAPI::kClientWidth) /
+				static_cast<float>(WindowsAPI::kClientHeight);
+			const float halfHeight = 25.0f;              // 画面の上下方向の半分くらい（調整ポイント）
+			const float halfWidth = halfHeight * aspect; // アスペクト比に合わせた横幅
+
+			// どれくらい「奥」に花火を出すか（カメラ前方方向）
+			const float minDepth = 80.0f;   // カメラからの最小距離
+			const float maxDepth = 140.0f;  // カメラからの最大距離
+
+			// 一度に何発分の花火を出すか（単発）
+			const int kBurstCount = 1;
+
+			for (int i = 0; i < kBurstCount; ++i) {
+				// スクリーン座標風の -1.0〜1.0
+				float sx = randRange(-1.0f, 1.0f);    // 左右
+				float sy = randRange(-0.8f, 0.8f);   // 上下（ちょい上下狭め）
+
+				float depth = randRange(minDepth, maxDepth);
+
+				// カメラ前方 depth の位置を中心に、Right/Up 方向でオフセット
+				Vector3 center =
+					camPos +
+					camFwd * depth +
+					camRight * (sx * halfWidth) +
+					camUp * (sy * halfHeight);
+
+				SpawnFirework(center);
+			}
+		}
+
+		// ============================
+		// ここまで花火
+		// ============================
+
+		// 一定距離進んだらアイリス閉じへ
+		if (clearTimer_ >= clearPlayerFlyMinTime_ &&
+			pos.z > clearPlayerStartPos_.z + clearPlayerFlyDistance_) {
+
 			clearPhase_ = ClearPhase::IrisClose;
 			clearTimer_ = 0.0f;
 
@@ -1048,7 +1131,6 @@ bool GameScene::UpdateClearSequence(float dt)
 
 	case ClearPhase::IrisClose: // アイリス閉じ
 	{
-		// ここでは「閉じきったかどうか」だけを見る
 		if (irisClosing_ && iris_) {
 			irisCloseScale_ = irisCloseTween_.Update(dt);
 			iris_->SetSize({ irisCloseScale_, irisCloseScale_ });
@@ -1066,9 +1148,41 @@ bool GameScene::UpdateClearSequence(float dt)
 		break;
 	}
 
-	// パーティクルなどは普通に動かす
+	// パーティクルは普通に動かす
 	ParticleManager::GetInstance()->Update();
 
 	return false; // まだ演出継続中
 }
+
+void GameScene::SpawnFirework(const Vector3& center)
+{
+	auto pm = ParticleManager::GetInstance();
+
+	// =========================
+	// 1. 打ち上がる光の筋
+	// =========================
+	{
+		Vector3 launchPos = center;   // 非 const のコピーを作る
+		launchPos.y -= 40.0f;        // 少し下から飛ばす
+		pm->Emit("fw_launch", launchPos, 1);
+	}
+
+	// =========================
+	// 2. 爆発フラッシュ
+	// =========================
+	{
+		Vector3 flashPos = center;
+		pm->Emit("fw_flash", flashPos, 1);
+	}
+
+	// =========================
+	// 3. 花火本体（放射）
+	// =========================
+	{
+		Vector3 burstPos = center;
+		pm->Emit("fw_burst", burstPos, 60);   // 本体の粒の数はお好みで
+	}
+}
+
+
 

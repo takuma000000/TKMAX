@@ -60,9 +60,9 @@ public:
 
 private:// ──────────────────── 初期化処理 ────────────────────
 
-   // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-   // ゲーム内のサウンドをロード＆再生
-   // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+	// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+	// ゲーム内のサウンドをロード＆再生
+	// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 	void InitializeAudio();
 
 	// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -120,6 +120,14 @@ private: // ──────────────────── 更新�
 	/// <summary>地面タイルのスクロールを更新します。</summary>
 	void UpdateGroundScroll(); // 地面タイルのスクロール更新
 
+	/// <summary>Iris演出の更新を行います。</summary>
+	void StartClearSequence();
+	/// <summary>Iris演出の更新を行います。</summary>
+	/// <param name="dt">デルタタイム。</param>
+	bool UpdateClearSequence(float dt);
+	/// <summary>「ゲームスタート」スプライトの更新を行います。</summary>
+	void SpawnFirework(const Vector3& center);
+
 private:
 	DirectXCommon* dxCommon = nullptr;
 	SrvManager* srvManager = nullptr;
@@ -157,6 +165,7 @@ private:
 	bool bossBattle_ = false;         // ボス戦フラグ
 	std::unique_ptr<BossEnemy> boss_; // ボス敵
 	std::vector<std::unique_ptr<BossBullet>> bossBullets_;
+	bool bossP2BgmPlayed_ = false; // P2でBGMを1回だけ再生したかどうか
 
 	// Iris（開く）用
 	std::unique_ptr<Sprite> iris_ = nullptr;
@@ -247,10 +256,5 @@ private:
 	float   clearPlayerFlyMinTime_ = 1.8f; // プレイヤーを飛ばして見せる最低時間（秒）
 	float   clearPlayerFlyDistance_ = 120.0f; // Z方向に飛ばす距離目安
 	Vector3 clearPlayerTargetPos_{}; // 目標位置（開始位置 + 距離）
-
-	// クリア演出の開始＆更新
-	void StartClearSequence();
-	// true を返したら「演出完了（シーン遷移してOK）」
-	bool UpdateClearSequence(float dt);
 };
 
