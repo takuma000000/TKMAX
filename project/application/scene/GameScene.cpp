@@ -106,6 +106,18 @@ void GameScene::Update()
 	ResetDrawCallCount();
 	UpdateMemory();
 
+	// クリア演出中なら専用処理だけ回して終わり
+	if (clearSequence_) {
+		bool finished = UpdateClearSequence(dt);
+		if (finished) {
+			// アイリス閉じまで終わったので GameClearScene へ
+			sceneManager_->SetNextScene(new GameClearScene(dxCommon, srvManager));
+			return;
+		}
+		UpdatePerformanceInfo();
+		return;
+	}
+
 	// 敵の更新と削除
 	UpdateEnemies();
 
@@ -124,10 +136,12 @@ void GameScene::Update()
 				boss_->SetPlayer([this]() { return player_->GetPosition(); });
 				boss_->SetPosition({ 0, 0, 200 }); // 奥から出現
 			} else {
-				// ボスが死んだらクリア
+				// ─── ボスが死んだらクリア演出開始 ───
 				if (boss_ && boss_->IsDead()) {
-					sceneManager_->SetNextScene(new GameClearScene(dxCommon, srvManager));
-					return;
+					if (!clearSequence_) {
+						StartClearSequence();
+						return; // このフレームの通常処理はここで終わり
+					}
 				}
 			}
 		}
@@ -282,7 +296,7 @@ void GameScene::Update()
 			float decay = 1.0f - 0.7f * t01; // 経過で発光を弱める
 			float glow = 1.0f + decay * 0.20f * std::sin(startHoldElapsed_ * startGlowSpeed_);
 			startSprite_->SetColor({ glow, glow, glow, startAlpha_ });
-		}	
+		}
 
 		// 到着後：静止→フェードアウト
 		if (!startFadeOut_) {
@@ -382,8 +396,15 @@ void GameScene::Draw()
 	//for (auto& g : groundTiles_) g->Draw(dxCommon);
 	player_->Draw(dxCommon);
 	for (auto& enemy : enemies_) enemy->Draw(dxCommon);
-	if (bossBattle_ && boss_) boss_->Draw(dxCommon);
-	for (auto& b : bossBullets_) b->Draw(dxCommon);
+	// クリア演出中はボス関連を描かない
+	if (!clearSequence_) {
+		if (bossBattle_ && boss_) {
+			boss_->Draw(dxCommon);
+		}
+		for (auto& b : bossBullets_) {
+			b->Draw(dxCommon);
+		}
+	}
 
 	// パーティクル描画
 	ParticleManager::GetInstance()->Draw();
@@ -514,7 +535,6 @@ void GameScene::InitializeCamera()
 	}
 }
 
-
 void GameScene::ImGuiDebug()
 {
 
@@ -610,6 +630,36 @@ void GameScene::ImGuiDebug()
 		progress = static_cast<float>(defeatedEnemyCount_) / static_cast<float>(maxEnemyCount_);
 	}
 	ImGui::ProgressBar(progress, ImVec2(200, 20), "Defeat Progress");
+	ImGui::Separator();
+	// ─────────────────────────────
+	// Wave デバッグ用 UI
+	// ─────────────────────────────
+	// 現在のWavePhaseを表示
+	const char* waveLabel = "";
+	switch (wavePhase_) {
+	case WavePhase::W1:  waveLabel = "W1";  break;
+	case WavePhase::W2:  waveLabel = "W2";  break;
+	case WavePhase::W3:  waveLabel = "W3";  break;
+	case WavePhase::Done: waveLabel = "Done (Boss phase)"; break;
+	default:             waveLabel = "Unknown"; break;
+	}
+	ImGui::Text("Current Wave: %s", waveLabel);
+
+	// 今の雑魚フェーズをスキップ（= 敵を消して、次フレームで GoToNextWave が走る）
+	if (ImGui::Button("Skip Current Wave")) {
+		enemies_.clear();      // 今出ている雑魚を全部消す
+		defeatedEnemyCount_ = 0; // カウントはデバッグだしゼロでもOK（お好み）
+	}
+
+	// いきなりボス戦に飛ぶ
+	if (ImGui::Button("Skip All Waves -> Boss")) {
+		enemies_.clear();          // 雑魚全削除
+		wavePhase_ = WavePhase::Done; // Waveフェーズを「Done」にしてボスフェーズへ
+		bossBattle_ = false;       // 念のためリセット
+		if (boss_) {
+			boss_.reset();         // 既にボスがいたら消す
+		}
+	}
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	ImGui::Begin("Camera");
@@ -656,7 +706,7 @@ void GameScene::ImGuiDebug()
 	ImGui::Text("Pitch: %.3f rad", skyPitch_);
 	ImGui::End();
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #endif // _DEBUG
@@ -887,5 +937,138 @@ void GameScene::UpdateGroundScroll() {
 		groundTiles_[idx]->SetTranslate(t);
 		groundTiles_[idx]->Update();
 	}
+}
+
+void GameScene::StartClearSequence()
+{
+	clearSequence_ = true;
+	clearPhase_ = ClearPhase::CamZoom;
+	clearTimer_ = 0.0f;
+
+	// いったん通常ゲームをロックしておく
+	gameplayLocked_ = true;
+
+	// --- ボス、ボス弾、レティクルを消し、プレイヤー操作をロック ---
+	bossBattle_ = false;            // もうボス戦ではない
+	bossBullets_.clear();           // 画面上のボス弾を全部削除
+	if (boss_) {
+		boss_.reset();              // ボス本体も破棄（描画/更新されなくなる）
+	}
+	if (player_) {
+		player_->SetControlEnabled(false); // 入力を全部無視
+		player_->SetReticleVisible(false); // レティクル非表示
+	}
+
+	// カメラの開始位置
+	clearCamStartPos_ = camera->GetTranslate(); // Camera に Getter あり :contentReference[oaicite:4]{index=4}
+
+	// プレイヤー方向に少し寄せる
+	Vector3 camPos = camera->GetTranslate();
+	Vector3 playerPos = player_->GetPosition();
+
+	// Zはプレイヤーの少し手前まで寄せる（-30 → プレイヤーZ-15くらい）
+	float targetZ = MyMath::Lerp(camPos.z, playerPos.z - 15.0f, 1.0f);
+	clearCamTargetPos_ = {
+		camPos.x,
+		camPos.y + 2.0f, // ちょい上から見下ろす
+		targetZ
+	};
+
+	// プレイヤーのスタート位置
+	clearPlayerStartPos_ = player_->GetPosition();
+
+	// ここで「どこまで飛ぶか」を決めておく（+Z方向に一定距離）
+	clearPlayerTargetPos_ = clearPlayerStartPos_; // いったん同じ位置に
+	clearPlayerTargetPos_.z += clearPlayerFlyDistance_; // +Z方向に進む
+
+	// 念のためアイリス閉じ状態リセット
+	irisClosing_ = false;
+}
+
+bool GameScene::UpdateClearSequence(float dt)
+{
+	clearTimer_ += dt;
+
+	UpdateSkyboxRotationX();
+
+	switch (clearPhase_) {
+
+	case ClearPhase::CamZoom: // カメラ寄せ
+	{
+		// ズームにかける時間（ちょっと長めにしてもOK）
+		const float zoomDuration = 1.2f;  // 好きなら 1.0f のままでもOK
+
+		// 0 → 1 のタイマー
+		float t = std::clamp(clearTimer_ / zoomDuration, 0.0f, 1.0f);
+
+		// イージングをかける（OutBack でちょいオーバーシュート気味にしても良いし、
+		// もし気になるなら OutQuad / InOutQuad みたいなのにしてもOK）
+		float e = Ease::OutBack(t);
+
+		// イージング済みの係数 e でカメラ位置を補間
+		Vector3 camPos = MyMath::Vector3Lerp(clearCamStartPos_, clearCamTargetPos_, e);
+		camera->SetTranslate(camPos);
+		camera->Update();
+
+		if (t >= 1.0f) {
+			clearPhase_ = ClearPhase::PlayerFly;
+			clearTimer_ = 0.0f;
+		}
+		break;
+	}
+
+	case ClearPhase::PlayerFly:
+	{
+		// カメラは寄った位置で固定
+		camera->SetTranslate(clearCamTargetPos_);
+		camera->Update();
+
+		// 0 → 1 のタイマー（＝飛ばして見せる時間）
+		float t = std::clamp(clearTimer_ / clearPlayerFlyMinTime_, 0.0f, 1.0f);
+
+		// 最初ゆっくり → 中盤スピード出て → 最後またゆっくり
+		float e = Ease::InOutQuad(t);  // InOutSine とかでもOK
+
+		// イージング済み係数で開始位置→目標位置を補間
+		Vector3 pos = MyMath::Vector3Lerp(clearPlayerStartPos_, clearPlayerTargetPos_, e);
+		player_->SetPosition(pos);
+		player_->UpdateVisualOnly(); // 入力無しで見た目だけ更新
+
+		// 1.0 まで行ったらアイリス閉じフェーズへ
+		if (t >= 1.0f) {
+			clearPhase_ = ClearPhase::IrisClose;
+			clearTimer_ = 0.0f;
+
+			irisClosing_ = true;
+			irisCloseScale_ = 0.0f;
+			irisCloseTween_.Reset(0.0f, irisMaxScale_, 0.8f, Ease::Type::InBack);
+		}
+		break;
+	}
+
+	case ClearPhase::IrisClose: // アイリス閉じ
+	{
+		// ここでは「閉じきったかどうか」だけを見る
+		if (irisClosing_ && iris_) {
+			irisCloseScale_ = irisCloseTween_.Update(dt);
+			iris_->SetSize({ irisCloseScale_, irisCloseScale_ });
+			iris_->Update();
+
+			if (irisCloseTween_.Finished()) {
+				// クリア演出完了 → true を返す
+				return true;
+			}
+		}
+		break;
+	}
+
+	default:
+		break;
+	}
+
+	// パーティクルなどは普通に動かす
+	ParticleManager::GetInstance()->Update();
+
+	return false; // まだ演出継続中
 }
 

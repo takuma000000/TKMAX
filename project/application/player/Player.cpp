@@ -40,6 +40,11 @@ void Player::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 
 
 void Player::Update() {
+	// クリア演出などで操作禁止中は、通常のUpdateを流さない
+	if (!controlEnabled_) {
+		return;
+	}
+
 	HandleGamePadMove(); // ゲームパッドのスティック入力で移動
 	HandleFollowCamera(); // カメラの追従処理
 	RemoveEnemyIfDead(); // 敵が死んでたら参照をクリア
@@ -277,10 +282,23 @@ void Player::Death()
 	}
 }
 
+void Player::UpdateVisualOnly()
+{
+	// クリア演出用：
+	// GameScene 側から SetPosition などで座標だけ動かしておいて、
+	// ここで行列更新だけ行う
+	if (object_) {
+		object_->Update();
+	}
+}
+
 void Player::Draw(DirectXCommon* dxCommon) {
 	object_->Draw(dxCommon); // プレイヤー本体描画
 
-	if (reticle_) reticle_->Draw(dxCommon); // 3Dレティクル描画
+	// クリア演出中などで隠したいときはフラグでOFF
+	if (reticle_ && reticleVisible_) {
+		reticle_->Draw(dxCommon);
+	}
 
 	for (auto& bullet : bullets_) {
 		bullet->Draw(dxCommon); // 弾描画

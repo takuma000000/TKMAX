@@ -222,11 +222,35 @@ private:
 	float camPitchEnd_ = 0.05f;    // 少しだけ水平へ
 
 	// Iris閉じ（タイトル戻り用）
-	bool irisClosing_ = false;
-	Ease::Tween irisCloseTween_;
-	float irisCloseScale_ = 0.0f;
+	bool irisClosing_ = false; // Iris閉じ中か
+	Ease::Tween irisCloseTween_; // Iris閉じ用イージング
+	float irisCloseScale_ = 0.0f; // 閉じる最終スケール
 
-	float playerDeathElapsed_ = 0.0f;
-	bool playerDeathStarted_ = false;
+	float playerDeathElapsed_ = 0.0f; // プレイヤー死亡からの経過時間
+	bool playerDeathStarted_ = false; // プレイヤー死亡処理開始フラグ
+
+	// --- ゲームクリア演出用 ---
+	bool clearSequence_ = false; // クリア演出中か
+
+	enum class ClearPhase { None, CamZoom, PlayerFly, IrisClose }; // 演出フェーズ
+	ClearPhase clearPhase_ = ClearPhase::None; // 現在のフェーズ
+
+	float clearTimer_ = 0.0f; // フェーズ内タイマー
+
+	// カメラ寄り用
+	Vector3 clearCamStartPos_{};   // 開始位置
+	Vector3 clearCamTargetPos_{};  // 目標位置
+
+	// プレイヤー飛ばし用
+	Vector3 clearPlayerStartPos_{}; // 開始位置
+	float   clearPlayerSpeed_ = 10.0f; // 奥に進むスピード
+	float   clearPlayerFlyMinTime_ = 1.8f; // プレイヤーを飛ばして見せる最低時間（秒）
+	float   clearPlayerFlyDistance_ = 120.0f; // Z方向に飛ばす距離目安
+	Vector3 clearPlayerTargetPos_{}; // 目標位置（開始位置 + 距離）
+
+	// クリア演出の開始＆更新
+	void StartClearSequence();
+	// true を返したら「演出完了（シーン遷移してOK）」
+	bool UpdateClearSequence(float dt);
 };
 

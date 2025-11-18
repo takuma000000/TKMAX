@@ -67,6 +67,12 @@ public:
 	/// <summary>撃墜関数</summary>
 	void Death();
 
+	/// <summary>
+	/// 入力などのゲームプレイ処理を行わず、
+	/// 見た目用に行列だけ更新したいとき（クリア演出用）
+	/// </summary>
+	void UpdateVisualOnly();
+
 	/// <summary>弾のリストを取得します。</summary>
 	const std::list<std::unique_ptr<PlayerBullet>>& GetBullets() const {
 		return bullets_;
@@ -115,6 +121,10 @@ public:
 	}
 	/// <summary>カメラシェイクを開始します。</summary>
 	void StartCameraShake(int frameCount);
+	/// <summary>プレイヤー操作を有効/無効にします。</summary>
+	void SetControlEnabled(bool enabled) { controlEnabled_ = enabled; }
+	/// <summary>レティクルの表示/非表示を切り替えます。</summary>
+	void SetReticleVisible(bool visible) { reticleVisible_ = visible; }
 
 	enum class DeathPhase { None, FaultSparks, FlyAway }; // 撃墜演出フェーズ
 
@@ -174,6 +184,9 @@ private:
 	bool enableJetSmoke_ = true; // デフォルトON
 
 	int hp_ = 1; // 初期HP
+
+	bool controlEnabled_ = true;   // trueなら通常操作、falseなら入力系を全部無視
+	bool reticleVisible_ = true;   // trueならレティクル描画
 
 	// 撃墜演出用
 	bool   isDead_ = false;                // 撃墜モード中
