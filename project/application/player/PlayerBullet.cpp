@@ -102,8 +102,7 @@ void PlayerBullet::SetVelocity(const Vector3& vel) {
 	velocity_ = vel; // 速度設定
 }
 
-void PlayerBullet::StartSpawnBezier(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float duration, const Vector3& velocityAfter)
-{
+void PlayerBullet::StartSpawnBezier(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float duration, const Vector3& velocityAfter){
 	bezP0_ = p0; bezP1_ = p1; bezP2_ = p2; bezP3_ = p3;
 	spawnDuration_ = std::max(0.001f, duration);
 	spawnT_ = 0.0f;
@@ -113,8 +112,7 @@ void PlayerBullet::StartSpawnBezier(const Vector3& p0, const Vector3& p1, const 
 	velocity_ = { 0,0,0 };
 }
 
-void PlayerBullet::UpdateSpawnBezier()
-{
+void PlayerBullet::UpdateSpawnBezier(){
 	const float dt = 1.0f / 60.0f;
 	// 現在の座標を取得して、速度分だけ進める
 	Vector3 pos = object_->GetTranslate();

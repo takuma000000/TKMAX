@@ -10,8 +10,7 @@
 #include <Object3dCommon.h>
 #include <SpriteCommon.h>
 
-void Framework::Initialize()
-{
+void Framework::Initialize(){
 	//シーンマネージャの生成
 	sceneManager_ = std::make_unique<SceneManager>();
 
@@ -41,27 +40,23 @@ void Framework::Initialize()
 	Input::GetInstance()->Initialize(windowsAPI.get()); // Inputを初期化
 }
 
-void Framework::Finalize()
-{
+void Framework::Finalize(){
 	windowsAPI->Finalize(); // WindowsAPI の終了
 
 	Input::GetInstance()->Finalize(); // Inputの終了
 }
 
-void Framework::Update()
-{
+void Framework::Update(){
 	//シーンマネージャーの更新
 	sceneManager_->Update();
 }
 
-void Framework::Draw()
-{
+void Framework::Draw(){
 	//シーンマネージャーの描画
 	sceneManager_->Draw();
 }
 
-void Framework::Run()
-{
+void Framework::Run(){
 	//ゲームの初期化
 	Initialize();
 

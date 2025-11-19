@@ -6,8 +6,7 @@
 #include <externals/imgui/imgui_impl_dx12.h>
 #endif
 
-void ImGuiManager::Initialize(WindowsAPI* winApp, DirectXCommon* dxCommon)
-{
+void ImGuiManager::Initialize(WindowsAPI* winApp, DirectXCommon* dxCommon){
 	HRESULT hr;
 
 	dxCommon_ = dxCommon;
@@ -77,8 +76,7 @@ void ImGuiManager::Initialize(WindowsAPI* winApp, DirectXCommon* dxCommon)
 	);
 }
 
-void ImGuiManager::Finalize()
-{
+void ImGuiManager::Finalize(){
 	// ImGuiのDirectX12用の終了処理
 	ImGui_ImplDX12_Shutdown();
 	// ImGuiのWin32用の終了処理
@@ -90,21 +88,18 @@ void ImGuiManager::Finalize()
 	srvHeap_.Reset();
 }
 
-void ImGuiManager::Begin()
-{
+void ImGuiManager::Begin(){
 	//ImGuiフレーム開始
 	ImGui_ImplDX12_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 }
 
-void ImGuiManager::End()
-{
+void ImGuiManager::End(){
 	ImGui::Render();
 }
 
-void ImGuiManager::Draw()
-{
+void ImGuiManager::Draw(){
 	// コマンドリストの取得
 	ID3D12GraphicsCommandList* commandList = dxCommon_->GetCommandList();
 
@@ -115,8 +110,7 @@ void ImGuiManager::Draw()
 	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
 }
 
-void ImGuiManager::SetColorStrawberry()
-{
+void ImGuiManager::SetColorStrawberry(){
 	ImGuiStyle& style = ImGui::GetStyle();
 
 	//========================================
@@ -167,8 +161,7 @@ void ImGuiManager::SetColorStrawberry()
 	colors[ImGuiCol_PopupBg] = ImVec4(0.9f, 0.2f, 0.3f, 0.95f);  // 苺色
 }
 
-void ImGuiManager::SetColorWhiteTiger()
-{
+void ImGuiManager::SetColorWhiteTiger(){
 	ImGuiStyle& style = ImGui::GetStyle();
 
 	//========================================
@@ -219,8 +212,7 @@ void ImGuiManager::SetColorWhiteTiger()
 	colors[ImGuiCol_PopupBg] = ImVec4(0.4f, 0.4f, 0.4f, 0.95f);  // **背景に溶け込むグレー**
 }
 
-void ImGuiManager::SetColorRainbow()
-{
+void ImGuiManager::SetColorRainbow(){
 	ImGuiStyle& style = ImGui::GetStyle();
 
 	//========================================

@@ -6,8 +6,7 @@ class SceneManager;
 // BaseSceneクラス
 // シーンの基本機能を定義する抽象基底クラス。
 //=============================================================
-class BaseScene
-{
+class BaseScene{
 public:
 	virtual ~BaseScene() = default;
 
@@ -53,4 +52,3 @@ protected:
 	/// </summary>
 	void ResetDrawCallCount(); // カウントリセット
 };
-

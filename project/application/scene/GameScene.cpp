@@ -11,8 +11,7 @@
 #include <psapi.h>
 #include <Input.h>
 
-void GameScene::Initialize()
-{
+void GameScene::Initialize(){
 	// ──────────────── NULLチェック ────────────────
 	assert(this != nullptr && "this is nullptr in GameScene::Initialize");
 	assert(dxCommon != nullptr && "dxCommon is nullptr in GameScene::Initialize");
@@ -91,8 +90,7 @@ void GameScene::Initialize()
 	startTween_.Reset(0.0f, 1.0f, startDuration_, Ease::Type::OutBack);
 }
 
-void GameScene::Finalize()
-{
+void GameScene::Finalize(){
 	// テクスチャマネージャーの終了
 	TextureManager::GetInstance()->Finalize();
 
@@ -103,8 +101,7 @@ void GameScene::Finalize()
 	ModelManager::GetInstance()->Finalize();
 }
 
-void GameScene::Update()
-{
+void GameScene::Update(){
 	// 入力処理
 	Input::GetInstance()->Update();
 
@@ -403,8 +400,7 @@ void GameScene::Update()
 	UpdatePerformanceInfo();
 }
 
-void GameScene::Draw()
-{
+void GameScene::Draw(){
 	if (skybox_) skybox_->Draw();
 
 	// 3Dまとめ
@@ -441,9 +437,7 @@ void GameScene::Draw()
 	}
 }
 
-
-void GameScene::SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float speed, int damage, int lifeFrame)
-{
+void GameScene::SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float speed, int damage, int lifeFrame){
 	auto b = std::make_unique<BossBullet>();
 	b->Initialize(Object3dCommon::GetInstance(), dxCommon, camera.get(), pos, dir, speed, damage, lifeFrame);
 	bossBullets_.push_back(std::move(b));
@@ -452,8 +446,7 @@ void GameScene::SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float s
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 // ゲーム内のサウンドをロード＆再生する
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-void GameScene::InitializeAudio()
-{
+void GameScene::InitializeAudio(){
 	auto* audio = AudioManager::GetInstance();
 	audio->Initialize();
 	audio->LoadSound("bossP2", "FLASHness.wav"); // ボス戦フェーズ2用BGM ( FLASHness / NEURAY )
@@ -462,8 +455,7 @@ void GameScene::InitializeAudio()
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 // 必要なテクスチャをロードする
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-void GameScene::LoadTextures()
-{
+void GameScene::LoadTextures(){
 	//ファイルパス
 	TextureManager::GetInstance()->LoadTexture("./resources/uvChecker.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/pokemon.png");
@@ -484,8 +476,7 @@ void GameScene::LoadTextures()
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 // スプライトを作成し、初期化する
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-void GameScene::InitializeSprite()
-{
+void GameScene::InitializeSprite(){
 	sprite = std::make_unique<Sprite>();
 	sprite->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/circle.png");
 	sprite->SetPosition({ -1000.0f, 0.0f });
@@ -495,8 +486,7 @@ void GameScene::InitializeSprite()
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 // 必要な3Dモデルをロードする
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-void GameScene::LoadModels()
-{
+void GameScene::LoadModels(){
 	ModelManager::GetInstance()->LoadModel("axis.obj", dxCommon);
 	ModelManager::GetInstance()->LoadModel("sphere.obj", dxCommon);
 	ModelManager::GetInstance()->LoadModel("terrain.obj", dxCommon);
@@ -511,8 +501,7 @@ void GameScene::LoadModels()
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 // 3Dオブジェクトを作成し、初期化する
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-void GameScene::InitializeObjects()
-{
+void GameScene::InitializeObjects(){
 	// --- ground: タイルを3枚並べる ---
 	groundTiles_.clear();
 	const int tileCount = 3;
@@ -538,8 +527,7 @@ void GameScene::InitializeObjects()
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 // カメラを作成し、各オブジェクトに適用する
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-void GameScene::InitializeCamera()
-{
+void GameScene::InitializeCamera(){
 	camera = std::make_unique<Camera>();
 	camera->SetRotate({ camPitchStart_, camYawStart_, 0.0f });
 	camera->SetTranslate({ 0.0f,0.0f,-30.0f });
@@ -555,9 +543,7 @@ void GameScene::InitializeCamera()
 	}
 }
 
-void GameScene::ImGuiDebug()
-{
-
+void GameScene::ImGuiDebug(){
 #ifdef _DEBUG
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -728,12 +714,10 @@ void GameScene::ImGuiDebug()
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 #endif // _DEBUG
 }
 
-void GameScene::UpdateMemory()
-{
+void GameScene::UpdateMemory(){
 	/// ───────────────────────────────────────────────
 	/// ● 現在のメモリ使用量（MB）を取得し、履歴に記録する
 	/// ───────────────────────────────────────────────
@@ -750,8 +734,7 @@ void GameScene::UpdateMemory()
 	}
 }
 
-void GameScene::UpdateEnemies()
-{
+void GameScene::UpdateEnemies(){
 	/// ───────────────────────────────────────────────
 	/// ● 敵の状態を更新し、死亡したものは削除＆カウント
 	/// ───────────────────────────────────────────────
@@ -776,8 +759,7 @@ void GameScene::UpdateEnemies()
 	}
 }
 
-void GameScene::UpdateClosestEnemy()
-{
+void GameScene::UpdateClosestEnemy(){
 	/// ───────────────────────────────────────────────
 	/// ● プレイヤーに最も近い敵を検出し、ターゲットとして設定する
 	/// ───────────────────────────────────────────────
@@ -916,8 +898,7 @@ void GameScene::GoToNextWave() {
 	}
 }
 
-void GameScene::UpdateSkyboxRotationX()
-{
+void GameScene::UpdateSkyboxRotationX(){
 	constexpr float kTwoPi = 6.2831853f;
 
 	// X軸回転を更新
@@ -959,8 +940,7 @@ void GameScene::UpdateGroundScroll() {
 	}
 }
 
-void GameScene::StartClearSequence()
-{
+void GameScene::StartClearSequence(){
 	clearSequence_ = true;
 	clearPhase_ = ClearPhase::CamZoom;
 	clearTimer_ = 0.0f;
@@ -1005,8 +985,7 @@ void GameScene::StartClearSequence()
 	irisClosing_ = false;
 }
 
-bool GameScene::UpdateClearSequence(float dt)
-{
+bool GameScene::UpdateClearSequence(float dt){
 	clearTimer_ += dt;
 
 	// skyboxはずっと回し続ける
@@ -1154,8 +1133,7 @@ bool GameScene::UpdateClearSequence(float dt)
 	return false; // まだ演出継続中
 }
 
-void GameScene::SpawnFirework(const Vector3& center)
-{
+void GameScene::SpawnFirework(const Vector3& center){
 	auto pm = ParticleManager::GetInstance();
 
 	// =========================
@@ -1183,6 +1161,3 @@ void GameScene::SpawnFirework(const Vector3& center)
 		pm->Emit("fw_burst", burstPos, 60);   // 本体の粒の数はお好みで
 	}
 }
-
-
-

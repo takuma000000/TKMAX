@@ -9,8 +9,7 @@
 #include "externals/imgui/imgui.h"
 #endif
 
-void TitleScene::Initialize()
-{
+void TitleScene::Initialize(){
 	camera = std::make_unique<Camera>();
 	camera->SetRotate({ 0.0f, 0.0f, 0.0f });
 	camera->SetTranslate({ 0.0f, camY_, -30.0f });
@@ -97,12 +96,9 @@ void TitleScene::Initialize()
 	//-----------------------------------------
 }
 
-void TitleScene::Finalize()
-{
-}
+void TitleScene::Finalize(){}
 
-void TitleScene::Update()
-{
+void TitleScene::Update(){
 	ResetDrawCallCount();
 	UpdatePerformanceInfo();
 
@@ -242,8 +238,7 @@ void TitleScene::Update()
 #endif // _DEBUG
 }
 
-void TitleScene::Draw()
-{
+void TitleScene::Draw(){
 	// 3Dは3Dでまとめて
 	Object3dCommon::GetInstance()->DrawSetCommon();
 	if (heli_) heli_->Draw(dxCommon);

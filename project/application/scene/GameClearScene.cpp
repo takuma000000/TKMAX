@@ -4,7 +4,6 @@
 #include "ImGuiManager.h"
 #include "SceneManager.h"
 
-// 他シーンと同じようにモデル・テクスチャを使う
 #include "ModelManager.h"
 #include "engine/3d/Object3dCommon.h"
 #include "WindowsAPI.h"

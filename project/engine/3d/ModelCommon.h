@@ -5,8 +5,7 @@
 // ModelCommonクラス
 // モデル描画で共通して使用する設定を保持するクラス。
 //=============================================================
-class ModelCommon
-{
+class ModelCommon{
 private:
 	DirectXCommon* dxCommon_;
 

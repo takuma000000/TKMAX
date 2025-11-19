@@ -4,37 +4,32 @@ using namespace Logger;
 
 Object3dCommon* Object3dCommon::instance = nullptr;
 
-Object3dCommon* Object3dCommon::GetInstance()
-{
+Object3dCommon* Object3dCommon::GetInstance(){
 	if (instance == nullptr) {
 		instance = new Object3dCommon;
 	}
 	return instance;
 }
 
-void Object3dCommon::Initialize(DirectXCommon* dxCommon)
-{
+void Object3dCommon::Initialize(DirectXCommon* dxCommon){
 	//引数で受け取ってメンバ変数に記録する
 	dxCommon_ = dxCommon;
 
 	GenerateGraficsPipeline(); //グラフィックスパイプライン生成
 }
 
-void Object3dCommon::Finalize()
-{
+void Object3dCommon::Finalize(){
 	delete instance;
 	instance = nullptr;
 }
 
-void Object3dCommon::DrawSetCommon()
-{
+void Object3dCommon::DrawSetCommon(){
 	dxCommon_->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get()); //ルートシグネチャセット
 	dxCommon_->GetCommandList()->SetPipelineState(graphicsPipelineState.Get()); //パイプラインステートセット
 	dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); //プリミティブトポロジーセット
 }
 
-void Object3dCommon::GenerateRootSignature()
-{
+void Object3dCommon::GenerateRootSignature(){
 	descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT; //入力アセンブラで頂点レイアウトを使う
 
 	D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {}; //DescriptorRange作成
@@ -149,8 +144,7 @@ void Object3dCommon::GenerateRootSignature()
 	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 }
 
-void Object3dCommon::GenerateGraficsPipeline()
-{
+void Object3dCommon::GenerateGraficsPipeline(){
 	GenerateRootSignature(); //ルートシグネチャ生成
 
 	HRESULT hr;

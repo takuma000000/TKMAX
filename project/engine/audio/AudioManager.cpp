@@ -79,8 +79,7 @@ void AudioManager::UnloadSound(const std::string& key) {
 	}
 }
 
-AudioManager* AudioManager::GetInstance()
-{
+AudioManager* AudioManager::GetInstance(){
 	if (instance == nullptr) { // インスタンスが存在しない場合に生成
 		instance = new AudioManager;
 	}
@@ -132,5 +131,3 @@ SoundData AudioManager::LoadWaveFile(const std::string& filename) {
 
 	return soundData;
 }
-
-

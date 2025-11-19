@@ -5,7 +5,6 @@
 #include "SceneManager.h"
 #include "AbstractSceneFactory.h"
 
-
 //前方宣言
 class WindowsAPI;
 class DirectXCommon;
@@ -17,8 +16,7 @@ class ImGuiManager;
 // Frameworkクラス
 // ゲーム全体の初期化・更新・描画・終了処理を統括する基盤クラス。
 //=============================================================
-class Framework
-{
+class Framework{
 public:
 	// 仮想関数（派生クラスで必ず実装する必要がある）
 	/// <summary>初期化を行う関数。</summary>

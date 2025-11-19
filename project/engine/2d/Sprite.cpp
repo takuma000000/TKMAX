@@ -9,18 +9,15 @@
 #include "externals/imgui/imgui.h"
 #endif
 
-Sprite::Sprite()
-{
+Sprite::Sprite(){
 	++activeCount_; //アクティブスプライト数をインクリメント
 }
 
-Sprite::~Sprite()
-{
+Sprite::~Sprite(){
 	--activeCount_; //アクティブスプライト数をデクリメント
 }
 
-void Sprite::SetParentScene(BaseScene* parentScene)
-{
+void Sprite::SetParentScene(BaseScene* parentScene){
 	parentScene_ = parentScene; //親シーンを設定
 }
 
@@ -195,8 +192,7 @@ void Sprite::ImGuiDebug() {
 	ImGui::End();
 }
 
-void Sprite::AdjustTextureSize()
-{
+void Sprite::AdjustTextureSize(){
 	//テクスチャデータを取得
 	const DirectX::TexMetadata& metadata = TextureManager::GetInstance()->GetMetadata(textureFilePath);
 

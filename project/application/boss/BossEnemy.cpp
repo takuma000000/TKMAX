@@ -14,6 +14,7 @@ Vector3 BossEnemy::PredictPlayer(const Vector3& playerPos) const {
 	float lookAhead = 6.0f; // フレーム
 	return playerPos + playerVelFiltered_ * lookAhead;
 }
+
 float BossEnemy::PhaseBiasFor(AttackType at) const {
 	switch (phase_) {
 	case Phase::P1: // 初期フェーズ
@@ -153,8 +154,7 @@ void BossEnemy::UpdatePhase() {
 //    P2はゆるい円運動、P3は左右往復
 // ─────────────────────────────────────────────
 // BossEnemy.cpp
-void BossEnemy::UpdateMovement(const Vector3& playerPos, const Vector3& /*playerVel*/)
-{
+void BossEnemy::UpdateMovement(const Vector3& playerPos, const Vector3& /*playerVel*/){
 	// =========================
 	// P1: 一度だけ前方アンカーを確定 → ゆっくり寄る → 到達後は完全停止（追従なし）
 	// =========================
@@ -233,8 +233,8 @@ void BossEnemy::UpdateMovement(const Vector3& playerPos, const Vector3& /*player
 	}
 
 	// =========================
-// P2: 決まった範囲で左右往復（ゆっくり）
-// =========================
+	// P2: 決まった範囲で左右往復（ゆっくり）
+	// =========================
 	if (phase_ == Phase::P2) {
 		// 左右往復の進行
 		theta_ += p2OmegaX_;
@@ -400,7 +400,6 @@ void BossEnemy::SelectNextAttackUtility(const Vector3& playerPos) {
 	currentAttack_ = next;
 }
 
-
 void BossEnemy::FireBegin() {
 	// テレグラフ演出など任意
 }
@@ -408,8 +407,7 @@ void BossEnemy::FireBegin() {
 // ─────────────────────────────────────────────
 // 3) 発射：P1は低頻度・低速・低威力のBeamのみ
 // ─────────────────────────────────────────────
-void BossEnemy::FireTick(float /*dt*/, const Vector3& playerPos)
-{
+void BossEnemy::FireTick(float /*dt*/, const Vector3& playerPos){
 	// シーン取得
 	auto* gs = dynamic_cast<GameScene*>(GetParentScene());
 	// 安全確認

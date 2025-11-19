@@ -9,8 +9,7 @@ extern Framework* gFramework; // グローバルポインタでFrameworkを参�
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 //ウィンドウプロシージャ
-LRESULT CALLBACK WindowsAPI::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
-{
+LRESULT CALLBACK WindowsAPI::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam){
 	// ImGui のウィンドウ処理
 	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) {
 		return true;
@@ -38,8 +37,7 @@ LRESULT CALLBACK WindowsAPI::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPAR
 	return DefWindowProc(hwnd, msg, wparam, lparam);
 }
 
-void WindowsAPI::Initialize()
-{
+void WindowsAPI::Initialize(){
 	//COMライブラリの初期化
 	CoInitializeEx(0, COINIT_MULTITHREADED);
 	//システムターマーの分解能を上げる
@@ -85,18 +83,15 @@ void WindowsAPI::Initialize()
 #pragma endregion
 }
 
-void WindowsAPI::Update()
-{
+void WindowsAPI::Update(){
 }
 
-void WindowsAPI::Finalize()
-{
+void WindowsAPI::Finalize(){
 	CloseWindow(hwnd); // ウィンドウを閉じる
 	CoUninitialize(); // COMライブラリの終了
 }
 
-bool WindowsAPI::ProcessMessage()
-{
+bool WindowsAPI::ProcessMessage(){
 	MSG msg{};
 
 	if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) { // メッセージがあるか確認

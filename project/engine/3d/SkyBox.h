@@ -94,7 +94,6 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource_;
 
-	
 	/// <summary>
 	/// 生成関数
 	/// </summary>
@@ -108,5 +107,4 @@ private:
 	//cameraResource関数
 	///<param name="dxCommon">DirectX共通。</param>
 	void CameraResource(DirectXCommon* dxCommon);
-
 };

@@ -72,8 +72,7 @@ Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> DirectXCommon::CreateDescriptorHeap
 	return descriptorHeap;
 }
 
-void DirectXCommon::Initialize(WindowsAPI* windowsAPI)
-{
+void DirectXCommon::Initialize(WindowsAPI* windowsAPI){
 	//FPS初期化固定
 	InitializeFixFPS();
 
@@ -97,8 +96,7 @@ void DirectXCommon::Initialize(WindowsAPI* windowsAPI)
 	InitializeScissorRect(); // シザー矩形初期化
 }
 
-void DirectXCommon::InitializeDevice()
-{
+void DirectXCommon::InitializeDevice(){
 	HRESULT hr;
 
 
@@ -189,8 +187,7 @@ void DirectXCommon::InitializeDevice()
 #endif
 }
 
-void DirectXCommon::InitializeCommand()
-{
+void DirectXCommon::InitializeCommand(){
 	HRESULT hr;
 
 #pragma region commandAllocator
@@ -220,8 +217,7 @@ void DirectXCommon::InitializeCommand()
 #pragma endregion
 }
 
-void DirectXCommon::GenerateSwapChain()
-{
+void DirectXCommon::GenerateSwapChain(){
 	HRESULT hr;
 
 #pragma region スワップチェーンの生成
@@ -250,8 +246,7 @@ void DirectXCommon::GenerateZBuffer() {
 	depthStencilResource = CreateDepthStencilTextureResource(device, width, height);
 }
 
-void DirectXCommon::GenerateDescpitorHeap()
-{
+void DirectXCommon::GenerateDescpitorHeap(){
 	//DescriptorSizeを取得しておく
 	descriptorSizeRTV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	descriptorSizeDSV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
@@ -264,8 +259,7 @@ void DirectXCommon::GenerateDescpitorHeap()
 #pragma endregion
 }
 
-void DirectXCommon::GenerateDXC()
-{
+void DirectXCommon::GenerateDXC(){
 	HRESULT hr;
 
 	// DXCのユーティリティとコンパイラのインスタンスを生成
@@ -280,8 +274,7 @@ void DirectXCommon::GenerateDXC()
 
 }
 
-Microsoft::WRL::ComPtr<IDxcBlob> DirectXCommon::CompileShader(const std::wstring& filePath, const wchar_t* profile)
-{
+Microsoft::WRL::ComPtr<IDxcBlob> DirectXCommon::CompileShader(const std::wstring& filePath, const wchar_t* profile){
 	Log(ConvertString(std::format(L"Begin CompileShader, path:{}, profile:{}\n", filePath, profile)));
 
 	// シェーダソースコードを読み込む
@@ -335,8 +328,7 @@ Microsoft::WRL::ComPtr<IDxcBlob> DirectXCommon::CompileShader(const std::wstring
 	return shaderBlob;
 }
 
-Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateBufferResource(size_t sizeInBytes)
-{
+Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateBufferResource(size_t sizeInBytes){
 	HRESULT hr;
 
 	// **256 バイト単位に揃える**
@@ -371,9 +363,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateBufferResource(size_
 	return vertexResource;
 }
 
-
-Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateTextureResource(const DirectX::TexMetadata& metadata)
-{
+Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateTextureResource(const DirectX::TexMetadata& metadata){
 	//metadataを基にResourceの設定
 	D3D12_RESOURCE_DESC resourceDesc{};
 	resourceDesc.Width = UINT(metadata.width);//Textureの幅
@@ -405,8 +395,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateTextureResource(cons
 }
 
 [[nodiscard]]
-Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages)
-{
+Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages){
 	//SubresourceDataの配列を用意して、画像データを詰め込む
 	std::vector<D3D12_SUBRESOURCE_DATA> subresources;
 	DirectX::PrepareUpload(device.Get(), mipImages.GetImages(), mipImages.GetImageCount(), mipImages.GetMetadata(), subresources);
@@ -425,8 +414,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::UploadTextureData(ID3D12Re
 	return intermediateResource;
 }
 
-void DirectXCommon::InitializeRTV()
-{
+void DirectXCommon::InitializeRTV(){
 	HRESULT hr;
 
 	rtvHeap_ = this->CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false); // RTV用のヒープを作成
@@ -464,8 +452,7 @@ void DirectXCommon::InitializeRTV()
 	device->CreateRenderTargetView(swapChainResources[1].Get(), &rtvDesc, rtvHandles[1]);
 }
 
-void DirectXCommon::InitializeDSV()
-{
+void DirectXCommon::InitializeDSV(){
 	//DepthStencilTextureをウィンドウのサイズで作成
 	depthStencilResource = CreateDepthStencilTextureResource(device.Get(), WindowsAPI::kClientWidth, WindowsAPI::kClientHeight);
 
@@ -479,8 +466,7 @@ void DirectXCommon::InitializeDSV()
 	device->CreateDepthStencilView(depthStencilResource.Get(), &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 }
 
-void DirectXCommon::InitializeFence()
-{
+void DirectXCommon::InitializeFence(){
 	HRESULT hr;
 
 	//フェンスの生成
@@ -493,8 +479,7 @@ void DirectXCommon::InitializeFence()
 	assert(fenceEvent != nullptr);
 }
 
-void DirectXCommon::InitializeViewport()
-{
+void DirectXCommon::InitializeViewport(){
 	//ビューポート矩形の設定
 	viewport.Width = WindowsAPI::kClientWidth;
 	viewport.Height = WindowsAPI::kClientHeight;
@@ -504,8 +489,7 @@ void DirectXCommon::InitializeViewport()
 	viewport.MaxDepth = 1.0f;
 }
 
-void DirectXCommon::InitializeScissorRect()
-{
+void DirectXCommon::InitializeScissorRect(){
 	//シザリング矩形の設定
 	scissorRect.left = 0;
 	scissorRect.right = WindowsAPI::kClientWidth;
@@ -513,14 +497,12 @@ void DirectXCommon::InitializeScissorRect()
 	scissorRect.bottom = WindowsAPI::kClientHeight;
 }
 
-void DirectXCommon::InitializeFixFPS()
-{
+void DirectXCommon::InitializeFixFPS(){
 	//現在時間を記録する
 	reference_ = std::chrono::steady_clock::now();
 }
 
-void DirectXCommon::UpdateFixFPS()
-{
+void DirectXCommon::UpdateFixFPS(){
 
 	// 1/60秒ぴったりの時間
 	const std::chrono::microseconds kMinTime(uint64_t(1000000.0f / 60.0f));
@@ -544,8 +526,7 @@ void DirectXCommon::UpdateFixFPS()
 
 }
 
-void DirectXCommon::PreDraw()
-{
+void DirectXCommon::PreDraw(){
 	// これから書き込むバックバッファのインデックスを取得    
 	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
 
@@ -585,8 +566,7 @@ void DirectXCommon::PreDraw()
 	commandList->RSSetScissorRects(1, &scissorRect);
 }
 
-void DirectXCommon::PostDraw()
-{
+void DirectXCommon::PostDraw(){
 	HRESULT hr;
 
 	// これから書き込むバックバッファのインデックスを取得    

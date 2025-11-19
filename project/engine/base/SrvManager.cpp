@@ -4,14 +4,12 @@
 //最大テクスチャ枚数
 const uint32_t SrvManager::kMaxSRVCount = 512;
 
-SrvManager::~SrvManager()
-{
+SrvManager::~SrvManager(){
 	int test = 1;
 	test = 0;
 }
 
-void SrvManager::Initialize(DirectXCommon* directXCommon)
-{
+void SrvManager::Initialize(DirectXCommon* directXCommon){
 	//引数で受け取ってメンバ変数に記録する
 	this->directXCommon_ = directXCommon;
 
@@ -21,20 +19,17 @@ void SrvManager::Initialize(DirectXCommon* directXCommon)
 	descriptorSize = directXCommon_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 }
 
-void SrvManager::PreDraw()
-{
+void SrvManager::PreDraw(){
 	//描画用のDescriptorHeapの設定
 	ID3D12DescriptorHeap* descriptorHeaps[] = { descriptorHeap.Get()};
 	directXCommon_->GetCommandList()->SetDescriptorHeaps(1, descriptorHeaps);
 }
 
-void SrvManager::SetGraphicsRootDescriptorTable(UINT RootParameterIndex, uint32_t srvIndex)
-{
+void SrvManager::SetGraphicsRootDescriptorTable(UINT RootParameterIndex, uint32_t srvIndex){
 	directXCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(RootParameterIndex, GetGPUDescriptorHandle(srvIndex));
 }
 
-uint32_t SrvManager::Allocate()
-{
+uint32_t SrvManager::Allocate(){
 	// 上限に達していないかチェック
 	assert(useIndex < kMaxSRVCount);
 
@@ -46,40 +41,34 @@ uint32_t SrvManager::Allocate()
 	return index;
 }
 
-bool SrvManager::Available() const
-{
+bool SrvManager::Available() const{
 	// 現在のインデックスが最大数未満であればtrueを返す
 	return useIndex < kMaxSRVCount;
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE SrvManager::GetCPUDescriptorHandleSUB(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index)
-{
+D3D12_CPU_DESCRIPTOR_HANDLE SrvManager::GetCPUDescriptorHandleSUB(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index){
 	// ヒープの先頭ハンドルを取得
 	D3D12_CPU_DESCRIPTOR_HANDLE handleCPU = descriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	handleCPU.ptr += (descriptorSize * index);
 	return handleCPU;
 }
 
-D3D12_GPU_DESCRIPTOR_HANDLE SrvManager::GetGPUDescriptorHandleSUB(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index)
-{
+D3D12_GPU_DESCRIPTOR_HANDLE SrvManager::GetGPUDescriptorHandleSUB(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index){
 	// ヒープの先頭ハンドルを取得
 	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
 	handleGPU.ptr += (descriptorSize * index);
 	return handleGPU;
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE SrvManager::GetCPUDescriptorHandle(uint32_t index)
-{
+D3D12_CPU_DESCRIPTOR_HANDLE SrvManager::GetCPUDescriptorHandle(uint32_t index){
 	return GetCPUDescriptorHandleSUB(descriptorHeap.Get(), descriptorSize, index);
 }
 
-D3D12_GPU_DESCRIPTOR_HANDLE SrvManager::GetGPUDescriptorHandle(uint32_t index)
-{
+D3D12_GPU_DESCRIPTOR_HANDLE SrvManager::GetGPUDescriptorHandle(uint32_t index){
 	return GetGPUDescriptorHandleSUB(descriptorHeap.Get(), descriptorSize, index);
 }
 
-void SrvManager::CreateSRVforTexture2D(uint32_t srvIndex, ID3D12Resource* pResource, DXGI_FORMAT Format, UINT MipLevels)
-{
+void SrvManager::CreateSRVforTexture2D(uint32_t srvIndex, ID3D12Resource* pResource, DXGI_FORMAT Format, UINT MipLevels){
 	// SRVの設定
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING; // 標準のコンポーネントマッピング
@@ -96,8 +85,7 @@ void SrvManager::CreateSRVforTexture2D(uint32_t srvIndex, ID3D12Resource* pResou
 	directXCommon_->GetDevice()->CreateShaderResourceView(pResource, &srvDesc, handle);
 }
 
-void SrvManager::CreateSRVforStructureBuffer(uint32_t srvIndex, ID3D12Resource* pResource, UINT numElements, UINT structureByteStride)
-{
+void SrvManager::CreateSRVforStructureBuffer(uint32_t srvIndex, ID3D12Resource* pResource, UINT numElements, UINT structureByteStride){
 	// SRVの設定
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
 	srvDesc.Format = DXGI_FORMAT_UNKNOWN; // 構造化バッファではフォーマットは未定義

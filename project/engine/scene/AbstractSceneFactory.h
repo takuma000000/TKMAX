@@ -11,8 +11,7 @@
 // AbstractSceneFactoryクラス
 // シーン生成のインターフェースを定義する抽象クラス。
 //=============================================================
-class AbstractSceneFactory
-{
+class AbstractSceneFactory{
 public:
 	/// <summary>
 	/// <span class="code-inline">AbstractSceneFactory</span>のデストラクタ

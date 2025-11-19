@@ -19,8 +19,7 @@
 //=============================================================
 // GameOverScene
 //=============================================================
-class GameOverScene : public BaseScene
-{
+class GameOverScene : public BaseScene{
 public:
 	GameOverScene(DirectXCommon* dxCommon, SrvManager* srvManager)
 		: dxCommon_(dxCommon), srvManager_(srvManager) {

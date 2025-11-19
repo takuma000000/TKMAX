@@ -106,8 +106,7 @@ struct EnvironmentEX {
 // Object3dクラス
 // 3Dオブジェクトの描画・変換・ライト設定を行うクラス。
 //=============================================================
-class Object3d
-{
+class Object3d{
 
 public://メンバ関数
 

@@ -27,8 +27,7 @@
 // TitleSceneクラス
 // タイトル画面を管理するシーンクラス。
 //=============================================================
-class TitleScene : public BaseScene
-{
+class TitleScene : public BaseScene{
 public:
 	TitleScene(DirectXCommon* dxCommon, SrvManager* srvManager) : dxCommon(dxCommon), srvManager(srvManager) {}
 

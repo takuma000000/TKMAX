@@ -7,8 +7,7 @@
 // SceneManagerクラス
 // シーンの管理を行うクラス。
 //=============================================================
-class SceneManager
-{
+class SceneManager{
 public:
 	//次シーン予約
 	/// <summary>次のシーンを設定します。</summary>
@@ -52,4 +51,3 @@ public://メンバ関数
 	/// </summary>
 	~SceneManager();
 };
-

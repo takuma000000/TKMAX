@@ -6,8 +6,7 @@
 // SceneFactoryクラス
 // シーン生成を行うクラス。
 //=============================================================
-class SceneFactory : public AbstractSceneFactory
-{
+class SceneFactory : public AbstractSceneFactory{
 public:
 	/// <summary>
 	/// <span class="code-inline">SceneFactory</span>のコンストラクタ
@@ -30,4 +29,3 @@ private:
 	SrvManager* srvManager = nullptr;
 
 };
-

@@ -7,8 +7,7 @@ class Camera;
 // Object3dCommonクラス
 // 3Dオブジェクト描画の共通設定（パイプライン等）を管理するクラス。
 //=============================================================
-class Object3dCommon
-{
+class Object3dCommon{
 
 public://メンバ関数
 
@@ -74,6 +73,4 @@ private://メンバ変数
 	Object3dCommon& operator=(Object3dCommon&) = delete;
 
 	////---------------------------------------------------------
-
 };
-

@@ -5,22 +5,19 @@
 
 ModelManager* ModelManager::instance = nullptr; //シングルトンインスタンスの初期化
 
-ModelManager* ModelManager::GetInstance()
-{
+ModelManager* ModelManager::GetInstance(){
 	if (instance == nullptr) { //インスタンスがなければ生成
 		instance = new ModelManager;
 	}
 	return instance;
 }
 
-void ModelManager::Finalize()
-{
+void ModelManager::Finalize(){
 	delete instance;
 	instance = nullptr;
 }
 
-void ModelManager::Initialize(DirectXCommon* dxCommon)
-{
+void ModelManager::Initialize(DirectXCommon* dxCommon){
 	//ポインタ...ModelCommon
 	std::unique_ptr<ModelCommon> modelCommon = nullptr;
 	//Object3d共通部の初期化
@@ -28,8 +25,7 @@ void ModelManager::Initialize(DirectXCommon* dxCommon)
 	modelCommon->Initialize(dxCommon);
 }
 
-void ModelManager::LoadModel(const std::string& filePath, DirectXCommon* dxCommon)
-{
+void ModelManager::LoadModel(const std::string& filePath, DirectXCommon* dxCommon){
 	dxCommon_ = dxCommon;
 	//読み込み済みモデルを検索
 	if (models.contains(filePath)) {
@@ -43,8 +39,7 @@ void ModelManager::LoadModel(const std::string& filePath, DirectXCommon* dxCommo
 	models.insert(std::make_pair(filePath, std::move(model)));
 }
 
-Model* ModelManager::FindModel(const std::string& filePath)
-{
+Model* ModelManager::FindModel(const std::string& filePath){
 	//読み込み済みモデルを検索
 	if (models.contains(filePath)) {
 		//読み込みモデルを戻り値としてreturn

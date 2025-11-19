@@ -10,8 +10,7 @@ class DirectXCommon;
 // SrvManagerクラス
 // SRV（Shader Resource View）ヒープの管理と割り当てを行うクラス。
 //=============================================================
-class SrvManager
-{
+class SrvManager{
 
 private:
 	DirectXCommon* directXCommon_ = nullptr;
@@ -75,6 +74,4 @@ public: //色々な関数
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> GetSrvDescriptorHeap() const { return descriptorHeap; }
 	///<summary>SRVデスクリプタサイズのゲッター。</summary>
 	uint32_t GetDescriptorSizeSRV() { return descriptorSize; }
-
 };
-

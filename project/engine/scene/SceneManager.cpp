@@ -1,7 +1,6 @@
 #include "SceneManager.h"
 
-void SceneManager::Update()
-{
+void SceneManager::Update(){
 	//TODO : シーン切り替え機構
 	//次のシーンが予約されていたら
 	if (nextScene_) {
@@ -28,14 +27,12 @@ void SceneManager::Update()
 	}
 }
 
-void SceneManager::Draw()
-{
+void SceneManager::Draw(){
 	//実行中シーンを描画
 	scene_->Draw();
 }
 
-SceneManager::~SceneManager()
-{
+SceneManager::~SceneManager(){
 	if (scene_) { // シーンが存在する場合のみ解放
 		scene_->Finalize();
 		delete scene_;

@@ -20,8 +20,7 @@
 // MyGameクラス
 // ゲーム全体を管理するクラス。
 //=============================================================
-class MyGame : public Framework
-{
+class MyGame : public Framework{
 public://メンバ関数
 	//初期化
 	/// <summary>初期化を行う関数。</summary>

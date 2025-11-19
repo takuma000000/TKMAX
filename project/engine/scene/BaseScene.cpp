@@ -4,24 +4,19 @@
 #include <externals/imgui/imgui.h>
 #endif
 
-void BaseScene::Initialize()
-{
+void BaseScene::Initialize(){
 }
 
-void BaseScene::Finalize()
-{
+void BaseScene::Finalize(){
 }
 
-void BaseScene::Update()
-{
+void BaseScene::Update(){
 }
 
-void BaseScene::Draw()
-{
+void BaseScene::Draw(){
 }
 
-void BaseScene::UpdatePerformanceInfo()
-{
+void BaseScene::UpdatePerformanceInfo(){
 	frameCount_++; // フレーム数カウント
 	float deltaTime = ImGui::GetIO().DeltaTime; // 経過時間取得(秒)
 	timeCount_ += deltaTime; // 経過時間加算
@@ -37,7 +32,6 @@ void BaseScene::UpdatePerformanceInfo()
 	}
 }
 
-void BaseScene::ResetDrawCallCount()
-{
+void BaseScene::ResetDrawCallCount(){
 	drawCallCount_ = 0; // DrawCall数リセット
 }

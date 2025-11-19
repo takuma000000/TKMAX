@@ -15,18 +15,15 @@
 #include <numbers>
 #include "BaseScene.h"
 
-Object3d::Object3d()
-{
+Object3d::Object3d(){
 	++activeCount_; // 静的メンバ変数のインクリメント
 }
 
-Object3d::~Object3d()
-{
+Object3d::~Object3d(){
 	--activeCount_; // 静的メンバ変数のデクリメント
 }
 
-void Object3d::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommon)
-{
+void Object3d::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommon){
 	//引数で受け取ってメンバ変数に記録する
 	this->object3dCommon = object3dCommon;
 	dxCommon_ = dxCommon;
@@ -62,8 +59,7 @@ void Object3d::Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommo
 	}
 }
 
-void Object3d::Update()
-{
+void Object3d::Update(){
 	// TransformからWorldMatrixを作る
 	Matrix4x4 worldMatrix = MyMath::MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 	// ワールドビュー射影行列を計算
@@ -146,8 +142,7 @@ void Object3d::Update()
 }
 
 
-void Object3d::Draw(DirectXCommon* dxCommon)
-{
+void Object3d::Draw(DirectXCommon* dxCommon){
 	if (parentScene_) { // 親シーンが設定されている場合
 		parentScene_->AddDrawCallCount(); // 描画コール数をカウント
 	}
@@ -179,14 +174,12 @@ void Object3d::Draw(DirectXCommon* dxCommon)
 	}
 }
 
-void Object3d::SetModel(const std::string& filePath)
-{
+void Object3d::SetModel(const std::string& filePath){
 	//モデルを検索してセットする
 	model_ = ModelManager::GetInstance()->FindModel(filePath);
 }
 
-void Object3d::SetParentScene(BaseScene* parentScene)
-{
+void Object3d::SetParentScene(BaseScene* parentScene){
 	parentScene_ = parentScene; // 親シーンを設定
 }
 
@@ -197,8 +190,7 @@ void Object3d::SetEnvironment(const std::string& filename) {
 	}
 }
 
-MaterialData Object3d::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename)
-{
+MaterialData Object3d::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename){
 	//中で必要となる変数の宣言
 	MaterialData materialData;//構築するMaterialData
 	std::string line;//ファイルから読んだ1行を格納するもの
@@ -220,8 +212,7 @@ MaterialData Object3d::LoadMaterialTemplateFile(const std::string& directoryPath
 	return materialData;
 }
 
-ModelData Object3d::LoadObjFile(const std::string& directoryPath, const std::string& filename)
-{
+ModelData Object3d::LoadObjFile(const std::string& directoryPath, const std::string& filename){
 	//必要となる変数の宣言
 	ModelData modelData;//構築するモデルデータ
 	std::vector<Vector4> positions;//位置
@@ -290,8 +281,7 @@ ModelData Object3d::LoadObjFile(const std::string& directoryPath, const std::str
 	return modelData;
 }
 
-void Object3d::VertexResource(DirectXCommon* dxCommon)
-{
+void Object3d::VertexResource(DirectXCommon* dxCommon){
 	dxCommon_ = dxCommon;
 
 	//VertexResourceを作る
@@ -305,8 +295,7 @@ void Object3d::VertexResource(DirectXCommon* dxCommon)
 	std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size());
 }
 
-void Object3d::MaterialResource(DirectXCommon* dxCommon)
-{
+void Object3d::MaterialResource(DirectXCommon* dxCommon){
 	dxCommon_ = dxCommon;
 
 	//materialResourceを作る
@@ -320,8 +309,7 @@ void Object3d::MaterialResource(DirectXCommon* dxCommon)
 	materialData->shininess = 48.3f;//明るさ
 }
 
-void Object3d::WVPResource(DirectXCommon* dxCommon)
-{
+void Object3d::WVPResource(DirectXCommon* dxCommon){
 	dxCommon_ = dxCommon;
 
 	//座標変換行列リソースを作る
@@ -334,8 +322,7 @@ void Object3d::WVPResource(DirectXCommon* dxCommon)
 	wvpData->WorldInverseTranspose = MyMath::MakeIdentity4x4();
 }
 
-void Object3d::CameraResource(DirectXCommon* dxCommon)
-{
+void Object3d::CameraResource(DirectXCommon* dxCommon){
 	dxCommon_ = dxCommon;
 
 	cameraResource = dxCommon_->CreateBufferResource(sizeof(CameraForGPU)); // カメラ用のリソースを作る
@@ -344,8 +331,7 @@ void Object3d::CameraResource(DirectXCommon* dxCommon)
 	cameraData->worldPosition = { 0.0f, 5.0f, -10.0f }; // 必要に応じて変更
 }
 
-void Object3d::Light(DirectXCommon* dxCommon)
-{
+void Object3d::Light(DirectXCommon* dxCommon){
 	dxCommon_ = dxCommon;
 
 	//並行光源リソースを作る
@@ -358,8 +344,7 @@ void Object3d::Light(DirectXCommon* dxCommon)
 	directionalLightData->intensity = 1.0f;//光の強さ
 }
 
-void Object3d::PointLight(DirectXCommon* dxCommon)
-{
+void Object3d::PointLight(DirectXCommon* dxCommon){
 	dxCommon_ = dxCommon;
 
 	//並行光源リソースを作る
@@ -374,8 +359,7 @@ void Object3d::PointLight(DirectXCommon* dxCommon)
 	pointLightData->decay = 1.0f; // 減衰率
 }
 
-void Object3d::SpotLight(DirectXCommon* dxCommon)
-{
+void Object3d::SpotLight(DirectXCommon* dxCommon){
 	dxCommon_ = dxCommon;
 
 	//並行光源リソースを作る
@@ -393,8 +377,7 @@ void Object3d::SpotLight(DirectXCommon* dxCommon)
 	spotLightData->cosFalloffStart = std::cos(std::numbers::pi_v<float> / 3.0f); // ライトの減衰開始角度
 }
 
-void Object3d::Environment(DirectXCommon* dxCommon)
-{
+void Object3d::Environment(DirectXCommon* dxCommon){
 	dxCommon_ = dxCommon;
 	//環境マップのリソースを作る
 	environment = dxCommon_->CreateBufferResource(sizeof(EnvironmentEX));

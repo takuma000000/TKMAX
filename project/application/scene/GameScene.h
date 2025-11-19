@@ -257,4 +257,3 @@ private:
 	float   clearPlayerFlyDistance_ = 80.0f; // Z方向に飛ばす距離目安
 	Vector3 clearPlayerTargetPos_{}; // 目標位置（開始位置 + 距離）
 };
-

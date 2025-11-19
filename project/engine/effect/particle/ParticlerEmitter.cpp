@@ -1,7 +1,6 @@
 #include "ParticlerEmitter.h"
 
-void ParticleEmitter::Initialize(std::string name, Vector3 pos)
-{
+void ParticleEmitter::Initialize(std::string name, Vector3 pos){
 	this->name = name;
 
 	emitter.count = 1;           // 毎フレーム1個出す
@@ -12,8 +11,7 @@ void ParticleEmitter::Initialize(std::string name, Vector3 pos)
 	emitter.transform.scale = { 1.0f,1.0f,1.0f }; // スケールは1固定
 }
 
-void ParticleEmitter::Emit()
-{
+void ParticleEmitter::Emit(){
 	ParticleManager::GetInstance()->Emit(name, emitter.transform.translate, emitter.count); // パーティクル発生
 }
 

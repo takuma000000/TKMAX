@@ -10,8 +10,7 @@
 // ParticleManagerクラス
 // パーティクルの生成・更新・描画を管理するクラス。
 //=============================================================
-class ParticleManager
-{
+class ParticleManager{
 public:
 
 	enum class ParticleType {
@@ -20,13 +19,8 @@ public:
 		CYLINDER,
 	};
 
-	/*struct Material {
-		Vector4 color;
-	};*/
-
 	//座標変換情報
-	struct Transform
-	{
+	struct Transform{
 		Vector3 scale;
 		Vector3 rotate;
 		Vector3 translate;
@@ -206,4 +200,3 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialCB_;  // 永続CB
 	Material* materialCPU_ = nullptr;                    // マップしたポインタ
 };
-

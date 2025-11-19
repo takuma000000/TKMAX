@@ -16,8 +16,7 @@
 // DirectXCommonクラス
 // DirectX12の初期化・描画・リソース管理を行うクラス。
 //=============================================================
-class DirectXCommon
-{
+class DirectXCommon{
 public:
 	
 	// OutlineParameter構造体

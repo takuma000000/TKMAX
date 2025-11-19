@@ -114,8 +114,7 @@ void TextureManager::LoadTexture(const std::string& filePath) {
 	textureDatas.emplace(filePath, std::move(textureData));
 }
 
-uint32_t TextureManager::GetTextureIndexByFilePath(const std::string& filePath)
-{
+uint32_t TextureManager::GetTextureIndexByFilePath(const std::string& filePath){
 	//読み込み済みテクスチャを検索
 	if (textureDatas.contains(filePath)) {
 		//読み込み済みなら要素番号を返す
@@ -127,8 +126,7 @@ uint32_t TextureManager::GetTextureIndexByFilePath(const std::string& filePath)
 	return 0;
 }
 
-D3D12_GPU_DESCRIPTOR_HANDLE TextureManager::GetSrvHandleGPU(const std::string& filePath)
-{
+D3D12_GPU_DESCRIPTOR_HANDLE TextureManager::GetSrvHandleGPU(const std::string& filePath){
 	//テクスチャ枚数上限チェック
 	assert(srvManager_->Available());
 
@@ -136,8 +134,7 @@ D3D12_GPU_DESCRIPTOR_HANDLE TextureManager::GetSrvHandleGPU(const std::string& f
 	return textureData.srvHnadleGPU;
 }
 
-const DirectX::TexMetadata& TextureManager::GetMetadata(const std::string& filePath)
-{
+const DirectX::TexMetadata& TextureManager::GetMetadata(const std::string& filePath){
 	//テクスチャ枚数上限チェック
 	assert(srvManager_->Available());
 

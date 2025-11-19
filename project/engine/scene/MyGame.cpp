@@ -6,8 +6,7 @@
 
 #include "ImGuiManager.h"
 
-void MyGame::Initialize()
-{
+void MyGame::Initialize(){
 
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 	Framework::Initialize(); //基底クラスの初期化処理
@@ -32,8 +31,7 @@ void MyGame::Initialize()
 
 }
 
-void MyGame::Finalize()
-{
+void MyGame::Finalize(){
 	////*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 	////				解放
 	////*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -46,8 +44,7 @@ void MyGame::Finalize()
 
 }
 
-void MyGame::Update()
-{
+void MyGame::Update(){
 	//---------------------------------------------------------
 
 	//基底クラスの更新処理
@@ -73,8 +70,7 @@ void MyGame::Update()
 	//---------------------------------------------------------
 }
 
-void MyGame::Draw()
-{
+void MyGame::Draw(){
 	dxCommon->PreDraw(); //描画前処理
 	srvManager->PreDraw(); //SRVデスクリプタヒープセット
 

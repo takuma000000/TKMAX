@@ -6,8 +6,7 @@
 // ImGuiManagerクラス
 // ImGuiの初期化・描画・終了処理およびテーマ設定を管理するクラス。
 //=============================================================
-class ImGuiManager
-{
+class ImGuiManager{
 
 public:
 	/// <summary>
@@ -51,4 +50,3 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvHeap_;
 
 };
-

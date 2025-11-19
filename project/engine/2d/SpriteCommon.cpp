@@ -9,8 +9,7 @@ using namespace Logger;
 
 SpriteCommon* SpriteCommon::instance = nullptr; //シングルトンインスタンスの初期化
 
-SpriteCommon* SpriteCommon::GetInstance()
-{
+SpriteCommon* SpriteCommon::GetInstance(){
 	if (instance == nullptr) { //インスタンスがなければ生成
 		instance = new SpriteCommon;
 	}
@@ -24,8 +23,7 @@ void SpriteCommon::Initialize(DirectXCommon* dxCommon) {
 	GenerateGraficsPipeline(); //グラフィックスパイプライン生成
 }
 
-void SpriteCommon::Finalize()
-{
+void SpriteCommon::Finalize(){
 	delete instance; //インスタンスの破棄
 	instance = nullptr; //ポインタをnullptrに戻す
 }

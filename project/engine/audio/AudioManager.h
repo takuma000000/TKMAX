@@ -36,8 +36,7 @@ struct SoundData {
 // AudioManagerクラス
 // 音声データの読み込み・再生・管理を行うクラス。
 //=============================================================
-class AudioManager
-{
+class AudioManager{
 public:
 
 	// 初期化と終了

@@ -10,8 +10,7 @@
 // Inputクラス
 // キーボードとゲームパッドの入力を管理するクラス。
 //=============================================================
-class Input
-{
+class Input{
 public:
 	template <class T> using ComPtr = Microsoft::WRL::ComPtr<T>;
 

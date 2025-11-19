@@ -14,8 +14,7 @@ Camera::Camera()
 	, viewProjectionMatrix(MyMath::Multiply(viewMatrix, projectionMatrix))
 {}
 
-void Camera::Update()
-{
+void Camera::Update(){
 	//cameraTransformからcameraMatrixを作る
 	worldMatrix = MyMath::MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 	//cameraMatrixからviewMatrixを作る

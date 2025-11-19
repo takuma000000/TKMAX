@@ -6,8 +6,7 @@
 // WindowsAPIクラス
 // ウィンドウの生成・更新・終了処理を管理するクラス。
 //=============================================================
-class WindowsAPI
-{
+class WindowsAPI{
 public://getter
 	/// <summary>
 	/// <para>HWNDを取得します。</para>

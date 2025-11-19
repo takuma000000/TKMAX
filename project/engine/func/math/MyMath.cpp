@@ -526,8 +526,7 @@ float MyMath::DotOnXZ(const Vector3& a, const Vector3& b) {
 }
 
 // ドット積
-float MyMath::Dot(const Vector3& a, const Vector3& b)
-{
+float MyMath::Dot(const Vector3& a, const Vector3& b){
 	return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
@@ -537,8 +536,7 @@ float MyMath::Rand01() {
 	return dist(s_rng);
 }
 
-Vector3 MyMath::Bezier3(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float t)
-{
+Vector3 MyMath::Bezier3(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float t){
 	Vector3 a = Vector3Lerp(p0, p1, t);
 	Vector3 b = Vector3Lerp(p1, p2, t);
 	Vector3 c = Vector3Lerp(p2, p3, t);

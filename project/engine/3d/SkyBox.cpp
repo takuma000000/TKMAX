@@ -216,8 +216,7 @@ void Skybox::Draw() {
 	cmdList->DrawInstanced(vertexCount_, 1, 0, 0); // 描画
 }
 
-void Skybox::ImGuiUpdate()
-{
+void Skybox::ImGuiUpdate(){
 	ImGui::Begin("Skybox");
 	ImGui::DragFloat3("Scale", &scale_.x, 0.1f, 0.0f, 100.0f);
 	ImGui::End();

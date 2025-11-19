@@ -86,7 +86,6 @@ void Enemy::Update() {
 	object_->Update(); // Object3d の更新
 }
 
-
 void Enemy::Draw(DirectXCommon* dxCommon) {
 	object_->Draw(dxCommon); // Object3d の描画
 }
@@ -135,8 +134,7 @@ void Enemy::ImGuiDebug() {
 	ImGui::End();
 }
 
-void Enemy::OnHitWithDamage(int damage)
-{
+void Enemy::OnHitWithDamage(int damage){
 	hp_ -= damage; // 指定ダメージ分減らす
 	// HPが0になったら
 	if (hp_ <= 0) {

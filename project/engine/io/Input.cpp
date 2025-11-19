@@ -6,16 +6,14 @@
 
 Input* Input::instance = nullptr;
 
-Input* Input::GetInstance()
-{
+Input* Input::GetInstance(){
 	if (instance == nullptr) {
 		instance = new Input;
 	}
 	return instance;
 }
 
-void Input::Initialize(WindowsAPI* windowsAPI)
-{
+void Input::Initialize(WindowsAPI* windowsAPI){
 	HRESULT result;
 
 	this->winApp = windowsAPI; // WindowsAPIのポインタを保存
@@ -34,14 +32,12 @@ void Input::Initialize(WindowsAPI* windowsAPI)
 	assert(SUCCEEDED(result));
 }
 
-void Input::Finalize()
-{
+void Input::Finalize(){
 	delete instance;
 	instance = nullptr;
 }
 
-void Input::Update()
-{
+void Input::Update(){
 	// キーボードの状態を更新
 	memcpy(keyPre, key, sizeof(key));
 	keyboard->Acquire();
@@ -54,69 +50,58 @@ void Input::Update()
 }
 
 // キーボード入力判定
-bool Input::PushKey(BYTE keyNumber)
-{
+bool Input::PushKey(BYTE keyNumber){
 	return (key[keyNumber] & 0x80) != 0;
 }
 
 // キーボードのトリガー判定
-bool Input::TriggerKey(BYTE keyNumber)
-{
+bool Input::TriggerKey(BYTE keyNumber){
 	return !(keyPre[keyNumber] & 0x80) && (key[keyNumber] & 0x80);
 }
 
 // ゲームパッドのボタン判定
-bool Input::PushButton(WORD button)
-{
+bool Input::PushButton(WORD button){
 	return (controllerState.Gamepad.wButtons & button) != 0;
 }
 
 // ゲームパッドのトリガー判定
-bool Input::TriggerButton(WORD button)
-{
+bool Input::TriggerButton(WORD button){
 	return !(prevControllerState.Gamepad.wButtons & button) &&
 		(controllerState.Gamepad.wButtons & button);
 }
 
 // 左スティックの取得
-SHORT Input::GetLeftStickX()
-{
+SHORT Input::GetLeftStickX(){
 	return controllerState.Gamepad.sThumbLX;
 }
 
 // Y軸の取得
-SHORT Input::GetLeftStickY()
-{
+SHORT Input::GetLeftStickY(){
 	return controllerState.Gamepad.sThumbLY;
 }
 
 // 右スティックの取得
-SHORT Input::GetRightStickX()
-{
+SHORT Input::GetRightStickX(){
 	return controllerState.Gamepad.sThumbRX;
 }
 
 // Y軸の取得
-SHORT Input::GetRightStickY()
-{
+SHORT Input::GetRightStickY(){
 	return controllerState.Gamepad.sThumbRY;
 }
 
 // トリガー入力
-BYTE Input::GetRightTrigger()
-{
+BYTE Input::GetRightTrigger(){
 	return controllerState.Gamepad.bRightTrigger;
 }
 
 // トリガー入力
-BYTE Input::GetLeftTrigger()
-{
+BYTE Input::GetLeftTrigger(){
 	return controllerState.Gamepad.bLeftTrigger;
 }
 
 // コントローラーの振動
-void Input::SetVibration(WORD leftMotor, WORD rightMotor)
-{
+void Input::SetVibration(WORD leftMotor, WORD rightMotor){
 	// 振動の設定
 	XINPUT_VIBRATION vibration;
 	ZeroMemory(&vibration, sizeof(XINPUT_VIBRATION));

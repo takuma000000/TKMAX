@@ -5,8 +5,7 @@
 // ParticleEmitterクラス
 // パーティクルの発生位置・頻度を管理するクラス。
 //=============================================================
-class ParticleEmitter
-{
+class ParticleEmitter{
 private:
 
 public:
@@ -44,5 +43,4 @@ private:
 
 	//Δtを定義
 	const float kDeltaTime = 1.0f / 60.0f;
-
 };

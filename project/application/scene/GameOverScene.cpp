@@ -10,8 +10,7 @@
 // #include "TitleScene.h"
 // #include "GameScene.h"
 
-void GameOverScene::Initialize()
-{
+void GameOverScene::Initialize(){
 	ModelManager::GetInstance()->LoadModel("jett.obj", dxCommon_);
 	TextureManager::GetInstance()->LoadTexture("./resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
 	TextureManager::GetInstance()->LoadTexture("./resources/over.png");
@@ -101,13 +100,11 @@ void GameOverScene::Initialize()
 	overActive_ = true; // アニメ進行フラグON
 }
 
-void GameOverScene::Finalize()
-{
+void GameOverScene::Finalize(){
 
 }
 
-void GameOverScene::Update()
-{
+void GameOverScene::Update(){
 	Input::GetInstance()->Update();
 
 	if (player_) { player_->Update(); }
@@ -349,8 +346,7 @@ void GameOverScene::Update()
 	}
 }
 
-void GameOverScene::Draw()
-{
+void GameOverScene::Draw(){
 	// 3D
 	Object3dCommon::GetInstance()->DrawSetCommon();
 	if (player_) { player_->Draw(dxCommon_); }

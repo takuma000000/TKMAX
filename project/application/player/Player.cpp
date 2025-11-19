@@ -38,7 +38,6 @@ void Player::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	}
 }
 
-
 void Player::Update() {
 	// クリア演出などで操作禁止中は、通常のUpdateを流さない
 	if (!controlEnabled_) {
@@ -282,8 +281,7 @@ void Player::Death()
 	}
 }
 
-void Player::UpdateVisualOnly()
-{
+void Player::UpdateVisualOnly(){
 	// クリア演出用：
 	// GameScene 側から SetPosition などで座標だけ動かしておいて、
 	// ここで行列更新だけ行う
@@ -412,8 +410,7 @@ void Player::HandleShooting() {
 	LTShoot(); // LT弾処理
 }
 
-void Player::RBShoot()
-{
+void Player::RBShoot(){
 	Input* input = Input::GetInstance();
 	// ▼ RB：通常弾
 	if (input->TriggerButton(XINPUT_GAMEPAD_RIGHT_SHOULDER)) {
@@ -449,8 +446,7 @@ void Player::RBShoot()
 	}
 }
 
-void Player::RTShoot()
-{
+void Player::RTShoot(){
 	Input* input = Input::GetInstance();
 	// RT：一撃必殺（最も近い敵に必中弾）
 	const bool pressed = (input->GetRightTrigger() > 128);
@@ -493,8 +489,7 @@ void Player::RTShoot()
 	}
 }
 
-void Player::LBShoot()
-{
+void Player::LBShoot(){
 	Input* input = Input::GetInstance();
 	// ▼ LB：全敵必中弾
 	if (input->TriggerButton(XINPUT_GAMEPAD_LEFT_SHOULDER) && allEnemies_) {
@@ -523,8 +518,7 @@ void Player::LBShoot()
 	}
 }
 
-void Player::LTShoot()
-{
+void Player::LTShoot(){
 	Input* input = Input::GetInstance();
 	if ((input->GetLeftTrigger() > 128) && !ltHeld_) {
 		auto bullet = std::make_unique<PlayerBullet>();
@@ -657,8 +651,7 @@ void Player::UpdateCameraFollowThirdPerson(float dt) {
 	camera->SetTranslate(cameraPos);
 }
 
-void Player::ZoomCamera()
-{
+void Player::ZoomCamera(){
 	// === LT押下時の一時カメラズーム ===
 	const float kInTarget = 0.75f; // ズーム到達目標値
 	const float kInTime = 0.12f;  // 再ターゲット時の寄り時間（短め）
