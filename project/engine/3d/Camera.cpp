@@ -27,9 +27,9 @@ void Camera::Update(){
 
 void Camera::ImGuiDebug() {
 
-	ImGui::Begin("Camera");
-	ImGui::DragFloat3("Translate", &transform.translate.x, 0.01f);
-	ImGui::DragFloat3("Rotate", &transform.rotate.x, 0.01f);
-	ImGui::DragFloat3("Scale", &transform.scale.x, 0.01f);
+	ImGui::Begin("カメラ");
+	ImGui::DragFloat3("位置", &transform.translate.x, 0.01f);
+	ImGui::DragFloat3("回転", &transform.rotate.x, 0.01f);
+	ImGui::DragFloat3("拡縮", &transform.scale.x, 0.01f);
 	ImGui::End();
 }

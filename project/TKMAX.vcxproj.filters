@@ -144,6 +144,7 @@
       <Filter>application\scene</Filter>
     </ClCompile>
     <ClCompile Include="Reticle.cpp" />
+    <ClCompile Include="EnemyWaveManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -312,6 +313,7 @@
     <ClInclude Include="Vector2.h">
       <Filter>engine\func\math</Filter>
     </ClInclude>
+    <ClInclude Include="EnemyWaveManager.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

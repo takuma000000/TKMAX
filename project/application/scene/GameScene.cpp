@@ -576,15 +576,15 @@ void GameScene::ImGuiDebug(){
 	);
 	ImGui::PopStyleColor();
 	ImGui::Separator();
-	ImGui::Text("Active Sprite 数 : %d", Sprite::GetActiveCount());
-	ImGui::Text("Active Object3D 数 : %d", Object3d::GetActiveCount());
+	ImGui::Text("アクティブ Sprite 数 : %d", Sprite::GetActiveCount());
+	ImGui::Text("アクティブ Object3D 数 : %d", Object3d::GetActiveCount());
 	ImGui::Separator();
 	int totalParticles = 0;
 	for (const auto& pair : ParticleManager::GetInstance()->GetParticleGroups()) {
 		totalParticles += static_cast<int>(pair.second.particles.size());
 	}
-	ImGui::Text("Active Particles: %d", totalParticles);
-	ImGui::Text("ParticleGroup Count: %d", ParticleManager::GetInstance()->GetParticleGroups().size());
+	ImGui::Text("アクティブ Particles: %d", totalParticles);
+	ImGui::Text("パーティクルグループ数: %d", ParticleManager::GetInstance()->GetParticleGroups().size());
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	player_->ImGuiDebug();
@@ -593,37 +593,37 @@ void GameScene::ImGuiDebug(){
 		boss_->ImGuiDebug();
 	}
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	ImGui::Begin("Bullet Debug");
+	ImGui::Begin("プレイヤー弾ステータス");
 	for (const auto& bullet : player_->GetBullets()) {
 		ImGui::Text(bullet->IsHit() ? "true" : "false");
 	}
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	ImGui::Begin("ground");
+	ImGui::Begin("地面");
 	for (size_t i = 0; i < groundTiles_.size(); ++i) {
 		ImGui::PushID(static_cast<int>(i)); // IDを分ける
 		Vector3 t = groundTiles_[i]->GetTranslate();
 		Vector3 r = groundTiles_[i]->GetRotate();
 		Vector3 s = groundTiles_[i]->GetScale();
-		if (ImGui::DragFloat3("Translate", &t.x, 0.01f)) {
+		if (ImGui::DragFloat3("位置", &t.x, 0.01f)) {
 			groundTiles_[i]->SetTranslate(t);
 		}
-		if (ImGui::DragFloat3("Rotate", &r.x, 0.01f)) {
+		if (ImGui::DragFloat3("回転", &r.x, 0.01f)) {
 			groundTiles_[i]->SetRotate(r);
 		}
-		if (ImGui::DragFloat3("Scale", &s.x, 0.01f)) {
+		if (ImGui::DragFloat3("拡縮", &s.x, 0.01f)) {
 			groundTiles_[i]->SetScale(s);
 		}
 		ImGui::Separator();
 		ImGui::PopID();
 	}
-	ImGui::DragFloat("Tile Length (L)", &groundTileLen_, 0.1f, 10.0f, 1000.0f); // 実寸に近い範囲で
-	ImGui::DragFloat("Scroll Speed", &groundScroll_, 0.01f, -5.0f, 5.0f);
-	ImGui::DragFloat("Offset", &groundOffset_, 0.1f, 0.0f, groundTileLen_ * groundTiles_.size());
+	ImGui::DragFloat("タイルの長さ", &groundTileLen_, 0.1f, 10.0f, 1000.0f); // 実寸に近い範囲で
+	ImGui::DragFloat("スクロール速度", &groundScroll_, 0.01f, -5.0f, 5.0f);
+	ImGui::DragFloat("オフセット", &groundOffset_, 0.1f, 0.0f, groundTileLen_ * groundTiles_.size());
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	ImGui::Begin("Enemy Status");
-	ImGui::Text("Defeated: %d / %d", defeatedEnemyCount_, maxEnemyCount_);
+	ImGui::Begin("敵ステータス");
+	ImGui::Text("撃破数: %d / %d", defeatedEnemyCount_, maxEnemyCount_);
 
 	for (size_t i = 0; i < enemies_.size(); ++i) {
 		ImGui::PushID(static_cast<int>(i));
@@ -635,7 +635,7 @@ void GameScene::ImGuiDebug(){
 	if (maxEnemyCount_ > 0) {
 		progress = static_cast<float>(defeatedEnemyCount_) / static_cast<float>(maxEnemyCount_);
 	}
-	ImGui::ProgressBar(progress, ImVec2(200, 20), "Defeat Progress");
+	ImGui::ProgressBar(progress, ImVec2(200, 20), "撃破振興数");
 	ImGui::Separator();
 	// ─────────────────────────────
 	// Wave デバッグ用 UI
@@ -643,22 +643,22 @@ void GameScene::ImGuiDebug(){
 	// 現在のWavePhaseを表示
 	const char* waveLabel = "";
 	switch (wavePhase_) {
-	case WavePhase::W1:  waveLabel = "W1";  break;
-	case WavePhase::W2:  waveLabel = "W2";  break;
-	case WavePhase::W3:  waveLabel = "W3";  break;
-	case WavePhase::Done: waveLabel = "Done (Boss phase)"; break;
-	default:             waveLabel = "Unknown"; break;
+	case WavePhase::W1:  waveLabel = "Wave1";  break;
+	case WavePhase::W2:  waveLabel = "Wave2";  break;
+	case WavePhase::W3:  waveLabel = "Wave3";  break;
+	case WavePhase::Done: waveLabel = "Bossフェーズ"; break;
+	default:             waveLabel = "不明"; break;
 	}
-	ImGui::Text("Current Wave: %s", waveLabel);
+	ImGui::Text("現在のWave: %s", waveLabel);
 
 	// 今の雑魚フェーズをスキップ（= 敵を消して、次フレームで GoToNextWave が走る）
-	if (ImGui::Button("Skip Current Wave")) {
+	if (ImGui::Button("次のWaveへ")) {
 		enemies_.clear();      // 今出ている雑魚を全部消す
 		defeatedEnemyCount_ = 0; // カウントはデバッグだしゼロでもOK（お好み）
 	}
 
 	// いきなりボス戦に飛ぶ
-	if (ImGui::Button("Skip All Waves -> Boss")) {
+	if (ImGui::Button("ボスWaveへ")) {
 		enemies_.clear();          // 雑魚全削除
 		wavePhase_ = WavePhase::Done; // Waveフェーズを「Done」にしてボスフェーズへ
 		bossBattle_ = false;       // 念のためリセット
@@ -668,11 +668,11 @@ void GameScene::ImGuiDebug(){
 	}
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	ImGui::Begin("Camera");
+	ImGui::Begin("カメラ");
 	camera->ImGuiDebug();
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	ImGui::Begin("GamePad");
+	ImGui::Begin("ゲームパッド");
 	auto DrawButtonBar = [](const char* label, bool isPressed, const ImVec4& color) {
 		float value = isPressed ? 1.0f : 0.0f;
 		ImGui::PushStyleColor(ImGuiCol_PlotHistogram, color);
@@ -682,9 +682,9 @@ void GameScene::ImGuiDebug(){
 	XINPUT_STATE state;
 	DWORD result = XInputGetState(0, &state);
 	if (result == ERROR_SUCCESS) {
-		ImGui::TextColored(ImVec4(0, 1, 0, 1), "Controller Connected");
+		ImGui::TextColored(ImVec4(0, 1, 0, 1), "接続中！！！");
 	} else {
-		ImGui::TextColored(ImVec4(1, 0, 0, 1), "Controller Not Found");
+		ImGui::TextColored(ImVec4(1, 0, 0, 1), "接続されていません");
 	}
 	ImGui::Separator();
 	DrawButtonBar("A", Input::GetInstance()->PushButton(XINPUT_GAMEPAD_A), ImVec4(0.0f, 1.0f, 0.0f, 1.0f)); // 緑
@@ -707,9 +707,9 @@ void GameScene::ImGuiDebug(){
 	ImGui::PopStyleColor();
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	ImGui::Begin("Skybox");
-	ImGui::DragFloat("Rot Speed X", &skyRotSpeedX_, 0.0001f, -0.02f, 0.02f);
-	ImGui::Text("Pitch: %.3f rad", skyPitch_);
+	ImGui::Begin("スカイボックス");
+	ImGui::DragFloat("回転速度 X軸", &skyRotSpeedX_, 0.0001f, -0.02f, 0.02f);
+	ImGui::Text("上下の傾き: %.3f rad", skyPitch_);
 	ImGui::End();
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
 

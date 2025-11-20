@@ -74,54 +74,54 @@ void BossEnemy::Update() {
 // BossEnemy.cpp 内 ImGuiDebug() を拡張（可視化パネル）
 void BossEnemy::ImGuiDebug() {
 	Vector3 col = GetColliderScale();
-	ImGui::Begin("Boss");
+	ImGui::Begin("ボス");
 
 	ImGui::Text("HP: %d / %d", GetHP(), GetMaxHP());
-	ImGui::Text("Phase: %s", (phase_ == Phase::P1) ? "P1" : (phase_ == Phase::P2) ? "P2" : "P3");
-	ImGui::Text("Stage: %s (%.1f)", (stage_ == ActStage::Telegraph) ? "Telegraph" :
-		(stage_ == ActStage::Fire) ? "Fire" : "Cooldown", stageT_);
-	if (ImGui::DragFloat3("ColliderScale", &col.x, 0.05f, 0.1f, 50.0f)) SetColliderScale(col);
+	ImGui::Text("フェーズ: %s", (phase_ == Phase::P1) ? "P1" : (phase_ == Phase::P2) ? "P2" : "P3");
+	ImGui::Text("ステージ: %s (%.1f)", (stage_ == ActStage::Telegraph) ? "準備" :
+		(stage_ == ActStage::Fire) ? "発射" : "クールダウン", stageT_);
+	if (ImGui::DragFloat3("当たり判定拡縮", &col.x, 0.05f, 0.1f, 50.0f)) SetColliderScale(col);
 
 	ImGui::Separator();
-	ImGui::Checkbox("Show AI Inspector", &dbg_.show);
+	ImGui::Checkbox("BossAI 詳細表示r", &dbg_.show);
 
 	// 既存のチューニング項目（省略可。ここは元のまま）
 	if (dbg_.show) {
 		ImGui::Separator();
-		ImGui::TextColored(ImVec4(0.8f, 0.9f, 1, 1), "AI Inputs");
-		ImGui::Text("dist: %.2f", dbg_.dist);
-		ImGui::ProgressBar(std::min(dbg_.align, 1.0f), ImVec2(180, 0), "align");
+		ImGui::TextColored(ImVec4(0.8f, 0.9f, 1, 1), "AI 入力情報");
+		ImGui::Text("距離: %.2f", dbg_.dist);
+		ImGui::ProgressBar(std::min(dbg_.align, 1.0f), ImVec2(180, 0), "整列度");
 
-		ImGui::Text("jitter: %+0.3f", dbg_.jitter);
-
-		ImGui::Separator();
-		ImGui::TextColored(ImVec4(0.8f, 1, 0.8f, 1), "Distance Fitness");
-		ImGui::ProgressBar(std::clamp(dbg_.distBeam, 0.f, 1.f), ImVec2(180, 0), "Beam distPref");
-		ImGui::ProgressBar(std::clamp(dbg_.distFan, 0.f, 1.f), ImVec2(180, 0), "Fan  distPref");
-		ImGui::ProgressBar(std::clamp(dbg_.distRapid, 0.f, 1.f), ImVec2(180, 0), "Rapid distPref");
+		ImGui::Text("ゆらぎ: %+0.3f", dbg_.jitter);
 
 		ImGui::Separator();
-		ImGui::TextColored(ImVec4(1, 0.9f, 0.7f, 1), "Phase Bias (+)");
-		ImGui::Text("Beam:+%.2f  Fan:+%.2f  Rapid:+%.2f", dbg_.biasBeam, dbg_.biasFan, dbg_.biasRapid);
+		ImGui::TextColored(ImVec4(0.8f, 1, 0.8f, 1), "距離適性");
+		ImGui::ProgressBar(std::clamp(dbg_.distBeam, 0.f, 1.f), ImVec2(180, 0), "ビーム距離適性");
+		ImGui::ProgressBar(std::clamp(dbg_.distFan, 0.f, 1.f), ImVec2(180, 0), "拡散距離適性");
+		ImGui::ProgressBar(std::clamp(dbg_.distRapid, 0.f, 1.f), ImVec2(180, 0), "連射距離適性");
 
 		ImGui::Separator();
-		ImGui::TextColored(ImVec4(1, 0.7f, 0.7f, 1), "Penalty (-)");
-		ImGui::Text("CD:   B:%.1f  F:%.1f  R:%.1f", dbg_.cdBeam, dbg_.cdFan, dbg_.cdRapid);
-		ImGui::Text("Chain:B:%.1f  F:%.1f  R:%.1f", dbg_.chainBeam, dbg_.chainFan, dbg_.chainRapid);
+		ImGui::TextColored(ImVec4(1, 0.9f, 0.7f, 1), "フェーズ補正（＋）");
+		ImGui::Text("ビーム:+%.2f  拡散:+%.2f  連射:+%.2f", dbg_.biasBeam, dbg_.biasFan, dbg_.biasRapid);
 
 		ImGui::Separator();
-		ImGui::TextColored(ImVec4(0.9f, 0.9f, 1, 1), "Final Scores");
+		ImGui::TextColored(ImVec4(1, 0.7f, 0.7f, 1), "ペナルティ (-)");
+		ImGui::Text("クールダウン:   B:%.1f  F:%.1f  R:%.1f", dbg_.cdBeam, dbg_.cdFan, dbg_.cdRapid);
+		ImGui::Text("連続使用:B:%.1f  F:%.1f  R:%.1f", dbg_.chainBeam, dbg_.chainFan, dbg_.chainRapid);
+	
+		ImGui::Separator();
+		ImGui::TextColored(ImVec4(0.9f, 0.9f, 1, 1), "最終スコア");
 		auto bar = [](const char* lbl, float v) {
 			float view = std::clamp((v + 3.0f) / 6.0f, 0.0f, 1.0f); // 見栄え用に -3..+3 を 0..1 に
 			ImGui::ProgressBar(view, ImVec2(220, 0), lbl);
 			};
-		bar((std::string("Beam  s=") + std::to_string(dbg_.sBeam)).c_str(), dbg_.sBeam);
-		bar((std::string("Fan   s=") + std::to_string(dbg_.sFan)).c_str(), dbg_.sFan);
-		bar((std::string("Rapid s=") + std::to_string(dbg_.sRapid)).c_str(), dbg_.sRapid);
+		bar((std::string("ビーム  s=") + std::to_string(dbg_.sBeam)).c_str(), dbg_.sBeam);
+		bar((std::string("拡散   s=") + std::to_string(dbg_.sFan)).c_str(), dbg_.sFan);
+		bar((std::string("連射 s=") + std::to_string(dbg_.sRapid)).c_str(), dbg_.sRapid);
 
 		ImGui::Separator();
 		const char* chosen =
-			(dbg_.chosen == 0) ? "Beam" : (dbg_.chosen == 1) ? "Fan" : "Rapid";
+			(dbg_.chosen == 0) ? "ビーム" : (dbg_.chosen == 1) ? "拡散" : "連射";
 		ImGui::TextColored(ImVec4(1, 1, 0.5f, 1), "Chosen: %s", chosen);
 
 		// 履歴帯（直近16手）

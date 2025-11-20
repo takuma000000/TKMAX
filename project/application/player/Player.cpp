@@ -105,26 +105,26 @@ void Player::ImGuiDebug() {
 
 	ImGui::Begin("プレイヤー");
 
-	if (ImGui::DragFloat3("Position", &pos.x, 0.01f)) {
+	if (ImGui::DragFloat3("位置", &pos.x, 0.01f)) {
 		object_->SetTranslate(pos);
 	}
-	if (ImGui::DragFloat3("Rotation", &rot.x, 0.01f)) {
+	if (ImGui::DragFloat3("回転", &rot.x, 0.01f)) {
 		object_->SetRotate(rot);
 	}
-	if (ImGui::DragFloat3("Scale", &scale.x, 0.01f)) {
+	if (ImGui::DragFloat3("拡縮cale", &scale.x, 0.01f)) {
 		object_->SetScale(scale);
 	}
 	ImGui::Separator(); // 区切り線
-	ImGui::Text("Special Attack: %s", canUseSpecial_ ? "READY" : "NOT READY"); // 一撃必殺の使用可能状態を表示
-	ImGui::Checkbox("Unlimited RT (Debug)", &debugUnlimitedSpecial_);
+	ImGui::Text("RT 一撃必殺: %s", canUseSpecial_ ? "READY" : "NOT READY"); // 一撃必殺の使用可能状態を表示
+	ImGui::Checkbox("RT 無制限", &debugUnlimitedSpecial_);
 	ImGui::Separator(); // 区切り線
 	ImGui::Text("HP: %d", hp_);// 1
 	ImGui::SameLine();// 1 と 2 を同じ行に配置
-	if (ImGui::Button("Reset HP")) { hp_ = 1; } // 2
-	ImGui::SeparatorText("Camera Shake");
-	ImGui::SliderFloat("Base Strength", &shakeBaseStrength_, 0.0f, 5.0f); // ベースとなるカメラシェイク強度
-	ImGui::SliderFloat("Zoom Boost", &shakeZoomBoost_, 0.0f, 15.0f); // ズーム時の追加倍率
-	ImGui::Text("Current Gain : %.2f", shakeBaseStrength_ + (1.0f - camZoom_) * shakeZoomBoost_); // 現在の倍率を表示
+	if (ImGui::Button("HPリセット")) { hp_ = 1; } // 2
+	ImGui::SeparatorText("カメラシェイク");
+	ImGui::SliderFloat("強度のベース", &shakeBaseStrength_, 0.0f, 5.0f); // ベースとなるカメラシェイク強度
+	ImGui::SliderFloat("ズーム強調", &shakeZoomBoost_, 0.0f, 15.0f); // ズーム時の追加倍率
+	ImGui::Text("現在の増幅量 : %.2f", shakeBaseStrength_ + (1.0f - camZoom_) * shakeZoomBoost_); // 現在の倍率を表示
 
 	ImGui::End();
 
