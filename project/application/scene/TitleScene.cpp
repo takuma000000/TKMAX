@@ -94,6 +94,12 @@ void TitleScene::Initialize(){
 	//---------------パーティクル----------------
 	ParticleManager::GetInstance()->Initialize(dxCommon, srvManager, camera.get());
 	//-----------------------------------------
+
+	// ---------------BGMロード・再生----------------
+	// タイトルBGMロード
+	AudioManager::GetInstance()->LoadSound("title", "kuraran.wav");
+	// タイトルBGM再生（1回だけ）
+	AudioManager::GetInstance()->PlaySound("title");
 }
 
 void TitleScene::Finalize(){}

@@ -51,6 +51,12 @@ void GameScene::Initialize(){
 	ParticleManager::GetInstance()->CreateParticleGroup("fw_flash", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
 	ParticleManager::GetInstance()->CreateParticleGroup("fw_burst", "./resources/firework_star.png", ParticleManager::ParticleType::NORMAL);
 
+	// 空気の流れ(風)エフェクト
+	ParticleManager::GetInstance()->CreateParticleGroup(
+		"airStreak", "./resources/circle.png",
+		ParticleManager::ParticleType::NORMAL
+	);
+
 	// ──────────────── スカイボックスの初期化 ───────────────
 	skybox_ = std::make_unique<Skybox>();
 	skybox_->Initialize(dxCommon, srvManager, "resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
@@ -179,6 +185,11 @@ void GameScene::Update(){
 				bossP2BgmPlayed_ = true;   // 2回目以降は鳴らさない
 			}
 		}
+	}
+
+	// ゲームプレイ中だけ風エフェクト
+	if (!clearSequence_ && !gameplayLocked_) {
+		UpdateAirStreak(dt);
 	}
 
 	// これまで: if (irisOpening_) { ... emitFireworkPending_ の遅延 ... }
@@ -461,7 +472,6 @@ void GameScene::LoadTextures(){
 	TextureManager::GetInstance()->LoadTexture("./resources/pokemon.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/circle.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/circle2.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/sphere.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/gradationLine.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/rostock_laage_airport_4k.dds");
 	TextureManager::GetInstance()->LoadTexture("./resources/test.dds");
@@ -1159,5 +1169,75 @@ void GameScene::SpawnFirework(const Vector3& center){
 	{
 		Vector3 burstPos = center;
 		pm->Emit("fw_burst", burstPos, 60);   // 本体の粒の数はお好みで
+	}
+}
+
+void GameScene::UpdateAirStreak(float dt) {
+	if (!player_) { return; }
+
+	airStreakTimer_ += dt;
+
+	// どれくらいの密度で出すか（小さいほど密度↑）
+	const float emitInterval = 0.02f; // 0.02秒ごと ≒ 1秒あたり50個
+
+	while (airStreakTimer_ >= emitInterval) {
+		airStreakTimer_ -= emitInterval;
+
+		// カメラ基準ベクトル
+		const Matrix4x4 camW = camera->GetWorldMatrix();
+		Vector3 camPos = { camW.m[3][0], camW.m[3][1], camW.m[3][2] };
+		Vector3 camFwd = MyMath::Normalize(Vector3{ camW.m[2][0], camW.m[2][1], camW.m[2][2] });
+		Vector3 camRight = MyMath::Normalize(Vector3{ camW.m[0][0], camW.m[0][1], camW.m[0][2] });
+		Vector3 camUp = MyMath::Normalize(Vector3{ camW.m[1][0], camW.m[1][1], camW.m[1][2] });
+
+		auto rand01 = []() { return MyMath::Rand01(); };
+
+		// ─────────────────────────────
+		// カメラ前方の「巨大な箱」の中に出す
+		// ─────────────────────────────
+		const float boxHalfWidth = 40.0f;  // X方向（左右）±40
+		const float boxHalfHeight = 25.0f;  // Y方向（上下）±25
+		const float depthNear = 10.0f;  // カメラから10手前
+		const float depthFar = 120.0f; // カメラから120まで
+
+		// 画面中心はちょっと避けたいので、中心半径を決める
+		const float centerHoleRadius = 3.0f; // この半径内は出にくくする
+
+		// 平面オフセット（x,y）を決める
+		float offsetX = 0.0f;
+		float offsetY = 0.0f;
+
+		for (int tries = 0; tries < 4; ++tries) {
+			float u = rand01() * 2.0f - 1.0f; // -1～+1
+			float v = rand01() * 2.0f - 1.0f;
+
+			float x = u * boxHalfWidth;
+			float y = v * boxHalfHeight;
+
+			// 中心付近を少しだけ避ける
+			if (x * x + y * y < centerHoleRadius * centerHoleRadius) {
+				// たまになら良いので、25%くらいの確率で許可
+				if (rand01() > 0.25f) {
+					continue; // 取り直し
+				}
+			}
+
+			offsetX = x;
+			offsetY = y;
+			break;
+		}
+
+		// 奥行き（カメラからの距離）
+		float tDepth = rand01();
+		float depth = MyMath::Lerp(depthNear, depthFar, tDepth);
+
+		// ワールド座標に変換
+		Vector3 emitPos =
+			camPos
+			+ camFwd * depth
+			+ camRight * offsetX
+			+ camUp * offsetY;
+
+		ParticleManager::GetInstance()->Emit("airStreak", emitPos, 1);
 	}
 }

@@ -5,7 +5,7 @@
 
 ParticleManager* ParticleManager::instance = nullptr;
 
-ParticleManager* ParticleManager::GetInstance(){
+ParticleManager* ParticleManager::GetInstance() {
 	if (instance == nullptr) {
 		instance = new ParticleManager();
 	}
@@ -13,7 +13,7 @@ ParticleManager* ParticleManager::GetInstance(){
 	return instance;
 }
 
-void ParticleManager::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager, Camera* camera){
+void ParticleManager::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager, Camera* camera) {
 	//引数で受け取る
 	dxCommon_ = dxCommon;
 	srvManager_ = srvManager;
@@ -44,7 +44,7 @@ void ParticleManager::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager
 
 }
 
-void ParticleManager::Update(){
+void ParticleManager::Update() {
 	MakeBillboardMatrix(); //ビルボードマトリクス作成
 
 	//カメラの各種行列を取得
@@ -93,7 +93,7 @@ void ParticleManager::Update(){
 	}
 }
 
-void ParticleManager::Draw(){
+void ParticleManager::Draw() {
 	auto* cmd = dxCommon_->GetCommandList(); // コマンドリスト取得
 
 	// 共通セット
@@ -144,7 +144,7 @@ void ParticleManager::Draw(){
 	}
 }
 
-void ParticleManager::CreatePipeline(){
+void ParticleManager::CreatePipeline() {
 	HRESULT hr;
 
 	//呼び出し
@@ -220,7 +220,7 @@ void ParticleManager::CreatePipeline(){
 	assert(SUCCEEDED(hr));
 }
 
-void ParticleManager::CreateRootSigunature(){
+void ParticleManager::CreateRootSigunature() {
 	HRESULT hr;
 
 	//RootSignature作成
@@ -292,7 +292,7 @@ void ParticleManager::CreateRootSigunature(){
 	assert(SUCCEEDED(hr));
 }
 
-void ParticleManager::InitializeVD(){
+void ParticleManager::InitializeVD() {
 	//四角形の頂点データ
 	modelData.vertices.push_back({ .position = {1.0f,1.0f,0.0f,1.0f},.texcoord = {0.0f,0.0f},.normal = {0.0f,0.0f,1.0f} });
 	modelData.vertices.push_back({ .position = {-1.0f,1.0f,0.0f,1.0f},.texcoord = {1.0f,0.0f},.normal = {0.0f,0.0f,1.0f} });
@@ -309,7 +309,7 @@ void ParticleManager::InitializeVD(){
 	cylinderModelData.material.textureFilePath = "./resources/gradationLine.png"; //テクスチャパス
 }
 
-void ParticleManager::CreateVR(){
+void ParticleManager::CreateVR() {
 	//頂点リソースを作る
 	vertexResource = dxCommon_->CreateBufferResource(sizeof(VertexData) * modelData.vertices.size());
 	//リングの頂点リソースを作る
@@ -318,7 +318,7 @@ void ParticleManager::CreateVR(){
 	cylinderVertexResource = dxCommon_->CreateBufferResource(sizeof(VertexData) * cylinderModelData.vertices.size());
 }
 
-void ParticleManager::CreateVB(){
+void ParticleManager::CreateVB() {
 	//頂点バッファビューを作成する
 	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
 	vertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * modelData.vertices.size());
@@ -335,7 +335,7 @@ void ParticleManager::CreateVB(){
 	cylinderVertexBufferView.StrideInBytes = sizeof(VertexData);
 }
 
-void ParticleManager::WriteResource(){
+void ParticleManager::WriteResource() {
 	//頂点リソースにデータを書き込む
 	VertexData* vertexData = nullptr;
 	//書き込むためのアドレスを取得
@@ -356,7 +356,7 @@ void ParticleManager::WriteResource(){
 
 }
 
-void ParticleManager::CreateParticleGroup(const std::string& name, const std::string& textureFilePath, ParticleType type){
+void ParticleManager::CreateParticleGroup(const std::string& name, const std::string& textureFilePath, ParticleType type) {
 	// すでに存在するなら何もしない（安全な再呼び出し対応）
 	if (particleGroups.find(name) != particleGroups.end()) {
 		return;
@@ -385,7 +385,7 @@ void ParticleManager::CreateParticleGroup(const std::string& name, const std::st
 	particleGroups[name] = newGroup; // 登録
 }
 
-void ParticleManager::MakeBillboardMatrix(){
+void ParticleManager::MakeBillboardMatrix() {
 	//カメラの向きに回転するビルボード行列を作成
 	Matrix4x4 backToFrontMatrix = MyMath::MakeRotateYMatrix(std::numbers::pi_v<float>);
 	//ビルボード行列 = カメラのワールド行列 × Z180度回転行列
@@ -397,7 +397,7 @@ void ParticleManager::MakeBillboardMatrix(){
 
 }
 
-void ParticleManager::Emit(const std::string name, Vector3& pos, uint32_t count){
+void ParticleManager::Emit(const std::string name, Vector3& pos, uint32_t count) {
 	assert(particleGroups.find(name) != particleGroups.end());
 	ParticleGroup& group = particleGroups[name]; // パーティクルグループの参照を取得
 
@@ -412,7 +412,7 @@ void ParticleManager::Emit(const std::string name, Vector3& pos, uint32_t count)
 	}
 }
 
-ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, const std::string& groupName, const Vector3& center){
+ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, const std::string& groupName, const Vector3& center) {
 	Particle p{}; // 新規パーティクル
 
 	// 共通：発生位置を中心±オフセット
@@ -688,6 +688,33 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 
 		p.color = { r, g, b, 1.0f };
 		p.lifeTime = 3.0f;
+	} else if (groupName == "airStreak") {
+		// ─────────────────────
+		// 空で飛んでるときの「風の筋」
+		// ─────────────────────
+
+		// 細長いライン（ビルボードでカメラ向きになる）
+		p.transform.scale = { 0.09f, 0.09f, 0.09f }; // 幅, 高さ, 奥行き
+		p.transform.rotate = { 0.0f, 0.0f, 0.0f };
+		p.transform.translate.z = 50.0f;
+
+		// ちょっとだけブレを入れながら手前(-Z)に流す
+		float vx = ((rand() % 40) - 20) / 200.0f; // -0.1 ～ +0.1
+		float vy = ((rand() % 40) - 20) / 200.0f; // -0.1 ～ +0.1
+
+		float baseSpeed = 30.0f + (rand() % 40) / 10.0f; // 12.0 ～ 16.0 くらい
+		float vz = -baseSpeed; // カメラ手前方向（-Z）へシュッと流れる
+
+		p.velocity = { vx, vy, vz };
+
+		// ほぼ白～薄い青でうっすら
+		float c = 0.85f + (rand() % 15) / 100.0f; // 0.85 ～ 1.0
+		// 濃い砂埃の色
+		p.color = { 0.9f * c, 0.9f * c, 1.0f * c, 0.6f }; // 少し透明感あり
+
+		p.lifeTime = 6.0f;   // だいたい3秒くらい生きる
+		p.currentTime = 0.0f; // 初期化
+
 	} else { // 上記意外
 		// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 		std::uniform_real_distribution<float> velX(-0.15f, 0.15f);
@@ -708,7 +735,7 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 	return p;
 }
 
-void ParticleManager::CreateRingVertices(){
+void ParticleManager::CreateRingVertices() {
 	for (uint32_t index = 0; index < kRingDivide; ++index) { // 分割数分ループ
 		float theta = index * radianPerDivide; // 現在の角度
 		float nextTheta = (index + 1) * radianPerDivide; // 次の角度
