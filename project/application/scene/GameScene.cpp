@@ -40,6 +40,13 @@ void GameScene::Initialize(){
 		ParticleManager::ParticleType::RING
 	);
 
+	// リボンパーティクルのテスト用グループ（Aキーで出す）
+	ParticleManager::GetInstance()->CreateParticleGroup(
+		"ribbonTest",
+		"./resources/gradationLine.png",          // それっぽいテクスチャ。変えてOK
+		ParticleManager::ParticleType::RIBBON     // ← ここがポイント
+	);
+
 	// 花火用：放射状に飛ぶ粒（通常クアッド）
 	ParticleManager::GetInstance()->CreateParticleGroup(
 		"irisFire", "./resources/circle.png",
@@ -350,11 +357,13 @@ void GameScene::Update(){
 		else ++it;
 	}
 
-	// SPACEキーでパーティクルテスト発生
-	if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
-		Vector3 emitPos = { 0.0f, 2.5f, 10.0f }; // 空中で見やすい位置
-		ParticleManager::GetInstance()->Emit("uv", emitPos, 20); // 20個発生
+	// Aキーでリボンパーティクルテスト
+	if (Input::GetInstance()->TriggerKey(DIK_A)) {
+		// プレイヤーのちょい前に出したければこんな感じでもOK
+		Vector3 emitPos = { 0.0f, 2.5f, 20.0f };  // Zを少し奥にして見やすく
+		ParticleManager::GetInstance()->Emit("ribbonTest", emitPos, 1); // 1本だけ出す
 	}
+
 
 	// ─── プレイヤー死亡時のGameOver遷移 ───
 	if (player_ && player_->IsDead()) {

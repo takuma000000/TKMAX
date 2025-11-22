@@ -14,9 +14,10 @@ class ParticleManager{
 public:
 
 	enum class ParticleType {
-		NORMAL,
-		RING,
-		CYLINDER,
+		NORMAL, // 通常パーティクル
+		RING, // リングパーティクル
+		CYLINDER, // シリンダーパーティクル
+		RIBBON, // リボンパーティクル
 	};
 
 	//座標変換情報
@@ -142,6 +143,9 @@ public:
 	//Cylinder関数
 	/// <summary>シリンダー頂点を作成します。</summary>
 	void CreateCylinderVertices();
+	//Ribbon関数
+	/// <summary>リボン頂点を作成します。</summary>
+	void CreateRibbonVertices();
 
 private:
 	static ParticleManager* instance;
@@ -169,6 +173,10 @@ private:
 	ModelData cylinderModelData;
 	Microsoft::WRL::ComPtr<ID3D12Resource> cylinderVertexResource = nullptr;
 	D3D12_VERTEX_BUFFER_VIEW cylinderVertexBufferView{};
+
+	ModelData ribbonModelData;
+	Microsoft::WRL::ComPtr<ID3D12Resource> ribbonVertexResource = nullptr;
+	D3D12_VERTEX_BUFFER_VIEW ribbonVertexBufferView{};
 
 	std::unordered_map<std::string, ParticleGroup> particleGroups;
 
