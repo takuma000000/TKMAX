@@ -766,6 +766,77 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 		p.lifeTime = 1.0f;
 		p.currentTime = 0.0f;
 
+	} else if (groupName == "enemySpawn") {
+		//=========================================================
+		// 敵出現用：中心で「ボフッ」と光って、周りに粒が広がる
+		//   ・25%くらいは中心のフラッシュ
+		//   ・残りは円状に飛び散る粒
+		//=========================================================
+		std::uniform_real_distribution<float> patternDist(0.0f, 1.0f);
+		float pattern = patternDist(rng);
+
+		if (pattern < 0.25f) {
+			// ── 中央フラッシュ ──
+			// 敵のど真ん中で大きく光るだけ（ほぼ動かない）
+			p.transform.translate = center;
+			p.velocity = { 0.0f, 0.0f, 0.0f };
+
+			// 大きめサイズで「出現した！」感
+			float sc = std::uniform_real_distribution<float>(1.8f, 2.6f)(rng);
+			p.transform.scale = { sc, sc, sc };
+
+			// 短命だけど強く光る
+			p.lifeTime = std::uniform_real_distribution<float>(0.25f, 0.40f)(rng);
+			p.currentTime = 0.0f;
+
+			// 白に近いシアン系（コアがピカッと光るイメージ）
+			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+			float rCol = 0.3f * (1.0f - t);
+			float gCol = 0.9f;
+			float bCol = 1.2f - 0.2f * t;
+			p.color = { rCol, gCol, bCol, 1.0f };
+		} else {
+			// ── 周囲に円状に広がる粒 ──
+			// ちょっと広めの半径＆Zにもバラつきを持たせる
+			std::uniform_real_distribution<float> radiusDist(0.5f, 3.0f);
+			std::uniform_real_distribution<float> angleDist(0.0f, 2.0f * std::numbers::pi_v<float>);
+			std::uniform_real_distribution<float> zOffsetDist(-0.8f, 0.8f);
+
+			float r = radiusDist(rng);
+			float th = angleDist(rng);
+
+			Vector3 offsetLocal{
+				std::cos(th) * r,
+				std::sin(th) * 0.7f,   // Yを少し強めて“湧き上がる”感じ
+				zOffsetDist(rng)       // 手前/奥にも少し散らす
+			};
+
+			p.transform.translate = center + offsetLocal;
+
+			// オフセット方向に外へ飛ばす
+			Vector3 dir = (MyMath::Length(offsetLocal) > 0.001f)
+				? MyMath::Normalize(offsetLocal)
+				: Vector3{ 0.0f, 1.0f, 0.0f };
+
+			std::uniform_real_distribution<float> spd(1.2f, 3.2f);
+			p.velocity = dir * spd(rng);
+
+			// 粒自体も少し大きめ
+			float sc = std::uniform_real_distribution<float>(0.6f, 1.3f)(rng);
+			p.transform.scale = { sc, sc, sc };
+
+			// ちょい長めに残す
+			p.lifeTime = std::uniform_real_distribution<float>(0.60f, 1.00f)(rng);
+			p.currentTime = 0.0f;
+
+			// 青〜シアン系で、中心フラッシュより少し落ち着いた色
+			float t2 = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+			float rCol = 0.05f + 0.10f * (1.0f - t2);
+			float gCol = 0.80f + 0.15f * t2;
+			float bCol = 1.00f;
+			p.color = { rCol, gCol, bCol, 1.0f };
+		}
+
 	} else { // 上記意外
 		// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 		std::uniform_real_distribution<float> velX(-0.15f, 0.15f);

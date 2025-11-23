@@ -64,6 +64,12 @@ void GameScene::Initialize(){
 		ParticleManager::ParticleType::NORMAL
 	);
 
+	// 敵スポーン
+	ParticleManager::GetInstance()->CreateParticleGroup(
+		"enemySpawn", "./resources/circle.png",
+		ParticleManager::ParticleType::NORMAL
+	);
+
 	// ──────────────── スカイボックスの初期化 ───────────────
 	skybox_ = std::make_unique<Skybox>();
 	skybox_->Initialize(dxCommon, srvManager, "resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
@@ -134,37 +140,40 @@ void GameScene::Update(){
 		return;
 	}
 
-	// 敵の更新と削除
-	UpdateEnemies();
+	// --- 敵とWaveは「ゲーム開始後」だけ動かす ---
+	if (!gameplayLocked_ && enemiesInitialized_) {
 
-	if (enemies_.empty()) {
-		if (wavePhase_ != WavePhase::Done) {
-			GoToNextWave();
-		} else {
-			if (!bossBattle_) {
-				// ボス戦突入！
-				bossBattle_ = true;
-				boss_ = std::make_unique<BossEnemy>();
-				boss_->Initialize(Object3dCommon::GetInstance(), dxCommon);
-				//boss_->SetCamera(camera.get());
-				boss_->SetParentScene(this);
-				boss_->SetCamera(camera.get()); // カメラセット
-				boss_->SetPlayer([this]() { return player_->GetPosition(); });
-				boss_->SetPosition({ 0, 0, 200 }); // 奥から出現
+		// 敵の更新と削除
+		UpdateEnemies();
+
+		if (enemies_.empty()) {
+			if (wavePhase_ != WavePhase::Done) {
+				GoToNextWave();
 			} else {
-				// ─── ボスが死んだらクリア演出開始 ───
-				if (boss_ && boss_->IsDead()) {
-					if (!clearSequence_) {
-						StartClearSequence();
-						return; // このフレームの通常処理はここで終わり
+				if (!bossBattle_) {
+					// ボス戦突入！
+					bossBattle_ = true;
+					boss_ = std::make_unique<BossEnemy>();
+					boss_->Initialize(Object3dCommon::GetInstance(), dxCommon);
+					boss_->SetParentScene(this);
+					boss_->SetCamera(camera.get());
+					boss_->SetPlayer([this]() { return player_->GetPosition(); });
+					boss_->SetPosition({ 0, 0, 200 }); // 奥から出現
+				} else {
+					// ─── ボスが死んだらクリア演出開始 ───
+					if (boss_ && boss_->IsDead()) {
+						if (!clearSequence_) {
+							StartClearSequence();
+							return; // このフレームの通常処理はここで終わり
+						}
 					}
 				}
 			}
 		}
-	}
 
-	// 最も近い敵をプレイヤーに設定
-	UpdateClosestEnemy();
+		// 最も近い敵をプレイヤーに設定
+		UpdateClosestEnemy();
+	}
 
 	ImGuiDebug();
 
@@ -341,6 +350,13 @@ void GameScene::Update(){
 			if (startAlpha_ <= 0.0f) {
 				startAlpha_ = 0.0f;
 				startVisible_ = false; // 完全に消す
+
+				// ★ここで初めて敵を初期化
+				if (!enemiesInitialized_) {
+					InitializeEnemies();
+					enemiesInitialized_ = true;
+				}
+
 				gameplayLocked_ = false; // ゲームプレイ解放
 			}
 			startSprite_->SetColor({ 1,1,1,startAlpha_ });
@@ -539,8 +555,6 @@ void GameScene::InitializeObjects(){
 	player_->SetPosition({ 0.0f, 0.0f, 0.0f });
 	player_->SetParentScene(this);
 	player_->SetEnemy(boss_.get()); // 最初はボスはいないのでnullptr
-
-	InitializeEnemies();// 敵の初期化
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*

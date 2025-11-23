@@ -215,8 +215,10 @@ private:
 
 	// ゲーム開始ロック：true の間は敵/プレイヤー/弾など一切更新しない
 	bool gameplayLocked_ = true;
+	// 敵初期化フラグ
+	bool enemiesInitialized_ = false;
 
-	// --- ここから追加: カメラインロ用 ---
+	// --- カメラインロ用 ---
 	bool  camIntroActive_ = false;   // いま回転中か
 	bool  camIntroDone_ = false;   // 一度やったら終了
 	Ease::Tween camYawTween_;        // ヨー回転用ツイーン(スカラー)

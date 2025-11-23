@@ -97,9 +97,9 @@ void TitleScene::Initialize(){
 
 	// ---------------BGMロード・再生----------------
 	// タイトルBGMロード
-	AudioManager::GetInstance()->LoadSound("title", "kuraran.wav");
+	//AudioManager::GetInstance()->LoadSound("title", "kuraran.wav");
 	// タイトルBGM再生（1回だけ）
-	AudioManager::GetInstance()->PlaySound("title");
+	//AudioManager::GetInstance()->PlaySound("title");
 }
 
 void TitleScene::Finalize(){}
