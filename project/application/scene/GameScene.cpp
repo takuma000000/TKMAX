@@ -70,6 +70,53 @@ void GameScene::Initialize(){
 		ParticleManager::ParticleType::NORMAL
 	);
 
+	// === ここから被弾エフェクト用 ===
+// 中央の強いフラッシュ
+	ParticleManager::GetInstance()->CreateParticleGroup(
+		"enemyHit_flash", "./resources/circle2.png",
+		ParticleManager::ParticleType::NORMAL);
+
+	// 外側に広がるリング
+	ParticleManager::GetInstance()->CreateParticleGroup(
+		"enemyHit_ring", "./resources/gradationLine.png",
+		ParticleManager::ParticleType::RING);
+
+	// 放射状のレイ（細い光の筋）
+	ParticleManager::GetInstance()->CreateParticleGroup(
+		"enemyHit_rays", "./resources/gradationLine.png",
+		ParticleManager::ParticleType::NORMAL);
+
+	// 小さいスパーク
+	ParticleManager::GetInstance()->CreateParticleGroup(
+		"enemyHit_spark", "./resources/circle2.png",
+		ParticleManager::ParticleType::NORMAL);
+
+	// === ここから LT弾ヒット用・さらにド派手版 ===
+	// 爆心コア（まぶしい光の玉）
+	ParticleManager::GetInstance()->CreateParticleGroup(
+		"lt_nova_core", "./resources/circle2.png",
+		ParticleManager::ParticleType::NORMAL);
+
+	// 球状ショックウェーブ（外側のエネルギー殻）
+	ParticleManager::GetInstance()->CreateParticleGroup(
+		"lt_nova_wave", "./resources/gradationLine.png",
+		ParticleManager::ParticleType::RING);
+
+	// 爆炎オーラ（周囲でメラメラ燃える光）
+	ParticleManager::GetInstance()->CreateParticleGroup(
+		"lt_nova_aura", "./resources/gradationLine.png",
+		ParticleManager::ParticleType::NORMAL);
+
+	// デブリ＆煙（暗い破片、煙っぽい粒）
+	ParticleManager::GetInstance()->CreateParticleGroup(
+		"lt_nova_debris", "./resources/circle.png",
+		ParticleManager::ParticleType::NORMAL);
+
+	// 亀裂エフェクト（空間が裂けるような光の筋）
+	ParticleManager::GetInstance()->CreateParticleGroup(
+		"lt_nova_crack", "./resources/circle2.png",
+		ParticleManager::ParticleType::NORMAL);
+
 	// ──────────────── スカイボックスの初期化 ───────────────
 	skybox_ = std::make_unique<Skybox>();
 	skybox_->Initialize(dxCommon, srvManager, "resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");

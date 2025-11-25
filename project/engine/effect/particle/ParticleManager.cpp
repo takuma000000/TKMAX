@@ -837,7 +837,263 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 			p.color = { rCol, gCol, bCol, 1.0f };
 		}
 
-	} else { // 上記意外
+	} else if (groupName == "enemyHit_flash") {
+		// 中央のまぶしいフラッシュ（一瞬だけ）＋色は毎回ちょっと変える
+		p.transform.translate = center; // 完全センター固定
+
+		// 少し大きめにして「ドンッ」と光る感じ
+		float sc = std::uniform_real_distribution<float>(1.3f, 1.8f)(rng);
+		p.transform.scale = { sc, sc, sc };
+		p.velocity = { 0.0f, 0.0f, 0.0f };
+
+		p.lifeTime = std::uniform_real_distribution<float>(0.07f, 0.10f)(rng);
+		p.currentTime = 0.0f;
+
+		// --- 白ベース＋アクセントカラーをランダム ---
+		float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+		Vector3 coreColor;
+		if (t < 0.33f) {
+			// ゴールド寄り
+			coreColor = { 1.0f, 0.95f, 0.70f };
+		} else if (t < 0.66f) {
+			// シアン寄り
+			coreColor = { 0.75f, 0.95f, 1.0f };
+		} else {
+			// マゼンタ寄り
+			coreColor = { 1.0f, 0.75f, 1.0f };
+		}
+		p.color = { coreColor.x, coreColor.y, coreColor.z, 1.0f };
+
+	} else if (groupName == "enemyHit_ring") {
+		// 外側に広がるショックウェーブリング（カラフル）
+		p.transform.translate = center; // ぴったり中心
+
+		// ちょっと大きめ＆強め
+		float sc = std::uniform_real_distribution<float>(1.6f, 2.3f)(rng);
+		p.transform.scale = { sc, sc, sc };
+		p.velocity = { 0.0f, 0.0f, 0.0f };
+
+		p.lifeTime = std::uniform_real_distribution<float>(0.22f, 0.30f)(rng);
+		p.currentTime = 0.0f;
+
+		// ビビッドな色を何パターンかからランダム
+		float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+		Vector3 ringColor;
+		if (t < 0.25f) {
+			// ゴールド
+			ringColor = { 1.0f, 0.9f, 0.4f };
+		} else if (t < 0.5f) {
+			// シアン
+			ringColor = { 0.4f, 0.95f, 1.0f };
+		} else if (t < 0.75f) {
+			// ピンク
+			ringColor = { 1.0f, 0.55f, 0.8f };
+		} else {
+			// ライム
+			ringColor = { 0.6f, 1.0f, 0.6f };
+		}
+		p.color = { ringColor.x, ringColor.y, ringColor.z, 1.0f };
+
+	} else if (groupName == "enemyHit_rays") {
+		// 放射状の細長いレイ（光の筋）
+		p.transform.translate = center;
+
+		// 画面上の回転角
+		float angle = std::uniform_real_distribution<float>(0.0f, 2.0f * std::numbers::pi_v<float>)(rng);
+		p.transform.rotate = { 0.0f, 0.0f, angle };
+
+		// 長くて細い板（前より長め＆細め）
+		float len = std::uniform_real_distribution<float>(2.5f, 3.5f)(rng);
+		float thin = std::uniform_real_distribution<float>(0.05f, 0.10f)(rng);
+		p.transform.scale = { len, thin, 1.0f };
+
+		// 少しだけ外側に膨らむように動かす
+		Vector3 dir = { std::cos(angle), 0.0f, std::sin(angle) };
+		dir = (MyMath::Length(dir) > 0.001f) ? MyMath::Normalize(dir) : Vector3{ 1,0,0 };
+		float spd = std::uniform_real_distribution<float>(3.0f, 6.0f)(rng);
+		p.velocity = dir * spd;
+
+		p.lifeTime = std::uniform_real_distribution<float>(0.18f, 0.26f)(rng);
+		p.currentTime = 0.0f;
+
+		// レイも派手色で
+		float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+		Vector3 rayColor;
+		if (t < 0.25f) {
+			rayColor = { 1.0f, 0.85f, 0.45f };   // ゴールド
+		} else if (t < 0.5f) {
+			rayColor = { 0.5f, 0.95f, 1.0f };    // シアン
+		} else if (t < 0.75f) {
+			rayColor = { 1.0f, 0.6f, 0.9f };     // ピンク
+		} else {
+			rayColor = { 0.7f, 1.0f, 0.6f };     // ライム
+		}
+		p.color = { rayColor.x, rayColor.y, rayColor.z, 1.0f };
+
+	} else if (groupName == "enemyHit_spark") {
+		// 周りに飛び散る小さな火花（スピード＆色増し）
+		p.transform.translate = center;
+
+		// ランダム方向（XZメイン、少しだけY）
+		float a = std::uniform_real_distribution<float>(0.0f, 2.0f * std::numbers::pi_v<float>)(rng);
+		float up = std::uniform_real_distribution<float>(-0.25f, 0.55f)(rng);
+		Vector3 dir = MyMath::Normalize(Vector3{ std::cos(a), up, std::sin(a) });
+
+		// スピード強め
+		float spd = std::uniform_real_distribution<float>(8.0f, 16.0f)(rng);
+		p.velocity = dir * spd;
+
+		float sc = std::uniform_real_distribution<float>(0.22f, 0.40f)(rng);
+		p.transform.scale = { sc, sc, sc };
+
+		p.lifeTime = std::uniform_real_distribution<float>(0.32f, 0.52f)(rng);
+		p.currentTime = 0.0f;
+
+		// 暖色・寒色・マゼンタをミックス
+		float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+		Vector3 spColor;
+		if (t < 0.33f) {
+			// オレンジ
+			spColor = { 1.0f, 0.65f, 0.25f };
+		} else if (t < 0.66f) {
+			// シアン
+			spColor = { 0.4f, 0.9f, 1.0f };
+		} else {
+			// マゼンタ
+			spColor = { 1.0f, 0.45f, 0.9f };
+		}
+		p.color = { spColor.x, spColor.y, spColor.z, 1.0f };
+	} else if (groupName == "lt_nova_core") {
+		// 爆心コア：画面を埋めるくらいのまぶしいエネルギー球
+		p.transform.translate = center;
+
+		// ★サイズ大幅アップ（敵が完全に飲み込まれるレベル）
+		float sc = std::uniform_real_distribution<float>(4.0f, 6.0f)(rng);
+		p.transform.scale = { sc, sc, sc };
+		p.velocity = { 0.0f, 0.0f, 0.0f };
+
+		// 残光長め（ドーンと光が残る）
+		p.lifeTime = std::uniform_real_distribution<float>(0.45f, 0.65f)(rng);
+		p.currentTime = 0.0f;
+
+		// 中心は白＋黄金（太陽みたいな爆心）
+		p.color = { 1.0f, 0.96f, 0.70f, 1.0f };
+
+
+	} else if (groupName == "lt_nova_wave") {
+		// 球状ショックウェーブ（外側のエネルギー殻。コアよりさらに大きい）
+		p.transform.translate = center;
+
+		// ★半径かなり拡大（画面を貫く衝撃波）
+		float sc = std::uniform_real_distribution<float>(5.0f, 7.5f)(rng);
+		p.transform.scale = { sc, sc, sc };
+		p.velocity = { 0.0f, 0.0f, 0.0f };
+
+		// コアより少し長く残して「爆風の壁」感
+		p.lifeTime = std::uniform_real_distribution<float>(0.50f, 0.80f)(rng);
+		p.currentTime = 0.0f;
+
+		// 内側が黄〜外側オレンジに見えるような暖色
+		p.color = { 1.0f, 0.78f, 0.32f, 1.0f };
+
+
+	} else if (groupName == "lt_nova_aura") {
+		// 爆炎オーラ：爆心の周囲でメラメラ燃えている光の柱
+		p.transform.translate = center;
+
+		// 角度ランダムにして、周囲に炎片をばらまく
+		float ang = std::uniform_real_distribution<float>(0.0f, 2.0f * std::numbers::pi_v<float>)(rng);
+
+		// ★コアの外側〜かなり外まで広く配置
+		float radius = std::uniform_real_distribution<float>(1.5f, 3.0f)(rng);
+
+		Vector3 dir = {
+			std::cos(ang),
+			std::uniform_real_distribution<float>(-0.1f, 0.9f)(rng), // 少し上方向を強めに
+			std::sin(ang)
+		};
+		if (MyMath::Length(dir) < 0.001f) { dir = { 1,0,0 }; }
+		dir = MyMath::Normalize(dir);
+
+		Vector3 pos = center + dir * radius;
+		p.transform.translate = pos;
+
+		// ★炎柱も長く・太く
+		float len = std::uniform_real_distribution<float>(3.0f, 4.8f)(rng);
+		float thin = std::uniform_real_distribution<float>(0.20f, 0.35f)(rng);
+		p.transform.scale = { len, thin, 1.0f };
+
+		// ゆっくり外へ漂う（爆風で押し広げられてる感じ）
+		float spd = std::uniform_real_distribution<float>(2.0f, 4.5f)(rng);
+		p.velocity = dir * spd;
+
+		// 爆炎は長めに残して「いつまでも燃えてる」感じに
+		p.lifeTime = std::uniform_real_distribution<float>(0.60f, 0.90f)(rng);
+		p.currentTime = 0.0f;
+
+		// 炎色：黄〜オレンジ〜赤の中からランダム
+		float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+		Vector3 col;
+		if (t < 0.33f)      col = { 1.0f, 0.85f, 0.45f }; // 明るい黄炎
+		else if (t < 0.66f) col = { 1.0f, 0.65f, 0.35f }; // 標準的なオレンジ
+		else                col = { 1.0f, 0.45f, 0.30f }; // 赤寄り
+		p.color = { col.x, col.y, col.z, 1.0f };
+	} else if (groupName == "lt_nova_debris") {
+		// 破片：暗い塊が高速で四方八方に飛ぶ
+		p.transform.translate = center;
+
+		// バラバラの方向に飛ばす
+		float ang1 = std::uniform_real_distribution<float>(0, 2 * std::numbers::pi_v<float>)(rng);
+		float ang2 = std::uniform_real_distribution<float>(-1.0f, 1.0f)(rng);
+
+		Vector3 dir = {
+			std::cos(ang1),
+			ang2,
+			std::sin(ang1)
+		};
+		dir = MyMath::Normalize(dir);
+
+		float speed = std::uniform_real_distribution<float>(4.0f, 9.0f)(rng);
+		p.velocity = dir * speed;
+
+		// 小さめの塊＋ランダム
+		float sc = std::uniform_real_distribution<float>(0.2f, 0.45f)(rng);
+		p.transform.scale = { sc, sc, sc };
+
+		// 暗い破片 → 茶色〜黒
+		float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+		float c = MyMath::Lerp(0.05f, 0.20f, t);
+		p.color = { c, c * 0.9f, c * 0.8f, 1.0f };
+
+		p.lifeTime = std::uniform_real_distribution<float>(0.4f, 0.8f)(rng);
+		p.currentTime = 0.0f;
+	} else if (groupName == "lt_nova_crack") {
+		// 亀裂：空間を裂くような細長いスパーク
+		p.transform.translate = center;
+
+		// ランダム方向へ細く長いひび
+		float ang = std::uniform_real_distribution<float>(0, 2 * std::numbers::pi_v<float>)(rng);
+		Vector3 dir = { std::cos(ang), 0.0f, std::sin(ang) };
+
+		float len = std::uniform_real_distribution<float>(1.5f, 3.0f)(rng);
+		float thin = std::uniform_real_distribution<float>(0.05f, 0.12f)(rng);
+		p.transform.scale = { len, thin, 1.0f };
+
+		// ほぼ動かないが少しだけ散る
+		p.velocity = dir * std::uniform_real_distribution<float>(0.5f, 1.5f)(rng);
+
+		// 黒〜赤黒いひび
+		float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+		Vector3 col = {
+			MyMath::Lerp(0.05f, 0.3f, t),
+			MyMath::Lerp(0.0f, 0.05f, t),
+			MyMath::Lerp(0.0f, 0.05f, t)
+		};
+		p.color = { col.x, col.y, col.z, 1.0f };
+
+		p.lifeTime = std::uniform_real_distribution<float>(0.35f, 0.5f)(rng);
+		p.currentTime = 0.0f;
+	}else { // 上記意外
 		// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 		std::uniform_real_distribution<float> velX(-0.15f, 0.15f);
 		std::uniform_real_distribution<float> velY(0.10f, 0.30f);

@@ -55,26 +55,65 @@ void PlayerBullet::Update() {
 		AABB bulletBox(bulletPos, bulletScale);
 		AABB enemyBox(enemyPos, enemyScale);
 
-		// AABB同士の当たり判定を行う
-		if (bulletBox.IsCollidingWithAABB(enemyBox)) { // 当たった場合
-			isHit_ = true; // デバッグ用フラグ
-			isDead_ = true; // 弾を削除
+		// 当たり判定チェック
+		if (bulletBox.IsCollidingWithAABB(enemyBox)) {
+			isHit_ = true;
+			isDead_ = true;
 
-			// パーティクル発生
-			ParticleManager::GetInstance()->Emit("uv", bulletPos, 30); // 衝突位置にパーティクルを発生
+			ParticleManager* pm = ParticleManager::GetInstance();
 
-			// 正しい順序：敵がまだ死んでない場合のみダメージ処理
-			if (enemy_ && !enemy_->IsDead()) { // 敵が死んでなければダメージ処理
-				if (isSpecialAttack_) { // 一撃必殺なら大ダメージ
-					enemy_->OnHitWithDamage(100); // 引数分のダメージを与える
-				} else { // 通常攻撃
-					enemy_->OnHitWithDamage(1); // 引数分のダメージを与える
+			// Emit の第2引数は非const参照なのでローカル変数で
+			Vector3 hitPos = bulletPos;
+
+			// ▼ trailGroup_ で「LT弾かどうか」を判定
+			bool isLTBullet = (trailGroup_ == "trail_lt");
+
+			if (isLTBullet) {
+
+				// ===============================
+				// LT：ドラゴンボール級 “爆心地誕生” 演出
+				// ===============================
+
+				// 核となるコア（めちゃデカい光）
+				pm->Emit("lt_nova_core", hitPos, 1);   // サイズは MakeNewParticle 内で6倍へ強化
+
+				// 超巨大ショックウェーブ（2〜3層）
+				pm->Emit("lt_nova_wave", hitPos, 3);
+
+				// 爆炎オーラ（40本の炎柱）
+				pm->Emit("lt_nova_aura", hitPos, 40);
+
+				// デブリ（破片）100個
+				pm->Emit("lt_nova_debris", hitPos, 120);
+
+				// （オプション）黒いクラックスパーク（地割れ粒）
+				pm->Emit("lt_nova_crack", hitPos, 80);
+			} else {
+				// ============================
+				//  それ以外の弾：通常のヒット演出
+				// ============================
+				pm->Emit("enemyHit_flash", hitPos, 1);
+				pm->Emit("enemyHit_ring", hitPos, 1);
+				pm->Emit("enemyHit_rays", hitPos, 18);
+				pm->Emit("enemyHit_spark", hitPos, 32);
+			}
+
+			// 敵へのダメージは今まで通り
+			if (enemy_ && !enemy_->IsDead()) {
+				if (isSpecialAttack_) {          // RT一撃必殺
+					enemy_->OnHitWithDamage(100);
+				} else {
+					enemy_->OnHitWithDamage(1);  // 通常/LB/LTは今のまま
 				}
 			}
 
-			// カメラシェイク
+			// カメラシェイクはLTだけ強め
 			if (player_) {
-				player_->StartCameraShake(10); // 10フレーム間シェイク
+				if (isLTBullet) {
+					player_->StartCameraShake(40); // ドーンッ
+				} else {
+					player_->StartCameraShake(10);
+				}
 			}
 
 			return;
