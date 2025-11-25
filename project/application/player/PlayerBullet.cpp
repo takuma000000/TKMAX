@@ -41,6 +41,18 @@ void PlayerBullet::Update() {
 	trailEmitter_.SetPosition(pos); // パーティクル位置更新
 	trailEmitter_.Update(); // 毎フレーム放出
 
+	// ▼ LTホーミング弾だけ、飛行中にスパークをばら撒く（全部盛りポイント）
+	if (trailGroup_ == "trail_lt") {
+		ParticleManager* pm = ParticleManager::GetInstance();
+		Vector3 emitPos = pos;
+
+		// 空間を裂くような細いレイ
+		pm->Emit("enemyHit_rays", emitPos, 1);
+
+		// バチバチ弾けるスパーク
+		pm->Emit("enemyHit_spark", emitPos, 1);
+	}
+
 	// 敵が存在するなら当たり判定チェック
 	if (enemy_ && !enemy_->IsDead()) { // 敵が死んでなければ当たり判定
 		// 弾の座標とスケールを取得

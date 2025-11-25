@@ -1,7 +1,9 @@
+#define NOMINMAX
 #include "ParticleManager.h"
 #include "TextureManager.h"
 #include "MyMath.h"
 #include <numbers>
+#include <algorithm>
 
 ParticleManager* ParticleManager::instance = nullptr;
 
@@ -573,35 +575,49 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 		Vector3 col = { 1.0f, 0.2f + 0.3f * t, 0.1f };
 		p.color = { 1.0f, 0.05f, 0.05f, 1.0f };  // 強い赤（R100%, G5%, B5%）
 	} else if (groupName == "trail_lt") {
+
 		// ─────────────────────────────
-		// LT：ホーミング弾の「帯」トレイル（RIBBON前提）
+		// LT：カラフル・スパークル粒（通常パーティクル）
 		// ─────────────────────────────
 
-		// 共通のオフセットを無視して、弾のど真ん中に出す
+		// 弾の中心に発生
 		p.transform.translate = center;
 
-		// リボンそのものは動かさない（位置固定）
-		// → 弾が進むたびに「静止した帯」がポコポコ生まれて、
-		//    それが繋がって“軌跡”に見える
-		p.velocity = { 0.0f, 0.0f, 0.0f };
+		// 通常のパーティクルなので軽い散乱速度を与える
+		float spd = std::uniform_real_distribution<float>(0.05f, 0.25f)(rng);
+		Vector3 dir = MyMath::Normalize(Vector3{
+			std::uniform_real_distribution<float>(-1.0f, 1.0f)(rng),
+			std::uniform_real_distribution<float>(-1.0f, 1.0f)(rng),
+			std::uniform_real_distribution<float>(-1.0f, 1.0f)(rng)
+			});
+		p.velocity = dir * spd;
 
-		// 細長い帯：X方向に長く、Yを薄く
-		float length = std::uniform_real_distribution<float>(4.0f, 6.0f)(rng);
-		float thickness = 0.25f;
-		p.transform.scale = { length, thickness, 1.0f };
+		// ★ 星屑みたいな小粒サイズ（横長じゃない）
+		float s = std::uniform_real_distribution<float>(0.20f, 0.35f)(rng);
+		p.transform.scale = { s, s, 1.0f };
 
-		// 少し長めに残して軌跡感を出す
-		p.lifeTime = std::uniform_real_distribution<float>(0.35f, 0.55f)(rng);
+		// キラッと短命
+		p.lifeTime = std::uniform_real_distribution<float>(0.18f, 0.32f)(rng);
 		p.currentTime = 0.0f;
 
-		// 黄緑〜シアン寄りの視認性高い色
-		float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
-		Vector3 col = {
-			0.3f,
-			0.9f,
-			0.3f + 0.2f * t
-		};
-		p.color = { col.x, col.y, col.z, 1.0f };
+		// ★ かなりカラフル（ホログラム風）
+		float r = std::uniform_real_distribution<float>(0.6f, 1.0f)(rng);
+		float g = std::uniform_real_distribution<float>(0.3f, 1.0f)(rng);
+		float b = std::uniform_real_distribution<float>(0.7f, 1.0f)(rng);
+
+		// パステル寄りになることも
+		if (std::uniform_real_distribution<float>(0.0f, 1.0f)(rng) < 0.25f) {
+			r *= 0.8f; g *= 0.9f; b *= 1.1f;
+		}
+
+		// 彩度バースト
+		if (std::uniform_real_distribution<float>(0.0f, 1.0f)(rng) < 0.25f) {
+			r = std::min(r * 1.4f, 1.0f);
+			g = std::min(g * 1.4f, 1.0f);
+			b = std::min(b * 1.4f, 1.0f);
+		}
+
+		p.color = { r, g, b, 1.0f };
 	} else if (groupName == "damageSpark") { //── 故障スパーク ──
 		// 放射状に高速で飛ぶ、短命、明るくチカチカ
 		std::uniform_real_distribution<float> dir(-1.0f, 1.0f);
@@ -1093,7 +1109,7 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 
 		p.lifeTime = std::uniform_real_distribution<float>(0.35f, 0.5f)(rng);
 		p.currentTime = 0.0f;
-	}else { // 上記意外
+	} else { // 上記意外
 		// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 		std::uniform_real_distribution<float> velX(-0.15f, 0.15f);
 		std::uniform_real_distribution<float> velY(0.10f, 0.30f);
