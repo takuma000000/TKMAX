@@ -492,65 +492,124 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 		float g = 0.8f + 0.2f * cos(hue * 6.283f);
 		float b = 1.0f - 0.3f * sin(hue * 3.142f);
 		p.color = { r, g, b, 1.0f };
-	} else if (groupName == "jetSmoke") { //── ジェット噴射煙：コア炎＋モクモク煙 ──
+	} else if (groupName == "jetSmoke") {
+		// ─────────────────────────────
+		// Player 後ろのスピード感ジェット
+		//  コア炎 + もくもく煙 + スピードスパーク
+		// ─────────────────────────────
 
-		// 0.0〜1.0で種類を分ける
+		// center は Player のケツあたり。共通オフセットは一旦無視して自前で決める
 		float kind = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
 
-		if (kind < 0.35f) {
-			// ----------------------------
-			// ① コア炎（エンジンのすぐ後ろの明るい部分）
-			// ----------------------------
-			std::uniform_real_distribution<float> velX(-0.10f, 0.10f);
-			std::uniform_real_distribution<float> velY(0.00f, 0.15f);
-			std::uniform_real_distribution<float> velZ(-60.0f, -40.0f); // 強く後ろへ
+		// ランダムヘルパー
+		auto frand = [&rng](float a, float b) {
+			return std::uniform_real_distribution<float>(a, b)(rng);
+			};
 
-			p.velocity = { velX(rng), velY(rng), velZ(rng) };
+		// 角度ランダム（円周上オフセット用）
+		float ang = frand(0.0f, 2.0f * std::numbers::pi_v<float>);
+		float radCore = frand(0.0f, 0.25f);  // コア用の半径
+		float radSmoke = frand(0.15f, 0.60f); // 煙用の半径
 
-			// 小さめ・きゅっと締まった炎
-			std::uniform_real_distribution<float> scl(0.20f, 0.45f);
-			float sc = scl(rng);
-			p.transform.scale = { sc, sc, sc };
+		if (kind < 0.25f) {
+			// ============================
+			// ① コア炎：細くて明るいジェット
+			// ============================
+			Vector3 local = {
+				std::cos(ang) * radCore * 0.4f,   // X：あまり広げない
+				frand(-0.10f, 0.15f),             // Y：ちょい上下
+				-0.4f                              // Z：少しだけ機体の後ろ側へ
+			};
+			p.transform.translate = center + local;
 
-			// 短命
-			p.lifeTime = std::uniform_real_distribution<float>(0.25f, 0.45f)(rng);
+			// ガッと後ろへ吹く
+			p.velocity = {
+				frand(-0.3f, 0.3f),
+				frand(0.0f, 0.15f),
+				frand(-80.0f, -60.0f)             // 強く −Z 方向へ
+			};
+
+			// 細長い炎コア
+			float len = frand(0.6f, 1.0f);
+			float thick = frand(0.18f, 0.30f);
+			p.transform.scale = { thick, len, thick };
+
+			// 寿命はかなり短い（キュッと消える）
+			p.lifeTime = frand(0.18f, 0.35f);
 			p.currentTime = 0.0f;
 
-			// オレンジ〜白っぽい明るい色
-			Vector3 col3 = { 1.0f, 0.85f, 0.55f };
-			float bright = std::uniform_real_distribution<float>(0.9f, 1.2f)(rng);
-			col3 = col3 * bright;
-
+			// 青～白寄りの噴射炎
+			Vector3 col3 = { 0.6f, 0.8f, 1.0f };
+			float hot = frand(0.9f, 1.3f);
+			col3 = col3 * hot;
 			p.color = { col3.x, col3.y, col3.z, 1.0f };
-		} else {
-			// ----------------------------
-			// ② ふわっと広がる白煙
-			// ----------------------------
-			std::uniform_real_distribution<float> velX(-0.15f, 0.15f);
-			std::uniform_real_distribution<float> velY(0.05f, 0.25f);   // 少し浮き上がる
-			std::uniform_real_distribution<float> velZ(-35.0f, -18.0f); // ゆっくり後ろへ
 
-			p.velocity = { velX(rng), velY(rng), velZ(rng) };
+		} else if (kind < 0.85f) {
+			// ============================
+			// ② メインのもくもく白煙
+			// ============================
+			Vector3 local = {
+				std::cos(ang) * radSmoke,
+				frand(-0.15f, 0.25f),
+				frand(-0.8f, -0.3f)               // コアより少し後ろで発生
+			};
+			p.transform.translate = center + local;
 
-			// 大きめでモクモク
-			std::uniform_real_distribution<float> scl(0.8f, 1.8f);
-			float sc = scl(rng);
+			// コアより遅めに後ろへ流れる
+			p.velocity = {
+				frand(-0.25f, 0.25f),
+				frand(0.03f, 0.20f),             // 少し上昇
+				frand(-45.0f, -25.0f)
+			};
+
+			// 大きめの丸煙
+			float sc = frand(0.9f, 2.0f);
 			p.transform.scale = { sc, sc, sc };
 
-			// 長めに残る
-			p.lifeTime = std::uniform_real_distribution<float>(1.2f, 2.6f)(rng);
+			// 長めに残って尾を引く
+			p.lifeTime = frand(1.2f, 2.4f);
 			p.currentTime = 0.0f;
 
 			// 白〜薄いグレー
-			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+			float t = frand(0.0f, 1.0f);
 			Vector3 col3 = {
-				0.78f + 0.10f * t,
-				0.80f + 0.08f * t,
-				0.82f + 0.03f * t
+				0.82f + 0.05f * t,
+				0.84f + 0.04f * t,
+				0.86f + 0.02f * t
 			};
-			float bright = std::uniform_real_distribution<float>(0.8f, 1.0f)(rng);
+			float bright = frand(0.8f, 1.0f);
 			col3 = col3 * bright;
+			p.color = { col3.x, col3.y, col3.z, 1.0f };
 
+		} else {
+			// ============================
+			// ③ スピードスパーク：速さの“線”
+			// ============================
+			Vector3 local = {
+				std::cos(ang) * radSmoke * 0.8f,
+				frand(-0.10f, 0.10f),
+				frand(-0.5f, -0.2f)
+			};
+			p.transform.translate = center + local;
+
+			// 細くて速い粒
+			p.velocity = {
+				frand(-0.4f, 0.4f),
+				frand(-0.05f, 0.10f),
+				frand(-90.0f, -70.0f)
+			};
+
+			float len = frand(0.8f, 1.4f);
+			float thin = frand(0.10f, 0.18f);
+			p.transform.scale = { thin, len, thin };
+
+			p.lifeTime = frand(0.20f, 0.45f);
+			p.currentTime = 0.0f;
+
+			// 白～薄いシアンで「スピード線」っぽく
+			Vector3 col3 = { 0.8f, 0.9f, 1.0f };
+			float bright = frand(0.9f, 1.4f);
+			col3 = col3 * bright;
 			p.color = { col3.x, col3.y, col3.z, 1.0f };
 		}
 	} else if (groupName == "trail_rb") {
