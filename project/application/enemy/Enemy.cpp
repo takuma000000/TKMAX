@@ -22,7 +22,7 @@ void Enemy::Update() {
 	Vector3 pos = object_->GetTranslate();
 
 	switch (behavior_) { // 挙動別移動
-	case EnemyBehavior::StraightStop: { // 既存の挙動
+	case EnemyBehavior::StraightStop: { // いまの「Z手前に進んでstopZで止まる」
 		if (!stopMove_) {
 			pos += velocity_;
 			if (pos.z <= stopZ_) { pos.z = stopZ_; stopMove_ = true; }
@@ -61,7 +61,6 @@ void Enemy::Update() {
 		if (pos.z <= stopZ_) { pos.z = stopZ_; }
 		break;
 	}
-
 	}
 
 	object_->SetTranslate(pos); // 位置反映

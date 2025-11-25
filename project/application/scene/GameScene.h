@@ -262,4 +262,6 @@ private:
 	// 風エフェクト用
 	void UpdateAirStreak(float dt);
 	float airStreakTimer_ = 0.0f;
+
+	bool requestInitEnemies_ = false;
 };

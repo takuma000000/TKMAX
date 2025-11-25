@@ -351,10 +351,8 @@ void GameScene::Update(){
 				startAlpha_ = 0.0f;
 				startVisible_ = false; // 完全に消す
 
-				// ★ここで初めて敵を初期化
 				if (!enemiesInitialized_) {
-					InitializeEnemies();
-					enemiesInitialized_ = true;
+					requestInitEnemies_ = true;   // ←追加！
 				}
 
 				gameplayLocked_ = false; // ゲームプレイ解放
@@ -430,6 +428,12 @@ void GameScene::Update(){
 	// ─── キーボードのYキーでプレイヤーのHPを0にする（デバッグ用）───
 	if (Input::GetInstance()->TriggerKey(DIK_Y)) {
 		if (player_) player_->SetHP(0);
+	}
+
+	if (requestInitEnemies_) {
+		InitializeEnemies();
+		enemiesInitialized_ = true;
+		requestInitEnemies_ = false;
 	}
 
 	// パフォーマンス情報・デバッグUI
@@ -929,6 +933,9 @@ void GameScene::GoToNextWave() {
 	} else if (wavePhase_ == WavePhase::W3) {
 		wavePhase_ = WavePhase::Done; // 最終Waveまで終了
 	}
+
+	defeatedEnemyCount_ = 0;
+	maxEnemyCount_ = 0;
 }
 
 void GameScene::UpdateSkyboxRotationX(){

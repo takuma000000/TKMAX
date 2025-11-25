@@ -29,7 +29,7 @@ void Player::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	ParticleManager::GetInstance()->CreateParticleGroup("trail_rb", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL); // 弾の軌跡
 	ParticleManager::GetInstance()->CreateParticleGroup("trail_lb", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL); // 弾の軌跡
 	ParticleManager::GetInstance()->CreateParticleGroup("trail_rt", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL); // 弾の軌跡
-	ParticleManager::GetInstance()->CreateParticleGroup("trail_lt", "./resources/circle2.png", ParticleManager::ParticleType::RIBBON); // 弾の軌跡
+	ParticleManager::GetInstance()->CreateParticleGroup("trail_lt", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL); // 弾の軌跡
 
 	if (enableJetSmoke_) { // ジェット煙初期化
 		Vector3 jetPos = object_->GetTranslate();
