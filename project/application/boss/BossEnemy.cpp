@@ -71,8 +71,9 @@ void BossEnemy::Update() {
 	Enemy::Update(); // 基底更新
 }
 
-// BossEnemy.cpp 内 ImGuiDebug() を拡張（可視化パネル）
 void BossEnemy::ImGuiDebug() {
+#ifdef USE_IMGUI
+
 	Vector3 col = GetColliderScale();
 	ImGui::Begin("ボス");
 
@@ -139,6 +140,8 @@ void BossEnemy::ImGuiDebug() {
 
 	// 元のチューニング類（重み/バイアス/CDなど）はすでにこの関数にあるので省略
 	ImGui::End();
+
+#endif // USE_IMGUI
 }
 
 void BossEnemy::UpdatePhase() {

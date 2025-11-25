@@ -217,9 +217,13 @@ void Skybox::Draw() {
 }
 
 void Skybox::ImGuiUpdate(){
+#ifdef USE_IMGUI
+
 	ImGui::Begin("Skybox");
 	ImGui::DragFloat3("Scale", &scale_.x, 0.1f, 0.0f, 100.0f);
 	ImGui::End();
+
+#endif
 }
 
 

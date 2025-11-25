@@ -109,7 +109,9 @@ Vector3 Enemy::GetWorldPosition() const {
 }
 
 void Enemy::ImGuiDebug() {
-	if (!object_) return; //
+#ifdef USE_IMGUI
+
+	if (!object_) return;
 
 	ImGui::Begin("Enemy");
 
@@ -131,6 +133,8 @@ void Enemy::ImGuiDebug() {
 	ImGui::Text("Dead: %s", isDead_ ? "true" : "false");
 
 	ImGui::End();
+
+#endif // USE_IMGUI
 }
 
 void Enemy::OnHitWithDamage(int damage){

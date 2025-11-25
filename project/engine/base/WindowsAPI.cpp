@@ -6,14 +6,20 @@
 #include "Framework.h"
 extern Framework* gFramework; // グローバルポインタでFrameworkを参照
 
+#ifdef USE_IMGUI
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+#endif
 
 //ウィンドウプロシージャ
 LRESULT CALLBACK WindowsAPI::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam){
+#ifdef USE_IMGUI
+
 	// ImGui のウィンドウ処理
 	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) {
 		return true;
 	}
+
+#endif
 
 	// メッセージに応じてゲーム固有の処理を行う
 	switch (msg) {

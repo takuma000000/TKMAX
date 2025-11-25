@@ -628,7 +628,7 @@ void GameScene::InitializeCamera(){
 }
 
 void GameScene::ImGuiDebug(){
-#ifdef _DEBUG
+#ifdef USE_IMGUI
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	ImGui::Begin("情報");

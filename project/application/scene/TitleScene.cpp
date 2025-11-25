@@ -222,7 +222,8 @@ void TitleScene::Update(){
 
 	ParticleManager::GetInstance()->Update();
 
-#ifdef _DEBUG
+#ifdef USE_IMGUI
+
 	// === ImGui ===
 	ImGui::Begin("Title Heli (Background)");
 	// position
@@ -241,7 +242,8 @@ void TitleScene::Update(){
 		camera->Update();
 	}
 	ImGui::End();
-#endif // _DEBUG
+
+#endif // USE_IMGUI
 }
 
 void TitleScene::Draw(){

@@ -96,7 +96,11 @@ void Player::Update() {
 	object_->Update(); // プレイヤー本体更新
 }
 
+
 void Player::ImGuiDebug() {
+#ifdef USE_IMGUI
+
+
 	if (!object_) return;
 
 	Vector3 pos = object_->GetTranslate();
@@ -134,6 +138,7 @@ void Player::ImGuiDebug() {
 		reticle_->ImGuiDebug();
 	}
 	ImGui::End();
+#endif
 }
 
 void Player::RemoveEnemyIfDead()

@@ -17,6 +17,8 @@ void BaseScene::Draw(){
 }
 
 void BaseScene::UpdatePerformanceInfo(){
+#ifdef USE_IMGUI
+
 	frameCount_++; // フレーム数カウント
 	float deltaTime = ImGui::GetIO().DeltaTime; // 経過時間取得(秒)
 	timeCount_ += deltaTime; // 経過時間加算
@@ -30,6 +32,8 @@ void BaseScene::UpdatePerformanceInfo(){
 		frameCount_ = 0; // フレーム数リセット
 		timeCount_ = 0.0f; // 経過時間リセット
 	}
+
+#endif
 }
 
 void BaseScene::ResetDrawCallCount(){

@@ -7,6 +7,8 @@
 #endif
 
 void ImGuiManager::Initialize(WindowsAPI* winApp, DirectXCommon* dxCommon){
+#ifdef USE_IMGUI
+
 	HRESULT hr;
 
 	dxCommon_ = dxCommon;
@@ -74,9 +76,13 @@ void ImGuiManager::Initialize(WindowsAPI* winApp, DirectXCommon* dxCommon){
 		srvHeap_->GetCPUDescriptorHandleForHeapStart(), // SRVのCPU側のハンドル
 		srvHeap_->GetGPUDescriptorHandleForHeapStart() // SRVのGPU側のハンドル
 	);
+
+#endif
 }
 
 void ImGuiManager::Finalize(){
+#ifdef USE_IMGUI
+
 	// ImGuiのDirectX12用の終了処理
 	ImGui_ImplDX12_Shutdown();
 	// ImGuiのWin32用の終了処理
@@ -86,20 +92,32 @@ void ImGuiManager::Finalize(){
 
 	// デスクリプタヒープを解放
 	srvHeap_.Reset();
+
+#endif
 }
 
 void ImGuiManager::Begin(){
+#ifdef USE_IMGUI
+
 	//ImGuiフレーム開始
 	ImGui_ImplDX12_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
+
+#endif
 }
 
 void ImGuiManager::End(){
+#ifdef USE_IMGUI
+
 	ImGui::Render();
+
+#endif
 }
 
 void ImGuiManager::Draw(){
+#ifdef USE_IMGUI
+
 	// コマンドリストの取得
 	ID3D12GraphicsCommandList* commandList = dxCommon_->GetCommandList();
 
@@ -108,9 +126,13 @@ void ImGuiManager::Draw(){
 	commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 	//描画コマンドを発行
 	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
+
+#endif
 }
 
 void ImGuiManager::SetColorStrawberry(){
+#ifdef USE_IMGUI
+
 	ImGuiStyle& style = ImGui::GetStyle();
 
 	//========================================
@@ -159,9 +181,13 @@ void ImGuiManager::SetColorStrawberry(){
 
 	// 🍓 ポップアップ（コンテキストメニュー）
 	colors[ImGuiCol_PopupBg] = ImVec4(0.9f, 0.2f, 0.3f, 0.95f);  // 苺色
+
+#endif
 }
 
 void ImGuiManager::SetColorWhiteTiger(){
+#ifdef USE_IMGUI
+
 	ImGuiStyle& style = ImGui::GetStyle();
 
 	//========================================
@@ -210,9 +236,13 @@ void ImGuiManager::SetColorWhiteTiger(){
 
 	//— 🐯** ポップアップ（コンテキストメニュー）**
 	colors[ImGuiCol_PopupBg] = ImVec4(0.4f, 0.4f, 0.4f, 0.95f);  // **背景に溶け込むグレー**
+
+#endif
 }
 
 void ImGuiManager::SetColorRainbow(){
+#ifdef USE_IMGUI
+
 	ImGuiStyle& style = ImGui::GetStyle();
 
 	//========================================
@@ -253,4 +283,6 @@ void ImGuiManager::SetColorRainbow(){
 	colors[ImGuiCol_TabActive] = ImVec4(0.0f, 0.5f, 1.0f, 1.0f);
 
 	colors[ImGuiCol_PopupBg] = ImVec4(1.0f, 0.5f, 1.0f, 0.95f);
+
+#endif
 }

@@ -76,7 +76,7 @@ void Object3d::Update(){
 	wvpData->World = worldMatrix; // ワールド行列をセット
 	wvpData->WorldInverseTranspose = MyMath::Inverse4x4(worldMatrix); // ワールド行列の逆行列をセット
 
-#ifdef _DEBUG
+#ifdef USE_IMGUI
 
 	// ---- ImGui のライト設定 ----
 	ImGui::Begin("Light Settings");
@@ -138,7 +138,7 @@ void Object3d::Update(){
 
 	ImGui::End();
 
-#endif // DEBUG
+#endif // USE_IMGUI
 }
 
 

@@ -182,6 +182,7 @@ void Sprite::Draw() {
 }
 
 void Sprite::ImGuiDebug() {
+#ifdef USE_IMGUI
 
 	// ImGui ウィジェット: スプライトの座標操作
 	ImGui::Begin("Sprite");
@@ -190,6 +191,8 @@ void Sprite::ImGuiDebug() {
 	ImGui::SliderFloat2("Sprite Position", &position.x, 0.0f, 500.0f, "%.1f");
 
 	ImGui::End();
+
+#endif
 }
 
 void Sprite::AdjustTextureSize(){
