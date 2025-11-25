@@ -102,11 +102,6 @@ void GameScene::Initialize(){
 		"lt_nova_wave", "./resources/gradationLine.png",
 		ParticleManager::ParticleType::RING);
 
-	// 爆炎オーラ（周囲でメラメラ燃える光）
-	ParticleManager::GetInstance()->CreateParticleGroup(
-		"lt_nova_aura", "./resources/gradationLine.png",
-		ParticleManager::ParticleType::NORMAL);
-
 	// デブリ＆煙（暗い破片、煙っぽい粒）
 	ParticleManager::GetInstance()->CreateParticleGroup(
 		"lt_nova_debris", "./resources/circle.png",
@@ -115,6 +110,11 @@ void GameScene::Initialize(){
 	// 亀裂エフェクト（空間が裂けるような光の筋）
 	ParticleManager::GetInstance()->CreateParticleGroup(
 		"lt_nova_crack", "./resources/circle2.png",
+		ParticleManager::ParticleType::NORMAL);
+
+	// 爆発バースト（明るい爆発の粒）
+	ParticleManager::GetInstance()->CreateParticleGroup(
+		"lt_nova_burst", "./resources/circle2.png",
 		ParticleManager::ParticleType::NORMAL);
 
 	// ──────────────── スカイボックスの初期化 ───────────────

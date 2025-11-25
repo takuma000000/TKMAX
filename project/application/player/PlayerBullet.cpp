@@ -92,8 +92,8 @@ void PlayerBullet::Update() {
 				// 超巨大ショックウェーブ（2〜3層）
 				pm->Emit("lt_nova_wave", hitPos, 3);
 
-				// 爆炎オーラ（40本の炎柱）
-				pm->Emit("lt_nova_aura", hitPos, 40);
+				// 炎の大爆発
+				pm->Emit("lt_nova_burst", hitPos, 40);
 
 				// デブリ（破片）100個
 				pm->Emit("lt_nova_debris", hitPos, 120);

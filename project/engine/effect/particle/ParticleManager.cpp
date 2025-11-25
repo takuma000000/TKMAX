@@ -492,40 +492,67 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 		float g = 0.8f + 0.2f * cos(hue * 6.283f);
 		float b = 1.0f - 0.3f * sin(hue * 3.142f);
 		p.color = { r, g, b, 1.0f };
-	} else if (groupName == "jetSmoke") { //── ジェット噴射煙 ──
-		std::uniform_real_distribution<float> velX(-0.05f, 0.05f);
-		std::uniform_real_distribution<float> velY(0.10f, 0.25f);
-		std::uniform_real_distribution<float> velZ(-45.0f, -25.0f);
-		p.velocity = { velX(rng), velY(rng), velZ(rng) };
+	} else if (groupName == "jetSmoke") { //── ジェット噴射煙：コア炎＋モクモク煙 ──
 
-		std::uniform_real_distribution<float> scl(0.5f, 1.0f);
-		float sc = scl(rng);
-		p.transform.scale = { sc, sc, sc };
+		// 0.0〜1.0で種類を分ける
+		float kind = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
 
-		p.lifeTime = std::uniform_real_distribution<float>(1.5f, 2.5f)(rng);
-		p.currentTime = 0.0f;
+		if (kind < 0.35f) {
+			// ----------------------------
+			// ① コア炎（エンジンのすぐ後ろの明るい部分）
+			// ----------------------------
+			std::uniform_real_distribution<float> velX(-0.10f, 0.10f);
+			std::uniform_real_distribution<float> velY(0.00f, 0.15f);
+			std::uniform_real_distribution<float> velZ(-60.0f, -40.0f); // 強く後ろへ
 
-		// --- ランダムカラー煙：温～冷まで ---
-		// 0.0 = 灰 (冷) ～ 1.0 = オレンジ白 (温)
-		float hueType = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+			p.velocity = { velX(rng), velY(rng), velZ(rng) };
 
-		Vector3 col3;
-		if (hueType < 0.33f) {
-			// 冷たい灰～青系
-			col3 = { 0.75f, 0.78f, 0.85f };
-		} else if (hueType < 0.66f) {
-			// 標準的な白煙（少し黄味）
-			col3 = { 0.88f, 0.86f, 0.80f };
+			// 小さめ・きゅっと締まった炎
+			std::uniform_real_distribution<float> scl(0.20f, 0.45f);
+			float sc = scl(rng);
+			p.transform.scale = { sc, sc, sc };
+
+			// 短命
+			p.lifeTime = std::uniform_real_distribution<float>(0.25f, 0.45f)(rng);
+			p.currentTime = 0.0f;
+
+			// オレンジ〜白っぽい明るい色
+			Vector3 col3 = { 1.0f, 0.85f, 0.55f };
+			float bright = std::uniform_real_distribution<float>(0.9f, 1.2f)(rng);
+			col3 = col3 * bright;
+
+			p.color = { col3.x, col3.y, col3.z, 1.0f };
 		} else {
-			// 暖かいオレンジ～クリーム系
-			col3 = { 0.95f, 0.90f, 0.82f };
+			// ----------------------------
+			// ② ふわっと広がる白煙
+			// ----------------------------
+			std::uniform_real_distribution<float> velX(-0.15f, 0.15f);
+			std::uniform_real_distribution<float> velY(0.05f, 0.25f);   // 少し浮き上がる
+			std::uniform_real_distribution<float> velZ(-35.0f, -18.0f); // ゆっくり後ろへ
+
+			p.velocity = { velX(rng), velY(rng), velZ(rng) };
+
+			// 大きめでモクモク
+			std::uniform_real_distribution<float> scl(0.8f, 1.8f);
+			float sc = scl(rng);
+			p.transform.scale = { sc, sc, sc };
+
+			// 長めに残る
+			p.lifeTime = std::uniform_real_distribution<float>(1.2f, 2.6f)(rng);
+			p.currentTime = 0.0f;
+
+			// 白〜薄いグレー
+			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+			Vector3 col3 = {
+				0.78f + 0.10f * t,
+				0.80f + 0.08f * t,
+				0.82f + 0.03f * t
+			};
+			float bright = std::uniform_real_distribution<float>(0.8f, 1.0f)(rng);
+			col3 = col3 * bright;
+
+			p.color = { col3.x, col3.y, col3.z, 1.0f };
 		}
-
-		// 明度を少しランダムに
-		float brightness = std::uniform_real_distribution<float>(0.8f, 1.0f)(rng);
-		col3 = col3 * brightness;
-
-		p.color = { col3.x, col3.y, col3.z, 1.0f }; // アルファは不透明スタート
 	} else if (groupName == "trail_rb") {
 		// RB：青いスパーク（クールで安定）
 		std::uniform_real_distribution<float> velX(-0.03f, 0.03f);
@@ -575,49 +602,35 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 		Vector3 col = { 1.0f, 0.2f + 0.3f * t, 0.1f };
 		p.color = { 1.0f, 0.05f, 0.05f, 1.0f };  // 強い赤（R100%, G5%, B5%）
 	} else if (groupName == "trail_lt") {
-
 		// ─────────────────────────────
-		// LT：カラフル・スパークル粒（通常パーティクル）
+		// LT：ホーミング弾の「帯」トレイル（RIBBON前提）
 		// ─────────────────────────────
 
-		// 弾の中心に発生
+		// 共通のオフセットを無視して、弾のど真ん中に出す
 		p.transform.translate = center;
 
-		// 通常のパーティクルなので軽い散乱速度を与える
-		float spd = std::uniform_real_distribution<float>(0.05f, 0.25f)(rng);
-		Vector3 dir = MyMath::Normalize(Vector3{
-			std::uniform_real_distribution<float>(-1.0f, 1.0f)(rng),
-			std::uniform_real_distribution<float>(-1.0f, 1.0f)(rng),
-			std::uniform_real_distribution<float>(-1.0f, 1.0f)(rng)
-			});
-		p.velocity = dir * spd;
+		// リボンそのものは動かさない（位置固定）
+		// → 弾が進むたびに「静止した帯」がポコポコ生まれて、
+		//    それが繋がって“軌跡”に見える
+		p.velocity = { 0.0f, 0.0f, 0.0f };
 
-		// ★ 星屑みたいな小粒サイズ（横長じゃない）
-		float s = std::uniform_real_distribution<float>(0.20f, 0.35f)(rng);
-		p.transform.scale = { s, s, 1.0f };
+		// 細長い帯：X方向に長く、Yを薄く
+		float length = std::uniform_real_distribution<float>(4.0f, 6.0f)(rng);
+		float thickness = 0.25f;
+		p.transform.scale = { length, thickness, 1.0f };
 
-		// キラッと短命
-		p.lifeTime = std::uniform_real_distribution<float>(0.18f, 0.32f)(rng);
+		// 少し長めに残して軌跡感を出す
+		p.lifeTime = std::uniform_real_distribution<float>(0.35f, 0.55f)(rng);
 		p.currentTime = 0.0f;
 
-		// ★ かなりカラフル（ホログラム風）
-		float r = std::uniform_real_distribution<float>(0.6f, 1.0f)(rng);
-		float g = std::uniform_real_distribution<float>(0.3f, 1.0f)(rng);
-		float b = std::uniform_real_distribution<float>(0.7f, 1.0f)(rng);
-
-		// パステル寄りになることも
-		if (std::uniform_real_distribution<float>(0.0f, 1.0f)(rng) < 0.25f) {
-			r *= 0.8f; g *= 0.9f; b *= 1.1f;
-		}
-
-		// 彩度バースト
-		if (std::uniform_real_distribution<float>(0.0f, 1.0f)(rng) < 0.25f) {
-			r = std::min(r * 1.4f, 1.0f);
-			g = std::min(g * 1.4f, 1.0f);
-			b = std::min(b * 1.4f, 1.0f);
-		}
-
-		p.color = { r, g, b, 1.0f };
+		// 黄緑〜シアン寄りの視認性高い色
+		float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+		Vector3 col = {
+			0.3f,
+			0.9f,
+			0.3f + 0.2f * t
+		};
+		p.color = { col.x, col.y, col.z, 1.0f };
 	} else if (groupName == "damageSpark") { //── 故障スパーク ──
 		// 放射状に高速で飛ぶ、短命、明るくチカチカ
 		std::uniform_real_distribution<float> dir(-1.0f, 1.0f);
@@ -918,10 +931,9 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 		float angle = std::uniform_real_distribution<float>(0.0f, 2.0f * std::numbers::pi_v<float>)(rng);
 		p.transform.rotate = { 0.0f, 0.0f, angle };
 
-		// 長くて細い板（前より長め＆細め）
-		float len = std::uniform_real_distribution<float>(2.5f, 3.5f)(rng);
-		float thin = std::uniform_real_distribution<float>(0.05f, 0.10f)(rng);
-		p.transform.scale = { len, thin, 1.0f };
+		float len = std::uniform_real_distribution<float>(0.4f, 0.8f)(rng);
+		float thin = std::uniform_real_distribution<float>(0.1f, 0.18f)(rng);
+		p.transform.scale = { thin, len, 1.0f }; // ← XとYを逆転させる
 
 		// 少しだけ外側に膨らむように動かす
 		Vector3 dir = { std::cos(angle), 0.0f, std::sin(angle) };
@@ -1012,48 +1024,31 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 		// 内側が黄〜外側オレンジに見えるような暖色
 		p.color = { 1.0f, 0.78f, 0.32f, 1.0f };
 
-
-	} else if (groupName == "lt_nova_aura") {
-		// 爆炎オーラ：爆心の周囲でメラメラ燃えている光の柱
+	} else if (groupName == "lt_nova_burst") {
+		// シンプルな光の爆発粒子
 		p.transform.translate = center;
 
-		// 角度ランダムにして、周囲に炎片をばらまく
-		float ang = std::uniform_real_distribution<float>(0.0f, 2.0f * std::numbers::pi_v<float>)(rng);
-
-		// ★コアの外側〜かなり外まで広く配置
-		float radius = std::uniform_real_distribution<float>(1.5f, 3.0f)(rng);
-
+		// 飛び散り方向ランダム
 		Vector3 dir = {
-			std::cos(ang),
-			std::uniform_real_distribution<float>(-0.1f, 0.9f)(rng), // 少し上方向を強めに
-			std::sin(ang)
+			std::uniform_real_distribution<float>(-1,1)(rng),
+			std::uniform_real_distribution<float>(-1,1)(rng),
+			std::uniform_real_distribution<float>(-1,1)(rng)
 		};
-		if (MyMath::Length(dir) < 0.001f) { dir = { 1,0,0 }; }
+		if (MyMath::Length(dir) < 0.001f) dir = { 0,1,0 };
 		dir = MyMath::Normalize(dir);
 
-		Vector3 pos = center + dir * radius;
-		p.transform.translate = pos;
-
-		// ★炎柱も長く・太く
-		float len = std::uniform_real_distribution<float>(3.0f, 4.8f)(rng);
-		float thin = std::uniform_real_distribution<float>(0.20f, 0.35f)(rng);
-		p.transform.scale = { len, thin, 1.0f };
-
-		// ゆっくり外へ漂う（爆風で押し広げられてる感じ）
-		float spd = std::uniform_real_distribution<float>(2.0f, 4.5f)(rng);
+		// スピード（ランダム）
+		float spd = std::uniform_real_distribution<float>(0.3f, 1.2f)(rng);
 		p.velocity = dir * spd;
 
-		// 爆炎は長めに残して「いつまでも燃えてる」感じに
-		p.lifeTime = std::uniform_real_distribution<float>(0.60f, 0.90f)(rng);
-		p.currentTime = 0.0f;
+		// 大きさ（小さめの点）
+		float sc = std::uniform_real_distribution<float>(0.2f, 0.6f)(rng);
+		p.transform.scale = { sc, sc, sc };
 
-		// 炎色：黄〜オレンジ〜赤の中からランダム
-		float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
-		Vector3 col;
-		if (t < 0.33f)      col = { 1.0f, 0.85f, 0.45f }; // 明るい黄炎
-		else if (t < 0.66f) col = { 1.0f, 0.65f, 0.35f }; // 標準的なオレンジ
-		else                col = { 1.0f, 0.45f, 0.30f }; // 赤寄り
-		p.color = { col.x, col.y, col.z, 1.0f };
+		// 色（白ベース）
+		p.color = { 1,1,1,1 };
+
+		p.lifeTime = std::uniform_real_distribution<float>(0.20f, 0.40f)(rng);
 	} else if (groupName == "lt_nova_debris") {
 		// 破片：暗い塊が高速で四方八方に飛ぶ
 		p.transform.translate = center;
