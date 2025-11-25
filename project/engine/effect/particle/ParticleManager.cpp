@@ -480,7 +480,7 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 		std::uniform_real_distribution<float> scl(0.8f, 1.6f);
 		float sc = scl(rng);
 		p.transform.scale = { sc, sc, sc };
-
+		
 		// 寿命長め（広く散っても見えるように）
 		std::uniform_real_distribution<float> life(0.8f, 1.5f);
 		p.lifeTime = life(rng);
