@@ -106,4 +106,12 @@ private:
 	float irisEndScale_ = 0.0f;    // 目標（Initializeでセット）
 
 	Ease::Tween irisTween_; // イージング関数
+
+	// アイリスのトランジション時間
+	static constexpr float kIrisDurationSec = 0.8f;
+
+	// タイトル敵の数式定義（π系）
+	static constexpr float kPi = 3.14159265358979323846f;   // π
+	static constexpr float kHalfPi = kPi * 0.5f;                 // π/2
+	static constexpr float kTwoPi = kPi * 2.0f;                 // 2π
 };

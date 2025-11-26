@@ -77,7 +77,7 @@ void TitleScene::Initialize(){
 
 	iris_->SetSize({ irisScale_, irisScale_ });
 	// 開始時にセット（覆い切るサイズを irisMax_ とする）
-	irisTween_.Reset(/*start*/ irisScale_, /*end*/ irisMax_, /*sec*/ 0.8f, Ease::Type::InBack);
+	irisTween_.Reset(irisScale_, irisMax_, kIrisDurationSec, Ease::Type::InBack);
 
 	// タイトル敵を1体だけ置く
 	titleEnemies_.clear();
@@ -165,9 +165,11 @@ void TitleScene::Update(){
 		}
 		case EnemyMotion::Swoop: {
 			// 周期的にカメラへスッと寄って戻る
-			float phase = std::fmod(enemyTime_, 6.2831853f);
+			float phase = std::fmod(enemyTime_, kTwoPi);
 			// 0→1→0 の台形イージング
-			float w = std::clamp(1.0f - std::abs(std::fmod(phase, 3.1415926f) - 1.5707963f) / 1.5707963f, 0.0f, 1.0f);
+			float w = std::clamp(
+				1.0f - std::abs(std::fmod(phase, kPi) - kHalfPi) / kHalfPi,
+				0.0f, 1.0f);
 			float swoop = -enemyRadius_ * 0.6f * w; // 手前(−Z)に引き寄せ
 
 			pos.x = std::cos(enemyTime_) * (enemyRadius_ * 0.6f);
