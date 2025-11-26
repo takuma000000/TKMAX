@@ -264,4 +264,26 @@ private:
 	float airStreakTimer_ = 0.0f;
 
 	bool requestInitEnemies_ = false;
+
+	// アイリス演出時間
+	static constexpr float kIrisDurationSec = 0.8f;
+
+	// スカイボックス回転
+	static constexpr float kSkyRotSpeedX = 0.002f;
+
+	// 「ゲームスタート」演出
+	static constexpr float kStartSlideInSec = 1.0f;
+	static constexpr float kStartHoldSec = 1.0f;
+	static constexpr float kStartFadeSec = 0.6f;
+
+	// クリア演出
+	static constexpr float kPlayerFlyMinTime = 1.8f;
+	static constexpr float kPlayerFlyDistance = 80.0f;
+
+	// 花火
+	static constexpr int   kFireworkBurstCount = 60;
+
+	// airStreak（風エフェクト）
+	static constexpr float kAirBoxHalfWidth = 40.0f;
+	static constexpr float kAirBoxHalfHeight = 25.0f;
 };

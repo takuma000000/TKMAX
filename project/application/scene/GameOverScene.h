@@ -70,7 +70,7 @@ private:
 	int perFrameFlameBudget_ = 40;
 	int perFrameSparkBudget_ = 25;
 
-	// === 「GAME OVER」スプライト ===
+	// === 「GAME OVER」スプライト ===	
 	std::unique_ptr<Sprite> overSprite_;
 
 	// フェードイン（0→1）とスケール（0.8→1.0）
@@ -80,4 +80,8 @@ private:
 	bool overActive_ = false;   // アニメ進行フラグ
 	float overAlpha_ = 0.0f;    // 現アルファ
 	float overScale_ = 1.0f;    // 現スケール
+
+	static constexpr float kIrisDuration = 0.8f; // 虹彩絞り演出時間
+	static constexpr int kPerFrameFlameBudget = 40; // 1フレの炎発生上限
+	static constexpr int kPerFrameSparkBudget = 25; // 1フレの火花発生上限
 };

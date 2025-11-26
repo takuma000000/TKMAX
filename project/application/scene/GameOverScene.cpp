@@ -71,7 +71,7 @@ void GameOverScene::Initialize(){
 	// 入場は「覆った状態 → 0」へ（OutBack, 0.8s）
 	irisScale_ = irisMaxScale_;
 	iris_->SetSize({ irisScale_, irisScale_ });
-	irisOpenTween_.Reset(/*start*/ irisMaxScale_, /*end*/ 0.0f, /*sec*/ 0.8f, Ease::Type::OutBack);
+	irisOpenTween_.Reset(irisMaxScale_, 0.0f, kIrisDuration, Ease::Type::OutBack);
 
 	// --- 墜落用パーティクルグループ作成（circle.pngでOK） ---
 	auto* PM = ParticleManager::GetInstance();
@@ -100,9 +100,7 @@ void GameOverScene::Initialize(){
 	overActive_ = true; // アニメ進行フラグON
 }
 
-void GameOverScene::Finalize(){
-
-}
+void GameOverScene::Finalize(){}
 
 void GameOverScene::Update(){
 	Input::GetInstance()->Update();
@@ -125,7 +123,7 @@ void GameOverScene::Update(){
 	// ─── Tキーでタイトルへ戻る（アイリス閉じ：InBack/0.8s） ───
 	if (!irisClosing_ && Input::GetInstance()->TriggerKey(DIK_T)) {
 		irisClosing_ = true;
-		irisCloseTween_.Reset(/*start*/ 0.0f, /*end*/ irisMaxScale_, /*sec*/ 0.8f, Ease::Type::InBack);
+		irisCloseTween_.Reset(0.0f, irisMaxScale_, kIrisDuration, Ease::Type::InBack);
 	}
 
 	if (irisClosing_) {

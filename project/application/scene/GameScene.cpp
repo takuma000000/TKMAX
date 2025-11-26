@@ -140,11 +140,11 @@ void GameScene::Initialize(){
 	irisEndScale_ = 0.0f;          // 最終的に消える
 	irisScale_ = irisStartScale_;
 	iris_->SetSize({ irisScale_, irisScale_ });
-	irisTween_.Reset(/*start*/ irisMaxScale_, /*end*/ 0.0f, /*sec*/ 0.8f, Ease::Type::OutBack);
+	irisTween_.Reset(irisMaxScale_, 0.0f, kIrisDurationSec, Ease::Type::OutBack);
 
 	// タイトル戻り用アイリス
 	irisCloseScale_ = 0.0f;
-	irisCloseTween_.Reset(0.0f, irisMaxScale_, 0.8f, Ease::Type::InBack);
+	irisCloseTween_.Reset(0.0f, irisMaxScale_, kIrisDurationSec, Ease::Type::InBack);
 
 	// ゲームスタート文字
 	startSprite_ = std::make_unique<Sprite>();
@@ -438,7 +438,7 @@ void GameScene::Update(){
 			// クルクル（FlyAway）開始から約4秒後にシーン遷移
 			if (playerDeathElapsed_ >= 4.0f && !irisClosing_) {
 				irisClosing_ = true;
-				irisCloseTween_.Reset(0.0f, irisMaxScale_, 0.8f, Ease::Type::InBack);
+				irisCloseTween_.Reset(0.0f, irisMaxScale_, kIrisDurationSec, Ease::Type::InBack);
 			}
 		}
 	}
@@ -1190,7 +1190,7 @@ bool GameScene::UpdateClearSequence(float dt){
 
 			irisClosing_ = true;
 			irisCloseScale_ = 0.0f;
-			irisCloseTween_.Reset(0.0f, irisMaxScale_, 0.8f, Ease::Type::InBack);
+			irisCloseTween_.Reset(0.0f, irisMaxScale_, kIrisDurationSec, Ease::Type::InBack);
 		}
 		break;
 	}
@@ -1245,7 +1245,7 @@ void GameScene::SpawnFirework(const Vector3& center){
 	// =========================
 	{
 		Vector3 burstPos = center;
-		pm->Emit("fw_burst", burstPos, 60);   // 本体の粒の数はお好みで
+		pm->Emit("fw_burst", burstPos, kFireworkBurstCount); // 一度に複数個出す
 	}
 }
 
