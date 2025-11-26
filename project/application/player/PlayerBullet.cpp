@@ -11,7 +11,7 @@ void PlayerBullet::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	object_ = std::make_unique<Object3d>();
 	object_->Initialize(common, dxCommon);
 	object_->SetModel("sphere.obj");
-	object_->SetScale({ 0.2f, 0.2f, 0.2f });
+	object_->SetScale({ kDefaultScale, kDefaultScale, kDefaultScale });
 
 	// 既定グループで一旦初期化（あとで SetTrailGroup で上書き可）
 	Vector3 start = object_->GetTranslate();
@@ -133,7 +133,7 @@ void PlayerBullet::Update() {
 	}
 
 	// 一定距離（Z方向）を超えたら弾を削除する
-	if (pos.z > 70.0f) {
+	if (pos.z > kDespawnZ) {
 		isDead_ = true; // 弾を削除
 	}
 

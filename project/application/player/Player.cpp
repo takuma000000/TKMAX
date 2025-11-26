@@ -33,7 +33,7 @@ void Player::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 
 	if (enableJetSmoke_) { // ジェット煙初期化
 		Vector3 jetPos = object_->GetTranslate();
-		jetPos.z -= 2.0f;           // 機体のケツあたり
+		jetPos.z -= kJetSmokeOffsetZ;           // 機体のケツあたり
 		jetEmitter_.Initialize("jetSmoke", jetPos);
 	}
 }
@@ -53,7 +53,7 @@ void Player::Update() {
 		Input* input = Input::GetInstance();
 		Enemy* cur = (enemy_ && !enemy_->IsDead()) ? enemy_ : nullptr;
 
-		bool hold = (input->GetRightTrigger() > 128) && (canUseSpecial_ || debugUnlimitedSpecial_);
+		bool hold = (input->GetRightTrigger() > kTriggerThreshold) && (canUseSpecial_ || debugUnlimitedSpecial_);
 
 		// ターゲットが切り替わったら前のロックを解除
 		if (lastLockedEnemy_ && lastLockedEnemy_ != cur) {
@@ -85,7 +85,7 @@ void Player::Update() {
 	// ---- ジェット煙（HPが0なら停止）----
 	if (enableJetSmoke_ && hp_ > 0) {
 		Vector3 jetPos = object_->GetTranslate();
-		jetPos.z -= 2.0f;
+		jetPos.z -= kJetSmokeOffsetZ;
 		jetEmitter_.SetPosition(jetPos);
 		jetEmitter_.Update();
 	}
@@ -435,9 +435,9 @@ void Player::RBShoot(){
 			} else { // 正常な場合
 				dir = MyMath::Normalize(dir);
 			}
-			bullet->SetVelocity(dir * 0.5f);
+			bullet->SetVelocity(dir * kNormalBulletSpeed);
 		} else { // ターゲットがいないなら前方
-			bullet->SetVelocity({ 0, 0, 0.5f });
+			bullet->SetVelocity({ 0, 0, kNormalBulletSpeed });
 		}
 
 		bullet->SetCamera(camera); // カメラ設定
@@ -454,7 +454,7 @@ void Player::RBShoot(){
 void Player::RTShoot(){
 	Input* input = Input::GetInstance();
 	// RT：一撃必殺（最も近い敵に必中弾）
-	const bool pressed = (input->GetRightTrigger() > 128);
+	const bool pressed = (input->GetRightTrigger() > kTriggerThreshold);
 
 	// 押している間：ホールド状態にする（発射はしない）
 	if (pressed && (canUseSpecial_ || debugUnlimitedSpecial_) && enemy_ && !enemy_->IsDead()) {
@@ -473,7 +473,7 @@ void Player::RTShoot(){
 
 			// 弾設定
 			bullet->SetPosition(startPos); // 弾位置設定
-			bullet->SetVelocity(dir * 0.5f); // 速度設定
+			bullet->SetVelocity(dir * kNormalBulletSpeed); // 速度設定
 			bullet->SetCamera(camera); // カメラ設定
 			bullet->SetEnemy(enemy_); // 敵設定
 			bullet->SetPlayer(this); // プレイヤー設定
@@ -510,7 +510,7 @@ void Player::LBShoot(){
 
 			// 弾設定
 			bullet->SetPosition(startPos); // 弾位置設定
-			bullet->SetVelocity(dir * 0.5f); // 速度設定
+			bullet->SetVelocity(dir * kNormalBulletSpeed); // 速度設定
 			bullet->SetCamera(camera); // カメラ設定
 			bullet->SetEnemy(enemy.get()); // 敵設定
 			bullet->SetPlayer(this); // プレイヤー設定
@@ -525,14 +525,14 @@ void Player::LBShoot(){
 
 void Player::LTShoot(){
 	Input* input = Input::GetInstance();
-	if ((input->GetLeftTrigger() > 128) && !ltHeld_) {
+	if ((input->GetLeftTrigger() > kTriggerThreshold) && !ltHeld_) {
 		auto bullet = std::make_unique<PlayerBullet>();
 		bullet->Initialize(common_, dxCommon_);
 
 		Vector3 p0 = object_->GetTranslate();
 		bullet->SetPosition(p0);
 		bullet->SetEnemy(enemy_);
-		bullet->SetHoming(true, 0.60f);        // ベジェ終了後に効く追尾速度
+		bullet->SetHoming(true, kHomingBulletSpeed); // ベジェ終了後に効く追尾速度
 		bullet->SetCamera(camera);
 		bullet->SetPlayer(this);
 		bullet->SetTrailGroup("trail_lt");
@@ -593,7 +593,7 @@ void Player::LTShoot(){
 		ZoomCamera();
 		StartCameraShake(10);
 	}
-	ltHeld_ = (input->GetLeftTrigger() > 128);
+	ltHeld_ = (input->GetLeftTrigger() > kTriggerThreshold);
 }
 
 void Player::UpdateCameraFollowThirdPerson(float dt) {
