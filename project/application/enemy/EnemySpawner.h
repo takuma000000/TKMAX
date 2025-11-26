@@ -13,7 +13,8 @@ class BaseScene;
 // 敵の生成処理をまとめたユーティリティ。
 //=============================================================
 namespace EnemySpawner {
-
+	// 敵出現エフェクトの粒子数（マジックナンバー 32 の定数化）
+	constexpr int kSpawnParticleCount = 32;
 	using EnemyConfig = std::function<void(Enemy&)>;
 
 	/// <summary>一直線に敵をスポーンします。</summary>
