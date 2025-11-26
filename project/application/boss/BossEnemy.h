@@ -205,7 +205,7 @@ private:
 	/// <summary>攻撃終了処理。</summary>
 	void FireEnd();
 
-	// ★ユーティリティで次の攻撃を選ぶ（ここがAIの核）
+	// ユーティリティで次の攻撃を選ぶ（ここがAIの核）
 	/// <summary>ユーティリティAIで次の攻撃を選択します。</summary>
 	/// <param name="playerPos">プレイヤー位置。</param>
 	void SelectNextAttackUtility(const Vector3& playerPos);
@@ -265,8 +265,9 @@ private:
 	int histIndex_ = 0;
 
 	/// <summary>攻撃名を返します。</summary>
+	/// <param name="at">攻撃タイプ。</param>
 	const char* AttackName(AttackType at) const;
-
 	/// <summary>攻撃履歴に追加します。</summary>
+	/// <param name="at">攻撃タイプ。</param>
 	void PushHistory(AttackType at);
 };
