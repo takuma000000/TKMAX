@@ -8,6 +8,96 @@
 #include "externals/imgui/imgui.h"
 #endif
 
+// Bossの各種定数
+namespace BossParam {
+	// --- フェーズ切り替え HP ---
+	constexpr int Phase2HP = 60;
+	constexpr int Phase3HP = 30;
+	// --- P1 移動 ---
+	constexpr float P1FrontZ = 20.0f;
+	constexpr float P1MaxSpeed = 0.8f;
+	constexpr float P1StopRadius = 1.5f;
+	// --- 共通 ---
+	constexpr float ArriveRadius = 3.0f;
+	// --- P3 移動 ---
+	constexpr float P3CenterOffsetZ = 20.0f;
+	constexpr float P3RangeX = 18.0f;
+	constexpr float P3RangeY = 3.0f;
+	constexpr float P3OmegaX = 0.05f;
+	constexpr float P3OmegaY = 0.035f;
+	constexpr float P3MaxSpeed = 1.2f;
+	// --- 先読み ---
+	constexpr float LookAheadFrames = 6.0f;
+	// --- テレグラフ / 発射 / クールダウン ---
+	constexpr float TelegraphP1 = 60.0f;
+	constexpr float TelegraphP2 = 45.0f;
+	constexpr float TelegraphP3 = 30.0f;
+	constexpr float FireP1 = 40.0f;
+	constexpr float FireP2 = 60.0f;
+	constexpr float FireP3 = 90.0f;
+	constexpr float CooldownP1 = 120.0f;
+	constexpr float CooldownP2 = 60.0f;
+	constexpr float CooldownP3 = 45.0f;
+	// --- ビーム / 扇 / 連射の距離帯 ---
+	constexpr float BeamDistCenter = 45.0f;
+	constexpr float BeamDistWidth = 30.0f;
+	constexpr float FanDistCenter = 32.0f;
+	constexpr float FanDistWidth = 18.0f;
+	constexpr float RapidDistCenter = 18.0f;
+	constexpr float RapidDistWidth = 16.0f;
+	// --- ペナルティ ---
+	constexpr float CooldownPenaltyValue = 0.6f;
+	constexpr float ChainPenaltyValue = 0.7f;
+	// --- FireTick: 発射間隔 & 性能 ---
+	// P1やさしいビーム
+	constexpr int   P1BeamInterval = 24;
+	constexpr float P1BeamSpeed = 0.55f;
+	constexpr int   P1BeamDamage = 1;
+	constexpr int   P1BeamLife = 150;
+	// P2/P3 ビーム
+	constexpr int   BeamInterval = 3;
+	constexpr float BeamSpeed = 0.7f;
+	constexpr int   BeamDamage = 2;
+	constexpr int   BeamLife = 240;
+	// 扇
+	constexpr int   FanInterval = 10;
+	constexpr float FanSpeed = 0.9f;
+	constexpr int   FanDamage = 1;
+	constexpr int   FanLife = 180;
+	// 連射
+	constexpr int   RapidInterval = 6;   // 「6フレームごと」にしておく
+	constexpr float RapidSpeed = 1.4f;
+	constexpr int   RapidDamage = 1;
+	constexpr int   RapidLife = 120;
+	// --- ロック時スケール・点滅 ---
+	constexpr float LockBlinkSpeed = 0.2f;
+	constexpr float LockBlinkAmount = 0.2f;
+	constexpr float NormalScale = 5.0f;
+	constexpr float NormalCollider = 5.5f;
+	constexpr float LockedCollider = 5.0f;
+	// --- 数学系 ---
+	constexpr float EpsilonLength = 1e-4f;
+	// === Telegraph(予備動作) ===
+	constexpr float TeleP1 = 60.0f;
+	constexpr float TeleP2 = 45.0f;
+	constexpr float TeleP3 = 30.0f;
+	// === Cooldown(休憩時間) ===
+	constexpr float CD_P1 = 120.0f;
+	constexpr float CD_P2 = 60.0f;
+	constexpr float CD_P3 = 45.0f;
+	// --- フェーズ別バイアス（固定値） ---
+	constexpr float P1_FanWeak = 0.4f;
+	constexpr float P1_RapidWeak = 0.2f;
+	constexpr float P2_BeamMid = 0.6f;
+	constexpr float P2_RapidMid = 0.5f;
+	constexpr float P3_FanMid = 0.7f;
+	constexpr float P3_BeamWeak = 0.4f;
+	// --- 初期設定 --- 
+	constexpr int   InitHP = 80;
+	constexpr float InitScale = 5.0f;
+	constexpr float InitColliderScale = 7.5f;
+}
+
 //=============================================================
 // BossEnemyクラス
 // ボスの挙動と攻撃を制御するクラス。

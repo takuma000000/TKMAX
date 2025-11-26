@@ -26,8 +26,8 @@ public:
 		float speed, int damage, int lifeFrame) {
 		obj_ = std::make_unique<Object3d>();
 		obj_->Initialize(common, dx);
-		obj_->SetModel("sphere.obj");              // 既存モデルを使用
-		obj_->SetScale({ 0.6f, 0.6f, 0.6f });        // 見やすいサイズ
+		obj_->SetModel("sphere.obj");              // モデル指定
+		obj_->SetScale({ kDefaultScale, kDefaultScale, kDefaultScale }); // スケール
 		obj_->SetTranslate(pos);
 		if (cam) obj_->SetCamera(cam);
 
@@ -66,7 +66,7 @@ public:
 	const Vector3& GetPos() const { return obj_->GetTranslate(); }
 
 	/// <summary>当たり半径を返します。</summary>
-	float Radius() const { return 0.6f; } // 簡易当たり半径
+	float Radius() const { return kDefaultScale; } // 簡易当たり半径
 
 private:
 	std::unique_ptr<Object3d> obj_;
@@ -75,4 +75,7 @@ private:
 	int     damage_ = 1;
 	int     life_ = 180;
 	bool    dead_ = false;
+
+	// マジックナンバー解消用定数
+	static constexpr float kDefaultScale = 0.6f;  // 見た目の大きさ
 };
