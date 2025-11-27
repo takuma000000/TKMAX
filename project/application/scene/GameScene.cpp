@@ -1,15 +1,14 @@
 #define NOMINMAX
 #include "GameScene.h"
-
-#ifdef USE_IMGUI
-#include "externals/imgui/imgui.h"
-#endif
-
 #include <limits>
 #include <algorithm>
 #include "MyMath.h"
 #include <psapi.h>
 #include <Input.h>
+
+#ifdef USE_IMGUI
+#include "externals/imgui/imgui.h"
+#endif
 
 void GameScene::Initialize() {
 	// ──────────────── NULLチェック ────────────────
@@ -34,108 +33,57 @@ void GameScene::Initialize() {
 	particleEmitter = std::make_unique<ParticleEmitter>();
 	particleEmitter->Initialize("uv", { 0.0f,2.5f,10.0f });
 
+	/// ===== パーティクルグループの作成 =====
 	// 開幕用：うっすら光が吸い込まれるリング
-	ParticleManager::GetInstance()->CreateParticleGroup(
-		"irisOpen", "./resources/gradationLine.png",
-		ParticleManager::ParticleType::RING
-	);
-
+	ParticleManager::GetInstance()->CreateParticleGroup("irisOpen", "./resources/gradationLine.png", ParticleManager::ParticleType::RING);
 	// リボンパーティクルのテスト用グループ（Aキーで出す）
-	ParticleManager::GetInstance()->CreateParticleGroup(
-		"ribbonTest",
-		"./resources/gradationLine.png",          // それっぽいテクスチャ。変えてOK
-		ParticleManager::ParticleType::RIBBON     // ← ここがポイント
-	);
-
+	ParticleManager::GetInstance()->CreateParticleGroup("ribbonTest", "./resources/gradationLine.png", ParticleManager::ParticleType::RIBBON);
 	// 花火用：放射状に飛ぶ粒（通常クアッド）
-	ParticleManager::GetInstance()->CreateParticleGroup(
-		"irisFire", "./resources/circle.png",
-		ParticleManager::ParticleType::NORMAL
-	);
-
+	ParticleManager::GetInstance()->CreateParticleGroup("irisFire", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
 	// 花火用：打ち上げ＆閃光＆爆発
 	ParticleManager::GetInstance()->CreateParticleGroup("fw_launch", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
 	ParticleManager::GetInstance()->CreateParticleGroup("fw_flash", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
 	ParticleManager::GetInstance()->CreateParticleGroup("fw_burst", "./resources/firework_star.png", ParticleManager::ParticleType::NORMAL);
-
 	// 空気の流れ(風)エフェクト
-	ParticleManager::GetInstance()->CreateParticleGroup(
-		"airStreak", "./resources/circle.png",
-		ParticleManager::ParticleType::NORMAL
-	);
-
+	ParticleManager::GetInstance()->CreateParticleGroup("airStreak", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
 	// 敵スポーン
-	ParticleManager::GetInstance()->CreateParticleGroup(
-		"enemySpawn", "./resources/circle.png",
-		ParticleManager::ParticleType::NORMAL
-	);
-
+	ParticleManager::GetInstance()->CreateParticleGroup("enemySpawn", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
 	// === ここから被弾エフェクト用 ===
-// 中央の強いフラッシュ
-	ParticleManager::GetInstance()->CreateParticleGroup(
-		"enemyHit_flash", "./resources/circle2.png",
-		ParticleManager::ParticleType::NORMAL);
-
+	// 中央の強いフラッシュ
+	ParticleManager::GetInstance()->CreateParticleGroup("enemyHit_flash", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
 	// 外側に広がるリング
-	ParticleManager::GetInstance()->CreateParticleGroup(
-		"enemyHit_ring", "./resources/gradationLine.png",
-		ParticleManager::ParticleType::RING);
-
+	ParticleManager::GetInstance()->CreateParticleGroup("enemyHit_ring", "./resources/gradationLine.png", ParticleManager::ParticleType::RING);
 	// 放射状のレイ（細い光の筋）
-	ParticleManager::GetInstance()->CreateParticleGroup(
-		"enemyHit_rays", "./resources/gradationLine.png",
-		ParticleManager::ParticleType::NORMAL);
-
+	ParticleManager::GetInstance()->CreateParticleGroup("enemyHit_rays", "./resources/gradationLine.png", ParticleManager::ParticleType::NORMAL);
 	// 小さいスパーク
-	ParticleManager::GetInstance()->CreateParticleGroup(
-		"enemyHit_spark", "./resources/circle2.png",
-		ParticleManager::ParticleType::NORMAL);
-
+	ParticleManager::GetInstance()->CreateParticleGroup("enemyHit_spark", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
 	// === ここから LT弾ヒット用・さらにド派手版 ===
 	// 爆心コア（まぶしい光の玉）
-	ParticleManager::GetInstance()->CreateParticleGroup(
-		"lt_nova_core", "./resources/circle2.png",
-		ParticleManager::ParticleType::NORMAL);
-
+	ParticleManager::GetInstance()->CreateParticleGroup("lt_nova_core", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
 	// 球状ショックウェーブ（外側のエネルギー殻）
-	ParticleManager::GetInstance()->CreateParticleGroup(
-		"lt_nova_wave", "./resources/gradationLine.png",
-		ParticleManager::ParticleType::RING);
-
+	ParticleManager::GetInstance()->CreateParticleGroup("lt_nova_wave", "./resources/gradationLine.png", ParticleManager::ParticleType::RING);
 	// デブリ＆煙（暗い破片、煙っぽい粒）
-	ParticleManager::GetInstance()->CreateParticleGroup(
-		"lt_nova_debris", "./resources/circle.png",
-		ParticleManager::ParticleType::NORMAL);
-
+	ParticleManager::GetInstance()->CreateParticleGroup("lt_nova_debris", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
 	// 亀裂エフェクト（空間が裂けるような光の筋）
-	ParticleManager::GetInstance()->CreateParticleGroup(
-		"lt_nova_crack", "./resources/circle2.png",
-		ParticleManager::ParticleType::NORMAL);
-
+	ParticleManager::GetInstance()->CreateParticleGroup("lt_nova_crack", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
 	// 爆発バースト（明るい爆発の粒）
-	ParticleManager::GetInstance()->CreateParticleGroup(
-		"lt_nova_burst", "./resources/circle2.png",
-		ParticleManager::ParticleType::NORMAL);
+	ParticleManager::GetInstance()->CreateParticleGroup("lt_nova_burst", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
 
 	// ──────────────── スカイボックスの初期化 ───────────────
 	skybox_ = std::make_unique<Skybox>();
 	skybox_->Initialize(dxCommon, srvManager, "resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
 	skybox_->SetCamera(camera.get());
-
 	// ──────────────── 敵マネージャの初期化 ───────────────
 	enemyManager_ = std::make_unique<EnemyManager>();
 	enemyManager_->Initialize(dxCommon, camera.get(), this, player_.get());
 	enemyManager_->BindEnemies(&enemies_, &defeatedEnemyCount_, &maxEnemyCount_);
-
 }
 
 void GameScene::Finalize() {
 	// テクスチャマネージャーの終了
 	TextureManager::GetInstance()->Finalize();
-
 	// 終了処理
 	AudioManager::GetInstance()->Finalize();
-
 	// 3Dモデルマネージャーの終了
 	ModelManager::GetInstance()->Finalize();
 }
@@ -170,7 +118,6 @@ void GameScene::Update() {
 
 		// 全てのWaveが終了していて、敵がいない → ボスへ進行 or クリア処理
 		if (enemyManager_ && enemyManager_->IsAllWavesCleared()) {
-
 			// --- ボス戦突入（まだボス出してない時） ---
 			if (!bossBattle_) {
 				bossBattle_ = true;
@@ -190,7 +137,6 @@ void GameScene::Update() {
 				}
 			}
 		}
-
 		// ロックオン対象の更新（既存ロジック維持）
 		if (bossBattle_ && boss_ && !boss_->IsDead()) {
 			player_->SetEnemy(boss_.get());
@@ -260,11 +206,9 @@ void GameScene::Update() {
 		}
 
 		// ── 花火（開始から emitFireworkDelaySec_ 秒後に一度だけ） ──
-		// ※「リング後ではなく開始から」の基準に変更
 		if (emitFireworkPending_ && emitOpenElapsed_ >= emitFireworkDelaySec_) {
 			emitFireworkPending_ = false;
-
-			// 同じ位置で出す（カメラ前を毎フレ計算したい場合は lastEmitPos_ ではなく再計算でもOK）
+			// 同じ位置で出す
 			ParticleManager::GetInstance()->Emit("irisFire", lastEmitPos_, 80);
 		}
 
@@ -293,9 +237,9 @@ void GameScene::Update() {
 
 	// ── カメラインロ：ツイーンでカメラ回転を更新 ──
 	if (camIntroActive_) {
-		// 60FPS想定の固定デルタ。可変デルタがあるなら dt を使ってOK
+		// 60FPS想定の固定デルタ
 		const float delta = 0.016f;
-
+		// ツイーン更新で現在のヨー回転を取得
 		float yawNow = camYawTween_.Update(delta);
 
 		// 進捗0..1を安全に出す
@@ -311,8 +255,7 @@ void GameScene::Update() {
 		if (camYawTween_.Finished()) {
 			camIntroActive_ = false;
 			camIntroDone_ = true;
-			// 念のため最終姿勢を明示
-			camera->SetRotate({ camPitchEnd_, camYawEnd_, 0.0f });
+			camera->SetRotate({ camPitchEnd_, camYawEnd_, 0.0f }); // 念のため最終値セット
 		}
 	}
 
@@ -351,7 +294,6 @@ void GameScene::Update() {
 			startHoldElapsed_ = 0.0f; // 到着後の静止タイマー開始
 		}
 	} else if (startVisible_) {
-
 		// 中央での呼吸発光（だんだん弱くなる）
 		if (!startFadeOut_ && startGlowOn_) {
 			float t01 = (startHoldSec_ > 0.0f) ? std::min(startHoldElapsed_ / startHoldSec_, 1.0f) : 1.0f;
@@ -359,7 +301,6 @@ void GameScene::Update() {
 			float glow = 1.0f + decay * 0.20f * std::sin(startHoldElapsed_ * startGlowSpeed_);
 			startSprite_->SetColor({ glow, glow, glow, startAlpha_ });
 		}
-
 		// 到着後：静止→フェードアウト
 		if (!startFadeOut_) {
 			startHoldElapsed_ += dt;
@@ -399,7 +340,6 @@ void GameScene::Update() {
 		Vector3 emitPos = { 0.0f, 2.5f, 20.0f };  // Zを少し奥にして見やすく
 		ParticleManager::GetInstance()->Emit("ribbonTest", emitPos, 1); // 1本だけ出す
 	}
-
 
 	// ─── プレイヤー死亡時のGameOver遷移 ───
 	if (player_ && player_->IsDead()) {
@@ -493,11 +433,9 @@ void GameScene::Draw() {
 	if (irisOpening_ && iris_) {
 		iris_->Draw(); // 開く
 	}
-
 	if (irisClosing_ && iris_) {
 		iris_->Draw(); // 閉じる
 	}
-
 	if (startVisible_) {
 		startSprite_->Draw(); // ゲームスタート文字
 	}
@@ -550,10 +488,7 @@ void GameScene::InitializeSprite() {
 	iris_->SetPosition({ WindowsAPI::kClientWidth * 0.5f, WindowsAPI::kClientHeight * 0.5f });
 
 	// 画面対角から最大スケールを計算
-	const float diag = std::sqrt(
-		float(WindowsAPI::kClientWidth) * float(WindowsAPI::kClientWidth) +
-		float(WindowsAPI::kClientHeight) * float(WindowsAPI::kClientHeight)
-	);
+	const float diag = std::sqrt(float(WindowsAPI::kClientWidth) * float(WindowsAPI::kClientWidth) + float(WindowsAPI::kClientHeight) * float(WindowsAPI::kClientHeight));
 	irisMaxScale_ = diag * 2.0f;    // TitleSceneと対に合わせる
 
 	irisStartScale_ = irisMaxScale_; // 最初は覆った状態
@@ -701,7 +636,6 @@ bool GameScene::UpdateClearSequence(float dt) {
 		if (t >= 1.0f) {
 			clearPhase_ = ClearPhase::PlayerFly;
 			clearTimer_ = 0.0f;
-
 			// プレイヤー飛び始め時に花火タイマーリセット
 			fireTimer = 0.0f;
 		}
@@ -724,20 +658,17 @@ bool GameScene::UpdateClearSequence(float dt) {
 		// ============================
 		// 花火演出（打ち上げ花火版）
 		// ============================
-
 		// ランダム範囲ヘルパー
 		auto randRange = [](float min, float max) {
 			return min + (max - min) * MyMath::Rand01();
 			};
 
 		// 「次の花火が上がるまでの時間」をランダムで決める用
-		// （このstaticはこの関数の中で1回だけ初期化されて生き続ける）
 		static float fireInterval = randRange(0.8f, 1.6f); // 0.8〜1.6秒のどこか
+		fireTimer += dt; // 経過時間を加算
 
-		fireTimer += dt;
-
-		if (fireTimer >= fireInterval) {
-			fireTimer = 0.0f;
+		if (fireTimer >= fireInterval) { // 花火打ち上げタイミング到来
+			fireTimer = 0.0f; // タイマーリセット
 			// 次回用に、また別の間隔をランダム決定
 			fireInterval = randRange(0.8f, 1.6f);
 
@@ -755,15 +686,13 @@ bool GameScene::UpdateClearSequence(float dt) {
 				static_cast<float>(WindowsAPI::kClientHeight);
 			const float halfHeight = 25.0f;              // 画面の上下方向の半分くらい（調整ポイント）
 			const float halfWidth = halfHeight * aspect; // アスペクト比に合わせた横幅
-
 			// どれくらい「奥」に花火を出すか（カメラ前方方向）
 			const float minDepth = 80.0f;   // カメラからの最小距離
 			const float maxDepth = 140.0f;  // カメラからの最大距離
-
 			// 一度に何発分の花火を出すか（単発）
 			const int kBurstCount = 1;
 
-			for (int i = 0; i < kBurstCount; ++i) {
+			for (int i = 0; i < kBurstCount; ++i) { // 複数発分ループ
 				// スクリーン座標風の -1.0〜1.0
 				float sx = randRange(-1.0f, 1.0f);    // 左右
 				float sy = randRange(-0.8f, 0.8f);   // 上下（ちょい上下狭め）
@@ -771,13 +700,9 @@ bool GameScene::UpdateClearSequence(float dt) {
 				float depth = randRange(minDepth, maxDepth);
 
 				// カメラ前方 depth の位置を中心に、Right/Up 方向でオフセット
-				Vector3 center =
-					camPos +
-					camFwd * depth +
-					camRight * (sx * halfWidth) +
-					camUp * (sy * halfHeight);
+				Vector3 center = camPos + camFwd * depth + camRight * (sx * halfWidth) + camUp * (sy * halfHeight);
 
-				SpawnFirework(center);
+				SpawnFirework(center); // 花火発生関数を呼ぶ
 			}
 		}
 
@@ -829,7 +754,6 @@ void GameScene::SpawnFirework(const Vector3& center) {
 		launchPos.y -= 40.0f;        // 少し下から飛ばす
 		pm->Emit("fw_launch", launchPos, 1);
 	}
-
 	// =========================
 	// 2. 爆発フラッシュ
 	// =========================
@@ -837,7 +761,6 @@ void GameScene::SpawnFirework(const Vector3& center) {
 		Vector3 flashPos = center;
 		pm->Emit("fw_flash", flashPos, 1);
 	}
-
 	// =========================
 	// 3. 花火本体（放射）
 	// =========================
