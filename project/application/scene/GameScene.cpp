@@ -757,10 +757,8 @@ void GameScene::UpdateMemory() {
 
 	PROCESS_MEMORY_COUNTERS pmc{};
 	if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
-
 		// ───── 使用中メモリ（MB単位）を計算 ─────
 		float memoryUsageMB = static_cast<float>(pmc.WorkingSetSize) / (1024.0f * 1024.0f);
-
 		// ───── リングバッファ形式で履歴を更新 ─────
 		memoryHistory_[memoryHistoryIndex_] = memoryUsageMB;
 		memoryHistoryIndex_ = (memoryHistoryIndex_ + 1) % kMemoryHistorySize; // インデックスを循環
@@ -830,7 +828,6 @@ bool GameScene::UpdateClearSequence(float dt) {
 	static float fireTimer = 0.0f;
 
 	switch (clearPhase_) {
-
 	case ClearPhase::CamZoom: // カメラ寄せ
 	{
 		// 1秒かけて寄る
@@ -850,7 +847,6 @@ bool GameScene::UpdateClearSequence(float dt) {
 		}
 		break;
 	}
-
 	case ClearPhase::PlayerFly:
 	{
 		// カメラは寄った位置で固定
@@ -925,10 +921,6 @@ bool GameScene::UpdateClearSequence(float dt) {
 			}
 		}
 
-		// ============================
-		// ここまで花火
-		// ============================
-
 		// 一定距離進んだらアイリス閉じへ
 		if (clearTimer_ >= clearPlayerFlyMinTime_ &&
 			pos.z > clearPlayerStartPos_.z + clearPlayerFlyDistance_) {
@@ -942,7 +934,6 @@ bool GameScene::UpdateClearSequence(float dt) {
 		}
 		break;
 	}
-
 	case ClearPhase::IrisClose: // アイリス閉じ
 	{
 		if (irisClosing_ && iris_) {
@@ -957,7 +948,6 @@ bool GameScene::UpdateClearSequence(float dt) {
 		}
 		break;
 	}
-
 	default:
 		break;
 	}
