@@ -11,7 +11,7 @@
 #include <psapi.h>
 #include <Input.h>
 
-void GameScene::Initialize(){
+void GameScene::Initialize() {
 	// ──────────────── NULLチェック ────────────────
 	assert(this != nullptr && "this is nullptr in GameScene::Initialize");
 	assert(dxCommon != nullptr && "dxCommon is nullptr in GameScene::Initialize");
@@ -121,9 +121,15 @@ void GameScene::Initialize(){
 	skybox_ = std::make_unique<Skybox>();
 	skybox_->Initialize(dxCommon, srvManager, "resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
 	skybox_->SetCamera(camera.get());
+
+	// ──────────────── 敵マネージャの初期化 ───────────────
+	// プレイヤー初期化のあとあたりに
+	enemyManager_ = std::make_unique<EnemyManager>();
+	enemyManager_->Initialize(dxCommon, camera.get(), this, player_.get());
+	enemyManager_->BindEnemyData(&enemies_, &defeatedEnemyCount_, &maxEnemyCount_);
 }
 
-void GameScene::Finalize(){
+void GameScene::Finalize() {
 	// テクスチャマネージャーの終了
 	TextureManager::GetInstance()->Finalize();
 
@@ -134,7 +140,7 @@ void GameScene::Finalize(){
 	ModelManager::GetInstance()->Finalize();
 }
 
-void GameScene::Update(){
+void GameScene::Update() {
 	// 入力処理
 	Input::GetInstance()->Update();
 
@@ -157,8 +163,10 @@ void GameScene::Update(){
 	// --- 敵とWaveは「ゲーム開始後」だけ動かす ---
 	if (!gameplayLocked_ && enemiesInitialized_) {
 
-		// 敵の更新と削除
-		UpdateEnemies();
+		// 敵の更新と削除（処理を EnemyManager に委譲）
+		if (enemyManager_) {
+			enemyManager_->Update(dt);
+		}
 
 		if (enemies_.empty()) {
 			if (wavePhase_ != WavePhase::Done) {
@@ -261,7 +269,7 @@ void GameScene::Update(){
 		}
 
 		// ── アイリスの見た目更新（従来どおり） ──
-		irisScale_ = irisTween_.Update(0.016f);     // 実 deltaTime があるならそれを使うと安定
+		irisScale_ = irisTween_.Update(0.016f);
 		iris_->SetSize({ irisScale_, irisScale_ });
 		iris_->Update();
 
@@ -281,6 +289,11 @@ void GameScene::Update(){
 			// 横向き（camYawStart_）→ 正面（camYawEnd_）へ、OutBackで camIntroDuration_ 秒
 			camYawTween_.Reset(camYawStart_, camYawEnd_, camIntroDuration_, Ease::Type::OutBack);
 		}
+	}
+
+	// GameScene::Update のどこか（最後の方でOK）
+	if (enemyManager_) {
+		enemyManager_->Update(dt); // deltaTime 使ってないなら 0.0f でも可
 	}
 
 	// ── カメラインロ：ツイーンでカメラ回転を更新 ──
@@ -366,7 +379,7 @@ void GameScene::Update(){
 				startVisible_ = false; // 完全に消す
 
 				if (!enemiesInitialized_) {
-					requestInitEnemies_ = true;   // ←追加！
+					requestInitEnemies_ = true;
 				}
 
 				gameplayLocked_ = false; // ゲームプレイ解放
@@ -454,21 +467,25 @@ void GameScene::Update(){
 	UpdatePerformanceInfo();
 }
 
-void GameScene::Draw(){
-	if (skybox_) skybox_->Draw();
+void GameScene::Draw() {
+	if (skybox_) skybox_->Draw(); // スカイボックスの描画
 
 	// 3Dまとめ
 	Object3dCommon::GetInstance()->DrawSetCommon();
 	//for (auto& g : groundTiles_) g->Draw(dxCommon);
-	player_->Draw(dxCommon);
-	for (auto& enemy : enemies_) enemy->Draw(dxCommon);
+	player_->Draw(dxCommon); // プレイヤーの描画
+
+	if (enemyManager_) {
+		enemyManager_->Draw(dxCommon); // 敵群の描画を EnemyManager に委譲
+	}
+
 	// クリア演出中はボス関連を描かない
 	if (!clearSequence_) {
 		if (bossBattle_ && boss_) {
-			boss_->Draw(dxCommon);
+			boss_->Draw(dxCommon); // ボスの描画
 		}
 		for (auto& b : bossBullets_) {
-			b->Draw(dxCommon);
+			b->Draw(dxCommon); // ボス弾の描画
 		}
 	}
 
@@ -479,7 +496,7 @@ void GameScene::Draw(){
 	SpriteCommon::GetInstance()->DrawSetCommon();
 	// ---- 最前面の白円は Sprite パスで最後に描く ----
 	if (irisOpening_ && iris_) {
-		iris_->Draw();
+		iris_->Draw(); // 開く
 	}
 
 	if (irisClosing_ && iris_) {
@@ -491,7 +508,7 @@ void GameScene::Draw(){
 	}
 }
 
-void GameScene::SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float speed, int damage, int lifeFrame){
+void GameScene::SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float speed, int damage, int lifeFrame) {
 	auto b = std::make_unique<BossBullet>();
 	b->Initialize(Object3dCommon::GetInstance(), dxCommon, camera.get(), pos, dir, speed, damage, lifeFrame);
 	bossBullets_.push_back(std::move(b));
@@ -500,7 +517,7 @@ void GameScene::SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float s
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 // ゲーム内のサウンドをロード＆再生する
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-void GameScene::InitializeAudio(){
+void GameScene::InitializeAudio() {
 	auto* audio = AudioManager::GetInstance();
 	audio->Initialize();
 	audio->LoadSound("bossP2", "FLASHness.wav"); // ボス戦フェーズ2用BGM ( FLASHness / NEURAY )
@@ -509,7 +526,7 @@ void GameScene::InitializeAudio(){
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 // 必要なテクスチャをロードする
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-void GameScene::LoadTextures(){
+void GameScene::LoadTextures() {
 	//ファイルパス
 	TextureManager::GetInstance()->LoadTexture("./resources/uvChecker.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/pokemon.png");
@@ -529,7 +546,7 @@ void GameScene::LoadTextures(){
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 // スプライトを作成し、初期化する
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-void GameScene::InitializeSprite(){
+void GameScene::InitializeSprite() {
 	iris_ = std::make_unique<Sprite>();
 	iris_->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/circle2.png");
 
@@ -567,7 +584,7 @@ void GameScene::InitializeSprite(){
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 // 必要な3Dモデルをロードする
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-void GameScene::LoadModels(){
+void GameScene::LoadModels() {
 	ModelManager::GetInstance()->LoadModel("axis.obj", dxCommon);
 	ModelManager::GetInstance()->LoadModel("sphere.obj", dxCommon);
 	ModelManager::GetInstance()->LoadModel("terrain.obj", dxCommon);
@@ -582,7 +599,7 @@ void GameScene::LoadModels(){
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 // 3Dオブジェクトを作成し、初期化する
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-void GameScene::InitializeObjects(){
+void GameScene::InitializeObjects() {
 	// --- ground: タイルを3枚並べる ---
 	//groundTiles_.clear();
 	//const int tileCount = 3;
@@ -606,7 +623,7 @@ void GameScene::InitializeObjects(){
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 // カメラを作成し、各オブジェクトに適用する
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-void GameScene::InitializeCamera(){
+void GameScene::InitializeCamera() {
 	camera = std::make_unique<Camera>();
 	camera->SetRotate({ camPitchStart_, camYawStart_, 0.0f });
 	camera->SetTranslate({ 0.0f,0.0f,-30.0f });
@@ -622,7 +639,7 @@ void GameScene::InitializeCamera(){
 	}
 }
 
-void GameScene::ImGuiDebug(){
+void GameScene::ImGuiDebug() {
 #ifdef USE_IMGUI
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -796,7 +813,7 @@ void GameScene::ImGuiDebug(){
 #endif // _DEBUG
 }
 
-void GameScene::UpdateMemory(){
+void GameScene::UpdateMemory() {
 	/// ───────────────────────────────────────────────
 	/// ● 現在のメモリ使用量（MB）を取得し、履歴に記録する
 	/// ───────────────────────────────────────────────
@@ -813,32 +830,7 @@ void GameScene::UpdateMemory(){
 	}
 }
 
-void GameScene::UpdateEnemies(){
-	/// ───────────────────────────────────────────────
-	/// ● 敵の状態を更新し、死亡したものは削除＆カウント
-	/// ───────────────────────────────────────────────
-
-	for (auto it = enemies_.begin(); it != enemies_.end(); ) {
-		Enemy* e = it->get();      // erase 前に生存中の生ポインタを保持
-		e->Update();
-
-		if (e->IsDead()) {
-			// 死亡していたら
-			player_->OnEnemyDestroyed(e); // プレイヤーに通知
-
-			++defeatedEnemyCount_;          // 倒した数をカウント
-			if (defeatedEnemyCount_ == 3) {
-				player_->EnableSpecialAttack();
-			}
-
-			it = enemies_.erase(it);        // erase でイテレータが無効化されるので注意
-		} else {
-			++it;
-		}
-	}
-}
-
-void GameScene::UpdateClosestEnemy(){
+void GameScene::UpdateClosestEnemy() {
 	/// ───────────────────────────────────────────────
 	/// ● プレイヤーに最も近い敵を検出し、ターゲットとして設定する
 	/// ───────────────────────────────────────────────
@@ -922,7 +914,7 @@ void GameScene::SpawnCurrentWave() {
 				e.SetVelocity({ 0,0,-0.22f });
 				e.SetSineParams(/*ampX*/6.0f, /*freq*/1.6f);
 
-				// ★ここが追加：個体ごとに位相と停止Zを少しずつズラす
+				// 個体ごとに位相と停止Zを少しずつズラす
 				e.SetSinePhase(phaseStep * float(idx));
 				e.SetStopZ(60.0f + stopStep * float(idx % 3));
 
@@ -980,7 +972,7 @@ void GameScene::GoToNextWave() {
 	maxEnemyCount_ = 0;
 }
 
-void GameScene::UpdateSkyboxRotationX(){
+void GameScene::UpdateSkyboxRotationX() {
 	constexpr float kTwoPi = 6.2831853f;
 
 	// X軸回転を更新
@@ -1022,7 +1014,7 @@ void GameScene::UpdateSkyboxRotationX(){
 //	}
 //}
 
-void GameScene::StartClearSequence(){
+void GameScene::StartClearSequence() {
 	clearSequence_ = true;
 	clearPhase_ = ClearPhase::CamZoom;
 	clearTimer_ = 0.0f;
@@ -1063,7 +1055,7 @@ void GameScene::StartClearSequence(){
 	irisClosing_ = false;
 }
 
-bool GameScene::UpdateClearSequence(float dt){
+bool GameScene::UpdateClearSequence(float dt) {
 	clearTimer_ += dt;
 
 	// skyboxはずっと回し続ける
@@ -1088,7 +1080,7 @@ bool GameScene::UpdateClearSequence(float dt){
 			clearPhase_ = ClearPhase::PlayerFly;
 			clearTimer_ = 0.0f;
 
-			// ★プレイヤー飛び始め時に花火タイマーリセット
+			// プレイヤー飛び始め時に花火タイマーリセット
 			fireTimer = 0.0f;
 		}
 		break;
@@ -1211,7 +1203,7 @@ bool GameScene::UpdateClearSequence(float dt){
 	return false; // まだ演出継続中
 }
 
-void GameScene::SpawnFirework(const Vector3& center){
+void GameScene::SpawnFirework(const Vector3& center) {
 	auto pm = ParticleManager::GetInstance();
 
 	// =========================

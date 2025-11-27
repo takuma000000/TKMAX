@@ -303,9 +303,9 @@ void Player::Draw(DirectXCommon* dxCommon) {
 		reticle_->Draw(dxCommon);
 	}
 
-	for (auto& bullet : bullets_) {
-		bullet->Draw(dxCommon); // 弾描画
-	}
+	//for (auto& bullet : bullets_) {
+	//	bullet->Draw(dxCommon); // 弾描画
+	//}
 }
 
 void Player::SetPosition(const Vector3& pos) {

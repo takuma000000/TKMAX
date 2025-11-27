@@ -1054,7 +1054,7 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 		// 爆心コア：画面を埋めるくらいのまぶしいエネルギー球
 		p.transform.translate = center;
 
-		// ★サイズ大幅アップ（敵が完全に飲み込まれるレベル）
+		// サイズ大幅アップ（敵が完全に飲み込まれるレベル）
 		float sc = std::uniform_real_distribution<float>(4.0f, 6.0f)(rng);
 		p.transform.scale = { sc, sc, sc };
 		p.velocity = { 0.0f, 0.0f, 0.0f };
@@ -1071,7 +1071,7 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 		// 球状ショックウェーブ（外側のエネルギー殻。コアよりさらに大きい）
 		p.transform.translate = center;
 
-		// ★半径かなり拡大（画面を貫く衝撃波）
+		// 半径かなり拡大（画面を貫く衝撃波）
 		float sc = std::uniform_real_distribution<float>(5.0f, 7.5f)(rng);
 		p.transform.scale = { sc, sc, sc };
 		p.velocity = { 0.0f, 0.0f, 0.0f };

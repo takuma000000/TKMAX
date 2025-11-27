@@ -143,7 +143,7 @@
     <ClCompile Include="application\scene\GameOverScene.cpp">
       <Filter>application\scene</Filter>
     </ClCompile>
-    <ClCompile Include="EnemyWaveManager.cpp" />
+    <ClCompile Include="EnemyManager.cpp" />
     <ClCompile Include="application\player\reticle\Reticle.cpp">
       <Filter>application\player\reticle</Filter>
     </ClCompile>
@@ -314,7 +314,7 @@
     <ClInclude Include="engine\func\math\Vector2.h">
       <Filter>engine\func\math</Filter>
     </ClInclude>
-    <ClInclude Include="EnemyWaveManager.h" />
+    <ClInclude Include="EnemyManager.h" />
     <ClInclude Include="application\player\reticle\Reticle.h">
       <Filter>application\player\reticle</Filter>
     </ClInclude>

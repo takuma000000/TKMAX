@@ -22,6 +22,7 @@
 #include "GameClearScene.h"
 #include "TitleScene.h"
 #include "SceneManager.h"
+#include "EnemyManager.h"
 
 #include "application/player/Player.h"
 #include "application/enemy/Enemy.h"
@@ -100,8 +101,6 @@ private: // ──────────────────── 更新�
 	//メモリ使用量
 	/// <summary>メモリ使用量を計測・履歴化します。</summary>
 	void UpdateMemory();
-	/// <summary>敵群の更新を行います。</summary>
-	void UpdateEnemies();
 	/// <summary>最も近い敵を更新します。</summary>
 	void UpdateClosestEnemy();
 	/// <summary>敵の初期化を行います。</summary>
@@ -144,10 +143,12 @@ private:
 
 	std::unique_ptr<Skybox> skybox_;// スカイボックス
 	std::unique_ptr<Player> player_ = nullptr;
-	std::vector<std::unique_ptr<Enemy>> enemies_;
 
+	std::vector<std::unique_ptr<Enemy>> enemies_;
 	int defeatedEnemyCount_ = 0;// 倒した敵の数
 	int maxEnemyCount_ = 0;// 最大敵数
+
+	std::unique_ptr<EnemyManager> enemyManager_; // 敵管理クラス
 
 	//std::vector<std::unique_ptr<Object3d>> groundTiles_;
 	//float groundTileLen_ = 299.0f;   // ground.obj の奥行きに合わせて調整
