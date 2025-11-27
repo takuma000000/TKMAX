@@ -118,7 +118,7 @@ private: // ──────────────────── 更新�
 	/// <summary>スカイボックスのX回転を更新します。</summary>
 	void UpdateSkyboxRotationX(); // スカイボックスをX軸方向に回転
 	/// <summary>地面タイルのスクロールを更新します。</summary>
-	void UpdateGroundScroll(); // 地面タイルのスクロール更新
+	//void UpdateGroundScroll(); // 地面タイルのスクロール更新
 
 	/// <summary>Iris演出の更新を行います。</summary>
 	void StartClearSequence();
@@ -132,12 +132,7 @@ private:
 	DirectXCommon* dxCommon = nullptr;
 	SrvManager* srvManager = nullptr;
 
-	std::unique_ptr<Sprite> sprite = nullptr;
 	std::unique_ptr<Camera> camera = nullptr;
-
-	//地面
-	std::unique_ptr<Object3d> ground_ = nullptr;
-
 	std::unique_ptr<DirectionalLight> directionalLight_ = nullptr;// ディレクショナルライト
 
 	static const int kMemoryHistorySize = 100;
@@ -154,10 +149,10 @@ private:
 	int defeatedEnemyCount_ = 0;// 倒した敵の数
 	int maxEnemyCount_ = 0;// 最大敵数
 
-	std::vector<std::unique_ptr<Object3d>> groundTiles_;
-	float groundTileLen_ = 299.0f;   // ground.obj の奥行きに合わせて調整
-	float groundScroll_ = 0.6f;     // 前進感の速さ
-	float groundOffset_ = 0.0f;     // スクロール用オフセット
+	//std::vector<std::unique_ptr<Object3d>> groundTiles_;
+	//float groundTileLen_ = 299.0f;   // ground.obj の奥行きに合わせて調整
+	//float groundScroll_ = 0.6f;     // 前進感の速さ
+	//float groundOffset_ = 0.0f;     // スクロール用オフセット
 
 	float skyPitch_ = 0.0f;        // X軸回転量
 	float skyRotSpeedX_ = 0.002f;  // X軸回転速度
@@ -171,12 +166,6 @@ private:
 	std::unique_ptr<Sprite> iris_ = nullptr;
 	bool   irisOpening_ = true;
 	float  irisScale_ = 5.0f;
-	float  irisSpeed_ = 3.2f;
-	float  irisMin_ = 0.0f;
-
-	// ★追加
-	float  irisT_ = 0.0f;            // 進行度(0→1)
-	float  irisDuration_ = 0.8f;     // アニメ全体の長さ(秒)
 	float  irisStartScale_ = 0.0f;   // 開始スケール（覆った状態）
 	float  irisEndScale_ = 0.0f;   // 最終スケール（Initializeでセット）
 	float  irisMaxScale_ = 0.0f;   // 画面対角ベース
@@ -257,7 +246,6 @@ private:
 	float   clearPlayerSpeed_ = 10.0f; // 奥に進むスピード
 	float   clearPlayerFlyMinTime_ = 1.8f; // プレイヤーを飛ばして見せる最低時間（秒）
 	float   clearPlayerFlyDistance_ = 80.0f; // Z方向に飛ばす距離目安
-	Vector3 clearPlayerTargetPos_{}; // 目標位置（開始位置 + 距離）
 
 	// 風エフェクト用
 	void UpdateAirStreak(float dt);

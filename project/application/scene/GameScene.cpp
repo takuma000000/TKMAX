@@ -121,39 +121,6 @@ void GameScene::Initialize(){
 	skybox_ = std::make_unique<Skybox>();
 	skybox_->Initialize(dxCommon, srvManager, "resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
 	skybox_->SetCamera(camera.get());
-
-	iris_ = std::make_unique<Sprite>();
-	iris_->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/circle2.png");
-
-	// 画面中央に配置 & 対角長を最大に
-	iris_->SetAnchorPoint({ 0.5f, 0.5f });
-	iris_->SetPosition({ WindowsAPI::kClientWidth * 0.5f, WindowsAPI::kClientHeight * 0.5f });
-
-	// 画面対角から最大スケールを計算
-	const float diag = std::sqrt(
-		float(WindowsAPI::kClientWidth) * float(WindowsAPI::kClientWidth) +
-		float(WindowsAPI::kClientHeight) * float(WindowsAPI::kClientHeight)
-	);
-	irisMaxScale_ = diag * 2.0f;    // TitleSceneと対に合わせる
-
-	irisStartScale_ = irisMaxScale_; // 最初は覆った状態
-	irisEndScale_ = 0.0f;          // 最終的に消える
-	irisScale_ = irisStartScale_;
-	iris_->SetSize({ irisScale_, irisScale_ });
-	irisTween_.Reset(irisMaxScale_, 0.0f, kIrisDurationSec, Ease::Type::OutBack);
-
-	// タイトル戻り用アイリス
-	irisCloseScale_ = 0.0f;
-	irisCloseTween_.Reset(0.0f, irisMaxScale_, kIrisDurationSec, Ease::Type::InBack);
-
-	// ゲームスタート文字
-	startSprite_ = std::make_unique<Sprite>();
-	startSprite_->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/start.png");
-	startSprite_->SetAnchorPoint({ 0.5f, 0.5f }); // 中央基準
-	startSprite_->SetPosition({ startStartPos_.x, startStartPos_.y });
-	startSprite_->SetSize({ 100, 100 }); // 画像サイズに合わせ調整
-	startSprite_->SetColor({ 1,1,1,1 }); // アルファ1で開始
-	startTween_.Reset(0.0f, 1.0f, startDuration_, Ease::Type::OutBack);
 }
 
 void GameScene::Finalize(){
@@ -231,7 +198,7 @@ void GameScene::Update(){
 	UpdateSkyboxRotationX();
 
 	// ---- ground scroll ----
-	UpdateGroundScroll();
+	//UpdateGroundScroll();
 
 	player_->Update();
 	directionalLight_->Update();
@@ -563,10 +530,38 @@ void GameScene::LoadTextures(){
 // スプライトを作成し、初期化する
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeSprite(){
-	sprite = std::make_unique<Sprite>();
-	sprite->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/circle.png");
-	sprite->SetPosition({ -1000.0f, 0.0f });
-	sprite->SetParentScene(this);
+	iris_ = std::make_unique<Sprite>();
+	iris_->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/circle2.png");
+
+	// 画面中央に配置 & 対角長を最大に
+	iris_->SetAnchorPoint({ 0.5f, 0.5f });
+	iris_->SetPosition({ WindowsAPI::kClientWidth * 0.5f, WindowsAPI::kClientHeight * 0.5f });
+
+	// 画面対角から最大スケールを計算
+	const float diag = std::sqrt(
+		float(WindowsAPI::kClientWidth) * float(WindowsAPI::kClientWidth) +
+		float(WindowsAPI::kClientHeight) * float(WindowsAPI::kClientHeight)
+	);
+	irisMaxScale_ = diag * 2.0f;    // TitleSceneと対に合わせる
+
+	irisStartScale_ = irisMaxScale_; // 最初は覆った状態
+	irisEndScale_ = 0.0f;          // 最終的に消える
+	irisScale_ = irisStartScale_;
+	iris_->SetSize({ irisScale_, irisScale_ });
+	irisTween_.Reset(irisMaxScale_, 0.0f, kIrisDurationSec, Ease::Type::OutBack);
+
+	// タイトル戻り用アイリス
+	irisCloseScale_ = 0.0f;
+	irisCloseTween_.Reset(0.0f, irisMaxScale_, kIrisDurationSec, Ease::Type::InBack);
+
+	// ゲームスタート文字
+	startSprite_ = std::make_unique<Sprite>();
+	startSprite_->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/start.png");
+	startSprite_->SetAnchorPoint({ 0.5f, 0.5f }); // 中央基準
+	startSprite_->SetPosition({ startStartPos_.x, startStartPos_.y });
+	startSprite_->SetSize({ 100, 100 }); // 画像サイズに合わせ調整
+	startSprite_->SetColor({ 1,1,1,1 }); // アルファ1で開始
+	startTween_.Reset(0.0f, 1.0f, startDuration_, Ease::Type::OutBack);
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -589,16 +584,16 @@ void GameScene::LoadModels(){
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeObjects(){
 	// --- ground: タイルを3枚並べる ---
-	groundTiles_.clear();
-	const int tileCount = 3;
-	for (int i = 0; i < tileCount; ++i) {
-		auto g = std::make_unique<Object3d>();
-		g->Initialize(Object3dCommon::GetInstance(), dxCommon);
-		g->SetModel("ground.obj");
-		g->SetParentScene(this);
-		g->SetTranslate({ 0.0f, -2.0f,  (float)i * groundTileLen_ }); // 少し下げる
-		groundTiles_.push_back(std::move(g));
-	}
+	//groundTiles_.clear();
+	//const int tileCount = 3;
+	//for (int i = 0; i < tileCount; ++i) {
+	//	auto g = std::make_unique<Object3d>();
+	//	g->Initialize(Object3dCommon::GetInstance(), dxCommon);
+	//	g->SetModel("ground.obj");
+	//	g->SetParentScene(this);
+	//	g->SetTranslate({ 0.0f, -2.0f,  (float)i * groundTileLen_ }); // 少し下げる
+	//	groundTiles_.push_back(std::move(g));
+	//}
 
 	// player
 	player_ = std::make_unique<Player>();
@@ -616,10 +611,10 @@ void GameScene::InitializeCamera(){
 	camera->SetRotate({ camPitchStart_, camYawStart_, 0.0f });
 	camera->SetTranslate({ 0.0f,0.0f,-30.0f });
 
-	ground_ = nullptr; // 既存は使わない（誤参照防止）
-	for (auto& g : groundTiles_) {
-		g->SetCamera(camera.get());
-	}
+	//ground_ = nullptr; // 既存は使わない（誤参照防止）
+	//for (auto& g : groundTiles_) {
+	//	g->SetCamera(camera.get());
+	//}
 	player_->SetCamera(camera.get());
 
 	for (auto& enemy : enemies_) {
@@ -683,28 +678,28 @@ void GameScene::ImGuiDebug(){
 	}
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	ImGui::Begin("地面");
-	for (size_t i = 0; i < groundTiles_.size(); ++i) {
-		ImGui::PushID(static_cast<int>(i)); // IDを分ける
-		Vector3 t = groundTiles_[i]->GetTranslate();
-		Vector3 r = groundTiles_[i]->GetRotate();
-		Vector3 s = groundTiles_[i]->GetScale();
-		if (ImGui::DragFloat3("位置", &t.x, 0.01f)) {
-			groundTiles_[i]->SetTranslate(t);
-		}
-		if (ImGui::DragFloat3("回転", &r.x, 0.01f)) {
-			groundTiles_[i]->SetRotate(r);
-		}
-		if (ImGui::DragFloat3("拡縮", &s.x, 0.01f)) {
-			groundTiles_[i]->SetScale(s);
-		}
-		ImGui::Separator();
-		ImGui::PopID();
-	}
-	ImGui::DragFloat("タイルの長さ", &groundTileLen_, 0.1f, 10.0f, 1000.0f); // 実寸に近い範囲で
-	ImGui::DragFloat("スクロール速度", &groundScroll_, 0.01f, -5.0f, 5.0f);
-	ImGui::DragFloat("オフセット", &groundOffset_, 0.1f, 0.0f, groundTileLen_ * groundTiles_.size());
-	ImGui::End();
+	//ImGui::Begin("地面");
+	//for (size_t i = 0; i < groundTiles_.size(); ++i) {
+	//	ImGui::PushID(static_cast<int>(i)); // IDを分ける
+	//	Vector3 t = groundTiles_[i]->GetTranslate();
+	//	Vector3 r = groundTiles_[i]->GetRotate();
+	//	Vector3 s = groundTiles_[i]->GetScale();
+	//	if (ImGui::DragFloat3("位置", &t.x, 0.01f)) {
+	//		groundTiles_[i]->SetTranslate(t);
+	//	}
+	//	if (ImGui::DragFloat3("回転", &r.x, 0.01f)) {
+	//		groundTiles_[i]->SetRotate(r);
+	//	}
+	//	if (ImGui::DragFloat3("拡縮", &s.x, 0.01f)) {
+	//		groundTiles_[i]->SetScale(s);
+	//	}
+	//	ImGui::Separator();
+	//	ImGui::PopID();
+	//}
+	//ImGui::DragFloat("タイルの長さ", &groundTileLen_, 0.1f, 10.0f, 1000.0f); // 実寸に近い範囲で
+	//ImGui::DragFloat("スクロール速度", &groundScroll_, 0.01f, -5.0f, 5.0f);
+	//ImGui::DragFloat("オフセット", &groundOffset_, 0.1f, 0.0f, groundTileLen_ * groundTiles_.size());
+	//ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	ImGui::Begin("敵ステータス");
 	ImGui::Text("撃破数: %d / %d", defeatedEnemyCount_, maxEnemyCount_);
@@ -997,35 +992,35 @@ void GameScene::UpdateSkyboxRotationX(){
 	skybox_->SetRotation({ skyPitch_, 0.0f, 0.0f });
 }
 
-void GameScene::UpdateGroundScroll() {
-	const int   N = static_cast<int>(groundTiles_.size());
-	if (N == 0) return;
-
-	const float L = groundTileLen_;
-	const float speed = groundScroll_;
-	const float epsilon = 0.001f; // タイル間にごく小さな隙間を入れてZ-fighting防止
-
-	// 累積オフセット更新
-	groundOffset_ += speed;
-	const float loop = N * L;
-	if (groundOffset_ >= loop) groundOffset_ -= loop;
-	if (groundOffset_ < 0.0f)  groundOffset_ += loop;
-
-	// いまどのタイルが先頭か（整数部）と端数（小数部）
-	const int   k = static_cast<int>(groundOffset_ / L);
-	const float frac = groundOffset_ - static_cast<float>(k) * L;
-
-	// 配置
-	for (int j = 0; j < N; ++j) {
-		const int idx = (k + j) % N;
-		float z = -L + j * L - frac - epsilon * j;
-
-		Vector3 t = groundTiles_[idx]->GetTranslate();
-		t.z = z;
-		groundTiles_[idx]->SetTranslate(t);
-		groundTiles_[idx]->Update();
-	}
-}
+//void GameScene::UpdateGroundScroll() {
+//	const int   N = static_cast<int>(groundTiles_.size());
+//	if (N == 0) return;
+//
+//	const float L = groundTileLen_;
+//	const float speed = groundScroll_;
+//	const float epsilon = 0.001f; // タイル間にごく小さな隙間を入れてZ-fighting防止
+//
+//	// 累積オフセット更新
+//	groundOffset_ += speed;
+//	const float loop = N * L;
+//	if (groundOffset_ >= loop) groundOffset_ -= loop;
+//	if (groundOffset_ < 0.0f)  groundOffset_ += loop;
+//
+//	// いまどのタイルが先頭か（整数部）と端数（小数部）
+//	const int   k = static_cast<int>(groundOffset_ / L);
+//	const float frac = groundOffset_ - static_cast<float>(k) * L;
+//
+//	// 配置
+//	for (int j = 0; j < N; ++j) {
+//		const int idx = (k + j) % N;
+//		float z = -L + j * L - frac - epsilon * j;
+//
+//		Vector3 t = groundTiles_[idx]->GetTranslate();
+//		t.z = z;
+//		groundTiles_[idx]->SetTranslate(t);
+//		groundTiles_[idx]->Update();
+//	}
+//}
 
 void GameScene::StartClearSequence(){
 	clearSequence_ = true;
@@ -1063,10 +1058,6 @@ void GameScene::StartClearSequence(){
 
 	// プレイヤーのスタート位置
 	clearPlayerStartPos_ = player_->GetPosition();
-
-	// ここで「どこまで飛ぶか」を決めておく（+Z方向に一定距離）
-	clearPlayerTargetPos_ = clearPlayerStartPos_; // いったん同じ位置に
-	clearPlayerTargetPos_.z += clearPlayerFlyDistance_; // +Z方向に進む
 
 	// 念のためアイリス閉じ状態リセット
 	irisClosing_ = false;

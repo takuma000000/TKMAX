@@ -266,7 +266,6 @@ public:
 		if (ImGui::CollapsingHeader("Reticle 3D")) {
 			ImGui::Checkbox("Visible", &visible_);
 			ImGui::Checkbox("Align To Owner Yaw", &alignToOwnerYaw_);
-			ImGui::Checkbox("Invert Forward", &invertForward_);
 			ImGui::Checkbox("Self Spin Axis = Y", &selfSpinAxisY_);
 			ImGui::DragFloat("Up Offset", &up_, 0.01f, -20.0f, 20.0f);
 			ImGui::DragFloat("Yaw Offset", &yawOffset_, 0.001f, -3.14f, 3.14f);
@@ -286,7 +285,6 @@ public:
 					}
 
 					ImGui::Checkbox("Visible", &L.visible);
-					ImGui::DragFloat("Forward", &L.forward, 0.1f, -200.f, 200.f);
 					ImGui::DragFloat3("Scale", &L.scale.x, 0.01f, 0.01f, 10.f);
 					ImGui::DragFloat("SpinSpeed", &L.spinSpeed, 0.01f, -20.f, 20.f);
 					ImGui::TreePop();
@@ -300,16 +298,12 @@ private:
 	//--------------------------------------------------
 	// 各レイヤ
 	//--------------------------------------------------
-	struct Layer {
-		std::unique_ptr<Object3d> obj;
-
-		float   forward = 0.0f;         // 今は使ってないがImGui用に残す
-		Vector3 scale = { 1,1,1 };
-
-		float   spinSpeed = 0.0f;
-		float   selfAngle = 0.0f;
-
-		bool    visible = true;
+	struct Layer { // 上から順に引数
+		std::unique_ptr<Object3d> obj; // 3Dオブジェクト本体
+		Vector3 scale = { 1,1,1 }; // スケール
+		float   spinSpeed = 0.0f; // 自己回転速度（ラジアン/秒）
+		float   selfAngle = 0.0f; // 自己回転角度（ラジアン）
+		bool    visible = true; // 表示/非表示
 	};
 
 	//--------------------------------------------------
@@ -324,16 +318,15 @@ private:
 
 	// 手前→奥の順に4層
 	std::array<Layer, 4> layers_ = { // 第一引数: Object3dポインタ 第二引数: 前後位置（ImGui用） 第三引数: スケール　第四引数: 自己回転速度　第五引数: 自己回転角度　第六引数: 表示/非表示
-		Layer{ nullptr, 0.0f, {1.80f, 1.80f, 1.80f},  2.5f, 0.0f, true }, // 0: 一番手前
-		Layer{ nullptr, 0.0f, {1.55f, 1.55f, 1.55f}, -2.3f, 0.0f, true }, // 1
-		Layer{ nullptr, 0.0f, {1.48f, 1.48f, 1.48f},  2.5f, 0.0f, true }, // 2
-		Layer{ nullptr, 0.0f, {1.20f, 1.20f, 1.20f}, -2.3f, 0.0f, true }  // 3: 奥
+		Layer{ nullptr,{1.80f, 1.80f, 1.80f},  2.5f, 0.0f, true }, // 0: 一番手前
+		Layer{ nullptr,{1.55f, 1.55f, 1.55f}, -2.3f, 0.0f, true }, // 1
+		Layer{ nullptr,{1.48f, 1.48f, 1.48f},  2.5f, 0.0f, true }, // 2
+		Layer{ nullptr,{1.20f, 1.20f, 1.20f}, -2.3f, 0.0f, true }  // 3: 奥
 	};
 
 	// 全体設定
 	bool  visible_ = true;
 	bool  alignToOwnerYaw_ = true;
-	bool  invertForward_ = false;
 	bool  selfSpinAxisY_ = false;
 	float up_ = 0.0f;
 	float yawOffset_ = 0.0f;
