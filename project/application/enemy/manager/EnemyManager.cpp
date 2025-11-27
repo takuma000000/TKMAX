@@ -305,6 +305,35 @@ void EnemyManager::ImGuiDebug() {
 	}
 	ImGui::ProgressBar(progress, ImVec2(200, 20), "撃破進行度");
 
+	// ===== Wave 状態表示 =====
+	const char* waveLabel = "";
+	switch (wavePhase_) {
+	case WavePhase::W1:   waveLabel = "Wave1";        break;
+	case WavePhase::W2:   waveLabel = "Wave2";        break;
+	case WavePhase::W3:   waveLabel = "Wave3";        break;
+	case WavePhase::Done: waveLabel = "Bossフェーズ"; break;
+	}
+	ImGui::Text("現在のWave: %s", waveLabel);
+
+	// 「次のWaveへ」ボタン
+	if (ImGui::Button("次のWaveへ")) {
+		GoToNextWave();
+	}
+	ImGui::SameLine(); // 横並びに
+	// 「ボスWaveへ」ボタン
+	if (ImGui::Button("ボスWaveへ")) {
+		SkipToBossWave();
+	}
+
+	ImGui::Separator();
+
+	// 各敵のデバッグ
+	for (size_t i = 0; i < enemies_->size(); ++i) {
+		ImGui::PushID(static_cast<int>(i));
+		(*enemies_)[i]->ImGuiDebug();
+		ImGui::PopID();
+	}
+
 	ImGui::End();
 #endif
 }

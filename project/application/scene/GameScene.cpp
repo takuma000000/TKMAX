@@ -624,43 +624,13 @@ void GameScene::ImGuiDebug() {
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	enemyManager_->ImGuiDebug();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	ImGui::Begin("WAVEステータス");
-	int defeated = defeatedEnemyCount_;
-	int maxCount = maxEnemyCount_;
-	ImGui::Text("撃破数: %d / %d", defeated, maxCount);
-	float progress = 0.0f;
-	if (maxCount > 0) {
-		progress = static_cast<float>(defeated) / static_cast<float>(maxCount);
-	}
-	ImGui::ProgressBar(progress, ImVec2(200, 20), "撃破進行度");
-	// Wave の表示を EnemyManager から取る
-	EnemyManager::WavePhase phase = enemyManager_->GetWavePhase();
-	const char* waveLabel = "";
-	switch (phase) {
-	case EnemyManager::WavePhase::W1:   waveLabel = "Wave1";        break;
-	case EnemyManager::WavePhase::W2:   waveLabel = "Wave2";        break;
-	case EnemyManager::WavePhase::W3:   waveLabel = "Wave3";        break;
-	case EnemyManager::WavePhase::Done: waveLabel = "Bossフェーズ"; break;
-	}
-	ImGui::Text("現在のWave: %s", waveLabel);
-	// 「次のWaveへ」ボタン
-	if (ImGui::Button("次のWaveへ")) {
-		enemyManager_->GoToNextWave();
-	}
-	ImGui::SameLine();
-	// 「ボスWaveへ」ボタン
-	if (ImGui::Button("ボスWaveへ")) {
-		enemyManager_->SkipToBossWave();
-	}
-	ImGui::End();
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	camera->ImGuiDebug();
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
 	skybox_->ImGuiUpdate();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	ImGuiDebugGamepad(); // ゲームパッド入力デバッグ
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	ImGuiDebugInfo();        // ← BaseScene の「情報」ウィンドウ
+	ImGuiDebugInfo(); // BaseScene の「情報」ウィンドウ
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
 #endif
 }
