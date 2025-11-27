@@ -123,10 +123,10 @@ void GameScene::Initialize() {
 	skybox_->SetCamera(camera.get());
 
 	// ──────────────── 敵マネージャの初期化 ───────────────
-	// プレイヤー初期化のあとあたりに
 	enemyManager_ = std::make_unique<EnemyManager>();
 	enemyManager_->Initialize(dxCommon, camera.get(), this, player_.get());
-	enemyManager_->BindEnemyData(&enemies_, &defeatedEnemyCount_, &maxEnemyCount_);
+	enemyManager_->BindEnemies(&enemies_, &defeatedEnemyCount_, &maxEnemyCount_);
+
 }
 
 void GameScene::Finalize() {
@@ -192,9 +192,14 @@ void GameScene::Update() {
 				}
 			}
 		}
-
-		// 最も近い敵をプレイヤーに設定
-		UpdateClosestEnemy();
+		// ロックオン対象の更新
+			// ボス戦中かつボス生存中ならボスを優先
+		if (bossBattle_ && boss_ && !boss_->IsDead()) {
+			player_->SetEnemy(boss_.get());
+			//player_->SetAllEnemies(nullptr); // LBの全体攻撃を封じたいならここで制御
+		} else {
+			enemyManager_->UpdateClosestEnemy();
+		}
 	}
 
 	ImGuiDebug();
@@ -718,21 +723,13 @@ void GameScene::ImGuiDebug() {
 	//ImGui::DragFloat("オフセット", &groundOffset_, 0.1f, 0.0f, groundTileLen_ * groundTiles_.size());
 	//ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	ImGui::Begin("敵ステータス");
-	ImGui::Text("撃破数: %d / %d", defeatedEnemyCount_, maxEnemyCount_);
 
-	for (size_t i = 0; i < enemies_.size(); ++i) {
-		ImGui::PushID(static_cast<int>(i));
-		enemies_[i]->ImGuiDebug();
-		ImGui::PopID();
-	}
+	enemyManager_->ImGuiDebug();
 
-	float progress = 0.0f;
-	if (maxEnemyCount_ > 0) {
-		progress = static_cast<float>(defeatedEnemyCount_) / static_cast<float>(maxEnemyCount_);
-	}
-	ImGui::ProgressBar(progress, ImVec2(200, 20), "撃破振興数");
-	ImGui::Separator();
+	ImGui::Begin("WAVEステータス");
+	
+
+
 	// ─────────────────────────────
 	// Wave デバッグ用 UI
 	// ─────────────────────────────
@@ -828,42 +825,6 @@ void GameScene::UpdateMemory() {
 		memoryHistory_[memoryHistoryIndex_] = memoryUsageMB;
 		memoryHistoryIndex_ = (memoryHistoryIndex_ + 1) % kMemoryHistorySize; // インデックスを循環
 	}
-}
-
-void GameScene::UpdateClosestEnemy() {
-	/// ───────────────────────────────────────────────
-	/// ● プレイヤーに最も近い敵を検出し、ターゲットとして設定する
-	/// ───────────────────────────────────────────────
-
-	 // ボス戦中は常にボスをターゲット
-	if (bossBattle_ && boss_ && !boss_->IsDead()) {
-		player_->SetEnemy(boss_.get());
-		//player_->SetAllEnemies(nullptr); // LBの全体攻撃を封じたいなら
-		return;
-	}
-
-	if (!player_) return; // プレイヤーが未初期化なら処理中止
-
-	Enemy* closestEnemy = nullptr; // 最も近い敵（nullptrで初期化）
-	float closestDistance = std::numeric_limits<float>::max(); // 距離の最小値（初期は最大値）
-	Vector3 playerPos = player_->GetPosition(); // プレイヤーの現在位置を取得
-
-	// ───── 敵リストを走査して、最も近い生存中の敵を探す ─────
-	for (auto& enemy : enemies_) {
-		if (!enemy->IsDead()) { // 死んでいない敵に限定
-			float dist = MyMath::Length(enemy->GetWorldPosition() - playerPos); // 距離を計算
-
-			// これまでで最も近いなら更新
-			if (dist < closestDistance) {
-				closestDistance = dist;
-				closestEnemy = enemy.get();
-			}
-		}
-	}
-
-	// ───── 検出結果をプレイヤーに通知 ─────
-	player_->SetEnemy(closestEnemy);          // 最も近い敵をターゲットとして設定
-	player_->SetAllEnemies(&enemies_);        // 全敵リストを共有（全体攻撃などで利用）
 }
 
 void GameScene::InitializeEnemies() {

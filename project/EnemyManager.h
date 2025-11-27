@@ -1,4 +1,3 @@
-// application/enemy/EnemyManager.h
 #pragma once
 
 #include <memory>
@@ -25,7 +24,7 @@ public:
 	~EnemyManager() = default;
 
 	/// <summary>
-	/// 初期化
+	/// 敵マネージャを初期化します
 	/// </summary>
 	/// <param name="dx"></param>
 	/// <param name="camera"></param>
@@ -46,22 +45,29 @@ public:
 	void Draw(DirectXCommon* dx);
 
 	/// <summary>
-	/// デバッグ用ImGui表示。
+	/// デバッグ用ImGui表示
 	/// </summary>
 	void ImGuiDebug();
 
 	/// <summary>
-	/// 敵データのバインド（GameScene 側のデータを借りて使う）
+	/// 敵リストをバインドします
 	/// </summary>
 	/// <param name="enemies"></param>
-	/// <param name="defeatedCount"></param>
-	/// <param name="maxCount"></param>
-	void BindEnemyData(std::vector<std::unique_ptr<Enemy>>* enemies,
-		int* defeatedCount,
-		int* maxCount);
+	/// <param name="defeatedEnemyCount"></param>
+	/// <param name="maxEnemyCount"></param>
+	void BindEnemies(std::vector<std::unique_ptr<Enemy>>* enemies,
+		int* defeatedEnemyCount,
+		int* maxEnemyCount);
 
-	/// 管理している敵リスト（ロックオン用など）
-	const std::vector<std::unique_ptr<Enemy>>* GetEnemies() const { return enemies_; }
+	/// <summary>
+	/// プレイヤーに最も近い敵を更新します
+	/// </summary>
+	void UpdateClosestEnemy();
+
+	/// Getter=====================================================================================
+	// 管理している敵リスト（ロックオン用など）
+	const std::vector<std::unique_ptr<Enemy>>& GetEnemies() const { return *enemies_; }
+	/// ===========================================================================================
 
 private:
 	DirectXCommon* dx_ = nullptr;
@@ -69,8 +75,8 @@ private:
 	BaseScene* parent_ = nullptr;
 	Player* player_ = nullptr;
 
-	// GameScene 側のデータを借りて使う
+	// GameScene 側の実体を「参照」するだけ
 	std::vector<std::unique_ptr<Enemy>>* enemies_ = nullptr;
 	int* defeatedEnemyCount_ = nullptr;
-	int* maxEnemyCount_ = nullptr; // 今は ImGui 用。処理移植のときに使う予定
+	int* maxEnemyCount_ = nullptr;
 };

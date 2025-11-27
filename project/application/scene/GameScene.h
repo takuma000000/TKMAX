@@ -101,8 +101,6 @@ private: // ──────────────────── 更新�
 	//メモリ使用量
 	/// <summary>メモリ使用量を計測・履歴化します。</summary>
 	void UpdateMemory();
-	/// <summary>最も近い敵を更新します。</summary>
-	void UpdateClosestEnemy();
 	/// <summary>敵の初期化を行います。</summary>
 	void InitializeEnemies();
 
