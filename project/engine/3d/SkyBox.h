@@ -94,6 +94,8 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource_;
 
+	float rotationSpeedX_ = 0.002f; // デフォルト値
+
 	/// <summary>
 	/// 生成関数
 	/// </summary>
@@ -103,8 +105,9 @@ private:
 	void CreateRootSignature();// RootSignature生成
 	///<param name="texturePath">使用するキューブマップのパス。</param>
 	void CreatePipelineState();// PSO生成
-
-	//cameraResource関数
-	///<param name="dxCommon">DirectX共通。</param>
+	/// <summary>
+	/// カメラ用リソースを作成します。
+	/// </summary>
+	/// <param name="dxCommon"></param>
 	void CameraResource(DirectXCommon* dxCommon);
 };

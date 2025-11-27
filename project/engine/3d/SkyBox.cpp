@@ -218,12 +218,12 @@ void Skybox::Draw() {
 
 void Skybox::ImGuiUpdate(){
 #ifdef USE_IMGUI
-
-	ImGui::Begin("Skybox");
-	ImGui::DragFloat3("Scale", &scale_.x, 0.1f, 0.0f, 100.0f);
+	ImGui::Begin("スカイボックス");
+	ImGui::DragFloat3("スケール", &scale_.x, 0.1f, 0.0f, 100.0f);
+	ImGui::Separator();
+	ImGui::DragFloat("回転速度 X軸", &rotationSpeedX_, 0.0001f, -0.02f, 0.02f);
+	ImGui::Separator();
+	ImGui::Text("上下の傾き: %.3f rad", rotation_.x);
 	ImGui::End();
-
 #endif
 }
-
-
