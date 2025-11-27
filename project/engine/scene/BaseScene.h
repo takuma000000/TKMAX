@@ -51,4 +51,8 @@ protected:
 	/// </summary>DrawCall数をリセットします。</summary>
 	/// </summary>
 	void ResetDrawCallCount(); // カウントリセット
+	/// <summary>
+	/// </summary>ImGuiでゲームパッド情報を表示します。</summary>
+	/// </summary>
+	void ImGuiDebugGamepad();
 };

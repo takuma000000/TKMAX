@@ -698,40 +698,7 @@ void GameScene::ImGuiDebug() {
 	camera->ImGuiDebug();
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	ImGui::Begin("ゲームパッド");
-	auto DrawButtonBar = [](const char* label, bool isPressed, const ImVec4& color) {
-		float value = isPressed ? 1.0f : 0.0f;
-		ImGui::PushStyleColor(ImGuiCol_PlotHistogram, color);
-		ImGui::ProgressBar(value, ImVec2(200, 0), label);
-		ImGui::PopStyleColor();
-		};
-	XINPUT_STATE state;
-	DWORD result = XInputGetState(0, &state);
-	if (result == ERROR_SUCCESS) {
-		ImGui::TextColored(ImVec4(0, 1, 0, 1), "接続中！！！");
-	} else {
-		ImGui::TextColored(ImVec4(1, 0, 0, 1), "接続されていません");
-	}
-	ImGui::Separator();
-	DrawButtonBar("A", Input::GetInstance()->PushButton(XINPUT_GAMEPAD_A), ImVec4(0.0f, 1.0f, 0.0f, 1.0f)); // 緑
-	DrawButtonBar("B", Input::GetInstance()->PushButton(XINPUT_GAMEPAD_B), ImVec4(1.0f, 0.0f, 0.0f, 1.0f)); // 赤
-	DrawButtonBar("X", Input::GetInstance()->PushButton(XINPUT_GAMEPAD_X), ImVec4(0.0f, 0.4f, 1.0f, 1.0f)); // 青
-	DrawButtonBar("Y", Input::GetInstance()->PushButton(XINPUT_GAMEPAD_Y), ImVec4(1.0f, 0.4f, 0.7f, 1.0f)); // ピンク
-	DrawButtonBar("Start", Input::GetInstance()->PushButton(XINPUT_GAMEPAD_START), ImVec4(0.5f, 0.5f, 0.5f, 1.0f)); // グレー
-	DrawButtonBar("Back", Input::GetInstance()->PushButton(XINPUT_GAMEPAD_BACK), ImVec4(1.0f, 1.0f, 1.0f, 1.0f)); // 白
-	DrawButtonBar("LB", Input::GetInstance()->PushButton(XINPUT_GAMEPAD_LEFT_SHOULDER), ImVec4(0.6f, 0.2f, 0.8f, 1.0f)); // 紫
-	DrawButtonBar("RB", Input::GetInstance()->PushButton(XINPUT_GAMEPAD_RIGHT_SHOULDER), ImVec4(1.0f, 0.6f, 0.0f, 1.0f)); // オレンジ
-	// RT表示（シアン）
-	float rtValue = static_cast<float>(Input::GetInstance()->GetRightTrigger()) / 255.0f;
-	ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.0f, 1.0f, 1.0f, 1.0f));
-	ImGui::ProgressBar(rtValue, ImVec2(200, 0), "RT");
-	ImGui::PopStyleColor();
-	// LT表示（マゼンタ）
-	float ltValue = static_cast<float>(Input::GetInstance()->GetLeftTrigger()) / 255.0f;
-	ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(1.0f, 0.0f, 1.0f, 1.0f));
-	ImGui::ProgressBar(ltValue, ImVec2(200, 0), "LT");
-	ImGui::PopStyleColor();
-	ImGui::End();
+	ImGuiDebugGamepad(); // ゲームパッド入力デバッグ
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	skybox_->ImGuiUpdate();
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
