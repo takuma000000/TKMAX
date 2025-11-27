@@ -143,8 +143,10 @@
     <ClCompile Include="application\scene\GameOverScene.cpp">
       <Filter>application\scene</Filter>
     </ClCompile>
-    <ClCompile Include="Reticle.cpp" />
     <ClCompile Include="EnemyWaveManager.cpp" />
+    <ClCompile Include="application\player\reticle\Reticle.cpp">
+      <Filter>application\player\reticle</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -309,11 +311,13 @@
     <ClInclude Include="application\scene\GameOverScene.h">
       <Filter>application\scene</Filter>
     </ClInclude>
-    <ClInclude Include="Reticle.h" />
-    <ClInclude Include="Vector2.h">
+    <ClInclude Include="engine\func\math\Vector2.h">
       <Filter>engine\func\math</Filter>
     </ClInclude>
     <ClInclude Include="EnemyWaveManager.h" />
+    <ClInclude Include="application\player\reticle\Reticle.h">
+      <Filter>application\player\reticle</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
@@ -381,6 +385,9 @@
     </Filter>
     <Filter Include="externals\imgui">
       <UniqueIdentifier>{9dbdba4b-2ee4-45d1-af96-c30c76585b23}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\player\reticle">
+      <UniqueIdentifier>{377c4e20-132f-4863-9c81-4fa6244f77f3}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

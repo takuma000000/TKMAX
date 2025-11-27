@@ -99,8 +99,6 @@ public:
 		strafeLeft_ = left; strafeRight_ = right; strafeSpeed_ = speed;
 		if (strafePosX_ == 0.0f) strafePosX_ = left;
 	}
-	/// <summary>追尾用プレイヤー位置参照を設定します。</summary>
-	void SetPlayerRef(const Vector3* playerPos) { playerPos_ = playerPos; } // 追尾用
 	// 将来の発射フック（今は未使用）
 	/// <summary>射撃可能フラグとインターバルを設定します。</summary>
 	void SetCanShoot(bool v, float interval) { canShoot_ = v; shootInterval_ = interval; }
@@ -145,8 +143,7 @@ private:
 	float strafePosX_ = 0.0f;
 	int   strafeDir_ = +1;
 
-	// 追尾用
-	const Vector3* playerPos_ = nullptr;
+	// ChasePlayer 用
 	float chaseSpeed_ = 0.07f;
 
 	// 将来の射撃用

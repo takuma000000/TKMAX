@@ -120,8 +120,6 @@ public:
 	int GetPhase() const { return static_cast<int>(phase_); }
 
 private:
-	Camera* camera_ = nullptr;
-
 	// ====== 既存のフェーズ管理 ======
 	enum class Phase { P1, P2, P3 };
 	Phase phase_ = Phase::P1;
@@ -133,10 +131,7 @@ private:
 
 	// ====== 移動（周回＋到達減速） ======
 	float theta_ = 0.0f;           // 周回角度
-	float orbitR_ = 35.0f;         // 周回半径（動的に微ゆらぎ）
-	float orbitOmega_ = 0.7f;      // 周回角速度（動的に微ゆらぎ）
 	float dzMin_ = 45.0f;          // プレイヤーより奥側に居る最小差
-	float maxSpeed_ = 0.6f;
 	float arriveRadius_ = 3.0f;
 
 	// ====== 攻撃の種類 ======
@@ -165,17 +160,10 @@ private:
 	float rapidJitterX_ = 0.2f;
 	float rapidJitterZ_ = 0.2f;
 
-	// フェーズ別の軌道ゆらぎ
-	float orbitR_Jitter_ = 2.0f;
-	float orbitOmega_Jitter_ = 0.15f;
-
 	// 先読み照準用（直近プレイヤー速度の指数平滑）
 	Vector3 prevPlayerPos_{ 0,0,0 };
 	Vector3 playerVelFiltered_{ 0,0,0 };
 	float   velFilter_ = 0.2f;        // 0..1（大きいほど最新寄り）
-
-	// 乱数
-	std::mt19937 rng_{ 123456u };
 
 	// 内部処理
 

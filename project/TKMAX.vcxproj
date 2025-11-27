@@ -162,7 +162,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\player\PlayerBullet.cpp" />
     <ClCompile Include="engine\3d\SkyBox.cpp" />
     <ClCompile Include="engine\base\SystemIncludes.cpp" />
-    <ClCompile Include="Reticle.cpp" />
+    <ClCompile Include="application\player\reticle\Reticle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EnemyWaveManager.h" />
@@ -220,8 +220,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\3d\SkyBox.h" />
     <ClInclude Include="engine\base\SystemIncludes.h" />
     <ClInclude Include="application\scene\GameOverScene.h" />
-    <ClInclude Include="Reticle.h" />
-    <ClInclude Include="Vector2.h" />
+    <ClInclude Include="application\player\reticle\Reticle.h" />
+    <ClInclude Include="engine\func\math\Vector2.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
