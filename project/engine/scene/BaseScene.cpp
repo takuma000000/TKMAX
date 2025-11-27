@@ -1,6 +1,4 @@
 #include "BaseScene.h"
-#include <Input.h>
-#include <Xinput.h>
 
 #ifdef USE_IMGUI
 #include <externals/imgui/imgui.h>
@@ -38,8 +36,66 @@ void BaseScene::UpdatePerformanceInfo() {
 #endif
 }
 
+void BaseScene::UpdateMemory() {
+#ifdef USE_IMGUI
+	PROCESS_MEMORY_COUNTERS pmc{};
+	if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
+		float memoryUsageMB = static_cast<float>(pmc.WorkingSetSize) / (1024.0f * 1024.0f);
+		memoryHistory_[memoryHistoryIndex_] = memoryUsageMB;
+		memoryHistoryIndex_ = (memoryHistoryIndex_ + 1) % kMemoryHistorySize;
+	}
+#endif
+}
+
 void BaseScene::ResetDrawCallCount() {
 	drawCallCount_ = 0; // DrawCall数リセット
+}
+
+void BaseScene::ImGuiDebugInfo() {
+#ifdef USE_IMGUI
+	ImGui::Begin("情報");
+	ImGui::Text("FPS : %.2f", fps_);
+	ImGui::Separator();
+	ImGui::Text("フレーム時間 : %.2f ms", frameTimeMs_);
+	ImGui::Separator();
+	ImGui::Text("DrawCall 回数 : %d", drawCallCount_);
+	ImGui::Separator();
+
+	// メモリ使用量（KB/MB表記）
+	PROCESS_MEMORY_COUNTERS pmc{};
+	if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
+		size_t memoryUsageKB = pmc.WorkingSetSize / 1024;      // KB
+		size_t memoryUsageMB = memoryUsageKB / 1024;           // MB
+		ImGui::Text("メモリ使用量 : %zu KB / %zu MB", memoryUsageKB, memoryUsageMB);
+	}
+
+	ImGui::Text("MB");
+	ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(1.0f, 0.0f, 0.0f, 1.0f)); // 赤色
+	ImGui::PlotLines(
+		"メモリ推移",
+		memoryHistory_.data(),
+		kMemoryHistorySize,
+		memoryHistoryIndex_,
+		nullptr,
+		0.0f,
+		500.0f,
+		ImVec2(0, 150)
+	);
+	ImGui::PopStyleColor();
+	ImGui::Separator();
+
+	ImGui::Text("アクティブ Sprite 数 : %d", Sprite::GetActiveCount());
+	ImGui::Text("アクティブ Object3D 数 : %d", Object3d::GetActiveCount());
+	ImGui::Separator();
+
+	int totalParticles = 0;
+	for (const auto& pair : ParticleManager::GetInstance()->GetParticleGroups()) {
+		totalParticles += static_cast<int>(pair.second.particles.size());
+	}
+	ImGui::Text("アクティブ Particles: %d", totalParticles);
+	ImGui::Text("パーティクルグループ数: %d", ParticleManager::GetInstance()->GetParticleGroups().size());
+	ImGui::End();
+#endif
 }
 
 void BaseScene::ImGuiDebugGamepad() {

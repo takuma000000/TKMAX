@@ -35,8 +35,7 @@
 // GameSceneクラス
 // ゲーム本編を管理するシーンクラス。
 //=============================================================
-class GameScene : public BaseScene
-{
+class GameScene : public BaseScene{
 public:
 	GameScene(DirectXCommon* dxCommon, SrvManager* srvManager) : dxCommon(dxCommon), srvManager(srvManager) {}
 	~GameScene() = default;
@@ -97,10 +96,6 @@ private:// ──────────────────── 初期�
 	void ImGuiDebug();
 
 private: // ──────────────────── 更新処理 ────────────────────
-
-	//メモリ使用量
-	/// <summary>メモリ使用量を計測・履歴化します。</summary>
-	void UpdateMemory();
 	/// <summary>Iris演出の更新を行います。</summary>
 	void StartClearSequence();
 	/// <summary>Iris演出の更新を行います。</summary>
@@ -115,10 +110,6 @@ private:
 
 	std::unique_ptr<Camera> camera = nullptr;
 	std::unique_ptr<DirectionalLight> directionalLight_ = nullptr;// ディレクショナルライト
-
-	static const int kMemoryHistorySize = 100;
-	std::array<float, kMemoryHistorySize> memoryHistory_{}; // 過去のメモリ使用履歴（MB）
-	int memoryHistoryIndex_ = 0;
 
 	//パーティクル
 	std::unique_ptr<ParticleEmitter> particleEmitter = nullptr;

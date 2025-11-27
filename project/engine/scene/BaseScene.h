@@ -1,4 +1,13 @@
 #pragma once
+#include <array>
+#include <Windows.h>
+#include <Psapi.h>
+#include "engine/2d/Sprite.h"
+#include "Object3d.h"
+#include "engine/effect/particle/ParticleManager.h"
+#include <Input.h>
+#include <Xinput.h>
+
 
 class SceneManager;
 
@@ -43,6 +52,11 @@ protected:
 
 	int drawCallCount_ = 0;  // DrawCall数カウント用
 
+	// 情報ウィンドウ用（メモリ履歴）をここに移す
+	static constexpr int kMemoryHistorySize = 100; // 履歴サイズ
+	std::array<float, kMemoryHistorySize> memoryHistory_{}; // 過去のメモリ使用履歴（MB）
+	int memoryHistoryIndex_ = 0; // 履歴インデックス
+
 	/// <summary>
 	/// </summary>パフォーマンス情報を更新します。</summary>
 	/// </summary>
@@ -55,4 +69,12 @@ protected:
 	/// </summary>ImGuiでゲームパッド情報を表示します。</summary>
 	/// </summary>
 	void ImGuiDebugGamepad();
+	/// <summary>
+	/// </summary>メモリ使用量を計測・履歴化します。</summary>
+	/// </summary>
+	void UpdateMemory();
+	/// <summary>
+	/// </summary>ImGuiでデバッグ情報を表示します。</summary>
+	/// </summary>
+	void ImGuiDebugInfo();
 };

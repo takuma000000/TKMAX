@@ -616,53 +616,13 @@ void GameScene::InitializeCamera() {
 void GameScene::ImGuiDebug() {
 #ifdef USE_IMGUI
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	ImGui::Begin("情報");
-	ImGui::Text("FPS : %.2f", fps_);
-	ImGui::Separator();
-	ImGui::Text("フレーム時間 : %.2f ms", frameTimeMs_);
-	ImGui::Separator();
-	ImGui::Text("DrawCall 回数 : %d", drawCallCount_);
-	ImGui::Separator();
-	// メモリ使用量取得
-	PROCESS_MEMORY_COUNTERS pmc{};
-	if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
-		// WorkingSetSize = 実際にメモリ上に展開されているサイズ
-		size_t memoryUsageKB = pmc.WorkingSetSize / 1024; // KB
-		size_t memoryUsageMB = memoryUsageKB / 1024; // MB
-		ImGui::Text("メモリ使用量 : %zu KB / %zu MB", memoryUsageKB, memoryUsageMB);
-	}
-	ImGui::Text("MB");
-	ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(1.0f, 0.0f, 0.0f, 1.0f)); // 赤色
-	ImGui::PlotLines(
-		"メモリ推移",
-		memoryHistory_.data(),
-		kMemoryHistorySize,
-		memoryHistoryIndex_,
-		nullptr,
-		0.0f,
-		500.0f,
-		ImVec2(0, 150)
-	);
-	ImGui::PopStyleColor();
-	ImGui::Separator();
-	ImGui::Text("アクティブ Sprite 数 : %d", Sprite::GetActiveCount());
-	ImGui::Text("アクティブ Object3D 数 : %d", Object3d::GetActiveCount());
-	ImGui::Separator();
-	int totalParticles = 0;
-	for (const auto& pair : ParticleManager::GetInstance()->GetParticleGroups()) {
-		totalParticles += static_cast<int>(pair.second.particles.size());
-	}
-	ImGui::Text("アクティブ Particles: %d", totalParticles);
-	ImGui::Text("パーティクルグループ数: %d", ParticleManager::GetInstance()->GetParticleGroups().size());
-	ImGui::End();
-	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	player_->ImGuiDebug();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	if (boss_) {
 		boss_->ImGuiDebug();
 	}
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	enemyManager_->ImGuiDebug(); // EnemyManager
+	enemyManager_->ImGuiDebug();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	ImGui::Begin("WAVEステータス");
 	int defeated = defeatedEnemyCount_;
@@ -694,30 +654,15 @@ void GameScene::ImGuiDebug() {
 	}
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	ImGui::Begin("カメラ");
 	camera->ImGuiDebug();
-	ImGui::End();
+	////////////////////////////////////////////////////////////////////////////////////////////////////////
+	skybox_->ImGuiUpdate();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	ImGuiDebugGamepad(); // ゲームパッド入力デバッグ
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	skybox_->ImGuiUpdate();
+	ImGuiDebugInfo();        // ← BaseScene の「情報」ウィンドウ
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
 #endif
-}
-
-void GameScene::UpdateMemory() {
-	/// ───────────────────────────────────────────────
-	/// ● 現在のメモリ使用量（MB）を取得し、履歴に記録する
-	/// ───────────────────────────────────────────────
-
-	PROCESS_MEMORY_COUNTERS pmc{};
-	if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
-		// ───── 使用中メモリ（MB単位）を計算 ─────
-		float memoryUsageMB = static_cast<float>(pmc.WorkingSetSize) / (1024.0f * 1024.0f);
-		// ───── リングバッファ形式で履歴を更新 ─────
-		memoryHistory_[memoryHistoryIndex_] = memoryUsageMB;
-		memoryHistoryIndex_ = (memoryHistoryIndex_ + 1) % kMemoryHistorySize; // インデックスを循環
-	}
 }
 
 void GameScene::StartClearSequence() {
