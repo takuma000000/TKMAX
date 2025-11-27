@@ -143,9 +143,11 @@
     <ClCompile Include="application\scene\GameOverScene.cpp">
       <Filter>application\scene</Filter>
     </ClCompile>
-    <ClCompile Include="EnemyManager.cpp" />
     <ClCompile Include="application\player\reticle\Reticle.cpp">
       <Filter>application\player\reticle</Filter>
+    </ClCompile>
+    <ClCompile Include="application\enemy\manager\EnemyManager.cpp">
+      <Filter>application\enemy\manager</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -314,9 +316,11 @@
     <ClInclude Include="engine\func\math\Vector2.h">
       <Filter>engine\func\math</Filter>
     </ClInclude>
-    <ClInclude Include="EnemyManager.h" />
     <ClInclude Include="application\player\reticle\Reticle.h">
       <Filter>application\player\reticle</Filter>
+    </ClInclude>
+    <ClInclude Include="application\enemy\manager\EnemyManager.h">
+      <Filter>application\enemy\manager</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -388,6 +392,9 @@
     </Filter>
     <Filter Include="application\player\reticle">
       <UniqueIdentifier>{377c4e20-132f-4863-9c81-4fa6244f77f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application\enemy\manager">
+      <UniqueIdentifier>{b5a17694-ede9-4458-b6f3-b5d3eef79bf8}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

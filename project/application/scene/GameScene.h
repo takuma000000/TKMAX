@@ -22,7 +22,7 @@
 #include "GameClearScene.h"
 #include "TitleScene.h"
 #include "SceneManager.h"
-#include "EnemyManager.h"
+#include "application/enemy/manager/EnemyManager.h"
 
 #include "application/player/Player.h"
 #include "application/enemy/Enemy.h"
