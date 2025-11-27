@@ -99,16 +99,14 @@ void Player::Update() {
 
 void Player::ImGuiDebug() {
 #ifdef USE_IMGUI
-
-
 	if (!object_) return;
 
 	Vector3 pos = object_->GetTranslate();
 	Vector3 rot = object_->GetRotate();
 	Vector3 scale = object_->GetScale();
 
+	//---------------- プレイヤー本体 ----------------
 	ImGui::Begin("プレイヤー");
-
 	if (ImGui::DragFloat3("位置", &pos.x, 0.01f)) {
 		object_->SetTranslate(pos);
 	}
@@ -129,13 +127,24 @@ void Player::ImGuiDebug() {
 	ImGui::SliderFloat("強度のベース", &shakeBaseStrength_, 0.0f, 5.0f); // ベースとなるカメラシェイク強度
 	ImGui::SliderFloat("ズーム強調", &shakeZoomBoost_, 0.0f, 15.0f); // ズーム時の追加倍率
 	ImGui::Text("現在の増幅量 : %.2f", shakeBaseStrength_ + (1.0f - camZoom_) * shakeZoomBoost_); // 現在の倍率を表示
-
 	ImGui::End();
-
+	//---------------- レティクル ----------------
 	ImGui::Begin("レティクル");
 	if (reticle_) {
 		ImGui::Separator();
 		reticle_->ImGuiDebug();
+	}
+	ImGui::End();
+	//---------------- プレイヤー弾ステータス ----------------
+	ImGui::Begin("プレイヤー弾ステータス");
+	int idx = 0;
+	for (const auto& bullet : bullets_) {   // ← Player が持ってる bullets_ :contentReference[oaicite:1]{index=1}
+		ImGui::Text("Bullet %d : %s",
+			idx++,
+			bullet->IsHit() ? "Hit" : "Flying");  // ← PlayerBullet::IsHit() 
+	}
+	if (idx == 0) {
+		ImGui::Text("弾なし");
 	}
 	ImGui::End();
 #endif
