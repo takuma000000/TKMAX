@@ -200,21 +200,18 @@ void GameScene::Update() {
 		}
 	}
 
+	// デバッグ用ImGui表示
 	ImGuiDebug();
-
 	// プレイヤーと環境
 	camera->Update();
-
-	// Skybox 回転
-	UpdateSkyboxRotationX();
-
-	// ---- ground scroll ----
-	//UpdateGroundScroll();
-
+	// スカイボックスの回転更新
+	skybox_->UpdateRotation();
+	// プレイヤーの更新
 	player_->Update();
+	// ライトの更新
 	directionalLight_->Update();
 
-	if (bossBattle_ && boss_) {
+	if (bossBattle_ && boss_) {// ボス戦中ならボスも更新
 		boss_->Update();
 
 		// P2突入時にBGMを1回だけ再生
@@ -756,18 +753,6 @@ void GameScene::UpdateMemory() {
 	}
 }
 
-void GameScene::UpdateSkyboxRotationX() {
-	constexpr float kTwoPi = 6.2831853f;
-
-	// X軸回転を更新
-	skyPitch_ -= skyRotSpeedX_;
-	if (skyPitch_ > kTwoPi)  skyPitch_ -= kTwoPi;
-	if (skyPitch_ < 0.0f)    skyPitch_ += kTwoPi;
-
-	// Skybox に適用
-	skybox_->SetRotation({ skyPitch_, 0.0f, 0.0f });
-}
-
 void GameScene::StartClearSequence() {
 	clearSequence_ = true;
 	clearPhase_ = ClearPhase::CamZoom;
@@ -813,7 +798,9 @@ bool GameScene::UpdateClearSequence(float dt) {
 	clearTimer_ += dt;
 
 	// skyboxはずっと回し続ける
-	UpdateSkyboxRotationX();
+	if (skybox_) {
+		skybox_->UpdateRotation();  // ← ここに差し替え
+	}
 
 	// 花火用タイマー（クリア演出中だけ使うローカル static）
 	static float fireTimer = 0.0f;

@@ -216,6 +216,14 @@ void Skybox::Draw() {
 	cmdList->DrawInstanced(vertexCount_, 1, 0, 0); // 描画
 }
 
+void Skybox::UpdateRotation(){
+	constexpr float kTwoPi = 6.2831853f;
+
+	rotation_.x -= rotationSpeedX_;
+	if (rotation_.x > kTwoPi) rotation_.x -= kTwoPi;
+	if (rotation_.x < 0.0f)   rotation_.x += kTwoPi;
+}
+
 void Skybox::ImGuiUpdate(){
 #ifdef USE_IMGUI
 	ImGui::Begin("スカイボックス");

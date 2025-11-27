@@ -27,7 +27,9 @@ public:
 	/// <summary>スカイボックスを描画します。</summary>
 	void Draw();
 
-	//ImGui
+	/// <summary>スカイボックスの回転を更新します。</summary>
+	void UpdateRotation();
+
 	/// <summary>ImGuiでスカイボックスのパラメータを更新します。</summary>
 	void ImGuiUpdate();
 

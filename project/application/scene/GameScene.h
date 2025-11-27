@@ -101,12 +101,6 @@ private: // ──────────────────── 更新�
 	//メモリ使用量
 	/// <summary>メモリ使用量を計測・履歴化します。</summary>
 	void UpdateMemory();
-
-	/// <summary>スカイボックスのX回転を更新します。</summary>
-	void UpdateSkyboxRotationX(); // スカイボックスをX軸方向に回転
-	/// <summary>地面タイルのスクロールを更新します。</summary>
-	//void UpdateGroundScroll(); // 地面タイルのスクロール更新
-
 	/// <summary>Iris演出の更新を行います。</summary>
 	void StartClearSequence();
 	/// <summary>Iris演出の更新を行います。</summary>
