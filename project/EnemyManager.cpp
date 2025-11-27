@@ -48,6 +48,11 @@ void EnemyManager::Update(float dt) {
 			++it;
 		}
 	}
+
+	// 「敵が全滅」かつ「まだ最後のWaveじゃない」なら次のWaveへ
+	if (enemies_->empty() && wavePhase_ != WavePhase::Done) {
+		GoToNextWave(); // Wave 進行
+	}
 }
 
 void EnemyManager::UpdateClosestEnemy() {
@@ -79,6 +84,187 @@ void EnemyManager::UpdateClosestEnemy() {
 	// ───── 検出結果をプレイヤーに通知 ─────
 	player_->SetEnemy(closestEnemy);
 	player_->SetAllEnemies(enemies_);
+}
+
+void EnemyManager::InitializeWaves() {
+	if (!enemies_ || !player_) {
+		return;
+	}
+
+	enemies_->clear();
+
+	if (defeatedEnemyCount_) {
+		*defeatedEnemyCount_ = 0;   // ついでに進捗をリセット
+	}
+	if (maxEnemyCount_) {
+		*maxEnemyCount_ = 0;        // 全Wave合計で加算していく
+	}
+
+	wavePhase_ = WavePhase::W1; // Wave1から
+	SpawnCurrentWave();         // 最初のWaveだけ出す（ここでmaxEnemyCount_も加算）
+
+	// 最初のロックオン対象
+	if (!enemies_->empty()) {
+		player_->SetEnemy(enemies_->front().get());
+		player_->SetAllEnemies(enemies_);
+	}
+}
+
+void EnemyManager::SpawnCurrentWave() {
+	if (!enemies_ || !dx_ || !cam_ || !parent_) {
+		return;
+	}
+
+	// いったん全消し
+	enemies_->clear();
+
+	// 呼び出しで毎回書くのダルいのでローカルに詰める
+	DirectXCommon* dxPtr = dx_;
+	Camera* camPtr = cam_;
+	BaseScene* parentPtr = parent_;
+
+	switch (wavePhase_) {
+	case WavePhase::W1: {
+		// W1: 直進停止（密度で圧）＋HP控えめ
+		EnemySpawner::SpawnLine(
+			*enemies_,                   // ★ ポインタではなく参照にして渡す
+			5,                           // count
+			/*y*/ 5.0f,
+			/*z*/ 60.0f,
+			-20.0f,                      // xStart
+			10.0f,                       // xStep
+			dxPtr,
+			camPtr,
+			parentPtr,
+			[&](Enemy& e) {
+				e.SetBehavior(EnemyBehavior::StraightStop);
+				e.SetVelocity({ 0,0,-0.25f });
+				e.SetStopZ(60.0f);
+				e.SetHP(2);
+				e.SetScale({ 1.1f,1.1f,1.1f });
+			}
+		);
+		if (maxEnemyCount_) {
+			*maxEnemyCount_ += 5;
+		}
+		break;
+	}
+	case WavePhase::W2: {
+		// W2: サイン蛇行で避けにくく（重なり防止で位相＆停止Zを個体別にオフセット）
+		int idx = 0;                  // 個体インデックス（ラムダ内でインクリメント）
+		const float phaseStep = 0.7f; // 位相刻み（ラジアン）
+		const float stopStep = 0.6f;  // 停止Zのズラし量
+
+		EnemySpawner::SpawnV(
+			*enemies_,
+			3,                          // V字の列数（中央＋左右）
+			/*y*/ 6.0f,
+			/*z*/ 80.0f,
+			0.0f,                       // centerX
+			8.0f,                       // xStep
+			6.0f,                       // zStep
+			dxPtr,
+			camPtr,
+			parentPtr,
+			[&](Enemy& e) {
+				e.SetBehavior(EnemyBehavior::SineX);
+				e.SetVelocity({ 0,0,-0.22f });
+				e.SetSineParams(/*ampX*/ 6.0f, /*freq*/ 1.6f);
+
+				// 個体ごとに位相と停止Zを少しずつズラす
+				e.SetSinePhase(phaseStep * float(idx));
+				e.SetStopZ(60.0f + stopStep * float(idx % 3));
+
+				e.SetHP(3);
+				++idx;
+			}
+		);
+		if (maxEnemyCount_) {
+			// 中央1 + 左右3*2 = 7体
+			*maxEnemyCount_ += 7;
+		}
+		break;
+	}
+	case WavePhase::W3: {
+		// W3: 追尾＋左右ストレーフ混在で圧を上げる
+		EnemySpawner::SpawnColumn(
+			*enemies_,
+			6,                          // count
+			/*x*/ 25.0f,
+			/*zStart*/ 100.0f,
+			/*zStep*/ 10.0f,
+			/*y*/ 4.0f,
+			/*intervalSec*/ 0.5f,       // （EnemySpawner 実装に合わせて）
+			dxPtr,
+			camPtr,
+			parentPtr,
+			[&](Enemy& e) {
+				// 交互にパターン変える例
+				static int idx = 0;
+				if ((idx++ % 2) == 0) {
+					e.SetBehavior(EnemyBehavior::ChasePlayer);
+					e.SetVelocity({ 0,0,-0.20f });
+					e.SetStopZ(34.0f);
+					// 追尾用にプレイヤー位置の参照を渡す
+					e.SetPlayer([this]() { return player_->GetPosition(); });
+					e.SetHP(3);
+				} else {
+					e.SetBehavior(EnemyBehavior::StrafeLtoR);
+					e.SetVelocity({ 0,0,-0.25f });
+					e.SetStopZ(60.0f);
+					e.SetStrafeX(-18.0f, 18.0f, 0.45f);
+					e.SetHP(4);
+				}
+			}
+		);
+		if (maxEnemyCount_) {
+			*maxEnemyCount_ += 6;
+		}
+		break;
+	}
+	case WavePhase::Done:
+		// 何もしない
+		break;
+	}
+}
+
+void EnemyManager::GoToNextWave() {
+	if (wavePhase_ == WavePhase::W1) {
+		wavePhase_ = WavePhase::W2;
+		SpawnCurrentWave();
+	} else if (wavePhase_ == WavePhase::W2) {
+		wavePhase_ = WavePhase::W3;
+		SpawnCurrentWave();
+	} else if (wavePhase_ == WavePhase::W3) {
+		wavePhase_ = WavePhase::Done; // 最終Waveまで終了
+		// Done のときは Spawnしない（終わり）
+	}
+
+	// Waveごとに撃破カウントリセットする仕様ならここも移植
+	if (defeatedEnemyCount_) {
+		*defeatedEnemyCount_ = 0;
+	}
+}
+
+void EnemyManager::SkipToBossWave() {
+	// 敵リストがバインドされていなければ何もしない
+	if (!enemies_) {
+		return;
+	}
+
+	// いま居るザコ敵は全部消す
+	enemies_->clear();
+
+	// 撃破数・最大数もリセット（ゲージを空にしておく）
+	if (defeatedEnemyCount_) {
+		*defeatedEnemyCount_ = 0;
+	}
+	if (maxEnemyCount_) {
+		*maxEnemyCount_ = 0;
+	}
+
+	// Wave を Done（＝ボスフェーズ）にする
+	wavePhase_ = WavePhase::Done;
 }
 
 void EnemyManager::Draw(DirectXCommon* dx) {

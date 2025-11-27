@@ -23,6 +23,9 @@ public:
 	EnemyManager() = default;
 	~EnemyManager() = default;
 
+	// --- Wave 管理周りを追加 ---
+	enum class WavePhase { W1, W2, W3, Done };
+
 	/// <summary>
 	/// 敵マネージャを初期化します
 	/// </summary>
@@ -64,9 +67,49 @@ public:
 	/// </summary>
 	void UpdateClosestEnemy();
 
+	/// <summary>
+	/// Wave 初期化（GameScene::InitializeWaves 相当）
+	/// </summary>
+	void InitializeWaves();
+
+	/// <summary>
+	/// 現在の wavePhase_ に応じて敵をスポーンします（GameScene::SpawnCurrentWave 相当）
+	/// </summary>
+	void SpawnCurrentWave();
+
+	/// <summary>
+	/// wavePhase_ を進めます（GameScene::GoToNextWave 相当）
+	/// </summary>
+	void GoToNextWave();
+
+	/// <summary>
+	/// 生存している敵が存在するかどうかを判定して返します。
+	/// </summary>
+	/// <returns>生存している敵が1体以上いる場合は true、そうでない場合は false を返します。</returns>
+	bool HasAliveEnemies() const { return enemies_ && !enemies_->empty(); }
+
+	/// <summary>
+	/// 全Waveクリア済みかどうかを取得します
+	/// </summary>
+	/// <returns></returns>
+	bool IsAllWavesCleared() const { return (wavePhase_ == WavePhase::Done) && (!enemies_ || enemies_->empty()); }
+
+	/// <summary>
+	/// 全Waveクリア済みかどうかを取得します
+	/// </summary>
+	/// <returns></returns>
+	bool IsWaveDone() const { return wavePhase_ == WavePhase::Done; }
+
+	/// <summary>
+	/// デバッグ用：即座にボスWave（Done）へスキップします
+	/// </summary>
+	void SkipToBossWave();
+
 	/// Getter=====================================================================================
 	// 管理している敵リスト（ロックオン用など）
 	const std::vector<std::unique_ptr<Enemy>>& GetEnemies() const { return *enemies_; }
+	// Wave フェーズ取得
+	WavePhase GetWavePhase() const { return wavePhase_; }
 	/// ===========================================================================================
 
 private:
@@ -79,4 +122,7 @@ private:
 	std::vector<std::unique_ptr<Enemy>>* enemies_ = nullptr;
 	int* defeatedEnemyCount_ = nullptr;
 	int* maxEnemyCount_ = nullptr;
+
+	// Wave 状態は EnemyManager が持つようにする
+	WavePhase wavePhase_ = WavePhase::W1;
 };

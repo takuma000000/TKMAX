@@ -163,41 +163,39 @@ void GameScene::Update() {
 	// --- 敵とWaveは「ゲーム開始後」だけ動かす ---
 	if (!gameplayLocked_ && enemiesInitialized_) {
 
-		// 敵の更新と削除（処理を EnemyManager に委譲）
+		// 敵の更新（敵ロジックは EnemyManager に完全委譲）
 		if (enemyManager_) {
 			enemyManager_->Update(dt);
 		}
 
-		if (enemies_.empty()) {
-			if (wavePhase_ != WavePhase::Done) {
-				GoToNextWave();
+		// 全てのWaveが終了していて、敵がいない → ボスへ進行 or クリア処理
+		if (enemyManager_ && enemyManager_->IsAllWavesCleared()) {
+
+			// --- ボス戦突入（まだボス出してない時） ---
+			if (!bossBattle_) {
+				bossBattle_ = true;
+				boss_ = std::make_unique<BossEnemy>();
+				boss_->Initialize(Object3dCommon::GetInstance(), dxCommon);
+				boss_->SetParentScene(this);
+				boss_->SetCamera(camera.get());
+				boss_->SetPlayer([this]() { return player_->GetPosition(); });
+				boss_->SetPosition({ 0, 0, 200 });  // 奥から登場
 			} else {
-				if (!bossBattle_) {
-					// ボス戦突入！
-					bossBattle_ = true;
-					boss_ = std::make_unique<BossEnemy>();
-					boss_->Initialize(Object3dCommon::GetInstance(), dxCommon);
-					boss_->SetParentScene(this);
-					boss_->SetCamera(camera.get());
-					boss_->SetPlayer([this]() { return player_->GetPosition(); });
-					boss_->SetPosition({ 0, 0, 200 }); // 奥から出現
-				} else {
-					// ─── ボスが死んだらクリア演出開始 ───
-					if (boss_ && boss_->IsDead()) {
-						if (!clearSequence_) {
-							StartClearSequence();
-							return; // このフレームの通常処理はここで終わり
-						}
+				// --- ボス撃破 → クリア演出へ ---
+				if (boss_ && boss_->IsDead()) { // ボスが存在していて倒されている
+					if (!clearSequence_) { // まだクリア演出始まってないなら
+						StartClearSequence(); // クリア演出開始
+						return; // このフレームの通常処理は終わり
 					}
 				}
 			}
 		}
-		// ロックオン対象の更新
-			// ボス戦中かつボス生存中ならボスを優先
+
+		// ロックオン対象の更新（既存ロジック維持）
 		if (bossBattle_ && boss_ && !boss_->IsDead()) {
 			player_->SetEnemy(boss_.get());
-			//player_->SetAllEnemies(nullptr); // LBの全体攻撃を封じたいならここで制御
 		} else {
+			// 雑魚がいるときは最も近い敵をロックオン
 			enemyManager_->UpdateClosestEnemy();
 		}
 	}
@@ -294,11 +292,6 @@ void GameScene::Update() {
 			// 横向き（camYawStart_）→ 正面（camYawEnd_）へ、OutBackで camIntroDuration_ 秒
 			camYawTween_.Reset(camYawStart_, camYawEnd_, camIntroDuration_, Ease::Type::OutBack);
 		}
-	}
-
-	// GameScene::Update のどこか（最後の方でOK）
-	if (enemyManager_) {
-		enemyManager_->Update(dt); // deltaTime 使ってないなら 0.0f でも可
 	}
 
 	// ── カメラインロ：ツイーンでカメラ回転を更新 ──
@@ -463,7 +456,7 @@ void GameScene::Update() {
 	}
 
 	if (requestInitEnemies_) {
-		InitializeEnemies();
+		enemyManager_->InitializeWaves();
 		enemiesInitialized_ = true;
 		requestInitEnemies_ = false;
 	}
@@ -605,18 +598,6 @@ void GameScene::LoadModels() {
 // 3Dオブジェクトを作成し、初期化する
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeObjects() {
-	// --- ground: タイルを3枚並べる ---
-	//groundTiles_.clear();
-	//const int tileCount = 3;
-	//for (int i = 0; i < tileCount; ++i) {
-	//	auto g = std::make_unique<Object3d>();
-	//	g->Initialize(Object3dCommon::GetInstance(), dxCommon);
-	//	g->SetModel("ground.obj");
-	//	g->SetParentScene(this);
-	//	g->SetTranslate({ 0.0f, -2.0f,  (float)i * groundTileLen_ }); // 少し下げる
-	//	groundTiles_.push_back(std::move(g));
-	//}
-
 	// player
 	player_ = std::make_unique<Player>();
 	player_->Initialize(Object3dCommon::GetInstance(), dxCommon);
@@ -632,21 +613,11 @@ void GameScene::InitializeCamera() {
 	camera = std::make_unique<Camera>();
 	camera->SetRotate({ camPitchStart_, camYawStart_, 0.0f });
 	camera->SetTranslate({ 0.0f,0.0f,-30.0f });
-
-	//ground_ = nullptr; // 既存は使わない（誤参照防止）
-	//for (auto& g : groundTiles_) {
-	//	g->SetCamera(camera.get());
-	//}
 	player_->SetCamera(camera.get());
-
-	for (auto& enemy : enemies_) {
-		enemy->SetCamera(camera.get());
-	}
 }
 
 void GameScene::ImGuiDebug() {
 #ifdef USE_IMGUI
-
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	ImGui::Begin("情報");
 	ImGui::Text("FPS : %.2f", fps_);
@@ -700,64 +671,35 @@ void GameScene::ImGuiDebug() {
 	}
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	//ImGui::Begin("地面");
-	//for (size_t i = 0; i < groundTiles_.size(); ++i) {
-	//	ImGui::PushID(static_cast<int>(i)); // IDを分ける
-	//	Vector3 t = groundTiles_[i]->GetTranslate();
-	//	Vector3 r = groundTiles_[i]->GetRotate();
-	//	Vector3 s = groundTiles_[i]->GetScale();
-	//	if (ImGui::DragFloat3("位置", &t.x, 0.01f)) {
-	//		groundTiles_[i]->SetTranslate(t);
-	//	}
-	//	if (ImGui::DragFloat3("回転", &r.x, 0.01f)) {
-	//		groundTiles_[i]->SetRotate(r);
-	//	}
-	//	if (ImGui::DragFloat3("拡縮", &s.x, 0.01f)) {
-	//		groundTiles_[i]->SetScale(s);
-	//	}
-	//	ImGui::Separator();
-	//	ImGui::PopID();
-	//}
-	//ImGui::DragFloat("タイルの長さ", &groundTileLen_, 0.1f, 10.0f, 1000.0f); // 実寸に近い範囲で
-	//ImGui::DragFloat("スクロール速度", &groundScroll_, 0.01f, -5.0f, 5.0f);
-	//ImGui::DragFloat("オフセット", &groundOffset_, 0.1f, 0.0f, groundTileLen_ * groundTiles_.size());
-	//ImGui::End();
+	enemyManager_->ImGuiDebug(); // EnemyManager
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	enemyManager_->ImGuiDebug();
-
 	ImGui::Begin("WAVEステータス");
-	
-
-
-	// ─────────────────────────────
-	// Wave デバッグ用 UI
-	// ─────────────────────────────
-	// 現在のWavePhaseを表示
+	int defeated = defeatedEnemyCount_;
+	int maxCount = maxEnemyCount_;
+	ImGui::Text("撃破数: %d / %d", defeated, maxCount);
+	float progress = 0.0f;
+	if (maxCount > 0) {
+		progress = static_cast<float>(defeated) / static_cast<float>(maxCount);
+	}
+	ImGui::ProgressBar(progress, ImVec2(200, 20), "撃破進行度");
+	// Wave の表示を EnemyManager から取る
+	EnemyManager::WavePhase phase = enemyManager_->GetWavePhase();
 	const char* waveLabel = "";
-	switch (wavePhase_) {
-	case WavePhase::W1:  waveLabel = "Wave1";  break;
-	case WavePhase::W2:  waveLabel = "Wave2";  break;
-	case WavePhase::W3:  waveLabel = "Wave3";  break;
-	case WavePhase::Done: waveLabel = "Bossフェーズ"; break;
-	default:             waveLabel = "不明"; break;
+	switch (phase) {
+	case EnemyManager::WavePhase::W1:   waveLabel = "Wave1";        break;
+	case EnemyManager::WavePhase::W2:   waveLabel = "Wave2";        break;
+	case EnemyManager::WavePhase::W3:   waveLabel = "Wave3";        break;
+	case EnemyManager::WavePhase::Done: waveLabel = "Bossフェーズ"; break;
 	}
 	ImGui::Text("現在のWave: %s", waveLabel);
-
-	// 今の雑魚フェーズをスキップ（= 敵を消して、次フレームで GoToNextWave が走る）
+	// 「次のWaveへ」ボタン
 	if (ImGui::Button("次のWaveへ")) {
-		enemies_.clear();      // 今出ている雑魚を全部消す
-		defeatedEnemyCount_ = 0; // カウントはデバッグだしゼロでもOK（お好み）
+		enemyManager_->GoToNextWave();
 	}
-
-	// いきなりボス戦に飛ぶ
+	ImGui::SameLine();
+	// 「ボスWaveへ」ボタン
 	if (ImGui::Button("ボスWaveへ")) {
-		enemies_.clear();          // 雑魚全削除
-		wavePhase_ = WavePhase::Done; // Waveフェーズを「Done」にしてボスフェーズへ
-		bossBattle_ = false;       // 念のためリセット
-		if (boss_) {
-			boss_.reset();         // 既にボスがいたら消す
-		}
+		enemyManager_->SkipToBossWave();
 	}
 	ImGui::End();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -805,9 +747,7 @@ void GameScene::ImGuiDebug() {
 	ImGui::Text("上下の傾き: %.3f rad", skyPitch_);
 	ImGui::End();
 	////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	////////////////////////////////////////////////////////////////////////////////////////////////////////
-#endif // _DEBUG
+#endif
 }
 
 void GameScene::UpdateMemory() {
@@ -827,112 +767,6 @@ void GameScene::UpdateMemory() {
 	}
 }
 
-void GameScene::InitializeEnemies() {
-	enemies_.clear();
-	defeatedEnemyCount_ = 0;   // ついでに進捗をリセット
-	maxEnemyCount_ = 0;        // 全Wave合計で加算していく
-
-	wavePhase_ = WavePhase::W1; // Wave1から
-	SpawnCurrentWave();         // 最初のWaveだけ出す（ここでmaxEnemyCount_も加算）
-
-	if (!enemies_.empty()) {
-		player_->SetEnemy(enemies_.front().get());
-		player_->SetAllEnemies(&enemies_);
-	}
-}
-
-void GameScene::SpawnCurrentWave() {
-	auto camPtr = camera ? camera.get() : nullptr;
-
-	switch (wavePhase_) {
-	case WavePhase::W1: {
-		// W1: 直進停止（密度で圧）＋HP控えめ
-		EnemySpawner::SpawnLine(
-			enemies_, 5, /*y*/5.0f, /*z*/60.0f, -20.0f, 10.0f,
-			dxCommon, camPtr, this,
-			[&](Enemy& e) {
-				e.SetBehavior(EnemyBehavior::StraightStop);
-				e.SetVelocity({ 0,0,-0.25f });
-				e.SetStopZ(60.0f);
-				e.SetHP(2);
-				e.SetScale({ 1.1f,1.1f,1.1f });
-			}
-		);
-		maxEnemyCount_ += 5;
-		break;
-	}
-	case WavePhase::W2: {
-		// W2: サイン蛇行で避けにくく（重なり防止で位相＆停止Zを個体別にオフセット）
-		int idx = 0;                 // 個体インデックス（ラムダ内でインクリメント）
-		const float phaseStep = 0.7f; // 位相刻み（ラジアン）
-		const float stopStep = 0.6f; // 停止Zのズラし量
-
-		EnemySpawner::SpawnV(
-			enemies_, 3, /*y*/6.0f, /*z*/80.0f, 0.0f, 8.0f, 6.0f,
-			dxCommon, camPtr, this,
-			[&](Enemy& e) {
-				e.SetBehavior(EnemyBehavior::SineX);
-				e.SetVelocity({ 0,0,-0.22f });
-				e.SetSineParams(/*ampX*/6.0f, /*freq*/1.6f);
-
-				// 個体ごとに位相と停止Zを少しずつズラす
-				e.SetSinePhase(phaseStep * float(idx));
-				e.SetStopZ(60.0f + stopStep * float(idx % 3));
-
-				e.SetHP(3);
-				++idx;
-			}
-		);
-		maxEnemyCount_ += 7; // 中央1 + 左右3*2
-		break;
-	}
-	case WavePhase::W3: {
-		// W3: 追尾＋左右ストレーフ混在で圧を上げる
-		EnemySpawner::SpawnColumn(
-			enemies_, 6, /*x*/25.0f, 100.0f, 10.0f, 4.0f, 0.5f,
-			dxCommon, camPtr, this,
-			[&](Enemy& e) {
-				// 交互にパターン変える例
-				static int idx = 0;
-				if ((idx++ % 2) == 0) {
-					e.SetBehavior(EnemyBehavior::ChasePlayer);
-					e.SetVelocity({ 0,0,-0.20f });
-					e.SetStopZ(34.0f);
-					// 追尾用にプレイヤー位置の参照を渡す
-					e.SetPlayer([this]() { return player_->GetPosition(); });
-					e.SetHP(3);
-				} else {
-					e.SetBehavior(EnemyBehavior::StrafeLtoR);
-					e.SetVelocity({ 0,0,-0.25f });
-					e.SetStopZ(60.0f);
-					e.SetStrafeX(-18.0f, 18.0f, 0.45f);
-					e.SetHP(4);
-				}
-			}
-		);
-		maxEnemyCount_ += 6;
-		break;
-	}
-	case WavePhase::Done:
-		break;
-	}
-}
-
-void GameScene::GoToNextWave() {
-	if (wavePhase_ == WavePhase::W1) {
-		wavePhase_ = WavePhase::W2;
-		SpawnCurrentWave();
-	} else if (wavePhase_ == WavePhase::W2) {
-		wavePhase_ = WavePhase::W3;
-		SpawnCurrentWave();
-	} else if (wavePhase_ == WavePhase::W3) {
-		wavePhase_ = WavePhase::Done; // 最終Waveまで終了
-	}
-
-	defeatedEnemyCount_ = 0;
-	maxEnemyCount_ = 0;
-}
-
 void GameScene::UpdateSkyboxRotationX() {
 	constexpr float kTwoPi = 6.2831853f;
 
@@ -944,36 +778,6 @@ void GameScene::UpdateSkyboxRotationX() {
 	// Skybox に適用
 	skybox_->SetRotation({ skyPitch_, 0.0f, 0.0f });
 }
-
-//void GameScene::UpdateGroundScroll() {
-//	const int   N = static_cast<int>(groundTiles_.size());
-//	if (N == 0) return;
-//
-//	const float L = groundTileLen_;
-//	const float speed = groundScroll_;
-//	const float epsilon = 0.001f; // タイル間にごく小さな隙間を入れてZ-fighting防止
-//
-//	// 累積オフセット更新
-//	groundOffset_ += speed;
-//	const float loop = N * L;
-//	if (groundOffset_ >= loop) groundOffset_ -= loop;
-//	if (groundOffset_ < 0.0f)  groundOffset_ += loop;
-//
-//	// いまどのタイルが先頭か（整数部）と端数（小数部）
-//	const int   k = static_cast<int>(groundOffset_ / L);
-//	const float frac = groundOffset_ - static_cast<float>(k) * L;
-//
-//	// 配置
-//	for (int j = 0; j < N; ++j) {
-//		const int idx = (k + j) % N;
-//		float z = -L + j * L - frac - epsilon * j;
-//
-//		Vector3 t = groundTiles_[idx]->GetTranslate();
-//		t.z = z;
-//		groundTiles_[idx]->SetTranslate(t);
-//		groundTiles_[idx]->Update();
-//	}
-//}
 
 void GameScene::StartClearSequence() {
 	clearSequence_ = true;

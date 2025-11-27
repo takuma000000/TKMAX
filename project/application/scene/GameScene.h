@@ -101,16 +101,6 @@ private: // ──────────────────── 更新�
 	//メモリ使用量
 	/// <summary>メモリ使用量を計測・履歴化します。</summary>
 	void UpdateMemory();
-	/// <summary>敵の初期化を行います。</summary>
-	void InitializeEnemies();
-
-	// Wave管理 ===
-	enum class WavePhase { W1, W2, W3, Done };
-	WavePhase wavePhase_ = WavePhase::W1;
-	/// <summary>現在のwavePhase_に応じて敵をスポーンします。</summary>
-	void SpawnCurrentWave();   // 現在のwavePhase_に応じてスポーン
-	/// <summary>wavePhase_を進めます。</summary>
-	void GoToNextWave();       // wavePhase_を進める
 
 	/// <summary>スカイボックスのX回転を更新します。</summary>
 	void UpdateSkyboxRotationX(); // スカイボックスをX軸方向に回転
@@ -147,11 +137,6 @@ private:
 	int maxEnemyCount_ = 0;// 最大敵数
 
 	std::unique_ptr<EnemyManager> enemyManager_; // 敵管理クラス
-
-	//std::vector<std::unique_ptr<Object3d>> groundTiles_;
-	//float groundTileLen_ = 299.0f;   // ground.obj の奥行きに合わせて調整
-	//float groundScroll_ = 0.6f;     // 前進感の速さ
-	//float groundOffset_ = 0.0f;     // スクロール用オフセット
 
 	float skyPitch_ = 0.0f;        // X軸回転量
 	float skyRotSpeedX_ = 0.002f;  // X軸回転速度
