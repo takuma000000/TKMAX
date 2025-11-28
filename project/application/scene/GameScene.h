@@ -23,6 +23,7 @@
 #include "TitleScene.h"
 #include "SceneManager.h"
 #include "application/enemy/manager/EnemyManager.h"
+#include "BossManager.h"
 
 #include "application/player/Player.h"
 #include "application/enemy/Enemy.h"
@@ -122,14 +123,7 @@ private:
 	int maxEnemyCount_ = 0;// 最大敵数
 
 	std::unique_ptr<EnemyManager> enemyManager_; // 敵管理クラス
-
-	float skyPitch_ = 0.0f;        // X軸回転量
-	float skyRotSpeedX_ = 0.002f;  // X軸回転速度
-
-	bool bossBattle_ = false;         // ボス戦フラグ
-	std::unique_ptr<BossEnemy> boss_; // ボス敵
-	std::vector<std::unique_ptr<BossBullet>> bossBullets_;
-	bool bossP2BgmPlayed_ = false; // P2でBGMを1回だけ再生したかどうか
+	std::unique_ptr<BossManager> bossManager_; // ボス管理クラス
 
 	// Iris（開く）用
 	std::unique_ptr<Sprite> iris_ = nullptr;

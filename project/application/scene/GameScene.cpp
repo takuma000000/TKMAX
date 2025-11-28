@@ -77,6 +77,11 @@ void GameScene::Initialize() {
 	enemyManager_ = std::make_unique<EnemyManager>();
 	enemyManager_->Initialize(dxCommon, camera.get(), this, player_.get());
 	enemyManager_->BindEnemies(&enemies_, &defeatedEnemyCount_, &maxEnemyCount_);
+	// ──────────────── ボスマネージャの初期化 ───────────────
+	if (!bossManager_) {
+		bossManager_ = std::make_unique<BossManager>();
+	}
+	bossManager_->Initialize(dxCommon, camera.get(), this, player_.get());
 }
 
 void GameScene::Finalize() {
@@ -118,30 +123,25 @@ void GameScene::Update() {
 
 		// 全てのWaveが終了していて、敵がいない → ボスへ進行 or クリア処理
 		if (enemyManager_ && enemyManager_->IsAllWavesCleared()) {
-			// --- ボス戦突入（まだボス出してない時） ---
-			if (!bossBattle_) {
-				bossBattle_ = true;
-				boss_ = std::make_unique<BossEnemy>();
-				boss_->Initialize(Object3dCommon::GetInstance(), dxCommon);
-				boss_->SetParentScene(this);
-				boss_->SetCamera(camera.get());
-				boss_->SetPlayer([this]() { return player_->GetPosition(); });
-				boss_->SetPosition({ 0, 0, 200 });  // 奥から登場
-			} else {
-				// --- ボス撃破 → クリア演出へ ---
-				if (boss_ && boss_->IsDead()) { // ボスが存在していて倒されている
-					if (!clearSequence_) { // まだクリア演出始まってないなら
-						StartClearSequence(); // クリア演出開始
-						return; // このフレームの通常処理は終わり
+			if (bossManager_) {
+				// まだボス戦始まっていなければ開始
+				if (!bossManager_->IsBattleActive() && !bossManager_->IsBossDead()) {
+					bossManager_->StartBattle();
+				} else {
+					// ボス撃破 → クリア演出へ
+					if (bossManager_->IsBossDead()) {
+						if (!clearSequence_) {
+							StartClearSequence();
+							return;
+						}
 					}
 				}
 			}
 		}
-		// ロックオン対象の更新（既存ロジック維持）
-		if (bossBattle_ && boss_ && !boss_->IsDead()) {
-			player_->SetEnemy(boss_.get());
+		// ロックオン対象の更新
+		if (bossManager_ && bossManager_->IsBossAlive()) {
+			player_->SetEnemy(bossManager_->GetBoss());
 		} else {
-			// 雑魚がいるときは最も近い敵をロックオン
 			enemyManager_->UpdateClosestEnemy();
 		}
 	}
@@ -156,19 +156,9 @@ void GameScene::Update() {
 	player_->Update();
 	// ライトの更新
 	directionalLight_->Update();
-
-	if (bossBattle_ && boss_) {// ボス戦中ならボスも更新
-		boss_->Update();
-
-		// P2突入時にBGMを1回だけ再生
-		if (!bossP2BgmPlayed_) {
-			int phase = boss_->GetPhase(); // P1=0, P2=1, P3=2
-
-			if (phase == 1) { // P2
-				AudioManager::GetInstance()->PlaySound("bossP2");
-				bossP2BgmPlayed_ = true;   // 2回目以降は鳴らさない
-			}
-		}
+	// ボスマネージャの更新
+	if (bossManager_) {
+		bossManager_->Update(dt);
 	}
 
 	// ゲームプレイ中だけ風エフェクト
@@ -328,12 +318,6 @@ void GameScene::Update() {
 	// その他のオブジェクト・パーティクルの更新
 	ParticleManager::GetInstance()->Update();
 
-	for (auto it = bossBullets_.begin(); it != bossBullets_.end(); ) {
-		(*it)->Update();
-		if ((*it)->IsDead()) it = bossBullets_.erase(it);
-		else ++it;
-	}
-
 	// Aキーでリボンパーティクルテスト
 	if (Input::GetInstance()->TriggerKey(DIK_A)) {
 		// プレイヤーのちょい前に出したければこんな感じでもOK
@@ -416,11 +400,8 @@ void GameScene::Draw() {
 
 	// クリア演出中はボス関連を描かない
 	if (!clearSequence_) {
-		if (bossBattle_ && boss_) {
-			boss_->Draw(dxCommon); // ボスの描画
-		}
-		for (auto& b : bossBullets_) {
-			b->Draw(dxCommon); // ボス弾の描画
+		if (bossManager_) {
+			bossManager_->Draw(dxCommon);
 		}
 	}
 
@@ -442,9 +423,9 @@ void GameScene::Draw() {
 }
 
 void GameScene::SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float speed, int damage, int lifeFrame) {
-	auto b = std::make_unique<BossBullet>();
-	b->Initialize(Object3dCommon::GetInstance(), dxCommon, camera.get(), pos, dir, speed, damage, lifeFrame);
-	bossBullets_.push_back(std::move(b));
+	if (bossManager_) {
+		bossManager_->SpawnEnemyBullet(pos, dir, speed, damage, lifeFrame);
+	}
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -530,12 +511,12 @@ void GameScene::LoadModels() {
 // 3Dオブジェクトを作成し、初期化する
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeObjects() {
-	// player
+	// ──────────────── プレイヤーの初期化 ───────────────
 	player_ = std::make_unique<Player>();
 	player_->Initialize(Object3dCommon::GetInstance(), dxCommon);
 	player_->SetPosition({ 0.0f, 0.0f, 0.0f });
 	player_->SetParentScene(this);
-	player_->SetEnemy(boss_.get()); // 最初はボスはいないのでnullptr
+	player_->SetEnemy(nullptr); // 最初はボスはいないのでnullptr
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -553,8 +534,8 @@ void GameScene::ImGuiDebug() {
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	player_->ImGuiDebug();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
-	if (boss_) {
-		boss_->ImGuiDebug();
+	if (bossManager_ && bossManager_->GetBoss()) {
+		bossManager_->GetBoss()->ImGuiDebug();
 	}
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	enemyManager_->ImGuiDebug();
@@ -579,10 +560,8 @@ void GameScene::StartClearSequence() {
 	gameplayLocked_ = true;
 
 	// --- ボス、ボス弾、レティクルを消し、プレイヤー操作をロック ---
-	bossBattle_ = false;            // もうボス戦ではない
-	bossBullets_.clear();           // 画面上のボス弾を全部削除
-	if (boss_) {
-		boss_.reset();              // ボス本体も破棄（描画/更新されなくなる）
+	if (bossManager_) {
+		bossManager_->OnClearSequenceStart();
 	}
 	if (player_) {
 		player_->SetControlEnabled(false); // 入力を全部無視

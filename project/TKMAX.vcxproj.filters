@@ -149,6 +149,7 @@
     <ClCompile Include="application\enemy\manager\EnemyManager.cpp">
       <Filter>application\enemy\manager</Filter>
     </ClCompile>
+    <ClCompile Include="BossManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -322,6 +323,7 @@
     <ClInclude Include="application\enemy\manager\EnemyManager.h">
       <Filter>application\enemy\manager</Filter>
     </ClInclude>
+    <ClInclude Include="BossManager.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
