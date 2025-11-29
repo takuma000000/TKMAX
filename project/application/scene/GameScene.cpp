@@ -376,6 +376,7 @@ void GameScene::Update() {
 		if (player_) player_->SetHP(0);
 	}
 
+	// ── 敵初期化要求が来ていたら実行 ──
 	if (requestInitEnemies_) {
 		enemyManager_->InitializeWaves();
 		enemiesInitialized_ = true;
