@@ -8,21 +8,18 @@
 
 void ImGuiManager::Initialize(WindowsAPI* winApp, DirectXCommon* dxCommon){
 #ifdef USE_IMGUI
-
 	HRESULT hr;
-
 	dxCommon_ = dxCommon;
 	winApp_ = winApp;
 
 	//ImGuoのコンテキストを生成
 	ImGui::CreateContext();
-
 	// ImGuiドッキング
 	ImGuiIO& io = ImGui::GetIO();
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
 	// ===============================
-	// ▼ 日本語フォントの追加
+	// 日本語フォントの追加
 	// ===============================
 	io.Fonts->AddFontDefault(); // デフォルト英語フォント
 
@@ -41,23 +38,19 @@ void ImGuiManager::Initialize(WindowsAPI* winApp, DirectXCommon* dxCommon){
 		OutputDebugStringA("[ImGui] 日本語フォントの読み込みに失敗しました\\n");
 	}
 
-
 	///ImGuiの色設定場所===========================================
-
 	//イチゴ色
 	//SetColorStrawberry();
-
+	
 	//ホワイトタイガー色
 	SetColorWhiteTiger();
 
 	//レインボー キラキラ✨
 	//SetColorRainbow();
-
 	///===========================================================
 
 	//Win32用の初期化
 	ImGui_ImplWin32_Init(winApp_->GetHwnd());
-
 	//デスクリプタ―ヒープ設定
 	D3D12_DESCRIPTOR_HEAP_DESC desc = {};
 	desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
@@ -76,7 +69,6 @@ void ImGuiManager::Initialize(WindowsAPI* winApp, DirectXCommon* dxCommon){
 		srvHeap_->GetCPUDescriptorHandleForHeapStart(), // SRVのCPU側のハンドル
 		srvHeap_->GetGPUDescriptorHandleForHeapStart() // SRVのGPU側のハンドル
 	);
-
 #endif
 }
 
@@ -98,26 +90,21 @@ void ImGuiManager::Finalize(){
 
 void ImGuiManager::Begin(){
 #ifdef USE_IMGUI
-
 	//ImGuiフレーム開始
 	ImGui_ImplDX12_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
-
 #endif
 }
 
 void ImGuiManager::End(){
 #ifdef USE_IMGUI
-
 	ImGui::Render();
-
 #endif
 }
 
 void ImGuiManager::Draw(){
 #ifdef USE_IMGUI
-
 	// コマンドリストの取得
 	ID3D12GraphicsCommandList* commandList = dxCommon_->GetCommandList();
 
@@ -126,13 +113,11 @@ void ImGuiManager::Draw(){
 	commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 	//描画コマンドを発行
 	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
-
 #endif
 }
 
 void ImGuiManager::SetColorStrawberry(){
 #ifdef USE_IMGUI
-
 	ImGuiStyle& style = ImGui::GetStyle();
 
 	//========================================
@@ -181,13 +166,11 @@ void ImGuiManager::SetColorStrawberry(){
 
 	// 🍓 ポップアップ（コンテキストメニュー）
 	colors[ImGuiCol_PopupBg] = ImVec4(0.9f, 0.2f, 0.3f, 0.95f);  // 苺色
-
 #endif
 }
 
 void ImGuiManager::SetColorWhiteTiger(){
 #ifdef USE_IMGUI
-
 	ImGuiStyle& style = ImGui::GetStyle();
 
 	//========================================
@@ -236,13 +219,11 @@ void ImGuiManager::SetColorWhiteTiger(){
 
 	//— 🐯** ポップアップ（コンテキストメニュー）**
 	colors[ImGuiCol_PopupBg] = ImVec4(0.4f, 0.4f, 0.4f, 0.95f);  // **背景に溶け込むグレー**
-
 #endif
 }
 
 void ImGuiManager::SetColorRainbow(){
 #ifdef USE_IMGUI
-
 	ImGuiStyle& style = ImGui::GetStyle();
 
 	//========================================
@@ -283,6 +264,5 @@ void ImGuiManager::SetColorRainbow(){
 	colors[ImGuiCol_TabActive] = ImVec4(0.0f, 0.5f, 1.0f, 1.0f);
 
 	colors[ImGuiCol_PopupBg] = ImVec4(1.0f, 0.5f, 1.0f, 0.95f);
-
 #endif
 }

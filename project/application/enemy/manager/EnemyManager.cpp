@@ -72,7 +72,7 @@ void EnemyManager::UpdateClosestEnemy() {
 
 	// ───── 敵リストを走査して、最も近い生存中の敵を探す ─────
 	for (auto& enemy : *enemies_) {
-		if (!enemy->IsDead()) {
+		if (!enemy->IsDead() && !enemy->IsDying()) { // 生存中の敵のみ対象
 			float dist = MyMath::Length(enemy->GetWorldPosition() - playerPos);
 
 			if (dist < closestDistance) {

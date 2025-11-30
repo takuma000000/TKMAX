@@ -25,7 +25,7 @@ void PlayerBullet::Update() {
 	// 現在の座標を取得して、速度分だけ進める
 	Vector3 pos = object_->GetTranslate();
 
-	// ▼ 完全追従：毎フレーム、目標の現在位置へ向けて速度ベクトルを再設定
+	// 完全追従：毎フレーム、目標の現在位置へ向けて速度ベクトルを再設定
 	if (isHoming_ && enemy_ && !enemy_->IsDead()) {
 		Vector3 enemyPos = enemy_->GetWorldPosition(); // 敵の現在位置を取得
 		Vector3 dir = enemyPos - pos; // 敵への方向ベクトルを計算
@@ -41,7 +41,7 @@ void PlayerBullet::Update() {
 	trailEmitter_.SetPosition(pos); // パーティクル位置更新
 	trailEmitter_.Update(); // 毎フレーム放出
 
-	// ▼ LTホーミング弾だけ、飛行中にスパークをばら撒く（全部盛りポイント）
+	// LTホーミング弾だけ、飛行中にスパークをばら撒く（全部盛りポイント）
 	if (trailGroup_ == "trail_lt") {
 		ParticleManager* pm = ParticleManager::GetInstance();
 		Vector3 emitPos = pos;
@@ -80,6 +80,11 @@ void PlayerBullet::Update() {
 			// ▼ trailGroup_ で「LT弾かどうか」を判定
 			bool isLTBullet = (trailGroup_ == "trail_lt");
 
+			// ダメージ値をまず決める
+			int damage = isSpecialAttack_ ? 100 : 1;
+			// 今のHPから見て「この一撃で死ぬか」を先に判定
+			bool willDie = (enemy_ && enemy_->GetHP() <= damage);
+
 			if (isLTBullet) {
 
 				// ===============================
@@ -110,12 +115,18 @@ void PlayerBullet::Update() {
 				pm->Emit("enemyHit_spark", hitPos, 32);
 			}
 
-			// 敵へのダメージは今まで通り
+			// ダメージ適用
 			if (enemy_ && !enemy_->IsDead()) {
-				if (isSpecialAttack_) {          // RT一撃必殺
-					enemy_->OnHitWithDamage(100);
-				} else {
-					enemy_->OnHitWithDamage(1);  // 通常/LB/LTは今のまま
+				enemy_->OnHitWithDamage(damage);
+
+				// ★ 致死だったならノックバック開始
+				if (willDie) {
+					// ノックバック方向は「弾の進行方向」
+					Vector3 knockDir = velocity_;
+					if (MyMath::Length(knockDir) < 0.001f) {
+						knockDir = enemyPos - bulletPos; // 保険
+					}
+					enemy_->StartDeathReaction(knockDir);
 				}
 			}
 

@@ -68,6 +68,13 @@ void GameScene::Initialize() {
 	ParticleManager::GetInstance()->CreateParticleGroup("lt_nova_crack", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
 	// 爆発バースト（明るい爆発の粒）
 	ParticleManager::GetInstance()->CreateParticleGroup("lt_nova_burst", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
+	// === 敵吹っ飛び死亡専用エフェクト ===
+	// 核となる小さな光の塊（中央でフッと光って消える）
+	ParticleManager::GetInstance()->CreateParticleGroup("enemyDeath_core", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
+	// 周りに飛び散る光の破片
+	ParticleManager::GetInstance()->CreateParticleGroup("enemyDeath_shard", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
+	// 残り香みたいにふわっと残る煙
+	ParticleManager::GetInstance()->CreateParticleGroup("enemyDeath_smoke", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
 
 	// ──────────────── スカイボックスの初期化 ───────────────
 	skybox_ = std::make_unique<Skybox>();
@@ -595,7 +602,7 @@ bool GameScene::UpdateClearSequence(float dt) {
 
 	// skyboxはずっと回し続ける
 	if (skybox_) {
-		skybox_->UpdateRotation();  // ← ここに差し替え
+		skybox_->UpdateRotation(); // skybox回転更新
 	}
 
 	// 花火用タイマー（クリア演出中だけ使うローカル static）

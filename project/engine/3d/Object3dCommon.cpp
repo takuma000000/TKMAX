@@ -132,6 +132,21 @@ void Object3dCommon::GenerateRootSignature(){
 
 	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL; //RGBA全てのチャンネルを描画
 
+	// --- アルファブレンド有効化 ---
+	blendDesc.AlphaToCoverageEnable = FALSE;
+	blendDesc.IndependentBlendEnable = FALSE;
+
+	auto& rt0 = blendDesc.RenderTarget[0];
+	rt0.BlendEnable = TRUE;
+	rt0.LogicOpEnable = FALSE;
+	rt0.SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	rt0.DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	rt0.BlendOp = D3D12_BLEND_OP_ADD;
+	rt0.SrcBlendAlpha = D3D12_BLEND_ONE;
+	rt0.DestBlendAlpha = D3D12_BLEND_ZERO;
+	rt0.BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	rt0.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
 	resterizerDesc.CullMode = D3D12_CULL_MODE_NONE; //カリングしない
 	resterizerDesc.FillMode = D3D12_FILL_MODE_SOLID; //塗りつぶし
 

@@ -106,7 +106,7 @@ struct EnvironmentEX {
 // Object3dクラス
 // 3Dオブジェクトの描画・変換・ライト設定を行うクラス。
 //=============================================================
-class Object3d{
+class Object3d {
 
 public://メンバ関数
 
@@ -134,6 +134,8 @@ public:
 	const Vector3& GetTranslate() const { return transform.translate; }
 	/// <summary>アクティブオブジェクト数の取得。</summary>
 	static int GetActiveCount() { return activeCount_; }
+	/// <summary>モデルの取得。</summary>
+	Vector4 GetColor() const { return materialData ? materialData->color : Vector4{ 1,1,1,1 }; }
 	//setter
 	/// <summary>スケール、回転、平行移動の設定。</summary>
 	void SetScale(const Vector3& scale) { this->transform.scale = scale; }
@@ -149,6 +151,8 @@ public:
 	void SetParentScene(BaseScene* parentScene);
 	/// <summary>環境マップの設定。</summary>
 	void SetEnvironment(const std::string& filename);
+	/// <summary>色の設定。</summary>
+	void SetColor(const Vector4& color) { if (materialData) { materialData->color = color; } }
 
 private:
 	Object3dCommon* object3dCommon = nullptr;

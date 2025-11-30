@@ -3,6 +3,7 @@
 #include "Object3d.h"
 #include "Camera.h"
 #include "BaseScene.h"
+#include <engine/effect/particle/ParticleManager.h>
 
 #ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"
@@ -40,26 +41,26 @@ public:
 	bool IsDead() const { return isDead_; }
 	/// <summary>敵がロックオンされているかどうかを取得します。</summary>
 	bool IsLocked() const { return isLocked_; }
+	/// <summary>敵が死亡演出中かどうかを取得します。</summary>
+	bool IsDying() const { return isDying_; }
+	/// <summary>敵の死亡リアクションを開始します。</summary>
+	void StartDeathReaction(const Vector3& hitDir);
 
-	// HP設定
 	/// <summary>HPを設定します（最大HPも更新）。</summary>
 	void SetHP(int hp) {
 		hp_ = hp;
 		maxHP_ = hp;
 	}
-	// モデル差し替え
 	/// <summary>モデルを設定します。</summary>
 	void SetModel(const std::string& modelName) {
 		if (object_) object_->SetModel(modelName);
 	}
-	// スケール変更
 	/// <summary>スケールを設定します（当たり判定用スケールも更新）。</summary>
 	void SetScale(const Vector3& scale) {
 		baseScale_ = scale; // 元のスケールを更新
 		colliderScale_ = scale; // 当たり判定用スケールも更新
 		if (object_) object_->SetScale(scale); // Object3d にも反映
 	}
-
 	/// <summary>カメラを設定します。</summary>
 	void SetCamera(Camera* camera);
 	/// <summary>位置を設定します。</summary>
@@ -154,4 +155,12 @@ private:
 	std::function<Vector3()> playerGetter_;
 
 	float sinePhase_ = 0.0f;  // SineX用の位相(ラジアン)
+
+	// 死亡リアクション用
+	bool isDying_ = false;        // 死亡演出中かどうか
+	float deathTimer_ = 0.0f;     // 経過時間
+	float deathDuration_ = 1.2f;  // 演出の長さ（秒相当）
+	Vector3 deathVelocity_ = { 0.0f, 0.0f, 0.0f }; // 吹っ飛び速度
+	Vector3 deathRotateSpeed_ = { 0.0f, 0.0f, 0.0f }; // 撃墜回転用
+	float deathAlpha_ = 1.0f;     // フェード用アルファ
 };

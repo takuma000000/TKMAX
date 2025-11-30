@@ -480,7 +480,7 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 		std::uniform_real_distribution<float> scl(0.8f, 1.6f);
 		float sc = scl(rng);
 		p.transform.scale = { sc, sc, sc };
-		
+
 		// 寿命長め（広く散っても見えるように）
 		std::uniform_real_distribution<float> life(0.8f, 1.5f);
 		p.lifeTime = life(rng);
@@ -1163,6 +1163,105 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 
 		p.lifeTime = std::uniform_real_distribution<float>(0.35f, 0.5f)(rng);
 		p.currentTime = 0.0f;
+	} else if (groupName == "enemyDeath_core") {
+		// 敵が消える瞬間、中心にフッと出る小さな光
+
+		// 位置は完全にセンター
+		p.transform.translate = center;
+
+		// 少しだけ大きめだけど、そこまでド派手じゃない
+		float sc = std::uniform_real_distribution<float>(0.9f, 1.4f)(rng);
+		p.transform.scale = { sc, sc, sc };
+
+		// 動かない（その場で光って消える）
+		p.velocity = { 0.0f, 0.0f, 0.0f };
+
+		// 寿命はかなり短いパッと光る感じ
+		p.lifeTime = std::uniform_real_distribution<float>(0.12f, 0.20f)(rng);
+		p.currentTime = 0.0f;
+
+		// 少し黄味がかった白い光
+		p.color = { 1.0f, 0.96f, 0.86f, 1.0f };
+
+	} else if (groupName == "enemyDeath_shard") {
+		// バラバラに飛び散る光の破片
+
+		// 中心からごく小さなオフセット
+		std::uniform_real_distribution<float> offSmall(-0.15f, 0.15f);
+		Vector3 localOffset{
+			offSmall(rng),
+			offSmall(rng),
+			offSmall(rng)
+		};
+		p.transform.translate = center + localOffset;
+
+		// ランダム方向（やや上＋後ろに飛ぶ、ふわっと散るイメージ）
+		auto frand = [&](float a, float b) {
+			return std::uniform_real_distribution<float>(a, b)(rng);
+			};
+
+		Vector3 dir{
+			frand(-0.6f, 0.6f),
+			frand(0.0f, 0.9f),    // 上方向に少しバイアス
+			frand(-1.0f, 0.2f)    // 画面奥〜少し手前
+		};
+		if (MyMath::Length(dir) < 0.001f) {
+			dir = { 0.0f, 1.0f, 0.0f };
+		}
+		dir = MyMath::Normalize(dir);
+
+		float spd = frand(0.6f, 1.6f);
+		p.velocity = dir * spd;
+
+		// 小さい光の破片
+		float sc = frand(0.25f, 0.55f);
+		p.transform.scale = { sc, sc, sc };
+
+		// ちょっとだけ残る
+		p.lifeTime = frand(0.45f, 0.85f);
+		p.currentTime = 0.0f;
+
+		// 色は少しだけカラフル（青〜シアン〜マゼンタの中間）
+		float t = frand(0.0f, 1.0f);
+		Vector3 col = {
+			0.6f + 0.3f * t,      // R : 0.6〜0.9
+			0.7f + 0.2f * (1 - t),// G : 0.7〜0.9
+			1.0f                  // B : 1.0（青白い感じ）
+		};
+		p.color = { col.x, col.y, col.z, 1.0f };
+
+	} else if (groupName == "enemyDeath_smoke") {
+		// ふわっと残る煙（あまり主張しない）
+
+		// 位置はほぼセンター
+		p.transform.translate = center;
+
+		auto frand = [&](float a, float b) {
+			return std::uniform_real_distribution<float>(a, b)(rng);
+			};
+
+		// 少しだけゆっくり上昇
+		p.velocity = {
+			frand(-0.15f, 0.15f),
+			frand(0.15f, 0.35f),
+			frand(-0.15f, 0.15f)
+		};
+
+		// 丸くて少し大きめ
+		float sc = frand(0.9f, 1.8f);
+		p.transform.scale = { sc, sc, sc };
+
+		// わりと長めに残って、消えたあとも余韻がある
+		p.lifeTime = frand(0.9f, 1.5f);
+		p.currentTime = 0.0f;
+
+		// 薄いグレー〜少し青み
+		Vector3 col3 = {
+			frand(0.70f, 0.85f),
+			frand(0.72f, 0.88f),
+			frand(0.80f, 0.95f)
+		};
+		p.color = { col3.x, col3.y, col3.z, 1.0f };
 	} else { // 上記意外
 		// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 		std::uniform_real_distribution<float> velX(-0.15f, 0.15f);
