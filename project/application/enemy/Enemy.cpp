@@ -166,6 +166,54 @@ void Enemy::Update() {
 
 	object_->SetTranslate(pos); // 位置反映
 
+	// ---- 当たり判定の可視化（ワイヤーボックス）----
+	{
+		Vector3 center = GetWorldPosition();
+
+		float hx = colliderScale_.x * 0.5f;
+		float hy = colliderScale_.y * 0.5f;
+		float hz = colliderScale_.z * 0.5f;
+
+		auto* lr = LineRenderer::GetInstance();
+
+		// 軸ごとに色分けしても分かりやすい
+		LineRenderer::Color colEdge{ 0.0f, 1.0f, 0.0f, 1.0f }; // とりあえず全部同じ色
+
+		// 8頂点（AABBの隅）
+		Vector3 p[8] = {
+			{ center.x - hx, center.y - hy, center.z - hz }, // 0: 左下手前
+			{ center.x + hx, center.y - hy, center.z - hz }, // 1: 右下手前
+			{ center.x - hx, center.y + hy, center.z - hz }, // 2: 左上手前
+			{ center.x + hx, center.y + hy, center.z - hz }, // 3: 右上手前
+			{ center.x - hx, center.y - hy, center.z + hz }, // 4: 左下奥
+			{ center.x + hx, center.y - hy, center.z + hz }, // 5: 右下奥
+			{ center.x - hx, center.y + hy, center.z + hz }, // 6: 左上奥
+			{ center.x + hx, center.y + hy, center.z + hz }, // 7: 右上奥
+		};
+
+		auto add = [&](int a, int b) {
+			lr->AddLine(p[a], p[b], colEdge);
+			};
+
+		// 手前面（z - hz）
+		add(0, 1);
+		add(1, 3);
+		add(3, 2);
+		add(2, 0);
+
+		// 奥面（z + hz）
+		add(4, 5);
+		add(5, 7);
+		add(7, 6);
+		add(6, 4);
+
+		// 側面（縦の4本）
+		add(0, 4);
+		add(1, 5);
+		add(2, 6);
+		add(3, 7);
+	}
+
 	// ---- ロック中のパルス（既存）----
 	if (isLocked_) {
 		pulseT_ += 0.12f;
@@ -208,7 +256,6 @@ Vector3 Enemy::GetWorldPosition() const {
 
 void Enemy::ImGuiDebug() {
 #ifdef USE_IMGUI
-
 	if (!object_) return;
 
 	ImGui::Begin("Enemy");
@@ -216,21 +263,28 @@ void Enemy::ImGuiDebug() {
 	Vector3 pos = object_->GetTranslate();
 	Vector3 rot = object_->GetRotate();
 	Vector3 scale = object_->GetScale();
-	if (ImGui::DragFloat3("Position", &pos.x, 0.01f)) {
+
+	if (ImGui::DragFloat3("位置", &pos.x, 0.01f)) {
 		object_->SetTranslate(pos);
 	}
-	if (ImGui::DragFloat3("Rotation", &rot.x, 0.01f)) {
+	if (ImGui::DragFloat3("回転", &rot.x, 0.01f)) {
 		object_->SetRotate(rot);
 	}
-	if (ImGui::DragFloat3("Scale", &scale.x, 0.01f)) {
-		object_->SetScale(scale);
+	if (ImGui::DragFloat3("拡縮", &scale.x, 0.01f)) {
+		SetScale(scale);   // モデルと当たり判定両方に反映される
 	}
-	ImGui::Text("N_EnemyHP: %d", hp_);
-	ImGui::Text("Dead: %s", isDead_ ? "true" : "false");
+
+	// 当たり判定スケール編集
+	Vector3 col = colliderScale_;
+	if (ImGui::DragFloat3("当たり判定サイズ", &col.x, 0.01f, 0.01f, 999.0f)) {
+		SetColliderScale(col);
+	}
+
+	ImGui::Text("HP: %d / %d", hp_, maxHP_);
+	ImGui::Text("生死: %s", isDead_ ? "死" : "生");
 
 	ImGui::End();
-
-#endif // USE_IMGUI
+#endif
 }
 
 void Enemy::OnHitWithDamage(int damage){

@@ -4,6 +4,7 @@
 #include "Camera.h"
 #include "BaseScene.h"
 #include <engine/effect/particle/ParticleManager.h>
+#include "engine/effect/line/LineRenderer.h"
 
 #ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"

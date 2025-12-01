@@ -58,14 +58,14 @@ void PlayerBullet::Update() {
 		// 弾の座標とスケールを取得
 		Vector3 bulletPos = object_->GetTranslate();
 		Vector3 bulletScale = object_->GetScale();
+		// 弾の当たり判定AABB
+		AABB bulletBox(bulletPos, bulletScale);
 
 		// 敵のワールド座標とスケールを取得
 		Vector3 enemyPos = enemy_->GetWorldPosition();
-		Vector3 enemyScale = enemy_->GetColliderScale();
-
-		// 弾と敵のAABB（軸に沿ったバウンディングボックス）を作成
-		AABB bulletBox(bulletPos, bulletScale);
-		AABB enemyBox(enemyPos, enemyScale);
+		Vector3 enemySize = enemy_->GetColliderScale(); // 「幅」
+		// 敵の当たり判定AABB
+		AABB enemyBox(enemyPos, enemySize);
 
 		// 当たり判定チェック
 		if (bulletBox.IsCollidingWithAABB(enemyBox)) {
@@ -164,7 +164,7 @@ void PlayerBullet::SetVelocity(const Vector3& vel) {
 	velocity_ = vel; // 速度設定
 }
 
-void PlayerBullet::StartSpawnBezier(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float duration, const Vector3& velocityAfter){
+void PlayerBullet::StartSpawnBezier(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float duration, const Vector3& velocityAfter) {
 	bezP0_ = p0; bezP1_ = p1; bezP2_ = p2; bezP3_ = p3;
 	spawnDuration_ = std::max(0.001f, duration);
 	spawnT_ = 0.0f;
@@ -174,7 +174,7 @@ void PlayerBullet::StartSpawnBezier(const Vector3& p0, const Vector3& p1, const 
 	velocity_ = { 0,0,0 };
 }
 
-void PlayerBullet::UpdateSpawnBezier(){
+void PlayerBullet::UpdateSpawnBezier() {
 	const float dt = 1.0f / 60.0f;
 	// 現在の座標を取得して、速度分だけ進める
 	Vector3 pos = object_->GetTranslate();

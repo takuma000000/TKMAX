@@ -452,7 +452,7 @@ void Player::RBShoot() {
 
 		bullet->SetVelocity(dir * kNormalBulletSpeed); // 速度設定
 		bullet->SetCamera(camera);
-		bullet->SetEnemy(nullptr);     // RBは敵ロックなしでOKなら null に
+		bullet->SetEnemy(enemy_);     // RBは敵ロックなしでOKなら null に
 		bullet->SetPlayer(this); // プレイヤー設定
 		bullet->SetTrailGroup("trail_rb");
 
