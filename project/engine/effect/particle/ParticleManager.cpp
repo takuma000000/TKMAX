@@ -4,6 +4,7 @@
 #include "MyMath.h"
 #include <numbers>
 #include <algorithm>
+#include "LineRenderer.h"
 
 ParticleManager* ParticleManager::instance = nullptr;
 

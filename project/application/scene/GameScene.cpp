@@ -27,6 +27,9 @@ void GameScene::Initialize() {
 	directionalLight_ = std::make_unique<DirectionalLight>();
 	directionalLight_->Initialize({ 1.0f, 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 0.0f }, 1.0f);
 
+	// ──────────────── ラインレンダラーの初期化 ───────────────
+	LineRenderer::GetInstance()->Initialize(dxCommon);
+
 	// ──────────────── パーティクルの初期化 ───────────────
 	ParticleManager::GetInstance()->Initialize(dxCommon, srvManager, camera.get());
 	ParticleManager::GetInstance()->CreateParticleGroup("uv", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
@@ -103,6 +106,8 @@ void GameScene::Finalize() {
 void GameScene::Update() {
 	// 入力処理
 	Input::GetInstance()->Update();
+	// 毎フレームの最初に、前フレームのラインをクリア
+	LineRenderer::GetInstance()->BeginFrame();
 
 	// 描画コール・メモリの初期化
 	ResetDrawCallCount();
@@ -415,6 +420,11 @@ void GameScene::Draw() {
 
 	// パーティクル描画
 	ParticleManager::GetInstance()->Draw();
+
+	// カメラの ViewProjection 行列を用意
+	Matrix4x4 vp = camera->GetViewProjectionMatrix(); // ← カメラクラスに合わせて
+	// ライン描画
+	LineRenderer::GetInstance()->Draw(vp);
 
 	// スプライトまとめ
 	SpriteCommon::GetInstance()->DrawSetCommon();

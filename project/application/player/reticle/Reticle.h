@@ -15,6 +15,7 @@
 #include "MyMath.h"
 #include "engine/io/Input.h"
 #include "WindowsAPI.h"
+#include "LineRenderer.h"
 
 #ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"
@@ -160,6 +161,15 @@ public:
 		// 一番奥の狙い点（ここまで線を伸ばす）
 		float maxDist = 48.0f;  // ちょい長めに（好みで 35〜60）
 		Vector3 aimPoint = origin + aimDir * maxDist;
+
+		// ─────────────────────────────
+	    // レティクル用のガイドラインをデバッグ描画に登録
+	    // ─────────────────────────────
+		LineRenderer::GetInstance()->AddLine( // デバッグ用ガイドライン
+			origin,
+			aimPoint,
+			LineRenderer::Color{ 0.0f, 1.0f, 0.0f, 1.0f }  // 緑色
+		);
 
 		//--------------------------------------------------
 		// 5) 線分 origin→aimPoint を割合で割って、4枚並べる
