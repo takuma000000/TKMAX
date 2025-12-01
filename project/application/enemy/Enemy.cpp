@@ -16,7 +16,6 @@ void Enemy::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	}
 
 	baseScale_ = object_->GetScale(); // 元のスケールを保持
-	colliderScale_ = baseScale_; // 当たり判定用スケールも初期化
 	startX_ = object_->GetTranslate().x; // サイン波の基準用
 }
 

@@ -64,7 +64,6 @@ public:
 	/// <summary>スケールを設定します（当たり判定用スケールも更新）。</summary>
 	void SetScale(const Vector3& scale) {
 		baseScale_ = scale; // 元のスケールを更新
-		colliderScale_ = scale; // 当たり判定用スケールも更新
 		if (object_) object_->SetScale(scale); // Object3d にも反映
 	}
 	/// <summary>カメラを設定します。</summary>
@@ -133,7 +132,7 @@ private:
 	float pulseT_ = 0.0f;   // パルス用の位相
 	Vector3 baseScale_ = { 1.0f,1.0f,1.0f }; // 元のスケールを保持
 
-	Vector3 colliderScale_ = { 1.0f, 1.0f, 1.0f }; // 当たり判定用スケール
+	Vector3 colliderScale_ = { 3.260f,5.5f,4.16f };// 当たり判定用スケール
 
 	EnemyBehavior behavior_ = EnemyBehavior::StraightStop;
 

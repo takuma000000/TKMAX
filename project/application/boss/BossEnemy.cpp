@@ -52,51 +52,76 @@ void BossEnemy::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 }
 
 void BossEnemy::Update() {
-	if (IsDead()) return; // 死亡済みなら更新しない
+	if (IsDead()) return;
 
-	// プレイヤー位置（既存の GetPlayer ラムダ）を利用
 	Vector3 playerPos{ 0,0,0 };
-	if (auto getter = GetPlayer()) playerPos = getter();
+	if (auto getter = GetPlayer()) {
+		playerPos = getter();
+	}
 
-	// プレイヤー速度の簡易推定（指数平滑）
 	Vector3 instV = playerPos - prevPlayerPos_;
 	playerVelFiltered_ = playerVelFiltered_ * (1.0f - velFilter_) + instV * velFilter_;
 	prevPlayerPos_ = playerPos;
 
-	UpdatePhase();                                    // フェーズ判定（HP）  :contentReference[oaicite:2]{index=2}
-	UpdateMovement(playerPos, playerVelFiltered_);    // 軌道に微ゆらぎを加えつつ追従
-	UpdateAttack(1.0f, playerPos);                    // 攻撃FSMは存続（Telegraph/Fire/Cooldown）
+	UpdatePhase();
+	UpdateMovement(playerPos, playerVelFiltered_);
+	UpdateAttack(1.0f, playerPos);
 
-	// ロック時の演出
+	// ロック時の演出（当たり判定は触らない）
 	if (IsLocked()) {
 		blinkT_ += BossParam::LockBlinkSpeed;
 		float s = 1.0f + BossParam::LockBlinkAmount * sinf(blinkT_);
-		SetScale({ BossParam::NormalScale * s, BossParam::NormalScale * s, BossParam::NormalScale * s });
-		SetColliderScale({ BossParam::LockedCollider * s, BossParam::LockedCollider * s, BossParam::LockedCollider * s });
+		SetScale({ BossParam::NormalScale * s,
+				   BossParam::NormalScale * s,
+				   BossParam::NormalScale * s });
 	} else {
-		SetScale({ BossParam::NormalScale, BossParam::NormalScale, BossParam::NormalScale });
-		SetColliderScale({ BossParam::NormalCollider, BossParam::NormalCollider, BossParam::NormalCollider });
+		SetScale({ BossParam::NormalScale,
+				   BossParam::NormalScale,
+				   BossParam::NormalScale });
 	}
 
-	Enemy::Update(); // 基底更新
+	Enemy::Update();
 }
 
 void BossEnemy::ImGuiDebug() {
 #ifdef USE_IMGUI
 
-	Vector3 col = GetColliderScale();
 	ImGui::Begin("ボス");
 
-	ImGui::Text("HP: %d / %d", GetHP(), GetMaxHP());
-	ImGui::Text("フェーズ: %s", (phase_ == Phase::P1) ? "P1" : (phase_ == Phase::P2) ? "P2" : "P3");
-	ImGui::Text("ステージ: %s (%.1f)", (stage_ == ActStage::Telegraph) ? "準備" :
-		(stage_ == ActStage::Fire) ? "発射" : "クールダウン", stageT_);
-	if (ImGui::DragFloat3("当たり判定拡縮", &col.x, 0.05f, 0.1f, 50.0f)) SetColliderScale(col);
+	// =========================
+	// 当たり判定用スケール（AABB サイズ）
+	// =========================
+	Vector3 col = GetColliderScale();
+	if (ImGui::DragFloat3("当たり判定サイズ", &col.x, 0.01f, 0.01f, 999.0f)) {
+		SetColliderScale(col);
+	}
 
 	ImGui::Separator();
-	ImGui::Checkbox("BossAI 詳細表示r", &dbg_.show);
 
-	// 既存のチューニング項目（省略可。ここは元のまま）
+	// =========================
+	// ボスのステータス表示
+	// =========================
+	ImGui::Text("HP: %d / %d", GetHP(), GetMaxHP());
+	ImGui::Text(
+		"フェーズ: %s",
+		(phase_ == Phase::P1) ? "P1" :
+		(phase_ == Phase::P2) ? "P2" : "P3"
+	);
+	ImGui::Text(
+		"ステージ: %s (%.1f)",
+		(stage_ == ActStage::Telegraph) ? "準備" :
+		(stage_ == ActStage::Fire) ? "発射" :
+		"クールダウン",
+		stageT_
+	);
+
+	ImGui::Separator();
+
+	// =========================
+	// Boss AI デバッグ（元からあったやつ）
+	// =========================
+	ImGui::Checkbox("BossAI 詳細表示", &dbg_.show);
+
 	if (dbg_.show) {
 		ImGui::Separator();
 		ImGui::TextColored(ImVec4(0.8f, 0.9f, 1, 1), "AI 入力情報");
@@ -113,17 +138,26 @@ void BossEnemy::ImGuiDebug() {
 
 		ImGui::Separator();
 		ImGui::TextColored(ImVec4(1, 0.9f, 0.7f, 1), "フェーズ補正（＋）");
-		ImGui::Text("ビーム:+%.2f  拡散:+%.2f  連射:+%.2f", dbg_.biasBeam, dbg_.biasFan, dbg_.biasRapid);
+		ImGui::Text(
+			"ビーム:+%.2f  拡散:+%.2f  連射:+%.2f",
+			dbg_.biasBeam, dbg_.biasFan, dbg_.biasRapid
+		);
 
 		ImGui::Separator();
 		ImGui::TextColored(ImVec4(1, 0.7f, 0.7f, 1), "ペナルティ (-)");
-		ImGui::Text("クールダウン:   B:%.1f  F:%.1f  R:%.1f", dbg_.cdBeam, dbg_.cdFan, dbg_.cdRapid);
-		ImGui::Text("連続使用:B:%.1f  F:%.1f  R:%.1f", dbg_.chainBeam, dbg_.chainFan, dbg_.chainRapid);
-	
+		ImGui::Text(
+			"クールダウン:   B:%.1f  F:%.1f  R:%.1f",
+			dbg_.cdBeam, dbg_.cdFan, dbg_.cdRapid
+		);
+		ImGui::Text(
+			"連続使用:       B:%.1f  F:%.1f  R:%.1f",
+			dbg_.chainBeam, dbg_.chainFan, dbg_.chainRapid
+		);
+
 		ImGui::Separator();
 		ImGui::TextColored(ImVec4(0.9f, 0.9f, 1, 1), "最終スコア");
 		auto bar = [](const char* lbl, float v) {
-			float view = std::clamp((v + 3.0f) / 6.0f, 0.0f, 1.0f); // 見栄え用に -3..+3 を 0..1 に
+			float view = std::clamp((v + 3.0f) / 6.0f, 0.0f, 1.0f);
 			ImGui::ProgressBar(view, ImVec2(220, 0), lbl);
 			};
 		bar((std::string("ビーム  s=") + std::to_string(dbg_.sBeam)).c_str(), dbg_.sBeam);
@@ -132,25 +166,26 @@ void BossEnemy::ImGuiDebug() {
 
 		ImGui::Separator();
 		const char* chosen =
-			(dbg_.chosen == 0) ? "ビーム" : (dbg_.chosen == 1) ? "拡散" : "連射";
+			(dbg_.chosen == 0) ? "ビーム" :
+			(dbg_.chosen == 1) ? "拡散" : "連射";
 		ImGui::TextColored(ImVec4(1, 1, 0.5f, 1), "Chosen: %s", chosen);
 
-		// 履歴帯（直近16手）
 		ImGui::Text("History (latest ->)");
 		ImGui::BeginChild("hist", ImVec2(240, 22), true);
 		for (int i = 0; i < kHist; ++i) {
 			int idx = (histIndex_ - 1 - i + kHist) % kHist;
 			int v = history_[idx];
-			ImVec4 c = (v == 0) ? ImVec4(0.6f, 0.8f, 1, 1) : (v == 1) ? ImVec4(0.6f, 1, 0.6f, 1) : ImVec4(1, 0.6f, 0.6f, 1);
+			ImVec4 c =
+				(v == 0) ? ImVec4(0.6f, 0.8f, 1, 1) :
+				(v == 1) ? ImVec4(0.6f, 1, 0.6f, 1) :
+				ImVec4(1, 0.6f, 0.6f, 1);
 			ImGui::SameLine();
 			ImGui::TextColored(c, "%s", (v == 0) ? "B" : (v == 1) ? "F" : "R");
 		}
 		ImGui::EndChild();
 	}
 
-	// 元のチューニング類（重み/バイアス/CDなど）はすでにこの関数にあるので省略
 	ImGui::End();
-
 #endif // USE_IMGUI
 }
 
@@ -170,7 +205,7 @@ void BossEnemy::UpdatePhase() {
 //    P2はゆるい円運動、P3は左右往復
 // ─────────────────────────────────────────────
 // BossEnemy.cpp
-void BossEnemy::UpdateMovement(const Vector3& playerPos, const Vector3& /*playerVel*/){
+void BossEnemy::UpdateMovement(const Vector3& playerPos, const Vector3& /*playerVel*/) {
 	// =========================
 	// P1: 一度だけ前方アンカーを確定 → ゆっくり寄る → 到達後は完全停止（追従なし）
 	// =========================
@@ -409,7 +444,7 @@ void BossEnemy::SelectNextAttackUtility(const Vector3& playerPos) {
 
 	// 選択履歴に記録
 	switch (next) {
-	case AttackType::Beam:  cdBeam_.t = cdBeam_.cool;  break; 
+	case AttackType::Beam:  cdBeam_.t = cdBeam_.cool;  break;
 	case AttackType::Fan:   cdFan_.t = cdFan_.cool;   break;
 	case AttackType::Rapid: cdRapid_.t = cdRapid_.cool; break;
 	}
@@ -426,7 +461,7 @@ void BossEnemy::FireBegin() {
 // ─────────────────────────────────────────────
 // 3) 発射：P1は低頻度・低速・低威力のBeamのみ
 // ─────────────────────────────────────────────
-void BossEnemy::FireTick(float /*dt*/, const Vector3& playerPos){
+void BossEnemy::FireTick(float /*dt*/, const Vector3& playerPos) {
 	// シーン取得
 	auto* gs = dynamic_cast<GameScene*>(GetParentScene());
 	// 安全確認
