@@ -1,7 +1,7 @@
 #include "EnemyManager.h"
 #include <limits>
 #include "MyMath.h"
-#include "BossManager.h"
+#include "application/boss/manager/BossManager.h"
 
 void EnemyManager::Initialize(DirectXCommon* dx, Camera* camera, BaseScene* parent, Player* player) {
 	dx_ = dx;

@@ -149,8 +149,12 @@
     <ClCompile Include="application\enemy\manager\EnemyManager.cpp">
       <Filter>application\enemy\manager</Filter>
     </ClCompile>
-    <ClCompile Include="BossManager.cpp" />
-    <ClCompile Include="LineRenderer.cpp" />
+    <ClCompile Include="application\boss\manager\BossManager.cpp">
+      <Filter>application\boss\manager</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\effect\line\LineRenderer.cpp">
+      <Filter>engine\effect\line</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -324,8 +328,12 @@
     <ClInclude Include="application\enemy\manager\EnemyManager.h">
       <Filter>application\enemy\manager</Filter>
     </ClInclude>
-    <ClInclude Include="BossManager.h" />
-    <ClInclude Include="LineRenderer.h" />
+    <ClInclude Include="application\boss\manager\BossManager.h">
+      <Filter>application\boss\manager</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\effect\line\LineRenderer.h">
+      <Filter>engine\effect\line</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
@@ -400,9 +408,11 @@
     <Filter Include="application\enemy\manager">
       <UniqueIdentifier>{b5a17694-ede9-4458-b6f3-b5d3eef79bf8}</UniqueIdentifier>
     </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="LineRenderer.PS.hlsl" />
-    <FxCompile Include="LineRenderer.VS.hlsl" />
+    <Filter Include="application\boss\manager">
+      <UniqueIdentifier>{5c96e16e-212c-4d58-93a6-18ad670f74bf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\effect\line">
+      <UniqueIdentifier>{a749d660-1edb-4aab-8c52-f4c96ccf1dc4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

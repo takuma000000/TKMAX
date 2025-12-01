@@ -23,8 +23,8 @@
 #include "TitleScene.h"
 #include "SceneManager.h"
 #include "application/enemy/manager/EnemyManager.h"
-#include "BossManager.h"
-#include "LineRenderer.h"
+#include "application/boss/manager/BossManager.h"
+#include "engine/effect/line/LineRenderer.h"
 
 #include "application/player/Player.h"
 #include "application/enemy/Enemy.h"

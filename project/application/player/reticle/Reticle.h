@@ -15,7 +15,7 @@
 #include "MyMath.h"
 #include "engine/io/Input.h"
 #include "WindowsAPI.h"
-#include "LineRenderer.h"
+#include "engine/effect/line/LineRenderer.h"
 
 #ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"

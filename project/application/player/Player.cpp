@@ -424,36 +424,36 @@ void Player::HandleShooting() {
 	LTShoot(); // LT弾処理
 }
 
-void Player::RBShoot(){
+void Player::RBShoot() {
 	Input* input = Input::GetInstance();
-	// ▼ RB：通常弾
+	// ▼ RB：通常弾（レティクル方向に発射）
 	if (input->TriggerButton(XINPUT_GAMEPAD_RIGHT_SHOULDER)) {
 		auto bullet = std::make_unique<PlayerBullet>();
 		bullet->Initialize(common_, dxCommon_);
 
-		Vector3 startPos = object_->GetTranslate(); // 発射位置
-		bullet->SetPosition(startPos); // 弾位置設定
+		// 発射位置＝プレイヤー位置
+		Vector3 startPos = object_->GetTranslate();
+		bullet->SetPosition(startPos);// 弾位置設定
 
-		if (enemy_) { // ターゲットがいるならそっち向ける
-			Vector3 enemyPos = enemy_->GetWorldPosition();
-			Vector3 dir = enemyPos - startPos;
-			float length = MyMath::Length(dir);
+		// ---- 向き：プレイヤー → レティクル中心 ----
+		Vector3 dir = { 0, 0, 1 }; // デフォは前方
 
-			if (length < 0.01f) { // 長さがほぼ0なら
-				dir = { 0, 0, 1 };
-			} else { // 正常な場合
-				dir = MyMath::Normalize(dir);
+		if (reticle_) {
+			// レティクル中心のワールド座標
+			Vector3 reticlePos = reticle_->GetCenterWorldPos(); // レティクル中心位置取得
+			dir = reticlePos - startPos; // プレイヤー → レティクル
+			float len = MyMath::Length(dir); // 長さ取得
+			if (len > 0.01f) { // ゼロ除算防止
+				dir = MyMath::Normalize(dir); // 正規化
+			} else {
+				dir = { 0, 0, 1 }; // 万一ほぼゼロなら前方に逃がす
 			}
-			bullet->SetVelocity(dir * kNormalBulletSpeed);
-		} else { // ターゲットがいないなら前方
-			bullet->SetVelocity({ 0, 0, kNormalBulletSpeed });
 		}
 
-		bullet->SetCamera(camera); // カメラ設定
-		bullet->SetEnemy(enemy_); // ターゲット設定
+		bullet->SetVelocity(dir * kNormalBulletSpeed); // 速度設定
+		bullet->SetCamera(camera);
+		bullet->SetEnemy(nullptr);     // RBは敵ロックなしでOKなら null に
 		bullet->SetPlayer(this); // プレイヤー設定
-
-		// RB専用の軌跡
 		bullet->SetTrailGroup("trail_rb");
 
 		bullets_.push_back(std::move(bullet)); // 弾リストに追加

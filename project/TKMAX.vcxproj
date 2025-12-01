@@ -114,7 +114,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="application\enemy\manager\EnemyManager.cpp" />
-    <ClCompile Include="BossManager.cpp" />
+    <ClCompile Include="application\boss\manager\BossManager.cpp" />
     <ClCompile Include="engine\func\math\AABB.cpp" />
     <ClCompile Include="application\boss\BossEnemy.cpp" />
     <ClCompile Include="engine\effect\light\DirectionalLight.cpp" />
@@ -142,7 +142,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\scene\GameClearScene.cpp" />
     <ClCompile Include="engine\effect\light\LightManager.cpp" />
     <ClCompile Include="application\scene\GameOverScene.cpp" />
-    <ClCompile Include="LineRenderer.cpp" />
+    <ClCompile Include="engine\effect\line\LineRenderer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="engine\3d\Model.cpp" />
     <ClCompile Include="engine\3d\ModelCommon.cpp" />
@@ -170,7 +170,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\enemy\manager\EnemyManager.h" />
-    <ClInclude Include="BossManager.h" />
+    <ClInclude Include="application\boss\manager\BossManager.h" />
     <ClInclude Include="engine\func\math\Easing.h" />
     <ClInclude Include="engine\func\math\AABB.h" />
     <ClInclude Include="engine\scene\AbstractSceneFactory.h" />
@@ -227,7 +227,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\scene\GameOverScene.h" />
     <ClInclude Include="application\player\reticle\Reticle.h" />
     <ClInclude Include="engine\func\math\Vector2.h" />
-    <ClInclude Include="LineRenderer.h" />
+    <ClInclude Include="engine\effect\line\LineRenderer.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
@@ -239,16 +239,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ProjectReference Include="externals\DirectXTex\DirectXTex_Desktop_2022_Win10.vcxproj">
       <Project>{371b9fa9-4c90-4ac6-a123-aced756d6c77}</Project>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="LineRenderer.PS.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
-    </FxCompile>
-    <FxCompile Include="LineRenderer.VS.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
-    </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
