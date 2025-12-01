@@ -2,6 +2,7 @@
 #include "Enemy.h"
 #include "ModelManager.h"
 #include <algorithm>
+#include <cstdlib> 
 
 void Enemy::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	object_ = std::make_unique<Object3d>(); // Object3d のインスタンスを生成
@@ -23,36 +24,67 @@ void Enemy::Update() {
 
 	// 死亡演出中ならこっちを優先
 	if (isDying_) {
-		const float dt = 1.0f / 60.0f;              // 疑似的なフレーム時間
+		const float dt = 1.0f / 60.0f;
 		deathTimer_ += dt;
 		float t = std::min(deathTimer_ / deathDuration_, 1.0f); // 0.0 → 1.0
-
-		// ---- ノックバック移動（最初速い → 最後ゆっくり）
-		float speed = 1.0f - t;                     // 1 → 0
+		// 基本値を取得
 		Vector3 pos = object_->GetTranslate();
-		pos += deathVelocity_ * speed * dt;         // 「速度 × dt」でじわっと動かす
-		object_->SetTranslate(pos);
-
-		// ---- 回転（こっちも dt でフレーム依存をなくす）
 		Vector3 rot = object_->GetRotate();
-		rot.x += deathRotateSpeed_.x * dt;
-		rot.y += deathRotateSpeed_.y * dt;
-		rot.z += deathRotateSpeed_.z * dt;
+		Vector3 scale = baseScale_;
+
+		switch (deathReaction_) {
+		case EnemyDeathReaction::BlowAway: {
+			// いままでの「吹っ飛び＋縮小」
+			float speed = 1.0f - t;                    // だんだん減速
+			pos += deathVelocity_ * speed * dt;        // 吹っ飛び
+
+			rot.x += deathRotateSpeed_.x * dt;
+			rot.y += deathRotateSpeed_.y * dt;
+			rot.z += deathRotateSpeed_.z * dt;
+
+			float s = 1.0f - t;                        // 全体的に縮む
+			scale = { baseScale_.x * s, baseScale_.y * s, baseScale_.z * s };
+			break;
+		}
+		case EnemyDeathReaction::RiseAbsorb: {
+			// その場付近で上に吸い込まれるように消える
+			pos += deathVelocity_ * dt;                // 上方向へ一定速度で移動
+
+			// 少しだけY軸回転
+			rot.y += deathRotateSpeed_.y * dt;
+
+			// XZだけ細くなっていく（縦方向はあまり潰さない）
+			float s = 1.0f - t;
+			scale = {
+				baseScale_.x * s * 0.5f,
+				baseScale_.y * (1.0f - t * 0.2f),
+				baseScale_.z * s * 0.5f
+			};
+			break;
+		}
+		case EnemyDeathReaction::Collapse: {
+			// 前のめりに崩れ落ちる
+			pos += deathVelocity_ * dt;                // 下＋ちょっと前に落ちる
+
+			// X 回転を強めに（前に倒れ込む）
+			rot.x += deathRotateSpeed_.x * dt;
+
+			// Yだけペシャンと潰れる感じ
+			float s = 1.0f - t;
+			scale = {
+				baseScale_.x,
+				baseScale_.y * s * 0.2f,
+				baseScale_.z
+			};
+			break;
+		}
+		}
+
+		object_->SetTranslate(pos);
 		object_->SetRotate(rot);
+		object_->SetScale(scale);
 
-		// ---- スケールもだんだん小さくする（ここ追加）
-		// t = 0.0 → 1.0 の間で 1.0 → 0.0 に縮む
-		float scaleT = 1.0f - t;
-		Vector3 deathScale = {
-			baseScale_.x * scaleT,
-			baseScale_.y * scaleT,
-			baseScale_.z * scaleT
-		};
-		object_->SetScale(deathScale);
-
-		// ---- フェード（演出の最初から最後までずっと薄くしていく）
-		//   t=0.0 のとき 1.0（完全不透明）
-		//   t=1.0 のとき 0.0（完全透明）
+		// 全パターン共通：アルファは 1 → 0 にフェード
 		deathAlpha_ = 1.0f - t;
 		object_->SetColor({ 1.0f, 1.0f, 1.0f, deathAlpha_ });
 		object_->Update();
@@ -60,14 +92,27 @@ void Enemy::Update() {
 		if (deathTimer_ >= deathDuration_) {
 			// 敵が完全に消える瞬間に専用エフェクトを出す
 			ParticleManager* pm = ParticleManager::GetInstance();
-			Vector3 emitPos = GetWorldPosition(); // 敵の現在ワールド座標
+			Vector3 emitPos = GetWorldPosition();
 
-			// 中心でフッと光るコア
-			pm->Emit("enemyDeath_core", emitPos, 1);
-			// バラバラに飛び散る破片
-			pm->Emit("enemyDeath_shard", emitPos, 18);  // 数はお好みで 12〜24 くらい
-			// ふわっと残る煙
-			pm->Emit("enemyDeath_smoke", emitPos, 6);   // ちょっとだけ
+			switch (deathReaction_) {
+			case EnemyDeathReaction::BlowAway:
+				// 吹っ飛び系：破片多め
+				pm->Emit("enemyDeath_core", emitPos, 1);
+				pm->Emit("enemyDeath_shard", emitPos, 20);
+				pm->Emit("enemyDeath_smoke", emitPos, 4);
+				break;
+			case EnemyDeathReaction::RiseAbsorb:
+				// 吸い込み系：ビット＋縦ラインメイン
+				pm->Emit("enemyDeath_core", emitPos, 1);
+				pm->Emit("enemyDeath_shard", emitPos, 14);
+				pm->Emit("enemyDeath_smoke", emitPos, 6);
+				break;
+			case EnemyDeathReaction::Collapse:
+				// 崩れ落ち系：破片少なめ＋控えめなライン
+				pm->Emit("enemyDeath_shard", emitPos, 10);
+				pm->Emit("enemyDeath_smoke", emitPos, 3);
+				break;
+			}
 
 			isDead_ = true;
 		}
@@ -171,7 +216,6 @@ void Enemy::ImGuiDebug() {
 	Vector3 pos = object_->GetTranslate();
 	Vector3 rot = object_->GetRotate();
 	Vector3 scale = object_->GetScale();
-
 	if (ImGui::DragFloat3("Position", &pos.x, 0.01f)) {
 		object_->SetTranslate(pos);
 	}
@@ -181,7 +225,6 @@ void Enemy::ImGuiDebug() {
 	if (ImGui::DragFloat3("Scale", &scale.x, 0.01f)) {
 		object_->SetScale(scale);
 	}
-
 	ImGui::Text("N_EnemyHP: %d", hp_);
 	ImGui::Text("Dead: %s", isDead_ ? "true" : "false");
 
@@ -204,19 +247,38 @@ void Enemy::StartDeathReaction(const Vector3& hitDir) {
 
 	isDying_ = true;
 	deathTimer_ = 0.0f;
-	// フェードをしっかり見せたいので 1.5秒に伸ばす
-	deathDuration_ = 1.5f;
 	deathAlpha_ = 1.0f;
 
-	// ノックバック方向
+	// 0,1,2 のどれかをランダムに選ぶ
+	int r = std::rand() % 3;
+
+	// 共通で使うノックバック方向
 	Vector3 dir = hitDir;
 	if (MyMath::Length(dir) < 0.001f) {
 		dir = { 0.0f, 0.0f, 1.0f };
 	}
 	dir = MyMath::Normalize(dir);
 
-	// 1秒あたりどれくらい飛ぶか（ここは今の感覚が良ければそのままでOK）
-	deathVelocity_ = dir * 4.0f;
-	// 回転速度も dt 前提（今の値で問題なければそのままでOK）
-	deathRotateSpeed_ = { 1.5f, 2.0f, 0.8f };
+	switch (r) {
+	case 0: // 吹っ飛び
+	default:
+		deathReaction_ = EnemyDeathReaction::BlowAway;
+		deathDuration_ = 1.0f;
+		deathVelocity_ = dir * 4.0f;             // ヒット方向へ吹っ飛ぶ
+		deathRotateSpeed_ = { 1.5f, 2.0f, 0.8f }; // ぐるっと回転
+		break;
+	case 1: // 上に吸い込まれる
+		deathReaction_ = EnemyDeathReaction::RiseAbsorb;
+		deathDuration_ = 1.2f;
+		deathVelocity_ = { 0.0f, 3.0f, 0.0f };   // 上方向にスッと上がる
+		deathRotateSpeed_ = { 0.0f, 2.0f, 0.0f }; // 少しだけY回転
+		break;
+	case 2: // 崩れ落ち
+		deathReaction_ = EnemyDeathReaction::Collapse;
+		deathDuration_ = 0.9f;
+		// ちょい前＋下に崩れ落ちる
+		deathVelocity_ = { dir.x * 1.5f, -3.0f, dir.z * 1.5f };
+		deathRotateSpeed_ = { 3.0f, 0.5f, 0.0f }; // 前に倒れ込む感じ
+		break;
+	}
 }

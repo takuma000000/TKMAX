@@ -25,7 +25,7 @@ void ImGuiManager::Initialize(WindowsAPI* winApp, DirectXCommon* dxCommon){
 
 	// 日本語フォントを読み込む
 	ImFont* font = io.Fonts->AddFontFromFileTTF(
-		"C:/Windows/Fonts/meiryo.ttc",   // Windows標準のメイリオ
+		"C:/Windows/Fonts/msmincho.ttc",   // Windows標準のメイリオ
 		18.0f,                           // フォントサイズ
 		nullptr,
 		io.Fonts->GetGlyphRangesJapanese() // 日本語文字範囲

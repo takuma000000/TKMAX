@@ -18,12 +18,17 @@ enum class EnemyBehavior {
 	SineX,          // Xをサイン波で揺らしながら前進
 	StrafeLtoR,     // Xを左右往復（矩形波）しながら前進
 	ChasePlayer,    // プレイヤー方向にじわっと追尾
-	/// ここに将来：ShootOnly / Kamikaze なども追加可
+};
+
+// 死亡リアクションパターン
+enum class EnemyDeathReaction {
+	BlowAway,       // 吹っ飛んで消える
+	RiseAbsorb,     // 上に吸い込まれるように消える
+	Collapse,       // 崩れ落ちて潰れて消える
 };
 
 class Enemy {
 public:
-
 	/// <summary>敵を初期化します。</summary>
 	/// <param name="common">Object3d共通。</param>
 	void Initialize(Object3dCommon* common, DirectXCommon* dxCommon);
@@ -163,4 +168,7 @@ private:
 	Vector3 deathVelocity_ = { 0.0f, 0.0f, 0.0f }; // 吹っ飛び速度
 	Vector3 deathRotateSpeed_ = { 0.0f, 0.0f, 0.0f }; // 撃墜回転用
 	float deathAlpha_ = 1.0f;     // フェード用アルファ
+
+	// どのリアクションか
+	EnemyDeathReaction deathReaction_ = EnemyDeathReaction::BlowAway;
 };
