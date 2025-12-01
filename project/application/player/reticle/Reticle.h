@@ -29,9 +29,15 @@ public:
 	Reticle() = default;
 	~Reticle() = default;
 
-	// --------------------------------------------------
-	// 初期化
-	// --------------------------------------------------
+	/// <summary>
+	/// レティクルの一層分
+	/// </summary>
+	/// <param name="common"></param>
+	/// <param name="dx"></param>
+	/// <param name="modelBig"></param>
+	/// <param name="modelMid"></param>
+	/// <param name="modelSmall"></param>
+	/// <param name="modelFar"></param>
 	void Initialize(
 		Object3dCommon* common,
 		DirectXCommon* dx,
@@ -57,10 +63,10 @@ public:
 		initLayer(layers_[2], modelSmall); // 3番目
 		initLayer(layers_[3], modelFar);   // 一番奥
 	}
-
-	// --------------------------------------------------
-	// 毎フレ更新
-	// --------------------------------------------------
+	/// <summary>
+	/// 毎フレーム更新
+	/// </summary>
+	/// <param name="dt"></param>
 	void Update(float dt) {
 		if (!visible_ || !getPos_ || !getYaw_) return;
 
@@ -148,23 +154,27 @@ public:
 		// スティック入力を少しだけ方向に混ぜて「狙っている方向」にする
 		Vector3 aimDir = fwd;
 		aimDir += camRight * (curX_ * 0.03f);   // 横
-		aimDir += camUp * (curY_ * 0.03f);   // 縦
+		aimDir += camUp * (curY_ * 0.03f);      // 縦
 
 		if (MyMath::Length(aimDir) < 0.001f) {
 			aimDir = fwd;
 		}
 		aimDir = MyMath::Normalize(aimDir);
 
-		// ☆ 起点は毎フレームのプレイヤー位置（ほんとに「playerから伸びる」）
+		// 起点は毎フレームのプレイヤー位置
 		Vector3 origin = getPos_();
 
+		// ここで「最後の狙い線」を記録しておく
+		lastOrigin_ = origin;
+		lastAimDir_ = aimDir;
+		hasAim_ = true;
+
 		// 一番奥の狙い点（ここまで線を伸ばす）
-		float maxDist = 48.0f;  // ちょい長めに（好みで 35〜60）
 		Vector3 aimPoint = origin + aimDir * maxDist;
 
 		// ─────────────────────────────
-	    // レティクル用のガイドラインをデバッグ描画に登録
-	    // ─────────────────────────────
+		// レティクル用のガイドラインをデバッグ描画に登録
+		// ─────────────────────────────
 		LineRenderer::GetInstance()->AddLine( // デバッグ用ガイドライン
 			origin,
 			aimPoint,
@@ -228,10 +238,10 @@ public:
 			L.obj->Update();
 		}
 	}
-
-	// --------------------------------------------------
-	// 描画
-	// --------------------------------------------------
+	/// <summary>
+	/// 描画
+	/// </summary>
+	/// <param name="dx"></param>
 	void Draw(DirectXCommon* dx) {
 		if (!visible_) return;
 		for (auto& L : layers_) {
@@ -239,9 +249,11 @@ public:
 		}
 	}
 
-	// --------------------------------------------------
-	// 参照元（Player）から世界座標とヨー角を受け取る
-	// --------------------------------------------------
+	/// <summary>
+	/// 所有者情報のバインド
+	/// </summary>
+	/// <param name="getWorldPos"></param>
+	/// <param name="getYawRad"></param>
 	void BindOwner(
 		std::function<Vector3(void)> getWorldPos,
 		std::function<float(void)>   getYawRad)
@@ -249,26 +261,37 @@ public:
 		getPos_ = std::move(getWorldPos);
 		getYaw_ = std::move(getYawRad);
 	}
-
-	// --------------------------------------------------
-	// カメラを設定
-	// --------------------------------------------------
+	/// <summary>
+	/// カメラ設定
+	/// </summary>
+	/// <param name="cam"></param>
 	void SetCamera(Camera* cam) {
 		cam_ = cam;
 		for (auto& L : layers_) {
 			if (L.obj) L.obj->SetCamera(cam_);
 		}
 	}
-
-	//---------------------------------------------------
-	// 中心座標取得（Player が追尾する基準）
-	//---------------------------------------------------
+	/// <summary>
+	/// 最後に更新された狙いの起点座標を取得
+	/// </summary>
+	/// <returns></returns>
 	Vector3 GetCenterWorldPos() const {
 		// 今回は 2番目レイヤー(= index 1)を「中心」と扱う
 		if (layers_[1].obj) return layers_[1].obj->GetTranslate();
 		if (layers_[0].obj) return layers_[0].obj->GetTranslate();
 		if (getPos_) return getPos_();
 		return {};
+	}
+	/// <summary>
+	/// 最後に更新された狙い方向ベクトルを取得
+	/// </summary>
+	/// <returns></returns>
+	Vector3 GetAimDirection() const {
+		if (hasAim_) {
+			return lastAimDir_;
+		}
+		// まだ一度もUpdateされてないなどの場合の保険
+		return Vector3{ 0.0f, 0.0f, 1.0f };
 	}
 
 #ifdef USE_IMGUI
@@ -353,4 +376,9 @@ private:
 
 	// 右スティック制御
 	bool stickControl_ = true;
+
+	Vector3 lastOrigin_ = { 0.0f, 0.0f, 0.0f };
+	Vector3 lastAimDir_ = { 0.0f, 0.0f, 1.0f };
+	bool    hasAim_ = false;
+	float maxDist = 150.0f; // ラインをどこまで伸ばすか
 };

@@ -86,6 +86,14 @@ public:
 	/// <returns>HP値。</returns>
 	int GetHP() const { return hp_; }
 
+	/// <summary>
+	/// レティクルを取得します。
+	/// </summary>
+	/// <returns></returns>
+	Reticle* GetReticle() const {
+		return reticle_.get();
+	}
+
 	/// <summary>プレイヤーの回転を取得します。</summary>
 	const Vector3& GetRotation() const { return object_->GetRotate(); }
 

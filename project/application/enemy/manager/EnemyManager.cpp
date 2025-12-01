@@ -143,6 +143,10 @@ void EnemyManager::SpawnCurrentWave() {
 				e.SetStopZ(60.0f);
 				e.SetHP(2);
 				e.SetScale({ 1.1f,1.1f,1.1f });
+
+				if (player_) { // レティクルをセット
+					e.SetReticle(player_->GetReticle());
+				}
 			}
 		);
 		if (maxEnemyCount_) {
@@ -178,6 +182,10 @@ void EnemyManager::SpawnCurrentWave() {
 
 				e.SetHP(3);
 				++idx;
+
+				if (player_) { // レティクルをセット
+					e.SetReticle(player_->GetReticle());
+				}
 			}
 		);
 		if (maxEnemyCount_) {
@@ -215,6 +223,9 @@ void EnemyManager::SpawnCurrentWave() {
 					e.SetStopZ(60.0f);
 					e.SetStrafeX(-18.0f, 18.0f, 0.45f);
 					e.SetHP(4);
+				}
+				if (player_) { // レティクルをセット
+					e.SetReticle(player_->GetReticle());
 				}
 			}
 		);

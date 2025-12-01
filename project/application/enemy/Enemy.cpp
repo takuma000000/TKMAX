@@ -3,6 +3,7 @@
 #include "ModelManager.h"
 #include <algorithm>
 #include <cstdlib> 
+#include <AABB.h>
 
 void Enemy::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	object_ = std::make_unique<Object3d>(); // Object3d のインスタンスを生成
@@ -175,42 +176,44 @@ void Enemy::Update() {
 
 		auto* lr = LineRenderer::GetInstance();
 
-		// 軸ごとに色分けしても分かりやすい
-		LineRenderer::Color colEdge{ 0.0f, 1.0f, 0.0f, 1.0f }; // とりあえず全部同じ色
+		// ▼ デフォルトは緑
+		LineRenderer::Color colEdge{ 0.0f, 1.0f, 0.0f, 1.0f };
 
-		// 8頂点（AABBの隅）
+		// ▼ レティクルと交差していたら赤に変更
+		if (reticle_) {
+
+			Vector3 rayOrigin = reticle_->GetCenterWorldPos(); // または reticle_->lastOrigin_
+			Vector3 rayDir = reticle_->GetAimDirection();
+			Vector3 rayEnd = rayOrigin + rayDir * 150.0f; // Reticle の maxDist と揃える
+
+			// 敵AABB
+			AABB box(center, colliderScale_);
+
+			// 線分 vs AABB 交差チェック
+			if (box.IsIntersectSegment(rayOrigin, rayEnd)) {
+				colEdge = LineRenderer::Color{ 1.0f, 0.0f, 0.0f, 1.0f }; // 赤
+			}
+		}
+
+		// 8頂点
 		Vector3 p[8] = {
-			{ center.x - hx, center.y - hy, center.z - hz }, // 0: 左下手前
-			{ center.x + hx, center.y - hy, center.z - hz }, // 1: 右下手前
-			{ center.x - hx, center.y + hy, center.z - hz }, // 2: 左上手前
-			{ center.x + hx, center.y + hy, center.z - hz }, // 3: 右上手前
-			{ center.x - hx, center.y - hy, center.z + hz }, // 4: 左下奥
-			{ center.x + hx, center.y - hy, center.z + hz }, // 5: 右下奥
-			{ center.x - hx, center.y + hy, center.z + hz }, // 6: 左上奥
-			{ center.x + hx, center.y + hy, center.z + hz }, // 7: 右上奥
+			{ center.x - hx, center.y - hy, center.z - hz },
+			{ center.x + hx, center.y - hy, center.z - hz },
+			{ center.x - hx, center.y + hy, center.z - hz },
+			{ center.x + hx, center.y + hy, center.z - hz },
+			{ center.x - hx, center.y - hy, center.z + hz },
+			{ center.x + hx, center.y - hy, center.z + hz },
+			{ center.x - hx, center.y + hy, center.z + hz },
+			{ center.x + hx, center.y + hy, center.z + hz },
 		};
 
 		auto add = [&](int a, int b) {
 			lr->AddLine(p[a], p[b], colEdge);
 			};
 
-		// 手前面（z - hz）
-		add(0, 1);
-		add(1, 3);
-		add(3, 2);
-		add(2, 0);
-
-		// 奥面（z + hz）
-		add(4, 5);
-		add(5, 7);
-		add(7, 6);
-		add(6, 4);
-
-		// 側面（縦の4本）
-		add(0, 4);
-		add(1, 5);
-		add(2, 6);
-		add(3, 7);
+		add(0, 1); add(1, 3); add(3, 2); add(2, 0);
+		add(4, 5); add(5, 7); add(7, 6); add(6, 4);
+		add(0, 4); add(1, 5); add(2, 6); add(3, 7);
 	}
 
 	// ---- ロック中のパルス（既存）----

@@ -426,34 +426,30 @@ void Player::HandleShooting() {
 
 void Player::RBShoot() {
 	Input* input = Input::GetInstance();
-	// ▼ RB：通常弾（レティクル方向に発射）
+	// ▼ RB：通常弾（レティクルが描いているガイドライン通りに発射）
 	if (input->TriggerButton(XINPUT_GAMEPAD_RIGHT_SHOULDER)) {
 		auto bullet = std::make_unique<PlayerBullet>();
 		bullet->Initialize(common_, dxCommon_);
 
-		// 発射位置＝プレイヤー位置
+		// 発射位置＝プレイヤー位置（レティクルもここを起点に線を伸ばしている）
 		Vector3 startPos = object_->GetTranslate();
-		bullet->SetPosition(startPos);// 弾位置設定
+		bullet->SetPosition(startPos); // 弾位置設定
 
-		// ---- 向き：プレイヤー → レティクル中心 ----
+		// ---- 向き：Reticle が計算した「aimDir」をそのまま使う ----
 		Vector3 dir = { 0, 0, 1 }; // デフォは前方
 
 		if (reticle_) {
-			// レティクル中心のワールド座標
-			Vector3 reticlePos = reticle_->GetCenterWorldPos(); // レティクル中心位置取得
-			dir = reticlePos - startPos; // プレイヤー → レティクル
-			float len = MyMath::Length(dir); // 長さ取得
-			if (len > 0.01f) { // ゼロ除算防止
-				dir = MyMath::Normalize(dir); // 正規化
-			} else {
-				dir = { 0, 0, 1 }; // 万一ほぼゼロなら前方に逃がす
+			dir = reticle_->GetAimDirection(); // ★ 新規に追加した関数を使う
+			float len = MyMath::Length(dir);
+			if (len <= 0.01f) {
+				dir = { 0, 0, 1 }; // 念のための保険
 			}
 		}
 
 		bullet->SetVelocity(dir * kNormalBulletSpeed); // 速度設定
 		bullet->SetCamera(camera);
 		bullet->SetEnemy(enemy_);     // RBは敵ロックなしでOKなら null に
-		bullet->SetPlayer(this); // プレイヤー設定
+		bullet->SetPlayer(this);      // プレイヤー設定
 		bullet->SetTrailGroup("trail_rb");
 
 		bullets_.push_back(std::move(bullet)); // 弾リストに追加

@@ -1,6 +1,7 @@
 #pragma once
 #include "Vector3.h"
 #include <cmath>
+#include <algorithm>
 
 //=============================================================
 // AABBクラス
@@ -9,10 +10,7 @@
 class AABB {
 public:
 	AABB() = default;
-
-	AABB(const Vector3& center, const Vector3& size)
-		: center(center), halfSize(size * 0.5f) {
-	}
+	AABB(const Vector3& center, const Vector3& size) : center(center), halfSize(size * 0.5f) {}
 
 	// 中心座標と半サイズからAABBを構成
 	void Set(const Vector3& center, const Vector3& size) {
@@ -32,6 +30,40 @@ public:
 		return std::abs(center.x - other.center.x) <= (halfSize.x + other.halfSize.x) &&
 			std::abs(center.y - other.center.y) <= (halfSize.y + other.halfSize.y) &&
 			std::abs(center.z - other.center.z) <= (halfSize.z + other.halfSize.z);
+	}
+
+	bool IsIntersectSegment(const Vector3& s, const Vector3& e) const {
+		Vector3 d = e - s;
+		float tmin = 0.0f;
+		float tmax = 1.0f;
+
+		auto update = [&](float minB, float maxB, float start, float dir) {
+			if (fabsf(dir) < 1e-6f) {
+				// 動いてない軸は、スタート位置がボックス内にいなければ即アウト
+				return (start >= minB && start <= maxB);
+			}
+			float t1 = (minB - start) / dir;
+			float t2 = (maxB - start) / dir;
+			if (t1 > t2) std::swap(t1, t2);
+			if (tmin > t2 || tmax < t1) return false;
+			tmin = std::max(tmin, t1);
+			tmax = std::min(tmax, t2);
+			return true;
+			};
+
+		// ✅ AABB min/max（halfSize を使う）
+		float minX = center.x - halfSize.x;
+		float maxX = center.x + halfSize.x;
+		float minY = center.y - halfSize.y;
+		float maxY = center.y + halfSize.y;
+		float minZ = center.z - halfSize.z;
+		float maxZ = center.z + halfSize.z;
+
+		if (!update(minX, maxX, s.x, d.x)) return false;
+		if (!update(minY, maxY, s.y, d.y)) return false;
+		if (!update(minZ, maxZ, s.z, d.z)) return false;
+
+		return true;
 	}
 
 public:

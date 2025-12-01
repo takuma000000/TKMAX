@@ -5,6 +5,7 @@
 #include "BaseScene.h"
 #include <engine/effect/particle/ParticleManager.h>
 #include "engine/effect/line/LineRenderer.h"
+#include "application/player/reticle/Reticle.h"
 
 #ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"
@@ -114,11 +115,17 @@ public:
 	void SetSinePhase(float rad) { sinePhase_ = rad; }
 	/// <summary>親シーンを取得します。</summary>
 	BaseScene* GetParentScene() const { return parentScene_; }
+	/// <summary>
+	/// レティクルを設定します。
+	/// </summary>
+	/// <param name="r"></param>
+	void SetReticle(class Reticle* r) { reticle_ = r; }
 
 private:
 	std::unique_ptr<Object3d> object_;
 	Camera* camera = nullptr;
 	BaseScene* parentScene_ = nullptr;
+	Reticle* reticle_ = nullptr;
 
 	int hp_ = 3;
 	int maxHP_ = 3;
