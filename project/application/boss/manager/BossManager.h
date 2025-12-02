@@ -50,6 +50,17 @@ public:
 	/// <summary>クリア演出開始時にボス関連を全部消す。</summary>
 	void OnClearSequenceStart();
 
+
+	void SetCamera(Camera* camera) {
+		camera_ = camera;
+		if (boss_) {
+			boss_->SetCamera(camera_);
+		}
+		for (auto& b : bossBullets_) {
+			b->SetCamera(camera_);
+		}
+	}
+
 private:
 	DirectXCommon* dxCommon_ = nullptr;
 	Camera* camera_ = nullptr;

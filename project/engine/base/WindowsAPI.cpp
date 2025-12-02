@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <iostream>
 #include "Framework.h"
+#include "Input.h"
 extern Framework* gFramework; // グローバルポインタでFrameworkを参照
 
 #ifdef USE_IMGUI
@@ -11,30 +12,35 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 #endif
 
 //ウィンドウプロシージャ
-LRESULT CALLBACK WindowsAPI::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam){
-#ifdef USE_IMGUI
+LRESULT CALLBACK WindowsAPI::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 
+	// 先にホイール量だけ拾う（ImGuiより前）
+	if (msg == WM_MOUSEWHEEL) {
+		int delta = GET_WHEEL_DELTA_WPARAM(wparam); // 通常 ±120
+		Input::GetInstance()->SetWheel(delta / WHEEL_DELTA); // 120 → 1, -120 → -1
+		// return しないで、この後 ImGui / switch にも流す
+	}
+
+#ifdef USE_IMGUI
 	// ImGui のウィンドウ処理
 	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) {
 		return true;
 	}
-
 #endif
 
 	// メッセージに応じてゲーム固有の処理を行う
 	switch (msg) {
+
 		// ウィンドウが閉じられた
 	case WM_CLOSE:
 		if (gFramework) {
 			gFramework->SetEndRequest(true); // Frameworkの終了フラグを設定
 		}
-		// ウィンドウを破壊する
 		DestroyWindow(hwnd);
 		return 0;
 
 		// ウィンドウが破壊された
 	case WM_DESTROY:
-		// OSに対してアプリの終了を伝える
 		PostQuitMessage(0);
 		return 0;
 	}
@@ -43,7 +49,7 @@ LRESULT CALLBACK WindowsAPI::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPAR
 	return DefWindowProc(hwnd, msg, wparam, lparam);
 }
 
-void WindowsAPI::Initialize(){
+void WindowsAPI::Initialize() {
 	//COMライブラリの初期化
 	CoInitializeEx(0, COINIT_MULTITHREADED);
 	//システムターマーの分解能を上げる
@@ -89,15 +95,15 @@ void WindowsAPI::Initialize(){
 #pragma endregion
 }
 
-void WindowsAPI::Update(){
+void WindowsAPI::Update() {
 }
 
-void WindowsAPI::Finalize(){
+void WindowsAPI::Finalize() {
 	CloseWindow(hwnd); // ウィンドウを閉じる
 	CoUninitialize(); // COMライブラリの終了
 }
 
-bool WindowsAPI::ProcessMessage(){
+bool WindowsAPI::ProcessMessage() {
 	MSG msg{};
 
 	if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) { // メッセージがあるか確認

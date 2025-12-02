@@ -112,6 +112,15 @@ public:
 	WavePhase GetWavePhase() const { return wavePhase_; }
 	/// ===========================================================================================
 
+	/// Setter=====================================================================================
+	void SetCamera(Camera* camera) {
+		cam_ = camera;
+		for (auto& e : *enemies_) { // 敵全員にカメラをセット
+			if (e) e->SetCamera(cam_); // 敵にもカメラをセット
+		}
+	}
+	/// ===========================================================================================
+
 private:
 	DirectXCommon* dx_ = nullptr;
 	Camera* cam_ = nullptr;

@@ -68,7 +68,18 @@ public:
 	/// <summary>当たり半径を返します。</summary>
 	float Radius() const { return kDefaultScale; } // 簡易当たり半径
 
+	/// <summary>
+	/// カメラ設定。
+	/// </summary>
+	/// <param name="cam"></param>
+	void SetCamera(Camera* cam) {
+		if (obj_) {
+			obj_->SetCamera(cam);
+		}
+	}
 private:
+	Camera* cam_ = nullptr;
+
 	std::unique_ptr<Object3d> obj_;
 	Vector3 dir_{ 0,0,-1 };
 	float   speed_ = 0.8f;

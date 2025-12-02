@@ -160,8 +160,33 @@ void GameScene::Update() {
 
 	// デバッグ用ImGui表示
 	ImGuiDebug();
-	// プレイヤーと環境
-	camera->Update();
+
+	// ──────────────── アクティブカメラの決定＆更新 ───────────────
+	Camera* activeCamera = camera.get();
+	if (useDebugCamera_ && debugCamera_) {
+		// デバッグカメラを更新
+		debugCamera_->Update();
+		activeCamera = debugCamera_.get();
+	} else {
+		// 通常カメラを更新
+		camera->Update();
+	}
+
+	// ここで「今フレームのカメラ」を全部に渡す
+	player_->SetCamera(activeCamera);
+
+	if (skybox_) {
+		skybox_->SetCamera(activeCamera);
+	}
+
+	if (enemyManager_) {
+		enemyManager_->SetCamera(activeCamera);   // ← 後で作る
+	}
+
+	if (bossManager_) {
+		bossManager_->SetCamera(activeCamera);    // ← 後で作る
+	}
+
 	// スカイボックスの回転更新
 	skybox_->UpdateRotation();
 	// プレイヤーの更新
@@ -421,9 +446,13 @@ void GameScene::Draw() {
 	// パーティクル描画
 	ParticleManager::GetInstance()->Draw();
 
-	// カメラの ViewProjection 行列を用意
-	Matrix4x4 vp = camera->GetViewProjectionMatrix(); // ← カメラクラスに合わせて
 	// ライン描画
+	Matrix4x4 vp;
+	if (useDebugCamera_ && debugCamera_) {
+		vp = debugCamera_->GetViewProjectionMatrix();
+	} else {
+		vp = camera->GetViewProjectionMatrix();
+	}
 	LineRenderer::GetInstance()->Draw(vp);
 
 	// スプライトまとめ
@@ -544,7 +573,14 @@ void GameScene::InitializeCamera() {
 	camera = std::make_unique<Camera>();
 	camera->SetRotate({ camPitchStart_, camYawStart_, 0.0f });
 	camera->SetTranslate({ 0.0f,0.0f,-30.0f });
-	player_->SetCamera(camera.get());
+
+	debugCamera_ = std::make_unique<DebugCamera>();
+	debugCamera_->Initialize(
+		camera->GetTranslate(),        // 開始位置
+		Vector3{ 0.0f, 0.0f, 0.0f }    // 初期座標
+	);
+
+	player_->SetCamera(camera.get()); // プレイヤーにカメラをセット
 }
 
 void GameScene::ImGuiDebug() {
@@ -559,6 +595,11 @@ void GameScene::ImGuiDebug() {
 	enemyManager_->ImGuiDebug(); // 敵マネージャのデバッグ表示
 	/////////////////////////////////////////////////////
 	camera->ImGuiDebug(); // カメラのデバッグ表示
+
+	ImGui::Begin("デバッグカメラ");
+	ImGui::Checkbox("オン/オフ", &useDebugCamera_);
+	ImGui::Text("DebugCam: RMB rotate, LMB/Z, MMB/Y");
+	ImGui::End();
 	/////////////////////////////////////////////////////
 	skybox_->ImGuiUpdate(); // スカイボックスのデバッグ表示
 	/////////////////////////////////////////////////////

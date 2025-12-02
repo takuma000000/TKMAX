@@ -13,7 +13,6 @@
 class Input{
 public:
 	template <class T> using ComPtr = Microsoft::WRL::ComPtr<T>;
-
 	static Input* GetInstance();
 
 	Input() = default;
@@ -48,8 +47,6 @@ public:
 	/// <param name="keyNumber"></param>
 	/// <returns></returns>
 	bool TriggerKey(BYTE keyNumber);
-
-	// 追加: ゲームパッドのボタンチェック
 	///<para>指定したボタンが押されているかを返します。</para>
 	/// <param name="button"></param>
 	bool PushButton(WORD button);
@@ -59,32 +56,36 @@ public:
 	/// <param name="button"></param>
 	/// <returns></returns>
 	bool TriggerButton(WORD button);
-
-	// 追加: 左スティックの取得
 	///<para>左スティックのX軸の値を取得します。</para>
 	SHORT GetLeftStickX();
 	///<para>左スティックのY軸の値を取得します。</para>
 	SHORT GetLeftStickY();
-
-	// 追加: 右スティックの取得
-	////<para>右スティックのX軸の値を取得します。</para>
+	/// <summary>
+	/// <para>右スティックのX軸の値を取得します。</para>
+	/// </summary>
+	/// <returns></returns>
 	SHORT GetRightStickX();
 	/// <summary>
 	///	<para>右スティックのY軸の値を取得します。</para>
 	/// </summary>
 	/// <returns></returns>
 	SHORT GetRightStickY();
-
-	// 左トリガーの取得
 	/// <para>右トリガーの取得</para>
 	BYTE GetRightTrigger();
-	// 右トリガーの取得
 	/// <para>左トリガーの取得</para>
 	BYTE GetLeftTrigger();
-
-	// 追加: 振動を設定
+	/// <summary>
+	///	<para>マウスホイールの回転量を取得します。</para>
+	/// </summary>
+	/// <returns></returns>
+	int  GetWheel() const { return wheel_; }
 	///<para>コントローラーの振動を設定します。</para>
 	void SetVibration(WORD leftMotor, WORD rightMotor);
+	/// <summary>
+	/// <para>マウスホイールの回転量を設定します。</para>
+	/// </summary>
+	/// <param name="delta"></param>
+	void SetWheel(int delta) { wheel_ = delta; }
 
 private:
 	static Input* instance;
@@ -95,7 +96,10 @@ private:
 	ComPtr<IDirectInput8> directInput;
 	WindowsAPI* winApp = nullptr;
 
-	// 追加: XInput 用のメンバ変数
+	// XInput 用のメンバ変数
 	XINPUT_STATE controllerState = {};
 	XINPUT_STATE prevControllerState = {};
+
+	// マウスホイール量（フレーム単位でリセットされる）
+	int wheel_ = 0;
 };

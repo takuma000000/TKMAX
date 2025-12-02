@@ -10,6 +10,7 @@
 #include "SpriteCommon.h"
 #include "Object3d.h"
 #include "Camera.h"
+#include "DebugCamera.h"
 #include "Object3dCommon.h"
 #include "Model.h"
 #include "ModelCommon.h"
@@ -54,7 +55,12 @@ public:
 	/// <summary>ボス弾を生成して管理リストへ追加します。</summary>
 	void SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float speed, int damage, int lifeFrame);
 	/// <summary>最も近い敵を取得します。</summary>
-	Camera* GetCameraPtr() { return camera.get(); }
+	Camera* GetCameraPtr() {
+		if (useDebugCamera_ && debugCamera_) {
+			return debugCamera_.get();
+		}
+		return camera.get();
+	}
 	/// <summary>DirectXCommonを取得します。</summary>
 	DirectXCommon* GetDX() { return dxCommon; }
 	/// <summary>プレイヤーのポインタを取得します。</summary>
@@ -111,6 +117,10 @@ private:
 	SrvManager* srvManager = nullptr;
 
 	std::unique_ptr<Camera> camera = nullptr;
+
+	std::unique_ptr<DebugCamera> debugCamera_ = nullptr; // デバッグカメラ
+	bool useDebugCamera_ = false;                        // デバッグカメラ使用フラグ
+
 	std::unique_ptr<DirectionalLight> directionalLight_ = nullptr;// ディレクショナルライト
 
 	//パーティクル
