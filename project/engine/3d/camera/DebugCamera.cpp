@@ -57,7 +57,7 @@ void DebugCamera::Update() {
 	{
 		int wheel = input->GetWheel();  // -1, 0, 1 の想定
 		if (wheel != 0) {
-			const float wheelZoomSpeed = 0.3f;
+			const float wheelZoomSpeed = 1.0f; // ホイールズーム速度
 			pos_ = pos_ + forward * (wheel * wheelZoomSpeed);
 
 			// ここで一度使ったのでリセット（1フレーム分だけ有効）

@@ -12,7 +12,7 @@
 #include "SpriteCommon.h"
 #include "Object3d.h"
 #include "Object3dCommon.h"
-#include "Camera.h"
+#include "engine/3d/camera/Camera.h"
 #include "Model.h"
 #include "ModelCommon.h"
 #include "ModelManager.h"

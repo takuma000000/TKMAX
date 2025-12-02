@@ -11,9 +11,6 @@
     <ClCompile Include="engine\2d\TextureManager.cpp">
       <Filter>engine\2d</Filter>
     </ClCompile>
-    <ClCompile Include="engine\3d\Camera.cpp">
-      <Filter>engine\3d</Filter>
-    </ClCompile>
     <ClCompile Include="engine\3d\Model.cpp">
       <Filter>engine\3d</Filter>
     </ClCompile>
@@ -155,7 +152,12 @@
     <ClCompile Include="engine\effect\line\LineRenderer.cpp">
       <Filter>engine\effect\line</Filter>
     </ClCompile>
-    <ClCompile Include="DebugCamera.cpp" />
+    <ClCompile Include="engine\3d\camera\Camera.cpp">
+      <Filter>engine\3d\camera</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\3d\camera\DebugCamera.cpp">
+      <Filter>engine\3d\camera</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -166,9 +168,6 @@
     </ClInclude>
     <ClInclude Include="engine\2d\TextureManager.h">
       <Filter>engine\2d</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\3d\Camera.h">
-      <Filter>engine\3d</Filter>
     </ClInclude>
     <ClInclude Include="engine\3d\Model.h">
       <Filter>engine\3d</Filter>
@@ -335,7 +334,12 @@
     <ClInclude Include="engine\effect\line\LineRenderer.h">
       <Filter>engine\effect\line</Filter>
     </ClInclude>
-    <ClInclude Include="DebugCamera.h" />
+    <ClInclude Include="engine\3d\camera\Camera.h">
+      <Filter>engine\3d\camera</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\3d\camera\DebugCamera.h">
+      <Filter>engine\3d\camera</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
@@ -415,6 +419,9 @@
     </Filter>
     <Filter Include="engine\effect\line">
       <UniqueIdentifier>{a749d660-1edb-4aab-8c52-f4c96ccf1dc4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\3d\camera">
+      <UniqueIdentifier>{c6c2f927-e1d7-4ebf-a28f-12f4b4721a7f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

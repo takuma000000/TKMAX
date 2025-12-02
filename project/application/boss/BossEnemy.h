@@ -1,6 +1,6 @@
 #pragma once
 #include "application/enemy/Enemy.h"
-#include "Camera.h"
+#include "engine/3d/camera/Camera.h"
 #include <array>
 #include <random>
 

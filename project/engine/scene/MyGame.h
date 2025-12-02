@@ -4,7 +4,7 @@
 // GE3クラス化(MyClass)
 #include "Input.h"
 #include "Object3dCommon.h"
-#include "Camera.h"
+#include "engine/3d/camera/Camera.h"
 #include "ImGuiManager.h"
 
 //#include"GameScene.h"

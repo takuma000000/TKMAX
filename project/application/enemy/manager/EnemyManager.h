@@ -6,7 +6,7 @@
 #include "application/enemy/Enemy.h"          // 敵そのもの
 #include "application/enemy/EnemySpawner.h"   // 敵スポーンユーティリティ
 #include "application/player/Player.h"        // プレイヤー
-#include "Camera.h"
+#include "engine/3d/camera/Camera.h"
 #include "DirectXCommon.h"
 #include "BaseScene.h"
 

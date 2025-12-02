@@ -6,7 +6,7 @@
 #include "TextureManager.h"
 #include "Model.h"
 #include "ModelManager.h"
-#include "Camera.h"
+#include "engine/3d/camera/Camera.h"
 
 #ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"

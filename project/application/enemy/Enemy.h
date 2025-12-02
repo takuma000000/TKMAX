@@ -1,7 +1,7 @@
 #pragma once
 #include <memory>
 #include "Object3d.h"
-#include "Camera.h"
+#include "engine/3d/camera/Camera.h"
 #include "BaseScene.h"
 #include <engine/effect/particle/ParticleManager.h>
 #include "engine/effect/line/LineRenderer.h"
