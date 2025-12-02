@@ -44,6 +44,8 @@ void Player::Update() {
 		return;
 	}
 
+	if (reticle_) reticle_->Update(dt);
+
 	HandleGamePadMove(); // ゲームパッドのスティック入力で移動
 	HandleFollowCamera(); // カメラの追従処理
 	RemoveEnemyIfDead(); // 敵が死んでたら参照をクリア
@@ -90,8 +92,6 @@ void Player::Update() {
 		jetEmitter_.Update();
 	}
 
-	if (reticle_) reticle_->Update(0.016f);
-
 	ParticleManager::GetInstance()->Update(); // パーティクルマネージャー更新
 	object_->Update(); // プレイヤー本体更新
 }
@@ -136,12 +136,14 @@ void Player::ImGuiDebug() {
 	}
 	ImGui::End();
 	//---------------- プレイヤー弾ステータス ----------------
-	ImGui::Begin("プレイヤー弾ステータス");
+	ImGui::Begin("P弾ステータス");
+	ImGui::SliderFloat("弾速度(RB,RT,LB)", &normalBulletSpeed_, 0.1f, 5.0f); // RB,RT,LBの弾速度調整
+	ImGui::Separator();
 	int idx = 0;
-	for (const auto& bullet : bullets_) {   // ← Player が持ってる bullets_ :contentReference[oaicite:1]{index=1}
+	for (const auto& bullet : bullets_) {   // Player が持ってる bullets_ :contentReference[oaicite:1]{index=1}
 		ImGui::Text("Bullet %d : %s",
 			idx++,
-			bullet->IsHit() ? "Hit" : "Flying");  // ← PlayerBullet::IsHit() 
+			bullet->IsHit() ? "Hit" : "Flying");  // PlayerBullet::IsHit() 
 	}
 	if (idx == 0) {
 		ImGui::Text("弾なし");
@@ -161,7 +163,6 @@ void Player::Death()
 {
 	// ---- HPが0になったら「故障スパーク → 撃墜」二段階 ----
 	if (hp_ <= 0) {
-		const float dt = 1.0f / 60.0f;
 
 		// まだ死亡演出に入ってなければ、故障スパークから開始
 		if (deathPhase_ == DeathPhase::None) {
@@ -207,7 +208,7 @@ void Player::Death()
 					ParticleManager::GetInstance()->Emit("damageSpark", p, perSpot);
 				}
 
-				// “激しさ”演出：軽めシェイクを継続
+				// 激しさ”演出：軽めシェイクを継続
 				StartCameraShake(20);
 			}
 
@@ -295,7 +296,7 @@ void Player::Death()
 	}
 }
 
-void Player::UpdateVisualOnly(){
+void Player::UpdateVisualOnly() {
 	// クリア演出用：
 	// GameScene 側から SetPosition などで座標だけ動かしておいて、
 	// ここで行列更新だけ行う
@@ -332,85 +333,65 @@ void Player::StartCameraShake(int frameCount) {
 void Player::HandleGamePadMove() {
 	if (!object_) return;
 
-	// --- 左スティック入力（今は移動には使ってないけど、将来用に残しておく） ---
-	Input* input = Input::GetInstance();
-	float lx = static_cast<float>(input->GetLeftStickX());
-	float ly = static_cast<float>(input->GetLeftStickY());
-
-	const float dz = 8000.0f;
-	bool hasInput =
-		(std::fabs(lx) > dz) || (std::fabs(ly) > dz);
-
-	// 現在位置
 	Vector3 pos = object_->GetTranslate();
 	Vector3 newPos = pos;
-	bool movingThisFrame = false; // 今フレームで実際に動いたかどうか
+	bool movingThisFrame = false;
 
-	// --- 常に「レティクルの位置」を目標に寄っていく ---
 	if (reticle_) {
 		Vector3 target = pos;
 
-		// レティクル中心のワールド座標
+		// レティクル中心のワールド座標（今は「世界に固定される」）
 		Vector3 aim = reticle_->GetCenterWorldPos();
 
-		// レールシューターなので Z は固定、X/Y だけ寄せる
+		// X/Y だけ追従、Zは固定
 		target.x = std::clamp(aim.x, moveMin_.x, moveMax_.x);
 		target.y = std::clamp(aim.y, moveMin_.y, moveMax_.y);
 		target.z = 0.0f;
 
 		Vector3 diff = { target.x - pos.x, target.y - pos.y, 0.0f };
 		float dist2 = diff.x * diff.x + diff.y * diff.y;
-		const float stopDist = 0.02f; // これ以下なら「くっついた」とみなす
+
+		const float stopDist = 0.02f; // これ以内なら「追いついた」とみなす
 
 		if (dist2 > stopDist * stopDist) {
-			// まだ離れているあいだは紐っぽく寄っていく
-			const float follow = 0.12f; // 小さいほどもっさり
+			const float follow = 0.12f; // 追従のキモ（大きいほどキビキビ）
 			newPos.x = MyMath::Lerp(pos.x, target.x, follow);
 			newPos.y = MyMath::Lerp(pos.y, target.y, follow);
 			newPos.z = 0.0f;
 			movingThisFrame = true;
 		} else {
-			// ほぼ一致したら完全にターゲット位置にスナップして停止
-			newPos = target;
+			newPos = target; // ほぼ同じなら座標を揃えてピタッと停止
 		}
 
-		// 範囲内にクランプ
 		newPos.x = std::clamp(newPos.x, moveMin_.x, moveMax_.x);
 		newPos.y = std::clamp(newPos.y, moveMin_.y, moveMax_.y);
 	}
 
-	// ---- バンク処理 ----
-	float vx = newPos.x - pos.x; // 今フレームのX方向速度
+	// ---- バンク処理は今のロジックを流用 ----
+	float vx = newPos.x - pos.x;
 
 	if (movingThisFrame) {
-		// 動いているときは従来どおりスプリングでバンク
-		float targetBank = -vx * 0.8f; // 左に動くと左に傾く
-
+		float targetBank = -vx * 0.8f;
 		float k = 0.25f;
 		float d = 0.45f;
 		bankVel_ += (targetBank - bankAngle_) * k - bankVel_ * d;
 		bankAngle_ += bankVel_;
 	} else {
-		// 止まっているフレームでは「正面(0)」に戻す＋履歴リセット
 		float resetK = 0.25f;
 		float resetD = 0.5f;
 		bankVel_ += (0.0f - bankAngle_) * resetK - bankVel_ * resetD;
 		bankAngle_ += bankVel_;
-
-		// ほぼ0になったらピタッと0固定して過去方向を完全に消す
 		if (std::fabs(bankAngle_) < 0.001f && std::fabs(bankVel_) < 0.001f) {
 			bankAngle_ = 0.0f;
 			bankVel_ = 0.0f;
 		}
 	}
 
-	// 位置と回転反映
 	object_->SetTranslate(newPos);
 	Vector3 rot = object_->GetRotate();
 	rot.z = bankAngle_;
 	object_->SetRotate(rot);
 }
-
 void Player::HandleFollowCamera() {
 	const float dt = 1.0f / 60.0f;
 	// FPV分岐はしない（ズームは追従側で処理）
@@ -446,7 +427,7 @@ void Player::RBShoot() {
 			}
 		}
 
-		bullet->SetVelocity(dir * kNormalBulletSpeed); // 速度設定
+		bullet->SetVelocity(dir * normalBulletSpeed_); // 速度設定
 		bullet->SetCamera(camera);
 		bullet->SetEnemy(enemy_);     // RBは敵ロックなしでOKなら null に
 		bullet->SetPlayer(this);      // プレイヤー設定
@@ -456,7 +437,7 @@ void Player::RBShoot() {
 	}
 }
 
-void Player::RTShoot(){
+void Player::RTShoot() {
 	Input* input = Input::GetInstance();
 	// RT：一撃必殺（最も近い敵に必中弾）
 	const bool pressed = (input->GetRightTrigger() > kTriggerThreshold);
@@ -478,7 +459,7 @@ void Player::RTShoot(){
 
 			// 弾設定
 			bullet->SetPosition(startPos); // 弾位置設定
-			bullet->SetVelocity(dir * kNormalBulletSpeed); // 速度設定
+			bullet->SetVelocity(dir * normalBulletSpeed_); // 速度設定
 			bullet->SetCamera(camera); // カメラ設定
 			bullet->SetEnemy(enemy_); // 敵設定
 			bullet->SetPlayer(this); // プレイヤー設定
@@ -499,7 +480,7 @@ void Player::RTShoot(){
 	}
 }
 
-void Player::LBShoot(){
+void Player::LBShoot() {
 	Input* input = Input::GetInstance();
 	// ▼ LB：全敵必中弾
 	if (input->TriggerButton(XINPUT_GAMEPAD_LEFT_SHOULDER) && allEnemies_) {
@@ -515,7 +496,7 @@ void Player::LBShoot(){
 
 			// 弾設定
 			bullet->SetPosition(startPos); // 弾位置設定
-			bullet->SetVelocity(dir * kNormalBulletSpeed); // 速度設定
+			bullet->SetVelocity(dir * normalBulletSpeed_); // 速度設定
 			bullet->SetCamera(camera); // カメラ設定
 			bullet->SetEnemy(enemy.get()); // 敵設定
 			bullet->SetPlayer(this); // プレイヤー設定
@@ -528,12 +509,13 @@ void Player::LBShoot(){
 	}
 }
 
-void Player::LTShoot(){
+void Player::LTShoot() {
 	Input* input = Input::GetInstance();
 	if ((input->GetLeftTrigger() > kTriggerThreshold) && !ltHeld_) {
 		auto bullet = std::make_unique<PlayerBullet>();
 		bullet->Initialize(common_, dxCommon_);
 
+		// 発射位置＝プレイヤー位置
 		Vector3 p0 = object_->GetTranslate();
 		bullet->SetPosition(p0);
 		bullet->SetEnemy(enemy_);
@@ -583,7 +565,6 @@ void Player::LTShoot(){
 		Vector3 p2 = p3 - right * (side * sweep * 0.85f)
 			+ Vector3{ 0.0f, lift, 0.0f };
 
-
 		// ベジェ後は軽く前へ押し出してからホーミング
 		Vector3 vAfter = toEnemyDir * 0.40f; // 前方速度
 		// ベジェ弾道開始
@@ -611,7 +592,7 @@ void Player::UpdateCameraFollowThirdPerson(float dt) {
 	const float baseDistance = 40.0f;
 	const float baseHeight = 4.0f;
 
-	// ---- LT一時ズームの更新 ----
+	// ---- LT一時ズームアウト更新 ----
 	if (ltZoomActive_) {
 		camZoom_ = ltZoomTween_.Update(dt);  // 係数を更新
 		// 最小到達＆ホールドが残っていれば消化
@@ -632,7 +613,7 @@ void Player::UpdateCameraFollowThirdPerson(float dt) {
 		camZoom_ = 1.0f;
 	}
 
-	float distance = baseDistance * camZoom_;
+	float distance = baseDistance / camZoom_; // 距離はズーム係数で調整
 	float height = baseHeight; // 高さは据え置き（必要なら *camZoom_ でもOK）
 
 	float angleY = camRot.y;
@@ -661,9 +642,9 @@ void Player::UpdateCameraFollowThirdPerson(float dt) {
 	camera->SetTranslate(cameraPos);
 }
 
-void Player::ZoomCamera(){
+void Player::ZoomCamera() {
 	// === LT押下時の一時カメラズーム ===
-	const float kInTarget = 0.75f; // ズーム到達目標値
+	const float kInTarget = 0.6f; // ズーム到達目標値
 	const float kInTime = 0.12f;  // 再ターゲット時の寄り時間（短め）
 	const float kOutTime = 0.25f;  // 戻り時間
 	const float kHoldUnit = 1.5f;  // 1回の押下で与えるホールド秒

@@ -70,14 +70,20 @@ public:
 	void Update(float dt) {
 		if (!visible_ || !getPos_ || !getYaw_) return;
 
-		// 初回のみ
-		if (!baseInitialized_) {
-			basePos_ = getPos_();
-			baseInitialized_ = true;
-		}
+		// オーナー（プレイヤー）の位置
+		Vector3 ownerPos = getPos_();
 
 		//--------------------------------------------------
-		// 1) カメラのRight/Up取得
+		// 0) 初回だけ「プレイヤーの少し前」に中心を作る
+		//--------------------------------------------------
+		if (!centerInitialized_) {
+			float yaw = getYaw_() + yawOffset_;
+			Vector3 fwd = { std::sinf(yaw), 0.0f, std::cosf(yaw) };
+			center_ = ownerPos + fwd * 40.0f; // 好きな距離にしてOK
+			centerInitialized_ = true;
+		}
+		//--------------------------------------------------
+		// 1) カメラの Right / Up を取る
 		//--------------------------------------------------
 		Vector3 camRight = { 1,0,0 };
 		Vector3 camUp = { 0,1,0 };
@@ -86,136 +92,95 @@ public:
 			camRight = MyMath::Normalize({ W.m[0][0], W.m[0][1], W.m[0][2] });
 			camUp = MyMath::Normalize({ W.m[1][0], W.m[1][1], W.m[1][2] });
 		}
-
 		//--------------------------------------------------
-		// 2) スティック入力 → curX_/curY_ は「累積」
+		// 2) 左スティックで center_ を直接動かす
 		//--------------------------------------------------
-		bool hasStickInput = false;
-
 		if (stickControl_) {
 			auto* in = Input::GetInstance();
 
 			float rx = static_cast<float>(in->GetLeftStickX());
 			float ry = static_cast<float>(in->GetLeftStickY());
 
-			// デッドゾーン
-			const float dz = stickDeadZone_;
+			const float dz = stickDeadZone_; // 0〜32767 想定のデッドゾーン
 			if (std::fabs(rx) < dz) rx = 0; else rx = (rx > 0 ? rx - dz : rx + dz);
 			if (std::fabs(ry) < dz) ry = 0; else ry = (ry > 0 ? ry - dz : ry + dz);
 
-			// 正規化
 			float norm = 32767.0f - dz;
 			if (norm < 1.0f) norm = 1.0f;
 			rx /= norm;
 			ry /= norm;
 
-			// 2乗カーブでスムーズ化
+			// 2乗カーブでスティック端だけ強く
 			float lx = rx * std::fabs(rx);
 			float ly = ry * std::fabs(ry);
 
-			hasStickInput = (std::fabs(lx) > 0.00001f || std::fabs(ly) > 0.00001f);
-
-			// 累積
-			curX_ += lx * stickMovePerSec_ * dt;
-			curY_ += ly * stickMovePerSec_ * dt;
-
-			// 範囲制限（画面サイズ基準）
-			const float w = static_cast<float>(WindowsAPI::kClientWidth);
-			const float h = static_cast<float>(WindowsAPI::kClientHeight);
-			const float halfW = w * 0.5f;
-			const float halfH = h * 0.5f;
-
-			curX_ = std::clamp(curX_, -halfW, halfW);
-			curY_ = std::clamp(curY_, -halfH, halfH);
-		}
-
-		//--------------------------------------------------
-		// 3) 離した瞬間に内部リセット（カクつき防止）
-		//--------------------------------------------------
-		{
-			static bool prev = false;
-			if (!hasStickInput && prev) {
-				basePos_ = getPos_();
-				curX_ = 0.0f;
-				curY_ = 0.0f;
+			// 入力があるときだけ動かす（離したら center_ はその場で完全停止）
+			if (std::fabs(lx) > 0.00001f || std::fabs(ly) > 0.00001f) {
+				const float moveSpeed = stickMovePerSec_; // 既存の速度パラメータを流用
+				center_ += camRight * (lx * moveSpeed * dt)
+					+ camUp * (ly * moveSpeed * dt);
 			}
-			prev = hasStickInput;
 		}
-
 		//--------------------------------------------------
-		// 4) プレイヤーの向き ＋ スティックを含めた「射線方向」
+		// 3) プレイヤー → レティクルへの方向ベクトル
 		//--------------------------------------------------
-		const float ownerYaw = getYaw_();
-		const float yaw = ownerYaw + yawOffset_;
-
-		// プレイヤーの純粋な前方（+Z 前提）
-		Vector3 fwd = { std::sinf(yaw), 0.0f, std::cosf(yaw) };
-
-		// スティック入力を少しだけ方向に混ぜて「狙っている方向」にする
-		Vector3 aimDir = fwd;
-		aimDir += camRight * (curX_ * 0.03f);   // 横
-		aimDir += camUp * (curY_ * 0.03f);      // 縦
-
-		if (MyMath::Length(aimDir) < 0.001f) {
-			aimDir = fwd;
+		Vector3 origin = ownerPos;
+		Vector3 dir = center_ - origin;
+		if (MyMath::Length(dir) < 0.001f) {
+			// ほぼ同じ位置なら「前方向き」にしておく
+			float yaw = getYaw_() + yawOffset_;
+			dir = { std::sinf(yaw), 0.0f, std::cosf(yaw) };
 		}
-		aimDir = MyMath::Normalize(aimDir);
+		dir = MyMath::Normalize(dir);
 
-		// 起点は毎フレームのプレイヤー位置
-		Vector3 origin = getPos_();
-
-		// ここで「最後の狙い線」を記録しておく
 		lastOrigin_ = origin;
-		lastAimDir_ = aimDir;
+		lastAimDir_ = dir;
 		hasAim_ = true;
 
-		// 一番奥の狙い点（ここまで線を伸ばす）
-		Vector3 aimPoint = origin + aimDir * maxDist;
+		float dist = maxDist;
+		Vector3 aimPoint = origin + dir * dist;
 
-		// ─────────────────────────────
-		// レティクル用のガイドラインをデバッグ描画に登録
-		// ─────────────────────────────
-		LineRenderer::GetInstance()->AddLine( // デバッグ用ガイドライン
-			origin,
-			aimPoint,
-			LineRenderer::Color{ 0.0f, 1.0f, 0.0f, 1.0f }  // 緑色
+		// ガイドライン（プレイヤー→先端）
+		LineRenderer::GetInstance()->AddLine(
+			origin, aimPoint,
+			LineRenderer::Color{ 0.0f, 1.0f, 0.0f, 1.0f }
 		);
-
 		//--------------------------------------------------
-		// 5) 線分 origin→aimPoint を割合で割って、4枚並べる
-		//    手前ほどプレイヤー寄り・奥ほど遠く＆小さく
+		// 4) 4層レティクルの配置
 		//--------------------------------------------------
-		float t[4] = {
-			0.22f, // 手前
-			0.36f,
-			0.50f,
-			0.64f // 奥
-		};
+		// center_ を「2層目の位置」として、その前後に並べるイメージ
+		float nearOffset = 8.0f;
+		float farOffset = 20.0f;
 
 		for (int i = 0; i < 4; ++i) {
 			auto& L = layers_[i];
 			if (!L.obj) continue;
+			if (!L.visible) continue;
 
-			float ti = t[i];
+			Vector3 pos;
+			switch (i) {
+			case 0: // 手前
+				pos = center_ - dir * nearOffset;
+				break;
+			case 1: // 中央（ロック中心）
+				pos = center_;
+				break;
+			case 2: // 少し奥
+				pos = center_ + dir * nearOffset;
+				break;
+			case 3: // いちばん奥
+				pos = center_ + dir * farOffset;
+				break;
+			}
 
-			// 線形補間 origin + (aimPoint - origin) * t
-			Vector3 pos = {
-				origin.x + (aimPoint.x - origin.x) * ti,
-				origin.y + (aimPoint.y - origin.y) * ti,
-				origin.z + (aimPoint.z - origin.z) * ti
-			};
-
-			pos.y += up_;   // 全体の上下オフセット（ImGuiで弄れるやつ）
+			pos.y += up_; // 全体を上下にずらす量
 
 			L.obj->SetTranslate(pos);
-
-			// 真ん中あたりを「中心」とみなして Player が追尾する
-			// （GetCenterWorldPos() は layer[1] を返しているので、
-			//   2番目のレイヤーが「ロック中心」になるイメージ）
 
 			// 向きはプレイヤーのヨーに合わせる
 			Vector3 rot = L.obj->GetRotate();
 			if (alignToOwnerYaw_) {
+				float yaw = getYaw_() + yawOffset_;
 				rot.y = yaw;
 			}
 			L.obj->SetRotate(rot);
@@ -232,9 +197,7 @@ public:
 				L.obj->SetRotate(r);
 			}
 
-			// スケール
 			L.obj->SetScale(L.scale);
-
 			L.obj->Update();
 		}
 	}
@@ -271,17 +234,7 @@ public:
 			if (L.obj) L.obj->SetCamera(cam_);
 		}
 	}
-	/// <summary>
-	/// 最後に更新された狙いの起点座標を取得
-	/// </summary>
-	/// <returns></returns>
-	Vector3 GetCenterWorldPos() const {
-		// 今回は 2番目レイヤー(= index 1)を「中心」と扱う
-		if (layers_[1].obj) return layers_[1].obj->GetTranslate();
-		if (layers_[0].obj) return layers_[0].obj->GetTranslate();
-		if (getPos_) return getPos_();
-		return {};
-	}
+	
 	/// <summary>
 	/// 最後に更新された狙い方向ベクトルを取得
 	/// </summary>
@@ -294,27 +247,48 @@ public:
 		return Vector3{ 0.0f, 0.0f, 1.0f };
 	}
 
+	/// <summary>
+	/// 最後に更新された狙いの起点座標を取得（キャッシュ版）
+	/// </summary>
+	/// <returns></returns>
+	Vector3 GetCenterWorldPos() const {
+		return center_;
+	}
+
 #ifdef USE_IMGUI
 	void ImGuiDebug() {
-		if (ImGui::CollapsingHeader("Reticle 3D")) {
+		if (ImGui::CollapsingHeader("レティクル")) {
 			ImGui::Checkbox("Visible", &visible_);
 			ImGui::Checkbox("Align To Owner Yaw", &alignToOwnerYaw_);
 			ImGui::Checkbox("Self Spin Axis = Y", &selfSpinAxisY_);
 			ImGui::DragFloat("Up Offset", &up_, 0.01f, -20.0f, 20.0f);
 			ImGui::DragFloat("Yaw Offset", &yawOffset_, 0.001f, -3.14f, 3.14f);
 
+			// ─────────── 線で区切り（操作系パラメータ）───────────
+			ImGui::Separator();
+			ImGui::Text("操作パラメータ");
+			ImGui::DragFloat(
+				"感度",
+				&stickMovePerSec_,
+				10.0f,        // 1ステップの変化量
+				20.0f,       // 最小
+				500.0f       // 最大（必要ならもっと上げてもOK）
+			);
+
+			// ─────────── 線で区切り（各レイヤー設定）───────────
+			ImGui::Separator();
 			for (int i = 0; i < 4; ++i) {
 				auto& L = layers_[i];
 				char name[32];
-				sprintf_s(name, "Layer %d", i);
+				sprintf_s(name, "レイヤー %d", i);
 				if (ImGui::TreeNode(name)) {
 
-					// ▼ 位置表示（読み取り専用）
+					// 位置表示（読み取り専用）
 					if (L.obj) {
 						Vector3 pos = L.obj->GetTranslate();
-						ImGui::Text("Pos: (%.2f, %.2f, %.2f)", pos.x, pos.y, pos.z);
+						ImGui::Text("位置: (%.2f, %.2f, %.2f)", pos.x, pos.y, pos.z);
 					} else {
-						ImGui::Text("Pos: (---, ---, ---)");
+						ImGui::Text("位置: (---, ---, ---)");
 					}
 
 					ImGui::Checkbox("Visible", &L.visible);
@@ -367,12 +341,8 @@ private:
 	// 累積オフセット
 	float curX_ = 0.0f;
 	float curY_ = 0.0f;
-	float stickMovePerSec_ = 20.0f;
+	float stickMovePerSec_ = 50.0f; // スティックで動かす速度
 	float stickDeadZone_ = 8000.0f;
-
-	// 基準座標
-	Vector3 basePos_ = { 0,0,0 };
-	bool    baseInitialized_ = false;
 
 	// 右スティック制御
 	bool stickControl_ = true;
@@ -381,4 +351,8 @@ private:
 	Vector3 lastAimDir_ = { 0.0f, 0.0f, 1.0f };
 	bool    hasAim_ = false;
 	float maxDist = 150.0f; // ラインをどこまで伸ばすか
+
+	// レティクルの中心ワールド座標
+	Vector3 center_ = { 0,0,0 };
+	bool centerInitialized_ = false;
 };

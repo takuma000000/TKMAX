@@ -219,14 +219,15 @@ private:
 	Vector3 camSavedPos_; // カメラ位置保存用
 	Vector3 camSavedRot_; // カメラ回転保存用
 
+	// 3Dレティクル関連
 	std::unique_ptr<Reticle> reticle_;   // 3Dレティクル用Object3d
 	float reticleDistance_ = 50.0f;         // 自機から前方への距離
 	float reticleUpOffset_ = 0.0f;          // 必要なら少し上げる
 
 	// 入力 & 弾共通の調整用定数
 	static constexpr int   kTriggerThreshold = 128;  // LT/RT 判定しきい値
-	static constexpr float kNormalBulletSpeed = 0.5f; // RB/LB/RT の弾速
+	float normalBulletSpeed_ = 2.2f; // RB/LB/RT の弾速
 	static constexpr float kJetSmokeOffsetZ = 2.0f; // 機体後ろのジェット位置Zオフセット
 	static constexpr float kHomingBulletSpeed = 0.6f; // LT弾の追尾速度
-
+	const float dt = 1.0f / 60.0f; // 想定フレーム時間
 };
