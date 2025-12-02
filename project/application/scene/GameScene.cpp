@@ -160,32 +160,10 @@ void GameScene::Update() {
 
 	// デバッグ用ImGui表示
 	ImGuiDebug();
-
-	// ──────────────── アクティブカメラの決定＆更新 ───────────────
-	Camera* activeCamera = camera.get();
-	if (useDebugCamera_ && debugCamera_) {
-		// デバッグカメラを更新
-		debugCamera_->Update();
-		activeCamera = debugCamera_.get();
-	} else {
-		// 通常カメラを更新
-		camera->Update();
-	}
-
-	// ここで「今フレームのカメラ」を全部に渡す
-	player_->SetCamera(activeCamera);
-
-	if (skybox_) {
-		skybox_->SetCamera(activeCamera); // スカイボックスにも渡す
-	}
+	// パフォーマンス情報更新
+	UpdateActiveCamera();
 
 	if (enemyManager_) {
-		enemyManager_->SetCamera(activeCamera); // 敵マネージャにも渡す
-
-		if (bossManager_) {
-			bossManager_->SetCamera(activeCamera); // ボスマネージャにも渡す
-		}
-
 		// スカイボックスの回転更新
 		skybox_->UpdateRotation();
 		// プレイヤーの更新
@@ -202,8 +180,7 @@ void GameScene::Update() {
 			UpdateAirStreak(dt);
 		}
 
-		// これまで: if (irisOpening_) { ... emitFireworkPending_ の遅延 ... }
-		if (irisOpening_) {
+		if (irisOpening_) { // --- アイリスオープニング中の更新 ---
 			// 共通の経過タイム：開始時刻からの積算
 			emitOpenElapsed_ += dt;
 
@@ -473,6 +450,38 @@ void GameScene::SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float s
 	if (bossManager_) {
 		bossManager_->SpawnEnemyBullet(pos, dir, speed, damage, lifeFrame);
 	}
+}
+
+Camera* GameScene::UpdateActiveCamera() {
+	// ──────────────── アクティブカメラの決定＆更新 ───────────────
+	Camera* activeCamera = camera.get();
+	if (useDebugCamera_ && debugCamera_) {
+		// デバッグカメラを更新
+		debugCamera_->Update();
+		activeCamera = debugCamera_.get();
+	} else {
+		// 通常カメラを更新
+		camera->Update();
+	}
+
+	// ここで「今フレームのカメラ」を全部に渡す
+	if (player_) {
+		player_->SetCamera(activeCamera);
+	}
+	if (skybox_) {
+		skybox_->SetCamera(activeCamera); // スカイボックス適用
+	}
+	if (enemyManager_) {
+		enemyManager_->SetCamera(activeCamera); // 敵マネージャ適用
+	}
+	if (bossManager_) {
+		bossManager_->SetCamera(activeCamera); // ボスマネージャ適用
+	}
+
+	// パーティクルマネージャー適用
+	ParticleManager::GetInstance()->SetCamera(activeCamera);
+
+	return activeCamera; // 呼び出し元にも返す
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*

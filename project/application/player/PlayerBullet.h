@@ -97,7 +97,7 @@ private:
 
 	// 共通パラメータ（マジックナンバー解消）
 	static constexpr float kDefaultScale = 0.2f;  // 弾の見た目サイズ
-	static constexpr float kDespawnZ = 70.0f; // 消えるZ位置
+	static constexpr float kDespawnZ = 150.0f; // 消えるZ位置
 
 	/// <summary>発射の「出方」曲線を更新します。</summary>
 	void UpdateSpawnBezier();

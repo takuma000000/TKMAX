@@ -4,7 +4,6 @@
 #include "MyMath.h"
 #include <numbers>
 #include <algorithm>
-//#include "LineRenderer.h"
 
 ParticleManager* ParticleManager::instance = nullptr;
 
@@ -51,8 +50,8 @@ void ParticleManager::Update() {
 	MakeBillboardMatrix(); //ビルボードマトリクス作成
 
 	//カメラの各種行列を取得
-	camera_->GetViewMatrix();
-	camera_->GetProjectionMatrix();
+	/*camera_->GetViewMatrix();
+	camera_->GetProjectionMatrix();*/
 
 	for (std::unordered_map<std::string, ParticleGroup>::iterator particleGroupIterator = particleGroups.begin(); particleGroupIterator != particleGroups.end();) { //各パーティクルグループの更新
 		//パーティクルグループのポインタを取得
@@ -71,9 +70,10 @@ void ParticleManager::Update() {
 			Matrix4x4 rotateMatrix = MyMath::MakeRotateMatrix((*particleIterator).transform.rotate);
 			Matrix4x4 worldMatrix = scaleMatrix * rotateMatrix * billboardMatrix * translateMatrix;
 			Matrix4x4 cameraMatrix = MyMath::MakeAffineMatrix(camera_->GetScale(), camera_->GetRotate(), camera_->GetTranslate());
-			Matrix4x4 viewMatrix = MyMath::Inverse4x4(cameraMatrix);
-			Matrix4x4 projectionMatrix = MyMath::MakePerspectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHeight), 0.1f, 100.0f);
-			Matrix4x4 worldViewProjectionMatrix = MyMath::Multiply(worldMatrix, MyMath::Multiply(viewMatrix, projectionMatrix));
+			Matrix4x4 viewMatrix = camera_->GetViewMatrix();
+			Matrix4x4 projectionMatrix = camera_->GetProjectionMatrix();
+			Matrix4x4 worldViewProjectionMatrix =
+				MyMath::Multiply(worldMatrix, MyMath::Multiply(viewMatrix, projectionMatrix));
 			if (particleGroupIterator->second.kNumInstance < kNumMaxInstance) { //最大インスタンス数以下なら更新と描画対象にする
 				//フィールドの範囲内のParticleには加速度を適用する
 				if (IsCollision(acc.area, (*particleIterator).transform.translate)) { //当たり判定

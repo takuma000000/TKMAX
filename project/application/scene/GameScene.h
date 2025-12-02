@@ -54,6 +54,12 @@ public:
 
 	/// <summary>ボス弾を生成して管理リストへ追加します。</summary>
 	void SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float speed, int damage, int lifeFrame);
+	/// <summary>
+	/// アクティブなカメラを更新します。
+	/// </summary>
+	/// <returns></returns>
+	Camera* UpdateActiveCamera();
+
 	/// <summary>最も近い敵を取得します。</summary>
 	Camera* GetCameraPtr() {
 		if (useDebugCamera_ && debugCamera_) {

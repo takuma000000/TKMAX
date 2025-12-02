@@ -147,6 +147,14 @@ public:
 	/// <summary>リボン頂点を作成します。</summary>
 	void CreateRibbonVertices();
 
+	/// Setter
+
+	/// <summary>
+	/// <summary>カメラをセットします。</summary>
+	/// </summary>
+	/// <param name="cam"></param>
+	void SetCamera(Camera* cam) { camera_ = cam; }
+
 private:
 	static ParticleManager* instance;
 
