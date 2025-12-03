@@ -9,7 +9,6 @@ void Enemy::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	object_ = std::make_unique<Object3d>(); // Object3d のインスタンスを生成
 	object_->Initialize(common, dxCommon); // 初期化
 	object_->SetModel("enemy.obj"); // モデル名は適宜変更
-	ModelManager::GetInstance()->LoadModel("enemy.obj", dxCommon); // モデル読み込み
 
 	// カメラ設定
 	if (camera) {
@@ -18,6 +17,8 @@ void Enemy::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 
 	baseScale_ = object_->GetScale(); // 元のスケールを保持
 	startX_ = object_->GetTranslate().x; // サイン波の基準用
+
+	hasUpdatedOnce_ = false; // Update() 初回呼び出し前
 }
 
 void Enemy::Update() {
@@ -85,8 +86,9 @@ void Enemy::Update() {
 
 		// 全パターン共通：アルファは 1 → 0 にフェード
 		deathAlpha_ = 1.0f - t;
-		object_->SetColor({ 1.0f, 1.0f, 1.0f, deathAlpha_ });
+		object_->SetColor({ 1.0f, 1.0f, 1.0f, deathAlpha_ }); // 透明度設定
 		object_->Update();
+		hasUpdatedOnce_ = true; // Update() 呼び出し済みに
 
 		if (deathTimer_ >= deathDuration_) {
 			// 敵が完全に消える瞬間に専用エフェクトを出す
@@ -298,9 +300,14 @@ void Enemy::Update() {
 	}
 
 	object_->Update(); // Object3d の更新
+	hasUpdatedOnce_ = true; // Update() 呼び出し済み
 }
 
 void Enemy::Draw(DirectXCommon* dxCommon) {
+	if (!object_) return;
+	if (!hasUpdatedOnce_) { // Update() 未呼び出しなら描画しない
+		return;
+	}
 	object_->Draw(dxCommon); // Object3d の描画
 }
 

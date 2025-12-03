@@ -23,7 +23,7 @@ namespace EnemySpawner {
 			if (config) config(*e);
 
 			Vector3 emitPos = spawnPos;
-			ParticleManager::GetInstance()->Emit("enemySpawn", emitPos, kSpawnParticleCount);
+			//ParticleManager::GetInstance()->Emit("enemySpawn", emitPos, kSpawnParticleCount);
 
 			enemies.push_back(std::move(e));
 		}
@@ -45,7 +45,7 @@ namespace EnemySpawner {
 				if (config) config(*e);
 
 				Vector3 emitPos = spawnPos;
-				ParticleManager::GetInstance()->Emit("enemySpawn", emitPos, kSpawnParticleCount);
+				//ParticleManager::GetInstance()->Emit("enemySpawn", emitPos, kSpawnParticleCount);
 
 				enemies.push_back(std::move(e));
 			}
@@ -61,7 +61,7 @@ namespace EnemySpawner {
 					if (config) config(*e);
 
 					Vector3 emitPos = spawnPos;
-					ParticleManager::GetInstance()->Emit("enemySpawn", emitPos, kSpawnParticleCount);
+					//ParticleManager::GetInstance()->Emit("enemySpawn", emitPos, kSpawnParticleCount);
 
 					enemies.push_back(std::move(e));
 				}
@@ -83,7 +83,7 @@ namespace EnemySpawner {
 			if (config) config(*e);
 
 			Vector3 emitPos = spawnPos;
-			ParticleManager::GetInstance()->Emit("enemySpawn", emitPos, kSpawnParticleCount);
+			//ParticleManager::GetInstance()->Emit("enemySpawn", emitPos, kSpawnParticleCount);
 
 			enemies.push_back(std::move(e));
 		}
