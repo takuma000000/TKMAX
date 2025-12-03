@@ -53,6 +53,10 @@ public:
 	bool IsDying() const { return isDying_; }
 	/// <summary>敵の死亡リアクションを開始します。</summary>
 	void StartDeathReaction(const Vector3& hitDir);
+	/// <summary>
+	/// Transform情報をObject3dに同期します。
+	/// </summary>
+	void SyncTransform();
 
 	// Getter===================================
 	/// <summary>当たり判定用スケールを取得します。</summary>
@@ -220,8 +224,6 @@ private:
 	Vector3 pounceTarget_;            // 落下目標（プレイヤー付近）
 	bool   pounceStarted_ = false; // 飛び掛かり動作が開始されたかどうか
 	bool   pounceDiving_ = false; // 急降下フェーズに入ったかどうか
-
-	bool   hasUpdatedOnce_ = false;   // 少なくとも1回 Update を通ったか
 
 	const float dt = 1.0f / 60.0f; // 固定フレームレート想定
 };

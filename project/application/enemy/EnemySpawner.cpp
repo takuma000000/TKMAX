@@ -21,9 +21,10 @@ namespace EnemySpawner {
 			if (parent) e->SetParentScene(parent);
 			if (cam)    e->SetCamera(cam);
 			if (config) config(*e);
+			e->SyncTransform(); // Transform情報をObject3dに同期
 
 			Vector3 emitPos = spawnPos;
-			//ParticleManager::GetInstance()->Emit("enemySpawn", emitPos, kSpawnParticleCount);
+			ParticleManager::GetInstance()->Emit("enemySpawn", emitPos, kSpawnParticleCount);
 
 			enemies.push_back(std::move(e));
 		}
@@ -43,9 +44,10 @@ namespace EnemySpawner {
 				if (parent) e->SetParentScene(parent);
 				if (cam)    e->SetCamera(cam);
 				if (config) config(*e);
+				e->SyncTransform(); // Transform情報をObject3dに同期
 
 				Vector3 emitPos = spawnPos;
-				//ParticleManager::GetInstance()->Emit("enemySpawn", emitPos, kSpawnParticleCount);
+				ParticleManager::GetInstance()->Emit("enemySpawn", emitPos, kSpawnParticleCount);
 
 				enemies.push_back(std::move(e));
 			}
@@ -59,9 +61,10 @@ namespace EnemySpawner {
 					if (parent) e->SetParentScene(parent);
 					if (cam)    e->SetCamera(cam);
 					if (config) config(*e);
+					e->SyncTransform();
 
 					Vector3 emitPos = spawnPos;
-					//ParticleManager::GetInstance()->Emit("enemySpawn", emitPos, kSpawnParticleCount);
+					ParticleManager::GetInstance()->Emit("enemySpawn", emitPos, kSpawnParticleCount);
 
 					enemies.push_back(std::move(e));
 				}
@@ -81,9 +84,10 @@ namespace EnemySpawner {
 			if (parent) e->SetParentScene(parent);
 			if (cam)    e->SetCamera(cam);
 			if (config) config(*e);
+			e->SyncTransform();
 
 			Vector3 emitPos = spawnPos;
-			//ParticleManager::GetInstance()->Emit("enemySpawn", emitPos, kSpawnParticleCount);
+			ParticleManager::GetInstance()->Emit("enemySpawn", emitPos, kSpawnParticleCount);
 
 			enemies.push_back(std::move(e));
 		}

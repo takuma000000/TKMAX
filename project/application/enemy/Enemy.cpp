@@ -17,8 +17,6 @@ void Enemy::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 
 	baseScale_ = object_->GetScale(); // 元のスケールを保持
 	startX_ = object_->GetTranslate().x; // サイン波の基準用
-
-	hasUpdatedOnce_ = false; // Update() 初回呼び出し前
 }
 
 void Enemy::Update() {
@@ -88,7 +86,6 @@ void Enemy::Update() {
 		deathAlpha_ = 1.0f - t;
 		object_->SetColor({ 1.0f, 1.0f, 1.0f, deathAlpha_ }); // 透明度設定
 		object_->Update();
-		hasUpdatedOnce_ = true; // Update() 呼び出し済みに
 
 		if (deathTimer_ >= deathDuration_) {
 			// 敵が完全に消える瞬間に専用エフェクトを出す
@@ -300,14 +297,10 @@ void Enemy::Update() {
 	}
 
 	object_->Update(); // Object3d の更新
-	hasUpdatedOnce_ = true; // Update() 呼び出し済み
 }
 
 void Enemy::Draw(DirectXCommon* dxCommon) {
 	if (!object_) return;
-	if (!hasUpdatedOnce_) { // Update() 未呼び出しなら描画しない
-		return;
-	}
 	object_->Draw(dxCommon); // Object3d の描画
 }
 
@@ -410,4 +403,9 @@ void Enemy::StartDeathReaction(const Vector3& hitDir) {
 		deathRotateSpeed_ = { 3.0f, 0.5f, 0.0f }; // 前に倒れ込む感じ
 		break;
 	}
+}
+
+void Enemy::SyncTransform(){
+	if (!object_) return;
+	object_->Update();  // 行列と定数バッファだけ更新
 }
