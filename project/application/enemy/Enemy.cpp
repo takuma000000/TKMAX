@@ -191,7 +191,7 @@ void Enemy::Update() {
 
 			pos = newPos; // Enemy::Update 内の pos を更新
 
-			// ★ このフレームの軌道位置に「レール＋スパーク」を出す
+			// このフレームの軌道位置に「レール＋スパーク」を出す
 			{
 				Vector3 emitPos = pos;
 				// コアレール（軌道の筋）
@@ -203,7 +203,7 @@ void Enemy::Update() {
 			// 落下フェーズが終わったら「通過フェーズ」に切り替え
 			if (t >= 1.0f) {
 
-				// ★ ここでは「これまでの軌道の延長線上」に進ませる
+				// ここでは「これまでの軌道の延長線上」に進ませる
 				//    スタート→ターゲット方向を基準にして、そのまま突き抜ける
 				Vector3 dir = pounceTarget_ - pounceStart_;
 				float len = MyMath::Length(dir);
@@ -227,7 +227,7 @@ void Enemy::Update() {
 			// 通過フェーズ：そのまま直線移動（もうプレイヤー方向に曲がらない）
 			pos += velocity_;
 
-			// ★ ダイブ中も軌道を残す（本数は落としてもOK）
+			// ダイブ中も軌道を残す（本数は落としてもOK）
 			Vector3 emitPos = pos;
 			pm->Emit("enemyPounceTrail", emitPos, 2);
 			pm->Emit("enemyPounceSpark", emitPos, 2);
@@ -262,8 +262,23 @@ void Enemy::Update() {
 		// ▼ レティクルと交差していたら赤に変更
 		if (reticle_) {
 
-			Vector3 rayOrigin = reticle_->GetCenterWorldPos(); // または reticle_->lastOrigin_
+			// 弾と同じレイ（プレイヤー位置 → aimDir）で判定したい
+			Vector3 rayOrigin;
+
+			if (playerGetter_) {
+				// プレイヤーの現在位置（Player::GetPosition）が飛んでくる
+				rayOrigin = playerGetter_();
+			} else {
+				// もし未設定なら、前と同じくレティクル中心から
+				rayOrigin = reticle_->GetCenterWorldPos();
+			}
+
 			Vector3 rayDir = reticle_->GetAimDirection();
+			float len = MyMath::Length(rayDir);
+			if (len > 0.001f) {
+				rayDir = MyMath::Normalize(rayDir);
+			}
+
 			Vector3 rayEnd = rayOrigin + rayDir * 150.0f; // Reticle の maxDist と揃える
 
 			// 敵AABB
@@ -275,7 +290,7 @@ void Enemy::Update() {
 			}
 		}
 
-		// 8頂点
+		// 8頂点＆AddLine は今のままでOK
 		Vector3 p[8] = {
 			{ center.x - hx, center.y - hy, center.z - hz },
 			{ center.x + hx, center.y - hy, center.z - hz },
