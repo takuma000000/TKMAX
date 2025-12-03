@@ -95,7 +95,7 @@ namespace BossParam {
 	// --- 初期設定 --- 
 	constexpr int   InitHP = 80;
 	constexpr float InitScale = 5.0f;
-	constexpr float InitColliderScale = 7.5f;
+	constexpr Vector3 InitColliderScale = { 12.180f,18.210f,11.560f };
 }
 
 //=============================================================

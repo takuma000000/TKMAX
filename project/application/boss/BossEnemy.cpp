@@ -45,10 +45,8 @@ void BossEnemy::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	BossParam::InitScale,
 		BossParam::InitScale,
 		BossParam::InitScale });
-	SetColliderScale({ // 当たり判定用スケール
-		BossParam::InitColliderScale,
-		BossParam::InitColliderScale,
-		BossParam::InitColliderScale });
+	SetColliderScale( // 当たり判定用スケール
+		{ BossParam::InitColliderScale });
 }
 
 void BossEnemy::Update() {
