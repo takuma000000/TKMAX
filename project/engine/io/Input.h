@@ -21,7 +21,7 @@ public:
 	Input& operator=(Input&) = delete;
 
 	/// <summary>
-	/// <para>Inputの初期化を行います。</para>
+	/// オブジェクトやモジュールの初期化を行う。
 	/// </summary>
 	/// <param name="winApp"></param>
 	void Initialize(WindowsAPI* winApp);
@@ -47,8 +47,11 @@ public:
 	/// <param name="keyNumber"></param>
 	/// <returns></returns>
 	bool TriggerKey(BYTE keyNumber);
-	///<para>指定したボタンが押されているかを返します。</para>
+	/// <summary>
+	/// <para>指定したボタンが押されているかを返します。</para>
+	/// </summary>
 	/// <param name="button"></param>
+	/// <returns></returns>
 	bool PushButton(WORD button);
 	/// <summary>
 	/// <para>指定したボタンが押された瞬間かを返します。</para>
@@ -56,9 +59,17 @@ public:
 	/// <param name="button"></param>
 	/// <returns></returns>
 	bool TriggerButton(WORD button);
-	///<para>左スティックのX軸の値を取得します。</para>
+
+	// Getter========================================
+	/// <summary>
+	/// <para>左スティックのX軸の値を取得します。</para>
+	/// </summary>
+	/// <returns></returns>
 	SHORT GetLeftStickX();
-	///<para>左スティックのY軸の値を取得します。</para>
+	/// <summary>
+	/// <para>左スティックのY軸の値を取得します。</para>
+	/// </summary>
+	/// <returns></returns>
 	SHORT GetLeftStickY();
 	/// <summary>
 	/// <para>右スティックのX軸の値を取得します。</para>
@@ -70,15 +81,23 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	SHORT GetRightStickY();
+	/// <summary>
 	/// <para>右トリガーの取得</para>
+	/// </summary>
+	/// <returns></returns>
 	BYTE GetRightTrigger();
+	/// <summary>
 	/// <para>左トリガーの取得</para>
+	/// </summary>
+	/// <returns></returns>
 	BYTE GetLeftTrigger();
 	/// <summary>
 	///	<para>マウスホイールの回転量を取得します。</para>
 	/// </summary>
 	/// <returns></returns>
 	int  GetWheel() const { return wheel_; }
+	// ==============================================
+	// Setter========================================
 	///<para>コントローラーの振動を設定します。</para>
 	void SetVibration(WORD leftMotor, WORD rightMotor);
 	/// <summary>
@@ -86,7 +105,7 @@ public:
 	/// </summary>
 	/// <param name="delta"></param>
 	void SetWheel(int delta) { wheel_ = delta; }
-
+	// ==============================================
 private:
 	static Input* instance;
 

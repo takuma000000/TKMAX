@@ -29,13 +29,21 @@ public:
 	}
 	~GameClearScene() = default;
 
-	/// <summary>シーンを初期化します。</summary>
+	/// <summary>
+	/// シーンを初期化します。
+	/// </summary>
 	void Initialize() override;
-	/// <summary>シーンを終了します。</summary>
+	/// <summary>
+	/// シーンを終了します。
+	/// </summary>
 	void Finalize() override;
-	/// <summary>シーンを更新します。</summary>
+	/// <summary>
+	/// シーンを更新します。
+	/// </summary>
 	void Update() override;
-	/// <summary>シーンを描画します。</summary>
+	/// <summary>
+	/// シーンを描画します。
+	/// </summary>
 	void Draw() override;
 
 private:

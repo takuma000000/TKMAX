@@ -5,10 +5,11 @@
 // Logger名前空間
 // デバッグログの出力を行うユーティリティ。
 //=============================================================
-
-//ログ出力
-///<summary>ログメッセージを出力します。</summary>
 namespace Logger {
+	/// <summary>
+	/// ログを出力します。
+	/// </summary>
+	/// <param name="message"></param>
 	void Log(const std::string& message);
 };
 

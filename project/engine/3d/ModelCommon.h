@@ -10,13 +10,19 @@ private:
 	DirectXCommon* dxCommon_;
 
 public://メンバ関数
-	/// <summary>モデル共通機能を初期化します。</summary>
-	/// <param name="dxCommon">DirectX共通。</param>
+	/// <summary>
+	/// ModelCommonの初期化を行う関数
+	/// </summary>
+	/// <param name="dxCommon"></param>
 	void Initialize(DirectXCommon* dxCommon);
 
-	//getter
-	/// <summary>DirectXCommonのゲッター。</summary>
+	// Getter===================================
+	/// <summary>
+	/// DirectXCommonのゲッター
+	/// </summary>
+	/// <returns></returns>
 	DirectXCommon* GetDxCommon() const { return dxCommon_; }
+	// =========================================
 
 };
 

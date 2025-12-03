@@ -15,44 +15,50 @@ class ModelManager{
 private:
 	static ModelManager* instance;
 
-	////シングルトン-----------------------------------------------
-
+	///シングルトン-----------------------------------------------
 	//コンストラクタ、デストラクタの隠蔽
 	ModelManager() = default;
 	//コピーコンストラクタの封印
 	ModelManager(ModelManager&) = delete;
 	//コピー代入演算子の封印
 	ModelManager& operator=(ModelManager&) = delete;
-
-	////---------------------------------------------------------
+	///---------------------------------------------------------
 
 	//モデルデータコンテナ
 	std::map<std::string, std::unique_ptr<Model>> models;
-
 	//モデル共通部
 	ModelCommon* modelCommon = nullptr;
 	DirectXCommon* dxCommon_ = nullptr;
 
 public:
-	//シングルトンインスタンスの取得
-	/// <summary>シングルトンインスタンスを取得します。</summary>
-	static ModelManager* GetInstance();
-	//終了
-	/// <summary>モデルマネージャを終了します。</summary>
+	/// <summary>
+	/// モデルマネージャを終了処理します。
+	/// </summary>
 	void Finalize();
-	//初期化
-	/// <summary>モデルマネージャを初期化します。</summary>
-	/// <param name="dxCommon">DirectX共通。</param>
+	/// <summary>
+	/// モデルマネージャを初期化します。
+	/// </summary>
+	/// <param name="dxCommon"></param>
 	void Initialize(DirectXCommon* dxCommon);
-	//モデルのファイルに読み込み
-	/// <summary>モデルをファイルから読み込みます。</summary>
-	/// <param name="filePath">モデルファイルのパス。</param>
-	/// <param name="dxCommon">DirectX共通。</param>
+	/// <summary>
+	/// モデルを読み込みます。
+	/// </summary>
+	/// <param name="filePath"></param>
+	/// <param name="dxCommon"></param>
 	void LoadModel(const std::string& filePath, DirectXCommon* dxCommon);
-	//モデルの検索
-	/// <summary>モデルを検索します。</summary>
-	/// <param name="filePath">モデルファイルのパス。</param>
+	/// <summary>
+	/// モデルを検索します。
+	/// </summary>
+	/// <param name="filePath"></param>
+	/// <returns></returns>
 	Model* FindModel(const std::string& filePath);
 
+	// Getter===================================
+	/// <summary>
+	/// モデルマネージャのインスタンスを取得します。
+	/// </summary>
+	/// <returns></returns>
+	static ModelManager* GetInstance();
+	// =========================================
 };
 

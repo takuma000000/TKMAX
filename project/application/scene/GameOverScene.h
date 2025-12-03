@@ -25,9 +25,21 @@ public:
 		: dxCommon_(dxCommon), srvManager_(srvManager) {
 	}
 
+	/// <summary>
+	/// </summary>シーンを初期化します。
+	/// </summary>
 	void Initialize() override;
+	/// <summary>
+	/// </summary>シーンを終了します。
+	/// </summary>
 	void Finalize() override;
+	/// <summary>
+	/// </summary>シーンを更新します。
+	/// </summary>
 	void Update() override;
+	/// <summary>
+	/// </summary>シーンを描画します。
+	/// </summary>
 	void Draw() override;
 
 private:

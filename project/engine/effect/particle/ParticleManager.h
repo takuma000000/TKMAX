@@ -38,7 +38,7 @@ public:
 	};
 
 	/// <summary>
-	/// <summary>AABBと点の当たり判定を行う関数。</summary>
+	/// <summary>AABBと点の当たり判定を行います。</summary>
 	/// </summary>
 	/// <param name="aabb"></param>
 	/// <param name="point"></param>
@@ -79,51 +79,69 @@ public:
 	static ParticleManager* GetInstance();
 
 	/// <summary>
-	/// <summary>ParticleManagerを初期化します。</summary>
+	/// <summary>ParticleManagerの初期化を行います。</summary>
 	/// </summary>
 	/// <param name="dxCommon"></param>
 	/// <param name="srvManager"></param>
 	/// <param name="camera"></param>
 	void Initialize(DirectXCommon* dxCommon, SrvManager* srvManager, Camera* camera);
-
-	///<summary>ParticleManagerの終了処理を行います。</summary>
+	/// <summary>
+	/// <summary>ParticleManagerの終了処理を行います。</summary>
+	/// </summary>
 	void Update();
-	///<summary>ParticleManagerの描画処理を行います。</summary>
+	/// <summary>
+	/// <summary>ParticleManagerの描画を行います。</summary>
+	/// </summary>
 	void Draw();
 
-	//パイプライン生成
-	/// <summary>パイプラインを生成します。</summary>
+	/// <summary>
+	/// <summary>グラフィックスパイプラインを生成します。</summary>
+	/// </summary>
 	void CreatePipeline();
-	//ルートシグネイチャー
-	/// <summary>ルートシグネチャーを生成します。</summary>
+	/// <summary>
+	/// <summary>ルートシグネチャを生成します。</summary>
+	/// </summary>
 	void CreateRootSigunature();
-	//VertexData
+	/// <summary>
 	/// <summary>頂点データを初期化します。</summary>
+	/// </summary>
 	void InitializeVD();
-	//VertexResource
+	/// <summary>
 	/// <summary>頂点リソースを生成します。</summary>
+	/// </summary>
 	void CreateVR();
+	/// <summary>
 	/// <summary>頂点バッファビューを生成します。</summary>
-	//VertexBufferView
+	/// </summary>
 	void CreateVB();
-	/// <summary>マテリアルリソースを生成します。</summary>
-	//Resource
+	/// <summary>
+	/// <summary>パーティクルリソースを書き込みます。</summary>
+	/// </summary>
 	void WriteResource();
 
-	//パーティクルグループの作成
+	/// <summary>
 	/// <summary>パーティクルグループを作成します。</summary>
+	/// </summary>
+	/// <param name="name"></param>
+	/// <param name="textureFilePath"></param>
+	/// <param name="type"></param>
 	void CreateParticleGroup(const std::string& name, const std::string& textureFilePath, ParticleType type);
 
-	//billboardマトリクスの計算
-	/// <summary>ビルボードマトリクスを作成します。</summary>
+	/// <summary>
+	/// <summary>ビルボード行列を作成します。</summary>
+	/// </summary>
 	void MakeBillboardMatrix();
 
-	//パーティクルの発生
-	/// <summary>パーティクルを発生させます。</summary>
+	/// <summary>
+	/// <summary>パーティクルを放出します。</summary>
+	/// </summary>
+	/// <param name="name"></param>
+	/// <param name="pos"></param>
+	/// <param name="count"></param>
 	void Emit(const std::string name, Vector3& pos, uint32_t count);
 
 	/// <summary>
-	/// <summary>パーティクルグループの取得。</summary>
+	/// <summary>パーティクルグループを取得します。</summary>
 	/// </summary>
 	/// <returns></returns>
 	std::unordered_map<std::string, ParticleGroup> GetParticleGroups() { return particleGroups; }
@@ -137,23 +155,26 @@ public:
 	/// <returns></returns>
 	Particle MakeNewParticle(std::mt19937& randomEngine, const std::string& groupName, const Vector3& translate);
 
-	//Ring関数
+	/// <summary>
 	/// <summary>リング頂点を作成します。</summary>
+	/// </summary>
 	void CreateRingVertices();
-	//Cylinder関数
+	/// <summary>
 	/// <summary>シリンダー頂点を作成します。</summary>
+	/// </summary>
 	void CreateCylinderVertices();
-	//Ribbon関数
+	/// <summary>
 	/// <summary>リボン頂点を作成します。</summary>
+	/// </summary>
 	void CreateRibbonVertices();
 
-	/// Setter
-
+	// Setter===================================
 	/// <summary>
 	/// <summary>カメラをセットします。</summary>
 	/// </summary>
 	/// <param name="cam"></param>
 	void SetCamera(Camera* cam) { camera_ = cam; }
+	// =========================================
 
 private:
 	static ParticleManager* instance;
@@ -162,7 +183,6 @@ private:
 	~ParticleManager() = default;
 	ParticleManager(ParticleManager&) = delete;
 	ParticleManager& operator= (ParticleManager&) = delete;
-
 	DirectXCommon* dxCommon_ = nullptr;
 	SrvManager* srvManager_ = nullptr;
 	Camera* camera_ = nullptr;

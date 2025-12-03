@@ -22,30 +22,28 @@
 //=============================================================
 class MyGame : public Framework{
 public://メンバ関数
-	//初期化
-	/// <summary>初期化を行う関数。</summary>
+	/// <summary>
+	/// シーンを初期化します。
+	/// </summary>
 	void Initialize() override;
-	//終了
-	/// <summary>終了処理を行う関数。</summary>
+	/// <summary>
+	/// シーンを終了します。
+	/// </summary>
 	void Finalize() override;
-	//毎フレーム更新
-	/// <summary>毎フレーム更新を行う関数。</summary>
+	/// <summary>
+	/// 毎フレーム更新を行う関数。
+	/// </summary>
 	void Update() override;
-	//描画
-	/// <summary>毎フレーム描画を行う関数。</summary>
+	/// <summary>
+	/// 毎フレーム描画を行う関数。
+	/// </summary>
 	void Draw() override;
 
-private://メンバ変数
-
+private:
 	D3D12_VIEWPORT viewport;
 	D3D12_RECT scissorRect;
 
-private:
-	//フラグ
 	bool endRequest_ = false; // 終了フラグ
-
-	//シーン
-	//TitleScene* scene_ = nullptr;
-	std::unique_ptr<SceneManager> sceneManager_ = nullptr;
+	std::unique_ptr<SceneManager> sceneManager_ = nullptr; // シーンマネージャー
 
 };

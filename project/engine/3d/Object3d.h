@@ -110,22 +110,26 @@ class Object3d {
 
 public://メンバ関数
 
-	Object3d();
-	~Object3d();
+	Object3d(); // コンストラクタ
+	~Object3d(); // デストラクタ
 
-	/// <summary>初期化を行います。</summary>
-	/// <param name="object3dCommon">3D共通。</param>
-	/// <param name="dxCommon">DirectX共通。</param>
+	/// <summary>
+	/// 3Dオブジェクトを初期化します。
+	/// </summary>
+	/// <param name="object3dCommon"></param>
+	/// <param name="dxCommon"></param>
 	void Initialize(Object3dCommon* object3dCommon, DirectXCommon* dxCommon);
-	/// <summary>更新処理を行います。</summary>
+	/// <summary>
+	/// 3Dオブジェクトを終了します。
+	/// </summary>
 	void Update();
-	/// <summary>更新処理を行います。</summary>
+	/// <summary>
+	/// 3Dオブジェクトを描画します。
+	/// </summary>
+	/// <param name="dxCommon"></param>
 	void Draw(DirectXCommon* dxCommon);
-	/// <summary>更新処理を行います。</summary>
-	void SetModel(const std::string& filePath);
 
-public:
-	//getter
+	// Getter===================================
 	/// <summary>スケール、回転、平行移動の取得。</summary>
 	const Vector3& GetScale() const { return transform.scale; }
 	/// <summary>回転の取得。</summary>
@@ -136,24 +140,54 @@ public:
 	static int GetActiveCount() { return activeCount_; }
 	/// <summary>モデルの取得。</summary>
 	Vector4 GetColor() const { return materialData ? materialData->color : Vector4{ 1,1,1,1 }; }
-	//setter
-	/// <summary>スケール、回転、平行移動の設定。</summary>
+	// =========================================
+	// Setter===================================
+	/// <summary>
+	/// スケール、回転、平行移動の設定。
+	/// </summary>
+	/// <param name="scale"></param>
 	void SetScale(const Vector3& scale) { this->transform.scale = scale; }
-	/// <summary>回転の設定。</summary>
+	/// <summary>
+	/// 回転の設定。
+	/// </summary>
+	/// <param name="rotate"></param>
 	void SetRotate(const Vector3& rotate) { this->transform.rotate = rotate; }
-	/// <summary>平行移動の設定。</summary>
+	/// <summary>
+	/// 平行移動の設定。
+	/// </summary>
+	/// <param name="translate"></param>
 	void SetTranslate(const Vector3& translate) { this->transform.translate = translate; }
-	/// <summary>モデルの設定。</summary>
+	/// <summary>
+	/// モデルの設定。
+	/// </summary>
+	/// <param name="model"></param>
 	void SetModel(Model* model) { this->model_ = model; }
-	/// <summary>カメラの設定。</summary>
+	/// <summary>
+	/// カメラの設定。
+	/// </summary>
+	/// <param name="camera"></param>
 	void SetCamera(Camera* camera) { this->camera = camera; }
-	/// <summary>親シーンの設定。</summary>
+	/// <summary>
+	/// 親シーンの設定。
+	/// </summary>
+	/// <param name="parentScene"></param>
 	void SetParentScene(BaseScene* parentScene);
-	/// <summary>環境マップの設定。</summary>
+	/// <summary>
+	/// 環境マップの設定。
+	/// </summary>
+	/// <param name="filename"></param>
 	void SetEnvironment(const std::string& filename);
-	/// <summary>色の設定。</summary>
+	/// <summary>
+	/// 色の設定。
+	/// </summary>
+	/// <param name="color"></param>
 	void SetColor(const Vector4& color) { if (materialData) { materialData->color = color; } }
-
+	/// <summary>
+	/// デバッグ用ImGui表示。
+	/// </summary>
+	/// <param name="filePath"></param>
+	void SetModel(const std::string& filePath);
+	// =========================================
 private:
 	Object3dCommon* object3dCommon = nullptr;
 	DirectXCommon* dxCommon_;
@@ -163,15 +197,19 @@ private:
 	//Objファイルのデータ
 	ModelData modelData;
 
-	//.mtlファイル読み込み
-	/// <summary>.mtlファイルを読み込みます。</summary>
-	/// <param name="directoryPath">ディレクトリパス。</param>
-	/// /// <param name="filename">ファイル名。</param>
+	/// <summary>
+	/// マテリアルテンプレートファイルを読み込みます。
+	/// </summary>
+	/// <param name="directoryPath"></param>
+	/// <param name="filename"></param>
+	/// <returns></returns>
 	static MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
-	//.objファイル読み込み
-	/// <summary>.objファイルを読み込みます。</summary>
-	/// <param name="directoryPath">ディレクトリパス。</param>
-	/// /// <param name="filename">ファイル名。</param>
+	/// <summary>
+	/// Objファイルを読み込みます。
+	/// </summary>
+	/// <param name="directoryPath"></param>
+	/// <param name="filename"></param>
+	/// <returns></returns>
 	static ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename);
 
 	//頂点リソースを作る
@@ -219,37 +257,45 @@ private:
 	D3D12_GPU_DESCRIPTOR_HANDLE environmentSrvHandleGPU_;
 
 
-	//VertexResource関数
-	///<summary>頂点リソースを作成します。</summary>
-	///<param name="dxCommon">DirectX共通。</param>
+	/// <summary>
+	/// 頂点リソースを作成します。
+	/// </summary>
+	/// <param name="dxCommon"></param>
 	void VertexResource(DirectXCommon* dxCommon);
-	//materialResource関数
-	///<summary>マテリアルリソースを作成します。</summary>
-	///<param name="dxCommon">DirectX共通。</param>
+	/// <summary>
+	/// マテリアルリソースを作成します。
+	/// </summary>
+	/// <param name="dxCommon"></param>
 	void MaterialResource(DirectXCommon* dxCommon);
-	//wvpResource関数
-	///<summary>WVPリソースを作成します。</summary>
-	///<param name="dxCommon">DirectX共通。</param>
+	/// <summary>
+	/// WVPリソースを作成します。
+	/// </summary>
+	/// <param name="dxCommon"></param>
 	void WVPResource(DirectXCommon* dxCommon);
-	//cameraResource関数
-	///<summary>カメラリソースを作成します。</summary>
-	///<param name="dxCommon">DirectX共通。</param>
+	/// <summary>
+	/// カメラリソースを作成します。
+	/// </summary>
+	/// <param name="dxCommon"></param>
 	void CameraResource(DirectXCommon* dxCommon);
-	//Light関数
-	///<summary>ライトリソースを作成します。</summary>
-	///<param name="dxCommon">DirectX共通。</param>
+	/// <summary>
+	/// Lightリソースを作成します。
+	/// </summary>
+	/// <param name="dxCommon"></param>
 	void Light(DirectXCommon* dxCommon);
-	//PointLight関数
-	///<summary>Pointライトリソースを作成します。</summary>
-	///<param name="dxCommon">DirectX共通。</param>
+	/// <summary>
+	/// PointLightリソースを作成します。
+	/// </summary>
+	/// <param name="dxCommon"></param>
 	void PointLight(DirectXCommon* dxCommon);
-	//SpotLight関数
-	///<summary>Spotライトリソースを作成します。</summary>
-	///<param name="dxCommon">DirectX共通。</param>
+	/// <summary>
+	/// SpotLightリソースを作成します。
+	/// </summary>
+	/// <param name="dxCommon"></param>
 	void SpotLight(DirectXCommon* dxCommon);
-	//Environment関数
-	///<summary>環境マップリソースを作成します。</summary>
-	///<param name="dxCommon">DirectX共通。</param>
+	/// <summary>
+	/// 環境マップリソースを作成します。
+	/// </summary>
+	/// <param name="dxCommon"></param>
 	void Environment(DirectXCommon* dxCommon);
 
 	Transform transform;

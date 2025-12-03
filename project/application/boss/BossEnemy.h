@@ -105,19 +105,28 @@ namespace BossParam {
 class BossEnemy : public Enemy {
 public:
 
-	/// <summary>ボスを初期化します。</summary>
-	/// <param name="common">Object3d共通。</param>
-	/// <param name="dxCommon">DirectX共通。</param>
+	/// <summary>
+	/// ボスを初期化します。
+	/// </summary>
+	/// <param name="common"></param>
+	/// <param name="dxCommon"></param>
 	void Initialize(Object3dCommon* common, DirectXCommon* dxCommon);
-
-	/// <summary>ボスを更新します。</summary>
+	/// <summary>
+	/// ボスの更新を行います。
+	/// </summary>
 	void Update();
-
-	/// <summary>デバッグ用ImGui表示。</summary>
+	/// <summary>
+	/// ImGuiデバッグ表示を行います。
+	/// </summary>
 	void ImGuiDebug();
 
-	/// <summary>現在のフェーズを取得します。</summary>
+	// Getter===================================
+	/// <summary>
+	/// 現在のフェーズを取得します。
+	/// </summary>
+	/// <returns></returns>
 	int GetPhase() const { return static_cast<int>(phase_); }
+	// =========================================
 
 private:
 	// ====== 既存のフェーズ管理 ======
@@ -167,55 +176,71 @@ private:
 
 	// 内部処理
 
-	/// <summary>HPなどに応じてフェーズを切り替えます。</summary>
+	/// <summary>
+	/// フェーズの更新を行います。
+	/// </summary>
 	void UpdatePhase(); // HPでフェーズ切替
-
-	/// <summary>周回や減速到達などの移動制御を行います。</summary>
-	/// <param name="playerPos">プレイヤー位置。</param>
-	/// <param name="playerVel">推定プレイヤー速度。</param>
+	/// <summary>
+	/// 移動の更新を行います。
+	/// </summary>
+	/// <param name="playerPos"></param>
+	/// <param name="playerVel"></param>
 	void UpdateMovement(const Vector3& playerPos, const Vector3& playerVel);
-
-	/// <summary>攻撃の進行（Telegraph/Fire/Cooldown）を更新します。</summary>
-	/// <param name="dt">経過時間（秒）。</param>
-	/// <param name="playerPos">プレイヤー位置。</param>
+	/// <summary>
+	/// 攻撃の更新を行います。
+	/// </summary>
+	/// <param name="dt"></param>
+	/// <param name="playerPos"></param>
 	void UpdateAttack(float dt, const Vector3& playerPos);
-
-	// 攻撃フロー
-
-	/// <summary>攻撃開始処理。</summary>
+	/// <summary>
+	/// 攻撃開始処理。
+	/// </summary>
 	void FireBegin();
-
-	/// <summary>攻撃中フレーム処理。</summary>
-	/// <param name="dt">経過時間（秒）。</param>
-	/// <param name="playerPos">プレイヤー位置。</param>
+	/// <summary>
+	/// 攻撃継続処理。
+	/// </summary>
+	/// <param name="dt"></param>
+	/// <param name="playerPos"></param>
 	void FireTick(float dt, const Vector3& playerPos);
-
-	/// <summary>攻撃終了処理。</summary>
+	/// <summary>
+	/// 攻撃終了処理。
+	/// </summary>
 	void FireEnd();
-
-	// ユーティリティで次の攻撃を選ぶ（ここがAIの核）
-	/// <summary>ユーティリティAIで次の攻撃を選択します。</summary>
-	/// <param name="playerPos">プレイヤー位置。</param>
+	/// <summary>
+	/// 次の攻撃をユーティリティ選択で決定します。
+	/// </summary>
+	/// <param name="playerPos"></param>
 	void SelectNextAttackUtility(const Vector3& playerPos);
-
-	// 時間制御（frame基準の既存値を活かす）
-
-	/// <summary>予備動作時間（Telegraph）の秒数を返します。</summary>
+	/// <summary>
+	/// テレグラフ時間（Telegraph）の秒数を返します。
+	/// </summary>
+	/// <returns></returns>
 	float TelegraphTime() const;
-
-	/// <summary>発射時間（Fire）の秒数を返します。</summary>
+	/// <summary>
+	/// 発射時間（Fire）の秒数を返します。
+	/// </summary>
+	/// <returns></returns>
 	float FireTime() const;
-
-	/// <summary>クールダウン時間（Cooldown）の秒数を返します。</summary>
+	/// <summary>
+	/// クールダウン時間（Cooldown）の秒数を返します。
+	/// </summary>
+	/// <returns></returns>
 	float CooldownTime() const;
-
-	/// <summary>各攻撃のクールダウンを進めます。</summary>
+	/// <summary>
+	/// 各攻撃のクールダウンを進めます。
+	/// </summary>
 	void  TickCooldowns();            // CDを進める
-
-	/// <summary>プレイヤーの先読み位置を返します。</summary>
+	/// <summary>
+	/// プレイヤーの先読み位置を返します。
+	/// </summary>
+	/// <param name="playerPos"></param>
+	/// <returns></returns>
 	Vector3 PredictPlayer(const Vector3& playerPos) const; // 先読み
-
-	/// <summary>攻撃タイプに応じたフェーズバイアスを返します。</summary>
+	/// <summary>
+	/// 指定した攻撃タイプのフェーズバイアスを返します。
+	/// </summary>
+	/// <param name="at"></param>
+	/// <returns></returns>
 	float PhaseBiasFor(AttackType at) const;
 
 	// 演出
@@ -252,10 +277,15 @@ private:
 	std::array<int, kHist> history_{};
 	int histIndex_ = 0;
 
-	/// <summary>攻撃名を返します。</summary>
-	/// <param name="at">攻撃タイプ。</param>
+	/// <summary>
+	/// 攻撃タイプ名を取得します。
+	/// </summary>
+	/// <param name="at"></param>
+	/// <returns></returns>
 	const char* AttackName(AttackType at) const;
-	/// <summary>攻撃履歴に追加します。</summary>
-	/// <param name="at">攻撃タイプ。</param>
+	/// <summary>
+	/// 攻撃履歴に記録します。
+	/// </summary>
+	/// <param name="at"></param>
 	void PushHistory(AttackType at);
 };
