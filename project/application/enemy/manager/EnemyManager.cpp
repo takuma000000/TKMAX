@@ -28,31 +28,54 @@ void EnemyManager::Update(float dt) {
 	/// ● 敵の状態を更新し、死亡したものは削除＆カウント
 	/// ───────────────────────────────────────────────
 	for (auto it = enemies_->begin(); it != enemies_->end(); ) {
-		Enemy* e = it->get(); // erase 前に生存中の生ポインタを保持
+		Enemy* e = it->get();
 		e->Update();
 
 		if (e->IsDead()) {
-			// 死亡していたら
-			if (player_) {
-				player_->OnEnemyDestroyed(e); // プレイヤーに通知
-			}
 
-			if (defeatedEnemyCount_) {
-				++(*defeatedEnemyCount_);      // 倒した数をカウント
-				if (*defeatedEnemyCount_ == 3 && player_) {
-					player_->EnableSpecialAttack();
+			// ちゃんと倒した敵だけ、プレイヤーやカウンタに通知する
+			if (e->GetDefeated()) {
+
+				if (player_) {
+					player_->OnEnemyDestroyed(e);
+				}
+
+				if (defeatedEnemyCount_) {
+					++(*defeatedEnemyCount_);
+
+					// 3体倒したら特殊攻撃解禁（既存仕様はそのまま）
+					if (*defeatedEnemyCount_ == 3 && player_) {
+						player_->EnableSpecialAttack();
+					}
 				}
 			}
 
-			it = enemies_->erase(it);          // erase でイテレータが無効化されるので注意
+			// 逃げた敵（HasEscaped()==true）はここで静かに消えるだけ
+			it = enemies_->erase(it);
 		} else {
 			++it;
 		}
 	}
 
-	// 「敵が全滅」かつ「まだ最後のWaveじゃない」なら次のWaveへ
-	if (enemies_->empty() && wavePhase_ != WavePhase::Done) {
-		GoToNextWave(); // Wave 進行
+	// ───────────────────────────────────────────────
+	// ● Wave進行
+	// ───────────────────────────────────────────────
+	if (wavePhase_ == WavePhase::W1) {
+		// Wave1: 「5体倒すまで無限湧き」
+
+		// 5体倒したら次のWaveへ
+		if (defeatedEnemyCount_ && *defeatedEnemyCount_ >= wave1DefeatTarget_) {
+			GoToNextWave();
+			return; // このフレームはここまで
+		}
+
+		// Wave1 用のスポーン制御
+		UpdateWave1(dt);
+	} else {
+		// それ以外のWaveは「全滅したら次へ」の従来仕様
+		if (enemies_->empty() && wavePhase_ != WavePhase::Done) {
+			GoToNextWave();
+		}
 	}
 }
 
@@ -95,14 +118,18 @@ void EnemyManager::InitializeWaves() {
 	enemies_->clear();
 
 	if (defeatedEnemyCount_) {
-		*defeatedEnemyCount_ = 0;   // ついでに進捗をリセット
+		*defeatedEnemyCount_ = 0;
 	}
 	if (maxEnemyCount_) {
-		*maxEnemyCount_ = 0;        // 全Wave合計で加算していく
+		// Wave1 の目標撃破数をセット（ゲージ用）
+		*maxEnemyCount_ = wave1DefeatTarget_;
 	}
 
-	wavePhase_ = WavePhase::W1; // Wave1から
-	SpawnCurrentWave();         // 最初のWaveだけ出す（ここでmaxEnemyCount_も加算）
+	wavePhase_ = WavePhase::W1;
+
+	// Wave1用のタイマー初期化 ＆ 最初の1体だけ出しておく
+	wave1SpawnTimer_ = 0.0f;
+	SpawnWave1Enemy();
 
 	// 最初のロックオン対象
 	if (!enemies_->empty()) {
@@ -126,32 +153,12 @@ void EnemyManager::SpawnCurrentWave() {
 
 	switch (wavePhase_) {
 	case WavePhase::W1: {
-		// W1: 直進停止（密度で圧）＋HP控えめ
-		EnemySpawner::SpawnLine(
-			*enemies_,                   // ★ ポインタではなく参照にして渡す
-			5,                           // count
-			/*y*/ 5.0f,
-			/*z*/ 60.0f,
-			-20.0f,                      // xStart
-			10.0f,                       // xStep
-			dxPtr,
-			camPtr,
-			parentPtr,
-			[&](Enemy& e) {
-				e.SetBehavior(EnemyBehavior::StraightStop);
-				e.SetVelocity({ 0,0,-0.25f });
-				e.SetStopZ(60.0f);
-				e.SetHP(2);
-				e.SetScale({ 1.1f,1.1f,1.1f });
-
-				if (player_) { // レティクルをセット
-					e.SetReticle(player_->GetReticle());
-				}
-			}
-		);
+		// タイマー初期化と最初の1体スポーンだけを行う。
+		wave1SpawnTimer_ = 0.0f;
 		if (maxEnemyCount_) {
-			*maxEnemyCount_ += 5;
+			*maxEnemyCount_ = wave1DefeatTarget_; // ゲージ用にリセット
 		}
+		SpawnWave1Enemy(); // 最初の1体だけ出す
 		break;
 	}
 	case WavePhase::W2: {
@@ -277,6 +284,88 @@ void EnemyManager::SkipToBossWave() {
 
 	// Wave を Done（＝ボスフェーズ）にする
 	wavePhase_ = WavePhase::Done;
+}
+
+void EnemyManager::UpdateWave1(float dt) {
+	if (!enemies_ || !dx_ || !cam_ || !parent_) {
+		return;
+	}
+
+	// 現在生存している敵の数（死亡演出中も含めるかどうかは好みだが、ここでは「まだ画面に居るやつ」を数える）
+	int aliveCount = 0;
+	for (auto& e : *enemies_) {
+		if (!e->IsDead()) {
+			++aliveCount;
+		}
+	}
+
+	// 同時出現数が上限ならスポーンしない
+	if (aliveCount >= wave1MaxSimultaneous_) {
+		return;
+	}
+
+	// タイマーを進めて、一定間隔で敵を出す
+	wave1SpawnTimer_ += dt;
+	if (wave1SpawnTimer_ >= wave1SpawnInterval_) {
+		wave1SpawnTimer_ = 0.0f;
+		SpawnWave1Enemy();
+	}
+}
+
+void EnemyManager::SpawnWave1Enemy() {
+	if (!enemies_ || !dx_ || !cam_ || !parent_) {
+		return;
+	}
+
+	DirectXCommon* dxPtr = dx_;
+	Camera* camPtr = cam_;
+	BaseScene* parentPtr = parent_;
+
+	// 出現位置（Xはちょっとランダム、Zは奥から）
+	float y = 5.0f;
+	float z = 100.0f;
+	float xRange = 20.0f;
+	float rx = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX); // 0〜1
+	float x = -xRange + rx * (xRange * 2.0f); // -xRange〜+xRange
+
+	EnemySpawner::SpawnLine(
+		*enemies_,
+		1,          // 1体だけ
+		y,
+		z,
+		x,
+		0.0f,       // xStep は未使用（1体なので）
+		dxPtr,
+		camPtr,
+		parentPtr,
+		[&](Enemy& e) {
+
+			e.SetBehavior(EnemyBehavior::PounceFromAbove);
+
+			Vector3 start = { x, 20.0f, z }; // 高い位置から降ってくる
+			Vector3 playerPos = player_->GetPosition(); // プレイヤー位置取得
+			// プレイヤーの少し手前に着地するようにターゲット設定
+			Vector3 target = { playerPos.x,
+							   playerPos.y,
+							   playerPos.z + 3.0f };
+			// 曲線の頂点（アペックス）を計算
+			Vector3 apex = {
+				(start.x + target.x) * 0.5f,
+				30.0f,   // 曲線の頂点の高さ
+				(start.z + target.z) * 0.5f
+			};
+
+			e.SetPosition(start); // 開始位置にセット
+			e.SetPounceParameters(start, apex, target, 1.6f); // 1.6秒で移動
+			e.SetHP(1); // Wave1敵のHP設定
+			e.SetScale({ 1.0f,1.0f,1.0f }); // スケールリセット
+
+			if (player_) {
+				e.SetReticle(player_->GetReticle());
+				e.SetPlayer([this]() { return player_->GetPosition(); }); // プレイヤー位置参照セット
+			}
+		}
+	);
 }
 
 void EnemyManager::Draw(DirectXCommon* dx) {

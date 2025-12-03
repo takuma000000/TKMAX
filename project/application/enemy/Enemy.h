@@ -16,10 +16,11 @@
 // 通常敵の挙動と当たり判定を管理するクラス。
 //=============================================================
 enum class EnemyBehavior {
-	StraightStop,   // いまの「Z手前に進んでstopZで止まる」
-	SineX,          // Xをサイン波で揺らしながら前進
-	StrafeLtoR,     // Xを左右往復（矩形波）しながら前進
-	ChasePlayer,    // プレイヤー方向にじわっと追尾
+	StraightStop,    // いまの「Z手前に進んでstopZで止まる」
+	SineX,           // Xをサイン波で揺らしながら前進
+	StrafeLtoR,      // Xを左右往復（矩形波）しながら前進
+	ChasePlayer,     // プレイヤー方向にじわっと追尾
+	PounceFromAbove, // 上空から急降下してくる
 };
 
 // 死亡リアクションパターン
@@ -70,6 +71,16 @@ public:
 	const std::function<Vector3()>& GetPlayer() const { return playerGetter_; }
 	/// <summary>親シーンを取得します。</summary>
 	BaseScene* GetParentScene() const { return parentScene_; }
+	/// <summary>
+	/// 敵が撃破されたかどうかを取得します。
+	/// </summary>
+	/// <returns></returns>
+	bool GetDefeated() const { return defeated_; }
+	/// <summary>
+	/// 敵が逃走したかどうかを取得します。
+	/// </summary>
+	/// <returns></returns>
+	bool GetEscaped()  const { return escaped_; }
 	// =========================================
 	// Setter===================================
 	/// <summary>HPを設定します（最大HPも更新）。</summary>
@@ -121,6 +132,22 @@ public:
 	/// </summary>
 	/// <param name="r"></param>
 	void SetReticle(class Reticle* r) { reticle_ = r; }
+	/// <summary>
+	/// 飛び掛かり用のパラメータを設定します。
+	/// </summary>
+	/// <param name="start"></param>
+	/// <param name="apex"></param>
+	/// <param name="target"></param>
+	/// <param name="duration"></param>
+	void SetPounceParameters(const Vector3& start, const Vector3& apex, const Vector3& target, float duration = 1.6f) {
+		pounceStart_ = start; // 開始位置
+		pounceApex_ = apex; // 山の頂点
+		pounceTarget_ = target; // 目標位置
+		pounceDuration_ = duration; // 持続時間
+		pounceTime_ = 0.0f; // 経過時間リセット
+		pounceStarted_ = true; // フラグセット
+		pounceDiving_ = false; // 急降下フェーズ前
+	}
 	// =========================================
 
 private:
@@ -180,4 +207,19 @@ private:
 
 	// どのリアクションか
 	EnemyDeathReaction deathReaction_ = EnemyDeathReaction::BlowAway;
+
+	// 敵がどんな消え方をしたか
+	bool defeated_ = false; // ちゃんと倒された
+	bool escaped_ = false; // プレイヤーを通り過ぎて逃げた
+
+	// 飛び掛かり用
+	float pounceTime_ = 0.0f;         // 経過時間
+	float pounceDuration_ = 1.6f;     // 落下までの時間
+	Vector3 pounceStart_;             // 開始位置
+	Vector3 pounceApex_;              // 山の頂点
+	Vector3 pounceTarget_;            // 落下目標（プレイヤー付近）
+	bool   pounceStarted_ = false; // 飛び掛かり動作が開始されたかどうか
+	bool   pounceDiving_ = false; // 急降下フェーズに入ったかどうか
+
+	const float dt = 1.0f / 60.0f; // 固定フレームレート想定
 };

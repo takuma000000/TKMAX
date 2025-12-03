@@ -143,4 +143,20 @@ private:
 
 	// Wave 状態は EnemyManager が持つようにする
 	WavePhase wavePhase_ = WavePhase::W1;
+
+	// ───────── Wave1 用パラメータ ─────────
+	float wave1SpawnTimer_ = 0.0f; // 次の出現までのタイマー
+	float wave1SpawnInterval_ = 1.5f; // 出現間隔（秒相当）
+	int   wave1MaxSimultaneous_ = 2;    // 同時に存在してよい敵の数
+	int   wave1DefeatTarget_ = 5;    // このWaveで「倒すべき敵の数」
+
+	/// <summary>
+	/// Wave1の更新
+	/// </summary>
+	/// <param name="dt"></param>
+	void UpdateWave1(float dt);
+	/// <summary>
+	/// Wave1の敵を1体スポーンします
+	/// </summary>
+	void SpawnWave1Enemy();     // Wave1敵1体スポーン
 };

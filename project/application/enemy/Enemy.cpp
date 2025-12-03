@@ -24,7 +24,6 @@ void Enemy::Update() {
 
 	// 死亡演出中ならこっちを優先
 	if (isDying_) {
-		const float dt = 1.0f / 60.0f;
 		deathTimer_ += dt;
 		float t = std::min(deathTimer_ / deathDuration_, 1.0f); // 0.0 → 1.0
 		// 基本値を取得
@@ -162,9 +161,74 @@ void Enemy::Update() {
 		if (pos.z <= stopZ_) { pos.z = stopZ_; }
 		break;
 	}
+	case EnemyBehavior::PounceFromAbove:
+	{
+		const float dt = 1.0f / 60.0f; // 必要なら外のdtを使ってもOK
+
+		if (!pounceStarted_) {
+			break;
+		}
+
+		// まだ落下中（曲線で近づいている）フェーズ
+		if (!pounceDiving_) {
+
+			pounceTime_ += dt;
+			float t = pounceTime_ / pounceDuration_;
+			if (t > 1.0f) t = 1.0f;
+
+			// 0→1 を少しなめらかに
+			auto EaseOutQuad = [](float x) {
+				return 1.0f - (1.0f - x) * (1.0f - x);
+				};
+			float u = EaseOutQuad(t);
+
+			// スタート→頂点→ターゲット を通るカーブ
+			Vector3 pos1 = MyMath::Vector3Lerp(pounceStart_, pounceApex_, u);
+			Vector3 pos2 = MyMath::Vector3Lerp(pounceApex_, pounceTarget_, u);
+			Vector3 newPos = MyMath::Vector3Lerp(pos1, pos2, u);
+
+			pos = newPos; // Enemy::Update 内の pos を更新
+
+			// 落下フェーズが終わったら「通過フェーズ」に切り替え
+			if (t >= 1.0f) {
+
+				// ★ ここでは「これまでの軌道の延長線上」に進ませる
+				//    スタート→ターゲット方向を基準にして、そのまま突き抜ける
+				Vector3 dir = pounceTarget_ - pounceStart_;
+				float len = MyMath::Length(dir);
+				if (len > 0.001f) {
+					dir = MyMath::Normalize(dir);
+				} else {
+					// 万が一同一点だった場合の保険方向
+					dir = { 0.0f, -0.1f, -1.0f };
+				}
+
+				// 少し下向き成分を足して「落ちていく」感じを出す
+				dir.y -= 0.2f;
+				dir = MyMath::Normalize(dir);
+
+				float diveSpeed = 0.7f; // 落下後の突っ切り速度（好みで調整）
+				velocity_ = dir * diveSpeed;
+
+				pounceDiving_ = true; // 通過フェーズへ
+			}
+		} else {
+			// 通過フェーズ：そのまま直線移動（もうプレイヤー方向に曲がらない）
+			pos += velocity_;
+		}
+		break;
+	}
 	}
 
 	object_->SetTranslate(pos); // 位置反映
+
+	// ── プレイヤーを通り過ぎて画面外まで来たら「逃げた」として処理 ──
+	if (!isDying_) {
+		if (pos.z < -30.0f) { // しきい値は必要に応じて調整
+			escaped_ = true;  // 逃亡フラグ
+			isDead_ = true;  // Manager 側で erase してもらう
+		}
+	}
 
 	// ---- 当たり判定の可視化（ワイヤーボックス）----
 	{
@@ -289,7 +353,7 @@ void Enemy::ImGuiDebug() {
 #endif
 }
 
-void Enemy::OnHitWithDamage(int damage){
+void Enemy::OnHitWithDamage(int damage) {
 	hp_ -= damage; // 指定ダメージ分減らす
 	if (hp_ < 0) {
 		hp_ = 0;
@@ -301,7 +365,9 @@ void Enemy::StartDeathReaction(const Vector3& hitDir) {
 		return;
 	}
 
-	isDying_ = true;
+	defeated_ = true; // 敵撃破フラグをtrueに
+
+	isDying_ = true; // 死亡演出中フラグを立てるtrueに
 	deathTimer_ = 0.0f;
 	deathAlpha_ = 1.0f;
 
