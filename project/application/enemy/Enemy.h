@@ -53,6 +53,25 @@ public:
 	/// <summary>敵の死亡リアクションを開始します。</summary>
 	void StartDeathReaction(const Vector3& hitDir);
 
+	// Getter===================================
+	/// <summary>当たり判定用スケールを取得します。</summary>
+	Vector3 GetColliderScale() const { return colliderScale_; }
+	/// <summary>当たり判定用スケールを取得します。</summary>
+	Vector3 GetWorldPosition() const;
+	/// <summary>当たり判定用スケールを取得します。</summary>
+	Vector3 GetScale() const {
+		return object_ ? object_->GetScale() : Vector3{ 1.0f, 1.0f, 1.0f };
+	}
+	/// <summary>当たり判定用スケールを取得します。</summary>
+	int GetHP() const { return hp_; }
+	/// <summary>当たり判定用スケールを取得します。</summary>
+	int GetMaxHP() const { return maxHP_; }
+	/// <summary>当たり判定用スケールを取得します。</summary>
+	const std::function<Vector3()>& GetPlayer() const { return playerGetter_; }
+	/// <summary>親シーンを取得します。</summary>
+	BaseScene* GetParentScene() const { return parentScene_; }
+	// =========================================
+	// Setter===================================
 	/// <summary>HPを設定します（最大HPも更新）。</summary>
 	void SetHP(int hp) {
 		hp_ = hp;
@@ -76,23 +95,7 @@ public:
 	/// <summary>ワールド位置を設定します。</summary>
 	void SetLocked(bool v) { isLocked_ = v; if (!v) pulseT_ = 0.0f; }
 	/// <summary>当たり判定用スケールを取得します。</summary>
-	Vector3 GetColliderScale() const { return colliderScale_; }
-	/// <summary>当たり判定用スケールを取得します。</summary>
 	void SetColliderScale(const Vector3& s) { colliderScale_ = s; }
-	/// <summary>当たり判定用スケールを取得します。</summary>
-	Vector3 GetWorldPosition() const;
-	/// <summary>当たり判定用スケールを取得します。</summary>
-	Vector3 GetScale() const {
-		return object_ ? object_->GetScale() : Vector3{ 1.0f, 1.0f, 1.0f };
-	}
-	/// <summary>当たり判定用スケールを取得します。</summary>
-	const std::function<Vector3()>& GetPlayer() const { return playerGetter_; }
-	/// <summary>当たり判定用スケールを取得します。</summary>
-	int GetHP() const { return hp_; }
-	/// <summary>当たり判定用スケールを取得します。</summary>
-	int GetMaxHP() const { return maxHP_; }
-
-	// --- 設定系を追加 ---
 	/// <summary>挙動タイプを設定します。</summary>
 	void SetBehavior(EnemyBehavior b) { behavior_ = b; }
 	/// <summary>速度を設定します。</summary>
@@ -113,13 +116,12 @@ public:
 	void SetPlayer(std::function<Vector3()> getter) { playerGetter_ = std::move(getter); }
 	/// <summary>SineX用の位相を設定します。</summary>
 	void SetSinePhase(float rad) { sinePhase_ = rad; }
-	/// <summary>親シーンを取得します。</summary>
-	BaseScene* GetParentScene() const { return parentScene_; }
 	/// <summary>
 	/// レティクルを設定します。
 	/// </summary>
 	/// <param name="r"></param>
 	void SetReticle(class Reticle* r) { reticle_ = r; }
+	// =========================================
 
 private:
 	std::unique_ptr<Object3d> object_;

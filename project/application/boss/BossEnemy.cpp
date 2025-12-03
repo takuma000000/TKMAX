@@ -202,7 +202,6 @@ void BossEnemy::UpdatePhase() {
 // 1) 移動：P1は一度プレイヤー前に寄ってから静止
 //    P2はゆるい円運動、P3は左右往復
 // ─────────────────────────────────────────────
-// BossEnemy.cpp
 void BossEnemy::UpdateMovement(const Vector3& playerPos, const Vector3& /*playerVel*/) {
 	// =========================
 	// P1: 一度だけ前方アンカーを確定 → ゆっくり寄る → 到達後は完全停止（追従なし）
@@ -316,7 +315,6 @@ void BossEnemy::UpdateMovement(const Vector3& playerPos, const Vector3& /*player
 		SetPosition(pos);
 		return;
 	}
-
 }
 
 void BossEnemy::UpdateAttack(float dt, const Vector3& playerPos) {
@@ -410,14 +408,12 @@ void BossEnemy::SelectNextAttackUtility(const Vector3& playerPos) {
 		biasBeam +     // フェーズバイアス
 		jitter -     // ゆらぎ
 		penBeamCD - penBeamCh;        // ペナルティ
-
 	const float sFan =
 		wDistFan_ * fitFan + // 距離適性
 		wAlignFan_ * align01 + // 正対
 		biasFan + // フェーズバイアス
 		jitter - // ゆらぎ
 		penFanCD - penFanCh; // ペナルティ
-
 	const float sRapid =
 		wDistRapid_ * fitRapid + // 距離適性
 		wAlignRapid_ * align01 + // 正対

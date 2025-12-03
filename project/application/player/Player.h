@@ -39,7 +39,6 @@ public:
 	void RemoveEnemyIfDead();
 	/// <summary>一撃必殺を使用可能にします。</summary>
 	void EnableSpecialAttack() { canUseSpecial_ = true; } // 一撃必殺を使用可能にする
-
 	/// <summary>敵が破壊されたときの処理。</summary>
 	void OnEnemyDestroyed(Enemy* e) {
 		if (enemy_ == e) {
@@ -52,40 +51,42 @@ public:
 			}
 		}
 	}
-
 	/// <summary>プレイヤーが撃墜されているかどうかを取得します。</summary>
 	bool IsDead() const { return isDead_; }
-
 	/// <summary>ダメージを与えます。</summary>
 	/// <param name="value">ダメージ値。</param>
 	void Damage(int value) {
 		hp_ -= value;
 		if (hp_ < 0) hp_ = 0;
 	}
-
 	/// <summary>撃墜関数</summary>
 	void Death();
-
 	/// <summary>
 	/// 入力などのゲームプレイ処理を行わず、
 	/// 見た目用に行列だけ更新したいとき（クリア演出用）
 	/// </summary>
 	void UpdateVisualOnly();
 
-	/// <summary>弾のリストを取得します。</summary>
+	// Getter===================================
+	/// <summary>
+	/// プレイヤーの弾リストを取得します。
+	/// </summary>
+	/// <returns></returns>
 	const std::list<std::unique_ptr<PlayerBullet>>& GetBullets() const {
 		return bullets_;
 	}
-
-	/// <summary>プレイヤーの位置を取得します。</summary>
+	/// <summary>
+	/// プレイヤーの位置を取得します。
+	/// </summary>
+	/// <returns></returns>
 	Vector3 GetPosition() const {
 		return object_ ? object_->GetTranslate() : Vector3();
 	}
-
-	/// <summary>プレイヤーのHPを取得します。</summary>
-	/// <returns>HP値。</returns>
+	/// <summary>
+	/// プレイヤーのHPを取得します。
+	/// </summary>
+	/// <returns></returns>
 	int GetHP() const { return hp_; }
-
 	/// <summary>
 	/// レティクルを取得します。
 	/// </summary>
@@ -93,46 +94,76 @@ public:
 	Reticle* GetReticle() const {
 		return reticle_.get();
 	}
-
-	/// <summary>プレイヤーの回転を取得します。</summary>
+	/// <summary>
+	/// プレイヤーの回転を取得します。
+	/// </summary>
+	/// <returns></returns>
 	const Vector3& GetRotation() const { return object_->GetRotate(); }
-
-	/// <summary>プレイヤーの回転を設定します。</summary>
-	/// <param name="r">回転値。</param>
+	/// <summary>
+	/// プレイヤーの回転を設定します。
+	/// </summary>
+	/// <param name="r"></param>
 	void SetRotation(const Vector3& r) { object_->SetRotate(r); }
-
-	/// <summary>ジェット噴射の有効/無効を設定します。</summary>
-	/// <param name="enable">有効にする場合はtrue、無効にする場合はfalse。</param>
+	// =========================================
+	// Setter===================================
+	/// <summary>
+	/// ジェットスモークの有効/無効を設定します。
+	/// </summary>
+	/// <param name="enable"></param>
 	void SetEnableJetSmoke(bool enable) { enableJetSmoke_ = enable; }
-
-	/// <summary>プレイヤーのHPを設定します。</summary>
-	/// <param name="hp">HP値。</param>
+	/// <summary>
+	/// プレイヤーのHPを設定します。
+	/// </summary>
+	/// <param name="hp"></param>
 	void SetHP(int hp) { hp_ = hp; }
-
-	/// <summary>カメラを設定します。</summary>
+	/// <summary>
+	/// カメラを設定します。
+	/// </summary>
+	/// <param name="camera"></param>
 	void SetCamera(Camera* camera) 
 	{
 		this->camera = camera;
 		if (object_) { object_->SetCamera(camera); }
 		if (reticle_) { reticle_->SetCamera(camera); }
 	}
-	/// <summary>プレイヤーの位置を設定します。</summary>
+	/// <summary>
+	/// プレイヤーの位置を設定します。
+	/// </summary>
+	/// <param name="pos"></param>
 	void SetPosition(const Vector3& pos);
-	/// <summary>親シーンを設定します。</summary>
+	/// <summary>
+	/// 親シーンを設定します。
+	/// </summary>
+	/// <param name="parentScene"></param>
 	void SetParentScene(BaseScene* parentScene);
-	/// <summary>敵を設定します。</summary>
+	/// <summary>
+	/// ターゲット敵を設定します。
+	/// </summary>
+	/// <param name="enemy"></param>
 	void SetEnemy(Enemy* enemy) { enemy_ = enemy; }
-	/// <summary>全敵リストを設定します。</summary>
+	/// <summary>
+	/// 全敵リストを設定します。
+	/// </summary>
+	/// <param name="enemies"></param>
 	void SetAllEnemies(std::vector<std::unique_ptr<Enemy>>* enemies) {
 		allEnemies_ = enemies;
 	}
-	/// <summary>カメラシェイクを開始します。</summary>
+	/// <summary>
+	/// カメラシェイクを開始します。
+	/// </summary>
+	/// <param name="frameCount"></param>
 	void StartCameraShake(int frameCount);
-	/// <summary>プレイヤー操作を有効/無効にします。</summary>
+	/// <summary>
+	/// プレイヤーの操作有効/無効を切り替えます。
+	/// </summary>
+	/// <param name="enabled"></param>
 	void SetControlEnabled(bool enabled) { controlEnabled_ = enabled; }
-	/// <summary>レティクルの表示/非表示を切り替えます。</summary>
+	/// <summary>
+	/// レティクルの表示/非表示を切り替えます。
+	/// </summary>
+	/// <param name="visible"></param>
 	void SetReticleVisible(bool visible) { reticleVisible_ = visible; }
-
+	// =========================================
 	enum class DeathPhase { None, FaultSparks, FlyAway }; // 撃墜演出フェーズ
 
 private:

@@ -224,6 +224,8 @@ public:
 		getPos_ = std::move(getWorldPos);
 		getYaw_ = std::move(getYawRad);
 	}
+
+	// Setter========================================
 	/// <summary>
 	/// カメラ設定
 	/// </summary>
@@ -234,7 +236,8 @@ public:
 			if (L.obj) L.obj->SetCamera(cam_);
 		}
 	}
-	
+	// ==============================================
+	// Getter========================================
 	/// <summary>
 	/// 最後に更新された狙い方向ベクトルを取得
 	/// </summary>
@@ -246,7 +249,6 @@ public:
 		// まだ一度もUpdateされてないなどの場合の保険
 		return Vector3{ 0.0f, 0.0f, 1.0f };
 	}
-
 	/// <summary>
 	/// 最後に更新された狙いの起点座標を取得（キャッシュ版）
 	/// </summary>
@@ -254,6 +256,7 @@ public:
 	Vector3 GetCenterWorldPos() const {
 		return center_;
 	}
+	// ==============================================
 
 #ifdef USE_IMGUI
 	void ImGuiDebug() {

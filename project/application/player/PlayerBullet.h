@@ -35,41 +35,73 @@ public:
 
 	/// <summary>弾が当たったときの処理。</summary>
 	bool IsDead() const { return isDead_; }
-
-	// setter
 	/// <summary>発射の「出方」曲線を開始します。</summary>
 	void StartSpawnBezier(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float duration, const Vector3& velocityAfter);
-	/// <summary>弾が当たったときの処理。</summary>
+
+	// Setter===================================
+	/// <summary>
+	/// プレイヤーの位置を設定します。
+	/// </summary>
+	/// <param name="pos"></param>
 	void SetPosition(const Vector3& pos);
-	/// <summary>弾の速度を設定します。</summary>
+	/// <summary>
+	/// 弾の速度を設定します。
+	/// </summary>
+	/// <param name="vel"></param>
 	void SetVelocity(const Vector3& vel);
-	/// <summary>弾が当たったときの処理。</summary>
+	/// <summary>
+	/// カメラを設定します。
+	/// </summary>
+	/// <param name="camera"></param>
 	void SetCamera(Camera* camera) {
 		if (object_) {
 			object_->SetCamera(camera);
 		}
 	}
-	/// <summary>弾の軌跡パーティクルのグループを設定します。</summary>
+	/// <summary>
+	/// 弾のスケールを設定します。
+	/// </summary>
+	/// <param name="group"></param>
 	void SetTrailGroup(const std::string& group) {
 		trailGroup_ = group;
 		// 位置は現在地で再初期化（生成直後や途中でもOK）
 		Vector3 pos = object_ ? object_->GetTranslate() : Vector3{};
 		trailEmitter_.Initialize(trailGroup_, pos);
 	}
-	/// <summary>弾が当たったときの処理。</summary>
+	/// <summary>
+	/// 弾が当たったときの処理。
+	/// </summary>
+	/// <param name="enemy"></param>
 	void SetEnemy(Enemy* enemy) { enemy_ = enemy; }
-	/// <summary>弾が当たったときの処理。</summary>
+	/// <summary>
+	/// プレイヤーを設定します。
+	/// </summary>
+	/// <param name="player"></param>
 	void SetPlayer(Player* player) { player_ = player; }
-	/// <summary>弾が当たったときの処理。</summary>
+	/// <summary>
+	/// 一撃必殺フラグ設定。
+	/// </summary>
+	/// <param name="flag"></param>
 	void SetSpecialAttack(bool flag) { isSpecialAttack_ = flag; }
-	/// <summary>ホーミング設定。</summary>
+	/// <summary>
+	/// ホーミング設定。
+	/// </summary>
+	/// <param name="enable"></param>
+	/// <param name="speed"></param>
 	void SetHoming(bool enable, float speed) { isHoming_ = enable; homingSpeed_ = speed; }
-	/// <summary>ホーミング遅延時間設定。</summary>
+	/// <summary>
+	/// ホーミング遅延時間設定。
+	/// </summary>
+	/// <param name="sec"></param>
 	void  SetHomingDelay(float sec) { homingDelay_ = std::max(0.0f, sec); }
-
-	// getter
-	/// <summary>弾が当たったときの処理。</summary>
+	// =========================================
+	// Getter===================================
+	/// <summary>
+	/// 弾が追従している敵を取得します。
+	/// </summary>
+	/// <returns></returns>
 	Enemy* GetEnemy() const { return enemy_; }
+	// =========================================
 
 private:
 	Player* player_ = nullptr;
