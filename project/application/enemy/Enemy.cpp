@@ -168,6 +168,9 @@ void Enemy::Update() {
 			break;
 		}
 
+		// 軌道エフェクト用
+		ParticleManager* pm = ParticleManager::GetInstance();
+
 		// まだ落下中（曲線で近づいている）フェーズ
 		if (!pounceDiving_) {
 
@@ -187,6 +190,15 @@ void Enemy::Update() {
 			Vector3 newPos = MyMath::Vector3Lerp(pos1, pos2, u);
 
 			pos = newPos; // Enemy::Update 内の pos を更新
+
+			// ★ このフレームの軌道位置に「レール＋スパーク」を出す
+			{
+				Vector3 emitPos = pos;
+				// コアレール（軌道の筋）
+				pm->Emit("enemyPounceTrail", emitPos, 2);   // 本数は好みで調整
+				// スパーク（軌道から飛び散る光）
+				pm->Emit("enemyPounceSpark", emitPos, 3);
+			}
 
 			// 落下フェーズが終わったら「通過フェーズ」に切り替え
 			if (t >= 1.0f) {
@@ -214,6 +226,11 @@ void Enemy::Update() {
 		} else {
 			// 通過フェーズ：そのまま直線移動（もうプレイヤー方向に曲がらない）
 			pos += velocity_;
+
+			// ★ ダイブ中も軌道を残す（本数は落としてもOK）
+			Vector3 emitPos = pos;
+			pm->Emit("enemyPounceTrail", emitPos, 2);
+			pm->Emit("enemyPounceSpark", emitPos, 2);
 		}
 		break;
 	}

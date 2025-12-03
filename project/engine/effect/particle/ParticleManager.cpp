@@ -1263,6 +1263,116 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 			frand(0.80f, 0.95f)
 		};
 		p.color = { col3.x, col3.y, col3.z, 1.0f };
+	} else if (groupName == "enemyPounceTrail") {
+		// ─────────────────────────────
+		// 敵の飛び掛かり軌道：コアレール（闇マゼンタ一本軸）
+		// ─────────────────────────────
+		p.transform.translate = center;
+
+		float height = std::uniform_real_distribution<float>(1.6f, 2.4f)(rng); // 縦の長さ
+		float width = std::uniform_real_distribution<float>(0.08f, 0.14f)(rng); // 横の太さ
+		// スプライトの縦横を入れ替える
+		p.transform.scale = { width, height, 1.0f };
+
+		p.velocity = { 0.0f, 0.0f, 0.0f };
+		p.lifeTime = std::uniform_real_distribution<float>(0.55f, 0.9f)(rng);
+		p.currentTime = 0.0f;
+
+		// ── ベースカラー：闇マゼンタ ──
+		// あえて 1色＋ほんの少しだけバリエーションに絞る
+		Vector3 base = { 0.70f, 0.05f, 0.85f }; // 赤強めの紫
+
+		// 彩度・明るさを微妙に揺らす（全部ランダムにしない）
+		float valueJitter = std::uniform_real_distribution<float>(0.75f, 0.95f)(rng);
+		float hueJitter = std::uniform_real_distribution<float>(-0.05f, 0.05f)(rng);
+
+		Vector3 col = {
+			std::clamp(base.x + hueJitter, 0.0f, 1.0f),
+			base.y,
+			std::clamp(base.z - hueJitter, 0.0f, 1.0f)
+		};
+
+		// 全体を少し暗くして「白・黄」に寄らないように
+		col.x *= valueJitter;
+		col.y *= valueJitter;
+		col.z *= valueJitter;
+
+		float alpha = std::uniform_real_distribution<float>(0.85f, 1.0f)(rng);
+
+		p.color = { col.x, col.y, col.z, alpha };
+	} else if (groupName == "enemyPounceSpark") {
+		// ─────────────────────────────
+		// 軌道上から飛び散るスパーク（血・毒・火花）
+		// ─────────────────────────────
+		p.transform.translate = center;
+
+		Vector3 dir = {
+			std::uniform_real_distribution<float>(-1.0f, 1.0f)(rng),
+			std::uniform_real_distribution<float>(-0.3f, 0.9f)(rng),
+			std::uniform_real_distribution<float>(-1.0f, 1.0f)(rng)
+		};
+		if (MyMath::Length(dir) < 0.001f) {
+			dir = { 0.0f, 1.0f, 0.0f };
+		}
+		dir = MyMath::Normalize(dir);
+
+		float spd = std::uniform_real_distribution<float>(2.0f, 4.0f)(rng);
+		p.velocity = dir * spd;
+
+		float baseScale = std::uniform_real_distribution<float>(0.20f, 0.35f)(rng);
+
+		// 0.0–0.5  血スパーク（赤系）
+		// 0.5–0.8  毒スパーク（緑系）※Gは高いけどRをかなり抑える
+		// 0.8–1.0  火花スパーク（赤橙）※黄色に寄りすぎない
+		float   r = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+		Vector3 spColor;
+		float   alpha = 1.0f;
+
+		if (r < 0.5f) {
+			// 血
+			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+			if (t < 0.5f) {
+				spColor = { 0.95f, 0.15f, 0.25f }; // 鮮血
+			} else {
+				spColor = { 0.75f, 0.05f, 0.15f }; // どす黒い血
+			}
+			alpha = std::uniform_real_distribution<float>(0.85f, 1.0f)(rng);
+			baseScale *= std::uniform_real_distribution<float>(1.0f, 1.3f)(rng);
+
+		} else if (r < 0.8f) {
+			// 毒
+			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+			if (t < 0.5f) {
+				spColor = { 0.10f, 0.80f, 0.25f }; // 毒緑
+			} else {
+				spColor = { 0.05f, 0.60f, 0.20f }; // 少し暗い毒緑
+			}
+			alpha = std::uniform_real_distribution<float>(0.8f, 0.95f)(rng);
+			baseScale *= std::uniform_real_distribution<float>(0.9f, 1.1f)(rng);
+
+		} else {
+			// 火花（赤橙）※黄色まで行かない
+			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+			if (t < 0.5f) {
+				spColor = { 0.95f, 0.35f, 0.15f }; // 赤寄りオレンジ
+			} else {
+				spColor = { 0.85f, 0.25f, 0.15f }; // ちょい暗め
+			}
+			alpha = std::uniform_real_distribution<float>(0.85f, 1.0f)(rng);
+			baseScale *= std::uniform_real_distribution<float>(0.8f, 1.0f)(rng);
+		}
+
+		// ここでも「白・黄に寄せない」ために少し暗くする
+		float darken = 0.85f;
+		spColor.x *= darken;
+		spColor.y *= darken;
+		spColor.z *= darken;
+
+		p.transform.scale = { baseScale, baseScale, baseScale };
+		p.color = { spColor.x, spColor.y, spColor.z, alpha };
+
+		p.lifeTime = std::uniform_real_distribution<float>(0.20f, 0.40f)(rng);
+		p.currentTime = 0.0f;
 	} else { // 上記意外
 		// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 		std::uniform_real_distribution<float> velX(-0.15f, 0.15f);
