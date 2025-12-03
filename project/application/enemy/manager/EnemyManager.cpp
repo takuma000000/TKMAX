@@ -71,9 +71,17 @@ void EnemyManager::Update(float dt) {
 
 		// Wave1 用のスポーン制御
 		UpdateWave1(dt);
-	} else {
-		// それ以外のWaveは「全滅したら次へ」の従来仕様
-		if (enemies_->empty() && wavePhase_ != WavePhase::Done) {
+	} 
+
+	// --- Wave2 新仕様 ---
+	if (wavePhase_ == WavePhase::W2) {
+		UpdateWave2();
+		return;
+	}
+
+	// --- Wave3 ---
+	if (wavePhase_ == WavePhase::W3) {
+		if (enemies_->empty()) {
 			GoToNextWave();
 		}
 	}
@@ -131,6 +139,8 @@ void EnemyManager::InitializeWaves() {
 	wave1SpawnTimer_ = 0.0f;
 	SpawnWave1Enemy();
 
+	wave2SubWave_ = 0; // Wave2用サブWave初期化
+
 	// 最初のロックオン対象
 	if (!enemies_->empty()) {
 		player_->SetEnemy(enemies_->front().get());
@@ -162,45 +172,9 @@ void EnemyManager::SpawnCurrentWave() {
 		break;
 	}
 	case WavePhase::W2: {
-		// W2: サイン蛇行で避けにくく（重なり防止で位相＆停止Zを個体別にオフセット）
-		int idx = 0;                  // 個体インデックス（ラムダ内でインクリメント）
-		const float phaseStep = 0.7f; // 位相刻み（ラジアン）
-		const float stopStep = 0.6f;  // 停止Zのズラし量
-
-		EnemySpawner::SpawnV(
-			*enemies_,
-			3,                          // V字の列数（中央＋左右）
-			/*y*/ 6.0f,
-			/*z*/ 80.0f,
-			0.0f,                       // centerX
-			8.0f,                       // xStep
-			6.0f,                       // zStep
-			dxPtr,
-			camPtr,
-			parentPtr,
-			[&](Enemy& e) {
-				e.SetBehavior(EnemyBehavior::SineX);
-				e.SetVelocity({ 0,0,-0.22f });
-				e.SetSineParams(/*ampX*/ 6.0f, /*freq*/ 1.6f);
-
-				// 個体ごとに位相と停止Zを少しずつズラす
-				e.SetSinePhase(phaseStep * float(idx));
-				e.SetStopZ(60.0f + stopStep * float(idx % 3));
-
-				e.SetHP(3);
-				++idx;
-
-				if (player_) { // レティクルをセット
-					e.SetReticle(player_->GetReticle());
-				}
-			}
-		);
-		if (maxEnemyCount_) {
-			// 中央1 + 左右3*2 = 7体
-			*maxEnemyCount_ += 7;
-		}
+		wave2SubWave_ = 0; // サブWave初期化
+		SpawnWave2SubWave(0); // 最初のサブWaveをスポーン
 		break;
-	}
 	case WavePhase::W3: {
 		// W3: 追尾＋左右ストレーフ混在で圧を上げる
 		EnemySpawner::SpawnColumn(
@@ -244,6 +218,7 @@ void EnemyManager::SpawnCurrentWave() {
 	case WavePhase::Done:
 		// 何もしない
 		break;
+	}
 	}
 }
 
@@ -364,6 +339,106 @@ void EnemyManager::SpawnWave1Enemy() {
 				e.SetReticle(player_->GetReticle());
 				e.SetPlayer([this]() { return player_->GetPosition(); }); // プレイヤー位置参照セット
 			}
+		}
+	);
+}
+
+void EnemyManager::UpdateWave2() {
+	// まだ敵が残っている → 何もしない
+	if (!enemies_->empty()) {
+		return;
+	}
+
+	// 全滅した後、まだ待ち始めていないなら待ち開始
+	if (!wave2Waiting_) {
+		wave2Waiting_ = true;
+		wave2WaitTimer_ = 0.0f;
+		return;
+	}
+
+	// 待っている間はタイマー進行
+	wave2WaitTimer_ += dt;
+	if (wave2WaitTimer_ < wave2WaitDuration_) {
+		return; // まだ待ち時間中
+	}
+
+	// 待ち時間が終わった！次の隊列へ
+	wave2Waiting_ = false;
+	wave2SubWave_++; // 次のサブWaveへ
+
+	if (wave2SubWave_ >= 3) { // サブWaveが全部終わったら次のWaveへ
+		GoToNextWave();
+		return;
+	}
+	SpawnWave2SubWave(wave2SubWave_); // 次のサブWaveをスポーン
+}
+
+void EnemyManager::SpawnWave2SubWave(int id) {
+	if (!enemies_ || !dx_ || !cam_ || !parent_) return;
+	enemies_->clear(); // 念のためクリア
+
+	switch (id) { // サブWaveごとにパターン分け
+	case 0: SpawnWave2_Triangle();  break; // 下2 上1 の三角隊列
+	case 1: SpawnWave2_Line();      break; // 横一列
+	case 2: SpawnWave2_FastColumn(); break; // 右側高速通過
+	}
+}
+
+// ───────────────────────────────────────────────
+// ● Wave2 各小Waveスポーン関数群
+// ───────────────────────────────────────────────
+void EnemyManager::SpawnWave2_Triangle() {
+	int idx = 0;
+
+	EnemySpawner::SpawnV(
+		*enemies_,
+		1,  // 1段
+		6.0f, 80.0f,
+		0.0f,
+		7.0f,
+		5.0f,
+		dx_, cam_, parent_,
+		[&](Enemy& e) {
+			e.SetBehavior(EnemyBehavior::SineX);
+			e.SetVelocity({ 0,0,-0.30f });
+			e.SetSineParams(4.0f, 1.4f);
+			e.SetSinePhase(0.6f * float(idx++));
+			e.SetHP(3);
+			e.SetReticle(player_->GetReticle());
+		}
+	);
+}
+void EnemyManager::SpawnWave2_Line() {
+	EnemySpawner::SpawnLine(
+		*enemies_,
+		4, 4.5f, 90.0f,
+		-12.0f, 8.0f,
+		dx_, cam_, parent_,
+		[&](Enemy& e) {
+			e.SetBehavior(EnemyBehavior::StraightStop);
+			e.SetVelocity({ 0,0,-0.32f });
+			e.SetStopZ(52.0f);
+			e.SetHP(2);
+			e.SetReticle(player_->GetReticle());
+		}
+	);
+}
+void EnemyManager::SpawnWave2_FastColumn() {
+	EnemySpawner::SpawnColumn(
+		*enemies_,
+		3,
+		18.0f,
+		100.0f,
+		10.0f,
+		5.0f,
+		0.0f,
+		dx_, cam_, parent_,
+		[&](Enemy& e) {
+			e.SetBehavior(EnemyBehavior::StraightStop);
+			e.SetVelocity({ -0.20f, 0.0f, -0.75f });
+			e.SetStopZ(-50.0f); // 通過するだけ
+			e.SetHP(1);
+			e.SetReticle(player_->GetReticle());
 		}
 	);
 }

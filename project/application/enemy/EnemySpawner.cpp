@@ -92,4 +92,36 @@ namespace EnemySpawner {
 			enemies.push_back(std::move(e));
 		}
 	}
+
+	// "正三角形配置" に敵をスポーン
+	void SpawnTriangle3(
+		std::vector<std::unique_ptr<Enemy>>& enemies,
+		float centerX, float centerY, float z,
+		float size,
+		DirectXCommon* dx, Camera* cam, BaseScene* parent,
+		EnemyConfig config) {
+		// 上（先頭）
+			{
+				auto e = std::make_unique<Enemy>();
+				e->Initialize(Object3dCommon::GetInstance(), dx);
+				e->SetPosition({ centerX, centerY + size, z });
+				if (parent) e->SetParentScene(parent);
+				if (cam)    e->SetCamera(cam);
+				if (config) config(*e);
+				e->SyncTransform();
+				enemies.push_back(std::move(e));
+			}
+			// 下左右
+			for (int side = -1; side <= 1; side += 2) {
+				auto e = std::make_unique<Enemy>();
+				e->Initialize(Object3dCommon::GetInstance(), dx);
+				e->SetPosition({ centerX + side * size, centerY - size, z });
+				if (parent) e->SetParentScene(parent);
+				if (cam)    e->SetCamera(cam);
+				if (config) config(*e);
+				e->SyncTransform();
+				enemies.push_back(std::move(e));
+			}
+	}
+
 }

@@ -144,12 +144,13 @@ private:
 	// Wave 状態は EnemyManager が持つようにする
 	WavePhase wavePhase_ = WavePhase::W1;
 
+	const float dt = 1.0f / 60.0f; // 固定フレームレート想定
+
 	// ───────── Wave1 用パラメータ ─────────
 	float wave1SpawnTimer_ = 0.0f; // 次の出現までのタイマー
 	float wave1SpawnInterval_ = 1.5f; // 出現間隔（秒相当）
 	int   wave1MaxSimultaneous_ = 2;    // 同時に存在してよい敵の数
 	int   wave1DefeatTarget_ = 5;    // このWaveで「倒すべき敵の数」
-
 	/// <summary>
 	/// Wave1の更新
 	/// </summary>
@@ -159,4 +160,30 @@ private:
 	/// Wave1の敵を1体スポーンします
 	/// </summary>
 	void SpawnWave1Enemy();     // Wave1敵1体スポーン
+	// ───────── Wave2 用パラメータ ─────────
+	int wave2SubWave_ = 0;   // 0,1,2... の隊列番号
+	float wave2WaitTimer_ = 0.0f; // 待機タイマー
+	float wave2WaitDuration_ = 1.5f; // 好きな秒数にできる
+	bool  wave2Waiting_ = false; // 待機中フラグ
+	/// <summary>
+	/// Wave2の更新
+	/// </summary>
+	void UpdateWave2();
+	/// <summary>
+	/// Wave2のサブウェーブをスポーンします
+	/// </summary>
+	/// <param name="id"></param>
+	void SpawnWave2SubWave(int id);
+	/// <summary>
+	/// Wave2の三角形編隊をスポーンします
+	/// </summary>
+	void SpawnWave2_Triangle();
+	/// <summary>
+	/// Wave2のライン編隊をスポーンします
+	/// </summary>
+	void SpawnWave2_Line();
+	/// <summary>
+	/// Wave2のファストカラム編隊をスポーンします
+	/// </summary>
+	void SpawnWave2_FastColumn();
 };
