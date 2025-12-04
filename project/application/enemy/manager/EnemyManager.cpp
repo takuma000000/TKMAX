@@ -60,9 +60,9 @@ void EnemyManager::Update(float dt) {
 	// ───────────────────────────────────────────────
 	// ● Wave進行
 	// ───────────────────────────────────────────────
-	if (wavePhase_ == WavePhase::W1) {
+	switch (wavePhase_) {
+	case WavePhase::W1: {
 		// Wave1: 「5体倒すまで無限湧き」
-
 		// 5体倒したら次のWaveへ
 		if (defeatedEnemyCount_ && *defeatedEnemyCount_ >= wave1DefeatTarget_) {
 			GoToNextWave();
@@ -71,19 +71,23 @@ void EnemyManager::Update(float dt) {
 
 		// Wave1 用のスポーン制御
 		UpdateWave1(dt);
-	} 
-
-	// --- Wave2 新仕様 ---
-	if (wavePhase_ == WavePhase::W2) {
-		UpdateWave2();
-		return;
+		break;
 	}
-
-	// --- Wave3 ---
-	if (wavePhase_ == WavePhase::W3) {
-		if (enemies_->empty()) {
-			GoToNextWave();
-		}
+	case WavePhase::W2: {
+		// --- Wave2 新仕様 ---
+		UpdateWave2();
+		break;
+	}
+	case WavePhase::W3: {
+		// --- Wave3: 中ボスステージ（蘇生核含む） ---
+		// 中ボスの生存数・核の状態などは UpdateWave3 側で管理する
+		UpdateWave3(dt);
+		break;
+	}
+	case WavePhase::Done:
+	default:
+		// 何もしない（全Wave終了・ボス管理などに任せる）
+		break;
 	}
 }
 
@@ -176,43 +180,8 @@ void EnemyManager::SpawnCurrentWave() {
 		SpawnWave2SubWave(0); // 最初のサブWaveをスポーン
 		break;
 	case WavePhase::W3: {
-		// W3: 追尾＋左右ストレーフ混在で圧を上げる
-		EnemySpawner::SpawnColumn(
-			*enemies_,
-			6,                          // count
-			/*x*/ 25.0f,
-			/*zStart*/ 100.0f,
-			/*zStep*/ 10.0f,
-			/*y*/ 4.0f,
-			/*intervalSec*/ 0.5f,       // （EnemySpawner 実装に合わせて）
-			dxPtr,
-			camPtr,
-			parentPtr,
-			[&](Enemy& e) {
-				// 交互にパターン変える例
-				static int idx = 0;
-				if ((idx++ % 2) == 0) {
-					e.SetBehavior(EnemyBehavior::ChasePlayer);
-					e.SetVelocity({ 0,0,-0.20f });
-					e.SetStopZ(34.0f);
-					// 追尾用にプレイヤー位置の参照を渡す
-					e.SetPlayer([this]() { return player_->GetPosition(); });
-					e.SetHP(3);
-				} else {
-					e.SetBehavior(EnemyBehavior::StrafeLtoR);
-					e.SetVelocity({ 0,0,-0.25f });
-					e.SetStopZ(60.0f);
-					e.SetStrafeX(-18.0f, 18.0f, 0.45f);
-					e.SetHP(4);
-				}
-				if (player_) { // レティクルをセット
-					e.SetReticle(player_->GetReticle());
-				}
-			}
-		);
-		if (maxEnemyCount_) {
-			*maxEnemyCount_ += 6;
-		}
+		// ここから中ボスステージ
+		SpawnWave3MidBossStage();
 		break;
 	}
 	case WavePhase::Done:
@@ -439,6 +408,268 @@ void EnemyManager::SpawnWave2_FastColumn() {
 			e.SetStopZ(-50.0f); // 通過するだけ
 			e.SetHP(1);
 			e.SetReticle(player_->GetReticle());
+		}
+	);
+}
+
+void EnemyManager::UpdateWave3(float dt) {
+	if (!enemies_) {
+		return;
+	}
+
+	int aliveMidBossCount = 0;
+	bool coreAlive = false;
+
+	for (auto& e : *enemies_) {
+		if (!e) continue;
+
+		if (e->GetType() == EnemyType::Wave3MidBoss && !e->IsDead()) {
+			aliveMidBossCount++;
+		}
+
+		if (e->GetType() == EnemyType::Wave3Core) {
+			if (!e->IsDead() && !e->IsDying()) {
+				coreAlive = true;
+			}
+		}
+	}
+
+	// 「このフレームで中ボスが減ったか？」を判定
+	bool midBossJustDied = (aliveMidBossCount < wave3PrevAliveMidBossCount_);
+
+	// ---- まず「中ボスが 0 体」のケースを優先して判定 ----
+	if (aliveMidBossCount == 0) {
+		// 2 体とも倒した扱い。蘇生中かどうかに関係なく突破。
+		if (wave3ReviveInProgress_) {
+			// 進行中だった蘇生はキャンセルして核を殺す
+			for (auto& e : *enemies_) {
+				if (!e) continue;
+				if (e->GetType() == EnemyType::Wave3Core && !e->IsDead() && !e->IsDying()) {
+					e->StartDeathReaction({ 0.0f, 0.0f, 1.0f });
+				}
+			}
+			wave3ReviveInProgress_ = false;
+			wave3CoreTimer_ = 0.0f;
+		}
+
+		// 中ボスも核もいなくなったら Wave3 終了 → 次のWave（=ボス）へ
+		if (enemies_->empty()) {
+			GoToNextWave();
+		}
+
+		// ★最後に前回値を更新してから return
+		wave3PrevAliveMidBossCount_ = aliveMidBossCount;
+		return;
+	}
+
+	// ---- 中ボスが 1 体だけ生き残っていて、
+	//      かつ今フレームで誰か死んだ（2→1 になった瞬間）なら核を出す ----
+	if (aliveMidBossCount == 1 && !wave3ReviveInProgress_ && midBossJustDied) {
+		wave3ReviveInProgress_ = true;
+		wave3CoreTimer_ = 0.0f;
+		SpawnWave3Core();
+
+		wave3PrevAliveMidBossCount_ = aliveMidBossCount;
+		return;
+	}
+
+	// 中ボスが 1 体でも 2 体でも、とにかく蘇生フェーズに入ってないなら何もしない
+	if (!wave3ReviveInProgress_) {
+		wave3PrevAliveMidBossCount_ = aliveMidBossCount;
+		return;
+	}
+
+	// ---- ここからは「蘇生フェーズ中」 ----
+
+	// 核が既に壊されている → 蘇生キャンセル（再度コアは出さない）
+	if (!coreAlive) {
+		wave3ReviveInProgress_ = false;
+		wave3CoreTimer_ = 0.0f;
+		wave3PrevAliveMidBossCount_ = aliveMidBossCount;
+		return;
+	}
+
+	// 核がまだ生きているならタイマーを進める
+	wave3CoreTimer_ += dt;
+
+	// 規定時間生き残った → 蘇生成功（中ボス再スポーン）
+	if (wave3CoreTimer_ >= wave3CoreLifetime_) {
+		// 中ボスを 1 体復活
+		SpawnWave3ExtraMidBoss();
+
+		// 核は役目を終えたので消す
+		for (auto& e : *enemies_) {
+			if (!e) continue;
+			if (e->GetType() == EnemyType::Wave3Core && !e->IsDead() && !e->IsDying()) {
+				e->StartDeathReaction({ 0.0f, 0.0f, 1.0f });
+			}
+		}
+
+		wave3ReviveInProgress_ = false;
+		wave3CoreTimer_ = 0.0f;
+	}
+
+	// 最後に前回値を更新
+	wave3PrevAliveMidBossCount_ = aliveMidBossCount;
+}
+
+void EnemyManager::SpawnWave3MidBossStage() {
+	if (!enemies_ || !dx_ || !cam_ || !parent_) {
+		return;
+	}
+
+	enemies_->clear();
+
+	// 蘇生状態リセット
+	wave3ReviveInProgress_ = false;
+	wave3CoreTimer_ = 0.0f;
+
+	auto camPtr = cam_;
+	auto dxPtr = dx_;
+	auto parentPtr = parent_;
+
+	// 左右 2 体の中ボスを直線で出して、手前で停止させる
+	EnemySpawner::SpawnLine(
+		*enemies_,
+		2,                             // 敵の数
+		wave3LeftPos_.y,              // Y は左右同じ
+		wave3LeftPos_.z,              // Z 開始位置
+		wave3LeftPos_.x,              // X 開始（左）
+		(wave3RightPos_.x - wave3LeftPos_.x), // X間隔（右まで）
+		dxPtr,
+		camPtr,
+		parentPtr,
+		[&](Enemy& e) {
+			e.SetBehavior(EnemyBehavior::StraightStop);
+			e.SetVelocity({ 0.0f, 0.0f, -0.2f });
+			e.SetStopZ(40.0f); // ある程度手前で止まる
+			e.SetHP(12);       // 仮の中ボスHP（あとで調整）
+			e.SetScale({ 1.5f,1.5f,1.5f }); // ちょっと大きめにしてボス感
+
+			if (player_) {
+				e.SetReticle(player_->GetReticle());
+				e.SetPlayer([this]() { return player_->GetPosition(); });
+			}
+
+			e.SetType(EnemyType::Wave3MidBoss);
+		}
+	);
+
+	// 倒すべき中ボスは 2 体なので、ゲージ用に +2 だけ足しておく
+	if (maxEnemyCount_) {
+		*maxEnemyCount_ += 2;
+	}
+
+	// Wave3 開始時点では中ボスが 2 体生きている
+	wave3PrevAliveMidBossCount_ = 2;
+}
+
+void EnemyManager::SpawnWave3Core() {
+	if (!enemies_ || !dx_ || !cam_ || !parent_) {
+		return;
+	}
+
+	auto camPtr = cam_;
+	auto dxPtr = dx_;
+	auto parentPtr = parent_;
+
+	// 画面内っぽい範囲でランダムに配置（ざっくり）
+	float xRange = 18.0f;
+	float zMin = 35.0f;
+	float zMax = 75.0f;
+
+	float rx = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
+	float rz = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
+
+	float x = -xRange + rx * (xRange * 2.0f);
+	float z = zMin + rz * (zMax - zMin);
+	float y = 6.0f;
+
+	EnemySpawner::SpawnLine(
+		*enemies_,
+		1,
+		y,
+		z,
+		x,
+		0.0f, // X方向には並べない
+		dxPtr,
+		camPtr,
+		parentPtr,
+		[&](Enemy& e) {
+			e.SetBehavior(EnemyBehavior::StraightStop);
+			e.SetVelocity({ 0.0f, 0.0f, 0.0f }); // その場に留まる
+			e.SetStopZ(z);
+			e.SetHP(wave3CoreHP_);
+			e.SetScale({ 0.8f,0.8f,0.8f }); // 少し小さめ
+			if (player_) {
+				e.SetReticle(player_->GetReticle());
+				e.SetPlayer([this]() { return player_->GetPosition(); });
+			}
+			e.SetModel("sphere.obj");
+			e.SetType(EnemyType::Wave3Core);
+		}
+	);
+}
+
+void EnemyManager::SpawnWave3ExtraMidBoss() {
+	if (!enemies_ || !dx_ || !cam_ || !parent_) {
+		return;
+	}
+
+	// どっちサイドの中ボスが生きているか調べる
+	bool leftAlive = false;
+	bool rightAlive = false;
+
+	for (auto& e : *enemies_) {
+		if (!e) continue;
+		if (e->GetType() != EnemyType::Wave3MidBoss) continue;
+		if (e->IsDead()) continue;
+
+		Vector3 pos = e->GetWorldPosition();
+		if (pos.x < 0.0f) {
+			leftAlive = true;
+		} else {
+			rightAlive = true;
+		}
+	}
+
+	// 片方だけ生きている想定なので、空いている側に復活させる
+	Vector3 spawnPos = wave3LeftPos_;
+	if (leftAlive && !rightAlive) {
+		spawnPos = wave3RightPos_;
+	} else if (!leftAlive && rightAlive) {
+		spawnPos = wave3LeftPos_;
+	} else {
+		// 想定外だけど、両方死んでいたら左側に出しておく
+		spawnPos = wave3LeftPos_;
+	}
+
+	auto camPtr = cam_;
+	auto dxPtr = dx_;
+	auto parentPtr = parent_;
+
+	EnemySpawner::SpawnLine(
+		*enemies_,
+		1,
+		spawnPos.y,
+		spawnPos.z,
+		spawnPos.x,
+		0.0f,
+		dxPtr,
+		camPtr,
+		parentPtr,
+		[&](Enemy& e) {
+			e.SetBehavior(EnemyBehavior::StraightStop);
+			e.SetVelocity({ 0.0f, 0.0f, -0.2f });
+			e.SetStopZ(40.0f);
+			e.SetHP(12); // 初期中ボスと同じ HP
+			e.SetScale({ 1.5f,1.5f,1.5f });
+
+			if (player_) {
+				e.SetReticle(player_->GetReticle());
+				e.SetPlayer([this]() { return player_->GetPosition(); });
+			}
+			e.SetType(EnemyType::Wave3MidBoss);
 		}
 	);
 }

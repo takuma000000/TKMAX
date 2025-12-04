@@ -15,6 +15,7 @@
 // Enemyクラス
 // 通常敵の挙動と当たり判定を管理するクラス。
 //=============================================================
+
 enum class EnemyBehavior {
 	StraightStop,    // いまの「Z手前に進んでstopZで止まる」
 	SineX,           // Xをサイン波で揺らしながら前進
@@ -22,12 +23,17 @@ enum class EnemyBehavior {
 	ChasePlayer,     // プレイヤー方向にじわっと追尾
 	PounceFromAbove, // 上空から急降下してくる
 };
-
 // 死亡リアクションパターン
 enum class EnemyDeathReaction {
 	BlowAway,       // 吹っ飛んで消える
 	RiseAbsorb,     // 上に吸い込まれるように消える
 	Collapse,       // 崩れ落ちて潰れて消える
+};
+// 敵の役割（通常 / Wave3中ボス / Wave3蘇生核）
+enum class EnemyType {
+	Normal,      // 通常ザコ
+	Wave3MidBoss,// Wave3 中ボス
+	Wave3Core,   // Wave3 蘇生用の「核」
 };
 
 class Enemy {
@@ -85,6 +91,11 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	bool GetEscaped()  const { return escaped_; }
+	/// <summary>
+	/// 敵のタイプを取得します。
+	/// </summary>
+	/// <returns></returns>
+	EnemyType GetType() const { return type_; }
 	// =========================================
 	// Setter===================================
 	/// <summary>HPを設定します（最大HPも更新）。</summary>
@@ -152,6 +163,11 @@ public:
 		pounceStarted_ = true; // フラグセット
 		pounceDiving_ = false; // 急降下フェーズ前
 	}
+	/// <summary>
+	/// 敵のタイプを設定します。
+	/// </summary>
+	/// <param name="t"></param>
+	void SetType(EnemyType t) { type_ = t; }
 	// =========================================
 
 private:
@@ -163,6 +179,9 @@ private:
 	int hp_ = 3;
 	int maxHP_ = 3;
 	bool isDead_ = false;
+
+	// Wave3 用の種別（デフォルトは通常）
+	EnemyType type_ = EnemyType::Normal;
 
 	Vector3 velocity_ = { 0.0f, 0.0f, -0.1f }; // 毎フレームの移動量（Z方向に手前）
 	float stopZ_ = 30.0f;                      // このZ座標になったら止まる

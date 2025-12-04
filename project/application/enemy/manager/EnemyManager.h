@@ -186,4 +186,31 @@ private:
 	/// Wave2のファストカラム編隊をスポーンします
 	/// </summary>
 	void SpawnWave2_FastColumn();
+	// ───────── Wave3（中ボスステージ） 用パラメータ ─────────
+	// 中ボスが片方落ちたときに「蘇生核」を出して 5 秒間猶予を与える
+	bool  wave3ReviveInProgress_ = false; // 蘇生フェーズ中かどうか
+	float wave3CoreTimer_ = 0.0f;         // 核の経過時間
+	float wave3CoreLifetime_ = 5.0f;      // 核が生きていれば蘇生成立（秒）
+	int   wave3CoreHP_ = 5;               // 核のHP（あとで調整用）
+	int   wave3PrevAliveMidBossCount_ = 0; // 前フレームの生存中中ボス数
+	// 中ボスの定位置（左右 2 体）※必要ならあとで ImGui 化
+	Vector3 wave3LeftPos_ = { -12.0f, 6.0f, 80.0f };
+	Vector3 wave3RightPos_ = { 12.0f, 6.0f, 80.0f };
+	/// <summary>
+	/// Wave3の更新
+	/// </summary>
+	/// <param name="dt"></param>
+	void UpdateWave3(float dt);
+	/// <summary>
+	/// Wave3の中ボスステージ用の中ボスをスポーンします
+	/// </summary>
+	void SpawnWave3MidBossStage();
+	/// <summary>
+	/// Wave3の蘇生核をスポーンします
+	/// </summary>
+	void SpawnWave3Core();
+	/// <summary>
+	/// Wave3の追加中ボス（左右どちらか）をスポーンします
+	/// </summary>
+	void SpawnWave3ExtraMidBoss();
 };
