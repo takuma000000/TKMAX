@@ -532,9 +532,9 @@ void EnemyManager::SpawnWave3MidBossStage() {
 	EnemySpawner::SpawnLine(
 		*enemies_,
 		2,                             // 敵の数
-		wave3LeftPos_.y,              // Y は左右同じ
-		wave3LeftPos_.z,              // Z 開始位置
-		wave3LeftPos_.x,              // X 開始（左）
+		wave3LeftPos_.y,               // Y は左右同じ
+		wave3LeftPos_.z,               // Z 開始位置
+		wave3LeftPos_.x,               // X 開始（左）
 		(wave3RightPos_.x - wave3LeftPos_.x), // X間隔（右まで）
 		dxPtr,
 		camPtr,
