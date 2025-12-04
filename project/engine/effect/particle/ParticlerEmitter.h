@@ -6,27 +6,28 @@
 // パーティクルの発生位置・頻度を管理するクラス。
 //=============================================================
 class ParticleEmitter{
-private:
-
 public:
-
 	/// <summary>
-	/// <summary>パーティクルエミッターを初期化します。</summary>
+	/// パーティクルエミッターを初期化します。
 	/// </summary>
 	/// <param name="name"></param>
 	/// <param name="pos"></param>
 	void Initialize(std::string name, Vector3 pos);
-
-	///<summary>パーティクルを発生させます。</summary>
+	/// <summary>
+	/// <summary>パーティクルを放出します。</summary>
+	/// </summary>
 	void Emit();
-	///<summary>パーティクルエミッターを更新します。</summary>
+	/// <summary>
+	/// <summary>パーティクルエミッターを更新します。</summary>
+	/// </summary>
 	void Update();
-
-	///<summary>パーティクルエミッターの位置を設定します。</summary>
+	/// <summary>
+	/// <summary>パーティクルエミッターの位置を設定します。</summary>
+	/// </summary>
+	/// <param name="pos"></param>
 	void SetPosition(const Vector3& pos) {
 		emitter.transform.translate = pos;
 	};
-
 private:
 	//エミッター構造体
 	struct Emitter {
