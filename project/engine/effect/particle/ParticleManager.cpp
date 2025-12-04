@@ -49,15 +49,10 @@ void ParticleManager::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager
 void ParticleManager::Update() {
 	MakeBillboardMatrix(); //ビルボードマトリクス作成
 
-	//カメラの各種行列を取得
-	/*camera_->GetViewMatrix();
-	camera_->GetProjectionMatrix();*/
-
 	for (std::unordered_map<std::string, ParticleGroup>::iterator particleGroupIterator = particleGroups.begin(); particleGroupIterator != particleGroups.end();) { //各パーティクルグループの更新
 		//パーティクルグループのポインタを取得
 		ParticleGroup* particleGroup = &(particleGroupIterator->second);
 		particleGroupIterator->second.kNumInstance = 0;
-
 
 		for (std::list<Particle>::iterator particleIterator = particleGroup->particles.begin(); particleIterator != particleGroup->particles.end();) { //各パーティクルの更新
 			if ((*particleIterator).lifeTime <= (*particleIterator).currentTime) {//生存期間を過ぎていたら更新せず描画対象にしない
@@ -90,7 +85,6 @@ void ParticleManager::Update() {
 				++particleGroupIterator->second.kNumInstance;//生きているParticleの数を1つカウントする
 			}
 			++particleIterator; //次のパーティクルへ
-
 		}
 		++particleGroupIterator; //次のパーティクルグループへ
 	}
@@ -1373,6 +1367,69 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 
 		p.lifeTime = std::uniform_real_distribution<float>(0.20f, 0.40f)(rng);
 		p.currentTime = 0.0f;
+	} else if (groupName == "core_charge_shell") {
+		p.transform.translate = center;
+		float startScale = 1.6f;
+		p.transform.scale = { startScale, startScale, startScale };
+		p.velocity = { 0.0f, 0.0f, 0.0f };
+		// 邪悪な黒紫
+		p.color = { 0.35f, 0.0f, 0.5f, 0.35f };
+		p.lifeTime = 0.45f;
+		p.currentTime = 0.0f;
+	} else if (groupName == "core_charge_inward") {
+
+		std::uniform_real_distribution<float> dirDist(-1.0f, 1.0f);
+		Vector3 dirRand = { dirDist(rng), dirDist(rng), dirDist(rng) };
+
+		if (MyMath::Length(dirRand) < 0.001f) dirRand = { 0,1,0 };
+		dirRand = MyMath::Normalize(dirRand);
+
+		float radius = std::uniform_real_distribution<float>(2.0f, 5.0f)(rng);
+		Vector3 offset = dirRand * radius;
+
+		p.transform.translate = center + offset;
+
+		Vector3 dirToCenter = MyMath::Normalize(-offset);
+
+		float speed = std::uniform_real_distribution<float>(2.0f, 5.0f)(rng);
+		p.velocity = dirToCenter * speed;
+
+		p.transform.scale = { 0.15f, 0.15f, 0.15f };
+
+		// 怪しい血のような禍々しく濃い赤
+		p.color = { 0.8f, 0.05f, 0.1f, 0.9f };
+
+		p.lifeTime = 0.7f;
+		p.currentTime = 0.0f;
+	} else if (groupName == "core_charge_ribbon") {
+
+		float height = std::uniform_real_distribution<float>(-1.2f, 1.2f)(rng);
+		p.transform.translate.y += height;
+
+		// ★ もっと長く・太くして視認性アップ
+		p.transform.scale = { 3.2f, 0.14f, 1.0f };
+
+		// ★ 明るめの邪悪紫に変更（青成分足すと光って見える）
+		p.color = { 0.85f, 0.2f, 1.0f, 0.95f };
+
+		p.velocity = { 0.0f, 0.0f, 0.0f };
+
+		// ★ 寿命もちょい伸ばすと“渦巻き”感が出る
+		p.lifeTime = 0.55f;
+	} else if (groupName == "core_charge_flash") {
+
+		float s = std::uniform_real_distribution<float>(0.25f, 0.55f)(rng);
+
+		// ★ 完全に正面に出るように Z も s にする
+		p.transform.scale = { s, s, s };
+
+		// ★ 発光強めの深紅（alpha も上げる）
+		p.color = { 1.0f, 0.05f, 0.15f, 1.0f };
+
+		// ★ 寿命をほんの少しだけ伸ばすと見える
+		p.lifeTime = 0.18f;
+
+		p.velocity = { 0.0f, 0.0f, 0.0f };
 	} else { // 上記意外
 		// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 		std::uniform_real_distribution<float> velX(-0.15f, 0.15f);

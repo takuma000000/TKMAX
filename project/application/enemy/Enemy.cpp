@@ -386,9 +386,17 @@ void Enemy::ImGuiDebug() {
 }
 
 void Enemy::OnHitWithDamage(int damage) {
-	hp_ -= damage; // 指定ダメージ分減らす
-	if (hp_ < 0) {
+	// すでに死んでる or 死亡演出中なら無視
+	if (isDead_ || isDying_) {
+		return;
+	}
+
+	hp_ -= damage;
+	if (hp_ <= 0) {
 		hp_ = 0;
+
+		// 方向が取れないならとりあえず前方向とか適当に
+		StartDeathReaction({ 0.0f, 0.0f, 1.0f });
 	}
 }
 

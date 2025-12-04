@@ -139,6 +139,31 @@ void MidBossCore::Update(float dt) {
 		add(4, 5); add(5, 7); add(7, 6); add(6, 4);
 		add(0, 4); add(1, 5); add(2, 6); add(3, 7);
 	}
+
+	// ============================
+	// 核チャージ演出（蘇生エネルギー）
+	// ============================
+	{
+		ParticleManager* pm = ParticleManager::GetInstance();
+		Vector3 center = GetWorldPosition();
+
+		// 外殻：拡大球リング（ゆっくり波打つ）
+		if (rand() % 3 == 0) { // 毎フレーム出すと重いので1/3確率
+			pm->Emit("core_charge_shell", center, 1);
+		}
+		// 中心に向かって吸い込まれる粒子
+		for (int i = 0; i < 2; i++) {
+			pm->Emit("core_charge_inward", center, 1);
+		}
+		// ぐるぐる回る細い帯
+		if (rand() % 5 == 0) {
+			pm->Emit("core_charge_ribbon", center, 1);
+		}
+		// 時々バチッと光る放電
+		if (rand() % 20 == 0) {
+			pm->Emit("core_charge_flash", center, 3);
+		}
+	}
 }
 
 void MidBossCore::Draw(DirectXCommon* dxCommon) {

@@ -51,7 +51,7 @@ void GameScene::Initialize() {
 	ParticleManager::GetInstance()->CreateParticleGroup("airStreak", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
 	// 敵スポーン
 	ParticleManager::GetInstance()->CreateParticleGroup("enemySpawn", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
-	// === ここから被弾エフェクト用 ===
+	/// === ここから被弾エフェクト用 ===
 	// 中央の強いフラッシュ
 	ParticleManager::GetInstance()->CreateParticleGroup("enemyHit_flash", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
 	// 外側に広がるリング
@@ -60,7 +60,7 @@ void GameScene::Initialize() {
 	ParticleManager::GetInstance()->CreateParticleGroup("enemyHit_rays", "./resources/gradationLine.png", ParticleManager::ParticleType::NORMAL);
 	// 小さいスパーク
 	ParticleManager::GetInstance()->CreateParticleGroup("enemyHit_spark", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
-	// === ここから LT弾ヒット用・さらにド派手版 ===
+	/// === ここから LT弾ヒット用・さらにド派手版 ===
 	// 爆心コア（まぶしい光の玉）
 	ParticleManager::GetInstance()->CreateParticleGroup("lt_nova_core", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
 	// 球状ショックウェーブ（外側のエネルギー殻）
@@ -71,18 +71,23 @@ void GameScene::Initialize() {
 	ParticleManager::GetInstance()->CreateParticleGroup("lt_nova_crack", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
 	// 爆発バースト（明るい爆発の粒）
 	ParticleManager::GetInstance()->CreateParticleGroup("lt_nova_burst", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
-	// === 敵吹っ飛び死亡専用エフェクト ===
+	/// === 敵吹っ飛び死亡専用エフェクト ===
 	// 核となる小さな光の塊（中央でフッと光って消える）
 	ParticleManager::GetInstance()->CreateParticleGroup("enemyDeath_core", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
 	// 周りに飛び散る光の破片
 	ParticleManager::GetInstance()->CreateParticleGroup("enemyDeath_shard", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
 	// 残り香みたいにふわっと残る煙
 	ParticleManager::GetInstance()->CreateParticleGroup("enemyDeath_smoke", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
-	// === 敵飛び掛かり用エフェクト群 ===
+	/// === 敵飛び掛かり用エフェクト群 ===
 	// 敵の飛び掛かり軌道レール
 	ParticleManager::GetInstance()->CreateParticleGroup("enemyPounceTrail", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
 	// 軌道上のスパーク
 	ParticleManager::GetInstance()->CreateParticleGroup("enemyPounceSpark", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
+	// === 蘇生核チャージ演出 ===
+	ParticleManager::GetInstance()->CreateParticleGroup("core_charge_shell", "./resources/gradationLine.png", ParticleManager::ParticleType::RING);
+	ParticleManager::GetInstance()->CreateParticleGroup("core_charge_inward", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
+	ParticleManager::GetInstance()->CreateParticleGroup("core_charge_ribbon", "./resources/gradationLine.png", ParticleManager::ParticleType::RING);
+	ParticleManager::GetInstance()->CreateParticleGroup("core_charge_flash", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
 	// ──────────────── スカイボックスの初期化 ───────────────
 	skybox_ = std::make_unique<Skybox>();
 	skybox_->Initialize(dxCommon, srvManager, "resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
