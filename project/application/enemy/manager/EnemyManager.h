@@ -9,6 +9,7 @@
 #include "engine/3d/camera/Camera.h"
 #include "DirectXCommon.h"
 #include "BaseScene.h"
+#include "MidBossCore.h"
 
 #ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"
@@ -213,4 +214,6 @@ private:
 	/// Wave3の追加中ボス（左右どちらか）をスポーンします
 	/// </summary>
 	void SpawnWave3ExtraMidBoss();
+
+	std::unique_ptr<MidBossCore> midBossCore_ = nullptr;// 蘇生核
 };

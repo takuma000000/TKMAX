@@ -24,6 +24,18 @@ void EnemyManager::Update(float dt) {
 		return;
 	}
 
+	// ───────────────────────────────
+	// ● Wave3 の核が居れば更新
+	// ───────────────────────────────
+	if (midBossCore_) {
+		midBossCore_->Update(dt);
+
+		// 死亡しきったらポインタ破棄
+		if (midBossCore_->IsDead()) {
+			midBossCore_.reset();
+		}
+	}
+
 	/// ───────────────────────────────────────────────
 	/// ● 敵の状態を更新し、死亡したものは削除＆カウント
 	/// ───────────────────────────────────────────────
@@ -417,53 +429,45 @@ void EnemyManager::UpdateWave3(float dt) {
 		return;
 	}
 
+	// ── 中ボスが何体生きているかだけ Enemy から数える ──
 	int aliveMidBossCount = 0;
-	bool coreAlive = false;
-
 	for (auto& e : *enemies_) {
 		if (!e) continue;
-
 		if (e->GetType() == EnemyType::Wave3MidBoss && !e->IsDead()) {
 			aliveMidBossCount++;
 		}
-
-		if (e->GetType() == EnemyType::Wave3Core) {
-			if (!e->IsDead() && !e->IsDying()) {
-				coreAlive = true;
-			}
-		}
 	}
 
-	// 「このフレームで中ボスが減ったか？」を判定
+	// ── 核の生存状態は MidBossCore で判定 ──
+	bool coreAlive = (midBossCore_ && !midBossCore_->IsDead() && !midBossCore_->IsDying());
+
+	// 「このフレームで中ボスが減ったか？」
 	bool midBossJustDied = (aliveMidBossCount < wave3PrevAliveMidBossCount_);
 
-	// ---- まず「中ボスが 0 体」のケースを優先して判定 ----
+	// === ここから下のロジックも MidBossCore ベースに置き換え ===
+
+	// ---- 中ボスが 0 体になったら Wave3 終了判定 ----
 	if (aliveMidBossCount == 0) {
-		// 2 体とも倒した扱い。蘇生中かどうかに関係なく突破。
+		// 蘇生中ならコアを強制的に殺してキャンセル
 		if (wave3ReviveInProgress_) {
-			// 進行中だった蘇生はキャンセルして核を殺す
-			for (auto& e : *enemies_) {
-				if (!e) continue;
-				if (e->GetType() == EnemyType::Wave3Core && !e->IsDead() && !e->IsDying()) {
-					e->StartDeathReaction({ 0.0f, 0.0f, 1.0f });
-				}
+			if (coreAlive) {
+				midBossCore_->StartDeathReaction({ 0.0f, 0.0f, 1.0f });
 			}
 			wave3ReviveInProgress_ = false;
 			wave3CoreTimer_ = 0.0f;
+			midBossCore_.reset();
 		}
 
-		// 中ボスも核もいなくなったら Wave3 終了 → 次のWave（=ボス）へ
-		if (enemies_->empty()) {
+		// 中ボスも核も居なければ Wave3 終了 → 次のWave（ボス）へ
+		if (enemies_->empty() && !midBossCore_) {
 			GoToNextWave();
 		}
 
-		// ★最後に前回値を更新してから return
 		wave3PrevAliveMidBossCount_ = aliveMidBossCount;
 		return;
 	}
 
-	// ---- 中ボスが 1 体だけ生き残っていて、
-	//      かつ今フレームで誰か死んだ（2→1 になった瞬間）なら核を出す ----
+	// ---- 中ボスが 1 体になった瞬間に核を出す ----
 	if (aliveMidBossCount == 1 && !wave3ReviveInProgress_ && midBossJustDied) {
 		wave3ReviveInProgress_ = true;
 		wave3CoreTimer_ = 0.0f;
@@ -473,18 +477,19 @@ void EnemyManager::UpdateWave3(float dt) {
 		return;
 	}
 
-	// 中ボスが 1 体でも 2 体でも、とにかく蘇生フェーズに入ってないなら何もしない
+	// まだ蘇生フェーズに入っていないなら何もしない
 	if (!wave3ReviveInProgress_) {
 		wave3PrevAliveMidBossCount_ = aliveMidBossCount;
 		return;
 	}
 
-	// ---- ここからは「蘇生フェーズ中」 ----
+	// ---- ここから「蘇生フェーズ中」 ----
 
-	// 核が既に壊されている → 蘇生キャンセル（再度コアは出さない）
+	// 核が既に壊されている → 蘇生キャンセル
 	if (!coreAlive) {
 		wave3ReviveInProgress_ = false;
 		wave3CoreTimer_ = 0.0f;
+		midBossCore_.reset();
 		wave3PrevAliveMidBossCount_ = aliveMidBossCount;
 		return;
 	}
@@ -498,18 +503,14 @@ void EnemyManager::UpdateWave3(float dt) {
 		SpawnWave3ExtraMidBoss();
 
 		// 核は役目を終えたので消す
-		for (auto& e : *enemies_) {
-			if (!e) continue;
-			if (e->GetType() == EnemyType::Wave3Core && !e->IsDead() && !e->IsDying()) {
-				e->StartDeathReaction({ 0.0f, 0.0f, 1.0f });
-			}
+		if (midBossCore_) {
+			midBossCore_->StartDeathReaction({ 0.0f, 0.0f, 1.0f });
 		}
 
 		wave3ReviveInProgress_ = false;
 		wave3CoreTimer_ = 0.0f;
 	}
 
-	// 最後に前回値を更新
 	wave3PrevAliveMidBossCount_ = aliveMidBossCount;
 }
 
@@ -517,8 +518,10 @@ void EnemyManager::SpawnWave3MidBossStage() {
 	if (!enemies_ || !dx_ || !cam_ || !parent_) {
 		return;
 	}
-
+	// いったん全消し
 	enemies_->clear();
+	// 既存の核は捨てる
+	midBossCore_.reset();
 
 	// 蘇生状態リセット
 	wave3ReviveInProgress_ = false;
@@ -565,13 +568,9 @@ void EnemyManager::SpawnWave3MidBossStage() {
 }
 
 void EnemyManager::SpawnWave3Core() {
-	if (!enemies_ || !dx_ || !cam_ || !parent_) {
+	if (!dx_ || !cam_ || !parent_) {
 		return;
 	}
-
-	auto camPtr = cam_;
-	auto dxPtr = dx_;
-	auto parentPtr = parent_;
 
 	// 画面内っぽい範囲でランダムに配置（ざっくり）
 	float xRange = 18.0f;
@@ -585,30 +584,28 @@ void EnemyManager::SpawnWave3Core() {
 	float z = zMin + rz * (zMax - zMin);
 	float y = 6.0f;
 
-	EnemySpawner::SpawnLine(
-		*enemies_,
-		1,
-		y,
-		z,
-		x,
-		0.0f, // X方向には並べない
-		dxPtr,
-		camPtr,
-		parentPtr,
-		[&](Enemy& e) {
-			e.SetBehavior(EnemyBehavior::StraightStop);
-			e.SetVelocity({ 0.0f, 0.0f, 0.0f }); // その場に留まる
-			e.SetStopZ(z);
-			e.SetHP(wave3CoreHP_);
-			e.SetScale({ 0.8f,0.8f,0.8f }); // 少し小さめ
-			if (player_) {
-				e.SetReticle(player_->GetReticle());
-				e.SetPlayer([this]() { return player_->GetPosition(); });
-			}
-			e.SetModel("sphere.obj");
-			e.SetType(EnemyType::Wave3Core);
-		}
-	);
+	// すでにコアが居たら一旦消して作り直し
+	midBossCore_ = std::make_unique<MidBossCore>();
+
+	// Object3d 用共通（Enemy でも使ってるやつ）
+	auto* common = Object3dCommon::GetInstance();
+
+	midBossCore_->Initialize(common, dx_);
+	midBossCore_->SetCamera(cam_);
+	midBossCore_->SetParentScene(parent_);
+
+	midBossCore_->SetPosition({ x, y, z });
+	midBossCore_->SetScale({ 0.8f, 0.8f, 0.8f });
+	midBossCore_->SetHP(wave3CoreHP_);
+
+	// 当たり判定スケールは MidBossCore 側の ImGui でいじるので
+	// ここではデフォルトのままでも OK（必要なら初期値だけ渡す）
+	// midBossCore_->SetColliderScale({ 1.0f, 1.0f, 1.0f });
+
+	if (player_) {
+		midBossCore_->SetReticle(player_->GetReticle());
+		midBossCore_->SetPlayer([this]() { return player_->GetPosition(); });
+	}
 }
 
 void EnemyManager::SpawnWave3ExtraMidBoss() {
@@ -675,11 +672,14 @@ void EnemyManager::SpawnWave3ExtraMidBoss() {
 }
 
 void EnemyManager::Draw(DirectXCommon* dx) {
-	if (!enemies_) {
+	if (!enemies_) { // enemies_ がまだ紐付いてなかったら何もしない
 		return;
 	}
-	for (auto& enemy : *enemies_) {
+	for (auto& enemy : *enemies_) { // 敵を全部描画
 		enemy->Draw(dx);
+	}
+	if (midBossCore_) { // 核が居れば描画
+		midBossCore_->Draw(dx);
 	}
 }
 
@@ -742,5 +742,10 @@ void EnemyManager::ImGuiDebug() {
 	}
 
 	ImGui::End();
+
+	// 核
+	if (midBossCore_) {
+		midBossCore_->ImGuiDebug();
+	}
 #endif
 }

@@ -1,0 +1,153 @@
+#pragma once
+#include <memory>
+#include <functional>
+#include "Object3d.h"
+#include "engine/3d/camera/Camera.h"
+#include "BaseScene.h"
+#include "engine/effect/particle/ParticleManager.h"
+#include "engine/effect/line/LineRenderer.h"
+#include "AABB.h"
+#include "MyMath.h"
+#include "application/player/reticle/Reticle.h"
+
+#ifdef USE_IMGUI
+#include "externals/imgui/imgui.h"
+#endif
+
+class MidBossCore {
+public:
+	MidBossCore() = default;
+	~MidBossCore() = default;
+
+	/// <summary>
+	/// 敵を初期化します。
+	/// </summary>
+	/// <param name="common"></param>
+	/// <param name="dxCommon"></param>
+	void Initialize(Object3dCommon* common, DirectXCommon* dxCommon);
+	/// <summary>
+	/// 敵を更新します。
+	/// </summary>
+	/// <param name="dt"></param>
+	void Update(float dt);
+	/// <summary>
+	/// 敵を描画します。
+	/// </summary>
+	/// <param name="dxCommon"></param>
+	void Draw(DirectXCommon* dxCommon);
+
+	/// <summary>
+	/// デバッグ用ImGui表示。
+	/// </summary>
+	void ImGuiDebug();
+
+	/// <summary>
+	/// 敵が死亡したかどうかを取得します。
+	/// </summary>
+	/// <returns></returns>
+	bool IsDead() const { return isDead_; }
+	/// <summary>
+	/// 敵が死亡演出中かどうかを取得します。
+	/// </summary>
+	/// <returns></returns>
+	bool IsDying() const { return isDying_; }
+
+	/// <summary>
+	/// 特殊攻撃でダメージを指定して当たったときの処理。
+	/// </summary>
+	/// <param name="damage"></param>
+	void OnHitWithDamage(int damage);
+	/// <summary>
+	/// 敵の死亡リアクションを開始します。
+	/// </summary>
+	/// <param name="hitDir"></param>
+	void StartDeathReaction(const Vector3& hitDir);
+
+	// Getter==================================
+	/// <summary>
+	/// 現在のHPを取得します。
+	/// </summary>
+	/// <returns></returns>
+	int  GetHP() const { return hp_; }
+	/// <summary>
+	/// 最大HPを取得します。
+	/// </summary>
+	/// <returns></returns>
+	Vector3 GetWorldPosition() const;
+	/// <summary>
+	/// スケールを取得します。
+	/// </summary>
+	/// <returns></returns>
+	Vector3 GetScale() const { return baseScale_; }
+	/// <summary>
+	/// 当たり判定用スケールを取得します。
+	/// </summary>
+	/// <returns></returns>
+	Vector3 GetColliderScale() const { return colliderScale_; }
+	// ========================================
+	// Setter==================================
+	/// <summary>
+	/// HPを設定します（最大HPも更新）。
+	/// </summary>
+	/// <param name="hp"></param>
+	void SetHP(int hp) { hp_ = hp; maxHP_ = hp; }
+	/// <summary>
+	/// モデルを設定します。
+	/// </summary>
+	/// <param name="pos"></param>
+	void SetPosition(const Vector3& pos);
+	/// <summary>
+	/// スケールを設定します（当たり判定用スケールも更新）。
+	/// </summary>
+	/// <param name="s"></param>
+	void SetScale(const Vector3& s);
+	/// <summary>
+	/// カメラ設定
+	/// </summary>
+	/// <param name="cam"></param>
+	void SetCamera(Camera* cam);
+	/// <summary>
+	/// 親シーンを設定します。
+	/// </summary>
+	/// <param name="scene"></param>
+	void SetParentScene(BaseScene* scene) { parent_ = scene; }
+	/// <summary>
+	/// 当たり判定用スケールを設定します。
+	/// </summary>
+	/// <param name="s"></param>
+	void SetColliderScale(const Vector3& s) { colliderScale_ = s; }
+	/// <summary>
+	/// レティクルを設定します。
+	/// </summary>
+	/// <param name="r"></param>
+	void SetReticle(Reticle* r) { reticle_ = r; }
+	/// <summary>
+	/// プレイヤー位置取得関数を設定します。
+	/// </summary>
+	/// <param name="getter"></param>
+	void SetPlayer(std::function<Vector3()> getter) { playerGetter_ = std::move(getter); }
+	// ========================================
+private:
+	std::unique_ptr<Object3d> object_;
+	Camera* camera_ = nullptr;
+	BaseScene* parent_ = nullptr;
+	Reticle* reticle_ = nullptr;
+	std::function<Vector3()> playerGetter_;
+
+	int hp_ = 3;
+	int maxHP_ = 3;
+	bool isDead_ = false;
+	bool isDying_ = false;
+
+	Vector3 baseScale_{ 0.8f, 0.8f, 0.8f };
+	Vector3 colliderScale_{ 1.0f, 1.0f, 1.0f };
+
+	// 死亡演出用
+	float deathTimer_ = 0.0f;
+	float deathDuration_ = 1.0f;
+	Vector3 deathVelocity_{ 0.0f, 0.0f, 0.0f };
+	Vector3 deathRotateSpeed_{ 0.0f, 0.0f, 0.0f };
+	float deathAlpha_ = 1.0f;
+
+	const float fixedDt_ = 1.0f / 60.0f;
+};
