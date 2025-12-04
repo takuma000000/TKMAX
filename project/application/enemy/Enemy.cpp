@@ -311,7 +311,7 @@ void Enemy::Update() {
 		add(0, 4); add(1, 5); add(2, 6); add(3, 7);
 	}
 
-	// ---- ロック中のパルス（既存）----
+	// ---- ロック中のパルス ----
 	if (isLocked_) {
 		pulseT_ += 0.12f;
 		float s = 1.0f + 0.15f * sinf(pulseT_);
