@@ -15,7 +15,7 @@ void MidBossCore::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	// スケール調整
 	baseScale_ = { 0.8f, 0.8f, 0.8f };
 	object_->SetScale(baseScale_);
-	colliderScale_ = { 1.0f, 1.0f, 1.0f };
+	colliderScale_ = { 1.71f, 1.71f, 1.71f };
 }
 
 void MidBossCore::SetCamera(Camera* cam) {
@@ -166,6 +166,8 @@ void MidBossCore::ImGuiDebug() {
 		SetColliderScale(col);
 	}
 
+
+
 	ImGui::Text("HP: %d / %d", hp_, maxHP_);
 	ImGui::Text("状態: %s", isDead_ ? "死" : (isDying_ ? "死亡演出中" : "生"));
 
@@ -198,4 +200,9 @@ void MidBossCore::StartDeathReaction(const Vector3& hitDir) {
 	deathDuration_ = 0.8f;
 	deathVelocity_ = dir * 2.5f + Vector3{ 0.0f, 1.2f, 0.0f };
 	deathRotateSpeed_ = { 0.0f, 2.0f, 0.0f };
+}
+
+void MidBossCore::SyncTransform() {
+	if (!object_) return;
+	object_->Update();  // 行列と定数バッファだけ更新
 }

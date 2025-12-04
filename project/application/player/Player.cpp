@@ -433,6 +433,8 @@ void Player::RBShoot() {
 		bullet->SetPlayer(this);      // プレイヤー設定
 		bullet->SetTrailGroup("trail_rb");
 
+		bullet->SetCore(core_);
+
 		bullets_.push_back(std::move(bullet)); // 弾リストに追加
 	}
 }
@@ -468,6 +470,8 @@ void Player::RTShoot() {
 			// RT専用の軌跡
 			bullet->SetTrailGroup("trail_rt");
 
+			bullet->SetCore(core_);
+
 			bullets_.push_back(std::move(bullet)); // 弾リストに追加
 
 			// 見た目のロックは解除
@@ -501,6 +505,8 @@ void Player::LBShoot() {
 			bullet->SetEnemy(enemy.get()); // 敵設定
 			bullet->SetPlayer(this); // プレイヤー設定
 
+			bullet->SetCore(core_);
+
 			// LB専用の軌跡
 			bullet->SetTrailGroup("trail_lb");
 
@@ -523,6 +529,8 @@ void Player::LTShoot() {
 		bullet->SetCamera(camera);
 		bullet->SetPlayer(this);
 		bullet->SetTrailGroup("trail_lt");
+
+		bullet->SetCore(core_);
 
 		// --- 敵方向基準（いなければ前方） ---
 		Vector3 toEnemyDir = { 0,0,1 };

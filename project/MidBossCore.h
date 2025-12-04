@@ -40,7 +40,6 @@ public:
 	/// デバッグ用ImGui表示。
 	/// </summary>
 	void ImGuiDebug();
-
 	/// <summary>
 	/// 敵が死亡したかどうかを取得します。
 	/// </summary>
@@ -62,6 +61,10 @@ public:
 	/// </summary>
 	/// <param name="hitDir"></param>
 	void StartDeathReaction(const Vector3& hitDir);
+	/// <summary>
+	/// モデルの変換情報を同期します。
+	/// </summary>
+	void SyncTransform();
 
 	// Getter==================================
 	/// <summary>
@@ -134,19 +137,19 @@ private:
 	Reticle* reticle_ = nullptr;
 	std::function<Vector3()> playerGetter_;
 
-	int hp_ = 3;
-	int maxHP_ = 3;
-	bool isDead_ = false;
-	bool isDying_ = false;
+	int hp_ = 3; // 現在のHP
+	int maxHP_ = 3; // 最大HP
+	bool isDead_ = false; // 完全に死亡したかどうか
+	bool isDying_ = false; // 死亡演出中かどうか
 
-	Vector3 baseScale_{ 0.8f, 0.8f, 0.8f };
-	Vector3 colliderScale_{ 1.0f, 1.0f, 1.0f };
+	Vector3 baseScale_{ 0.8f, 0.8f, 0.8f }; // 基本スケール
+	Vector3 colliderScale_{ 1.71f, 1.71f, 1.71f }; // 当たり判定用スケール
 
 	// 死亡演出用
-	float deathTimer_ = 0.0f;
-	float deathDuration_ = 1.0f;
+	float deathTimer_ = 0.0f; // 経過時間
+	float deathDuration_ = 1.0f; // 演出の長さ（秒相当）
 	Vector3 deathVelocity_{ 0.0f, 0.0f, 0.0f };
-	Vector3 deathRotateSpeed_{ 0.0f, 0.0f, 0.0f };
+	Vector3 deathRotateSpeed_{ 0.0f, 0.0f, 0.0f }; // 回転速度
 	float deathAlpha_ = 1.0f;
 
 	const float fixedDt_ = 1.0f / 60.0f;

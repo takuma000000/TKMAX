@@ -5,6 +5,7 @@
 #include <engine/effect/particle/ParticleManager.h>
 #include "AABB.h"
 #include "Player.h"
+#include "MidBossCore.h"
 
 void PlayerBullet::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	// 3Dオブジェクト作成
@@ -53,7 +54,9 @@ void PlayerBullet::Update() {
 		pm->Emit("enemyHit_spark", emitPos, 1);
 	}
 
+	// =========================================
 	// 敵が存在するなら当たり判定チェック
+	// =========================================
 	if (enemy_ && !enemy_->IsDead()) { // 敵が死んでなければ当たり判定
 		// 弾の座標とスケールを取得
 		Vector3 bulletPos = object_->GetTranslate();
@@ -103,7 +106,7 @@ void PlayerBullet::Update() {
 				// デブリ（破片）100個
 				pm->Emit("lt_nova_debris", hitPos, 120);
 
-				// （オプション）黒いクラックスパーク（地割れ粒）
+				// 黒いクラックスパーク（地割れ粒）
 				pm->Emit("lt_nova_crack", hitPos, 80);
 			} else {
 				// ============================
@@ -134,6 +137,73 @@ void PlayerBullet::Update() {
 			if (player_) {
 				if (isLTBullet) {
 					player_->StartCameraShake(40); // ドーンッ
+				} else {
+					player_->StartCameraShake(10);
+				}
+			}
+
+			return;
+		}
+	}
+
+	// =========================================
+	// 核（MidBossCore）との当たり判定
+	// =========================================
+	if (core_ && !core_->IsDead()) {
+		// 弾の座標とスケールを取得
+		Vector3 bulletPos = object_->GetTranslate();
+		Vector3 bulletScale = object_->GetScale();
+		AABB bulletBox(bulletPos, bulletScale);
+
+		// 核のワールド座標とスケールを取得
+		Vector3 corePos = core_->GetWorldPosition();
+		Vector3 coreSize = core_->GetColliderScale();
+		AABB coreBox(corePos, coreSize);
+
+		// 当たり判定チェック
+		if (bulletBox.IsCollidingWithAABB(coreBox)) {
+			isHit_ = true;
+			isDead_ = true;
+
+			ParticleManager* pm = ParticleManager::GetInstance();
+			Vector3 hitPos = bulletPos;
+
+			bool isLTBullet = (trailGroup_ == "trail_lt");
+
+			int damage = isSpecialAttack_ ? 100 : 1;
+			bool willDie = (core_ && core_->GetHP() <= damage);
+
+			if (isLTBullet) {
+				// 敵と同じ“超必殺”演出でOK
+				pm->Emit("lt_nova_core", hitPos, 1);
+				pm->Emit("lt_nova_wave", hitPos, 3);
+				pm->Emit("lt_nova_burst", hitPos, 40);
+				pm->Emit("lt_nova_debris", hitPos, 120);
+				pm->Emit("lt_nova_crack", hitPos, 80);
+			} else {
+				pm->Emit("enemyHit_flash", hitPos, 1);
+				pm->Emit("enemyHit_ring", hitPos, 1);
+				pm->Emit("enemyHit_rays", hitPos, 18);
+				pm->Emit("enemyHit_spark", hitPos, 32);
+			}
+
+			// ダメージ適用
+			if (core_ && !core_->IsDead()) {
+				core_->OnHitWithDamage(damage);
+
+				if (willDie) {
+					Vector3 knockDir = velocity_;
+					if (MyMath::Length(knockDir) < 0.001f) {
+						knockDir = corePos - bulletPos;
+					}
+					core_->StartDeathReaction(knockDir);
+				}
+			}
+
+			// カメラシェイクも敵と同じノリで
+			if (player_) {
+				if (isLTBullet) {
+					player_->StartCameraShake(40);
 				} else {
 					player_->StartCameraShake(10);
 				}

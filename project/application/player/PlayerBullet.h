@@ -13,6 +13,7 @@
 #include <engine/effect/particle/ParticlerEmitter.h>
 
 class Player;
+class MidBossCore;
 
 //=============================================================
 // PlayerBulletクラス
@@ -94,6 +95,11 @@ public:
 	/// </summary>
 	/// <param name="sec"></param>
 	void  SetHomingDelay(float sec) { homingDelay_ = std::max(0.0f, sec); }
+	/// <summary>
+	/// 中ボスコアを設定します。
+	/// </summary>
+	/// <param name="core"></param>
+	void SetCore(MidBossCore* core) { core_ = core; }
 	// =========================================
 	// Getter===================================
 	/// <summary>
@@ -112,6 +118,7 @@ private:
 	bool isHit_ = false;
 
 	Enemy* enemy_ = nullptr;
+	MidBossCore* core_ = nullptr;
 
 	bool isSpecialAttack_ = false; // 一撃必殺フラグ
 

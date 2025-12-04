@@ -17,6 +17,8 @@
 #include "externals/imgui/imgui.h"
 #endif
 
+class MidBossCore;
+
 //=============================================================
 // Playerクラス
 // プレイヤーの動作を制御するクラス。
@@ -163,6 +165,11 @@ public:
 	/// </summary>
 	/// <param name="visible"></param>
 	void SetReticleVisible(bool visible) { reticleVisible_ = visible; }
+	/// <summary>
+	/// ミッドボスコアを設定します。
+	/// </summary>
+	/// <param name="core"></param>
+	void SetMidBossCore(MidBossCore* core) { core_ = core; }
 	// =========================================
 	enum class DeathPhase { None, FaultSparks, FlyAway }; // 撃墜演出フェーズ
 
@@ -191,6 +198,7 @@ private:
 	Object3dCommon* common_ = nullptr;
 	DirectXCommon* dxCommon_ = nullptr;
 	Enemy* enemy_ = nullptr;
+	MidBossCore* core_ = nullptr;
 
 	BaseScene* parentScene_ = nullptr;
 	std::unique_ptr<Object3d> object_;

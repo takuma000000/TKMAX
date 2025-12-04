@@ -32,6 +32,10 @@ void EnemyManager::Update(float dt) {
 
 		// 死亡しきったらポインタ破棄
 		if (midBossCore_->IsDead()) {
+			if (player_) {
+				player_->SetMidBossCore(nullptr);
+			}
+
 			midBossCore_.reset();
 		}
 	}
@@ -455,6 +459,9 @@ void EnemyManager::UpdateWave3(float dt) {
 			}
 			wave3ReviveInProgress_ = false;
 			wave3CoreTimer_ = 0.0f;
+			if (player_) {
+				player_->SetMidBossCore(nullptr);
+			}
 			midBossCore_.reset();
 		}
 
@@ -489,6 +496,9 @@ void EnemyManager::UpdateWave3(float dt) {
 	if (!coreAlive) {
 		wave3ReviveInProgress_ = false;
 		wave3CoreTimer_ = 0.0f;
+		if (player_) {
+			player_->SetMidBossCore(nullptr);
+		}
 		midBossCore_.reset();
 		wave3PrevAliveMidBossCount_ = aliveMidBossCount;
 		return;
@@ -598,13 +608,14 @@ void EnemyManager::SpawnWave3Core() {
 	midBossCore_->SetScale({ 0.8f, 0.8f, 0.8f });
 	midBossCore_->SetHP(wave3CoreHP_);
 
-	// 当たり判定スケールは MidBossCore 側の ImGui でいじるので
-	// ここではデフォルトのままでも OK（必要なら初期値だけ渡す）
-	// midBossCore_->SetColliderScale({ 1.0f, 1.0f, 1.0f });
+	midBossCore_->SyncTransform();
 
 	if (player_) {
 		midBossCore_->SetReticle(player_->GetReticle());
 		midBossCore_->SetPlayer([this]() { return player_->GetPosition(); });
+
+		// プレイヤーにもコアを教える
+		player_->SetMidBossCore(midBossCore_.get());
 	}
 }
 
