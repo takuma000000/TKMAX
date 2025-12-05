@@ -21,10 +21,14 @@ void Enemy::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 
 void Enemy::Update() {
 
+	// 共通の固定フレーム時間
+	const float dt = 1.0f / 60.0f;
+
 	// 死亡演出中ならこっちを優先
 	if (isDying_) {
 		deathTimer_ += dt;
 		float t = std::min(deathTimer_ / deathDuration_, 1.0f); // 0.0 → 1.0
+
 		// 基本値を取得
 		Vector3 pos = object_->GetTranslate();
 		Vector3 rot = object_->GetRotate();
@@ -117,123 +121,177 @@ void Enemy::Update() {
 		return;
 	}
 
+	// ===== 怒りタイマー更新 =====
+	if (isAngry_) {
+		angryTimer_ += dt;
+		if (angryTimer_ >= angryDuration_) {
+			isAngry_ = false;
+		}
+	}
+
 	// ---- 位置更新（挙動別）----
 	Vector3 pos = object_->GetTranslate();
 
-	switch (behavior_) { // 挙動別移動
-	case EnemyBehavior::StraightStop: { // いまの「Z手前に進んでstopZで止まる」
-		if (!stopMove_) {
-			pos += velocity_;
-			if (pos.z <= stopZ_) { pos.z = stopZ_; stopMove_ = true; }
-		}
-		break;
-	}
-	case EnemyBehavior::SineX: { // Xをサイン波で揺らしながら前進
-		t_ += 0.05f;
-		pos.z += velocity_.z; // 手前へ
-		pos.x = startX_ + std::sinf(sinePhase_ + t_ * sineFreq_) * sineAmpX_;
-		if (pos.z <= stopZ_) { pos.z = stopZ_; }
-		break;
-	}
-	case EnemyBehavior::StrafeLtoR: { // Xを左右往復しながら前進
-		pos.z += velocity_.z;
-		// 簡易左右往復
-		strafePosX_ += strafeSpeed_ * strafeDir_;
-		if (strafePosX_ > strafeRight_) { strafePosX_ = strafeRight_; strafeDir_ = -1; }
-		if (strafePosX_ < strafeLeft_) { strafePosX_ = strafeLeft_;  strafeDir_ = +1; }
-		pos.x = strafePosX_;
-		if (pos.z <= stopZ_) { pos.z = stopZ_; }
-		break;
-	}
-	case EnemyBehavior::ChasePlayer: { // プレイヤー方向にじわっと追尾
-		pos.z += velocity_.z;
-		if (playerGetter_) {
-			Vector3 toP = playerGetter_() - pos;
-			Vector3 desire = { toP.x, toP.y, 0.0f };
-			float len = MyMath::Length(desire);
-			if (len > 0.001f) {
-				Vector3 dir = MyMath::Normalize(desire);
-				pos.x += dir.x * chaseSpeed_;
-				pos.y += dir.y * chaseSpeed_;
-			}
-		}
-		if (pos.z <= stopZ_) { pos.z = stopZ_; }
-		break;
-	}
-	case EnemyBehavior::PounceFromAbove:
-	{
-		const float dt = 1.0f / 60.0f; // 必要なら外のdtを使ってもOK
+	// ★ freezeMove_ のときは「挙動による位置更新」を全部スキップ
+	if (!freezeMove_) {
 
-		if (!pounceStarted_) {
+		switch (behavior_) { // 挙動別移動
+		case EnemyBehavior::StraightStop: { // いまの「Z手前に進んでstopZで止まる」
+			if (!stopMove_) {
+				pos += velocity_;
+				if (pos.z <= stopZ_) { pos.z = stopZ_; stopMove_ = true; }
+			}
 			break;
 		}
-
-		// 軌道エフェクト用
-		ParticleManager* pm = ParticleManager::GetInstance();
-
-		// まだ落下中（曲線で近づいている）フェーズ
-		if (!pounceDiving_) {
-
-			pounceTime_ += dt;
-			float t = pounceTime_ / pounceDuration_;
-			if (t > 1.0f) t = 1.0f;
-
-			// 0→1 を少しなめらかに
-			auto EaseOutQuad = [](float x) {
-				return 1.0f - (1.0f - x) * (1.0f - x);
-				};
-			float u = EaseOutQuad(t);
-
-			// スタート→頂点→ターゲット を通るカーブ
-			Vector3 pos1 = MyMath::Vector3Lerp(pounceStart_, pounceApex_, u);
-			Vector3 pos2 = MyMath::Vector3Lerp(pounceApex_, pounceTarget_, u);
-			Vector3 newPos = MyMath::Vector3Lerp(pos1, pos2, u);
-
-			pos = newPos; // Enemy::Update 内の pos を更新
-
-			// このフレームの軌道位置に「レール＋スパーク」を出す
-			{
-				Vector3 emitPos = pos;
-				// コアレール（軌道の筋）
-				pm->Emit("enemyPounceTrail", emitPos, 2);   // 本数は好みで調整
-				// スパーク（軌道から飛び散る光）
-				pm->Emit("enemyPounceSpark", emitPos, 3);
+		case EnemyBehavior::SineX: { // Xをサイン波で揺らしながら前進
+			t_ += 0.05f;
+			pos.z += velocity_.z; // 手前へ
+			pos.x = startX_ + std::sinf(sinePhase_ + t_ * sineFreq_) * sineAmpX_;
+			if (pos.z <= stopZ_) { pos.z = stopZ_; }
+			break;
+		}
+		case EnemyBehavior::StrafeLtoR: { // Xを左右往復しながら前進
+			pos.z += velocity_.z;
+			// 簡易左右往復
+			strafePosX_ += strafeSpeed_ * strafeDir_;
+			if (strafePosX_ > strafeRight_) { strafePosX_ = strafeRight_; strafeDir_ = -1; }
+			if (strafePosX_ < strafeLeft_) { strafePosX_ = strafeLeft_;  strafeDir_ = +1; }
+			pos.x = strafePosX_;
+			if (pos.z <= stopZ_) { pos.z = stopZ_; }
+			break;
+		}
+		case EnemyBehavior::ChasePlayer: { // プレイヤー方向にじわっと追尾
+			pos.z += velocity_.z;
+			if (playerGetter_) {
+				Vector3 toP = playerGetter_() - pos;
+				Vector3 desire = { toP.x, toP.y, 0.0f };
+				float len = MyMath::Length(desire);
+				if (len > 0.001f) {
+					Vector3 dir = MyMath::Normalize(desire);
+					pos.x += dir.x * chaseSpeed_;
+					pos.y += dir.y * chaseSpeed_;
+				}
+			}
+			if (pos.z <= stopZ_) { pos.z = stopZ_; }
+			break;
+		}
+		case EnemyBehavior::PounceFromAbove:
+		{
+			if (!pounceStarted_) {
+				break;
 			}
 
-			// 落下フェーズが終わったら「通過フェーズ」に切り替え
-			if (t >= 1.0f) {
+			// 軌道エフェクト用
+			ParticleManager* pm = ParticleManager::GetInstance();
 
-				// ここでは「これまでの軌道の延長線上」に進ませる
-				//    スタート→ターゲット方向を基準にして、そのまま突き抜ける
-				Vector3 dir = pounceTarget_ - pounceStart_;
-				float len = MyMath::Length(dir);
-				if (len > 0.001f) {
-					dir = MyMath::Normalize(dir);
-				} else {
-					// 万が一同一点だった場合の保険方向
-					dir = { 0.0f, -0.1f, -1.0f };
+			// まだ落下中（曲線で近づいている）フェーズ
+			if (!pounceDiving_) {
+
+				pounceTime_ += dt;
+				float t = pounceTime_ / pounceDuration_;
+				if (t > 1.0f) t = 1.0f;
+
+				// 0→1 を少しなめらかに
+				auto EaseOutQuad = [](float x) {
+					return 1.0f - (1.0f - x) * (1.0f - x);
+					};
+				float u = EaseOutQuad(t);
+
+				// スタート→頂点→ターゲット を通るカーブ
+				Vector3 pos1 = MyMath::Vector3Lerp(pounceStart_, pounceApex_, u);
+				Vector3 pos2 = MyMath::Vector3Lerp(pounceApex_, pounceTarget_, u);
+				Vector3 newPos = MyMath::Vector3Lerp(pos1, pos2, u);
+
+				pos = newPos; // Enemy::Update 内の pos を更新
+
+				// このフレームの軌道位置に「レール＋スパーク」を出す
+				{
+					Vector3 emitPos = pos;
+					// コアレール（軌道の筋）
+					pm->Emit("enemyPounceTrail", emitPos, 2);
+					// スパーク（軌道から飛び散る光）
+					pm->Emit("enemyPounceSpark", emitPos, 3);
 				}
 
-				// 少し下向き成分を足して「落ちていく」感じを出す
-				dir.y -= 0.2f;
-				dir = MyMath::Normalize(dir);
+				// 落下フェーズが終わったら「通過フェーズ」に切り替え
+				if (t >= 1.0f) {
 
-				float diveSpeed = 0.7f; // 落下後の突っ切り速度（好みで調整）
-				velocity_ = dir * diveSpeed;
+					// ここでは「これまでの軌道の延長線上」に進ませる
+					//    スタート→ターゲット方向を基準にして、そのまま突き抜ける
+					Vector3 dir = pounceTarget_ - pounceStart_;
+					float len = MyMath::Length(dir);
+					if (len > 0.001f) {
+						dir = MyMath::Normalize(dir);
+					} else {
+						// 万が一同一点だった場合の保険方向
+						dir = { 0.0f, -0.1f, -1.0f };
+					}
 
-				pounceDiving_ = true; // 通過フェーズへ
+					// 少し下向き成分を足して「落ちていく」感じを出す
+					dir.y -= 0.2f;
+					dir = MyMath::Normalize(dir);
+
+					float diveSpeed = 0.7f; // 落下後の突っ切り速度（好みで調整）
+					velocity_ = dir * diveSpeed;
+
+					pounceDiving_ = true; // 通過フェーズへ
+				}
+			} else {
+				// 通過フェーズ：そのまま直線移動（もうプレイヤー方向に曲がらない）
+				pos += velocity_;
+
+				// ダイブ中も軌道を残す（本数は落としてもOK）
+				Vector3 emitPos = pos;
+				pm->Emit("enemyPounceTrail", emitPos, 2);
+				pm->Emit("enemyPounceSpark", emitPos, 2);
 			}
-		} else {
-			// 通過フェーズ：そのまま直線移動（もうプレイヤー方向に曲がらない）
-			pos += velocity_;
-
-			// ダイブ中も軌道を残す（本数は落としてもOK）
-			Vector3 emitPos = pos;
-			pm->Emit("enemyPounceTrail", emitPos, 2);
-			pm->Emit("enemyPounceSpark", emitPos, 2);
+			break;
 		}
-		break;
-	}
+		case EnemyBehavior::FreeRoam:
+		{
+			// 目標点がない or 近づきすぎたら、新しい目標点を決める
+			auto random01 = []() {
+				return static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
+				};
+
+			float distToTarget = MyMath::Length(roamTarget_ - pos);
+			if (!hasRoamTarget_ || distToTarget < 0.5f) {
+				hasRoamTarget_ = true;
+
+				// 基本は範囲内ランダム
+				Vector3 target;
+				target.x = roamMin_.x + (roamMax_.x - roamMin_.x) * random01();
+				target.y = roamMin_.y + (roamMax_.y - roamMin_.y) * random01();
+				target.z = roamMin_.z + (roamMax_.z - roamMin_.z) * random01();
+
+				// ★ 怒り時はプレイヤー方向に少し寄せる
+				if (isAngry_ && playerGetter_) {
+					Vector3 p = playerGetter_();
+					// プレイヤーのXだけ強めに反映して「間に割り込んでくる」感じ
+					target.x = (target.x * 0.4f) + (p.x * 0.6f);
+					// 範囲からはみ出さないようクランプ
+					target.x = std::max(roamMin_.x, std::min(roamMax_.x, target.x));
+				}
+
+				roamTarget_ = target;
+			}
+
+			// 目標に向かって移動
+			Vector3 toT = roamTarget_ - pos;
+			float len = MyMath::Length(toT);
+			if (len > 0.001f) {
+				Vector3 dir = toT / len;
+				float speed = isAngry_ ? roamSpeedAngry_ : roamSpeedNormal_;
+				pos += dir * speed;
+			}
+
+			// 念のため範囲内にクランプ
+			pos.x = std::max(roamMin_.x, std::min(roamMax_.x, pos.x));
+			pos.y = std::max(roamMin_.y, std::min(roamMax_.y, pos.y));
+			pos.z = std::max(roamMin_.z, std::min(roamMax_.z, pos.z));
+			break;
+		}
+		} // switch(behavior_)
 	}
 
 	object_->SetTranslate(pos); // 位置反映
@@ -261,7 +319,6 @@ void Enemy::Update() {
 
 		// ▼ レティクルと交差していたら赤に変更
 		if (reticle_) {
-
 			// 弾と同じレイ（プレイヤー位置 → aimDir）で判定したい
 			Vector3 rayOrigin;
 
@@ -444,7 +501,7 @@ void Enemy::StartDeathReaction(const Vector3& hitDir) {
 	}
 }
 
-void Enemy::SyncTransform(){
+void Enemy::SyncTransform() {
 	if (!object_) return;
 	object_->Update();  // 行列と定数バッファだけ更新
 }

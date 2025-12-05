@@ -45,6 +45,8 @@ void EnemyManager::Update(float dt) {
 	/// ───────────────────────────────────────────────
 	for (auto it = enemies_->begin(); it != enemies_->end(); ) {
 		Enemy* e = it->get();
+		// ★ ここでフラグを渡す
+		e->SetFreezeMove(freezeEnemies_);
 		e->Update();
 
 		if (e->IsDead()) {
@@ -480,6 +482,16 @@ void EnemyManager::UpdateWave3(float dt) {
 		wave3CoreTimer_ = 0.0f;
 		SpawnWave3Core();
 
+		// 残り1体の中ボスを怒りモードにする
+		const float angryDuration = 8.0f; // 何秒怒らせるか（あとで調整）
+		for (auto& e : *enemies_) {
+			if (!e) continue;
+			if (e->GetType() != EnemyType::Wave3MidBoss) continue;
+			if (e->IsDead() || e->IsDying()) continue;
+
+			e->SetAngry(angryDuration);
+		}
+
 		wave3PrevAliveMidBossCount_ = aliveMidBossCount;
 		return;
 	}
@@ -544,20 +556,26 @@ void EnemyManager::SpawnWave3MidBossStage() {
 	// 左右 2 体の中ボスを直線で出して、手前で停止させる
 	EnemySpawner::SpawnLine(
 		*enemies_,
-		2,                             // 敵の数
-		wave3LeftPos_.y,               // Y は左右同じ
-		wave3LeftPos_.z,               // Z 開始位置
-		wave3LeftPos_.x,               // X 開始（左）
-		(wave3RightPos_.x - wave3LeftPos_.x), // X間隔（右まで）
-		dxPtr,
-		camPtr,
-		parentPtr,
+		2,
+		wave3LeftPos_.y,
+		wave3LeftPos_.z,
+		wave3LeftPos_.x,
+		(wave3RightPos_.x - wave3LeftPos_.x),
+		dxPtr, camPtr, parentPtr,
 		[&](Enemy& e) {
-			e.SetBehavior(EnemyBehavior::StraightStop);
-			e.SetVelocity({ 0.0f, 0.0f, -0.2f });
-			e.SetStopZ(40.0f); // ある程度手前で止まる
-			e.SetHP(12);       // 仮の中ボスHP（あとで調整）
-			e.SetScale({ 1.5f,1.5f,1.5f }); // ちょっと大きめにしてボス感
+
+			// 中ボスの挙動設定
+			e.SetBehavior(EnemyBehavior::FreeRoam);
+			// ↓ 速度や範囲はあとでImGui化してもいい
+			e.SetFreeRoamArea(
+				{ -18.0f, 4.0f, 40.0f },   // min
+				{ 18.0f,10.0f, 62.0f },   // max ← z を 70 → 62 に手前寄せ
+				0.10f,                     // 通常速度（もっと遅くしたければここ）
+				0.24f                      // 怒り時速度（暴れ感）
+			);
+
+			e.SetHP(12);
+			e.SetScale({ 1.5f,1.5f,1.5f });
 
 			if (player_) {
 				e.SetReticle(player_->GetReticle());
@@ -702,6 +720,10 @@ void EnemyManager::ImGuiDebug() {
 	}
 
 	ImGui::Begin("敵ステータス");
+
+	// ★ 敵の動きを止めるトグル
+	ImGui::Checkbox("敵の動きを止める", &freezeEnemies_);
+	ImGui::Separator();
 
 	// 撃破数／最大数
 	int defeated = defeatedEnemyCount_ ? *defeatedEnemyCount_ : 0;

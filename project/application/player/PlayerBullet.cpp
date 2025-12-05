@@ -122,7 +122,7 @@ void PlayerBullet::Update() {
 			if (enemy_ && !enemy_->IsDead()) {
 				enemy_->OnHitWithDamage(damage);
 
-				// ★ 致死だったならノックバック開始
+				//  致死だったならノックバック開始
 				if (willDie) {
 					// ノックバック方向は「弾の進行方向」
 					Vector3 knockDir = velocity_;

@@ -22,6 +22,7 @@ enum class EnemyBehavior {
 	StrafeLtoR,      // Xを左右往復（矩形波）しながら前進
 	ChasePlayer,     // プレイヤー方向にじわっと追尾
 	PounceFromAbove, // 上空から急降下してくる
+	FreeRoam,        // 自由に動き回る
 };
 // 死亡リアクションパターン
 enum class EnemyDeathReaction {
@@ -63,6 +64,11 @@ public:
 	/// Transform情報をObject3dに同期します。
 	/// </summary>
 	void SyncTransform();
+	/// <summary>
+	/// 敵が怒っているかどうかを取得します。
+	/// </summary>
+	/// <returns></returns>
+	bool IsAngry() const { return isAngry_; }
 
 	// Getter===================================
 	/// <summary>当たり判定用スケールを取得します。</summary>
@@ -168,6 +174,42 @@ public:
 	/// </summary>
 	/// <param name="t"></param>
 	void SetType(EnemyType t) { type_ = t; }
+	/// <summary>
+	/// FreeRoam用のパラメータを設定します。
+	/// </summary>
+	/// <param name="min"></param>
+	/// <param name="max"></param>
+	/// <param name="normalSpeed"></param>
+	/// <param name="angrySpeed"></param>
+	void SetFreeRoamArea(const Vector3& min, const Vector3& max,
+		float normalSpeed, float angrySpeed) {
+		roamMin_ = min;
+		roamMax_ = max;
+		roamSpeedNormal_ = normalSpeed;
+		roamSpeedAngry_ = angrySpeed;
+
+		// 初期ターゲットは範囲の中心あたりにしておく
+		roamTarget_ = {
+			(min.x + max.x) * 0.5f,
+			(min.y + max.y) * 0.5f,
+			(min.z + max.z) * 0.5f,
+		};
+		hasRoamTarget_ = false;
+	}
+	/// <summary>
+	/// 敵を怒り状態にします。
+	/// </summary>
+	/// <param name="duration"></param>
+	void SetAngry(float duration) {
+		isAngry_ = true;
+		angryDuration_ = duration;
+		angryTimer_ = 0.0f;
+	}
+	/// <summary>
+	/// 移動凍結フラグを設定します。
+	/// </summary>
+	/// <param name="v"></param>
+	void SetFreezeMove(bool v) { freezeMove_ = v; }
 	// =========================================
 
 private:
@@ -245,4 +287,24 @@ private:
 	bool   pounceDiving_ = false; // 急降下フェーズに入ったかどうか
 
 	const float dt = 1.0f / 60.0f; // 固定フレームレート想定
+
+	// ==== FreeRoam（Wave3中ボス用） ====
+	// 動き回る範囲
+	Vector3 roamMin_ = { -18.0f, 4.0f, 40.0f };
+	Vector3 roamMax_ = { 18.0f,10.0f, 62.0f };
+	// 通常＆怒り時のベース速度
+	float   roamSpeedNormal_ = 0.10f;
+	float   roamSpeedAngry_ = 0.24f;
+	// パターンA/B/C制御用
+	int   roamPattern_ = 0;      // 0:A 1:B 2:C
+	float roamPatternTimer_ = 0.0f;   // パターン切替用タイマー
+	float roamAngle_ = 0.0f;   // 円運動などで使う角度
+	// ターゲット追尾用（パターンC用）
+	Vector3 roamTarget_ = { 0.0f, 0.0f, 0.0f };
+	bool    hasRoamTarget_ = false;
+	// ==== 怒り状態 ====
+	bool  isAngry_ = false; // 怒り状態フラグ
+	float angryTimer_ = 0.0f;  // 怒り経過時間
+	float angryDuration_ = 0.0f;  // 怒り持続時間
+	bool freezeMove_ = false; // 動きを一時停止するか
 };

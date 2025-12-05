@@ -1,5 +1,7 @@
 #include "Player.h"
 #include <engine/effect/particle/ParticleManager.h>
+#include "AABB.h"
+#include <limits>
 
 void Player::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	common_ = common; // Object3d共通
@@ -407,6 +409,7 @@ void Player::HandleShooting() {
 
 void Player::RBShoot() {
 	Input* input = Input::GetInstance();
+
 	// ▼ RB：通常弾（レティクルが描いているガイドライン通りに発射）
 	if (input->TriggerButton(XINPUT_GAMEPAD_RIGHT_SHOULDER)) {
 		auto bullet = std::make_unique<PlayerBullet>();
@@ -420,22 +423,62 @@ void Player::RBShoot() {
 		Vector3 dir = { 0, 0, 1 }; // デフォは前方
 
 		if (reticle_) {
-			dir = reticle_->GetAimDirection(); // ★ 新規に追加した関数を使う
+			dir = reticle_->GetAimDirection();
 			float len = MyMath::Length(dir);
 			if (len <= 0.01f) {
 				dir = { 0, 0, 1 }; // 念のための保険
 			}
 		}
 
-		bullet->SetVelocity(dir * normalBulletSpeed_); // 速度設定
+		// 速度セット（見た目用）
+		bullet->SetVelocity(dir * normalBulletSpeed_);
 		bullet->SetCamera(camera);
-		bullet->SetEnemy(enemy_);     // RBは敵ロックなしでOKなら null に
-		bullet->SetPlayer(this);      // プレイヤー設定
+		bullet->SetPlayer(this);
 		bullet->SetTrailGroup("trail_rb");
-
 		bullet->SetCore(core_);
 
-		bullets_.push_back(std::move(bullet)); // 弾リストに追加
+		// ==============================
+		// ここから「どの敵を狙うか」を決定
+		// ==============================
+
+		Enemy* targetEnemy = nullptr;
+
+		if (allEnemies_) {
+			// レイの終点（Reticle の maxDist と合わせる。いま 150.0f を使ってるなら同じ値）
+			Vector3 rayDir = dir;
+			float len = MyMath::Length(rayDir);
+			if (len > 0.001f) {
+				rayDir = rayDir / len;
+			}
+			Vector3 rayEnd = startPos + rayDir * 150.0f;
+
+			float closestDist = std::numeric_limits<float>::max();
+
+			for (auto& e : *allEnemies_) {
+				if (!e) continue;
+				if (e->IsDead() || e->IsDying()) continue;
+
+				Vector3 center = e->GetWorldPosition();
+				Vector3 size = e->GetColliderScale(); // Enemy の AABB と同じスケールを使用
+
+				AABB box(center, size);
+
+				if (box.IsIntersectSegment(startPos, rayEnd)) {
+					// 一番手前の敵を採用
+					float dist = MyMath::Length(center - startPos);
+					if (dist < closestDist) {
+						closestDist = dist;
+						targetEnemy = e.get();
+					}
+				}
+			}
+		}
+
+		// 見つかった敵をこの弾のターゲットにする
+		bullet->SetEnemy(targetEnemy); // nullptr なら「何にも当たらない」通常弾
+
+		// 弾リストに追加
+		bullets_.push_back(std::move(bullet));
 	}
 }
 

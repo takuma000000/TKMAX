@@ -219,4 +219,6 @@ private:
 	void SpawnWave3ExtraMidBoss();
 
 	std::unique_ptr<MidBossCore> midBossCore_ = nullptr;// 蘇生核
+
+	bool freezeEnemies_ = false; // デバッグ用：敵移動停止フラグ
 };

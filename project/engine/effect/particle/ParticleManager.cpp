@@ -1406,27 +1406,27 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 		float height = std::uniform_real_distribution<float>(-1.2f, 1.2f)(rng);
 		p.transform.translate.y += height;
 
-		// ★ もっと長く・太くして視認性アップ
+		// もっと長く・太くして視認性アップ
 		p.transform.scale = { 3.2f, 0.14f, 1.0f };
 
-		// ★ 明るめの邪悪紫に変更（青成分足すと光って見える）
+		// 明るめの邪悪紫に変更（青成分足すと光って見える）
 		p.color = { 0.85f, 0.2f, 1.0f, 0.95f };
 
 		p.velocity = { 0.0f, 0.0f, 0.0f };
 
-		// ★ 寿命もちょい伸ばすと“渦巻き”感が出る
+		// 寿命もちょい伸ばすと“渦巻き”感が出る
 		p.lifeTime = 0.55f;
 	} else if (groupName == "core_charge_flash") {
 
 		float s = std::uniform_real_distribution<float>(0.25f, 0.55f)(rng);
 
-		// ★ 完全に正面に出るように Z も s にする
+		// 完全に正面に出るように Z も s にする
 		p.transform.scale = { s, s, s };
 
-		// ★ 発光強めの深紅（alpha も上げる）
+		// 発光強めの深紅（alpha も上げる）
 		p.color = { 1.0f, 0.05f, 0.15f, 1.0f };
 
-		// ★ 寿命をほんの少しだけ伸ばすと見える
+		// 寿命をほんの少しだけ伸ばすと見える
 		p.lifeTime = 0.18f;
 
 		p.velocity = { 0.0f, 0.0f, 0.0f };
