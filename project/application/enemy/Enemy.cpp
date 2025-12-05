@@ -394,7 +394,6 @@ void Enemy::OnHitWithDamage(int damage) {
 	hp_ -= damage;
 	if (hp_ <= 0) {
 		hp_ = 0;
-
 		// 方向が取れないならとりあえず前方向とか適当に
 		StartDeathReaction({ 0.0f, 0.0f, 1.0f });
 	}
