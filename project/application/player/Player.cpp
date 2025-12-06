@@ -46,6 +46,14 @@ void Player::Update() {
 		return;
 	}
 
+	// 被弾フラッシュ用タイマー更新
+	if (hitFlashTimer_ > 0.0f) {
+		hitFlashTimer_ -= dt;
+		if (hitFlashTimer_ < 0.0f) {
+			hitFlashTimer_ = 0.0f;
+		}
+	}
+
 	if (reticle_) reticle_->Update(dt);
 
 	HandleGamePadMove(); // ゲームパッドのスティック入力で移動
@@ -84,6 +92,45 @@ void Player::Update() {
 		}
 	}
 
+	// ───────── 自機当たり判定ワイヤーボックス描画 ─────────
+	{
+		Vector3 center = object_->GetTranslate();
+
+		float hx = colliderScale_.x * 0.5f;
+		float hy = colliderScale_.y * 0.5f;
+		float hz = colliderScale_.z * 0.5f;
+
+		auto* lr = LineRenderer::GetInstance();
+
+		// 通常は緑、被弾中だけ赤
+		LineRenderer::Color col = { 0.0f, 1.0f, 0.0f, 1.0f };
+		if (hitFlashTimer_ > 0.0f) {
+			col = { 1.0f, 0.0f, 0.0f, 1.0f };
+		}
+
+		Vector3 p[8] = {
+			{ center.x - hx, center.y - hy, center.z - hz },
+			{ center.x + hx, center.y - hy, center.z - hz },
+			{ center.x - hx, center.y + hy, center.z - hz },
+			{ center.x + hx, center.y + hy, center.z - hz },
+			{ center.x - hx, center.y - hy, center.z + hz },
+			{ center.x + hx, center.y - hy, center.z + hz },
+			{ center.x - hx, center.y + hy, center.z + hz },
+			{ center.x + hx, center.y + hy, center.z + hz },
+		};
+
+		auto add = [&](int a, int b) {
+			lr->AddLine(p[a], p[b], col);
+			};
+
+		// 前面
+		add(0, 1); add(1, 3); add(3, 2); add(2, 0);
+		// 背面
+		add(4, 5); add(5, 7); add(7, 6); add(6, 4);
+		// 横のつなぎ
+		add(0, 4); add(1, 5); add(2, 6); add(3, 7);
+	}
+
 	Death(); // 撃墜処理
 
 	// ---- ジェット煙（HPが0なら停止）----
@@ -117,6 +164,12 @@ void Player::ImGuiDebug() {
 	}
 	if (ImGui::DragFloat3("拡縮cale", &scale.x, 0.01f)) {
 		object_->SetScale(scale);
+	}
+	ImGui::Separator(); // 区切り線
+	// 当たり判定サイズ
+	Vector3 col = colliderScale_;
+	if (ImGui::DragFloat3("当たり判定サイズ(自機)", &col.x, 0.01f, 0.01f, 50.0f)) {
+		colliderScale_ = col;
 	}
 	ImGui::Separator(); // 区切り線
 	ImGui::Text("RT 一撃必殺: %s", canUseSpecial_ ? "READY" : "NOT READY"); // 一撃必殺の使用可能状態を表示
@@ -299,9 +352,7 @@ void Player::Death()
 }
 
 void Player::UpdateVisualOnly() {
-	// クリア演出用：
-	// GameScene 側から SetPosition などで座標だけ動かしておいて、
-	// ここで行列更新だけ行う
+	// クリア演出用
 	if (object_) {
 		object_->Update();
 	}

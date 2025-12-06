@@ -12,6 +12,7 @@
 #include <engine/effect/particle/ParticlerEmitter.h>
 #include "Easing.h"
 #include "application/player/reticle/Reticle.h"
+#include "engine/effect/line/LineRenderer.h"
 
 #ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"
@@ -60,6 +61,8 @@ public:
 	void Damage(int value) {
 		hp_ -= value;
 		if (hp_ < 0) hp_ = 0;
+		// 被弾したので当たり判定ボックスをしばらく赤くする
+		hitFlashTimer_ = 0.15f; // 0.15秒くらい
 	}
 	/// <summary>撃墜関数</summary>
 	void Death();
@@ -106,6 +109,11 @@ public:
 	/// </summary>
 	/// <param name="r"></param>
 	void SetRotation(const Vector3& r) { object_->SetRotate(r); }
+	/// <summary>
+	/// プレイヤーのコライダースケールを取得します。
+	/// </summary>
+	/// <returns></returns>
+	Vector3 GetColliderScale() const { return colliderScale_; }
 	// =========================================
 	// Setter===================================
 	/// <summary>
@@ -122,7 +130,7 @@ public:
 	/// カメラを設定します。
 	/// </summary>
 	/// <param name="camera"></param>
-	void SetCamera(Camera* camera) 
+	void SetCamera(Camera* camera)
 	{
 		this->camera = camera;
 		if (object_) { object_->SetCamera(camera); }
@@ -170,7 +178,13 @@ public:
 	/// </summary>
 	/// <param name="core"></param>
 	void SetMidBossCore(MidBossCore* core) { core_ = core; }
+	/// <summary>
+	/// プレイヤーのコライダースケールを設定します。
+	/// </summary>
+	/// <param name="s"></param>
+	void SetColliderScale(const Vector3& s) { colliderScale_ = s; }
 	// =========================================
+
 	enum class DeathPhase { None, FaultSparks, FlyAway }; // 撃墜演出フェーズ
 
 private:
@@ -269,4 +283,8 @@ private:
 	static constexpr float kJetSmokeOffsetZ = 2.0f; // 機体後ろのジェット位置Zオフセット
 	static constexpr float kHomingBulletSpeed = 0.6f; // LT弾の追尾速度
 	const float dt = 1.0f / 60.0f; // 想定フレーム時間
+
+	// --- 自機当たり判定(AABB) ---
+	Vector3 colliderScale_ = { 2.0f, 2.0f, 6.0f }; // 当たり判定用スケール
+	float hitFlashTimer_ = 0.0f; // 被弾フラッシュ用タイマー
 };

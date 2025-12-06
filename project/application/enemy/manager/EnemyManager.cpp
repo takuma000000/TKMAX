@@ -391,7 +391,11 @@ void EnemyManager::SpawnWave2_Triangle() {
 			e.SetSineParams(4.0f, 1.4f);
 			e.SetSinePhase(0.6f * float(idx++));
 			e.SetHP(3);
-			e.SetReticle(player_->GetReticle());
+
+			if (player_) {
+				e.SetReticle(player_->GetReticle());
+				e.SetPlayer([this]() { return player_->GetPosition(); });
+			}
 		}
 	);
 }
@@ -406,7 +410,11 @@ void EnemyManager::SpawnWave2_Line() {
 			e.SetVelocity({ 0,0,-0.32f });
 			e.SetStopZ(52.0f);
 			e.SetHP(2);
-			e.SetReticle(player_->GetReticle());
+
+			if (player_) {
+				e.SetReticle(player_->GetReticle());
+				e.SetPlayer([this]() { return player_->GetPosition(); });
+			}
 		}
 	);
 }
@@ -425,7 +433,11 @@ void EnemyManager::SpawnWave2_FastColumn() {
 			e.SetVelocity({ -0.20f, 0.0f, -0.75f });
 			e.SetStopZ(-50.0f); // 通過するだけ
 			e.SetHP(1);
-			e.SetReticle(player_->GetReticle());
+
+			if (player_) {
+				e.SetReticle(player_->GetReticle());
+				e.SetPlayer([this]() { return player_->GetPosition(); });
+			}
 		}
 	);
 }
