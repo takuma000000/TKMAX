@@ -46,6 +46,7 @@ bool SrvManager::Available() const{
 	return useIndex < kMaxSRVCount;
 }
 
+
 D3D12_CPU_DESCRIPTOR_HANDLE SrvManager::GetCPUDescriptorHandleSUB(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index){
 	// ヒープの先頭ハンドルを取得
 	D3D12_CPU_DESCRIPTOR_HANDLE handleCPU = descriptorHeap->GetCPUDescriptorHandleForHeapStart();

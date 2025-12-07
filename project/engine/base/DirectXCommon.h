@@ -16,9 +16,9 @@
 // DirectXCommonクラス
 // DirectX12の初期化・描画・リソース管理を行うクラス。
 //=============================================================
-class DirectXCommon{
+class DirectXCommon {
 public:
-	
+
 	// OutlineParameter構造体
 	struct OutlineParameter {
 		Matrix4x4 projectionInverse;
@@ -77,6 +77,21 @@ public:
 	///<param name="shaderVisible">シェーダから見えるかどうか</param>
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
 
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateRenderTextureResource(Microsoft::WRL::ComPtr<ID3D12Device> device,
+		int width, int height, DXGI_FORMAT format, const Vector4& clearColor);
+
+	// CreateRenderTextureRTV関数
+	void CreateRenderTextureRTV();
+
+	///<summary>Swapchain に描き始める（ImGui 用）</summary>
+	void BeginDrawToSwapchain();
+
+	///<summary>CopyImage 用パイプライン初期化</summary>
+	void InitializeCopyImagePipeline();
+
+	///<summary>RenderTexture → Swapchain へコピー描画</summary>
+	void DrawRenderTextureToSwapchain();
+
 	// -------------------- シェーダ関連 --------------------
 	///<summary>シェーダのコンパイルを行う関数</summary>
 	///<param name="filePath">シェーダファイルのパス</param>
@@ -106,6 +121,12 @@ public:
 		UINT index = swapChain->GetCurrentBackBufferIndex();
 		return rtvHandles[index];
 	}
+
+	/// <summary>SrvManager を登録する</summary>
+	void SetSrvManager(SrvManager* srvManager) { srvManager_ = srvManager; }
+
+	/// <summary>RenderTexture 用 SRV インデックスを取得する</summary>
+	uint32_t GetRenderTextureSrvIndex() const { return renderTextureSrvIndex_; }
 
 private:
 	///<summary>固定FPS制御の初期化を行う関数</summary>
@@ -160,6 +181,9 @@ private:
 	// -------------------- Root & PSO --------------------
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState;
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> copyImageRootSignature_;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> copyImagePipelineState_;
+	bool copyImageInitialized_ = false;
 
 	// -------------------- ConstantBuffer --------------------
 	Microsoft::WRL::ComPtr<ID3D12Resource> outlineConstantBuffer_;
@@ -172,6 +196,8 @@ private:
 	ThresholdParam* thresholdMappedData_ = nullptr;
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> renderTextureResource;
+	// RenderTexture 用 SRV のインデックス
+	uint32_t renderTextureSrvIndex_ = 0;
 
 	// -------------------- 時間計測 --------------------
 	std::chrono::steady_clock::time_point reference_;
@@ -185,7 +211,6 @@ private:
 	// -------------------- 定数 --------------------
 	uint32_t backBufferChange = 2;
 	UINT fenceVal = 0;
-	static constexpr uint32_t kRenderTextureSRVIndex = 10;
 	static constexpr uint32_t kRenderTextureRTVIndex = 2;
 	static constexpr uint32_t kDepthSRVIndex = 11;
 };

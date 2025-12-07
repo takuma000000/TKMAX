@@ -10,7 +10,7 @@
 #include <Object3dCommon.h>
 #include <SpriteCommon.h>
 
-void Framework::Initialize(){
+void Framework::Initialize() {
 	//シーンマネージャの生成
 	sceneManager_ = std::make_unique<SceneManager>();
 
@@ -27,6 +27,17 @@ void Framework::Initialize(){
 	srvManager->Initialize(dxCommon.get());
 	assert(srvManager != nullptr && "SrvManager initialization failed");
 
+	// ★ DirectXCommon に SrvManager を教える
+	dxCommon->SetSrvManager(srvManager.get());
+
+	// ★ RenderTexture 用の RTV/SRV を作成（ここで rtvHandles[2] が有効になる）
+	dxCommon->CreateRenderTextureRTV();
+
+	// ★ RenderTexture 用の RTV/SRV を作成
+	dxCommon->CreateRenderTextureRTV();
+
+	// ★ CopyImage 用パイプラインを初期化
+	dxCommon->InitializeCopyImagePipeline();
 
 	//テクスチャマネージャの初期化
 	TextureManager::GetInstance()->Initialize(dxCommon.get(), srvManager.get());
@@ -36,27 +47,27 @@ void Framework::Initialize(){
 	AudioManager::GetInstance()->Initialize(); // AudioManagerを初期化
 
 	Object3dCommon::GetInstance()->Initialize(dxCommon.get()); // Object3dCommonを初期化
-	SpriteCommon::GetInstance()->Initialize(dxCommon.get()); // SpriteCommonを初期化
-	Input::GetInstance()->Initialize(windowsAPI.get()); // Inputを初期化
+	SpriteCommon::GetInstance()->Initialize(dxCommon.get());   // SpriteCommonを初期化
+	Input::GetInstance()->Initialize(windowsAPI.get());        // Inputを初期化
 }
 
-void Framework::Finalize(){
+void Framework::Finalize() {
 	windowsAPI->Finalize(); // WindowsAPI の終了
 
 	Input::GetInstance()->Finalize(); // Inputの終了
 }
 
-void Framework::Update(){
+void Framework::Update() {
 	//シーンマネージャーの更新
 	sceneManager_->Update();
 }
 
-void Framework::Draw(){
+void Framework::Draw() {
 	//シーンマネージャーの描画
 	sceneManager_->Draw();
 }
 
-void Framework::Run(){
+void Framework::Run() {
 	//ゲームの初期化
 	Initialize();
 

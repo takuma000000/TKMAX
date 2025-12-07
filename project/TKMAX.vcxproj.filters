@@ -426,4 +426,11 @@
       <UniqueIdentifier>{c6c2f927-e1d7-4ebf-a28f-12f4b4721a7f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="CopyImage.hlsli" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="CopyImage.VS.hlsl" />
+    <FxCompile Include="CopyImage.PS.hlsl" />
+  </ItemGroup>
 </Project>

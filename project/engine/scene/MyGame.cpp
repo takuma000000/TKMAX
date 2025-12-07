@@ -70,18 +70,23 @@ void MyGame::Update(){
 	//---------------------------------------------------------
 }
 
-void MyGame::Draw(){
-	dxCommon->PreDraw(); //描画前処理
-	srvManager->PreDraw(); //SRVデスクリプタヒープセット
+void MyGame::Draw() {
+	// ① シーンを RenderTexture に描く
+	dxCommon->PreDraw();        // RenderTexture をターゲットにしてクリア
+	srvManager->PreDraw();      // SRV ヒープセット（シーン側用）
 
-	sceneManager_->Draw(); //シーンマネージャーの描画
+	sceneManager_->Draw();      // シーン描画（全部 RenderTexture 行き）
 
-	//描画
-	dxCommon->GetCommandList()->RSSetViewports(1, &viewport); // ビューポートの設定
-	dxCommon->GetCommandList()->RSSetScissorRects(1, &scissorRect);	// シザー矩形の設定
+	// ② Swapchain に切り替え
+	dxCommon->BeginDrawToSwapchain();
 
-	// ** ImGui描画 **
+	// ③ RenderTexture → Swapchain へコピー（フルスクリーン三角形）
+	srvManager->PreDraw();                      // SRV ヒープをもう一度セットしておく
+	dxCommon->DrawRenderTextureToSwapchain();   // ← ここでコピー！
+
+	// ④ ImGui描画（これは Swapchain に重ねて描かれる）
 	imguiManager->Draw();
 
-	dxCommon->PostDraw(); //描画後処理
+	// ⑤ フレーム終了
+	dxCommon->PostDraw();       // バリア＋Present
 }

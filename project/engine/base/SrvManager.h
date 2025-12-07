@@ -10,7 +10,7 @@ class DirectXCommon;
 // SrvManagerクラス
 // SRV（Shader Resource View）ヒープの管理と割り当てを行うクラス。
 //=============================================================
-class SrvManager{
+class SrvManager {
 
 private:
 	DirectXCommon* directXCommon_ = nullptr;

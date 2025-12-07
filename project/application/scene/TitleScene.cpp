@@ -253,7 +253,7 @@ void TitleScene::Draw(){
 	Object3dCommon::GetInstance()->DrawSetCommon();
 	if (heli_) heli_->Draw(dxCommon);
 	for (auto& e : titleEnemies_) e->Draw(dxCommon);
-	if (skybox_) skybox_->Draw();
+	//if (skybox_) skybox_->Draw();
 
 	// ---- ここで Sprite パイプラインに戻す ----
 	SpriteCommon::GetInstance()->DrawSetCommon();
