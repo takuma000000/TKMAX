@@ -191,7 +191,7 @@ void DirectXCommon::InitializeCopyImagePipeline() {
 	Microsoft::WRL::ComPtr<IDxcBlob> vsBlob =
 		CompileShader(L"resources/shaders/CopyImage.VS.hlsl", L"vs_6_0");
 	Microsoft::WRL::ComPtr<IDxcBlob> psBlob =
-		CompileShader(L"resources/shaders/RadialBlur.PS.hlsl", L"ps_6_0");
+		CompileShader(L"resources/shaders/CopyImage.PS.hlsl", L"ps_6_0");
 
 	// 2. RootSignature 作成
 	//   - t0: SRV (RenderTexture)
