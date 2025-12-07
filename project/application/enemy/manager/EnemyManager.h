@@ -15,10 +15,10 @@
 #include "externals/imgui/imgui.h"
 #endif
 
-/// <summary>
-/// ザコ敵全体を管理するクラス。
-/// まずは入れ物。あとから機能を移植していく。
-/// </summary>
+// =============================================================
+// EnemyManagerクラス
+// 敵全体の管理を行うクラス。
+// =============================================================
 class EnemyManager {
 public:
 	EnemyManager() = default;
@@ -28,7 +28,7 @@ public:
 	enum class WavePhase { W1, W2, W3, Done };
 
 	/// <summary>
-	/// 敵マネージャを初期化します
+	/// 敵全体の初期化
 	/// </summary>
 	/// <param name="dx"></param>
 	/// <param name="camera"></param>
@@ -135,6 +135,9 @@ public:
 	// ================================================================================
 
 private:
+	//======================================================================
+	// 基本参照・共通情報
+	//======================================================================
 	DirectXCommon* dx_ = nullptr;
 	Camera* cam_ = nullptr;
 	BaseScene* parent_ = nullptr;
@@ -149,10 +152,12 @@ private:
 	WavePhase wavePhase_ = WavePhase::W1;
 
 	const float dt = 1.0f / 60.0f; // 固定フレームレート想定
-
+	//======================================================================
+	// Wave1 関連
+	//======================================================================
 	// ───────── Wave1 用パラメータ ─────────
-	float wave1SpawnTimer_ = 0.0f; // 次の出現までのタイマー
-	float wave1SpawnInterval_ = 1.5f; // 出現間隔（秒相当）
+	float wave1SpawnTimer_ = 0.0f;   // 次の出現までのタイマー
+	float wave1SpawnInterval_ = 1.5f;   // 出現間隔（秒相当）
 	int   wave1MaxSimultaneous_ = 2;    // 同時に存在してよい敵の数
 	int   wave1DefeatTarget_ = 5;    // このWaveで「倒すべき敵の数」
 	/// <summary>
@@ -164,11 +169,14 @@ private:
 	/// Wave1の敵を1体スポーンします
 	/// </summary>
 	void SpawnWave1Enemy();     // Wave1敵1体スポーン
+	//======================================================================
+	// Wave2 関連
+	//======================================================================
 	// ───────── Wave2 用パラメータ ─────────
-	int wave2SubWave_ = 0;   // 0,1,2... の隊列番号
-	float wave2WaitTimer_ = 0.0f; // 待機タイマー
-	float wave2WaitDuration_ = 1.5f; // 好きな秒数にできる
-	bool  wave2Waiting_ = false; // 待機中フラグ
+	int   wave2SubWave_ = 0;      // 0,1,2... の隊列番号
+	float wave2WaitTimer_ = 0.0f;   // 待機タイマー
+	float wave2WaitDuration_ = 1.5f;   // 好きな秒数にできる
+	bool  wave2Waiting_ = false;  // 待機中フラグ
 	/// <summary>
 	/// Wave2の更新
 	/// </summary>
@@ -190,12 +198,15 @@ private:
 	/// Wave2のファストカラム編隊をスポーンします
 	/// </summary>
 	void SpawnWave2_FastColumn();
+	//======================================================================
+	// Wave3（中ボスステージ） 関連
+	//======================================================================
 	// ───────── Wave3（中ボスステージ） 用パラメータ ─────────
 	// 中ボスが片方落ちたときに「蘇生核」を出して 5 秒間猶予を与える
 	bool  wave3ReviveInProgress_ = false; // 蘇生フェーズ中かどうか
-	float wave3CoreTimer_ = 0.0f;         // 核の経過時間
-	float wave3CoreLifetime_ = 5.0f;      // 核が生きていれば蘇生成立（秒）
-	int   wave3CoreHP_ = 5;               // 核のHP（あとで調整用）
+	float wave3CoreTimer_ = 0.0f;  // 核の経過時間
+	float wave3CoreLifetime_ = 5.0f;  // 核が生きていれば蘇生成立（秒）
+	int   wave3CoreHP_ = 5;     // 核のHP（あとで調整用）
 	int   wave3PrevAliveMidBossCount_ = 0; // 前フレームの生存中中ボス数
 	// 中ボスの定位置（左右 2 体）※必要ならあとで ImGui 化
 	Vector3 wave3LeftPos_ = { -12.0f, 6.0f, 80.0f };
@@ -218,7 +229,9 @@ private:
 	/// </summary>
 	void SpawnWave3ExtraMidBoss();
 
-	std::unique_ptr<MidBossCore> midBossCore_ = nullptr;// 蘇生核
-
+	std::unique_ptr<MidBossCore> midBossCore_ = nullptr; // 蘇生核
+	//======================================================================
+	// デバッグ系フラグ
+	//======================================================================
 	bool freezeEnemies_ = false; // デバッグ用：敵移動停止フラグ
 };

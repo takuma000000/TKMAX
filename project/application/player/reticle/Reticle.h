@@ -225,18 +225,6 @@ public:
 		getYaw_ = std::move(getYawRad);
 	}
 
-	// Setter========================================
-	/// <summary>
-	/// カメラ設定
-	/// </summary>
-	/// <param name="cam"></param>
-	void SetCamera(Camera* cam) {
-		cam_ = cam;
-		for (auto& L : layers_) {
-			if (L.obj) L.obj->SetCamera(cam_);
-		}
-	}
-	// ==============================================
 	// Getter========================================
 	/// <summary>
 	/// 最後に更新された狙い方向ベクトルを取得
@@ -257,8 +245,23 @@ public:
 		return center_;
 	}
 	// ==============================================
+	// Setter========================================
+	/// <summary>
+	/// カメラ設定
+	/// </summary>
+	/// <param name="cam"></param>
+	void SetCamera(Camera* cam) {
+		cam_ = cam;
+		for (auto& L : layers_) {
+			if (L.obj) L.obj->SetCamera(cam_);
+		}
+	}
+	// ==============================================
 
 #ifdef USE_IMGUI
+	/// <summary>
+	/// ImGuiデバッグ表示
+	/// </summary>
 	void ImGuiDebug() {
 		if (ImGui::CollapsingHeader("レティクル")) {
 			ImGui::Checkbox("Visible", &visible_);
@@ -303,21 +306,19 @@ public:
 		}
 	}
 #endif
-
 private:
 	//--------------------------------------------------
 	// 各レイヤ
 	//--------------------------------------------------
 	struct Layer { // 上から順に引数
 		std::unique_ptr<Object3d> obj; // 3Dオブジェクト本体
-		Vector3 scale = { 1,1,1 }; // スケール
-		float   spinSpeed = 0.0f; // 自己回転速度（ラジアン/秒）
-		float   selfAngle = 0.0f; // 自己回転角度（ラジアン）
-		bool    visible = true; // 表示/非表示
+		Vector3 scale = { 1,1,1 };     // スケール
+		float   spinSpeed = 0.0f;      // 自己回転速度（ラジアン/秒）
+		float   selfAngle = 0.0f;      // 自己回転角度（ラジアン）
+		bool    visible = true;      // 表示/非表示
 	};
-
 	//--------------------------------------------------
-	// 内部データ
+	// 内部データ（共通）
 	//--------------------------------------------------
 	Object3dCommon* common_ = nullptr;
 	DirectXCommon* dx_ = nullptr;
@@ -325,7 +326,9 @@ private:
 
 	std::function<Vector3(void)> getPos_;
 	std::function<float(void)>   getYaw_;
-
+	//--------------------------------------------------
+	// レイヤ構成（手前 → 奥）
+	//--------------------------------------------------
 	// 手前→奥の順に4層
 	std::array<Layer, 4> layers_ = { // 第一引数: Object3dポインタ 第二引数: 前後位置（ImGui用） 第三引数: スケール　第四引数: 自己回転速度　第五引数: 自己回転角度　第六引数: 表示/非表示
 		Layer{ nullptr,{1.80f, 1.80f, 1.80f},  2.5f, 0.0f, true }, // 0: 一番手前
@@ -340,22 +343,28 @@ private:
 	bool  selfSpinAxisY_ = false;
 	float up_ = 0.0f;
 	float yawOffset_ = 0.0f;
-
+	//--------------------------------------------------
+	// スティック入力によるオフセット
+	//--------------------------------------------------
 	// 累積オフセット
 	float curX_ = 0.0f;
 	float curY_ = 0.0f;
-	float stickMovePerSec_ = 50.0f; // スティックで動かす速度
+	float stickMovePerSec_ = 50.0f;  // スティックで動かす速度
 	float stickDeadZone_ = 8000.0f;
 
 	// 右スティック制御
 	bool stickControl_ = true;
-
+	//--------------------------------------------------
+	// エイム / レイ情報
+	//--------------------------------------------------
 	Vector3 lastOrigin_ = { 0.0f, 0.0f, 0.0f };
 	Vector3 lastAimDir_ = { 0.0f, 0.0f, 1.0f };
 	bool    hasAim_ = false;
-	float maxDist = 150.0f; // ラインをどこまで伸ばすか
-
+	float   maxDist = 150.0f; // ラインをどこまで伸ばすか
+	//--------------------------------------------------
+	// レティクル中心座標
+	//--------------------------------------------------
 	// レティクルの中心ワールド座標
 	Vector3 center_ = { 0,0,0 };
-	bool centerInitialized_ = false;
+	bool    centerInitialized_ = false;
 };

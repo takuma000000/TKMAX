@@ -27,52 +27,71 @@ class RadialBlurEffect;
 //=============================================================
 class Player {
 public:
-
-	/// <summary>プレイヤーを初期化します。</summary>
-	/// <param name="common">Object3d共通。</param>
-	/// <param name="dxCommon">DirectX共通。</param>
+	/// <summary>
+	/// プレイヤーを初期化します。
+	/// </summary>
+	/// <param name="common"></param>
+	/// <param name="dxCommon"></param>
 	void Initialize(Object3dCommon* common, DirectXCommon* dxCommon);
-	/// <summary>プレイヤーを更新します。</summary>
+	/// <summary>
+	/// プレイヤーを更新します。
+	/// </summary>
 	void Update();
-	/// <summary>プレイヤーを描画します。</summary>
+	/// <summary>
+	/// プレイヤーを描画します。
+	/// </summary>
+	/// <param name="dxCommon"></param>
 	void Draw(DirectXCommon* dxCommon);
-	/// <summary>デバッグ用ImGui表示。</summary>
+	/// <summary>
+	/// デバッグ用ImGui表示。
+	/// </summary>
 	void ImGuiDebug();
 
-	/// <summary>敵が死亡していたらリストから削除します。</summary>
+	/// <summary>
+	/// 敵が死亡していたらターゲットを解除します。
+	/// </summary>
 	void RemoveEnemyIfDead();
-	/// <summary>一撃必殺を使用可能にします。</summary>
+	/// <summary>
+	/// 一撃必殺を使用可能にします。
+	/// </summary>
 	void EnableSpecialAttack() { canUseSpecial_ = true; } // 一撃必殺を使用可能にする
-	/// <summary>敵が破壊されたときの処理。</summary>
+	/// <summary>
+	/// 敵が破壊されたときの処理。
+	/// </summary>
+	/// <param name="e"></param>
 	void OnEnemyDestroyed(Enemy* e) {
 		if (enemy_ == e) {
 			enemy_ = nullptr;
 		}
 		for (auto& b : bullets_) {
 			if (!b) continue;
-			if (b->GetEnemy() == e) { // 弾が追従していた敵が破壊された
-				b->SetEnemy(nullptr);
-			}
+			if (b->GetEnemy() == e) { b->SetEnemy(nullptr); }
 		}
 	}
-	/// <summary>プレイヤーが撃墜されているかどうかを取得します。</summary>
+	/// <summary>
+	/// プレイヤーが即死ダメージを受けたときの処理。
+	/// </summary>
+	/// <returns></returns>
 	bool IsDead() const { return isDead_; }
-	/// <summary>ダメージを与えます。</summary>
-	/// <param name="value">ダメージ値。</param>
+	/// <summary>
+	/// プレイヤーがダメージを受けたときの処理。
+	/// </summary>
+	/// <param name="value"></param>
 	void Damage(int value) {
 		hp_ -= value;
 		if (hp_ < 0) hp_ = 0;
 		// 被弾したので当たり判定ボックスをしばらく赤くする
 		hitFlashTimer_ = 0.15f; // 0.15秒くらい
 	}
-	/// <summary>撃墜関数</summary>
+	/// <summary>
+	/// プレイヤーが撃墜されたときの処理。
+	/// </summary>
 	void Death();
 	/// <summary>
 	/// 入力などのゲームプレイ処理を行わず、
 	/// 見た目用に行列だけ更新したいとき（クリア演出用）
 	/// </summary>
 	void UpdateVisualOnly();
-
 	// Getter===================================
 	/// <summary>
 	/// プレイヤーの弾リストを取得します。
@@ -192,28 +211,50 @@ public:
 	// =========================================
 
 	enum class DeathPhase { None, FaultSparks, FlyAway }; // 撃墜演出フェーズ
-
 private:
-
-	/// <summary>ゲームパッドの入力に基づいてプレイヤーを移動させます。</summary>
+	//======================================================================
+	// 内部メソッド
+	//======================================================================
+	/// <summary>
+	/// ゲームパッド入力による移動を処理します。
+	/// </summary>
 	void HandleGamePadMove();
-	/// <summary>追従カメラを処理します。</summary>
+	/// <summary>
+	/// カメラ追従処理を行います。
+	/// </summary>
 	void HandleFollowCamera();
-	/// <summary>射撃処理を行います。</summary>
+	/// <summary>
+	/// 射撃処理を行います。
+	/// </summary>
 	void HandleShooting();
-	/// <summary>RB弾を更新します。</summary>
+	/// <summary>
+	/// RB弾を更新します。
+	/// </summary>
 	void RBShoot();
-	/// <summary>RT弾を更新します。</summary>
+	/// <summary>
+	/// RT弾を更新します。
+	/// </summary>
 	void RTShoot();
-	/// <summary>LB弾を更新します。</summary>
+	/// <summary>
+	/// LB弾を更新します。
+	/// </summary>
 	void LBShoot();
-	/// <summary>LT弾を更新します。</summary>
+	/// <summary>
+	/// LT弾を更新します。
+	/// </summary>
 	void LTShoot();
-	/// <summary>カメラの更新（第三者視点追従）を行います。</summary>
+	/// <summary>
+	/// カメラの三人称視点追従処理を行います。
+	/// </summary>
+	/// <param name="dt"></param>
 	void UpdateCameraFollowThirdPerson(float dt);
-	/// <summary>カメラの更新（LTズーム）を行います。</summary>
+	/// <summary>
+	/// カメラのズーム処理を行います。
+	/// </summary>
 	void ZoomCamera();
-
+	//======================================================================
+	// 参照ポインタ / 共通オブジェクト
+	//======================================================================
 	Camera* camera = nullptr;
 	Object3dCommon* common_ = nullptr;
 	DirectXCommon* dxCommon_ = nullptr;
@@ -227,21 +268,23 @@ private:
 	std::vector<std::unique_ptr<Enemy>>* allEnemies_ = nullptr;
 
 	Enemy* lastLockedEnemy_ = nullptr;  // 直前にロック表示していた敵
-	bool rtHeld_ = false;  // RTをいま保持中か
-
+	//======================================================================
+	// カメラシェイク・バンク・移動範囲
+	//======================================================================
 	// --- カメラシェイク ---
 	Vector3 cameraShakeOffset_ = { 0, 0, 0 };
-	int cameraShakeFrame_ = 0;
-	float shakeBaseStrength_ = 1.8f;   // 基本のシェイク強度
-	float shakeZoomBoost_ = 8.0f;   // ズーム時の追加倍率
+	int     cameraShakeFrame_ = 0;
+	float   shakeBaseStrength_ = 1.8f;   // 基本のシェイク強度
+	float   shakeZoomBoost_ = 8.0f;   // ズーム時の追加倍率
 
-	bool canUseSpecial_ = false; // 一撃必殺が使用可能かどうか
-
-	float bankAngle_ = 0.0f;      // 現在の傾き（ロール）
-	float bankVel_ = 0.0f;      // 補間用
+	float  bankAngle_ = 0.0f;                 // 現在の傾き（ロール）
+	float  bankVel_ = 0.0f;                 // 補間用
 	Vector3 moveMin_ = { -100.0f, -20.0f, 0.0f }; // 移動範囲（Zは固定）
 	Vector3 moveMax_ = { 100.0f,  20.0f, 0.0f };
-
+	//======================================================================
+	// 入力ラッチ / ジェット煙 / デバッグフラグ
+	//======================================================================
+	bool rtHeld_ = false; // RTをいま保持中か
 	bool ltHeld_ = false; // LTの押下状態ラッチ
 
 	ParticleEmitter jetEmitter_;
@@ -249,49 +292,62 @@ private:
 	bool debugUnlimitedSpecial_ = false; // ImGuiでONならRTを無制限発射
 
 	bool enableJetSmoke_ = true; // デフォルトON
+	//======================================================================
+	// プレイヤー状態 / 制御フラグ
+	//======================================================================
+	int  hp_ = 1; // 初期HP
 
-	int hp_ = 1; // 初期HP
-
-	bool controlEnabled_ = true;   // trueなら通常操作、falseなら入力系を全部無視
-	bool reticleVisible_ = true;   // trueならレティクル描画
-
+	bool canUseSpecial_ = false; // 一撃必殺が使用可能かどうか
+	bool controlEnabled_ = true;  // trueなら通常操作、falseなら入力系を全部無視
+	bool reticleVisible_ = true;  // trueならレティクル描画
+	//======================================================================
+	// 撃墜演出（故障スパーク → 吹き飛び）
+	//======================================================================
 	// 撃墜演出用
-	bool   isDead_ = false;                // 撃墜モード中
-	Vector3 deathVelocity_ = { 0,0,0 };      // 速度
+	bool   isDead_ = false;         // 撃墜モード中
+	Vector3 deathVelocity_ = { 0,0,0 };     // 速度
 	Vector3 deathRotateSpeed_ = { 0,0,0 };   // 回転速度
-	float  deathTimer_ = 0.0f;             // 経過時間(秒想定)
+	float  deathTimer_ = 0.0f;          // 経過時間(秒想定)
 	float  deathDuration_ = 2.6f;          // 強制演出の長さ（好みで）
 	// デス演出ステート管理
 	DeathPhase deathPhase_ = DeathPhase::None;
 	// 故障スパーク段階の管理
 	float faultTimer_ = 0.0f;
 	float faultDuration_ = 1.3f;   // 何秒間スパークさせるか（ImGuiで調整可）
-	int   faultBurstPerTick_ = 12; // 1回あたり粒の発生数（ImGuiで調整可）
-	int   faultTickInterval_ = 2;  // 何フレームごとに出すか
+	int   faultBurstPerTick_ = 12;    // 1回あたり粒の発生数（ImGuiで調整可）
+	int   faultTickInterval_ = 2;     // 何フレームごとに出すか
 	int   faultFrameCounter_ = 0;
-	bool  flyInit_ = false; // FlyAway移行時の一度きり初期化フラグ
-
+	bool  flyInit_ = false;  // FlyAway移行時の一度きり初期化フラグ
+	//======================================================================
+	// LT一時ズーム（カメラ演出）
+	//======================================================================
 	// --- LT一時ズーム ---
-	bool ltZoomActive_ = false;   // ズーム中フラグ
+	bool        ltZoomActive_ = false;   // ズーム中フラグ
 	Ease::Tween ltZoomTween_;            // 0..1 の係数トゥイーン
-	float camZoom_ = 1.0f;         // 現在のズーム係数（1=通常）
-	float ltZoomHold_ = 0.0f;      // 最小倍率でホールドする秒数
-	Vector3 camSavedPos_; // カメラ位置保存用
-	Vector3 camSavedRot_; // カメラ回転保存用
-
+	float       camZoom_ = 1.0f;    // 現在のズーム係数（1=通常）
+	float       ltZoomHold_ = 0.0f;    // 最小倍率でホールドする秒数
+	Vector3     camSavedPos_;            // カメラ位置保存用
+	Vector3     camSavedRot_;            // カメラ回転保存用
+	//======================================================================
+	// レティクル関連
+	//======================================================================
 	// 3Dレティクル関連
 	std::unique_ptr<Reticle> reticle_;   // 3Dレティクル用Object3d
-	float reticleDistance_ = 50.0f;         // 自機から前方への距離
-	float reticleUpOffset_ = 0.0f;          // 必要なら少し上げる
-
+	float reticleDistance_ = 50.0f;      // 自機から前方への距離
+	float reticleUpOffset_ = 0.0f;       // 必要なら少し上げる
+	//======================================================================
+	// 入力 & 弾共通パラメータ
+	//======================================================================
 	// 入力 & 弾共通の調整用定数
 	static constexpr int   kTriggerThreshold = 128;  // LT/RT 判定しきい値
-	float normalBulletSpeed_ = 2.2f; // RB/LB/RT の弾速
+	float                  normalBulletSpeed_ = 2.2f; // RB/LB/RT の弾速
 	static constexpr float kJetSmokeOffsetZ = 2.0f; // 機体後ろのジェット位置Zオフセット
 	static constexpr float kHomingBulletSpeed = 0.6f; // LT弾の追尾速度
-	const float dt = 1.0f / 60.0f; // 想定フレーム時間
-
+	const float            dt = 1.0f / 60.0f; // 想定フレーム時間
+	//======================================================================
+	// 自機当たり判定 (AABB)
+	//======================================================================
 	// --- 自機当たり判定(AABB) ---
 	Vector3 colliderScale_ = { 2.0f, 2.0f, 6.0f }; // 当たり判定用スケール
-	float hitFlashTimer_ = 0.0f; // 被弾フラッシュ用タイマー
+	float   hitFlashTimer_ = 0.0f;                 // 被弾フラッシュ用タイマー
 };
