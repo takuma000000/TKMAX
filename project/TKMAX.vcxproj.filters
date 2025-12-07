@@ -427,10 +427,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="CopyImage.hlsli" />
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="CopyImage.VS.hlsl" />
-    <FxCompile Include="CopyImage.PS.hlsl" />
+    <FxCompile Include="RadialBlur.PS.hlsl" />
   </ItemGroup>
 </Project>
