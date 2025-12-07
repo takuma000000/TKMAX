@@ -12,6 +12,8 @@
 #include "MyMath.h"
 #include "SystemIncludes.h"
 
+class RadialBlurEffect;
+
 //=============================================================
 // DirectXCommonクラス
 // DirectX12の初期化・描画・リソース管理を行うクラス。
@@ -91,6 +93,23 @@ public:
 
 	///<summary>RenderTexture → Swapchain へコピー描画</summary>
 	void DrawRenderTextureToSwapchain();
+
+	///<summary>RadialBlur 用パイプライン初期化</summary>
+	void InitializeRadialBlurPipeline();
+
+	///<summary>RadialBlur 付きで RenderTexture → Swapchain へコピー描画</summary>
+	void DrawRadialBlurToSwapchain();
+
+	/// RadialBlurEffect を登録（シーンから渡す）
+	void SetRadialBlurEffect(RadialBlurEffect* effect) { radialBlurEffect_ = effect; }
+
+	/// 現在の RadialBlurEffect を取得（必要なら）
+	RadialBlurEffect* GetRadialBlurEffect() const { return radialBlurEffect_; }
+
+	/// 「今の状態に応じて」RenderTexture → Swapchain をコピー
+	///   - RadialBlur が有効なら RadialBlur で
+	///   - そうでなければ通常コピー
+	void DrawPostEffectToSwapchain();
 
 	// -------------------- シェーダ関連 --------------------
 	///<summary>シェーダのコンパイルを行う関数</summary>
@@ -184,7 +203,11 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> copyImageRootSignature_;
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> copyImagePipelineState_;
 	bool copyImageInitialized_ = false;
-
+	// RadialBlur 用 PSO
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> radialBlurPipelineState_;
+	bool radialBlurInitialized_ = false;
+	// 現在シーンの RadialBlurEffect（なければ nullptr）
+	RadialBlurEffect* radialBlurEffect_ = nullptr;
 	// -------------------- ConstantBuffer --------------------
 	Microsoft::WRL::ComPtr<ID3D12Resource> outlineConstantBuffer_;
 	OutlineParameter* outlineMappedData_ = nullptr;

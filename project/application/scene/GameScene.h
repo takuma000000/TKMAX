@@ -26,6 +26,7 @@
 #include "application/enemy/manager/EnemyManager.h"
 #include "application/boss/manager/BossManager.h"
 #include "engine/effect/line/LineRenderer.h"
+#include "RadialBlurEffect.h"
 
 #include "application/player/Player.h"
 #include "application/enemy/Enemy.h"
@@ -254,4 +255,7 @@ private:
 	// airStreak（風エフェクト）
 	static constexpr float kAirBoxHalfWidth = 40.0f;
 	static constexpr float kAirBoxHalfHeight = 25.0f;
+
+	// RadialBlur エフェクト
+	std::unique_ptr<RadialBlurEffect> radialBlur_;
 };

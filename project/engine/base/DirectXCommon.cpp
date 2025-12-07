@@ -7,6 +7,7 @@
 #include "thread"
 #include "externals/DirectXTex/d3dx12.h"
 #include <vector>
+#include "RadialBlurEffect.h" 
 
 #define ALIGN256(size) ((size + 255) & ~255)
 
@@ -324,6 +325,107 @@ void DirectXCommon::DrawRenderTextureToSwapchain() {
 	}
 }
 
+void DirectXCommon::InitializeRadialBlurPipeline() {
+	if (radialBlurInitialized_) { return; }
+
+	// まず CopyImage 側が初期化されていることを保証
+	if (!copyImageInitialized_) {
+		InitializeCopyImagePipeline();
+	}
+
+	// VS は CopyImage と同じフルスクリーントライアングル
+	Microsoft::WRL::ComPtr<IDxcBlob> vsBlob =
+		CompileShader(L"resources/shaders/CopyImage.VS.hlsl", L"vs_6_0");
+	// PS だけ RadialBlur
+	Microsoft::WRL::ComPtr<IDxcBlob> psBlob =
+		CompileShader(L"resources/shaders/RadialBlur.PS.hlsl", L"ps_6_0");
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
+	psoDesc.pRootSignature = copyImageRootSignature_.Get();
+	psoDesc.VS = { vsBlob->GetBufferPointer(), vsBlob->GetBufferSize() };
+	psoDesc.PS = { psBlob->GetBufferPointer(), psBlob->GetBufferSize() };
+
+	// フルスクリーン三角形なので InputLayout なし
+	psoDesc.InputLayout = { nullptr, 0 };
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+
+	psoDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
+
+	// レンダーターゲット設定（Swapchain と同じ）
+	psoDesc.NumRenderTargets = 1;
+	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+	psoDesc.SampleDesc.Count = 1;
+
+	// ブレンド / ラスタライザ / 深度ステンシル
+	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+
+	// 深度は使わない
+	D3D12_DEPTH_STENCIL_DESC dsDesc{};
+	dsDesc.DepthEnable = FALSE;
+	dsDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+	dsDesc.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+	dsDesc.StencilEnable = FALSE;
+	psoDesc.DepthStencilState = dsDesc;
+	psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
+	HRESULT hr = device->CreateGraphicsPipelineState(
+		&psoDesc, IID_PPV_ARGS(&radialBlurPipelineState_));
+	assert(SUCCEEDED(hr));
+
+	radialBlurInitialized_ = true;
+}
+
+void DirectXCommon::DrawRadialBlurToSwapchain() {
+
+	// 初期化されていなければ通常コピーにフォールバック
+	if (!radialBlurInitialized_ || !renderTextureResource) {
+		DrawRenderTextureToSwapchain();
+		return;
+	}
+
+	// 1. RenderTarget → PixelShaderResource へバリア
+	{
+		D3D12_RESOURCE_BARRIER barrier{};
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrier.Transition.pResource = renderTextureResource.Get();
+		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+		commandList->ResourceBarrier(1, &barrier);
+	}
+
+	// 2. パイプライン / RootSignature 設定
+	commandList->SetGraphicsRootSignature(copyImageRootSignature_.Get());
+	commandList->SetPipelineState(radialBlurPipelineState_.Get());
+	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	// 3. SRV ヒープをセットし、t0 に RenderTexture の SRV をバインド
+	if (srvManager_) {
+		ID3D12DescriptorHeap* heaps[] = { srvManager_->GetSrvDescriptorHeap().Get() };
+		commandList->SetDescriptorHeaps(1, heaps);
+
+		// RootParameter0 の DescriptorTable に renderTextureSrvIndex_ をセット
+		srvManager_->SetGraphicsRootDescriptorTable(0, renderTextureSrvIndex_);
+	}
+
+	// 4. フルスクリーン三角形を描画 (頂点数3)
+	commandList->DrawInstanced(3, 1, 0, 0);
+
+	// 5. PixelShaderResource → RenderTarget に戻す
+	{
+		D3D12_RESOURCE_BARRIER barrier{};
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrier.Transition.pResource = renderTextureResource.Get();
+		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		commandList->ResourceBarrier(1, &barrier);
+	}
+}
+
 void DirectXCommon::Initialize(WindowsAPI* windowsAPI) {
 	//FPS初期化固定
 	InitializeFixFPS();
@@ -524,6 +626,18 @@ void DirectXCommon::GenerateDXC() {
 	hr = dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
 	assert(SUCCEEDED(hr));
 
+}
+
+void DirectXCommon::DrawPostEffectToSwapchain() {
+
+	// シーン側で RadialBlurEffect が作られていて、
+	// かつ現在アクティブなら RadialBlur 版でコピー
+	if (radialBlurEffect_ && radialBlurEffect_->IsActive()) {
+		DrawRadialBlurToSwapchain();
+	} else {
+		// それ以外は通常コピー
+		DrawRenderTextureToSwapchain();
+	}
 }
 
 Microsoft::WRL::ComPtr<IDxcBlob> DirectXCommon::CompileShader(const std::wstring& filePath, const wchar_t* profile) {

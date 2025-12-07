@@ -159,6 +159,8 @@
       <Filter>engine\3d\camera</Filter>
     </ClCompile>
     <ClCompile Include="MidBossCore.cpp" />
+    <ClCompile Include="BaseEffect.cpp" />
+    <ClCompile Include="RadialBlurEffect.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -342,6 +344,8 @@
       <Filter>engine\3d\camera</Filter>
     </ClInclude>
     <ClInclude Include="MidBossCore.h" />
+    <ClInclude Include="BaseEffect.h" />
+    <ClInclude Include="RadialBlurEffect.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

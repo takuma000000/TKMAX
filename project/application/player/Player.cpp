@@ -2,6 +2,7 @@
 #include <engine/effect/particle/ParticleManager.h>
 #include "AABB.h"
 #include <limits>
+#include "RadialBlurEffect.h"
 
 void Player::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	common_ = common; // Object3d共通
@@ -623,6 +624,11 @@ void Player::LTShoot() {
 		bullet->SetCamera(camera);
 		bullet->SetPlayer(this);
 		bullet->SetTrailGroup("trail_lt");
+
+		// ★ ここでラジアルブラー発火
+		if (radialBlur_) {
+			radialBlur_->StartShock(2.0f, 0.35f); // 強さ、長さ
+		}
 
 		bullet->SetCore(core_);
 

@@ -72,21 +72,21 @@ void MyGame::Update(){
 
 void MyGame::Draw() {
 	// ① シーンを RenderTexture に描く
-	dxCommon->PreDraw();        // RenderTexture をターゲットにしてクリア
-	srvManager->PreDraw();      // SRV ヒープセット（シーン側用）
+	dxCommon->PreDraw();
+	srvManager->PreDraw();
 
-	sceneManager_->Draw();      // シーン描画（全部 RenderTexture 行き）
+	sceneManager_->Draw();      // ← GameScene が RenderTexture に描く
 
 	// ② Swapchain に切り替え
 	dxCommon->BeginDrawToSwapchain();
 
-	// ③ RenderTexture → Swapchain へコピー（フルスクリーン三角形）
-	srvManager->PreDraw();                      // SRV ヒープをもう一度セットしておく
-	dxCommon->DrawRenderTextureToSwapchain();   // ← ここでコピー！
+	// ③ RenderTexture → Swapchain へコピー（RadialBlur を含めた「正攻法」）
+	srvManager->PreDraw();
+	dxCommon->DrawPostEffectToSwapchain();   // ★ ここだけ変更！
 
-	// ④ ImGui描画（これは Swapchain に重ねて描かれる）
+	// ④ ImGui描画
 	imguiManager->Draw();
 
 	// ⑤ フレーム終了
-	dxCommon->PostDraw();       // バリア＋Present
+	dxCommon->PostDraw();
 }

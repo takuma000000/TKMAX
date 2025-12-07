@@ -19,6 +19,7 @@
 #endif
 
 class MidBossCore;
+class RadialBlurEffect;
 
 //=============================================================
 // Playerクラス
@@ -183,6 +184,11 @@ public:
 	/// </summary>
 	/// <param name="s"></param>
 	void SetColliderScale(const Vector3& s) { colliderScale_ = s; }
+	/// <summary>
+	/// 放射状ブラーエフェクトを設定します。
+	/// </summary>
+	/// <param name="effect"></param>
+	void SetRadialBlurEffect(RadialBlurEffect* effect) { radialBlur_ = effect; }
 	// =========================================
 
 	enum class DeathPhase { None, FaultSparks, FlyAway }; // 撃墜演出フェーズ
@@ -213,6 +219,7 @@ private:
 	DirectXCommon* dxCommon_ = nullptr;
 	Enemy* enemy_ = nullptr;
 	MidBossCore* core_ = nullptr;
+	RadialBlurEffect* radialBlur_ = nullptr;
 
 	BaseScene* parentScene_ = nullptr;
 	std::unique_ptr<Object3d> object_;
@@ -225,7 +232,7 @@ private:
 	// --- カメラシェイク ---
 	Vector3 cameraShakeOffset_ = { 0, 0, 0 };
 	int cameraShakeFrame_ = 0;
-	float shakeBaseStrength_ = 1.0f;   // 基本のシェイク強度
+	float shakeBaseStrength_ = 1.8f;   // 基本のシェイク強度
 	float shakeZoomBoost_ = 8.0f;   // ズーム時の追加倍率
 
 	bool canUseSpecial_ = false; // 一撃必殺が使用可能かどうか

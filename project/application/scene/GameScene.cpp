@@ -101,6 +101,17 @@ void GameScene::Initialize() {
 		bossManager_ = std::make_unique<BossManager>();
 	}
 	bossManager_->Initialize(dxCommon, camera.get(), this, player_.get());
+	// ──────────────── 画面エフェクトの初期化 ───────────────
+	radialBlur_ = std::make_unique<RadialBlurEffect>();
+	radialBlur_->Initialize(dxCommon);
+
+	// DirectX 側に「このシーンの RadialBlurEffect」を登録
+	dxCommon->SetRadialBlurEffect(radialBlur_.get());
+
+	if (player_) {
+		// プレイヤーから LT 発射時に通知してもらう
+		player_->SetRadialBlurEffect(radialBlur_.get());
+	}
 }
 
 void GameScene::Finalize() {
@@ -110,6 +121,11 @@ void GameScene::Finalize() {
 	AudioManager::GetInstance()->Finalize();
 	// 3Dモデルマネージャーの終了
 	ModelManager::GetInstance()->Finalize();
+
+	// RadialBlurEffect の登録を解除
+	if (dxCommon) {
+		dxCommon->SetRadialBlurEffect(nullptr);
+	}
 }
 
 void GameScene::Update() {
@@ -177,6 +193,12 @@ void GameScene::Update() {
 		skybox_->UpdateRotation();
 		// プレイヤーの更新
 		player_->Update();
+
+		// ★ RadialBlur エフェクトの更新
+		if (radialBlur_) {
+			radialBlur_->Update(dt);
+		}
+
 		// ライトの更新
 		directionalLight_->Update();
 		// ボスマネージャの更新
