@@ -127,6 +127,7 @@ void GameScene::Finalize() {
 	// RadialBlurEffect の登録を解除
 	if (dxCommon) {
 		dxCommon->SetRadialBlurEffect(nullptr);
+		dxCommon->SetVignettingEffect(nullptr);
 	}
 }
 
@@ -205,11 +206,15 @@ void GameScene::Update() {
 			radialBlur_->Update(dt); // ラジアルブラーの更新
 		}
 		if (vignetting_) {
-			// ボス戦中かどうかを見て、ビネット側に伝える
-			bool bossWave = (bossManager_ && bossManager_->IsBattleActive());
+			// ボス戦中かどうかを BossManager から聞いてフラグを渡す
+			bool bossWave =
+				bossManager_ &&
+				bossManager_->IsBattleActive() &&    // 戦闘中フラグ
+				!bossManager_->IsBossDead();         // すでに死んでないか
+
 			vignetting_->SetBossWave(bossWave);
 
-			vignetting_->Update(dt); // ビネットの更新
+			vignetting_->Update(dt); // ビネット更新（ボス戦中ならフェードIN、終わったらOUT）
 		}
 		// ==================================================
 
@@ -675,6 +680,14 @@ void GameScene::StartClearSequence() {
 	if (player_) {
 		player_->SetControlEnabled(false); // 入力を全部無視
 		player_->SetReticleVisible(false); // レティクル非表示
+	}
+	// ビネットを強制OFF（この後の演出では使わない）
+	if (vignetting_) {
+		vignetting_->SetBossWave(false);      // 内部フラグをOFF
+	}
+	if (dxCommon) {
+		// DX 側からも登録解除して、ポストエフェクトチェーンから外す
+		dxCommon->SetVignettingEffect(nullptr);
 	}
 
 	// カメラの開始位置
