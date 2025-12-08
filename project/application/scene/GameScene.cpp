@@ -552,6 +552,7 @@ void GameScene::LoadTextures() {
 	TextureManager::GetInstance()->LoadTexture("./resources/reticle.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/damageSpark.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/firework_star.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/uvChecker.dds");
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
