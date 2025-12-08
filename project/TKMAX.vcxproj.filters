@@ -431,6 +431,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="RadialBlur.PS.hlsl" />
+    <FxCompile Include="resources\shaders\Vignetting.PS.hlsl" />
+    <FxCompile Include="resources\shaders\RadialBlur.PS.hlsl" />
   </ItemGroup>
 </Project>
