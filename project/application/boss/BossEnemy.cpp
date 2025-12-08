@@ -45,8 +45,7 @@ void BossEnemy::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	BossParam::InitScale,
 		BossParam::InitScale,
 		BossParam::InitScale });
-	SetColliderScale( // 当たり判定用スケール
-		{ BossParam::InitColliderScale });
+	SetColliderScale(BossParam::InitColliderScale); // 当たり判定サイズ設定
 }
 
 void BossEnemy::Update() {
@@ -76,6 +75,48 @@ void BossEnemy::Update() {
 		SetScale({ BossParam::NormalScale,
 				   BossParam::NormalScale,
 				   BossParam::NormalScale });
+	}
+
+	// ───────── ボス当たり判定ワイヤーボックス描画 ─────────
+	{
+		// ボスの中心（ワールド座標）
+		Vector3 center = GetWorldPosition();
+		// コライダーサイズ
+		Vector3 col = GetColliderScale();
+
+		float hx = col.x * 0.5f;
+		float hy = col.y * 0.5f;
+		float hz = col.z * 0.5f;
+
+		auto* lr = LineRenderer::GetInstance();
+
+		// 通常は緑、ロック中は赤
+		LineRenderer::Color color = { 0.0f, 1.0f, 0.0f, 1.0f };
+		if (IsLocked()) {
+			color = { 1.0f, 0.0f, 0.0f, 1.0f };
+		}
+
+		Vector3 p[8] = {
+			{ center.x - hx, center.y - hy, center.z - hz },
+			{ center.x + hx, center.y - hy, center.z - hz },
+			{ center.x - hx, center.y + hy, center.z - hz },
+			{ center.x + hx, center.y + hy, center.z - hz },
+			{ center.x - hx, center.y - hy, center.z + hz },
+			{ center.x + hx, center.y - hy, center.z + hz },
+			{ center.x - hx, center.y + hy, center.z + hz },
+			{ center.x + hx, center.y + hy, center.z + hz },
+		};
+
+		auto add = [&](int a, int b) {
+			lr->AddLine(p[a], p[b], color);
+			};
+
+		// 前面
+		add(0, 1); add(1, 3); add(3, 2); add(2, 0);
+		// 背面
+		add(4, 5); add(5, 7); add(7, 6); add(6, 4);
+		// 横のつなぎ
+		add(0, 4); add(1, 5); add(2, 6); add(3, 7);
 	}
 
 	Enemy::Update();

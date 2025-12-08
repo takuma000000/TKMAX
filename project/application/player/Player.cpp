@@ -526,9 +526,14 @@ void Player::RBShoot() {
 			}
 		}
 
+		// レイで誰も引っ掛からなかったら、ロック中の敵（ボス含む）を使う
+		if (!targetEnemy) {
+			if (enemy_ && !enemy_->IsDead()) {
+				targetEnemy = enemy_;   // BossEnemy* でも Enemy* に代入OK
+			}
+		}
 		// 見つかった敵をこの弾のターゲットにする
 		bullet->SetEnemy(targetEnemy); // nullptr なら「何にも当たらない」通常弾
-
 		// 弾リストに追加
 		bullets_.push_back(std::move(bullet));
 	}
