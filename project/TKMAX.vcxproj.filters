@@ -161,6 +161,7 @@
     <ClCompile Include="MidBossCore.cpp" />
     <ClCompile Include="BaseEffect.cpp" />
     <ClCompile Include="RadialBlurEffect.cpp" />
+    <ClCompile Include="VignettingEffect.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -346,6 +347,7 @@
     <ClInclude Include="MidBossCore.h" />
     <ClInclude Include="BaseEffect.h" />
     <ClInclude Include="RadialBlurEffect.h" />
+    <ClInclude Include="VignettingEffect.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

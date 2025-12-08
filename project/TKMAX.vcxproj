@@ -171,6 +171,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\player\reticle\Reticle.cpp" />
     <ClCompile Include="MidBossCore.cpp" />
     <ClCompile Include="RadialBlurEffect.cpp" />
+    <ClCompile Include="VignettingEffect.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\enemy\manager\EnemyManager.h" />
@@ -236,6 +237,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\effect\line\LineRenderer.h" />
     <ClInclude Include="MidBossCore.h" />
     <ClInclude Include="RadialBlurEffect.h" />
+    <ClInclude Include="VignettingEffect.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

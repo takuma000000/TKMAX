@@ -12,7 +12,9 @@
 #include "MyMath.h"
 #include "SystemIncludes.h"
 
+// PostEffect
 class RadialBlurEffect;
+class VignettingEffect;
 
 //=============================================================
 // DirectXCommonクラス
@@ -23,6 +25,15 @@ public:
 	// OutlineParameter構造体
 	struct OutlineParameter {
 		Matrix4x4 projectionInverse;
+	};
+
+	// VignettingCB構造体
+	struct VignettingCB {
+		Vector4 color;     // 枠色
+		float   intensity; // 強度
+		float   radius;    // どこから暗くするか
+		float   softness;  // ふちのボケ具合
+		float   padding;   // 16byte アライメント
 	};
 
 	// -------------------- 初期化 --------------------
@@ -149,15 +160,13 @@ public:
 	/// </summary>
 	void DrawRadialBlurToSwapchain();
 	/// <summary>
-	/// RadialBlurEffect をセット（必要なら）
+	/// Vignetting パイプラインの初期化
 	/// </summary>
-	/// <param name="effect"></param>
-	void SetRadialBlurEffect(RadialBlurEffect* effect) { radialBlurEffect_ = effect; }
+	void InitializeVignettingPipeline();
 	/// <summary>
-	/// RadialBlurEffect を取得
+	/// VignettingEffect を使って RenderTexture → Swapchain へ描画
 	/// </summary>
-	/// <returns></returns>
-	RadialBlurEffect* GetRadialBlurEffect() const { return radialBlurEffect_; }
+	void DrawVignettingToSwapchain();
 	/// <summary>
 	/// ポストエフェクトなしで RenderTexture → Swapchain へ描画
 	/// </summary>
@@ -226,10 +235,36 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	uint32_t GetRenderTextureSrvIndex() const { return renderTextureSrvIndex_; }
+	/// <summary>
+	/// RadialBlurEffect を取得
+	/// </summary>
+	/// <returns></returns>
+	RadialBlurEffect* GetRadialBlurEffect() const { return radialBlurEffect_; }
 	// ========================================================================
 	// Setter==================================================================
-	/// <summary>SrvManager を登録する</summary>
+	/// <summary>
+	/// SrvManager をセット
+	/// </summary>
+	/// <param name="srvManager"></param>
 	void SetSrvManager(SrvManager* srvManager) { srvManager_ = srvManager; }
+	/// <summary>
+	/// RadialBlurEffect をセット（必要なら）
+	/// </summary>
+	/// <param name="effect"></param>
+	void SetRadialBlurEffect(RadialBlurEffect* effect) { radialBlurEffect_ = effect; }
+	/// <summary>
+	/// VignettingEffect をセット（必要なら）
+	/// </summary>
+	/// <param name="effect"></param>
+	void SetVignettingEffect(VignettingEffect* effect) { vignettingEffect_ = effect; }
+	/// <summary>
+	/// Vignetting 用 パラメータセット
+	/// </summary>
+	/// <param name="color"></param>
+	/// <param name="intensity"></param>
+	/// <param name="radius"></param>
+	/// <param name="softness"></param>
+	void SetVignettingParam(const Vector4& color, float intensity, float radius, float softness);
 	// ========================================================================
 private:
 	//======================================================================
@@ -301,11 +336,20 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12RootSignature>  copyImageRootSignature_;
 	Microsoft::WRL::ComPtr<ID3D12PipelineState>  copyImagePipelineState_;
 	bool                                          copyImageInitialized_ = false;
+
 	// RadialBlur 用 PSO
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> radialBlurPipelineState_;
 	bool                                         radialBlurInitialized_ = false;
-	// 現在シーンの RadialBlurEffect（なければ nullptr）
-	RadialBlurEffect* radialBlurEffect_ = nullptr;
+	RadialBlurEffect* radialBlurEffect_ = nullptr; // 現在シーンの RadialBlurEffect（なければ nullptr）
+
+	// Vignetting 用 PSO
+	Microsoft::WRL::ComPtr<ID3D12RootSignature>  vignettingRootSignature_;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState>  vignettingPipelineState_;
+	bool                                         vignettingInitialized_ = false;
+	VignettingEffect* vignettingEffect_ = nullptr; // 現在シーンの VignettingEffect（なければ nullptr）
+	Microsoft::WRL::ComPtr<ID3D12Resource> vignettingConstantBuffer_; // Vignetting 用 定数バッファ
+	void* vignettingMappedData_ = nullptr; // Vignetting 用 定数バッファマッピングデータポインタ
+
 	//======================================================================
 	// 定数バッファ / ポストエフェクト関連リソース
 	//======================================================================

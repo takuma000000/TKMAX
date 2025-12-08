@@ -27,6 +27,7 @@
 #include "application/boss/manager/BossManager.h"
 #include "engine/effect/line/LineRenderer.h"
 #include "RadialBlurEffect.h"
+#include "VignettingEffect.h"
 
 #include "application/player/Player.h"
 #include "application/enemy/Enemy.h"
@@ -304,4 +305,6 @@ private:
 	//======================================================================
 	// RadialBlur エフェクト
 	std::unique_ptr<RadialBlurEffect> radialBlur_;
+	// Vignetting エフェクト
+	std::unique_ptr<VignettingEffect> vignetting_;
 };

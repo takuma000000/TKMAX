@@ -102,16 +102,18 @@ void GameScene::Initialize() {
 	}
 	bossManager_->Initialize(dxCommon, camera.get(), this, player_.get());
 	// ──────────────── 画面エフェクトの初期化 ───────────────
+	// RadialBlurEffect の生成と初期化
 	radialBlur_ = std::make_unique<RadialBlurEffect>();
 	radialBlur_->Initialize(dxCommon);
-
 	// DirectX 側に「このシーンの RadialBlurEffect」を登録
 	dxCommon->SetRadialBlurEffect(radialBlur_.get());
-
 	if (player_) {
 		// プレイヤーから LT 発射時に通知してもらう
 		player_->SetRadialBlurEffect(radialBlur_.get());
 	}
+	// VignettingEffect の生成と初期化
+	vignetting_ = std::make_unique<VignettingEffect>();
+	vignetting_->Initialize(dxCommon);
 }
 
 void GameScene::Finalize() {
@@ -193,18 +195,26 @@ void GameScene::Update() {
 		skybox_->UpdateRotation();
 		// プレイヤーの更新
 		player_->Update();
-
-		// ★ RadialBlur エフェクトの更新
-		if (radialBlur_) {
-			radialBlur_->Update(dt);
-		}
-
-		// ライトの更新
-		directionalLight_->Update();
 		// ボスマネージャの更新
 		if (bossManager_) {
 			bossManager_->Update(dt);
 		}
+
+		// 画面エフェクトの更新=================================
+		if (radialBlur_) {
+			radialBlur_->Update(dt); // ラジアルブラーの更新
+		}
+		if (vignetting_) {
+			// ボス戦中かどうかを見て、ビネット側に伝える
+			bool bossWave = (bossManager_ && bossManager_->IsBattleActive());
+			vignetting_->SetBossWave(bossWave);
+
+			vignetting_->Update(dt); // ビネットの更新
+		}
+		// ==================================================
+
+		// ライトの更新
+		directionalLight_->Update();
 
 		// ゲームプレイ中だけ風エフェクト
 		if (!clearSequence_ && !gameplayLocked_) {
