@@ -360,8 +360,8 @@ void Player::UpdateVisualOnly() {
 }
 
 void Player::StartBossDeathCameraZoom() {
-	const float kTargetZoom = 0.35f; // 目標ズーム率
-	const float kInTime = 5.5f; // ズームイン時間(秒)
+	const float kTargetZoom = 0.28f; // 目標ズーム率
+	const float kInTime = 2.0f; // ズームイン時間(秒)
 
 	bossZoomActive_ = true;
 	bossZoomTween_.Reset(1.0f, kTargetZoom, kInTime, Ease::Type::OutCubic);
@@ -742,8 +742,6 @@ void Player::UpdateCameraFollowThirdPerson(float dt) {
 			// トゥイーン完了 → ここで止めるだけ。bossZoom_ の値はそのまま保持。
 			bossZoomActive_ = false;
 		}
-	} else {
-		bossZoom_ = 1.0f;
 	}
 
 	float zoom = camZoom_ * bossZoom_;

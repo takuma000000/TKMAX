@@ -84,7 +84,7 @@ void Enemy::Update() {
 
 			// 0.0〜1.0 のうち、0.7 まではその場でガクガク、
 			// 0.7 以降で「上＋奥」にぶっ飛ぶイメージ
-			const float launchStartT = 0.7f;
+			const float launchStartT = 0.5f;
 
 			if (t < launchStartT) {
 				// ─────────────────────
@@ -118,47 +118,42 @@ void Enemy::Update() {
 					pm->Emit("bossDeath_bomb", emitPos, 1); // 小爆発エフェクト
 				}
 			} else {
-				// ─────────────────────
 				// ② ぶっ飛びフェーズ
-				// ─────────────────────
 
-				// 最初の1回だけ開始位置を固定
+				// 最初の1回だけ開始位置を固定＆「最後の大きい演出」を出す
 				if (!bossFinalLaunchStarted_) {
 					bossFinalLaunchStarted_ = true;
 					bossFinalLaunchStartPos_ = pos; // このフレームの位置をスタート位置として保存
+
+					// ★ ここで既存の「最後の大きい演出」を出す
+					ParticleManager* pm = ParticleManager::GetInstance();
+					Vector3 center = GetWorldPosition();
+					pm->Emit("bossDeath_ring", center, 2);
+					pm->Emit("bossDeath_bomb", center, 10);
+					pm->Emit("bossDeath_smoke", center, 24);
 				}
 
-				// ぶっ飛び進捗 0〜1 にマップ
+				// ここから下は「回転上昇奥」の処理（今あるやつそのまま）
 				float u = (t - launchStartT) / (1.0f - launchStartT);
 				if (u < 0.0f) u = 0.0f;
 				if (u > 1.0f) u = 1.0f;
 
-				// お好みでイージング（OutCubic で最初速く、最後ゆっくり）
-				float k = u * u * u;        // 簡易 OutCubic
-				// // Easing.h を使うなら：
-				// float k = Ease::OutCubic(u);
+				float k = u * u * u; // OutCubic っぽい
 
-				// ─────────────────────
-				// ★★ ワールド固定の方向ベクトル ★★
-				// ─────────────────────
-				Vector3 upDir = { 0.0f, 1.0f, 0.0f };   // 上方向 (Y+)
-				Vector3 forwardDir = { 0.0f, 0.0f, 1.0f };   // 画面奥が +Z 側ならコレ
-				// もし「画面奥」が -Z 側のゲームなら ↑ を {0,0,-1} に変える
+				Vector3 upDir = { 0.0f, 1.0f, 0.0f };
+				Vector3 forwardDir = { 0.0f, 0.0f, 1.0f }; // +Z が奥
 
-				float upDist = 15.0f;  // どれだけ上に飛ぶか
-				float depthDist = 40.0f;  // どれだけ奥に飛ぶか
+				float upDist = 15.0f;
+				float depthDist = 40.0f;
 
-				// だんだん「上＋奥」へ
 				pos = bossFinalLaunchStartPos_
 					+ upDir * (upDist * k)
 					+ forwardDir * (depthDist * k);
 
-				// 回転させながら飛んでいく
 				rot.x += 2.5f * dt;
 				rot.y += 3.0f * dt;
 				rot.z += 1.5f * dt;
 
-				// 遠くへ行くにつれて少し小さくして遠近感を出す
 				float s = 1.0f - 0.3f * k;
 				if (s < 0.1f) s = 0.1f;
 				scale = {
@@ -167,7 +162,6 @@ void Enemy::Update() {
 					baseScale_.z * s,
 				};
 			}
-
 			break;
 		}
 		}
@@ -218,9 +212,10 @@ void Enemy::Update() {
 			case EnemyDeathReaction::BossFinal:
 				if (!bossFinalBigBurstDone_) {
 					// ボス用：最後にドカンと大きめエフェクト
-					pm->Emit("bossDeath_ring", emitPos, 2);
-					pm->Emit("bossDeath_bomb", emitPos, 10);
-					pm->Emit("bossDeath_smoke", emitPos, 24);
+					pm->Emit("bossClear_core", emitPos, 1);   // 爆心
+					pm->Emit("bossClear_ring", emitPos, 3);   // でかいショックウェーブ
+					pm->Emit("bossClear_spark", emitPos, 80);  // 光の破片
+					pm->Emit("bossClear_debris", emitPos, 60);  // 重めの破片
 				}
 				break;
 			}

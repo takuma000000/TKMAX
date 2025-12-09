@@ -85,6 +85,14 @@ void GameScene::Initialize() {
 	ParticleManager::GetInstance()->CreateParticleGroup("bossDeath_ring", "./resources/gradationLine.png", ParticleManager::ParticleType::RING);
 	// 倒れたあとしばらく残る大きめの煙
 	ParticleManager::GetInstance()->CreateParticleGroup("bossDeath_smoke", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
+	// 爆心コア（画面中央でドーンと光る玉）
+	ParticleManager::GetInstance()->CreateParticleGroup("bossClear_core", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
+	// 超デカいショックウェーブ（リング）
+	ParticleManager::GetInstance()->CreateParticleGroup("bossClear_ring", "./resources/gradationLine.png", ParticleManager::ParticleType::RING);
+	// 四方八方に飛ぶ光の破片
+	ParticleManager::GetInstance()->CreateParticleGroup("bossClear_spark", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
+	// 重めの破片・残り香みたいな煙
+	ParticleManager::GetInstance()->CreateParticleGroup("bossClear_debris", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
 	/// === 敵飛び掛かり用エフェクト群 ===
 	// 敵の飛び掛かり軌道レール
 	ParticleManager::GetInstance()->CreateParticleGroup("enemyPounceTrail", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);

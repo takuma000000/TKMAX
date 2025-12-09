@@ -1451,16 +1451,14 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 		float radius = frand(1.5f, 5.0f);               // 中心からの距離
 		p.transform.translate = center + dir * radius;
 
-		// 外向きにちょっとだけ飛ぶ
-		float speed = frand(0.6f, 2.2f);
+		// 外向きにそこそこ速く飛ぶ（画面全体に広がる感じ）
+		float speed = frand(2.5f, 6.0f);
 		p.velocity = dir * speed;
-
-		// 丸い爆発本体
-		float sc = frand(1.2f, 2.5f);
+		// 爆発本体をかなり大きく
+		float sc = frand(3.0f, 6.0f);
 		p.transform.scale = { sc, sc, sc };
-
-		// すぐ消える「ボンッ」
-		p.lifeTime = frand(0.22f, 0.40f);
+		// 少しだけ長く見せる
+		p.lifeTime = frand(0.35f, 0.65f);
 		p.currentTime = 0.0f;
 
 		// オレンジ〜黄色の炎色
@@ -1512,24 +1510,16 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 		}
 		dir = MyMath::Normalize(dir);
 
-		float radius = frand(3.0f, 7.0f);
+		// ボスの周囲にさらに広く散らす
+		float radius = frand(6.0f, 14.0f);
 		p.transform.translate = center + dir * radius;
-
-		// ゆっくり上向きに流れていく
-		Vector3 velDir = MyMath::Normalize(Vector3{
-			dir.x * 0.3f,
-			1.0f,
-			dir.z * 0.3f
-			});
-		float speed = frand(0.3f, 0.8f);
-		p.velocity = velDir * speed;
-
+		// 上方向にもう少し強めに流れる
+		float speed = frand(0.8f, 1.6f);
 		// 大きめの煙
-		float sc = frand(1.5f, 3.0f);
+		float sc = frand(3.0f, 5.5f);
 		p.transform.scale = { sc, sc, sc };
-
-		// けっこう長く残す
-		p.lifeTime = frand(1.4f, 2.4f);
+		// かなり長く残して「余韻」を出す
+		p.lifeTime = frand(2.0f, 3.0f);
 		p.currentTime = 0.0f;
 
 		// 少し青みがかった白煙〜灰
@@ -1539,6 +1529,126 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 			frand(0.78f, 0.96f)
 		};
 		p.color = { col3.x, col3.y, col3.z, 1.0f };
+	} else if (groupName == "bossClear_core") {
+		// ボス撃破後の「クリア決定打」になる爆心コア
+
+		p.transform.translate = center;
+
+		// かなりデカい光球（ボスを飲み込むレベル）
+		float sc = std::uniform_real_distribution<float>(5.0f, 8.0f)(rng);
+		p.transform.scale = { sc, sc, sc };
+
+		// 動かない・その場でドーンと光る
+		p.velocity = { 0.0f, 0.0f, 0.0f };
+
+		// 少し長めに残して余韻を出す
+		p.lifeTime = std::uniform_real_distribution<float>(0.6f, 0.9f)(rng);
+		p.currentTime = 0.0f;
+
+		// 白〜黄金色のまぶしい爆心
+		p.color = { 1.0f, 0.96f, 0.80f, 1.0f };
+
+	} else if (groupName == "bossClear_ring") {
+		// ボス撃破後の超デカいショックウェーブ
+
+		p.transform.translate = center;
+
+		// 半径かなり大きめ
+		float sc = std::uniform_real_distribution<float>(7.0f, 11.0f)(rng);
+		p.transform.scale = { sc, sc, sc };
+
+		// ほぼ動かない（サイズで見せる）
+		p.velocity = { 0.0f, 0.0f, 0.0f };
+
+		// 少し残る
+		p.lifeTime = std::uniform_real_distribution<float>(0.45f, 0.7f)(rng);
+		p.currentTime = 0.0f;
+
+		// 外周が少しオレンジがかった白
+		p.color = { 1.0f, 0.9f, 0.65f, 1.0f };
+
+	} else if (groupName == "bossClear_spark") {
+		// 爆発で四方八方に飛ぶ光の破片
+
+		auto frand = [&](float a, float b) {
+			return std::uniform_real_distribution<float>(a, b)(rng);
+			};
+
+		// 中心からランダム方向へ
+		Vector3 dir{
+			frand(-1.0f, 1.0f),
+			frand(-1.0f, 1.0f),
+			frand(-1.0f, 1.0f)
+		};
+		if (MyMath::Length(dir) < 0.001f) {
+			dir = { 0.0f, 1.0f, 0.0f };
+		}
+		dir = MyMath::Normalize(dir);
+
+		// 少しだけ中心から離して出す
+		float radius = frand(0.5f, 4.0f);
+		p.transform.translate = center + dir * radius;
+
+		// かなり速く飛ばす
+		float speed = frand(8.0f, 18.0f);
+		p.velocity = dir * speed;
+
+		// 細長い破片っぽく
+		float len = frand(0.6f, 1.4f);
+		float thin = frand(0.12f, 0.25f);
+		p.transform.scale = { len, thin, 1.0f };
+
+		// 短命〜中くらい
+		p.lifeTime = frand(0.25f, 0.5f);
+		p.currentTime = 0.0f;
+
+		// 黄〜白〜オレンジ寄りの光
+		Vector3 col{
+			1.0f,
+			frand(0.7f, 0.95f),
+			frand(0.3f, 0.6f)
+		};
+		p.color = { col.x, col.y, col.z, 1.0f };
+
+	} else if (groupName == "bossClear_debris") {
+		// 重めに飛んでいく破片（ゲームクリア感の余韻）
+
+		auto frand = [&](float a, float b) {
+			return std::uniform_real_distribution<float>(a, b)(rng);
+			};
+
+		Vector3 dir{
+			frand(-1.0f, 1.0f),
+			frand(0.2f, 1.0f),      // ちょい上向き寄り
+			frand(-1.0f, 1.0f)
+		};
+		if (MyMath::Length(dir) < 0.001f) {
+			dir = { 0.0f, 1.0f, 0.0f };
+		}
+		dir = MyMath::Normalize(dir);
+
+		float radius = frand(1.0f, 5.0f);
+		p.transform.translate = center + dir * radius;
+
+		// スパークより遅め・重たい感じ
+		float speed = frand(3.0f, 8.0f);
+		p.velocity = dir * speed;
+
+		// ゴツい破片
+		float sc = frand(0.4f, 0.9f);
+		p.transform.scale = { sc, sc, sc };
+
+		// 長めに残る
+		p.lifeTime = frand(0.7f, 1.4f);
+		p.currentTime = 0.0f;
+
+		// 暗めのオレンジ〜焦げ茶っぽい色
+		Vector3 col{
+			frand(0.4f, 0.8f),
+			frand(0.2f, 0.4f),
+			frand(0.05f, 0.15f)
+		};
+		p.color = { col.x, col.y, col.z, 1.0f };
 	} else { // 上記意外
 		// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 		std::uniform_real_distribution<float> velX(-0.15f, 0.15f);
