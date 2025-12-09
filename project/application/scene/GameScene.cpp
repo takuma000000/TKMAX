@@ -78,15 +78,26 @@ void GameScene::Initialize() {
 	ParticleManager::GetInstance()->CreateParticleGroup("enemyDeath_shard", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
 	// 残り香みたいにふわっと残る煙
 	ParticleManager::GetInstance()->CreateParticleGroup("enemyDeath_smoke", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
+	/// === ボス撃破専用エフェクト ===
+	// 揺れている最中にボンボン出る中サイズ爆発
+	ParticleManager::GetInstance()->CreateParticleGroup("bossDeath_bomb", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
+	// 最後にドカンと出るリング衝撃波
+	ParticleManager::GetInstance()->CreateParticleGroup("bossDeath_ring", "./resources/gradationLine.png", ParticleManager::ParticleType::RING);
+	// 倒れたあとしばらく残る大きめの煙
+	ParticleManager::GetInstance()->CreateParticleGroup("bossDeath_smoke", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
 	/// === 敵飛び掛かり用エフェクト群 ===
 	// 敵の飛び掛かり軌道レール
 	ParticleManager::GetInstance()->CreateParticleGroup("enemyPounceTrail", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
 	// 軌道上のスパーク
 	ParticleManager::GetInstance()->CreateParticleGroup("enemyPounceSpark", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
-	// === 蘇生核チャージ演出 ===
+	/// === 蘇生核チャージ演出 ===
+	// 外側を覆うエネルギー殻
 	ParticleManager::GetInstance()->CreateParticleGroup("core_charge_shell", "./resources/gradationLine.png", ParticleManager::ParticleType::RING);
+	// 内向きに吸い込まれる粒子
 	ParticleManager::GetInstance()->CreateParticleGroup("core_charge_inward", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
+	// リボン状のエネルギー帯
 	ParticleManager::GetInstance()->CreateParticleGroup("core_charge_ribbon", "./resources/gradationLine.png", ParticleManager::ParticleType::RING);
+	// 中心の強いフラッシュ
 	ParticleManager::GetInstance()->CreateParticleGroup("core_charge_flash", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
 	// ──────────────── スカイボックスの初期化 ───────────────
 	skybox_ = std::make_unique<Skybox>();

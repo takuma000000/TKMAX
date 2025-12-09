@@ -80,14 +80,54 @@ void Enemy::Update() {
 			};
 			break;
 		}
+		case EnemyDeathReaction::BossFinal: {
+			// ボス専用：その場でガクガク揺れながら脈打つ
+			float shakeAmp = 0.25f;
+			float shakeFreq = 18.0f;
+
+			pos.x += sinf(deathTimer_ * shakeFreq) * shakeAmp; // 横揺れ
+			pos.y += cosf(deathTimer_ * shakeFreq * 0.7f) * shakeAmp * 0.6f; // 縦揺れ
+
+			float pulse = 1.0f + 0.10f * sinf(deathTimer_ * 10.0f); // 脈打ち拡大縮小
+			scale = { // 脈打ちスケール
+				baseScale_.x * pulse, // X
+				baseScale_.y * pulse, // Y
+				baseScale_.z * pulse, // Z
+			};
+
+			// 揺れている間、体のあちこちから小爆発
+			ParticleManager* pm = ParticleManager::GetInstance();
+			if (std::rand() % 3 != 0) { // 出過ぎ防止
+				Vector3 center = GetWorldPosition(); // ボス中心位置
+				Vector3 off = { // コライダー範囲内ランダム
+					(static_cast<float>(std::rand()) / RAND_MAX - 0.5f) * colliderScale_.x, // X
+					(static_cast<float>(std::rand()) / RAND_MAX - 0.5f) * colliderScale_.y, // Y
+					(static_cast<float>(std::rand()) / RAND_MAX - 0.5f) * colliderScale_.z // Z
+				};
+				Vector3 emitPos = center + off * 0.5f; // 少し内側から出す
+				pm->Emit("bossDeath_bomb", emitPos, 1); // 小爆発エフェクト
+			}
+			break;
+		}
 		}
 
 		object_->SetTranslate(pos);
 		object_->SetRotate(rot);
 		object_->SetScale(scale);
 
-		// 全パターン共通：アルファは 1 → 0 にフェード
-		deathAlpha_ = 1.0f - t;
+		// ボスだけは「最後の30%だけフェードアウト」
+		if (deathReaction_ == EnemyDeathReaction::BossFinal) {
+			if (t < 0.7f) { // 最初の70%は不透明
+				deathAlpha_ = 1.0f; // 完全不透明
+			} else { // 最後の30%でフェードアウト
+				float u = (t - 0.7f) / 0.3f; // 0.0 → 1.0
+				if (u > 1.0f) u = 1.0f; // Clamp
+				deathAlpha_ = 1.0f - u; // 徐々に透明化
+			}
+		} else { // 通常敵は最初から均等に透明化
+			deathAlpha_ = 1.0f - t; // 通常は全体で均等に透明化
+		}
+
 		object_->SetColor({ 1.0f, 1.0f, 1.0f, deathAlpha_ }); // 透明度設定
 		object_->Update();
 
@@ -110,13 +150,18 @@ void Enemy::Update() {
 				pm->Emit("enemyDeath_smoke", emitPos, 6);
 				break;
 			case EnemyDeathReaction::Collapse:
-				// 崩れ落ち系：破片少なめ＋控えめなライン
+				// 崩れ落ち系：破片少なめ＋控えめなラインメイテックフィルダーズ
 				pm->Emit("enemyDeath_shard", emitPos, 10);
 				pm->Emit("enemyDeath_smoke", emitPos, 3);
 				break;
+			case EnemyDeathReaction::BossFinal:
+				// ボス用：最後にドカンと大きめエフェクト
+				pm->Emit("bossDeath_ring", emitPos, 2);
+				pm->Emit("bossDeath_bomb", emitPos, 10);
+				pm->Emit("bossDeath_smoke", emitPos, 24);
+				break;
 			}
-
-			isDead_ = true;
+			isDead_ = true; // 完全に消えたフラグを立てる
 		}
 		return;
 	}
@@ -451,8 +496,12 @@ void Enemy::OnHitWithDamage(int damage) {
 	hp_ -= damage;
 	if (hp_ <= 0) {
 		hp_ = 0;
-		// 方向が取れないならとりあえず前方向とか適当に
-		StartDeathReaction({ 0.0f, 0.0f, 1.0f });
+		// ボスなら専用死亡演出、それ以外は従来通り
+		if (type_ == EnemyType::Boss) {
+			StartBossDeathReaction({ 0.0f, 0.0f, 1.0f });
+		} else {
+			StartDeathReaction({ 0.0f, 0.0f, 1.0f });
+		}
 	}
 }
 
@@ -461,11 +510,17 @@ void Enemy::StartDeathReaction(const Vector3& hitDir) {
 		return;
 	}
 
-	defeated_ = true; // 敵撃破フラグをtrueに
+	// ボスなら共通処理は使わず専用リアクションへ
+	if (type_ == EnemyType::Boss) {
+		StartBossDeathReaction(hitDir); // ボス専用死亡リアクション
+		return;
+	}
 
+	freezeMove_ = true; // 死んだ瞬間に動き停止
+	defeated_ = true; // 敵撃破フラグをtrueに
 	isDying_ = true; // 死亡演出中フラグを立てるtrueに
-	deathTimer_ = 0.0f;
-	deathAlpha_ = 1.0f;
+	deathTimer_ = 0.0f; // タイマーリセット
+	deathAlpha_ = 1.0f; // アルファ初期値
 
 	// 0,1,2 のどれかをランダムに選ぶ
 	int r = std::rand() % 3;
@@ -504,4 +559,26 @@ void Enemy::StartDeathReaction(const Vector3& hitDir) {
 void Enemy::SyncTransform() {
 	if (!object_) return;
 	object_->Update();  // 行列と定数バッファだけ更新
+}
+
+void Enemy::StartBossDeathReaction(const Vector3& hitDir) {
+	if (isDying_) { // すでに死亡演出中なら無視
+		return;
+	}
+
+	freezeMove_ = true; // 死んだ瞬間に動き停止
+	defeated_ = true; // 敵撃破フラグをtrueに
+	isDying_ = true; // 死亡演出中フラグを立てるtrueに
+	deathTimer_ = 0.0f; // タイマーリセット
+	deathAlpha_ = 1.0f; // アルファ初期値
+
+	// ボス専用リアクション
+	deathReaction_ = EnemyDeathReaction::BossFinal;
+
+	// ボスはしっかり見せたいので少し長め
+	deathDuration_ = 5.0f; // 3秒で消える
+
+	// ほとんど動かないように設定
+	deathVelocity_ = { 0.0f, 0.0f, 0.0f }; // 動かない
+	deathRotateSpeed_ = { 0.0f, 0.0f, 0.0f }; // 回転しない
 }

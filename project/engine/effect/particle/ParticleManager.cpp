@@ -1430,6 +1430,115 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 		p.lifeTime = 0.18f;
 
 		p.velocity = { 0.0f, 0.0f, 0.0f };
+	} else if (groupName == "bossDeath_bomb") {
+		// モンストっぽい「丸い爆発」がボンボン出るやつ
+
+		auto frand = [&](float a, float b) {
+			return std::uniform_real_distribution<float>(a, b)(rng);
+			};
+
+		// ボスの周囲にランダム配置（ちょっと縦長）
+		Vector3 dir{
+			frand(-1.0f, 1.0f),
+			frand(-0.6f, 1.0f),
+			frand(-1.0f, 1.0f)
+		};
+		if (MyMath::Length(dir) < 0.001f) {
+			dir = { 0.0f, 1.0f, 0.0f };
+		}
+		dir = MyMath::Normalize(dir);
+
+		float radius = frand(1.5f, 5.0f);               // 中心からの距離
+		p.transform.translate = center + dir * radius;
+
+		// 外向きにちょっとだけ飛ぶ
+		float speed = frand(0.6f, 2.2f);
+		p.velocity = dir * speed;
+
+		// 丸い爆発本体
+		float sc = frand(1.2f, 2.5f);
+		p.transform.scale = { sc, sc, sc };
+
+		// すぐ消える「ボンッ」
+		p.lifeTime = frand(0.22f, 0.40f);
+		p.currentTime = 0.0f;
+
+		// オレンジ〜黄色の炎色
+		Vector3 col{
+			1.0f,
+			frand(0.45f, 0.9f),
+			frand(0.0f, 0.25f)
+		};
+		p.color = { col.x, col.y, col.z, 1.0f };
+
+	} else if (groupName == "bossDeath_ring") {
+		// 画面を埋めるくらいの衝撃波リング
+
+		auto frand = [&](float a, float b) {
+			return std::uniform_real_distribution<float>(a, b)(rng);
+			};
+
+		// 中心固定
+		p.transform.translate = center;
+
+		// 大きなリング
+		float sc = frand(6.0f, 10.0f);
+		p.transform.scale = { sc, sc, sc };
+
+		p.velocity = { 0.0f, 0.0f, 0.0f };
+
+		// 少し長めに残る
+		p.lifeTime = frand(0.5f, 0.9f);
+		p.currentTime = 0.0f;
+
+		// 黄白っぽい衝撃波カラー
+		p.color = { 1.0f, 0.88f, 0.55f, 1.0f };
+
+	} else if (groupName == "bossDeath_smoke") {
+		// 爆発のあとの大きな煙
+
+		auto frand = [&](float a, float b) {
+			return std::uniform_real_distribution<float>(a, b)(rng);
+			};
+
+		// ボスの周囲に大きく散らす
+		Vector3 dir{
+			frand(-1.0f, 1.0f),
+			frand(0.0f, 1.0f),
+			frand(-1.0f, 1.0f)
+		};
+		if (MyMath::Length(dir) < 0.001f) {
+			dir = { 0.0f, 1.0f, 0.0f };
+		}
+		dir = MyMath::Normalize(dir);
+
+		float radius = frand(3.0f, 7.0f);
+		p.transform.translate = center + dir * radius;
+
+		// ゆっくり上向きに流れていく
+		Vector3 velDir = MyMath::Normalize(Vector3{
+			dir.x * 0.3f,
+			1.0f,
+			dir.z * 0.3f
+			});
+		float speed = frand(0.3f, 0.8f);
+		p.velocity = velDir * speed;
+
+		// 大きめの煙
+		float sc = frand(1.5f, 3.0f);
+		p.transform.scale = { sc, sc, sc };
+
+		// けっこう長く残す
+		p.lifeTime = frand(1.4f, 2.4f);
+		p.currentTime = 0.0f;
+
+		// 少し青みがかった白煙〜灰
+		Vector3 col3{
+			frand(0.70f, 0.90f),
+			frand(0.72f, 0.92f),
+			frand(0.78f, 0.96f)
+		};
+		p.color = { col3.x, col3.y, col3.z, 1.0f };
 	} else { // 上記意外
 		// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 		std::uniform_real_distribution<float> velX(-0.15f, 0.15f);

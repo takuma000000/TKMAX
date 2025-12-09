@@ -46,6 +46,7 @@ void BossEnemy::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 		BossParam::InitScale,
 		BossParam::InitScale });
 	SetColliderScale(BossParam::InitColliderScale); // 当たり判定サイズ設定
+	SetType(EnemyType::Boss); // ボス設定
 }
 
 void BossEnemy::Update() {
@@ -136,6 +137,21 @@ void BossEnemy::ImGuiDebug() {
 	if (ImGui::DragFloat3("当たり判定サイズ", &col.x, 0.01f, 0.01f, 999.0f)) {
 		SetColliderScale(col);
 	}
+	// =========================
+
+	ImGui::Separator();
+
+	// =========================
+	// HP 調整
+	// =========================
+	int hp = GetHP();
+	int maxHP = GetMaxHP();
+
+	ImGui::Text("HP : %d / %d", hp, maxHP);
+	if (ImGui::SliderInt("HP 調整", &hp, 1, maxHP)) {
+		SetCurrentHP(hp);
+	}
+	// =========================
 
 	ImGui::Separator();
 
@@ -155,6 +171,7 @@ void BossEnemy::ImGuiDebug() {
 		"クールダウン",
 		stageT_
 	);
+	// =========================
 
 	ImGui::Separator();
 
@@ -225,6 +242,7 @@ void BossEnemy::ImGuiDebug() {
 		}
 		ImGui::EndChild();
 	}
+	// =========================
 
 	ImGui::End();
 #endif // USE_IMGUI

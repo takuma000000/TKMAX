@@ -29,12 +29,14 @@ enum class EnemyDeathReaction {
 	BlowAway,       // 吹っ飛んで消える
 	RiseAbsorb,     // 上に吸い込まれるように消える
 	Collapse,       // 崩れ落ちて潰れて消える
+	BossFinal,      // その場で揺れながら爆散
 };
 // 敵の役割（通常 / Wave3中ボス / Wave3蘇生核）
 enum class EnemyType {
 	Normal,      // 通常ザコ
 	Wave3MidBoss,// Wave3 中ボス
 	Wave3Core,   // Wave3 蘇生用の「核」
+	Boss,        // ボス
 };
 
 class Enemy {
@@ -93,6 +95,11 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	bool IsAngry() const { return isAngry_; }
+	/// <summary>
+	/// ボスの最終死亡リアクションを開始します。
+	/// </summary>
+	/// <param name="hitDir"></param>
+	void StartBossDeathReaction(const Vector3& hitDir);
 
 	// Getter===================================
 	/// <summary>
@@ -306,8 +313,16 @@ public:
 	/// </summary>
 	/// <param name="v"></param>
 	void SetFreezeMove(bool v) { freezeMove_ = v; }
+	/// <summary>
+	/// 現在のHPを設定します。
+	/// </summary>
+	/// <param name="hp"></param>
+	void SetCurrentHP(int hp) {
+		if (hp < 0) { hp = 0; }
+		if (hp > maxHP_) { hp = maxHP_; }
+		hp_ = hp;
+	}
 	// =========================================
-
 private:
 	//--------------------------------------------------------------
 	//  Enemy 内部データ（基本）

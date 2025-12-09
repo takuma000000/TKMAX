@@ -18,38 +18,58 @@ class ImGuiManager;
 //=============================================================
 class Framework{
 public:
-	// 仮想関数（派生クラスで必ず実装する必要がある）
-	/// <summary>初期化を行う関数。</summary>
+	virtual ~Framework() = default; // 仮想デストラクタ
+
+	/// <summary>
+	/// 初期化を行う関数。
+	/// </summary>
 	virtual void Initialize();   // 初期化
-	/// <summary>終了処理を行う関数。</summary>
+	/// <summary>
+	/// 終了処理を行う関数。
+	/// </summary>
 	virtual void Finalize();     // 終了
-	/// <summary>毎フレーム更新を行う関数。</summary>
+	/// <summary>
+	/// 毎フレーム更新を行う関数。
+	/// </summary>
 	virtual void Update();       // 毎フレーム更新
-	/// <summary>毎フレーム描画を行う関数。</summary>
+	/// <summary>
+	/// 毎フレーム描画を行う関数。
+	/// </summary>
 	virtual void Draw();         // 描画
-
-	// ゲーム終了のチェック
-	/// <summary>終了要求があるかを取得する関数。</summary>
+	/// <summary>
+	/// 終了フラグの取得を行う関数。
+	/// </summary>
+	/// <returns></returns>
 	virtual bool IsEndRequest() { return endRequest_; }
-
-	///<summary>デストラクタ。</summary>
-	virtual ~Framework() = default;
-
-	//実行
-	///<summary>フレームワークの実行を行う関数。</summary>
+	/// <summary>
+	/// フレームワークの実行を行う関数。
+	/// </summary>
 	void Run();
 
-	// 初期化した共通機能を派生クラスで使えるようにするためのアクセサ
-	//// <summary>WindowsAPIのゲッター。</summary>
+	// Getter========================================
+	/// <summary>
+	/// WindowsAPIのゲッター。
+	/// </summary>
+	/// <returns></returns>
 	WindowsAPI* GetWindowsAPI() const { return windowsAPI.get(); }
-	/// <summary>DirectXCommonのゲッター。</summary>
+	/// <summary>
+	/// DirectXCommonのゲッター。
+	/// </summary>
+	/// <returns></returns>
 	DirectXCommon* GetDirectXCommon() const { return dxCommon.get(); }
-	/// <summary>SrvManagerのゲッター。</summary>
+	/// <summary>
+	/// SrvManagerのゲッター。
+	/// </summary>
+	/// <returns></returns>
 	SrvManager* GetSrvManager() const { return srvManager.get(); }
-
-public:
-	///<summary>終了フラグを設定する関数。</summary>
+	// ==============================================
+	// Setter========================================
+	/// <summary>
+	/// 終了フラグの設定を行う関数。
+	/// </summary>
+	/// <param name="endRequest"></param>
 	void SetEndRequest(bool endRequest) { endRequest_ = endRequest; } // 終了フラグを設定する
+	// ==============================================
 protected:
 	bool endRequest_ = false;    // 終了フラグ
 
