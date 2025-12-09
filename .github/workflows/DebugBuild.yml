@@ -2,7 +2,7 @@ name: DebugBuild
 on:
   push:
     branches:
-      - master
+      - TKM_GAME
 
 env:
   # リポジトリのルートディレクトリを基点としたソリューションファイルのパス
