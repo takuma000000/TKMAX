@@ -360,12 +360,28 @@ void Player::UpdateVisualOnly() {
 }
 
 void Player::StartBossDeathCameraZoom() {
-	const float kTargetZoom = 0.28f; // 目標ズーム率
-	const float kInTime = 2.0f; // ズームイン時間(秒)
+	// すでにボス用ズーム中なら二重起動しない
+	if (bossZoomActive_) {
+		return;
+	}
 
+	// だいぶ引きたいのでかなり小さめにする
+	// camZoom_ と掛け算される前提で、
+	// 0.35f くらいだと「約 1 / 0.35 ≒ 2.85 倍」引きになるイメージ
+	const float kTargetZoom = 0.35f;
+	const float kZoomTime = 1.2f;   // カメラが引ききるまでの時間
+	const float kBlurTime = 4.795f;   // ブラー継続時間
+
+	// ---- ズームアウト用トゥイーン設定 ----
 	bossZoomActive_ = true;
-	bossZoomTween_.Reset(1.0f, kTargetZoom, kInTime, Ease::Type::OutCubic);
+	bossZoomTween_.Reset(1.0f, kTargetZoom, kZoomTime, Ease::Type::OutCubic);
 	bossZoom_ = 1.0f;
+
+	// ---- ラジアルブラー発火 ----
+	if (radialBlur_) {
+		// 強さ = 2.0f、時間 = kBlurTime
+		radialBlur_->BulrStartShock(2.0f, kBlurTime);
+	}
 }
 
 void Player::Draw(DirectXCommon* dxCommon) {
@@ -641,7 +657,7 @@ void Player::LTShoot() {
 
 		// ここでラジアルブラー発火
 		if (radialBlur_) {
-			radialBlur_->StartShock(2.0f, 0.35f); // 強さ、長さ
+			radialBlur_->BulrStartShock(2.0f, 0.35f); // 強さ、長さ
 		}
 
 		bullet->SetCore(core_);

@@ -9,7 +9,7 @@ public:
 	void Draw() override;
 
 	/// LT弾発射時に呼ぶ
-	void StartShock(float strength = 1.0f, float duration = 0.35f);
+	void BulrStartShock(float strength = 1.0f, float duration = 0.35f);
 
 	/// 有効かどうか（必要なら使う用）
 	bool IsActive() const { return active_; }

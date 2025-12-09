@@ -359,4 +359,9 @@ private:
 	// --- 自機当たり判定(AABB) ---
 	Vector3 colliderScale_ = { 2.0f, 2.0f, 6.0f }; // 当たり判定用スケール
 	float   hitFlashTimer_ = 0.0f;                 // 被弾フラッシュ用タイマー
+
+	// 
+	bool bossDeathBlurActive_ = false;
+	float bossDeathBlurT_ = 0.0f;
+	const float bossDeathBlurDuration_ = 1.5f; // ブラー強めの時間
 };
