@@ -67,7 +67,7 @@ void VignettingEffect::ImGuiDebug() {
 		ImGuiWindowFlags_NoCollapse)) {
 
 		ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.2f, 1.0f),
-			"★ ビネット設定");
+			"ビネット設定");
 		ImGui::Spacing();
 
 		// 横幅をそろえて見やすく

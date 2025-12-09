@@ -630,7 +630,7 @@ void Player::LTShoot() {
 		bullet->SetPlayer(this);
 		bullet->SetTrailGroup("trail_lt");
 
-		// ★ ここでラジアルブラー発火
+		// ここでラジアルブラー発火
 		if (radialBlur_) {
 			radialBlur_->StartShock(2.0f, 0.35f); // 強さ、長さ
 		}

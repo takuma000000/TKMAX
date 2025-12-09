@@ -30,7 +30,7 @@ PixelShaderOutput main(VertexShaderOutput input)
     float4 sceneColor = gSceneTex.Sample(gSampler, uv);
 
     // ------------------------------
-    // ★ ノイズパラメータ（固定値）
+    // ノイズパラメータ（固定値）
     //   ※あとで ImGui 連携したくなったら、
     //     そのとき CBV 方式に差し替えればOK
     // ------------------------------

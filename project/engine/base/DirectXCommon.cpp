@@ -114,7 +114,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateRenderTextureResourc
 void DirectXCommon::CreateRenderTextureRTV() {
 	const Vector4 kRenderTargetClearValue{ 1.0f, 0.0f, 0.0f, 1.0f }; // 赤色でクリア
 
-	// ★ メンバ変数に代入する（auto ローカルで隠さない）
+	// メンバ変数に代入する（auto ローカルで隠さない）
 	renderTextureResource =
 		CreateRenderTextureResource(device,
 			WindowsAPI::kClientWidth,
@@ -193,7 +193,7 @@ void DirectXCommon::InitializeCopyImagePipeline() {
 	Microsoft::WRL::ComPtr<IDxcBlob> vsBlob =
 		CompileShader(L"resources/shaders/CopyImage.VS.hlsl", L"vs_6_0");
 	Microsoft::WRL::ComPtr<IDxcBlob> psBlob =
-		CompileShader(L"resources/shaders/Random.PS.hlsl", L"ps_6_0");
+		CompileShader(L"resources/shaders/CopyImage.PS.hlsl", L"ps_6_0");
 
 	// 2. RootSignature 作成
 	//   - t0: SRV (RenderTexture)
@@ -1065,7 +1065,7 @@ void DirectXCommon::UpdateFixFPS() {
 void DirectXCommon::PreDraw() {
 
 	// =========================================
-	// ★ RenderTexture を描画先にする (9ページ)
+	// RenderTexture を描画先にする (9ページ)
 	// =========================================
 	// kRenderTextureRTVIndex は DirectXCommon.h で 2 に定義されている
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtvHandles[kRenderTextureRTVIndex];
@@ -1075,7 +1075,7 @@ void DirectXCommon::PreDraw() {
 	commandList->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
 
 	// =========================================
-	// ★ RenderTexture をクリア (今は赤で確認用)
+	// RenderTexture をクリア (今は赤で確認用)
 	// =========================================
 	float clearColor[4] = { 1.0f, 0.0f, 0.0f, 1.0f }; // 背景色：赤
 	commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
@@ -1089,7 +1089,7 @@ void DirectXCommon::PreDraw() {
 	);
 
 	// =========================================
-	// ★ ビューポート＆シザー設定
+	// ビューポート＆シザー設定
 	// =========================================
 	commandList->RSSetViewports(1, &viewport);
 	commandList->RSSetScissorRects(1, &scissorRect);

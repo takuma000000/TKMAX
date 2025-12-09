@@ -132,7 +132,7 @@ void Enemy::Update() {
 	// ---- 位置更新（挙動別）----
 	Vector3 pos = object_->GetTranslate();
 
-	// ★ freezeMove_ のときは「挙動による位置更新」を全部スキップ
+	// freezeMove_ のときは「挙動による位置更新」を全部スキップ
 	if (!freezeMove_) {
 
 		switch (behavior_) { // 挙動別移動
@@ -264,7 +264,7 @@ void Enemy::Update() {
 				target.y = roamMin_.y + (roamMax_.y - roamMin_.y) * random01();
 				target.z = roamMin_.z + (roamMax_.z - roamMin_.z) * random01();
 
-				// ★ 怒り時はプレイヤー方向に少し寄せる
+				// 怒り時はプレイヤー方向に少し寄せる
 				if (isAngry_ && playerGetter_) {
 					Vector3 p = playerGetter_();
 					// プレイヤーのXだけ強めに反映して「間に割り込んでくる」感じ
@@ -481,7 +481,7 @@ void Enemy::StartDeathReaction(const Vector3& hitDir) {
 	case 0: // 吹っ飛び
 	default:
 		deathReaction_ = EnemyDeathReaction::BlowAway;
-		deathDuration_ = 1.0f;
+		deathDuration_ = 3.0f; // 1秒で消える
 		deathVelocity_ = dir * 4.0f;             // ヒット方向へ吹っ飛ぶ
 		deathRotateSpeed_ = { 1.5f, 2.0f, 0.8f }; // ぐるっと回転
 		break;

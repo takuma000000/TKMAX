@@ -82,7 +82,7 @@ void MyGame::Draw() {
 
 	// ③ RenderTexture → Swapchain へコピー（RadialBlur を含めた「正攻法」）
 	srvManager->PreDraw();
-	dxCommon->DrawPostEffectToSwapchain();   // ★ ここだけ変更！
+	dxCommon->DrawPostEffectToSwapchain(); // RenderTexture を使った後処理
 
 	// ④ ImGui描画
 	imguiManager->Draw();

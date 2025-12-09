@@ -45,7 +45,7 @@ void EnemyManager::Update(float dt) {
 	/// ───────────────────────────────────────────────
 	for (auto it = enemies_->begin(); it != enemies_->end(); ) {
 		Enemy* e = it->get();
-		// ★ ここでフラグを渡す
+		// ここでフラグを渡す
 		e->SetFreezeMove(freezeEnemies_);
 		e->Update();
 
@@ -733,7 +733,7 @@ void EnemyManager::ImGuiDebug() {
 
 	ImGui::Begin("敵ステータス");
 
-	// ★ 敵の動きを止めるトグル
+	// 敵の動きを止めるトグル
 	ImGui::Checkbox("敵の動きを止める", &freezeEnemies_);
 	ImGui::Separator();
 
