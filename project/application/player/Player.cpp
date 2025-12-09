@@ -193,7 +193,7 @@ void Player::ImGuiDebug() {
 	ImGui::End();
 	//---------------- プレイヤー弾ステータス ----------------
 	ImGui::Begin("P弾ステータス");
-	ImGui::SliderFloat("弾速度(RB,RT,LB)", &normalBulletSpeed_, 0.1f, 5.0f); // RB,RT,LBの弾速度調整
+	ImGui::SliderFloat("弾速度(RB,RT,LB)", &normalBulletSpeed_, 0.1f, 15.0); // RB,RT,LBの弾速度調整
 	ImGui::Separator();
 	int idx = 0;
 	for (const auto& bullet : bullets_) {   // Player が持ってる bullets_ :contentReference[oaicite:1]{index=1}

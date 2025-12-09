@@ -51,6 +51,12 @@ void BossEnemy::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 void BossEnemy::Update() {
 	if (IsDead()) return;
 
+	// 死亡演出中はAI・攻撃を止めて、死亡アニメーションのみ実行
+	if (IsDying()) {
+		Enemy::Update();
+		return;
+	}
+
 	Vector3 playerPos{ 0,0,0 };
 	if (auto getter = GetPlayer()) {
 		playerPos = getter();
@@ -68,13 +74,9 @@ void BossEnemy::Update() {
 	if (IsLocked()) {
 		blinkT_ += BossParam::LockBlinkSpeed;
 		float s = 1.0f + BossParam::LockBlinkAmount * sinf(blinkT_);
-		SetScale({ BossParam::NormalScale * s,
-				   BossParam::NormalScale * s,
-				   BossParam::NormalScale * s });
+		SetScale({ BossParam::NormalScale * s,BossParam::NormalScale * s,BossParam::NormalScale * s });
 	} else {
-		SetScale({ BossParam::NormalScale,
-				   BossParam::NormalScale,
-				   BossParam::NormalScale });
+		SetScale({ BossParam::NormalScale,BossParam::NormalScale,BossParam::NormalScale });
 	}
 
 	// ───────── ボス当たり判定ワイヤーボックス描画 ─────────

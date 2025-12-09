@@ -340,7 +340,7 @@ private:
 	//======================================================================
 	// 入力 & 弾共通の調整用定数
 	static constexpr int   kTriggerThreshold = 128;  // LT/RT 判定しきい値
-	float                  normalBulletSpeed_ = 2.2f; // RB/LB/RT の弾速
+	float                  normalBulletSpeed_ = 10.0f; // RB/LB/RT の弾速
 	static constexpr float kJetSmokeOffsetZ = 2.0f; // 機体後ろのジェット位置Zオフセット
 	static constexpr float kHomingBulletSpeed = 0.6f; // LT弾の追尾速度
 	const float            dt = 1.0f / 60.0f; // 想定フレーム時間

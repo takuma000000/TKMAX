@@ -377,8 +377,8 @@ void Enemy::Update() {
 		object_->SetScale(baseScale_);
 	}
 
-	// ---- 将来の射撃フック（必要になったら実装）----
-	if (canShoot_) {
+	// ---- 将来の射撃フック ----
+	if (canShoot_ && !isDying_) { // 死亡演出中は撃たない
 		shootTimer_++;
 		if (shootTimer_ >= shootInterval_) {
 			shootTimer_ = 0.0f;
