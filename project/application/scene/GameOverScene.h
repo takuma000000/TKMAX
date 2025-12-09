@@ -24,7 +24,6 @@ public:
 	GameOverScene(DirectXCommon* dxCommon, SrvManager* srvManager)
 		: dxCommon_(dxCommon), srvManager_(srvManager) {
 	}
-
 	/// <summary>
 	/// </summary>シーンを初期化します。
 	/// </summary>

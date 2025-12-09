@@ -98,7 +98,11 @@ public:
 	int  GetWheel() const { return wheel_; }
 	// ==============================================
 	// Setter========================================
-	///<para>コントローラーの振動を設定します。</para>
+	/// <summary>
+	/// <para>コントローラーの振動を設定します。</para>
+	/// </summary>
+	/// <param name="leftMotor"></param>
+	/// <param name="rightMotor"></param>
 	void SetVibration(WORD leftMotor, WORD rightMotor);
 	/// <summary>
 	/// <para>マウスホイールの回転量を設定します。</para>

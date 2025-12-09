@@ -33,14 +33,17 @@ public:
 	void Draw();
 
 	//ImGuiの色関数===========================================
-	//イチゴ色
-	///<summary>イチゴ色に設定する関数</summary>
+	/// <summary>
+	/// イチゴ色に設定する関数
+	/// </summary>
 	void SetColorStrawberry();
-	//ホワイトタイガー
-	///<summary>ホワイトタイガーに設定する関数</summary>
+	/// <summary>
+	/// 白虎色に設定する関数
+	/// </summary>
 	void SetColorWhiteTiger();
-	//レインボー キラキラ
-	///<summary>レインボー キラキラに設定する関数</summary>
+	/// <summary>
+	/// 虹色に設定する関数
+	/// </summary>
 	void SetColorRainbow();
 	//=======================================================
 private:
