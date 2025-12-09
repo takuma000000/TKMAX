@@ -12,7 +12,7 @@ void RadialBlurEffect::Initialize(DirectXCommon* dx) {
 	}
 }
 
-void RadialBlurEffect::StartShock(float strength, float duration) {
+void RadialBlurEffect::BulrStartShock(float strength, float duration) {
 	active_ = true;
 	timer_ = 0.0f;
 	maxStrength_ = strength;
