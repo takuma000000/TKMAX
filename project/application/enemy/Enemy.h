@@ -6,6 +6,7 @@
 #include <engine/effect/particle/ParticleManager.h>
 #include "engine/effect/line/LineRenderer.h"
 #include "application/player/reticle/Reticle.h"
+#include "Easing.h"
 
 #ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"
@@ -394,6 +395,15 @@ private:
 	Vector3 deathRotateSpeed_ = { 0,0,0 };
 	float  deathAlpha_ = 1.0f;  // フェード
 	EnemyDeathReaction deathReaction_ = EnemyDeathReaction::BlowAway;
+
+	// --- BossFinal 用：ぶっ飛び＆カメラ演出 ---
+	bool   bossFinalBigBurstDone_ = false; // 大きい撃破円を出したか
+	bool   bossFinalCameraInited_ = false; // カメラ初期化済みフラグ
+	Vector3 bossFinalCameraStartPos_{};    // カメラの開始位置
+	Vector3 bossFinalCameraEndPos_{};      // カメラの終了位置
+	// ボス最終死亡リアクション用
+	bool    bossFinalLaunchStarted_ = false;
+	Vector3 bossFinalLaunchStartPos_ = { 0.0f, 0.0f, 0.0f };
 	//--------------------------------------------------------------
 	//  飛び掛かり（PounceFromAbove / Wave1 敵）
 	//--------------------------------------------------------------

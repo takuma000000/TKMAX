@@ -81,32 +81,93 @@ void Enemy::Update() {
 			break;
 		}
 		case EnemyDeathReaction::BossFinal: {
-			// ボス専用：その場でガクガク揺れながら脈打つ
-			float shakeAmp = 0.25f;
-			float shakeFreq = 18.0f;
 
-			pos.x += sinf(deathTimer_ * shakeFreq) * shakeAmp; // 横揺れ
-			pos.y += cosf(deathTimer_ * shakeFreq * 0.7f) * shakeAmp * 0.6f; // 縦揺れ
+			// 0.0〜1.0 のうち、0.7 まではその場でガクガク、
+			// 0.7 以降で「上＋奥」にぶっ飛ぶイメージ
+			const float launchStartT = 0.7f;
 
-			float pulse = 1.0f + 0.10f * sinf(deathTimer_ * 10.0f); // 脈打ち拡大縮小
-			scale = { // 脈打ちスケール
-				baseScale_.x * pulse, // X
-				baseScale_.y * pulse, // Y
-				baseScale_.z * pulse, // Z
-			};
+			if (t < launchStartT) {
+				// ─────────────────────
+				// ① ぶっ飛ぶ前：その場でガクガク＋脈打ち
+				// ─────────────────────
+				float shakeAmp = 0.25f;
+				float shakeFreq = 18.0f;
 
-			// 揺れている間、体のあちこちから小爆発
-			ParticleManager* pm = ParticleManager::GetInstance();
-			if (std::rand() % 3 != 0) { // 出過ぎ防止
-				Vector3 center = GetWorldPosition(); // ボス中心位置
-				Vector3 off = { // コライダー範囲内ランダム
-					(static_cast<float>(std::rand()) / RAND_MAX - 0.5f) * colliderScale_.x, // X
-					(static_cast<float>(std::rand()) / RAND_MAX - 0.5f) * colliderScale_.y, // Y
-					(static_cast<float>(std::rand()) / RAND_MAX - 0.5f) * colliderScale_.z // Z
+				// ガクガク揺れ
+				pos.x += sinf(deathTimer_ * shakeFreq) * shakeAmp;                // 横揺れ
+				pos.y += cosf(deathTimer_ * shakeFreq * 0.7f) * shakeAmp * 0.6f; // 縦揺れ
+
+				// 脈打つようにスケール変化
+				float pulse = 1.0f + 0.10f * sinf(deathTimer_ * 10.0f);
+				scale = {
+					baseScale_.x * pulse,
+					baseScale_.y * pulse,
+					baseScale_.z * pulse,
 				};
-				Vector3 emitPos = center + off * 0.5f; // 少し内側から出す
-				pm->Emit("bossDeath_bomb", emitPos, 1); // 小爆発エフェクト
+
+				// 揺れている間、体のあちこちから小爆発
+				ParticleManager* pm = ParticleManager::GetInstance();
+				if (std::rand() % 3 != 0) { // 出過ぎ防止
+					Vector3 center = GetWorldPosition(); // ボス中心位置
+					Vector3 off = { // コライダー範囲内ランダム
+						(static_cast<float>(std::rand()) / RAND_MAX - 0.5f) * colliderScale_.x,
+						(static_cast<float>(std::rand()) / RAND_MAX - 0.5f) * colliderScale_.y,
+						(static_cast<float>(std::rand()) / RAND_MAX - 0.5f) * colliderScale_.z
+					};
+					Vector3 emitPos = center + off * 0.5f; // 少し内側から出す
+					pm->Emit("bossDeath_bomb", emitPos, 1); // 小爆発エフェクト
+				}
+			} else {
+				// ─────────────────────
+				// ② ぶっ飛びフェーズ
+				// ─────────────────────
+
+				// 最初の1回だけ開始位置を固定
+				if (!bossFinalLaunchStarted_) {
+					bossFinalLaunchStarted_ = true;
+					bossFinalLaunchStartPos_ = pos; // このフレームの位置をスタート位置として保存
+				}
+
+				// ぶっ飛び進捗 0〜1 にマップ
+				float u = (t - launchStartT) / (1.0f - launchStartT);
+				if (u < 0.0f) u = 0.0f;
+				if (u > 1.0f) u = 1.0f;
+
+				// お好みでイージング（OutCubic で最初速く、最後ゆっくり）
+				float k = u * u * u;        // 簡易 OutCubic
+				// // Easing.h を使うなら：
+				// float k = Ease::OutCubic(u);
+
+				// ─────────────────────
+				// ★★ ワールド固定の方向ベクトル ★★
+				// ─────────────────────
+				Vector3 upDir = { 0.0f, 1.0f, 0.0f };   // 上方向 (Y+)
+				Vector3 forwardDir = { 0.0f, 0.0f, 1.0f };   // 画面奥が +Z 側ならコレ
+				// もし「画面奥」が -Z 側のゲームなら ↑ を {0,0,-1} に変える
+
+				float upDist = 15.0f;  // どれだけ上に飛ぶか
+				float depthDist = 40.0f;  // どれだけ奥に飛ぶか
+
+				// だんだん「上＋奥」へ
+				pos = bossFinalLaunchStartPos_
+					+ upDir * (upDist * k)
+					+ forwardDir * (depthDist * k);
+
+				// 回転させながら飛んでいく
+				rot.x += 2.5f * dt;
+				rot.y += 3.0f * dt;
+				rot.z += 1.5f * dt;
+
+				// 遠くへ行くにつれて少し小さくして遠近感を出す
+				float s = 1.0f - 0.3f * k;
+				if (s < 0.1f) s = 0.1f;
+				scale = {
+					baseScale_.x * s,
+					baseScale_.y * s,
+					baseScale_.z * s,
+				};
 			}
+
 			break;
 		}
 		}
@@ -155,10 +216,12 @@ void Enemy::Update() {
 				pm->Emit("enemyDeath_smoke", emitPos, 3);
 				break;
 			case EnemyDeathReaction::BossFinal:
-				// ボス用：最後にドカンと大きめエフェクト
-				pm->Emit("bossDeath_ring", emitPos, 2);
-				pm->Emit("bossDeath_bomb", emitPos, 10);
-				pm->Emit("bossDeath_smoke", emitPos, 24);
+				if (!bossFinalBigBurstDone_) {
+					// ボス用：最後にドカンと大きめエフェクト
+					pm->Emit("bossDeath_ring", emitPos, 2);
+					pm->Emit("bossDeath_bomb", emitPos, 10);
+					pm->Emit("bossDeath_smoke", emitPos, 24);
+				}
 				break;
 			}
 			isDead_ = true; // 完全に消えたフラグを立てる
@@ -567,8 +630,8 @@ void Enemy::StartBossDeathReaction(const Vector3& hitDir) {
 	}
 
 	freezeMove_ = true; // 死んだ瞬間に動き停止
-	defeated_ = true; // 敵撃破フラグをtrueに
-	isDying_ = true; // 死亡演出中フラグを立てるtrueに
+	defeated_ = true;   // 敵撃破フラグをtrueに
+	isDying_ = true;    // 死亡演出中フラグを立てる
 	deathTimer_ = 0.0f; // タイマーリセット
 	deathAlpha_ = 1.0f; // アルファ初期値
 
@@ -576,9 +639,18 @@ void Enemy::StartBossDeathReaction(const Vector3& hitDir) {
 	deathReaction_ = EnemyDeathReaction::BossFinal;
 
 	// ボスはしっかり見せたいので少し長め
-	deathDuration_ = 5.0f; // 3秒で消える
+	deathDuration_ = 5.0f;
 
-	// ほとんど動かないように設定
-	deathVelocity_ = { 0.0f, 0.0f, 0.0f }; // 動かない
-	deathRotateSpeed_ = { 0.0f, 0.0f, 0.0f }; // 回転しない
+	// 位置＆回転は BossFinal ブロック側で制御するのでここでは 0
+	deathVelocity_ = { 0.0f, 0.0f, 0.0f };
+	deathRotateSpeed_ = { 0.0f, 0.0f, 0.0f };
+
+	// BossFinal 用（ぶっ飛び演出の開始をリセット）
+	bossFinalLaunchStarted_ = false;
+	bossFinalLaunchStartPos_ = object_->GetTranslate();
+
+	// BossFinal 用一時変数リセット
+	bossFinalLaunchStarted_ = false;
+	bossFinalBigBurstDone_ = false;
+	bossFinalCameraInited_ = false;
 }

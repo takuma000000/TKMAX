@@ -42,8 +42,8 @@ void Player::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 }
 
 void Player::Update() {
-	// クリア演出などで操作禁止中は、通常のUpdateを流さない
 	if (!controlEnabled_) {
+		HandleFollowCamera(); // カメラ演出は動かす
 		return;
 	}
 
@@ -357,6 +357,15 @@ void Player::UpdateVisualOnly() {
 	if (object_) {
 		object_->Update();
 	}
+}
+
+void Player::StartBossDeathCameraZoom() {
+	const float kTargetZoom = 0.35f; // 目標ズーム率
+	const float kInTime = 5.5f; // ズームイン時間(秒)
+
+	bossZoomActive_ = true;
+	bossZoomTween_.Reset(1.0f, kTargetZoom, kInTime, Ease::Type::OutCubic);
+	bossZoom_ = 1.0f;
 }
 
 void Player::Draw(DirectXCommon* dxCommon) {
@@ -726,8 +735,20 @@ void Player::UpdateCameraFollowThirdPerson(float dt) {
 		camZoom_ = 1.0f;
 	}
 
-	float distance = baseDistance / camZoom_; // 距離はズーム係数で調整
-	float height = baseHeight; // 高さは据え置き（必要なら *camZoom_ でもOK）
+	// ---- ボス撃破ズームアウト更新 ----
+	if (bossZoomActive_) {
+		bossZoom_ = bossZoomTween_.Update(dt);
+		if (bossZoomTween_.Finished()) {
+			// トゥイーン完了 → ここで止めるだけ。bossZoom_ の値はそのまま保持。
+			bossZoomActive_ = false;
+		}
+	} else {
+		bossZoom_ = 1.0f;
+	}
+
+	float zoom = camZoom_ * bossZoom_;
+	float distance = baseDistance / zoom; // ← これで LT & ボス両方が効く
+	float height = baseHeight;
 
 	float angleY = camRot.y;
 	Vector3 offset = {

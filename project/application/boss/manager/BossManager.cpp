@@ -59,6 +59,14 @@ void BossManager::Update(float dt) {
 	// ボス本体更新
 	boss_->Update();
 
+	// ボス撃破ズーム開始（1回だけ）
+	if (!bossZoomStarted_ && boss_->IsDying()) {
+		if (player_) {
+			player_->StartBossDeathCameraZoom();
+		}
+		bossZoomStarted_ = true;
+	}
+
 	// P2突入時にBGMを1回だけ再生（GameScene にあった処理を移植）
 	if (!bossP2BgmPlayed_) {
 		int phase = boss_->GetPhase(); // P1=0, P2=1, P3=2

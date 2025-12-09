@@ -293,7 +293,6 @@ private:
 	std::array<int, kHist> history_{};
 	int histIndex_ = 0;
 
-
 	bool deathSequence_ = false; // 最終死亡リアクション中かどうか
 	float deathTimer_ = 0.0f;   // 最終死亡リアクション用タイマー
 	float deathShakePower_ = 0.15f; // 最終死亡リアクション用カメラ揺れ強度

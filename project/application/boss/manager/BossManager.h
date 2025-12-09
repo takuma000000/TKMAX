@@ -72,4 +72,6 @@ private:
 
 	std::unique_ptr<BossEnemy> boss_;             // ボス本体
 	std::vector<std::unique_ptr<BossBullet>> bossBullets_; // ボス弾リスト
+
+	bool bossZoomStarted_ = false; // ボス撃破後のカメラズーム演出が始まったか
 };
