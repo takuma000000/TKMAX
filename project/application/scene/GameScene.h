@@ -28,6 +28,7 @@
 #include "engine/effect/line/LineRenderer.h"
 #include "RadialBlurEffect.h"
 #include "VignettingEffect.h"
+#include "FogEffect.h"
 
 #include "application/player/Player.h"
 #include "application/enemy/Enemy.h"
@@ -307,4 +308,6 @@ private:
 	std::unique_ptr<RadialBlurEffect> radialBlur_;
 	// Vignetting エフェクト
 	std::unique_ptr<VignettingEffect> vignetting_;
+	// Fog エフェクト
+	std::unique_ptr<FogEffect> fog_;
 };

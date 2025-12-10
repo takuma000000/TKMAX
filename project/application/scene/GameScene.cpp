@@ -133,6 +133,11 @@ void GameScene::Initialize() {
 	// VignettingEffect の生成と初期化
 	vignetting_ = std::make_unique<VignettingEffect>();
 	vignetting_->Initialize(dxCommon);
+	// FogEffect の生成と初期化 ＆ 常時ON
+	fog_ = std::make_unique<FogEffect>();
+	fog_->Initialize(dxCommon);
+	fog_->SetActive(true);                // ゲームシーン中はずっと有効にしたい
+	dxCommon->SetFogEffect(fog_.get());   // DirectXCommon に登録
 }
 
 void GameScene::Finalize() {
@@ -143,10 +148,11 @@ void GameScene::Finalize() {
 	// 3Dモデルマネージャーの終了
 	ModelManager::GetInstance()->Finalize();
 
-	// RadialBlurEffect の登録を解除
+	// ポストエフェクトの解除
 	if (dxCommon) {
-		dxCommon->SetRadialBlurEffect(nullptr);
-		dxCommon->SetVignettingEffect(nullptr);
+		dxCommon->SetRadialBlurEffect(nullptr); // RadialBlurEffect の解除
+		dxCommon->SetVignettingEffect(nullptr); // VignettingEffect の解除
+		dxCommon->SetFogEffect(nullptr); // FogEffect の解除
 	}
 }
 
@@ -235,7 +241,12 @@ void GameScene::Update() {
 
 			vignetting_->Update(dt); // ビネット更新（ボス戦中ならフェードIN、終わったらOUT）
 		}
+		if (fog_) {
+			fog_->Update(dt); // フォグの更新
+		}
 		// ==================================================
+
+
 
 		// ライトの更新
 		directionalLight_->Update();
@@ -677,6 +688,11 @@ void GameScene::ImGuiDebug() {
 	ImGui::End();
 	/////////////////////////////////////////////////////
 	skybox_->ImGuiUpdate(); // スカイボックスのデバッグ表示
+	/////////////////////////////////////////////////////
+	// Fog のデバッグ
+	if (fog_) {
+		fog_->ImGuiDebug();
+	}
 	/////////////////////////////////////////////////////
 	ImGuiDebugGamepad(); // ゲームパッド入力デバッグ
 	ImGuiDebugInfo(); // パフォーマンス情報デバッグ

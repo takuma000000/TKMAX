@@ -16,6 +16,7 @@
 class RadialBlurEffect;
 class VignettingEffect;
 class WaterRippleEffect;
+class FogEffect;
 
 //=============================================================
 // DirectXCommonクラス
@@ -46,6 +47,17 @@ public:
 		float  padding;   // アライメント
 		Vector3 color;   // 波紋色
 		float   colorIntensity; // 波紋色の強さ
+	};
+	// FogCB構造体
+	struct FogCB {
+		Vector3 FogColor;
+		float   FogDensity;
+		float   FogStart;
+		float   FogEnd;
+		float   NoiseScale;
+		float   NoiseStrength;
+		float   Time;
+		float   padding;
 	};
 
 	// -------------------- 初期化 --------------------
@@ -188,6 +200,19 @@ public:
 		ID3D12Resource* outputTex,
 		D3D12_CPU_DESCRIPTOR_HANDLE outputRtv);
 	/// <summary>
+	/// ポストエフェクトチェーン用：Fog適用
+	/// </summary>
+	/// <param name="inputTex"></param>
+	/// <param name="inputSrvIndex"></param>
+	/// <param name="outputTex"></param>
+	/// <param name="outputRtv"></param>
+	void ApplyFog(
+		ID3D12Resource* inputTex,
+		uint32_t        inputSrvIndex,
+		ID3D12Resource* outputTex,
+		D3D12_CPU_DESCRIPTOR_HANDLE outputRtv);
+
+	/// <summary>
 	/// テクスチャ → Swapchain へコピー描画
 	/// </summary>
 	/// <param name="inputTex"></param>
@@ -219,6 +244,10 @@ public:
 	/// WaterRipple パイプラインの初期化
 	/// </summary>
 	void InitializeWaterRipplePipeline();
+	/// <summary>
+	/// Fog パイプラインの初期化
+	/// </summary>
+	void InitializeFogPipeline();
 	/// <summary>
 	/// ポストエフェクトなしで RenderTexture → Swapchain へ描画
 	/// </summary>
@@ -330,14 +359,23 @@ public:
 	/// <param name="amplitude"></param>
 	/// <param name="frequency"></param>
 	/// <param name="width"></param>
-	void SetWaterRippleParam(
-		const Vector2& centerUV,
-		float radius,
-		float amplitude,
-		float frequency,
-		float width,
-		const Vector3& color,
-		float colorIntensity);
+	void SetWaterRippleParam(const Vector2& centerUV, float radius, float amplitude, float frequency, float width, const Vector3& color, float colorIntensity);
+	/// <summary>
+	/// FogEffect をセット（必要なら）
+	/// </summary>
+	/// <param name="effect"></param>
+	void SetFogEffect(FogEffect* effect) { fogEffect_ = effect; }
+	/// <summary>
+	/// Fog 用 パラメータセット
+	/// </summary>
+	/// <param name="color"></param>
+	/// <param name="density"></param>
+	/// <param name="start"></param>
+	/// <param name="end"></param>
+	/// <param name="noiseScale"></param>
+	/// <param name="noiseStrength"></param>
+	/// <param name="time"></param>
+	void SetFogParam(const Vector3& color, float density, float start, float end, float noiseScale, float noiseStrength, float time);
 	// ========================================================================
 private:
 	//======================================================================
@@ -430,6 +468,14 @@ private:
 	WaterRippleEffect* rippleEffect_ = nullptr; // 現在シーンの WaterRippleEffect
 	Microsoft::WRL::ComPtr<ID3D12Resource> rippleConstantBuffer_; // Ripple 用 定数バッファ
 	void* rippleMappedData_ = nullptr; // Ripple 用 定数バッファマッピングデータポインタ
+
+	// Fog 用 PSO
+	FogEffect* fogEffect_ = nullptr;
+	bool fogInitialized_ = false;
+	Microsoft::WRL::ComPtr<ID3D12RootSignature>  fogRootSignature_;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState>  fogPipelineState_;
+	Microsoft::WRL::ComPtr<ID3D12Resource>       fogConstantBuffer_;
+	void* fogMappedData_ = nullptr;
 	//======================================================================
 	// 定数バッファ / ポストエフェクト関連リソース
 	//======================================================================
