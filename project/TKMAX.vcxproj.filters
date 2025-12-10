@@ -162,6 +162,7 @@
     <ClCompile Include="BaseEffect.cpp" />
     <ClCompile Include="RadialBlurEffect.cpp" />
     <ClCompile Include="VignettingEffect.cpp" />
+    <ClCompile Include="WaterRippleEffect.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -349,6 +350,7 @@
     <ClInclude Include="RadialBlurEffect.h" />
     <ClInclude Include="VignettingEffect.h" />
     <ClInclude Include="ModelTypes.h" />
+    <ClInclude Include="WaterRippleEffect.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
@@ -436,6 +438,5 @@
   <ItemGroup>
     <FxCompile Include="resources\shaders\Vignetting.PS.hlsl" />
     <FxCompile Include="resources\shaders\RadialBlur.PS.hlsl" />
-    <FxCompile Include="resources\shaders\Random.PS.hlsl" />
   </ItemGroup>
 </Project>

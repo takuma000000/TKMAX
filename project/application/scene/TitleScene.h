@@ -22,6 +22,7 @@
 #include <SkyBox.h> 
 #include <Easing.h>
 #include "application/scene/GameOverScene.h"
+#include "WaterRippleEffect.h"
 
 //=============================================================
 // TitleSceneクラス
@@ -114,4 +115,9 @@ private:
 	static constexpr float kPi = 3.14159265358979323846f;   // π
 	static constexpr float kHalfPi = kPi * 0.5f;                 // π/2
 	static constexpr float kTwoPi = kPi * 2.0f;                 // 2π
+
+	// 波紋エフェクト
+	std::unique_ptr<WaterRippleEffect> rippleEffect_ = nullptr;
+
+	const float dt = 1.0f / 60.0f; // 固定フレームレート用デルタタイム
 };

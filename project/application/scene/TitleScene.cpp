@@ -95,6 +95,12 @@ void TitleScene::Initialize(){
 	ParticleManager::GetInstance()->Initialize(dxCommon, srvManager, camera.get());
 	//-----------------------------------------
 
+	// ---------------水面波紋エフェクト----------------
+	rippleEffect_ = std::make_unique<WaterRippleEffect>();
+	rippleEffect_->Initialize(dxCommon);
+	// DirectXCommon 側に「現在の ripple はこれだよ」と教える
+	dxCommon->SetWaterRippleEffect(rippleEffect_.get());
+
 	// ---------------BGMロード・再生----------------
 	// タイトルBGMロード
 	//AudioManager::GetInstance()->LoadSound("title", "kuraran.wav");
@@ -193,11 +199,22 @@ void TitleScene::Update(){
 	camera->Update(); // カメラ更新
 	sprite->Update(); // タイトル画像更新
 
-	// SPACE / A でアイリス（閉）開始
+	if (rippleEffect_) {
+		rippleEffect_->Update(dt);
+	}
+
+	// SPACE / A でアイリス（閉）開始＋波紋
 	if (!irisClosing_ && (Input::GetInstance()->TriggerKey(DIK_SPACE) ||
 		Input::GetInstance()->TriggerButton(XINPUT_GAMEPAD_A))) {
+
 		irisClosing_ = true;
+
+		// 画面中心から波紋。UV(0.5, 0.5)
+		if (rippleEffect_) {
+			rippleEffect_->Trigger({ 0.5f, 0.5f }, 1.0f); // 持続0.8秒くらい
+		}
 	}
+
 
 	if (irisClosing_) {
 		irisScale_ = irisTween_.Update(0.016f); // 1フレーム分の進行

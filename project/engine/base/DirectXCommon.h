@@ -15,6 +15,7 @@
 // PostEffect
 class RadialBlurEffect;
 class VignettingEffect;
+class WaterRippleEffect;
 
 //=============================================================
 // DirectXCommonクラス
@@ -34,6 +35,15 @@ public:
 		float   radius;    // どこから暗くするか
 		float   softness;  // ふちのボケ具合
 		float   padding;   // 16byte アライメント
+	};
+	// WaterRippleCB構造体
+	struct WaterRippleCB {
+		Vector2 center;    // 波紋中心 (UV)
+		float   radius;    // 現在の半径
+		float   amplitude; // ズレの強さ
+		float   frequency; // 波の細かさ
+		float   width;     // 帯の幅
+		float  padding;   // アライメント
 	};
 
 	// -------------------- 初期化 --------------------
@@ -168,6 +178,14 @@ public:
 	/// </summary>
 	void DrawVignettingToSwapchain();
 	/// <summary>
+	/// WaterRipple パイプラインの初期化
+	/// </summary>
+	void InitializeWaterRipplePipeline();
+	/// <summary>
+	/// WaterRipple パイプラインの初期化
+	/// </summary>
+	void DrawWaterRippleToSwapchain();
+	/// <summary>
 	/// ポストエフェクトなしで RenderTexture → Swapchain へ描画
 	/// </summary>
 	void DrawPostEffectToSwapchain();
@@ -178,7 +196,7 @@ public:
 	/// <param name="profile"></param>
 	/// <returns></returns>
 	Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(const std::wstring& filePath, const wchar_t* profile);
-	
+
 	// Getter==================================================================
 	/// <summary>
 	/// D3D12デバイスのゲッター
@@ -265,6 +283,20 @@ public:
 	/// <param name="radius"></param>
 	/// <param name="softness"></param>
 	void SetVignettingParam(const Vector4& color, float intensity, float radius, float softness);
+	/// <summary>
+	/// WaterRippleEffect をセット（必要なら）
+	/// </summary>
+	/// <param name="effect"></param>
+	void SetWaterRippleEffect(WaterRippleEffect* effect) { rippleEffect_ = effect; }
+	/// <summary>
+	/// WaterRipple 用 パラメータセット
+	/// </summary>
+	/// <param name="centerUV"></param>
+	/// <param name="radius"></param>
+	/// <param name="amplitude"></param>
+	/// <param name="frequency"></param>
+	/// <param name="width"></param>
+	void SetWaterRippleParam(const Vector2& centerUV, float radius, float amplitude, float frequency, float width);
 	// ========================================================================
 private:
 	//======================================================================
@@ -350,6 +382,13 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> vignettingConstantBuffer_; // Vignetting 用 定数バッファ
 	void* vignettingMappedData_ = nullptr; // Vignetting 用 定数バッファマッピングデータポインタ
 
+	// WaterRipple 用 PSO
+	Microsoft::WRL::ComPtr<ID3D12RootSignature>  rippleRootSignature_;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState>  ripplePipelineState_;
+	bool                                         rippleInitialized_ = false;
+	WaterRippleEffect* rippleEffect_ = nullptr; // 現在シーンの WaterRippleEffect
+	Microsoft::WRL::ComPtr<ID3D12Resource> rippleConstantBuffer_; // Ripple 用 定数バッファ
+	void* rippleMappedData_ = nullptr; // Ripple 用 定数バッファマッピングデータポインタ
 	//======================================================================
 	// 定数バッファ / ポストエフェクト関連リソース
 	//======================================================================
