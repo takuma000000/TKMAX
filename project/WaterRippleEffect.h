@@ -26,7 +26,7 @@ public:
 private:
 	bool   active_ = false; // エフェクト有効フラグ
 	float  time_ = 0.0f;
-	float  duration_ = 1.166f; // 継続時間
+	float  duration_ = 2.492f; // 継続時間
 
 	Vector2 centerUV_ = { 0.5f, 0.5f }; // 波紋中心 (UV)
 
