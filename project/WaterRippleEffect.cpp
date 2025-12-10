@@ -35,8 +35,6 @@ void WaterRippleEffect::Update(float dt) {
 	float amp = amplitude_ * (1.0f - t);
 
 	dxCommon_->SetWaterRippleParam(centerUV_, radius, amp, frequency_, width_);
-
-	ImGuiDebug(); // ImGui デバッグ表示
 }
 
 #ifdef USE_IMGUI
