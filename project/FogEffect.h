@@ -20,11 +20,11 @@ public:
 
 private:
 	bool   active_ = false;            // 有効フラグ
-	float  density_ = 0.8f;             // 全体の濃さ
+	float  density_ = 1.28f;             // 全体の濃さ
 	float  start_ = 0.0f;             // 霧開始の高さ
-	float  end_ = 0.7f;             // 霧最大の高さ
+	float  end_ = 1.0f;             // 霧最大の高さ
 	float  noiseScale_ = 4.0f;             // ノイズ細かさ
-	float  noiseStrength_ = 0.3f;             // ノイズの強さ
+	float  noiseStrength_ = 0.0f;             // ノイズの強さ
 	float  time_ = 0.0f;             // 経過時間
 
 	Vector3 color_ = { 0.9f, 0.9f, 1.0f }; // 霧の色（薄い青白）
