@@ -4,7 +4,6 @@
 #include <sstream>
 #include <cassert>
 #include "TextureManager.h"
-#include "Object3d.h"
 
 MaterialData Model::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename) {
 	// マテリアルデータ

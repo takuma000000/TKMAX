@@ -1,6 +1,7 @@
 #pragma once
 #include "DirectXCommon.h"
 #include "Matrix4x4.h"
+#include "Vector2.h"
 #include "Vector3.h"
 #include "Vector4.h"
 
@@ -18,11 +19,6 @@ public:
 
 	Sprite();
 	~Sprite();
-
-	struct Vector2 {
-		float x;
-		float y;
-	};
 
 	struct Transform {
 		Vector3 scale;
@@ -127,7 +123,7 @@ public://メンバ関数
 	/// <param name="spriteCommon">スプライト共通設定。</param>
 	/// <param name="dxCommon">DirectX共通。</param>
 	/// <param name="textureFilePath">使用するテクスチャのファイルパス。</param>
-	void Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, std::string textureFilePath);
+	void Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, const std::string textureFilePath);
 	/// <summary>スプライトを終了します。</summary>
 	void Update();
 	/// <summary>スプライトを描画します。</summary>

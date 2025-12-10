@@ -21,7 +21,7 @@ void Sprite::SetParentScene(BaseScene* parentScene){
 	parentScene_ = parentScene; //親シーンを設定
 }
 
-void Sprite::Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, std::string textureFilePath) {
+void Sprite::Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, const std::string textureFilePath) {
 	//引数で受け取ったメンバ変数に記録する
 	this->spriteCommon = spriteCommon;
 	dxCommon_ = dxCommon;

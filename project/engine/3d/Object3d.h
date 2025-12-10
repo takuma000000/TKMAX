@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include "DirectXCommon.h"
+#include "Vector2.h"
 #include "Vector3.h"
 #include "Vector4.h"
 
@@ -10,12 +11,6 @@ class Object3dCommon;
 class Model;
 class Camera;
 class BaseScene;
-
-//頂点構造体
-struct Vector2 {
-	float x;
-	float y;
-};
 
 //座標変換情報
 struct Transform {
