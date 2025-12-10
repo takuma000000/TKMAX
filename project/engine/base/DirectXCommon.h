@@ -44,6 +44,8 @@ public:
 		float   frequency; // 波の細かさ
 		float   width;     // 帯の幅
 		float  padding;   // アライメント
+		Vector3 color;   // 波紋色
+		float   colorIntensity; // 波紋色の強さ
 	};
 
 	// -------------------- 初期化 --------------------
@@ -150,6 +152,50 @@ public:
 	/// </summary>
 	void CreateRenderTextureRTV();
 	/// <summary>
+	/// ポストエフェクトチェーン用：RadialBlur適用
+	/// </summary>
+	/// <param name="inputTex"></param>
+	/// <param name="inputSrvIndex"></param>
+	/// <param name="outputTex"></param>
+	/// <param name="outputRtv"></param>
+	void ApplyRadialBlur(
+		ID3D12Resource* inputTex,
+		uint32_t        inputSrvIndex,
+		ID3D12Resource* outputTex,
+		D3D12_CPU_DESCRIPTOR_HANDLE outputRtv);
+	/// <summary>
+	/// ポストエフェクトチェーン用：WaterRipple適用
+	/// </summary>
+	/// <param name="inputTex"></param>
+	/// <param name="inputSrvIndex"></param>
+	/// <param name="outputTex"></param>
+	/// <param name="outputRtv"></param>
+	void ApplyWaterRipple(
+		ID3D12Resource* inputTex,
+		uint32_t        inputSrvIndex,
+		ID3D12Resource* outputTex,
+		D3D12_CPU_DESCRIPTOR_HANDLE outputRtv);
+	/// <summary>
+	/// ポストエフェクトチェーン用：Vignetting適用
+	/// </summary>
+	/// <param name="inputTex"></param>
+	/// <param name="inputSrvIndex"></param>
+	/// <param name="outputTex"></param>
+	/// <param name="outputRtv"></param>
+	void ApplyVignetting(
+		ID3D12Resource* inputTex,
+		uint32_t        inputSrvIndex,
+		ID3D12Resource* outputTex,
+		D3D12_CPU_DESCRIPTOR_HANDLE outputRtv);
+	/// <summary>
+	/// テクスチャ → Swapchain へコピー描画
+	/// </summary>
+	/// <param name="inputTex"></param>
+	/// <param name="inputSrvIndex"></param>
+	void DrawTextureToSwapchain(
+		ID3D12Resource* inputTex,
+		uint32_t        inputSrvIndex);
+	/// <summary>
 	/// RenderTexture 用 SRV 作成
 	/// </summary>
 	void BeginDrawToSwapchain();
@@ -166,25 +212,13 @@ public:
 	/// </summary>
 	void InitializeRadialBlurPipeline();
 	/// <summary>
-	/// RadialBlurEffect を使って RenderTexture → Swapchain へ描画
-	/// </summary>
-	void DrawRadialBlurToSwapchain();
-	/// <summary>
 	/// Vignetting パイプラインの初期化
 	/// </summary>
 	void InitializeVignettingPipeline();
 	/// <summary>
-	/// VignettingEffect を使って RenderTexture → Swapchain へ描画
-	/// </summary>
-	void DrawVignettingToSwapchain();
-	/// <summary>
 	/// WaterRipple パイプラインの初期化
 	/// </summary>
 	void InitializeWaterRipplePipeline();
-	/// <summary>
-	/// WaterRipple パイプラインの初期化
-	/// </summary>
-	void DrawWaterRippleToSwapchain();
 	/// <summary>
 	/// ポストエフェクトなしで RenderTexture → Swapchain へ描画
 	/// </summary>
@@ -296,7 +330,14 @@ public:
 	/// <param name="amplitude"></param>
 	/// <param name="frequency"></param>
 	/// <param name="width"></param>
-	void SetWaterRippleParam(const Vector2& centerUV, float radius, float amplitude, float frequency, float width);
+	void SetWaterRippleParam(
+		const Vector2& centerUV,
+		float radius,
+		float amplitude,
+		float frequency,
+		float width,
+		const Vector3& color,
+		float colorIntensity);
 	// ========================================================================
 private:
 	//======================================================================
@@ -405,6 +446,10 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> renderTextureResource;
 	// RenderTexture 用 SRV のインデックス
 	uint32_t renderTextureSrvIndex_ = 0;
+
+	// ポストエフェクト用 ping-pong テクスチャ
+	Microsoft::WRL::ComPtr<ID3D12Resource> postEffectTextureResource;
+	uint32_t postEffectSrvIndex_ = 0;
 	//======================================================================
 	// フェンス / シンクロ
 	//======================================================================

@@ -1,55 +1,75 @@
 #include "CopyImage.hlsli"
 
-// RenderTexture（画面）のテクスチャとサンプラ
-Texture2D<float4> gSceneTex : register(t0);
+Texture2D<float4> gTexture : register(t0);
 SamplerState gSampler : register(s0);
 
-// 波紋用の定数バッファ
+// C++側の DirectXCommon::WaterRippleCB とレイアウトを合わせる
 cbuffer RippleCB : register(b0)
 {
-    float2 center; // 波紋の中心 (UV 空間 0〜1)
-    float radius; // 現在の半径
-    float amplitude; // ズレ量の強さ
-    float frequency; // 波の細かさ
-    float width; // 帯の幅(減衰の鋭さ)
-    float _pad; // 16byte アライメント用
+    float2 Center; // 波紋中心 (UV)  = center
+    float Radius; // 現在の半径    = radius
+    float Amplitude; // ズレの強さ    = amplitude
+    float Frequency; // 波の細かさ    = frequency
+    float Width; // 帯の幅        = width
+    float Padding; // アライメント  = padding
+    float3 RippleColor; // 波紋色        = color
+    float ColorIntensity; // 色の強さ      = colorIntensity
 };
 
-// VS から渡ってくる頂点
-float4 main(VertexShaderOutput input) : SV_TARGET
+struct PixelShaderOutput
 {
+    float4 color : SV_TARGET0;
+};
+
+PixelShaderOutput main(VertexShaderOutput input)
+{
+    PixelShaderOutput output;
+
     float2 uv = input.texcoord;
 
-    float2 dir = uv - center;
-    float dist = length(dir);
+    // 元のシーンカラー
+    float4 sceneColor = gTexture.Sample(gSampler, uv);
 
-    // 中心ど真ん中はそのまま
-    if (dist < 1e-4)
+    // 波紋が無効 or 半径が 0 ならそのまま返す
+    if (Radius <= 0.0f || Amplitude == 0.0f)
     {
-        return gSceneTex.Sample(gSampler, uv);
+        output.color = sceneColor;
+        return output;
     }
 
-    float2 n = dir / dist;
+    // 中心からのベクトルと距離
+    float2 dir = uv - Center;
+    float dist = length(dir);
 
-    // 現在のリングからの距離
-    float d = dist - radius;
+    // 方向（正規化） 距離がめちゃ小さい時は 0 にしておく
+    float2 dirN = (dist > 1e-4f) ? dir / dist : float2(0.0f, 0.0f);
 
-    // 帯のエンベロープ（中心から離れると弱くなる）
-    float envelope = exp(-abs(d) * width);
+    // --------------------------
+    // 波紋の「輪」のマスクを作る
+    //   dist が Radius 付近だけ 1 に近くなるような値
+    // --------------------------
+    float band = abs(dist - Radius) * Width; // 離れるほど大きく
+    float mask = saturate(1.0f - band); // 0〜1 にクランプ
 
-    // 正弦波で波紋
-    float wave = sin(d * frequency);
+    // 波の揺れ
+    float wave = sin(dist * Frequency);
+    float offset = wave * Amplitude * mask;
 
-    // 実際のオフセット量
-    float offset = wave * envelope * amplitude;
+    // UV をずらして再サンプリング
+    float2 rippleUV = uv + offset * dirN;
+    float4 rippleColorTex = gTexture.Sample(gSampler, rippleUV);
 
-    float2 uvRipple = uv + n * offset;
+    // --------------------------
+    // 色を乗せる
+    // --------------------------
+    // mask を少し強めたいなら pow(mask, 何か) とかでもOK
+    float colorMask = mask * ColorIntensity;
 
-    float4 baseCol = gSceneTex.Sample(gSampler, uv);
-    float4 rippleCol = gSceneTex.Sample(gSampler, uvRipple);
+    // 元のテクスチャ色に RippleColor をブレンド
+    float3 finalRgb = lerp(rippleColorTex.rgb, RippleColor, saturate(colorMask));
 
-    // 帯付近だけ強く混ぜる
-    float rippleMask = saturate(envelope * 2.0f);
+    output.color.rgb = finalRgb;
+    output.color.a = rippleColorTex.a; // アルファは元のまま
 
-    return lerp(baseCol, rippleCol, rippleMask);
+    return output;
 }

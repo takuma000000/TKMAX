@@ -24,15 +24,17 @@ public:
 #endif
 
 private:
-	bool   active_ = false;
+	bool   active_ = false; // エフェクト有効フラグ
 	float  time_ = 0.0f;
-	float  duration_ = 0.6f;
+	float  duration_ = 1.166f; // 継続時間
 
-	Vector2 centerUV_ = { 0.5f, 0.5f };
+	Vector2 centerUV_ = { 0.5f, 0.5f }; // 波紋中心 (UV)
 
 	// パラメータ（ImGuiでいじれるように）
-	float  radiusMax_ = 1.2f;   // 画面全体に広がる最大半径 (UVベース)
-	float  amplitude_ = 0.02f;  // ゆがみ量
-	float  frequency_ = 40.0f;  // 波の細かさ
-	float  width_ = 40.0f;  // 帯の幅(大きいほど細くシャープ)
+	float  radiusMax_ = 0.857f;   // 画面全体に広がる最大半径 (UVベース)
+	float  amplitude_ = 0.1f;  // ゆがみ量
+	float  frequency_ = 80.0f;  // 波の細かさ
+	float  width_ = 10.0f;  // 帯の幅(大きいほど細くシャープ)
+	Vector3 color_ = { 1.0f, 1.0f, 1.0f }; // 波紋色
+	float colorIntensity_ = 0.0f; // 波紋色の強さ
 };

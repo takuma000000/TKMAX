@@ -215,7 +215,6 @@ void TitleScene::Update(){
 		}
 	}
 
-
 	if (irisClosing_) {
 		irisScale_ = irisTween_.Update(0.016f); // 1フレーム分の進行
 		iris_->SetSize({ irisScale_, irisScale_ });

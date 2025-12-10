@@ -115,9 +115,10 @@ Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateRenderTextureResourc
 void DirectXCommon::CreateRenderTextureRTV() {
 	const Vector4 kRenderTargetClearValue{ 1.0f, 0.0f, 0.0f, 1.0f }; // 赤色でクリア
 
-	// メンバ変数に代入する（auto ローカルで隠さない）
+	// ========= 1枚目：シーン用 RenderTexture =========
 	renderTextureResource =
-		CreateRenderTextureResource(device,
+		CreateRenderTextureResource(
+			device,
 			WindowsAPI::kClientWidth,
 			WindowsAPI::kClientHeight,
 			DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
@@ -125,29 +126,109 @@ void DirectXCommon::CreateRenderTextureRTV() {
 
 	renderTextureResource->SetName(L"RenderTexture");
 
-	// 0,1 がスワップチェーンなので 2 番目を RenderTexture 用に
 	UINT descriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
+	// RTV: インデックス2に RenderTexture
 	rtvHandles[2] = rtvHeap_->GetCPUDescriptorHandleForHeapStart();
 	rtvHandles[2].ptr += descriptorSize * 2;
 
-	device->CreateRenderTargetView(renderTextureResource.Get(), &rtvDesc, rtvHandles[2]);
+	device->CreateRenderTargetView(
+		renderTextureResource.Get(),
+		&rtvDesc,
+		rtvHandles[2]);
+
+	// ========= 2枚目：ポストエフェクト用 PostEffectTexture =========
+	postEffectTextureResource =
+		CreateRenderTextureResource(
+			device,
+			WindowsAPI::kClientWidth,
+			WindowsAPI::kClientHeight,
+			DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
+			kRenderTargetClearValue);
+
+	postEffectTextureResource->SetName(L"PostEffectTexture");
+
+	// RTV: インデックス3に PostEffectTexture
+	rtvHandles[3] = rtvHeap_->GetCPUDescriptorHandleForHeapStart();
+	rtvHandles[3].ptr += descriptorSize * 3;
+
+	device->CreateRenderTargetView(
+		postEffectTextureResource.Get(),
+		&rtvDesc,
+		rtvHandles[3]);
 
 	// ============================
-	// RenderTexture 用 SRV を作成
+	// SRV を 2つ作成
 	// ============================
 	assert(srvManager_ && "SrvManager がセットされていません");
 
-	// SRV を 1 つ確保してインデックスを保存
+	// 1枚目：RenderTexture 用 SRV
 	renderTextureSrvIndex_ = srvManager_->Allocate();
-
-	// RenderTexture を読むための SRV を生成
 	srvManager_->CreateSRVforTexture2D(
 		renderTextureSrvIndex_,
 		renderTextureResource.Get(),
 		DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
-		1
-	);
+		1);
+
+	// 2枚目：PostEffectTexture 用 SRV
+	postEffectSrvIndex_ = srvManager_->Allocate();
+	srvManager_->CreateSRVforTexture2D(
+		postEffectSrvIndex_,
+		postEffectTextureResource.Get(),
+		DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
+		1);
+}
+
+void DirectXCommon::DrawTextureToSwapchain(
+	ID3D12Resource* inputTex,
+	uint32_t        inputSrvIndex) {
+
+	assert(copyImageInitialized_ && "InitializeCopyImagePipeline を先に呼んでください");
+	assert(inputTex && "入力テクスチャがありません");
+
+	// 入力テクスチャを PixelShaderResource へ
+	{
+		D3D12_RESOURCE_BARRIER barrier{};
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrier.Transition.pResource = inputTex;
+		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+		commandList->ResourceBarrier(1, &barrier);
+	}
+
+	// SwapChain の現在の RTV 取得
+	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtvHandles[backBufferIndex];
+	commandList->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
+
+	// パイプライン / RootSignature 設定
+	commandList->SetGraphicsRootSignature(copyImageRootSignature_.Get());
+	commandList->SetPipelineState(copyImagePipelineState_.Get());
+	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	// SRV ヒープ + t0
+	if (srvManager_) {
+		ID3D12DescriptorHeap* heaps[] = { srvManager_->GetSrvDescriptorHeap().Get() };
+		commandList->SetDescriptorHeaps(1, heaps);
+		srvManager_->SetGraphicsRootDescriptorTable(0, inputSrvIndex);
+	}
+
+	// フルスクリーントライアングル
+	commandList->DrawInstanced(3, 1, 0, 0);
+
+	// 入力テクスチャを RenderTarget 戻し
+	{
+		D3D12_RESOURCE_BARRIER barrier{};
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrier.Transition.pResource = inputTex;
+		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		commandList->ResourceBarrier(1, &barrier);
+	}
 }
 
 void DirectXCommon::BeginDrawToSwapchain() {
@@ -378,54 +459,45 @@ void DirectXCommon::InitializeRadialBlurPipeline() {
 	radialBlurInitialized_ = true;
 }
 
-void DirectXCommon::DrawRadialBlurToSwapchain() {
+void DirectXCommon::ApplyRadialBlur(
+	ID3D12Resource* inputTex,
+	uint32_t        inputSrvIndex,
+	ID3D12Resource* outputTex,
+	D3D12_CPU_DESCRIPTOR_HANDLE outputRtv) {
 
-	// 初期化されていなければ通常コピーにフォールバック
-	if (!radialBlurInitialized_ || !renderTextureResource) {
-		DrawRenderTextureToSwapchain();
+	if (!radialBlurInitialized_ || !inputTex || !outputTex) {
 		return;
 	}
 
-	// 1. RenderTarget → PixelShaderResource へバリア
-	{
-		D3D12_RESOURCE_BARRIER barrier{};
-		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barrier.Transition.pResource = renderTextureResource.Get();
-		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-		commandList->ResourceBarrier(1, &barrier);
-	}
+	// ===== 1. 入力テクスチャだけ RT → PS にする =====
+	D3D12_RESOURCE_BARRIER barrier{};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrier.Transition.pResource = inputTex;
+	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	commandList->ResourceBarrier(1, &barrier);
 
-	// 2. パイプライン / RootSignature 設定
+	// ===== 2. 出力RTVセット & 描画 =====
+	commandList->OMSetRenderTargets(1, &outputRtv, false, nullptr);
+
 	commandList->SetGraphicsRootSignature(copyImageRootSignature_.Get());
 	commandList->SetPipelineState(radialBlurPipelineState_.Get());
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	// 3. SRV ヒープをセットし、t0 に RenderTexture の SRV をバインド
 	if (srvManager_) {
 		ID3D12DescriptorHeap* heaps[] = { srvManager_->GetSrvDescriptorHeap().Get() };
 		commandList->SetDescriptorHeaps(1, heaps);
-
-		// RootParameter0 の DescriptorTable に renderTextureSrvIndex_ をセット
-		srvManager_->SetGraphicsRootDescriptorTable(0, renderTextureSrvIndex_);
+		srvManager_->SetGraphicsRootDescriptorTable(0, inputSrvIndex);
 	}
 
-	// 4. フルスクリーン三角形を描画 (頂点数3)
 	commandList->DrawInstanced(3, 1, 0, 0);
 
-	// 5. PixelShaderResource → RenderTarget に戻す
-	{
-		D3D12_RESOURCE_BARRIER barrier{};
-		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barrier.Transition.pResource = renderTextureResource.Get();
-		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-		commandList->ResourceBarrier(1, &barrier);
-	}
+	// ===== 3. 入力テクスチャだけ PS → RT に戻す =====
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	commandList->ResourceBarrier(1, &barrier);
 }
 
 void DirectXCommon::InitializeVignettingPipeline() {
@@ -530,23 +602,30 @@ void DirectXCommon::InitializeVignettingPipeline() {
 	vignettingInitialized_ = true;
 }
 
-void DirectXCommon::DrawVignettingToSwapchain() {
-	if (!vignettingInitialized_ || !renderTextureResource) {
-		DrawRenderTextureToSwapchain();
+void DirectXCommon::ApplyVignetting(
+	ID3D12Resource* inputTex,
+	uint32_t        inputSrvIndex,
+	ID3D12Resource* outputTex,
+	D3D12_CPU_DESCRIPTOR_HANDLE outputRtv) {
+
+	if (!vignettingInitialized_ || !inputTex) {
 		return;
 	}
 
-	// RenderTarget → PixelShaderResource
+	// 入力テクスチャを PixelShaderResource へ
 	{
 		D3D12_RESOURCE_BARRIER barrier{};
 		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barrier.Transition.pResource = renderTextureResource.Get();
+		barrier.Transition.pResource = inputTex;
 		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 		commandList->ResourceBarrier(1, &barrier);
 	}
+
+	// 出力RTVセット
+	commandList->OMSetRenderTargets(1, &outputRtv, false, nullptr);
 
 	// パイプライン設定
 	commandList->SetGraphicsRootSignature(vignettingRootSignature_.Get());
@@ -557,7 +636,7 @@ void DirectXCommon::DrawVignettingToSwapchain() {
 	if (srvManager_) {
 		ID3D12DescriptorHeap* heaps[] = { srvManager_->GetSrvDescriptorHeap().Get() };
 		commandList->SetDescriptorHeaps(1, heaps);
-		srvManager_->SetGraphicsRootDescriptorTable(0, renderTextureSrvIndex_);
+		srvManager_->SetGraphicsRootDescriptorTable(0, inputSrvIndex);
 	}
 
 	// b0: 定数バッファ
@@ -569,12 +648,12 @@ void DirectXCommon::DrawVignettingToSwapchain() {
 	// フルスクリーントライアングル
 	commandList->DrawInstanced(3, 1, 0, 0);
 
-	// PixelShaderResource → RenderTarget 戻し
+	// 入力テクスチャを RenderTarget 戻し
 	{
 		D3D12_RESOURCE_BARRIER barrier{};
 		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barrier.Transition.pResource = renderTextureResource.Get();
+		barrier.Transition.pResource = inputTex;
 		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
@@ -679,60 +758,53 @@ void DirectXCommon::InitializeWaterRipplePipeline() {
 	cb->amplitude = 0.0f;
 	cb->frequency = 40.0f;
 	cb->width = 40.0f;
+	cb->color = { 1.0f, 1.0f, 1.0f }; // デフォルト白
+	cb->colorIntensity = 0.0f;        // 初期は色なし
 
 	rippleInitialized_ = true;
 }
 
-void DirectXCommon::DrawWaterRippleToSwapchain() {
-	if (!rippleInitialized_ || !renderTextureResource) {
-		DrawRenderTextureToSwapchain();
-		return;
-	}
+void DirectXCommon::ApplyWaterRipple(
+	ID3D12Resource* inputTex,
+	uint32_t        inputSrvIndex,
+	ID3D12Resource* outputTex,
+	D3D12_CPU_DESCRIPTOR_HANDLE outputRtv) {
 
-	// RenderTarget → PixelShaderResource
-	{
-		D3D12_RESOURCE_BARRIER barrier{};
-		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barrier.Transition.pResource = renderTextureResource.Get();
-		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-		commandList->ResourceBarrier(1, &barrier);
-	}
+	// ===== 1. 入力テクスチャだけ RT → PS にする =====
+	D3D12_RESOURCE_BARRIER barrier{};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrier.Transition.pResource = inputTex;
+	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	commandList->ResourceBarrier(1, &barrier);
 
-	// パイプライン設定
+	// ===== 2. 出力RTVセット & 描画 =====
+	commandList->OMSetRenderTargets(1, &outputRtv, false, nullptr);
+
 	commandList->SetGraphicsRootSignature(rippleRootSignature_.Get());
 	commandList->SetPipelineState(ripplePipelineState_.Get());
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	// SRV ヒープ + t0
 	if (srvManager_) {
 		ID3D12DescriptorHeap* heaps[] = { srvManager_->GetSrvDescriptorHeap().Get() };
 		commandList->SetDescriptorHeaps(1, heaps);
-		srvManager_->SetGraphicsRootDescriptorTable(0, renderTextureSrvIndex_);
+		srvManager_->SetGraphicsRootDescriptorTable(0, inputSrvIndex);
 	}
 
-	// b0: 定数バッファ
 	if (rippleConstantBuffer_) {
 		commandList->SetGraphicsRootConstantBufferView(
 			1, rippleConstantBuffer_->GetGPUVirtualAddress());
 	}
 
-	// フルスクリーントライアングル
 	commandList->DrawInstanced(3, 1, 0, 0);
 
-	// PixelShaderResource → RenderTarget 戻し
-	{
-		D3D12_RESOURCE_BARRIER barrier{};
-		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barrier.Transition.pResource = renderTextureResource.Get();
-		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-		commandList->ResourceBarrier(1, &barrier);
-	}
+	// ===== 3. 入力テクスチャだけ PS → RT に戻す =====
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+
+	commandList->ResourceBarrier(1, &barrier);
 }
 
 void DirectXCommon::Initialize(WindowsAPI* windowsAPI) {
@@ -939,26 +1011,67 @@ void DirectXCommon::GenerateDXC() {
 
 void DirectXCommon::DrawPostEffectToSwapchain() {
 
-	// RadialBlur がアクティブなら最優先
-	if (radialBlurEffect_ && radialBlurEffect_->IsActive()) {
-		DrawRadialBlurToSwapchain();
+	// CopyImage パイプラインが未初期化なら初期化
+	if (!copyImageInitialized_) {
+		InitializeCopyImagePipeline();
 	}
-	// そうでなければ 波紋
-	else if (rippleEffect_ && rippleEffect_->IsActive()) {
-		// 必要ならここで遅延初期化
+
+	// オフスク2枚がなければ従来どおり
+	if (!renderTextureResource || !postEffectTextureResource) {
+		DrawRenderTextureToSwapchain();
+		return;
+	}
+
+	// チェーン用の src/dst
+	ID3D12Resource* srcTex = renderTextureResource.Get();
+	uint32_t        srcSrv = renderTextureSrvIndex_;
+	ID3D12Resource* dstTex = postEffectTextureResource.Get();
+	uint32_t        dstSrv = postEffectSrvIndex_;
+
+	// dstTex に対応する RTV を返すヘルパー
+	auto getRtvFor = [&](ID3D12Resource* tex) {
+		if (tex == renderTextureResource.Get()) {
+			return rtvHandles[2]; // RenderTexture 用
+		} else {
+			return rtvHandles[3]; // PostEffectTexture 用
+		}
+		};
+
+	// 1. RadialBlur
+	if (radialBlurEffect_ && radialBlurEffect_->IsActive()) {
+		if (!radialBlurInitialized_) {
+			InitializeRadialBlurPipeline();
+		}
+		ApplyRadialBlur(srcTex, srcSrv, dstTex, getRtvFor(dstTex));
+
+		std::swap(srcTex, dstTex);
+		std::swap(srcSrv, dstSrv);
+	}
+
+	// 2. 波紋
+	if (rippleEffect_ && rippleEffect_->IsActive()) {
 		if (!rippleInitialized_) {
 			InitializeWaterRipplePipeline();
 		}
-		DrawWaterRippleToSwapchain();
+		ApplyWaterRipple(srcTex, srcSrv, dstTex, getRtvFor(dstTex));
+
+		std::swap(srcTex, dstTex);
+		std::swap(srcSrv, dstSrv);
 	}
-	// そうでなければ Vignetting
-	else if (vignettingEffect_ && vignettingEffect_->IsActive()) {
-		DrawVignettingToSwapchain();
+
+	// 3. Vignetting
+	if (vignettingEffect_ && vignettingEffect_->IsActive()) {
+		if (!vignettingInitialized_) {
+			InitializeVignettingPipeline();
+		}
+		ApplyVignetting(srcTex, srcSrv, dstTex, getRtvFor(dstTex));
+
+		std::swap(srcTex, dstTex);
+		std::swap(srcSrv, dstSrv);
 	}
-	// 何もなければ通常コピー
-	else {
-		DrawRenderTextureToSwapchain();
-	}
+
+	// 最後は srcTex を Swapchain へ
+	DrawTextureToSwapchain(srcTex, srcSrv);
 }
 
 Microsoft::WRL::ComPtr<IDxcBlob> DirectXCommon::CompileShader(const std::wstring& filePath, const wchar_t* profile) {
@@ -1104,7 +1217,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::UploadTextureData(ID3D12Re
 void DirectXCommon::InitializeRTV() {
 	HRESULT hr;
 
-	rtvHeap_ = this->CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 3, false); // RTV用のヒープを作成
+	rtvHeap_ = this->CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 4, false); // RTV用のヒープを作成
 
 #pragma region SwapChainからResourceを引っ張てくる
 
@@ -1195,8 +1308,16 @@ void DirectXCommon::SetVignettingParam(
 	cb->softness = softness;
 }
 
-void DirectXCommon::SetWaterRippleParam(const Vector2& centerUV, float radius, float amplitude, float frequency, float width){
-	if (!rippleMappedData_) { return; }
+void DirectXCommon::SetWaterRippleParam(
+	const Vector2& centerUV,
+	float radius,
+	float amplitude,
+	float frequency,
+	float width,
+	const Vector3& color,
+	float colorIntensity)
+{
+	if (!rippleMappedData_) return;
 
 	auto* cb = reinterpret_cast<WaterRippleCB*>(rippleMappedData_);
 	cb->center = centerUV;
@@ -1204,6 +1325,8 @@ void DirectXCommon::SetWaterRippleParam(const Vector2& centerUV, float radius, f
 	cb->amplitude = amplitude;
 	cb->frequency = frequency;
 	cb->width = width;
+	cb->color = color;
+	cb->colorIntensity = colorIntensity;
 }
 
 void DirectXCommon::InitializeFixFPS() {

@@ -29,13 +29,5 @@ void RadialBlurEffect::Update(float dt) {
 }
 
 void RadialBlurEffect::Draw() {
-	if (!dxCommon_) { return; }
-
-	if (active_) {
-		// ラジアルブラーでコピー
-		dxCommon_->DrawRadialBlurToSwapchain();
-	} else {
-		// 通常のコピー
-		dxCommon_->DrawRenderTextureToSwapchain();
-	}
+	
 }
