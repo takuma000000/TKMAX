@@ -348,6 +348,7 @@
     <ClInclude Include="BaseEffect.h" />
     <ClInclude Include="RadialBlurEffect.h" />
     <ClInclude Include="VignettingEffect.h" />
+    <ClInclude Include="ModelTypes.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

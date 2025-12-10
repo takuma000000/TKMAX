@@ -5,6 +5,7 @@
 #include "engine/3d/camera/Camera.h"
 #include <random>
 #include <numbers>
+#include "ModelTypes.h" 
 
 //=============================================================
 // ParticleManagerクラス

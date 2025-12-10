@@ -2,9 +2,6 @@
 #include <d3d12.h>
 #include <wrl.h>
 #include <vector>
-#include "Vector3.h"
-#include "Vector4.h"
-#include "Matrix4x4.h"
 #include "MyMath.h"
 
 #include "TextureManager.h"

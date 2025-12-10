@@ -1,7 +1,6 @@
 #pragma once
-
-#include "Object3d.h"
-#include "Matrix4x4.h"
+#include "MyMath.h"
+#include "WindowsAPI.h"
 
 #ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"

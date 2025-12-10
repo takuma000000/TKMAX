@@ -1,6 +1,6 @@
 #pragma once
 #include "Camera.h"
-#include "Vector3.h"
+#include "MyMath.h"
 #include <Windows.h>
 
 class DebugCamera : public Camera {

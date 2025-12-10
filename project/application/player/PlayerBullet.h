@@ -8,7 +8,7 @@
 #include <string>
 #include <memory>
 #include "Object3d.h"
-#include "Vector3.h"
+#include "MyMath.h"
 #include "application/enemy/Enemy.h"
 #include <engine/effect/particle/ParticlerEmitter.h>
 

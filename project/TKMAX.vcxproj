@@ -250,6 +250,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\func\math\Vector2.h" />
     <ClInclude Include="engine\effect\line\LineRenderer.h" />
     <ClInclude Include="MidBossCore.h" />
+    <ClInclude Include="ModelTypes.h" />
     <ClInclude Include="RadialBlurEffect.h" />
     <ClInclude Include="VignettingEffect.h" />
   </ItemGroup>

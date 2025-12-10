@@ -5,8 +5,7 @@
 #include <d3d12.h>
 
 #include "DirectXCommon.h"
-#include "engine/func/math/Vector3.h"
-#include "engine/func/math/Matrix4x4.h"
+#include "MyMath.h"
 
 class LineRenderer {
 public:

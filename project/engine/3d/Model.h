@@ -3,7 +3,7 @@
 #include "MyMath.h"
 #include <string>
 #include <vector>
-
+#include "ModelTypes.h"
 #include <wrl.h>
 
 class ModelCommon;

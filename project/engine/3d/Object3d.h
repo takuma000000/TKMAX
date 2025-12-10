@@ -3,50 +3,12 @@
 #include <string>
 #include <vector>
 #include "DirectXCommon.h"
-#include "Vector2.h"
-#include "Vector3.h"
-#include "Vector4.h"
+#include "ModelTypes.h"
 
 class Object3dCommon;
 class Model;
 class Camera;
 class BaseScene;
-
-//座標変換情報
-struct Transform {
-	Vector3 scale;
-	Vector3 rotate;
-	Vector3 translate;
-};
-
-//頂点データ
-struct VertexData {
-	Vector4 position;
-	Vector2 texcoord;
-	Vector3 normal;
-};
-
-//マテリアルデータ
-struct MaterialData {
-	std::string textureFilePath;
-	//テクスチャ番号
-	uint32_t textureIndex = 0;
-};
-
-//モデルデータ
-struct ModelData {
-	std::vector<VertexData> vertices;
-	MaterialData material;
-};
-
-//マテリアルデータ
-struct Material {
-	Vector4	color;
-	int32_t enableLighting;
-	float padding[3];
-	Matrix4x4 uvTransform;
-	float shininess;//明るさ
-};
 
 //座標変換行列データ
 struct TransformationMatrix {

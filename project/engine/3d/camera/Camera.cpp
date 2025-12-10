@@ -1,5 +1,4 @@
 #include "Camera.h"
-#include "Object3d.h"
 
 Camera::Camera()
 	//初期化
