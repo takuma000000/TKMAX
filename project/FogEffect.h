@@ -19,13 +19,12 @@ public:
 #endif
 
 private:
-	bool   active_ = false;            // 有効フラグ
-	float  density_ = 1.28f;             // 全体の濃さ
-	float  start_ = 0.0f;             // 霧開始の高さ
-	float  end_ = 1.0f;             // 霧最大の高さ
-	float  noiseScale_ = 4.0f;             // ノイズ細かさ
-	float  noiseStrength_ = 0.0f;             // ノイズの強さ
-	float  time_ = 0.0f;             // 経過時間
-
-	Vector3 color_ = { 0.9f, 0.9f, 1.0f }; // 霧の色（薄い青白）
+	bool   active_ = true;             // 霧は最初から有効でOK
+	float  density_ = 0.495f;            // 画面全体の濃さ
+	float  start_ = 0.17f;              // 全画面に霧をかけたいので 0〜1 のまま
+	float  end_ = 0.376f;
+	float  noiseScale_ = 10.0f;         // 塊の大きさ）
+	float  noiseStrength_ = 0.817f;      // ムラの強さ
+	float  time_ = 0.0f; // 時間経過用
+	Vector3 color_ = { 0.9f, 0.9f, 1.0f }; // OK（青白い霧）
 };
