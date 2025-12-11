@@ -135,7 +135,8 @@ private:
 	Player* player_ = nullptr;
 
 	std::unique_ptr<Object3d> object_;
-	Vector3 velocity_{};   // 弾の現在速度
+	Vector3 velocity_{}; // 弾の現在速度
+	Vector3 prevPos_{}; // 前フレームの位置（トンネリング対策用）
 
 	Enemy* enemy_ = nullptr;
 	MidBossCore* core_ = nullptr;

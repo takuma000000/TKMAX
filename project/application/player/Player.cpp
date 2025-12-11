@@ -488,7 +488,7 @@ void Player::RBShoot() {
 	Input* input = Input::GetInstance();
 
 	// ▼ RB：通常弾（レティクルが描いているガイドライン通りに発射）
-	if (input->TriggerButton(XINPUT_GAMEPAD_RIGHT_SHOULDER)) {
+	if (input->PushButton(XINPUT_GAMEPAD_RIGHT_SHOULDER)) {
 		auto bullet = std::make_unique<PlayerBullet>();
 		bullet->Initialize(common_, dxCommon_);
 
