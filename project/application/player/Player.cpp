@@ -517,7 +517,6 @@ void Player::RBShoot() {
 		// ==============================
 		// ここから「どの敵を狙うか」を決定
 		// ==============================
-
 		Enemy* targetEnemy = nullptr;
 
 		if (allEnemies_) {
