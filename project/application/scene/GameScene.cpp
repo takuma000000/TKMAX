@@ -246,8 +246,6 @@ void GameScene::Update() {
 		}
 		// ==================================================
 
-
-
 		// ライトの更新
 		directionalLight_->Update();
 
