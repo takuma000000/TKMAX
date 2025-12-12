@@ -50,14 +50,16 @@ public:
 	};
 	// FogCB構造体
 	struct FogCB {
-		Vector3 FogColor;
-		float   FogDensity;
-		float   FogStart;
-		float   FogEnd;
-		float   NoiseScale;
-		float   NoiseStrength;
-		float   Time;
-		float   padding;
+		Vector3 FogColor;     // 霧の色
+		float   FogDensity;   // 全体の濃さ
+		float   FogStart;     // 霧開始の高さ (0〜1)
+		float   FogEnd;       // 霧最大の高さ (0〜1)
+		float   NoiseScale;   // ノイズの細かさ
+		float   NoiseStrength;// 濃さのムラの強さ
+		float   Time;         // 経過時間
+		float   worldScale;   // 霧パターンの「世界空間スケール」
+		Vector3 worldPos;     // カメラ or プレイヤーのワールド座標
+		float   padding2;     // 16byte整列用
 	};
 
 	// -------------------- 初期化 --------------------
@@ -375,7 +377,13 @@ public:
 	/// <param name="noiseScale"></param>
 	/// <param name="noiseStrength"></param>
 	/// <param name="time"></param>
-	void SetFogParam(const Vector3& color, float density, float start, float end, float noiseScale, float noiseStrength, float time);
+	/// <param name="worldPos"></param>
+	/// <param name="worldScale"></param>
+	void SetFogParam(const Vector3& color, float density,
+		float start, float end,
+		float noiseScale, float noiseStrength,
+		float time,
+		const Vector3& worldPos, float worldScale);
 	// ========================================================================
 private:
 	//======================================================================

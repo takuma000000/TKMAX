@@ -474,7 +474,7 @@ void GameScene::Update() {
 }
 
 void GameScene::Draw() {
-	if (skybox_) skybox_->Draw(); // スカイボックスの描画
+	//if (skybox_) skybox_->Draw(); // スカイボックスの描画
 
 	// 3Dまとめ
 	Object3dCommon::GetInstance()->DrawSetCommon();
@@ -552,6 +552,17 @@ Camera* GameScene::UpdateActiveCamera() {
 
 	// パーティクルマネージャー適用
 	ParticleManager::GetInstance()->SetCamera(activeCamera);
+
+	// フォグエフェクト用にカメラ位置をセット
+	if (fog_ && activeCamera) {
+		const Matrix4x4& camW = activeCamera->GetWorldMatrix();
+		Vector3 camPos{
+			camW.m[3][0],
+			camW.m[3][1],
+			camW.m[3][2]
+		};
+		fog_->SetWorldPos(camPos);
+	}
 
 	return activeCamera; // 呼び出し元にも返す
 }

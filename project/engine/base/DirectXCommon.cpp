@@ -909,13 +909,15 @@ void DirectXCommon::InitializeFogPipeline() {
 	// 初期値
 	auto* cb = reinterpret_cast<FogCB*>(fogMappedData_);
 	cb->FogColor = { 0.9f, 0.9f, 1.0f };
-	cb->FogDensity = 0.0f;
+	cb->FogDensity = 1.0f;
 	cb->FogStart = 0.0f;
-	cb->FogEnd = 0.7f;
+	cb->FogEnd = 1.0f;
 	cb->NoiseScale = 4.0f;
-	cb->NoiseStrength = 0.3f;
+	cb->NoiseStrength = 0.0f;
 	cb->Time = 0.0f;
-	cb->padding = 0.0f;
+	cb->worldScale = 0.02f;                 // とりあえず適当な値
+	cb->worldPos = { 0.0f, 0.0f, 0.0f };
+	cb->padding2 = 0.0f;
 
 	fogInitialized_ = true;
 }
@@ -1493,12 +1495,10 @@ void DirectXCommon::SetWaterRippleParam(
 }
 
 void DirectXCommon::SetFogParam(const Vector3& color,
-	float density,
-	float start,
-	float end,
-	float noiseScale,
-	float noiseStrength,
-	float time) {
+	float density, float start, float end,
+	float noiseScale, float noiseStrength,
+	float time,
+	const Vector3& worldPos, float worldScale) {
 
 	if (!fogMappedData_) { return; }
 
@@ -1510,6 +1510,8 @@ void DirectXCommon::SetFogParam(const Vector3& color,
 	cb->NoiseScale = noiseScale;
 	cb->NoiseStrength = noiseStrength;
 	cb->Time = time;
+	cb->worldScale = worldScale;
+	cb->worldPos = worldPos;
 }
 
 void DirectXCommon::InitializeFixFPS() {

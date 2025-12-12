@@ -18,6 +18,11 @@ public:
 	void ImGuiDebug();
 #endif
 
+	// Setter========================================
+	void SetWorldPos(const Vector3& pos) { worldPos_ = pos; }
+	void SetWorldScale(float s) { worldScale_ = s; }
+	// ==============================================
+
 private:
 	bool   active_ = true;             // 霧は最初から有効でOK
 	float  density_ = 0.495f;            // 画面全体の濃さ
@@ -26,5 +31,12 @@ private:
 	float  noiseScale_ = 10.0f;         // 塊の大きさ）
 	float  noiseStrength_ = 0.817f;      // ムラの強さ
 	float  time_ = 0.0f; // 時間経過用
-	Vector3 color_ = { 0.9f, 0.9f, 1.0f }; // OK（青白い霧）
+	float timeScale_ = 1.0f;      // 霧アニメ速度（Time倍率）
+	Vector2 driftSpeedXZ_ = { 0.0f, 0.0f };   // 霧の自動移動速度（ワールド単位/秒）
+	Vector2 driftOffsetXZ_ = { 0.0f, 0.0f };  // 蓄積オフセット
+	bool   freezeTime_ = false;    // 時間停止（形だけ止めたい時）
+	Vector3 color_ = { 0.9f, 0.9f, 1.0f }; // 霧の色
+
+	Vector3 worldPos_ = { 0.0f, 0.0f, 0.0f }; // 霧の基準となるワールド座標
+	float   worldScale_ = 0.02f;                // どれくらい動きに反応するか
 };
