@@ -35,7 +35,6 @@ void EnemyManager::Update(float dt) {
 			if (player_) {
 				player_->SetMidBossCore(nullptr);
 			}
-
 			midBossCore_.reset();
 		}
 	}
@@ -43,14 +42,14 @@ void EnemyManager::Update(float dt) {
 	/// ───────────────────────────────────────────────
 	/// ● 敵の状態を更新し、死亡したものは削除＆カウント
 	/// ───────────────────────────────────────────────
-	for (auto it = enemies_->begin(); it != enemies_->end(); ) {
+	for (auto it = enemies_->begin(); it != enemies_->end();) {
 		Enemy* e = it->get();
-		// ここでフラグを渡す
+
+		// フラグを渡す
 		e->SetFreezeMove(freezeEnemies_);
 		e->Update();
 
 		if (e->IsDead()) {
-
 			// ちゃんと倒した敵だけ、プレイヤーやカウンタに通知する
 			if (e->GetDefeated()) {
 
@@ -93,7 +92,7 @@ void EnemyManager::Update(float dt) {
 	}
 	case WavePhase::W2: {
 		// --- Wave2 新仕様 ---
-		UpdateWave2();
+		UpdateWave2(dt);
 		break;
 	}
 	case WavePhase::W3: {
@@ -178,11 +177,6 @@ void EnemyManager::SpawnCurrentWave() {
 	// いったん全消し
 	enemies_->clear();
 
-	// 呼び出しで毎回書くのダルいのでローカルに詰める
-	DirectXCommon* dxPtr = dx_;
-	Camera* camPtr = cam_;
-	BaseScene* parentPtr = parent_;
-
 	switch (wavePhase_) {
 	case WavePhase::W1: {
 		// タイマー初期化と最初の1体スポーンだけを行う。
@@ -194,18 +188,19 @@ void EnemyManager::SpawnCurrentWave() {
 		break;
 	}
 	case WavePhase::W2: {
-		wave2SubWave_ = 0; // サブWave初期化
-		SpawnWave2SubWave(0); // 最初のサブWaveをスポーン
+		wave2SubWave_ = 0;            // サブWave初期化
+		SpawnWave2SubWave(0);         // 最初のサブWaveをスポーン
 		break;
+	}
 	case WavePhase::W3: {
 		// ここから中ボスステージ
 		SpawnWave3MidBossStage();
 		break;
 	}
 	case WavePhase::Done:
+	default:
 		// 何もしない
 		break;
-	}
 	}
 }
 
@@ -248,6 +243,14 @@ void EnemyManager::SkipToBossWave() {
 	wavePhase_ = WavePhase::Done;
 }
 
+void EnemyManager::SetupEnemyForPlayer(Enemy& e) {
+	if (!player_) {
+		return;
+	}
+	e.SetReticle(player_->GetReticle());
+	e.SetPlayer([this]() { return player_->GetPosition(); });
+}
+
 void EnemyManager::UpdateWave1(float dt) {
 	if (!enemies_ || !dx_ || !cam_ || !parent_) {
 		return;
@@ -279,16 +282,16 @@ void EnemyManager::SpawnWave1Enemy() {
 		return;
 	}
 
-	DirectXCommon* dxPtr = dx_;
-	Camera* camPtr = cam_;
-	BaseScene* parentPtr = parent_;
-
 	// 出現位置（Xはちょっとランダム、Zは奥から）
 	float y = 5.0f;
 	float z = 100.0f;
 	float xRange = 20.0f;
 	float rx = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX); // 0〜1
 	float x = -xRange + rx * (xRange * 2.0f); // -xRange〜+xRange
+
+	DirectXCommon* dxPtr = dx_;
+	Camera* camPtr = cam_;
+	BaseScene* parentPtr = parent_;
 
 	EnemySpawner::SpawnLine(
 		*enemies_,
@@ -300,16 +303,18 @@ void EnemyManager::SpawnWave1Enemy() {
 		dxPtr,
 		camPtr,
 		parentPtr,
-		[&](Enemy& e) {
+		[this, x, z](Enemy& e) {
 
 			e.SetBehavior(EnemyBehavior::PounceFromAbove);
 
 			Vector3 start = { x, 20.0f, z }; // 高い位置から降ってくる
 			Vector3 playerPos = player_->GetPosition(); // プレイヤー位置取得
 			// プレイヤーの少し手前に着地するようにターゲット設定
-			Vector3 target = { playerPos.x,
-							   playerPos.y,
-							   playerPos.z + 3.0f };
+			Vector3 target = {
+				playerPos.x,
+				playerPos.y,
+				playerPos.z + 3.0f
+			};
 			// 曲線の頂点（アペックス）を計算
 			Vector3 apex = {
 				(start.x + target.x) * 0.5f,
@@ -322,15 +327,17 @@ void EnemyManager::SpawnWave1Enemy() {
 			e.SetHP(1); // Wave1敵のHP設定
 			e.SetScale({ 1.0f,1.0f,1.0f }); // スケールリセット
 
-			if (player_) {
-				e.SetReticle(player_->GetReticle());
-				e.SetPlayer([this]() { return player_->GetPosition(); }); // プレイヤー位置参照セット
-			}
+			// プレイヤー関連セットアップを共通化
+			SetupEnemyForPlayer(e);
 		}
 	);
 }
 
-void EnemyManager::UpdateWave2() {
+void EnemyManager::UpdateWave2(float dt) {
+	if (!enemies_) {
+		return;
+	}
+
 	// まだ敵が残っている → 何もしない
 	if (!enemies_->empty()) {
 		return;
@@ -365,9 +372,11 @@ void EnemyManager::SpawnWave2SubWave(int id) {
 	enemies_->clear(); // 念のためクリア
 
 	switch (id) { // サブWaveごとにパターン分け
-	case 0: SpawnWave2_Triangle();  break; // 下2 上1 の三角隊列
-	case 1: SpawnWave2_Line();      break; // 横一列
+	case 0: SpawnWave2_Triangle();   break; // 下2 上1 の三角隊列
+	case 1: SpawnWave2_Line();       break; // 横一列
 	case 2: SpawnWave2_FastColumn(); break; // 右側高速通過
+	default:
+		break;
 	}
 }
 
@@ -375,6 +384,8 @@ void EnemyManager::SpawnWave2SubWave(int id) {
 // ● Wave2 各小Waveスポーン関数群
 // ───────────────────────────────────────────────
 void EnemyManager::SpawnWave2_Triangle() {
+	if (!enemies_ || !dx_ || !cam_ || !parent_) return;
+
 	int idx = 0;
 
 	EnemySpawner::SpawnV(
@@ -385,40 +396,40 @@ void EnemyManager::SpawnWave2_Triangle() {
 		7.0f,
 		5.0f,
 		dx_, cam_, parent_,
-		[&](Enemy& e) {
+		[this, &idx](Enemy& e) {
 			e.SetBehavior(EnemyBehavior::SineX);
 			e.SetVelocity({ 0,0,-0.30f });
 			e.SetSineParams(4.0f, 1.4f);
 			e.SetSinePhase(0.6f * float(idx++));
 			e.SetHP(3);
 
-			if (player_) {
-				e.SetReticle(player_->GetReticle());
-				e.SetPlayer([this]() { return player_->GetPosition(); });
-			}
+			SetupEnemyForPlayer(e);
 		}
 	);
 }
+
 void EnemyManager::SpawnWave2_Line() {
+	if (!enemies_ || !dx_ || !cam_ || !parent_) return;
+
 	EnemySpawner::SpawnLine(
 		*enemies_,
 		4, 4.5f, 90.0f,
 		-12.0f, 8.0f,
 		dx_, cam_, parent_,
-		[&](Enemy& e) {
+		[this](Enemy& e) {
 			e.SetBehavior(EnemyBehavior::StraightStop);
 			e.SetVelocity({ 0,0,-0.32f });
 			e.SetStopZ(52.0f);
 			e.SetHP(2);
 
-			if (player_) {
-				e.SetReticle(player_->GetReticle());
-				e.SetPlayer([this]() { return player_->GetPosition(); });
-			}
+			SetupEnemyForPlayer(e);
 		}
 	);
 }
+
 void EnemyManager::SpawnWave2_FastColumn() {
+	if (!enemies_ || !dx_ || !cam_ || !parent_) return;
+
 	EnemySpawner::SpawnColumn(
 		*enemies_,
 		3,
@@ -428,16 +439,13 @@ void EnemyManager::SpawnWave2_FastColumn() {
 		5.0f,
 		0.0f,
 		dx_, cam_, parent_,
-		[&](Enemy& e) {
+		[this](Enemy& e) {
 			e.SetBehavior(EnemyBehavior::StraightStop);
 			e.SetVelocity({ -0.20f, 0.0f, -0.75f });
 			e.SetStopZ(-50.0f); // 通過するだけ
 			e.SetHP(1);
 
-			if (player_) {
-				e.SetReticle(player_->GetReticle());
-				e.SetPlayer([this]() { return player_->GetPosition(); });
-			}
+			SetupEnemyForPlayer(e);
 		}
 	);
 }
@@ -461,8 +469,6 @@ void EnemyManager::UpdateWave3(float dt) {
 
 	// 「このフレームで中ボスが減ったか？」
 	bool midBossJustDied = (aliveMidBossCount < wave3PrevAliveMidBossCount_);
-
-	// === ここから下のロジックも MidBossCore ベースに置き換え ===
 
 	// ---- 中ボスが 0 体になったら Wave3 終了判定 ----
 	if (aliveMidBossCount == 0) {
@@ -574,7 +580,7 @@ void EnemyManager::SpawnWave3MidBossStage() {
 		wave3LeftPos_.x,
 		(wave3RightPos_.x - wave3LeftPos_.x),
 		dxPtr, camPtr, parentPtr,
-		[&](Enemy& e) {
+		[this](Enemy& e) {
 
 			// 中ボスの挙動設定
 			e.SetBehavior(EnemyBehavior::FreeRoam);
@@ -582,17 +588,14 @@ void EnemyManager::SpawnWave3MidBossStage() {
 			e.SetFreeRoamArea(
 				{ -18.0f, 4.0f, 40.0f },   // min
 				{ 18.0f,10.0f, 62.0f },   // max ← z を 70 → 62 に手前寄せ
-				0.10f,                     // 通常速度（もっと遅くしたければここ）
-				0.24f                      // 怒り時速度（暴れ感）
+				0.10f,                     // 通常速度
+				0.24f                      // 怒り時速度
 			);
 
 			e.SetHP(12);
 			e.SetScale({ 1.5f,1.5f,1.5f });
 
-			if (player_) {
-				e.SetReticle(player_->GetReticle());
-				e.SetPlayer([this]() { return player_->GetPosition(); });
-			}
+			SetupEnemyForPlayer(e);
 
 			e.SetType(EnemyType::Wave3MidBoss);
 		}
@@ -641,6 +644,7 @@ void EnemyManager::SpawnWave3Core() {
 	midBossCore_->SyncTransform();
 
 	if (player_) {
+		// コアにもロック・プレイヤー情報を渡す
 		midBossCore_->SetReticle(player_->GetReticle());
 		midBossCore_->SetPlayer([this]() { return player_->GetPosition(); });
 
@@ -696,17 +700,14 @@ void EnemyManager::SpawnWave3ExtraMidBoss() {
 		dxPtr,
 		camPtr,
 		parentPtr,
-		[&](Enemy& e) {
+		[this](Enemy& e) {
 			e.SetBehavior(EnemyBehavior::StraightStop);
 			e.SetVelocity({ 0.0f, 0.0f, -0.2f });
 			e.SetStopZ(40.0f);
 			e.SetHP(12); // 初期中ボスと同じ HP
 			e.SetScale({ 1.5f,1.5f,1.5f });
 
-			if (player_) {
-				e.SetReticle(player_->GetReticle());
-				e.SetPlayer([this]() { return player_->GetPosition(); });
-			}
+			SetupEnemyForPlayer(e);
 			e.SetType(EnemyType::Wave3MidBoss);
 		}
 	);
@@ -742,13 +743,6 @@ void EnemyManager::ImGuiDebug() {
 	int maxCount = maxEnemyCount_ ? *maxEnemyCount_ : static_cast<int>(enemies_->size());
 
 	ImGui::Text("撃破数: %d / %d", defeated, maxCount);
-
-	// 各敵のデバッグ
-	for (size_t i = 0; i < enemies_->size(); ++i) {
-		ImGui::PushID(static_cast<int>(i));
-		(*enemies_)[i]->ImGuiDebug();
-		ImGui::PopID();
-	}
 
 	// 撃破進捗バー
 	float progress = 0.0f;
@@ -816,8 +810,7 @@ void EnemyManager::ImGuiDebug() {
 		ImGui::Separator();
 	}
 
-
-	// 各敵のデバッグ
+	// 各敵のデバッグ（※二重ループになっていたので 1 回に統一）
 	for (size_t i = 0; i < enemies_->size(); ++i) {
 		ImGui::PushID(static_cast<int>(i));
 		(*enemies_)[i]->ImGuiDebug();

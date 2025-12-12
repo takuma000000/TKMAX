@@ -407,68 +407,30 @@ void Enemy::Update() {
 		}
 	}
 
-	// ---- 当たり判定の可視化（ワイヤーボックス）----
+	// ---- 当たり判定ワイヤーボックス描画 ----
 	{
 		Vector3 center = GetWorldPosition();
-
-		float hx = colliderScale_.x * 0.5f;
-		float hy = colliderScale_.y * 0.5f;
-		float hz = colliderScale_.z * 0.5f;
+		Vector3 size = colliderScale_;
 
 		auto* lr = LineRenderer::GetInstance();
 
-		// ▼ デフォルトは緑
-		LineRenderer::Color colEdge{ 0.0f, 1.0f, 0.0f, 1.0f };
+		LineRenderer::Color normal{ 0.0f, 1.0f, 0.0f, 1.0f };
+		LineRenderer::Color hit{ 1.0f, 0.0f, 0.0f, 1.0f };
 
-		// ▼ レティクルと交差していたら赤に変更
 		if (reticle_) {
-			// 弾と同じレイ（プレイヤー位置 → aimDir）で判定したい
 			Vector3 rayOrigin;
-
 			if (playerGetter_) {
-				// プレイヤーの現在位置（Player::GetPosition）が飛んでくる
 				rayOrigin = playerGetter_();
 			} else {
-				// もし未設定なら、前と同じくレティクル中心から
 				rayOrigin = reticle_->GetCenterWorldPos();
 			}
 
 			Vector3 rayDir = reticle_->GetAimDirection();
-			float len = MyMath::Length(rayDir);
-			if (len > 0.001f) {
-				rayDir = MyMath::Normalize(rayDir);
-			}
 
-			Vector3 rayEnd = rayOrigin + rayDir * 150.0f; // Reticle の maxDist と揃える
-
-			// 敵AABB
-			AABB box(center, colliderScale_);
-
-			// 線分 vs AABB 交差チェック
-			if (box.IsIntersectSegment(rayOrigin, rayEnd)) {
-				colEdge = LineRenderer::Color{ 1.0f, 0.0f, 0.0f, 1.0f }; // 赤
-			}
+			lr->AddAABBWithRayHighlight(center, size, rayOrigin, rayDir, normal, hit);
+		} else {
+			lr->AddAABB(center, size, normal);
 		}
-
-		// 8頂点＆AddLine は今のままでOK
-		Vector3 p[8] = {
-			{ center.x - hx, center.y - hy, center.z - hz },
-			{ center.x + hx, center.y - hy, center.z - hz },
-			{ center.x - hx, center.y + hy, center.z - hz },
-			{ center.x + hx, center.y + hy, center.z - hz },
-			{ center.x - hx, center.y - hy, center.z + hz },
-			{ center.x + hx, center.y - hy, center.z + hz },
-			{ center.x - hx, center.y + hy, center.z + hz },
-			{ center.x + hx, center.y + hy, center.z + hz },
-		};
-
-		auto add = [&](int a, int b) {
-			lr->AddLine(p[a], p[b], colEdge);
-			};
-
-		add(0, 1); add(1, 3); add(3, 2); add(2, 0);
-		add(4, 5); add(5, 7); add(7, 6); add(6, 4);
-		add(0, 4); add(1, 5); add(2, 6); add(3, 7);
 	}
 
 	// ---- ロック中のパルス ----

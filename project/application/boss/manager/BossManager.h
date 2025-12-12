@@ -20,31 +20,57 @@ public:
 	BossManager() = default;
 	~BossManager() = default;
 
-	/// <summary>参照を渡して初期化。</summary>
+	/// <summary>
+	/// 初期化。
+	/// </summary>
+	/// <param name="dxCommon"></param>
+	/// <param name="camera"></param>
+	/// <param name="parent"></param>
+	/// <param name="player"></param>
 	void Initialize(DirectXCommon* dxCommon, Camera* camera, BaseScene* parent, Player* player);
-
-	/// <summary>ボス戦を開始（ボスを生成）。</summary>
+	/// <summary>
+	/// ボス戦開始。
+	/// </summary>
 	void StartBattle();
-
-	/// <summary>更新。</summary>
+	/// <summary>
+	/// 更新。
+	/// </summary>
+	/// <param name="dt"></param>
 	void Update(float dt);
-
-	/// <summary>描画。</summary>
+	/// <summary>
+	/// 描画。
+	/// </summary>
+	/// <param name="dxCommon"></param>
 	void Draw(DirectXCommon* dxCommon);
 
-	/// <summary>ボス弾生成（GameScene から呼ばれる入り口）。</summary>
+	/// <summary>
+	/// ボス弾をスポーンさせる。
+	/// </summary>
+	/// <param name="pos"></param>
+	/// <param name="dir"></param>
+	/// <param name="speed"></param>
+	/// <param name="damage"></param>
+	/// <param name="lifeFrame"></param>
 	void SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float speed, int damage, int lifeFrame);
-
-	/// <summary>ボス戦中か？</summary>
+	/// <summary>
+	/// ボス戦がアクティブか？
+	/// </summary>
+	/// <returns></returns>
 	bool IsBattleActive() const;
-
-	/// <summary>ボスが生きているか？（ロックオン用）</summary>
+	/// <summary>
+	/// ボスが生存しているか？
+	/// </summary>
+	/// <returns></returns>
 	bool IsBossAlive() const;
-
-	/// <summary>ボスが倒されているか？</summary>
+	/// <summary>
+	/// ボスが死亡しているか？
+	/// </summary>
+	/// <returns></returns>
 	bool IsBossDead() const;
-
-	/// <summary>ボス本体への生ポインタ（ImGui やロックオン用）。</summary>
+	/// <summary>
+	/// ボス本体を取得。
+	/// </summary>
+	/// <returns></returns>
 	BossEnemy* GetBoss() const { return boss_.get(); }
 
 	/// <summary>クリア演出開始時にボス関連を全部消す。</summary>
@@ -74,4 +100,9 @@ private:
 	std::vector<std::unique_ptr<BossBullet>> bossBullets_; // ボス弾リスト
 
 	bool bossZoomStarted_ = false; // ボス撃破後のカメラズーム演出が始まったか
+
+	/// <summary>
+	/// ボス弾を更新します。
+	/// </summary>
+	void UpdateBossBullets();
 };

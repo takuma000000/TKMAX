@@ -15,6 +15,7 @@
 #include "engine/effect/light/DirectionalLight.h"
 #include "engine/effect/particle/ParticleManager.h"
 #include <Easing.h>
+#include "IrisUtil.h"
 
 //=============================================================
 // GameOverScene
@@ -95,4 +96,6 @@ private:
 	static constexpr float kIrisDuration = 0.8f; // 虹彩絞り演出時間
 	static constexpr int kPerFrameFlameBudget = 40; // 1フレの炎発生上限
 	static constexpr int kPerFrameSparkBudget = 25; // 1フレの火花発生上限
+
+	float dt_ = 1.0f / 60.0f; // 仮のデルタタイム
 };

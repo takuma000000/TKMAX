@@ -1,4 +1,7 @@
 #pragma once
+#undef max
+#undef min
+
 #include "MyMath.h"
 #include <cmath>
 #include <algorithm>
@@ -10,13 +13,13 @@
 class AABB {
 public:
 	AABB() = default;
-	AABB(const Vector3& center, const Vector3& size) : center(center), halfSize(size * 0.5f) {}
+	AABB(const Vector3& center, const Vector3& size)
+		: center(center), halfSize(size * 0.5f) {
+	}
 
 	/// <summary>
 	/// AABBの中心とサイズを設定する
 	/// </summary>
-	/// <param name="center"></param>
-	/// <param name="size"></param>
 	void Set(const Vector3& center, const Vector3& size) {
 		this->center = center;
 		this->halfSize = size * 0.5f;
@@ -25,8 +28,6 @@ public:
 	/// <summary>
 	/// 点との当たり判定
 	/// </summary>
-	/// <param name="point"></param>
-	/// <returns></returns>
 	bool IsCollidingWithPoint(const Vector3& point) const {
 		return std::abs(point.x - center.x) <= halfSize.x &&
 			std::abs(point.y - center.y) <= halfSize.y &&
@@ -36,8 +37,6 @@ public:
 	/// <summary>
 	/// AABB同士の当たり判定
 	/// </summary>
-	/// <param name="other"></param>
-	/// <returns></returns>
 	bool IsCollidingWithAABB(const AABB& other) const {
 		return std::abs(center.x - other.center.x) <= (halfSize.x + other.halfSize.x) &&
 			std::abs(center.y - other.center.y) <= (halfSize.y + other.halfSize.y) &&
@@ -47,9 +46,6 @@ public:
 	/// <summary>
 	/// 線分との当たり判定
 	/// </summary>
-	/// <param name="s"></param>
-	/// <param name="e"></param>
-	/// <returns></returns>
 	bool IsIntersectSegment(const Vector3& s, const Vector3& e) const {
 		Vector3 d = e - s;
 		float tmin = 0.0f;
@@ -69,7 +65,7 @@ public:
 			return true;
 			};
 
-		// ✅ AABB min/max（halfSize を使う）
+		// AABB min/max（halfSize を使う）
 		float minX = center.x - halfSize.x;
 		float maxX = center.x + halfSize.x;
 		float minY = center.y - halfSize.y;
@@ -83,10 +79,11 @@ public:
 
 		return true;
 	}
+
 public:
 	//======================================================================
 	// AABB（軸平行境界ボックス）
 	//======================================================================
-	Vector3 center{}; // ボックスの中心座標（ワールド）
-	Vector3 halfSize{}; // ボックスの半分のサイズ（各軸方向）
+	Vector3 center{};    // ボックスの中心座標（ワールド）
+	Vector3 halfSize{};  // ボックスの半分のサイズ（各軸方向）
 };

@@ -7,9 +7,6 @@
 #include "application/scene/TitleScene.h"
 #include <SkyBox.h>
 
-// #include "TitleScene.h"
-// #include "GameScene.h"
-
 void GameOverScene::Initialize(){
 	ModelManager::GetInstance()->LoadModel("jett.obj", dxCommon_);
 	TextureManager::GetInstance()->LoadTexture("./resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
@@ -55,23 +52,22 @@ void GameOverScene::Initialize(){
 	skybox_->Initialize(dxCommon_, srvManager_, "resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
 	skybox_->SetCamera(camera_.get());
 
-	// --- Iris（Title/GameScene と同一仕様）---
-	iris_ = std::make_unique<Sprite>();
-	iris_->Initialize(SpriteCommon::GetInstance(), dxCommon_, "./resources/circle2.png");
-	iris_->SetAnchorPoint({ 0.5f, 0.5f });
-	iris_->SetPosition({ WindowsAPI::kClientWidth * 0.5f, WindowsAPI::kClientHeight * 0.5f });
+	// --- Iris（Title / GameScene と同一仕様・共通ユーティリティ版）---
 
-	// 画面対角から最大スケールを計算（対角×2.0f）
-	const float diag = std::sqrt(
-		float(WindowsAPI::kClientWidth) * float(WindowsAPI::kClientWidth) +
-		float(WindowsAPI::kClientHeight) * float(WindowsAPI::kClientHeight)
-	);
-	irisMaxScale_ = diag * 2.0f;
+	// 画面中央に iris を作成し、irisMaxScale_（画面を覆える最大サイズ）を計算
+	iris_ = CreateCenteredIrisSprite(dxCommon_, irisMaxScale_, "./resources/circle2.png");
 
 	// 入場は「覆った状態 → 0」へ（OutBack, 0.8s）
 	irisScale_ = irisMaxScale_;
 	iris_->SetSize({ irisScale_, irisScale_ });
-	irisOpenTween_.Reset(irisMaxScale_, 0.0f, kIrisDuration, Ease::Type::OutBack);
+
+	// Tween 初期化（覆った状態 → 0）
+	irisOpenTween_.Reset(
+		irisMaxScale_,         // start（画面全体を覆っている状態）
+		0.0f,                  // end   （完全に開いた状態）
+		kIrisDuration,         // 時間（元コードをそのまま使用）
+		Ease::Type::OutBack    // 開くときの跳ね返り感
+	);
 
 	// --- 墜落用パーティクルグループ作成（circle.pngでOK） ---
 	auto* PM = ParticleManager::GetInstance();
@@ -110,16 +106,14 @@ void GameOverScene::Update(){
 	if (dirLight_) { dirLight_->Update(); }
 	ParticleManager::GetInstance()->Update();
 
-	// ─── アイリス開き（入場） ───
 	if (irisOpening_) {
-		irisScale_ = irisOpenTween_.Update(0.016f);
-		iris_->SetSize({ irisScale_, irisScale_ });
-		iris_->Update();
+		irisScale_ = UpdateIrisScale(iris_.get(), irisOpenTween_, dt_);
 
 		if (irisOpenTween_.Finished()) {
 			irisOpening_ = false;
 		}
 	}
+
 	// ─── Tキーでタイトルへ戻る（アイリス閉じ：InBack/0.8s） ───
 	if (!irisClosing_ && Input::GetInstance()->TriggerKey(DIK_T)) {
 		irisClosing_ = true;
@@ -127,11 +121,10 @@ void GameOverScene::Update(){
 	}
 
 	if (irisClosing_) {
-		float s = irisCloseTween_.Update(0.016f);
-		iris_->SetSize({ s, s });
-		iris_->Update();
+		float s = UpdateIrisScale(iris_.get(), irisCloseTween_, dt_);
 
 		if (irisCloseTween_.Finished()) {
+			irisClosing_ = false;
 			sceneManager_->SetNextScene(new TitleScene(dxCommon_, srvManager_));
 			return;
 		}

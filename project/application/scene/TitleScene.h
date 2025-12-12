@@ -23,6 +23,7 @@
 #include <Easing.h>
 #include "application/scene/GameOverScene.h"
 #include "WaterRippleEffect.h"
+#include "IrisUtil.h"
 
 //=============================================================
 // TitleSceneクラス

@@ -8,25 +8,41 @@
 
 namespace EnemySpawner {
 
+	// ------------------------------------------------------------
+	// 共通：1 体分の敵を生成して push_back するヘルパー
+	// ------------------------------------------------------------
+	static void CreateAndPushEnemy(
+		std::vector<std::unique_ptr<Enemy>>& enemies,
+		const Vector3& spawnPos,
+		DirectXCommon* dx, Camera* cam, BaseScene* parent,
+		const EnemyConfig& config,
+		bool useSpawnEffect
+	) {
+		auto e = std::make_unique<Enemy>();
+		e->Initialize(Object3dCommon::GetInstance(), dx);
+		e->SetPosition(spawnPos);
+		if (parent) { e->SetParentScene(parent); }
+		if (cam) { e->SetCamera(cam); }
+		if (config) { config(*e); }
+		e->SyncTransform(); // Transform情報をObject3dに同期
+
+		if (useSpawnEffect) {
+			Vector3 emitPos = spawnPos;
+			ParticleManager::GetInstance()->Emit("enemySpawn", emitPos, kSpawnParticleCount);
+		}
+
+		enemies.push_back(std::move(e));
+	}
+
 	// "1直線状" に敵をスポーン
 	void SpawnLine(std::vector<std::unique_ptr<Enemy>>& enemies,
 		int count, float y, float z,
 		float xStart, float xStep,
 		DirectXCommon* dx, Camera* cam, BaseScene* parent, EnemyConfig config) {
-		for (int i = 0; i < count; ++i) { // 敵の生成と初期化
-			auto e = std::make_unique<Enemy>();
-			e->Initialize(Object3dCommon::GetInstance(), dx);
+
+		for (int i = 0; i < count; ++i) {
 			Vector3 spawnPos = { xStart + xStep * i, y, z };
-			e->SetPosition(spawnPos);
-			if (parent) e->SetParentScene(parent);
-			if (cam)    e->SetCamera(cam);
-			if (config) config(*e);
-			e->SyncTransform(); // Transform情報をObject3dに同期
-
-			Vector3 emitPos = spawnPos;
-			ParticleManager::GetInstance()->Emit("enemySpawn", emitPos, kSpawnParticleCount);
-
-			enemies.push_back(std::move(e));
+			CreateAndPushEnemy(enemies, spawnPos, dx, cam, parent, config, true);
 		}
 	}
 
@@ -35,38 +51,22 @@ namespace EnemySpawner {
 		int countPerSide, float y, float z,
 		float xCenter, float xStep, float zStep,
 		DirectXCommon* dx, Camera* cam, BaseScene* parent, EnemyConfig config) {
+
 		// 中央
-			{ // 敵の生成と初期化
-				auto e = std::make_unique<Enemy>();
-				e->Initialize(Object3dCommon::GetInstance(), dx);
+			{
 				Vector3 spawnPos = { xCenter, y, z };
-				e->SetPosition(spawnPos);
-				if (parent) e->SetParentScene(parent);
-				if (cam)    e->SetCamera(cam);
-				if (config) config(*e);
-				e->SyncTransform(); // Transform情報をObject3dに同期
-
-				Vector3 emitPos = spawnPos;
-				ParticleManager::GetInstance()->Emit("enemySpawn", emitPos, kSpawnParticleCount);
-
-				enemies.push_back(std::move(e));
+				CreateAndPushEnemy(enemies, spawnPos, dx, cam, parent, config, true);
 			}
+
 			// 左右展開
-			for (int i = 1; i <= countPerSide; ++i) { // 敵の生成と初期化
+			for (int i = 1; i <= countPerSide; ++i) {
 				for (int side = -1; side <= 1; side += 2) {
-					auto e = std::make_unique<Enemy>();
-					e->Initialize(Object3dCommon::GetInstance(), dx);
-					Vector3 spawnPos = { xCenter + side * xStep * i, y, z + zStep * i };
-					e->SetPosition(spawnPos);
-					if (parent) e->SetParentScene(parent);
-					if (cam)    e->SetCamera(cam);
-					if (config) config(*e);
-					e->SyncTransform();
-
-					Vector3 emitPos = spawnPos;
-					ParticleManager::GetInstance()->Emit("enemySpawn", emitPos, kSpawnParticleCount);
-
-					enemies.push_back(std::move(e));
+					Vector3 spawnPos = {
+						xCenter + side * xStep * i,
+						y,
+						z + zStep * i
+					};
+					CreateAndPushEnemy(enemies, spawnPos, dx, cam, parent, config, true);
 				}
 			}
 	}
@@ -76,20 +76,10 @@ namespace EnemySpawner {
 		int count, float x, float zStart, float zStep,
 		float yStart, float yStep,
 		DirectXCommon* dx, Camera* cam, BaseScene* parent, EnemyConfig config) {
-		for (int i = 0; i < count; ++i) { // 敵の生成と初期化
-			auto e = std::make_unique<Enemy>();
-			e->Initialize(Object3dCommon::GetInstance(), dx);
+
+		for (int i = 0; i < count; ++i) {
 			Vector3 spawnPos = { x, yStart + yStep * i, zStart + zStep * i };
-			e->SetPosition(spawnPos);
-			if (parent) e->SetParentScene(parent);
-			if (cam)    e->SetCamera(cam);
-			if (config) config(*e);
-			e->SyncTransform();
-
-			Vector3 emitPos = spawnPos;
-			ParticleManager::GetInstance()->Emit("enemySpawn", emitPos, kSpawnParticleCount);
-
-			enemies.push_back(std::move(e));
+			CreateAndPushEnemy(enemies, spawnPos, dx, cam, parent, config, true);
 		}
 	}
 
@@ -100,27 +90,19 @@ namespace EnemySpawner {
 		float size,
 		DirectXCommon* dx, Camera* cam, BaseScene* parent,
 		EnemyConfig config) {
+
 		// 上（先頭）
 			{
-				auto e = std::make_unique<Enemy>();
-				e->Initialize(Object3dCommon::GetInstance(), dx);
-				e->SetPosition({ centerX, centerY + size, z });
-				if (parent) e->SetParentScene(parent);
-				if (cam)    e->SetCamera(cam);
-				if (config) config(*e);
-				e->SyncTransform();
-				enemies.push_back(std::move(e));
+				Vector3 spawnPos = { centerX, centerY + size, z };
+				// もともとここは Spawn エフェクトを出してなかったので false
+				CreateAndPushEnemy(enemies, spawnPos, dx, cam, parent, config, false);
 			}
+
 			// 下左右
 			for (int side = -1; side <= 1; side += 2) {
-				auto e = std::make_unique<Enemy>();
-				e->Initialize(Object3dCommon::GetInstance(), dx);
-				e->SetPosition({ centerX + side * size, centerY - size, z });
-				if (parent) e->SetParentScene(parent);
-				if (cam)    e->SetCamera(cam);
-				if (config) config(*e);
-				e->SyncTransform();
-				enemies.push_back(std::move(e));
+				Vector3 spawnPos = { centerX + side * size, centerY - size, z };
+				// こちらも元コードに合わせてエフェクト無し
+				CreateAndPushEnemy(enemies, spawnPos, dx, cam, parent, config, false);
 			}
 	}
 

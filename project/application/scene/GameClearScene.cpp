@@ -73,23 +73,17 @@ void GameClearScene::Initialize() {
 	// ─────────────────────
 	// 画面遷移アイリス（他シーンと同じ仕様）
 	// ─────────────────────
-	iris_ = std::make_unique<Sprite>();
-	iris_->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/circle2.png");
-	iris_->SetAnchorPoint({ 0.5f, 0.5f });
-	iris_->SetPosition({ WindowsAPI::kClientWidth * 0.5f, WindowsAPI::kClientHeight * 0.5f });
-
-	// 画面対角から最大スケールを計算
-	const float diag = std::sqrt(
-		float(WindowsAPI::kClientWidth) * float(WindowsAPI::kClientWidth) +
-		float(WindowsAPI::kClientHeight) * float(WindowsAPI::kClientHeight)
-	);
-	irisMaxScale_ = diag * 2.0f;
+	iris_ = CreateCenteredIrisSprite(dxCommon, irisMaxScale_);
 
 	// 入場は「覆った状態 → 0」へ（OutBack, 0.8s）
 	irisScale_ = irisMaxScale_;
 	iris_->SetSize({ irisScale_, irisScale_ });
-	irisOpenTween_.Reset(/*start*/ irisMaxScale_, /*end*/ 0.0f, /*sec*/ 0.8f, Ease::Type::OutBack);
-
+	irisOpenTween_.Reset(
+		/*start*/ irisMaxScale_,
+		/*end*/   0.0f,
+		/*sec*/   0.8f,
+		Ease::Type::OutBack
+	);
 	irisOpening_ = true;
 	irisClosing_ = false;
 }
@@ -105,10 +99,7 @@ void GameClearScene::Update() {
 	// アイリス開き（入場）
 	// ─────────────────────
 	if (irisOpening_) {
-		irisScale_ = irisOpenTween_.Update(dt_);
-		iris_->SetSize({ irisScale_, irisScale_ });
-		iris_->Update();
-
+		irisScale_ = UpdateIrisScale(iris_.get(), irisOpenTween_, dt_);
 		if (irisOpenTween_.Finished()) {
 			irisOpening_ = false;
 		}
@@ -123,10 +114,7 @@ void GameClearScene::Update() {
 	}
 
 	if (irisClosing_) {
-		float s = irisCloseTween_.Update(dt_);
-		iris_->SetSize({ s, s });
-		iris_->Update();
-
+		irisScale_ = UpdateIrisScale(iris_.get(), irisCloseTween_, dt_);
 		if (irisCloseTween_.Finished()) {
 			sceneManager_->SetNextScene(new TitleScene(dxCommon, srvManager));
 			return;

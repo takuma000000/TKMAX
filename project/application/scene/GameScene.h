@@ -29,6 +29,7 @@
 #include "RadialBlurEffect.h"
 #include "VignettingEffect.h"
 #include "FogEffect.h"
+#include "IrisUtil.h" 
 
 #include "application/player/Player.h"
 #include "application/enemy/Enemy.h"

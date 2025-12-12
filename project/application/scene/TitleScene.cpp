@@ -45,39 +45,27 @@ void TitleScene::Initialize(){
 	skybox_->Initialize(dxCommon, srvManager, "resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
 	skybox_->SetCamera(camera.get());
 
-	// === Iris sprite (白円) ===
-	iris_ = std::make_unique<Sprite>();
-	// circle2.png が好みならこっちの行を使う： "./resources/circle2.png"
-	iris_->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/circle2.png");
-	iris_->SetPosition({ 0.0f, 0.0f });     // 画面中央
-	iris_->SetSize({ irisScale_, irisScale_ }); // 最初は小さく
-	iris_->SetColor({ 1,1,1,1 });           // 白・不透明
-
-	// 画面中央に配置 & 対角長を最大に
-	iris_->SetAnchorPoint({ 0.5f, 0.5f });
-	iris_->SetPosition({ WindowsAPI::kClientWidth * 0.5f, WindowsAPI::kClientHeight * 0.5f });
-
-	// 画面を覆うための最大スケール（対角）
-	const float diag = std::sqrt(
-		float(WindowsAPI::kClientWidth) * float(WindowsAPI::kClientWidth) +
-		float(WindowsAPI::kClientHeight) * float(WindowsAPI::kClientHeight)
-	);
-
-	// 余白に絶対負けない“核オプション”
-	// 基本の対角に 1.8〜2.0 倍をかける。これで端がチラ見えする余地を潰す。
-	irisMax_ = diag * 2.0f;   // ← まずは 2.0f。まだなら 2.2f に
-
-	irisStartScale_ = irisScale_; // 最初のスケール（小さめ）
-	irisEndScale_ = irisMax_;     // 最後に覆うサイズ
-
-
-	// 開始サイズ & 速度（お好みで）
-	irisScale_ = 10.0f;
-	irisSpeed_ = 3500.0f;  // 速め
-
+	// === Iris sprite (白円) 共通ユーティリティ版 ===
+	// 画面中央配置＋画面を覆う最大スケール irisMax_ をまとめて計算
+	iris_ = CreateCenteredIrisSprite(dxCommon, irisMax_, "./resources/circle2.png");
+	// 色だけここで上書き（白・不透明）
+	iris_->SetColor({ 1,1,1,1 });
+	// 開始／終了スケールの設定
+	irisStartScale_ = 10.0f;     // 最初は小さく
+	irisEndScale_ = irisMax_;  // 最後に画面を完全に覆う
+	// 現在スケールも開始値からスタート
+	irisScale_ = irisStartScale_;
+	// スプライトに反映
 	iris_->SetSize({ irisScale_, irisScale_ });
-	// 開始時にセット（覆い切るサイズを irisMax_ とする）
-	irisTween_.Reset(irisScale_, irisMax_, kIrisDurationSec, Ease::Type::InBack);
+	// 必要なら速度パラメータはそのまま保持（他で使ってるなら）
+	irisSpeed_ = 3500.0f;
+	// Tween の初期化（小さい → 大きい）
+	irisTween_.Reset(
+		irisStartScale_,          // start
+		irisEndScale_,            // end
+		kIrisDurationSec,         // 所要時間
+		Ease::Type::InBack        // ちょっと勢いつけて開く感じ
+	);
 
 	// タイトル敵を1体だけ置く
 	titleEnemies_.clear();
@@ -215,12 +203,12 @@ void TitleScene::Update(){
 		}
 	}
 
+	// アイリス（閉）更新
 	if (irisClosing_) {
-		irisScale_ = irisTween_.Update(0.016f); // 1フレーム分の進行
-		iris_->SetSize({ irisScale_, irisScale_ });
-		iris_->Update();
+		irisScale_ = UpdateIrisScale(iris_.get(), irisTween_, 0.016f);
 
 		if (irisTween_.Finished()) {
+			irisClosing_ = false; // 状態を戻しておく（お好み）
 			sceneManager_->SetNextScene(new GameScene(dxCommon, srvManager));
 			return;
 		}

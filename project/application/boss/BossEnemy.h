@@ -261,6 +261,15 @@ private:
 	/// <param name="at"></param>
 	/// <returns></returns>
 	float PhaseBiasFor(AttackType at) const;
+	/// <summary>
+	/// 到達減速付きシークベクトルを計算します。
+	/// </summary>
+	/// <param name="current"></param>
+	/// <param name="target"></param>
+	/// <param name="maxSpeed"></param>
+	/// <param name="arriveRadius"></param>
+	/// <returns></returns>
+	Vector3 SeekArrive(const Vector3& current, const Vector3& target, float maxSpeed, float arriveRadius) const;
 	//======================================================================
 	// 演出
 	//======================================================================
@@ -287,8 +296,8 @@ private:
 		// 選択候補
 		int   chosen = 0; // 0:Beam,1:Fan,2:Rapid
 	} dbg_;
-
-	// 直近履歴（視覚化）
+	
+	// 直近履歴（視覚化 
 	static constexpr int kHist = 16;
 	std::array<int, kHist> history_{};
 	int histIndex_ = 0;

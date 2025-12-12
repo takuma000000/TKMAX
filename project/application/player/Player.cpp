@@ -96,40 +96,16 @@ void Player::Update() {
 	// ───────── 自機当たり判定ワイヤーボックス描画 ─────────
 	{
 		Vector3 center = object_->GetTranslate();
-
-		float hx = colliderScale_.x * 0.5f;
-		float hy = colliderScale_.y * 0.5f;
-		float hz = colliderScale_.z * 0.5f;
+		Vector3 size = colliderScale_;
 
 		auto* lr = LineRenderer::GetInstance();
 
-		// 通常は緑、被弾中だけ赤
-		LineRenderer::Color col = { 0.0f, 1.0f, 0.0f, 1.0f };
-		if (hitFlashTimer_ > 0.0f) {
-			col = { 1.0f, 0.0f, 0.0f, 1.0f };
-		}
+		LineRenderer::Color col =
+			(hitFlashTimer_ > 0.0f)
+			? LineRenderer::Color{ 1.0f, 0.0f, 0.0f, 1.0f }
+		: LineRenderer::Color{ 0.0f, 1.0f, 0.0f, 1.0f };
 
-		Vector3 p[8] = {
-			{ center.x - hx, center.y - hy, center.z - hz },
-			{ center.x + hx, center.y - hy, center.z - hz },
-			{ center.x - hx, center.y + hy, center.z - hz },
-			{ center.x + hx, center.y + hy, center.z - hz },
-			{ center.x - hx, center.y - hy, center.z + hz },
-			{ center.x + hx, center.y - hy, center.z + hz },
-			{ center.x - hx, center.y + hy, center.z + hz },
-			{ center.x + hx, center.y + hy, center.z + hz },
-		};
-
-		auto add = [&](int a, int b) {
-			lr->AddLine(p[a], p[b], col);
-			};
-
-		// 前面
-		add(0, 1); add(1, 3); add(3, 2); add(2, 0);
-		// 背面
-		add(4, 5); add(5, 7); add(7, 6); add(6, 4);
-		// 横のつなぎ
-		add(0, 4); add(1, 5); add(2, 6); add(3, 7);
+		lr->AddAABB(center, size, col);
 	}
 
 	Death(); // 撃墜処理

@@ -88,16 +88,13 @@ void MidBossCore::Update(float dt) {
 	// ---- 当たり判定の可視化（Enemy と同じ箱描画）----
 	{
 		Vector3 center = GetWorldPosition();
-
-		float hx = colliderScale_.x * 0.5f;
-		float hy = colliderScale_.y * 0.5f;
-		float hz = colliderScale_.z * 0.5f;
+		Vector3 size = colliderScale_;
 
 		auto* lr = LineRenderer::GetInstance();
 
-		LineRenderer::Color colEdge{ 0.0f, 1.0f, 0.0f, 1.0f };
+		LineRenderer::Color normal{ 0.0f, 1.0f, 0.0f, 1.0f };
+		LineRenderer::Color hit{ 1.0f, 0.0f, 0.0f, 1.0f };
 
-		// Reticle のラインと当たっていたら赤
 		if (reticle_) {
 			Vector3 rayOrigin;
 			if (playerGetter_) {
@@ -107,37 +104,11 @@ void MidBossCore::Update(float dt) {
 			}
 
 			Vector3 rayDir = reticle_->GetAimDirection();
-			float len = MyMath::Length(rayDir);
-			if (len > 0.001f) {
-				rayDir = MyMath::Normalize(rayDir);
-			}
 
-			Vector3 rayEnd = rayOrigin + rayDir * 150.0f;
-
-			AABB box(center, colliderScale_);
-			if (box.IsIntersectSegment(rayOrigin, rayEnd)) {
-				colEdge = LineRenderer::Color{ 1.0f, 0.0f, 0.0f, 1.0f };
-			}
+			lr->AddAABBWithRayHighlight(center, size, rayOrigin, rayDir, normal, hit);
+		} else {
+			lr->AddAABB(center, size, normal);
 		}
-
-		Vector3 p[8] = {
-			{ center.x - hx, center.y - hy, center.z - hz },
-			{ center.x + hx, center.y - hy, center.z - hz },
-			{ center.x - hx, center.y + hy, center.z - hz },
-			{ center.x + hx, center.y + hy, center.z - hz },
-			{ center.x - hx, center.y - hy, center.z + hz },
-			{ center.x + hx, center.y - hy, center.z + hz },
-			{ center.x - hx, center.y + hy, center.z + hz },
-			{ center.x + hx, center.y + hy, center.z + hz },
-		};
-
-		auto add = [&](int a, int b) {
-			lr->AddLine(p[a], p[b], colEdge);
-			};
-
-		add(0, 1); add(1, 3); add(3, 2); add(2, 0);
-		add(4, 5); add(5, 7); add(7, 6); add(6, 4);
-		add(0, 4); add(1, 5); add(2, 6); add(3, 7);
 	}
 
 	// ============================

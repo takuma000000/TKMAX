@@ -45,14 +45,7 @@ void BossManager::StartBattle() {
 void BossManager::Update(float dt) {
 	if (!bossBattle_ || !boss_) {
 		// ボス戦中でないなら弾だけ掃除しておく
-		for (auto it = bossBullets_.begin(); it != bossBullets_.end();) {
-			(*it)->Update();
-			if ((*it)->IsDead()) {
-				it = bossBullets_.erase(it);
-			} else {
-				++it;
-			}
-		}
+		UpdateBossBullets();
 		return;
 	}
 
@@ -67,7 +60,7 @@ void BossManager::Update(float dt) {
 		bossZoomStarted_ = true;
 	}
 
-	// P2突入時にBGMを1回だけ再生（GameScene にあった処理を移植）
+	// P2突入時にBGMを1回だけ再生
 	if (!bossP2BgmPlayed_) {
 		int phase = boss_->GetPhase(); // P1=0, P2=1, P3=2
 		if (phase == 1) { // P2
@@ -76,15 +69,8 @@ void BossManager::Update(float dt) {
 		}
 	}
 
-	// ボス弾更新
-	for (auto it = bossBullets_.begin(); it != bossBullets_.end();) {
-		(*it)->Update();
-		if ((*it)->IsDead()) {
-			it = bossBullets_.erase(it);
-		} else {
-			++it;
-		}
-	}
+	// ボス弾更新（共通処理にまとめた）
+	UpdateBossBullets();
 }
 
 void BossManager::Draw(DirectXCommon* dxCommon) {
@@ -125,4 +111,15 @@ void BossManager::OnClearSequenceStart() {
 	bossBullets_.clear();
 	boss_.reset();
 	bossP2BgmPlayed_ = false;
+}
+
+void BossManager::UpdateBossBullets() {
+	for (auto it = bossBullets_.begin(); it != bossBullets_.end();) {
+		(*it)->Update();
+		if ((*it)->IsDead()) {
+			it = bossBullets_.erase(it);
+		} else {
+			++it;
+		}
+	}
 }

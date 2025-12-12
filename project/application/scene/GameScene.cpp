@@ -431,9 +431,7 @@ void GameScene::Update() {
 
 		// アイリス閉じ中は進行してGameOverへ
 		if (irisClosing_) {
-			irisCloseScale_ = irisCloseTween_.Update(0.016f);
-			iris_->SetSize({ irisCloseScale_, irisCloseScale_ });
-			iris_->Update();
+			irisScale_ = UpdateIrisScale(iris_.get(), irisTween_, 0.016f);
 
 			if (irisCloseTween_.Finished()) {
 				sceneManager_->SetNextScene(new GameOverScene(dxCommon, srvManager));
@@ -592,21 +590,8 @@ void GameScene::LoadTextures() {
 // スプライトを作成し、初期化する
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeSprite() {
-	iris_ = std::make_unique<Sprite>();
-	iris_->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/circle2.png");
-
-	// 画面中央に配置 & 対角長を最大に
-	iris_->SetAnchorPoint({ 0.5f, 0.5f });
-	iris_->SetPosition({ WindowsAPI::kClientWidth * 0.5f, WindowsAPI::kClientHeight * 0.5f });
-
-	// 画面対角から最大スケールを計算
-	const float diag = std::sqrt(float(WindowsAPI::kClientWidth) * float(WindowsAPI::kClientWidth) + float(WindowsAPI::kClientHeight) * float(WindowsAPI::kClientHeight));
-	irisMaxScale_ = diag * 2.0f;    // TitleSceneと対に合わせる
-
-	irisStartScale_ = irisMaxScale_; // 最初は覆った状態
-	irisEndScale_ = 0.0f;          // 最終的に消える
-	irisScale_ = irisStartScale_;
-	iris_->SetSize({ irisScale_, irisScale_ });
+	iris_ = CreateCenteredIrisSprite(dxCommon, irisMaxScale_);
+	irisScale_ = irisMaxScale_;
 	irisTween_.Reset(irisMaxScale_, 0.0f, kIrisDurationSec, Ease::Type::OutBack);
 
 	// タイトル戻り用アイリス

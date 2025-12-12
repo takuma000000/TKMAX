@@ -6,6 +6,7 @@
 
 #include "DirectXCommon.h"
 #include "MyMath.h"
+#include "AABB.h"
 
 class LineRenderer {
 public:
@@ -20,6 +21,30 @@ public:
 	void AddLine(const Vector3& a, const Vector3& b, const Color& c);
 	void Draw(const Matrix4x4& viewProj); // GameScene::Draw の中から呼ぶ
 
+	/// <summary>
+	/// AABB（軸平行境界ボックス）を追加する。
+	/// </summary>
+	/// <param name="center"></param>
+	/// <param name="size"></param>
+	/// <param name="color"></param>
+	void AddAABB(const Vector3& center, const Vector3& size, const Color& color);
+	/// <summary>
+	/// AABB（軸平行境界ボックス）を追加し、指定したレイと交差していたら色を変える。
+	/// </summary>
+	/// <param name="center"></param>
+	/// <param name="size"></param>
+	/// <param name="rayOrigin"></param>
+	/// <param name="rayDir"></param>
+	/// <param name="normalColor"></param>
+	/// <param name="hitColor"></param>
+	void AddAABBWithRayHighlight(
+		const Vector3& center,
+		const Vector3& size,
+		const Vector3& rayOrigin,
+		const Vector3& rayDir,   // 正規化前でも OK
+		const Color& normalColor,
+		const Color& hitColor
+	);
 private:
 	LineRenderer() = default;
 	~LineRenderer() = default;

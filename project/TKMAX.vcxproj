@@ -160,6 +160,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\scene\GameOverScene.cpp" />
     <ClCompile Include="engine\effect\line\LineRenderer.cpp" />
     <ClCompile Include="FogEffect.cpp" />
+    <ClCompile Include="IrisUtil.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="engine\3d\Model.cpp" />
     <ClCompile Include="engine\3d\ModelCommon.cpp" />
@@ -252,6 +253,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\func\math\Vector2.h" />
     <ClInclude Include="engine\effect\line\LineRenderer.h" />
     <ClInclude Include="FogEffect.h" />
+    <ClInclude Include="IrisUtil.h" />
     <ClInclude Include="MidBossCore.h" />
     <ClInclude Include="ModelTypes.h" />
     <ClInclude Include="RadialBlurEffect.h" />

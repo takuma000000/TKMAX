@@ -29,18 +29,6 @@ void PlayerBullet::Update() {
 
 	// 現在の座標を取得して、速度分だけ進める
 	Vector3 pos = object_->GetTranslate();
-
-	// 完全追従：毎フレーム、目標の現在位置へ向けて速度ベクトルを再設定
-	if (isHoming_ && enemy_ && !enemy_->IsDead()) {
-		Vector3 enemyPos = enemy_->GetWorldPosition(); // 敵の現在位置を取得
-		Vector3 dir = enemyPos - pos; // 敵への方向ベクトルを計算
-		float len = MyMath::Length(dir); // 方向ベクトルの長さを計算
-		if (len > 0.001f) { // ゼロ除算回避
-			dir = MyMath::Normalize(dir); // 方向ベクトルを正規化
-			velocity_ = dir * homingSpeed_; // 速度の大きさは一定、向きだけ更新
-		}
-	}
-
 	pos = pos + velocity_; // 速度分だけ進める
 	object_->SetTranslate(pos); // 座標を更新
 	trailEmitter_.SetPosition(pos); // パーティクル位置更新
@@ -61,30 +49,34 @@ void PlayerBullet::Update() {
 	}
 
 	// =========================================
+	// 弾AABB vs 相手AABB（線分＋AABB）の共通判定
+	// =========================================
+	Vector3 bulletPos = object_->GetTranslate();
+	Vector3 bulletScale = object_->GetScale();
+
+	auto CheckSweptHitAABB = [&](const Vector3& targetPos, const Vector3& targetSize) -> bool {
+		AABB bulletBox(bulletPos, bulletScale);
+		AABB targetBox(targetPos, targetSize);
+
+		// 1) 弾の移動線分(prevPos_ → bulletPos)と相手AABBの交差判定
+		if (targetBox.IsIntersectSegment(prevPos_, bulletPos)) {
+			return true;
+		}
+		// 2) 念のため AABB vs AABB も見る（弾が中からスタートした場合など）
+		if (bulletBox.IsCollidingWithAABB(targetBox)) {
+			return true;
+		}
+		return false;
+		};
+
+	// =========================================
 	// 敵が存在するなら当たり判定チェック
 	// =========================================
 	if (enemy_ && !enemy_->IsDead()) {
-		Vector3 bulletPos = object_->GetTranslate();
-		Vector3 bulletScale = object_->GetScale();
-		AABB    bulletBox(bulletPos, bulletScale);
-
 		Vector3 enemyPos = enemy_->GetWorldPosition();
 		Vector3 enemySize = enemy_->GetColliderScale();
-		AABB    enemyBox(enemyPos, enemySize);
 
-		// ★ ここを変更：
-		// AABB vs AABB だけだとすり抜けるので、
-		// 「線分(prevPos_→bulletPos)が敵AABBに当たっているか」も見る
-		bool hit = false;
-
-		// 1) まず移動線分でチェック（メイン）
-		if (enemyBox.IsIntersectSegment(prevPos_, bulletPos)) {
-			hit = true;
-		}
-		// 2) 念のため、AABB同士も見ておく（スタート時に中にいる場合など）
-		else if (bulletBox.IsCollidingWithAABB(enemyBox)) {
-			hit = true;
-		}
+		bool hit = CheckSweptHitAABB(enemyPos, enemySize);
 
 		if (hit) {
 			isHit_ = true;
@@ -97,7 +89,7 @@ void PlayerBullet::Update() {
 			int  damage = isSpecialAttack_ ? 100 : 1;
 			bool willDie = (enemy_ && enemy_->GetHP() <= damage);
 
-			// ▼ エフェクトは今のまま
+			// ▼ エフェクト（元のまま）
 			if (isLTBullet) {
 				pm->Emit("lt_nova_core", hitPos, 1);
 				pm->Emit("lt_nova_wave", hitPos, 3);
@@ -132,24 +124,13 @@ void PlayerBullet::Update() {
 	}
 
 	// =========================================
-// 核（MidBossCore）との当たり判定
-// =========================================
+	// 核（MidBossCore）との当たり判定
+	// =========================================
 	if (core_ && !core_->IsDead()) {
-		Vector3 bulletPos = object_->GetTranslate();
-		Vector3 bulletScale = object_->GetScale();
-		AABB    bulletBox(bulletPos, bulletScale);
-
 		Vector3 corePos = core_->GetWorldPosition();
 		Vector3 coreSize = core_->GetColliderScale();
-		AABB    coreBox(corePos, coreSize);
 
-		bool hit = false;
-
-		if (coreBox.IsIntersectSegment(prevPos_, bulletPos)) {
-			hit = true;
-		} else if (bulletBox.IsCollidingWithAABB(coreBox)) {
-			hit = true;
-		}
+		bool hit = CheckSweptHitAABB(corePos, coreSize);
 
 		if (hit) {
 			isHit_ = true;

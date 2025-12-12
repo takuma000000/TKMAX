@@ -37,6 +37,28 @@ float BossEnemy::PhaseBiasFor(AttackType at) const {
 	return 0.0f;
 }
 
+Vector3 BossEnemy::SeekArrive(const Vector3& current, const Vector3& target,
+	float maxSpeed, float arriveRadius) const {
+	Vector3 toTarget = target - current;
+	float dist = MyMath::Length(toTarget);
+
+	// ほぼ同じ位置ならそのまま
+	if (dist <= BossParam::EpsilonLength) {
+		return current;
+	}
+
+	// 目標方向へ最大速度で進む
+	Vector3 desired = MyMath::Normalize(toTarget) * maxSpeed;
+
+	// 到達半径内では距離に応じて減速
+	if (dist < arriveRadius) {
+		desired = desired * (dist / arriveRadius);
+	}
+
+	// 次の位置
+	return current + desired;
+}
+
 void BossEnemy::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	Enemy::Initialize(common, dxCommon);
 	SetModel("enemy.obj"); // モデル設定
@@ -82,44 +104,17 @@ void BossEnemy::Update() {
 
 	// ───────── ボス当たり判定ワイヤーボックス描画 ─────────
 	{
-		// ボスの中心（ワールド座標）
 		Vector3 center = GetWorldPosition();
-		// コライダーサイズ
-		Vector3 col = GetColliderScale();
-
-		float hx = col.x * 0.5f;
-		float hy = col.y * 0.5f;
-		float hz = col.z * 0.5f;
+		Vector3 size = GetColliderScale();
 
 		auto* lr = LineRenderer::GetInstance();
 
-		// 通常は緑、ロック中は赤
-		LineRenderer::Color color = { 0.0f, 1.0f, 0.0f, 1.0f };
-		if (IsLocked()) {
-			color = { 1.0f, 0.0f, 0.0f, 1.0f };
-		}
+		LineRenderer::Color col =
+			IsLocked()
+			? LineRenderer::Color{ 1.0f, 0.0f, 0.0f, 1.0f }
+		: LineRenderer::Color{ 0.0f, 1.0f, 0.0f, 1.0f };
 
-		Vector3 p[8] = {
-			{ center.x - hx, center.y - hy, center.z - hz },
-			{ center.x + hx, center.y - hy, center.z - hz },
-			{ center.x - hx, center.y + hy, center.z - hz },
-			{ center.x + hx, center.y + hy, center.z - hz },
-			{ center.x - hx, center.y - hy, center.z + hz },
-			{ center.x + hx, center.y - hy, center.z + hz },
-			{ center.x - hx, center.y + hy, center.z + hz },
-			{ center.x + hx, center.y + hy, center.z + hz },
-		};
-
-		auto add = [&](int a, int b) {
-			lr->AddLine(p[a], p[b], color);
-			};
-
-		// 前面
-		add(0, 1); add(1, 3); add(3, 2); add(2, 0);
-		// 背面
-		add(4, 5); add(5, 7); add(7, 6); add(6, 4);
-		// 横のつなぎ
-		add(0, 4); add(1, 5); add(2, 6); add(3, 7);
+		lr->AddAABB(center, size, col);
 	}
 
 	Enemy::Update();
@@ -318,6 +313,7 @@ void BossEnemy::UpdateMovement(const Vector3& playerPos, const Vector3& /*player
 		const float kOmegaY = BossParam::P3OmegaY; // 上下角速度
 		const float kMaxSpeed = BossParam::P3MaxSpeed; // 接近スピード
 		const float kArrive = BossParam::ArriveRadius; // 減速開始距離
+
 		// 左右往復の進行
 		theta_ += kOmegaX;
 
@@ -327,16 +323,10 @@ void BossEnemy::UpdateMovement(const Vector3& playerPos, const Vector3& /*player
 		float offY = kRangeY * std::sinf(theta_ * (kOmegaY / kOmegaX) + 1.2345f);
 		Vector3 target = center + Vector3{ offX, offY, 0.0f };
 
-		// 到達減速つきのシーク
+		// 共通シーク処理を使用
 		Vector3 pos = GetWorldPosition();
-		Vector3 toT = target - pos;
-		float   dist = MyMath::Length(toT);
-
-		// シークベクトル計算
-		Vector3 desired = (dist > 1e-4f) ? MyMath::Normalize(toT) * kMaxSpeed : Vector3{ 0,0,0 };
-		if (dist < kArrive) desired = desired * (dist / kArrive);
-		pos = pos + desired;
-		SetPosition(pos);
+		Vector3 next = SeekArrive(pos, target, kMaxSpeed, kArrive);
+		SetPosition(next);
 
 		return;
 	}
@@ -358,22 +348,13 @@ void BossEnemy::UpdateMovement(const Vector3& playerPos, const Vector3& /*player
 		// 目標位置
 		Vector3 target = center + Vector3{ offX, offY, 0.0f };
 
-		// 到達減速つきのシーク
+		// 共通シーク処理を使用
 		const float kMaxSpeed = p2MaxSpeed_;
 		const float kArrive = arriveRadius_;
 
-		// シークベクトル計算
 		Vector3 pos = GetWorldPosition();
-		Vector3 toT = target - pos;
-		float   dist = MyMath::Length(toT);
-
-		// シークベクトル計算
-		Vector3 desired = (dist > 1e-4f) ? MyMath::Normalize(toT) * kMaxSpeed : Vector3{ 0,0,0 };
-		if (dist < kArrive) {
-			desired = desired * (dist / kArrive);  // 線形減速
-		}
-		pos = pos + desired;
-		SetPosition(pos);
+		Vector3 next = SeekArrive(pos, target, kMaxSpeed, kArrive);
+		SetPosition(next);
 		return;
 	}
 }

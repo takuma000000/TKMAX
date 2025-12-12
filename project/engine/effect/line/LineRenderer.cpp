@@ -1,5 +1,6 @@
 #include "LineRenderer.h"
 #include "externals/DirectXTex/d3dx12.h"
+#include "MyMath.h"
 
 using Microsoft::WRL::ComPtr;
 
@@ -62,6 +63,54 @@ void LineRenderer::Draw(const Matrix4x4& viewProj) {
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
 	cmdList->IASetVertexBuffers(0, 1, &vbView_);
 	cmdList->DrawInstanced(static_cast<UINT>(vertices_.size()), 1, 0, 0);
+}
+
+void LineRenderer::AddAABB(const Vector3& center, const Vector3& size, const Color& color) {
+	float hx = size.x * 0.5f;
+	float hy = size.y * 0.5f;
+	float hz = size.z * 0.5f;
+
+	Vector3 p[8] = {
+		{ center.x - hx, center.y - hy, center.z - hz },
+		{ center.x + hx, center.y - hy, center.z - hz },
+		{ center.x - hx, center.y + hy, center.z - hz },
+		{ center.x + hx, center.y + hy, center.z - hz },
+		{ center.x - hx, center.y - hy, center.z + hz },
+		{ center.x + hx, center.y - hy, center.z + hz },
+		{ center.x - hx, center.y + hy, center.z + hz },
+		{ center.x + hx, center.y + hy, center.z + hz },
+	};
+
+	auto add = [&](int a, int b) {
+		AddLine(p[a], p[b], color);
+		};
+
+	add(0, 1); add(1, 3); add(3, 2); add(2, 0);
+	add(4, 5); add(5, 7); add(7, 6); add(6, 4);
+	add(0, 4); add(1, 5); add(2, 6); add(3, 7);
+}
+
+void LineRenderer::AddAABBWithRayHighlight(
+	const Vector3& center,
+	const Vector3& size,
+	const Vector3& rayOrigin,
+	const Vector3& rayDirRaw,
+	const Color& normalColor,
+	const Color& hitColor
+) {
+	Vector3 dir = rayDirRaw;
+	float len = MyMath::Length(dir);
+	if (len > 0.001f) {
+		dir = MyMath::Normalize(dir);
+	}
+
+	Vector3 rayEnd = rayOrigin + dir * 150.0f; // 距離は今まで通り
+
+	AABB box(center, size);
+	bool hit = box.IsIntersectSegment(rayOrigin, rayEnd);
+
+	const Color& col = hit ? hitColor : normalColor;
+	AddAABB(center, size, col);
 }
 
 void LineRenderer::CreatePipeline() {
