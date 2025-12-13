@@ -102,7 +102,7 @@ void ParticleManager::Draw() {
 	const UINT vtxCountNormal = static_cast<UINT>(modelData.vertices.size());
 	const UINT vtxCountRing = static_cast<UINT>(ringModelData.vertices.size());
 	const UINT vtxCountCylinder = static_cast<UINT>(cylinderModelData.vertices.size());
-	const UINT vtxCountRibbon = static_cast<UINT>(ribbonModelData.vertices.size());
+	//const UINT vtxCountRibbon = static_cast<UINT>(ribbonModelData.vertices.size());
 
 	for (auto it = particleGroups.begin(); it != particleGroups.end(); ++it) { //各パーティクルグループの描画
 		ParticleGroup& group = it->second;
@@ -116,7 +116,7 @@ void ParticleManager::Draw() {
 		if (group.type == ParticleType::NORMAL && vtxCountNormal == 0) continue;
 		if (group.type == ParticleType::RING && vtxCountRing == 0) continue;
 		if (group.type == ParticleType::CYLINDER && vtxCountCylinder == 0) continue;
-		if (group.type == ParticleType::RIBBON && vtxCountRibbon == 0) continue;
+		//if (group.type == ParticleType::RIBBON && vtxCountRibbon == 0) continue;
 
 		// ③ 永続CBに値を書くだけ（Create/Releaseしない）
 		//    ※ Initialize() で materialCB_ を UploadHeap で作って materialCPU_ を永続Map済み
@@ -139,9 +139,6 @@ void ParticleManager::Draw() {
 		} else if (group.type == ParticleType::CYLINDER) {
 			cmd->IASetVertexBuffers(0, 1, &cylinderVertexBufferView);
 			cmd->DrawInstanced(vtxCountCylinder, group.kNumInstance, 0, 0);
-		} else if (group.type == ParticleType::RIBBON) {
-			cmd->IASetVertexBuffers(0, 1, &ribbonVertexBufferView);
-			cmd->DrawInstanced(vtxCountRibbon, group.kNumInstance, 0, 0);
 		}
 	}
 }
@@ -311,8 +308,8 @@ void ParticleManager::InitializeVD() {
 	cylinderModelData.material.textureFilePath = "./resources/gradationLine.png"; //テクスチャパス
 
 	// リボン（細長い板） 
-	CreateRibbonVertices();
-	ribbonModelData.material.textureFilePath = "./resources/circle.png";
+	/*CreateRibbonVertices();
+	ribbonModelData.material.textureFilePath = "./resources/circle.png";*/
 }
 
 void ParticleManager::CreateVR() {
@@ -323,7 +320,7 @@ void ParticleManager::CreateVR() {
 	//cylinderの頂点リソースを作る
 	cylinderVertexResource = dxCommon_->CreateBufferResource(sizeof(VertexData) * cylinderModelData.vertices.size());
 	// リボン
-	ribbonVertexResource = dxCommon_->CreateBufferResource(sizeof(VertexData) * ribbonModelData.vertices.size());
+	//ribbonVertexResource = dxCommon_->CreateBufferResource(sizeof(VertexData) * ribbonModelData.vertices.size());
 }
 
 void ParticleManager::CreateVB() {
@@ -343,9 +340,9 @@ void ParticleManager::CreateVB() {
 	cylinderVertexBufferView.StrideInBytes = sizeof(VertexData);
 
 	// RIBBON
-	ribbonVertexBufferView.BufferLocation = ribbonVertexResource->GetGPUVirtualAddress();
-	ribbonVertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * ribbonModelData.vertices.size());
-	ribbonVertexBufferView.StrideInBytes = sizeof(VertexData);
+	//ribbonVertexBufferView.BufferLocation = ribbonVertexResource->GetGPUVirtualAddress();
+	//ribbonVertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * ribbonModelData.vertices.size());
+	//ribbonVertexBufferView.StrideInBytes = sizeof(VertexData);
 }
 
 void ParticleManager::WriteResource() {
@@ -368,9 +365,9 @@ void ParticleManager::WriteResource() {
 	std::memcpy(cylinderVertexData, cylinderModelData.vertices.data(), sizeof(VertexData) * cylinderModelData.vertices.size());
 
 	// RIBBON
-	VertexData* ribbonVertexData = nullptr;
+	/*VertexData* ribbonVertexData = nullptr;
 	ribbonVertexResource->Map(0, nullptr, reinterpret_cast<void**>(&ribbonVertexData));
-	std::memcpy(ribbonVertexData, ribbonModelData.vertices.data(), sizeof(VertexData) * ribbonModelData.vertices.size());
+	std::memcpy(ribbonVertexData, ribbonModelData.vertices.data(), sizeof(VertexData) * ribbonModelData.vertices.size());*/
 
 }
 
@@ -656,35 +653,103 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 		Vector3 col = { 1.0f, 0.2f + 0.3f * t, 0.1f };
 		p.color = { 1.0f, 0.05f, 0.05f, 1.0f };  // 強い赤（R100%, G5%, B5%）
 	} else if (groupName == "trail_lt") {
-		// ─────────────────────────────
-		// LT：ホーミング弾の「帯」トレイル（RIBBON前提）
-		// ─────────────────────────────
 
-		// 共通のオフセットを無視して、弾のど真ん中に出す
+		// =========================================
+		// LT 必殺技：気弾（実サイズ版）
+		// ・巨大コアを常時生成
+		// ・オーラは補助
+		// ・煙にならない
+		// =========================================
+
 		p.transform.translate = center;
 
-		// リボンそのものは動かさない（位置固定）
-		// → 弾が進むたびに「静止した帯」がポコポコ生まれて、
-		//    それが繋がって“軌跡”に見える
-		p.velocity = { 0.0f, 0.0f, 0.0f };
+		auto frand = [&](float a, float b) {
+			return std::uniform_real_distribution<float>(a, b)(rng);
+			};
 
-		// 細長い帯：X方向に長く、Yを薄く
-		float length = std::uniform_real_distribution<float>(4.0f, 6.0f)(rng);
-		float thickness = 0.25f;
-		p.transform.scale = { length, thickness, 1.0f };
+		float kind = frand(0.0f, 1.0f);
 
-		// 少し長めに残して軌跡感を出す
-		p.lifeTime = std::uniform_real_distribution<float>(0.35f, 0.55f)(rng);
+		// ============================
+		// ① メインコア（最重要）
+		// ============================
+		if (kind < 0.50f) {
+
+			// ほぼ静止（球として見せる）
+			p.velocity = { 0.0f, 0.0f, 0.0f };
+
+			// 大きな球
+			float sc = frand(2.0f, 3.5f);
+			p.transform.scale = { sc, sc, sc };
+
+			p.lifeTime = frand(0.08f, 0.14f);
+			p.currentTime = 0.0f;
+
+			float c = frand(2.8f, 3.8f);
+			p.color = {
+				0.95f * c,
+				0.98f * c,
+				1.00f * c,
+				1.0f
+			};
+			return p;
+		}
+
+		// ============================
+		// ② 外側オーラ
+		// ============================
+		if (kind < 0.85f) {
+
+			Vector3 off{
+				frand(-0.5f, 0.5f),
+				frand(-0.5f, 0.5f),
+				frand(-0.5f, 0.5f)
+			};
+			p.transform.translate = center + off;
+
+			Vector3 dir =
+				(MyMath::Length(off) > 0.001f) ?
+				MyMath::Normalize(off) :
+				Vector3{ 0,1,0 };
+
+			p.velocity = dir * frand(0.6f, 1.2f);
+
+			float sc = frand(1.6f, 2.8f);
+			p.transform.scale = { sc, sc, sc };
+
+			p.lifeTime = frand(0.05f, 0.09f);
+			p.currentTime = 0.0f;
+
+			p.color = {
+				0.25f,
+				0.75f,
+				1.10f,
+				1.0f
+			};
+			return p;
+		}
+
+		// ============================
+		// ③ 火花（補助）
+		// ============================
+		Vector3 off{
+			frand(-0.6f, 0.6f),
+			frand(-0.6f, 0.6f),
+			frand(-0.6f, 0.6f)
+		};
+		p.transform.translate = center + off;
+
+		Vector3 dir = MyMath::Normalize(off);
+		p.velocity = dir * frand(2.0f, 3.0f);
+
+		float sc = frand(0.2f, 0.4f);
+		p.transform.scale = { sc, sc, sc };
+
+		p.lifeTime = frand(0.03f, 0.06f);
 		p.currentTime = 0.0f;
 
-		// 黄緑〜シアン寄りの視認性高い色
-		float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
-		Vector3 col = {
-			0.3f,
-			0.9f,
-			0.3f + 0.2f * t
-		};
-		p.color = { col.x, col.y, col.z, 1.0f };
+		float c = frand(2.5f, 4.0f);
+		p.color = { c, c, c, 1.0f };
+
 	} else if (groupName == "damageSpark") { //── 故障スパーク ──
 		// 放射状に高速で飛ぶ、短命、明るくチカチカ
 		std::uniform_real_distribution<float> dir(-1.0f, 1.0f);
@@ -1649,6 +1714,25 @@ ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, co
 			frand(0.05f, 0.15f)
 		};
 		p.color = { col.x, col.y, col.z, 1.0f };
+	} else if (groupName == "trail_lt_path") {
+		// 発生位置：完全に中心だけ
+		p.transform.translate = center;
+
+		// 速度なし（軌道は弾そのものが描く）
+		p.velocity = { 0.0f, 0.0f, 0.0f };
+
+		// ★ 完全等方スケール（横長禁止）
+		std::uniform_real_distribution<float> scl(0.08f, 0.14f);
+		float sc = scl(rng);
+		p.transform.scale = { sc, sc, sc };
+
+		// ★ 短命（線にならない）
+		p.lifeTime = std::uniform_real_distribution<float>(0.08f, 0.15f)(rng);
+		p.currentTime = 0.0f;
+
+		// 色：必殺技らしく白〜薄青
+		float c = std::uniform_real_distribution<float>(0.85f, 1.0f)(rng);
+		p.color = { 0.9f * c, 0.95f * c, 1.0f, 1.0f };
 	} else { // 上記意外
 		// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 		std::uniform_real_distribution<float> velX(-0.15f, 0.15f);
@@ -1749,41 +1833,41 @@ void ParticleManager::CreateCylinderVertices() {
 	}
 }
 
-void ParticleManager::CreateRibbonVertices() {
-	// 横長リボン（幅：2.0、高さ：0.3）みたいな比率で作る
-	const float halfW = 1.0f;   // X 方向
-	const float halfH = 0.15f;  // Y 方向（細い）
-
-	// 三角形2つ分（通常クアッド）
-	ribbonModelData.vertices.push_back({
-		.position = { halfW,  halfH, 0.0f, 1.0f},
-		.texcoord = {0.0f, 0.0f},
-		.normal = {0.0f, 0.0f, 1.0f}
-		});
-	ribbonModelData.vertices.push_back({
-		.position = {-halfW,  halfH, 0.0f, 1.0f},
-		.texcoord = {1.0f, 0.0f},
-		.normal = {0.0f, 0.0f, 1.0f}
-		});
-	ribbonModelData.vertices.push_back({
-		.position = { halfW, -halfH, 0.0f, 1.0f},
-		.texcoord = {0.0f, 1.0f},
-		.normal = {0.0f, 0.0f, 1.0f}
-		});
-
-	ribbonModelData.vertices.push_back({
-		.position = { halfW, -halfH, 0.0f, 1.0f},
-		.texcoord = {0.0f, 1.0f},
-		.normal = {0.0f, 0.0f, 1.0f}
-		});
-	ribbonModelData.vertices.push_back({
-		.position = {-halfW,  halfH, 0.0f, 1.0f},
-		.texcoord = {1.0f, 0.0f},
-		.normal = {0.0f, 0.0f, 1.0f}
-		});
-	ribbonModelData.vertices.push_back({
-		.position = {-halfW, -halfH, 0.0f, 1.0f},
-		.texcoord = {1.0f, 1.0f},
-		.normal = {0.0f, 0.0f, 1.0f}
-		});
-}
+//void ParticleManager::CreateRibbonVertices() {
+//	// 横長リボン（幅：2.0、高さ：0.3）みたいな比率で作る
+//	const float halfW = 1.0f;   // X 方向
+//	const float halfH = 0.15f;  // Y 方向（細い）
+//
+//	// 三角形2つ分（通常クアッド）
+//	ribbonModelData.vertices.push_back({
+//		.position = { halfW,  halfH, 0.0f, 1.0f},
+//		.texcoord = {0.0f, 0.0f},
+//		.normal = {0.0f, 0.0f, 1.0f}
+//		});
+//	ribbonModelData.vertices.push_back({
+//		.position = {-halfW,  halfH, 0.0f, 1.0f},
+//		.texcoord = {1.0f, 0.0f},
+//		.normal = {0.0f, 0.0f, 1.0f}
+//		});
+//	ribbonModelData.vertices.push_back({
+//		.position = { halfW, -halfH, 0.0f, 1.0f},
+//		.texcoord = {0.0f, 1.0f},
+//		.normal = {0.0f, 0.0f, 1.0f}
+//		});
+//
+//	ribbonModelData.vertices.push_back({
+//		.position = { halfW, -halfH, 0.0f, 1.0f},
+//		.texcoord = {0.0f, 1.0f},
+//		.normal = {0.0f, 0.0f, 1.0f}
+//		});
+//	ribbonModelData.vertices.push_back({
+//		.position = {-halfW,  halfH, 0.0f, 1.0f},
+//		.texcoord = {1.0f, 0.0f},
+//		.normal = {0.0f, 0.0f, 1.0f}
+//		});
+//	ribbonModelData.vertices.push_back({
+//		.position = {-halfW, -halfH, 0.0f, 1.0f},
+//		.texcoord = {1.0f, 1.0f},
+//		.normal = {0.0f, 0.0f, 1.0f}
+//		});
+//}

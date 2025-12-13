@@ -41,9 +41,8 @@ void PlayerBullet::Update() {
 		ParticleManager* pm = ParticleManager::GetInstance();
 		Vector3 emitPos = pos;
 
-		// 空間を裂くような細いレイ
-		pm->Emit("enemyHit_rays", emitPos, 1);
-
+		// 軽い光の尾
+		pm->Emit("trail_lt_path", emitPos, 1);
 		// バチバチ弾けるスパーク
 		pm->Emit("enemyHit_spark", emitPos, 1);
 	}

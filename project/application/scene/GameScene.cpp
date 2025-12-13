@@ -39,8 +39,6 @@ void GameScene::Initialize() {
 	/// ===== パーティクルグループの作成 =====
 	// 開幕用：うっすら光が吸い込まれるリング
 	ParticleManager::GetInstance()->CreateParticleGroup("irisOpen", "./resources/gradationLine.png", ParticleManager::ParticleType::RING);
-	// リボンパーティクルのテスト用グループ（Aキーで出す）
-	ParticleManager::GetInstance()->CreateParticleGroup("ribbonTest", "./resources/gradationLine.png", ParticleManager::ParticleType::RIBBON);
 	// 花火用：放射状に飛ぶ粒（通常クアッド）
 	ParticleManager::GetInstance()->CreateParticleGroup("irisFire", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
 	// 花火用：打ち上げ＆閃光＆爆発
@@ -107,6 +105,8 @@ void GameScene::Initialize() {
 	ParticleManager::GetInstance()->CreateParticleGroup("core_charge_ribbon", "./resources/gradationLine.png", ParticleManager::ParticleType::RING);
 	// 中心の強いフラッシュ
 	ParticleManager::GetInstance()->CreateParticleGroup("core_charge_flash", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
+	/// === LT弾のチャージエフェクト ===
+	ParticleManager::GetInstance()->CreateParticleGroup("trail_lt_path", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
 	// ──────────────── スカイボックスの初期化 ───────────────
 	skybox_ = std::make_unique<Skybox>();
 	skybox_->Initialize(dxCommon, srvManager, "resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
@@ -404,13 +404,6 @@ void GameScene::Update() {
 
 		// その他のオブジェクト・パーティクルの更新
 		ParticleManager::GetInstance()->Update();
-
-		// Aキーでリボンパーティクルテスト
-		if (Input::GetInstance()->TriggerKey(DIK_A)) {
-			// プレイヤーのちょい前に出したければこんな感じでもOK
-			Vector3 emitPos = { 0.0f, 2.5f, 20.0f };  // Zを少し奥にして見やすく
-			ParticleManager::GetInstance()->Emit("ribbonTest", emitPos, 1); // 1本だけ出す
-		}
 
 		// ─── プレイヤー死亡時のGameOver遷移 ───
 		if (player_ && player_->IsDead()) {
