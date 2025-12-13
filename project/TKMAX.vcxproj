@@ -116,6 +116,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\enemy\manager\EnemyManager.cpp" />
     <ClCompile Include="application\boss\manager\BossManager.cpp" />
     <ClCompile Include="BaseEffect.cpp" />
+    <ClCompile Include="BossController.cpp" />
     <ClCompile Include="engine\3d\camera\DebugCamera.cpp" />
     <ClCompile Include="engine\func\math\AABB.cpp" />
     <ClCompile Include="application\boss\BossEnemy.cpp" />
@@ -194,6 +195,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\enemy\manager\EnemyManager.h" />
     <ClInclude Include="application\boss\manager\BossManager.h" />
     <ClInclude Include="BaseEffect.h" />
+    <ClInclude Include="BossController.h" />
     <ClInclude Include="engine\3d\camera\DebugCamera.h" />
     <ClInclude Include="engine\func\math\Easing.h" />
     <ClInclude Include="engine\func\math\AABB.h" />

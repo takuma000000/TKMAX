@@ -165,6 +165,7 @@
     <ClCompile Include="WaterRippleEffect.cpp" />
     <ClCompile Include="FogEffect.cpp" />
     <ClCompile Include="IrisUtil.cpp" />
+    <ClCompile Include="BossController.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -355,6 +356,7 @@
     <ClInclude Include="WaterRippleEffect.h" />
     <ClInclude Include="FogEffect.h" />
     <ClInclude Include="IrisUtil.h" />
+    <ClInclude Include="BossController.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
