@@ -10,6 +10,7 @@
 #include "application/boss/BossBullet.h"
 #include "application/player/Player.h"
 #include "BaseScene.h"
+#include "BossController.h"
 
 //=============================================================
 // BossManagerクラス
@@ -100,6 +101,8 @@ private:
 	std::vector<std::unique_ptr<BossBullet>> bossBullets_; // ボス弾リスト
 
 	bool bossZoomStarted_ = false; // ボス撃破後のカメラズーム演出が始まったか
+
+	std::unique_ptr<BossController> bossController_; // ボスコントローラー
 
 	/// <summary>
 	/// ボス弾を更新します。

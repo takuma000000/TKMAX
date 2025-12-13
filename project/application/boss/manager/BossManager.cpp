@@ -38,8 +38,15 @@ void BossManager::StartBattle() {
 			});
 	}
 
-	// 既存と同じ初期位置（奥から登場）
+	// 初期位置セット
 	boss_->SetPosition({ 0, 0, 200 });
+
+	// --- ボス挙動コントローラ生成 ---
+	bossController_ = std::make_unique<BossController>();
+	// ボスの行動範囲
+	Vector3 arenaMin{ -18.0f, 3.0f, 35.0f }; // Y軸は地面から少し上
+	Vector3 arenaMax{ 18.0f, 12.0f, 70.0f }; // Y軸は天井より少し下
+	bossController_->Initialize(arenaMin, arenaMax); // 行動範囲セット
 }
 
 void BossManager::Update(float dt) {
@@ -49,6 +56,10 @@ void BossManager::Update(float dt) {
 		return;
 	}
 
+	// --- ボス挙動更新 ---
+	if (bossController_) {
+		bossController_->Update(dt, *boss_); // ボス挙動更新
+	}
 	// ボス本体更新
 	boss_->Update();
 
@@ -60,17 +71,14 @@ void BossManager::Update(float dt) {
 		bossZoomStarted_ = true;
 	}
 
-	// P2突入時にBGMを1回だけ再生
-	if (!bossP2BgmPlayed_) {
-		int phase = boss_->GetPhase(); // P1=0, P2=1, P3=2
-		if (phase == 1) { // P2
-			//AudioManager::GetInstance()->PlaySound("bossP2");
-			bossP2BgmPlayed_ = true;
-		}
-	}
-
 	// ボス弾更新（共通処理にまとめた）
 	UpdateBossBullets();
+
+#ifdef USE_IMGUI
+	if (bossController_ && boss_) {
+		bossController_->ImGuiDebug(*boss_);
+	}
+#endif
 }
 
 void BossManager::Draw(DirectXCommon* dxCommon) {
@@ -110,6 +118,7 @@ void BossManager::OnClearSequenceStart() {
 	bossBattle_ = false;
 	bossBullets_.clear();
 	boss_.reset();
+	bossController_.reset();
 	bossP2BgmPlayed_ = false;
 }
 

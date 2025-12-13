@@ -4,14 +4,23 @@
 #include "application/enemy/Enemy.h"
 #include "MyMath.h"
 
+#ifdef USE_IMGUI
+#include "externals/imgui/imgui.h"
+#endif
+
 class BossController {
 public:
-	enum class State {
+	enum class State { // ボスの状態
 		Enter,
 		Orbit,
 		DashWindup,
 		DashRun,
 		Recover,
+	};
+
+	enum class DashType { // ダッシュの種類
+		Cross,
+		Hook,
 	};
 
 	/// <summary>
@@ -30,7 +39,11 @@ public:
 	/// <param name="dt"></param>
 	/// <param name="boss"></param>
 	void Update(float dt, Enemy& boss);
-
+	/// <summary>
+	/// ImGuiデバッグ表示
+	/// </summary>
+	/// <param name="boss"></param>
+	void ImGuiDebug(Enemy& boss);
 private:
 	// --- state updates ---
 	/// <summary>
@@ -111,6 +124,8 @@ private:
 	State state_ = State::Enter;
 	float timer_ = 0.0f;
 
+	DashType dashType_ = DashType::Cross; // ダッシュの種類
+
 	Vector3 arenaMin_{ -18.0f, 3.0f, 35.0f };
 	Vector3 arenaMax_{ 18.0f, 12.0f, 70.0f };
 
@@ -134,6 +149,11 @@ private:
 
 	float dashSpeed_ = 28.0f;
 
+	// 予測の外し量（どれくらいズラすか）
+	float aimJitterX_ = 2.0f;   // 左右ズレ（ワールド座標）
+	float aimJitterY_ = 0.0f;   // 基本0（水平勝負なら）
+	float aimJitterZ_ = 1.0f;   // 奥行ズレ
+
 	float dashStartX_ = 15.0f;
 	float dashEndX_ = 15.0f;
 	float dashStartZ_ = 62.0f;
@@ -146,4 +166,35 @@ private:
 	int lastDashDir_ = 1;
 
 	std::mt19937 rng_;
+
+	// 予測（どれくらい先を狙うか）
+	float predictLeadTime_ = 0.35f;
+	// 前フレームプレイヤー位置
+	Vector3 prevPlayerPos_{};
+	bool hasPrevPlayerPos_ = false;
+
+	Vector3 playerPos = { 0.0f, 0.0f, 0.0f }; // プレイヤー位置キャッシュ
+	Vector3 playerVel = { 0.0f, 0.0f, 0.0f }; // プレイヤー速度キャッシュ
+
+	float recoverAngle_ = 0.0f; // 回復時のOrbit角度スタート位置
+
+	// --- Recover中の「殴れたら凶悪化」判定 ---
+	int  recoverStartHP_ = 0;
+	int  recoverDamageThreshold_ = 6;   // とりあえず6（分かりやすく）
+	bool nextDashFixed_ = false;        // 次ダッシュを固定するか
+	DashType nextDashType_ = DashType::Cross;
+
+	// 次ダッシュだけ速度補正（凶悪化の体感用）
+	float nextDashSpeedMul_ = 1.0f;
+	float dashSpeedNow_ = 28.0f;        // 実際にDashRunで使う速度
+
+	// --- 怒りモード（有無のみ） ---
+	bool rageActive_ = false; // 怒っているか
+	// --- Rage Gauge ---
+	float rageGauge_ = 0.0f;          // 0..1
+	float rageGainPerHp_ = 0.08f;     // HP1減ったら+0.08（12〜13ダメで満タン）
+	float rageDecayPerSec_ = 0.25f;   // 何も無いと毎秒-0.25（4秒で空）
+	float rageOnThreshold_ = 1.0f;    // 満タンで怒りON
+	float rageOffThreshold_ = 0.20f;  // ここまで落ちたら怒りOFF
+	int   lastHpForRage_ = -1;        // 前回HP（ダメージ検出用）
 };
