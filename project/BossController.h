@@ -14,24 +14,97 @@ public:
 		Recover,
 	};
 
+	/// <summary>
+	/// 初期化
+	/// </summary>
+	/// <param name="arenaMin"></param>
+	/// <param name="arenaMax"></param>
 	void Initialize(const Vector3& arenaMin, const Vector3& arenaMax);
+	/// <summary>
+	/// リセット
+	/// </summary>
 	void Reset();
+	/// <summary>
+	/// 更新
+	/// </summary>
+	/// <param name="dt"></param>
+	/// <param name="boss"></param>
 	void Update(float dt, Enemy& boss);
 
 private:
 	// --- state updates ---
+	/// <summary>
+	/// 侵入
+	/// </summary>
+	/// <param name="dt"></param>
+	/// <param name="boss"></param>
+	/// <param name="pos"></param>
 	void UpdateEnter(float dt, Enemy& boss, Vector3& pos);
+	/// <summary>
+	/// 軌道回転
+	/// </summary>
+	/// <param name="dt"></param>
+	/// <param name="boss"></param>
+	/// <param name="pos"></param>
+	/// <param name="playerPos"></param>
 	void UpdateOrbit(float dt, Enemy& boss, Vector3& pos, const Vector3& playerPos);
+	/// <summary>
+	/// ダッシュ予備動作
+	/// </summary>
+	/// <param name="dt"></param>
+	/// <param name="boss"></param>
+	/// <param name="pos"></param>
+	/// <param name="playerPos"></param>
 	void UpdateDashWindup(float dt, Enemy& boss, Vector3& pos, const Vector3& playerPos);
+	/// <summary>
+	/// ダッシュ実行
+	/// </summary>
+	/// <param name="dt"></param>
+	/// <param name="boss"></param>
+	/// <param name="pos"></param>
 	void UpdateDashRun(float dt, Enemy& boss, Vector3& pos);
+	/// <summary>
+	/// 回復
+	/// </summary>
+	/// <param name="dt"></param>
+	/// <param name="boss"></param>
+	/// <param name="pos"></param>
 	void UpdateRecover(float dt, Enemy& boss, Vector3& pos);
 
 	// --- helpers ---
+	/// <summary>
+	/// 状態変更
+	/// </summary>
+	/// <param name="s"></param>
 	void ChangeState(State s);
+	/// <summary>
+	/// ダッシュ準備
+	/// </summary>
+	/// <param name="currentPos"></param>
+	/// <param name="playerPos"></param>
 	void PrepareDash(const Vector3& currentPos, const Vector3& playerPos);
+	/// <summary>
+	/// アリーナ内に位置をクランプする
+	/// </summary>
+	/// <param name="p"></param>
 	void ClampToArena(Vector3& p);
 
+	/// <summary>
+	/// 値を目標に向かって近づける
+	/// </summary>
+	/// <param name="v"></param>
+	/// <param name="target"></param>
+	/// <param name="delta"></param>
+	/// <returns></returns>
 	static float Approach(float v, float target, float delta);
+	/// <summary>
+	/// スムーズダンプ
+	/// </summary>
+	/// <param name="from"></param>
+	/// <param name="to"></param>
+	/// <param name="factor"></param>
+	/// <param name="dt"></param>
+	/// <returns></returns>
 	static Vector3 SmoothDamp(const Vector3& from, const Vector3& to, float factor, float dt);
 
 private:
