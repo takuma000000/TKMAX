@@ -16,7 +16,7 @@
 #include "SpriteCommon.h"
 #include "TextureManager.h"
 #include <Easing.h>
-#include "IrisUtil.h"
+#include "application/effect/IrisUtil.h"
 
 //=============================================================
 // GameClearSceneクラス

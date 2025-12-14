@@ -65,7 +65,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\2d;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\func\common;$(ProjectDir)engine\func\math;$(ProjectDir)engine\imgui;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\2d;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\func\common;$(ProjectDir)engine\func\math;$(ProjectDir)engine\imgui;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -94,7 +94,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\2d;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\func\common;$(ProjectDir)engine\func\math;$(ProjectDir)engine\imgui;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\2d;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\func\common;$(ProjectDir)engine\func\math;$(ProjectDir)engine\imgui;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>MinSpace</Optimization>
     </ClCompile>
     <Link>
@@ -115,8 +115,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   <ItemGroup>
     <ClCompile Include="application\enemy\manager\EnemyManager.cpp" />
     <ClCompile Include="application\boss\manager\BossManager.cpp" />
-    <ClCompile Include="BaseEffect.cpp" />
-    <ClCompile Include="BossController.cpp" />
+    <ClCompile Include="engine\effect\post\BaseEffect.cpp" />
+    <ClCompile Include="application\boss\BossController.cpp" />
     <ClCompile Include="engine\3d\camera\DebugCamera.cpp" />
     <ClCompile Include="engine\func\math\AABB.cpp" />
     <ClCompile Include="application\boss\BossEnemy.cpp" />
@@ -160,8 +160,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\effect\light\LightManager.cpp" />
     <ClCompile Include="application\scene\GameOverScene.cpp" />
     <ClCompile Include="engine\effect\line\LineRenderer.cpp" />
-    <ClCompile Include="FogEffect.cpp" />
-    <ClCompile Include="IrisUtil.cpp" />
+    <ClCompile Include="engine\effect\post\FogEffect.cpp" />
+    <ClCompile Include="application\effect\IrisUtil.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="engine\3d\Model.cpp" />
     <ClCompile Include="engine\3d\ModelCommon.cpp" />
@@ -186,16 +186,16 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\3d\SkyBox.cpp" />
     <ClCompile Include="engine\base\SystemIncludes.cpp" />
     <ClCompile Include="application\player\reticle\Reticle.cpp" />
-    <ClCompile Include="MidBossCore.cpp" />
-    <ClCompile Include="RadialBlurEffect.cpp" />
-    <ClCompile Include="VignettingEffect.cpp" />
-    <ClCompile Include="WaterRippleEffect.cpp" />
+    <ClCompile Include="application\enemy\MidBossCore.cpp" />
+    <ClCompile Include="engine\effect\post\RadialBlurEffect.cpp" />
+    <ClCompile Include="engine\effect\post\VignettingEffect.cpp" />
+    <ClCompile Include="engine\effect\post\WaterRippleEffect.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\enemy\manager\EnemyManager.h" />
     <ClInclude Include="application\boss\manager\BossManager.h" />
-    <ClInclude Include="BaseEffect.h" />
-    <ClInclude Include="BossController.h" />
+    <ClInclude Include="engine\effect\post\BaseEffect.h" />
+    <ClInclude Include="application\boss\BossController.h" />
     <ClInclude Include="engine\3d\camera\DebugCamera.h" />
     <ClInclude Include="engine\func\math\Easing.h" />
     <ClInclude Include="engine\func\math\AABB.h" />
@@ -254,13 +254,13 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\player\reticle\Reticle.h" />
     <ClInclude Include="engine\func\math\Vector2.h" />
     <ClInclude Include="engine\effect\line\LineRenderer.h" />
-    <ClInclude Include="FogEffect.h" />
-    <ClInclude Include="IrisUtil.h" />
-    <ClInclude Include="MidBossCore.h" />
-    <ClInclude Include="ModelTypes.h" />
-    <ClInclude Include="RadialBlurEffect.h" />
-    <ClInclude Include="VignettingEffect.h" />
-    <ClInclude Include="WaterRippleEffect.h" />
+    <ClInclude Include="engine\effect\post\FogEffect.h" />
+    <ClInclude Include="application\effect\IrisUtil.h" />
+    <ClInclude Include="application\enemy\MidBossCore.h" />
+    <ClInclude Include="engine\3d\ModelTypes.h" />
+    <ClInclude Include="engine\effect\post\RadialBlurEffect.h" />
+    <ClInclude Include="engine\effect\post\VignettingEffect.h" />
+    <ClInclude Include="engine\effect\post\WaterRippleEffect.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

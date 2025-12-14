@@ -10,7 +10,7 @@
 #include "application/boss/BossBullet.h"
 #include "application/player/Player.h"
 #include "BaseScene.h"
-#include "BossController.h"
+#include "application/boss/BossController.h"
 
 //=============================================================
 // BossManagerクラス

@@ -9,7 +9,7 @@
 #include "engine/3d/camera/Camera.h"
 #include "DirectXCommon.h"
 #include "BaseScene.h"
-#include "MidBossCore.h"
+#include "application/enemy/MidBossCore.h"
 
 #ifdef USE_IMGUI
 #include "externals/imgui/imgui.h"

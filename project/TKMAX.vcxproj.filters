@@ -158,14 +158,16 @@
     <ClCompile Include="engine\3d\camera\DebugCamera.cpp">
       <Filter>engine\3d\camera</Filter>
     </ClCompile>
-    <ClCompile Include="MidBossCore.cpp" />
-    <ClCompile Include="BaseEffect.cpp" />
-    <ClCompile Include="RadialBlurEffect.cpp" />
-    <ClCompile Include="VignettingEffect.cpp" />
-    <ClCompile Include="WaterRippleEffect.cpp" />
-    <ClCompile Include="FogEffect.cpp" />
-    <ClCompile Include="IrisUtil.cpp" />
-    <ClCompile Include="BossController.cpp" />
+    <ClCompile Include="application\enemy\MidBossCore.cpp" />
+    <ClCompile Include="engine\effect\post\BaseEffect.cpp" />
+    <ClCompile Include="engine\effect\post\RadialBlurEffect.cpp" />
+    <ClCompile Include="engine\effect\post\VignettingEffect.cpp" />
+    <ClCompile Include="engine\effect\post\WaterRippleEffect.cpp" />
+    <ClCompile Include="engine\effect\post\FogEffect.cpp" />
+    <ClCompile Include="application\effect\IrisUtil.cpp" />
+    <ClCompile Include="application\boss\BossController.cpp">
+      <Filter>application\boss</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -348,15 +350,17 @@
     <ClInclude Include="engine\3d\camera\DebugCamera.h">
       <Filter>engine\3d\camera</Filter>
     </ClInclude>
-    <ClInclude Include="MidBossCore.h" />
-    <ClInclude Include="BaseEffect.h" />
-    <ClInclude Include="RadialBlurEffect.h" />
-    <ClInclude Include="VignettingEffect.h" />
-    <ClInclude Include="ModelTypes.h" />
-    <ClInclude Include="WaterRippleEffect.h" />
-    <ClInclude Include="FogEffect.h" />
-    <ClInclude Include="IrisUtil.h" />
-    <ClInclude Include="BossController.h" />
+    <ClInclude Include="application\enemy\MidBossCore.h" />
+    <ClInclude Include="engine\effect\post\BaseEffect.h" />
+    <ClInclude Include="engine\effect\post\RadialBlurEffect.h" />
+    <ClInclude Include="engine\effect\post\VignettingEffect.h" />
+    <ClInclude Include="engine\3d\ModelTypes.h" />
+    <ClInclude Include="engine\effect\post\WaterRippleEffect.h" />
+    <ClInclude Include="engine\effect\post\FogEffect.h" />
+    <ClInclude Include="application\effect\IrisUtil.h" />
+    <ClInclude Include="application\boss\BossController.h">
+      <Filter>application\boss</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
