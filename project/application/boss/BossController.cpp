@@ -14,6 +14,7 @@ void BossController::Initialize(const Vector3& arenaMin, const Vector3& arenaMax
 	rageGauge_ = 0.0f;
 	rageActive_ = false;
 	lastHpForRage_ = -1;
+	noDamageTime_ = 0.0f;
 }
 
 void BossController::Reset() {
@@ -26,6 +27,7 @@ void BossController::Reset() {
 	rageGauge_ = 0.0f;
 	rageActive_ = false;
 	lastHpForRage_ = -1;
+	noDamageTime_ = 0.0f;
 
 	// 予測系もリセットしておくと安全
 	hasPrevPlayerPos_ = false;
@@ -37,31 +39,41 @@ void BossController::Update(float dt, Enemy& boss) {
 	timer_ += dt;
 
 	// ============================================================
-	// Rage Gauge Update（毎フレーム）
-	// ・ダメージを受けたら増える
-	// ・受けてない時間は減る
-	// ・ヒステリシスでチカチカ防止
-	// ============================================================
+// Rage Gauge Update（毎フレーム）
+// ・ダメージを受けたら増える（noDamageTime_ をリセット）
+// ・一定秒ノーダメの時だけ減衰
+// ・減衰中にダメージを受けたら：減衰即中断＆猶予リセット＆増加
+// ============================================================
 	if (lastHpForRage_ < 0) {
 		lastHpForRage_ = boss.GetHP();
+		noDamageTime_ = 0.0f;
 	}
-
+	// 今回のHP取得＆ダメ計算
 	int hpNow = boss.GetHP();
 	int dmg = std::max(0, lastHpForRage_ - hpNow);
 	lastHpForRage_ = hpNow;
 
 	if (dmg > 0) {
+		// ダメージ受けた：増える＆減衰猶予リセット（減ってたとしてもここで止まる）
 		rageGauge_ += static_cast<float>(dmg) * rageGainPerHp_;
+		noDamageTime_ = 0.0f;
 	} else {
-		rageGauge_ -= rageDecayPerSec_ * dt;
-	}
+		// ノーダメ：時間だけ進める
+		noDamageTime_ += dt;
 
+		// 一定時間ノーダメの時だけ減る
+		if (noDamageTime_ >= rageDecayDelay_) {
+			rageGauge_ -= rageDecayPerSec_ * dt;
+		}
+	}
+	// クランプ
 	rageGauge_ = std::clamp(rageGauge_, 0.0f, 1.5f);
 
+	// ON/OFF（ヒステリシス）
 	if (!rageActive_) {
-		if (rageGauge_ >= rageOnThreshold_) { rageActive_ = true; }
+		if (rageGauge_ >= rageOnThreshold_) { rageActive_ = true; } // 満タンでON
 	} else {
-		if (rageGauge_ <= rageOffThreshold_) { rageActive_ = false; }
+		if (rageGauge_ <= rageOffThreshold_) { rageActive_ = false; } // 20%以下でOFF
 	}
 
 	// ① 先に最新 playerPos を取る

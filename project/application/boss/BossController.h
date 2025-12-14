@@ -197,4 +197,6 @@ private:
 	float rageOnThreshold_ = 1.0f;    // 満タンで怒りON
 	float rageOffThreshold_ = 0.20f;  // ここまで落ちたら怒りOFF
 	int   lastHpForRage_ = -1;        // 前回HP（ダメージ検出用）
+	float noDamageTime_ = 0.0f;   // 最後に被ダメしてからの経過
+	float rageDecayDelay_ = 2.0f; // 秒間ノーダメなら減衰開始
 };
