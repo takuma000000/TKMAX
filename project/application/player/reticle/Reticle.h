@@ -10,15 +10,15 @@
 #include "Object3d.h"
 #include "Object3dCommon.h"
 #include "DirectXCommon.h"
-#include "engine/3d/camera/Camera.h"
-#include "engine/func/math/Vector3.h"
+#include "camera/Camera.h"
+#include "Vector3.h"
 #include "MyMath.h"
-#include "engine/io/Input.h"
+#include "Input.h"
 #include "WindowsAPI.h"
-#include "engine/effect/line/LineRenderer.h"
+#include "LineRenderer.h"
 
 #ifdef USE_IMGUI
-#include "externals/imgui/imgui.h"
+#include "imgui.h"
 #endif
 
 //============================================================

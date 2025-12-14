@@ -4,15 +4,15 @@
 #include <memory>
 #include <cmath>
 #include <vector>
-#include "engine/audio/AudioManager.h"
+#include "AudioManager.h"
 #include "TextureManager.h"
 #include "DirectXCommon.h"
 #include "srvManager.h"
-#include "engine/2d/Sprite.h"
+#include "Sprite.h"
 #include "SpriteCommon.h"
 #include "Object3d.h"
 #include "Object3dCommon.h"
-#include "engine/3d/camera/Camera.h"
+#include "camera/Camera.h"
 #include "Model.h"
 #include "ModelCommon.h"
 #include "ModelManager.h"
@@ -21,9 +21,9 @@
 #include "GameScene.h"
 #include <SkyBox.h> 
 #include <Easing.h>
-#include "application/scene/GameOverScene.h"
+#include "GameOverScene.h"
 #include "WaterRippleEffect.h"
-#include "application/effect/IrisUtil.h"
+#include "IrisUtil.h"
 
 //=============================================================
 // TitleSceneクラス

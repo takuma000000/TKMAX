@@ -8,7 +8,7 @@
 #include <chrono>
 #include "WindowsAPI.h"
 #include "SrvManager.h"
-#include "externals/DirectXTex/DirectXTex.h"//DirectX
+#include "DirectXTex.h"//DirectX
 #include "MyMath.h"
 #include "SystemIncludes.h"
 

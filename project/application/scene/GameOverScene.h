@@ -3,8 +3,8 @@
 #include <memory>
 #include "DirectXCommon.h"
 #include "srvManager.h"
-#include "engine/3d/camera/Camera.h"
-#include "application/player/Player.h"
+#include "camera/Camera.h"
+#include "Player.h"
 #include "Object3dCommon.h"
 #include "SpriteCommon.h"
 #include "Sprite.h"
@@ -12,10 +12,10 @@
 #include "Model.h"
 #include "ModelCommon.h"
 #include "ModelManager.h"
-#include "engine/effect/light/DirectionalLight.h"
-#include "engine/effect/particle/ParticleManager.h"
+#include "DirectionalLight.h"
+#include "ParticleManager.h"
 #include <Easing.h>
-#include "application/effect/IrisUtil.h"
+#include "IrisUtil.h"
 
 //=============================================================
 // GameOverScene

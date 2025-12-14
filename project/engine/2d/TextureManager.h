@@ -3,7 +3,7 @@
 #include <d3d11.h>      // Direct3D 11の機能を使うためのヘッダ
 #include <d3dcompiler.h> // シェーダーのコンパイル用
 #include <DirectXMath.h> // 数学ライブラリ（DirectXMath）
-#include "externals/DirectXTex/DirectXTex.h"
+#include "DirectXTex.h"
 #include <wrl.h>
 #include <d3d12.h>
 #include <unordered_map>

@@ -2,21 +2,20 @@
 #include "BaseScene.h"
 
 #include <memory>
-
 #include "DirectXCommon.h"
 #include "SrvManager.h"
-#include "engine/3d/camera/Camera.h"
-#include "application/player/Player.h"
+#include "camera/Camera.h"
+#include "Player.h"
 #include "Object3dCommon.h"
-#include "engine/effect/light/DirectionalLight.h"
+#include "DirectionalLight.h"
 #include <SkyBox.h>
-#include "engine/func/math/Vector3.h"
+#include "Vector3.h"
 #include "MyMath.h"
 #include "Sprite.h"
 #include "SpriteCommon.h"
 #include "TextureManager.h"
 #include <Easing.h>
-#include "application/effect/IrisUtil.h"
+#include "IrisUtil.h"
 
 //=============================================================
 // GameClearSceneクラス

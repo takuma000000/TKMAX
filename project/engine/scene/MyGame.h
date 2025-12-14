@@ -1,19 +1,12 @@
 #pragma once
 #include "Framework.h"
-
-// GE3クラス化(MyClass)
 #include "Input.h"
 #include "Object3dCommon.h"
-#include "engine/3d/camera/Camera.h"
+#include "camera/Camera.h"
 #include "ImGuiManager.h"
-
-//#include"GameScene.h"
-//#include"TitleScene.h"
 #include "SceneFactory.h"
 #include "AbstractSceneFactory.h"
-
 #include "SceneManager.h"
-
 #include <memory>
 
 //=============================================================

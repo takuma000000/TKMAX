@@ -1,11 +1,11 @@
 #pragma once
 #include <random>
 #include <algorithm>
-#include "application/enemy/Enemy.h"
+#include "Enemy.h"
 #include "MyMath.h"
 
 #ifdef USE_IMGUI
-#include "externals/imgui/imgui.h"
+#include "imgui.h"
 #endif
 
 class BossController {

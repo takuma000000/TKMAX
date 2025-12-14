@@ -1,5 +1,5 @@
 #include "LineRenderer.h"
-#include "externals/DirectXTex/d3dx12.h"
+#include "d3dx12.h"
 #include "MyMath.h"
 
 using Microsoft::WRL::ComPtr;

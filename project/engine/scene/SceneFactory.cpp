@@ -1,8 +1,8 @@
 #include "SceneFactory.h"
-#include "application/scene/TitleScene.h"
-#include "application/scene/GameScene.h"
-#include "application/scene/GameClearScene.h"
-#include "application/scene/GameOverScene.h"
+#include "TitleScene.h"
+#include "GameScene.h"
+#include "GameClearScene.h"
+#include "GameOverScene.h"
 
 BaseScene* SceneFactory::CreateScene(const std::string& sceneName){
 	//次のシーンを生成

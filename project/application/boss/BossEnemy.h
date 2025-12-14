@@ -1,5 +1,5 @@
 #pragma once
-#include "application/enemy/Enemy.h"
+#include "Enemy.h"
 
 namespace BossParam {
 	// ここはとりあえず “動くこと優先” の初期値

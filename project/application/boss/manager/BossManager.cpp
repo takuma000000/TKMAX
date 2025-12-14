@@ -1,5 +1,5 @@
 #include "BossManager.h"
-#include "application/scene/GameScene.h"
+#include "GameScene.h"
 
 void BossManager::Initialize(DirectXCommon* dxCommon, Camera* camera, BaseScene* parent, Player* player) {
 	dxCommon_ = dxCommon;

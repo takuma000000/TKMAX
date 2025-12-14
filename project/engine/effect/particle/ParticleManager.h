@@ -2,7 +2,7 @@
 #include "Logger.h"
 #include "DirectXCommon.h"
 #include "SrvManager.h"
-#include "engine/3d/camera/Camera.h"
+#include "camera/Camera.h"
 #include <random>
 #include <numbers>
 #include "ModelTypes.h" 

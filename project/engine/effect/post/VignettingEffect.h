@@ -3,7 +3,7 @@
 #include "MyMath.h"
 
 #ifdef USE_IMGUI
-#include "externals/imgui/imgui.h"
+#include "imgui.h"
 #endif
 
 class VignettingEffect : public BaseEffect {

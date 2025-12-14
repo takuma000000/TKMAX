@@ -1,4 +1,4 @@
-#include "application/boss/BossEnemy.h"
+#include "BossEnemy.h"
 #include <cmath>
 
 void BossEnemy::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {

@@ -2,12 +2,11 @@
 #include <array>
 #include <Windows.h>
 #include <Psapi.h>
-#include "engine/2d/Sprite.h"
+#include "Sprite.h"
 #include "Object3d.h"
-#include "engine/effect/particle/ParticleManager.h"
+#include "ParticleManager.h"
 #include <Input.h>
 #include <Xinput.h>
-
 
 class SceneManager;
 

@@ -2,15 +2,15 @@
 #include <memory>
 #include <vector>
 #include "DirectXCommon.h"
-#include "engine/3d/camera/Camera.h"
-#include "engine/func/math/Vector3.h"
+#include "camera/Camera.h"
+#include "Vector3.h"
 #include "Object3dCommon.h"
-#include "engine/audio/AudioManager.h"
-#include "application/boss/BossEnemy.h"
-#include "application/boss/BossBullet.h"
-#include "application/player/Player.h"
+#include "AudioManager.h"
+#include "BossEnemy.h"
+#include "BossBullet.h"
+#include "Player.h"
 #include "BaseScene.h"
-#include "application/boss/BossController.h"
+#include "BossController.h"
 
 //=============================================================
 // BossManagerクラス

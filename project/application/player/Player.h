@@ -2,20 +2,20 @@
 #define NOMINMAX
 #include <memory>
 #include "Object3d.h"
-#include "engine/3d/camera/Camera.h"
+#include "camera/Camera.h"
 #include "ModelManager.h"
 #include "PlayerBullet.h"
 #include "Input.h"
-#include "application/enemy/Enemy.h"
+#include "Enemy.h"
 #include <algorithm>
 #include <list>
-#include <engine/effect/particle/ParticlerEmitter.h>
+#include <ParticlerEmitter.h>
 #include "Easing.h"
-#include "application/player/reticle/Reticle.h"
-#include "engine/effect/line/LineRenderer.h"
+#include "reticle/Reticle.h"
+#include "LineRenderer.h"
 
 #ifdef USE_IMGUI
-#include "externals/imgui/imgui.h"
+#include "imgui.h"
 #endif
 
 class MidBossCore;

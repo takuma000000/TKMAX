@@ -1,15 +1,15 @@
 #pragma once
 #include <memory>
 #include "Object3d.h"
-#include "engine/3d/camera/Camera.h"
+#include "camera/Camera.h"
 #include "BaseScene.h"
-#include <engine/effect/particle/ParticleManager.h>
-#include "engine/effect/line/LineRenderer.h"
-#include "application/player/reticle/Reticle.h"
+#include <ParticleManager.h>
+#include "LineRenderer.h"
+#include "reticle/Reticle.h"
 #include "Easing.h"
 
 #ifdef USE_IMGUI
-#include "externals/imgui/imgui.h"
+#include "imgui.h"
 #endif
 
 //=============================================================

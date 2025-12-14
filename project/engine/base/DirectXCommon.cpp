@@ -5,7 +5,7 @@
 #include "Logger.h"
 #include "StringUtility.h"
 #include "thread"
-#include "externals/DirectXTex/d3dx12.h"
+#include "d3dx12.h"
 #include <vector>
 
 #include "RadialBlurEffect.h" 

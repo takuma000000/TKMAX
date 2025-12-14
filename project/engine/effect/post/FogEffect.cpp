@@ -2,7 +2,7 @@
 #include "DirectXCommon.h"
 
 #ifdef USE_IMGUI
-#include "externals/imgui/imgui.h"
+#include "imgui.h"
 #endif
 
 void FogEffect::Update(float dt) {

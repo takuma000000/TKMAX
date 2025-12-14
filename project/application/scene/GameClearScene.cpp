@@ -5,7 +5,7 @@
 #include "SceneManager.h"
 
 #include "ModelManager.h"
-#include "engine/3d/Object3dCommon.h"
+#include "Object3dCommon.h"
 #include "WindowsAPI.h"
 
 #include <cmath>

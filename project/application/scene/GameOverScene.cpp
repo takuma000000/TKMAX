@@ -2,9 +2,9 @@
 #include "TextureManager.h"
 #include "Input.h"
 #include "SceneManager.h"
-#include "engine/2d/SpriteCommon.h"
-#include "engine/3d/Object3dCommon.h"
-#include "application/scene/TitleScene.h"
+#include "SpriteCommon.h"
+#include "Object3dCommon.h"
+#include "TitleScene.h"
 #include <SkyBox.h>
 
 void GameOverScene::Initialize(){

@@ -6,7 +6,7 @@
 
 #include "TextureManager.h"
 #include "DirectXCommon.h"
-#include "engine/3d/camera/Camera.h"
+#include "camera/Camera.h"
 
 class DirectXCommon;
 

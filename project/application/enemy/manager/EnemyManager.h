@@ -3,16 +3,16 @@
 #include <memory>
 #include <vector>
 
-#include "application/enemy/Enemy.h"          // 敵そのもの
-#include "application/enemy/EnemySpawner.h"   // 敵スポーンユーティリティ
-#include "application/player/Player.h"        // プレイヤー
-#include "engine/3d/camera/Camera.h"
+#include "Enemy.h"          // 敵そのもの
+#include "EnemySpawner.h"   // 敵スポーンユーティリティ
+#include "Player.h"        // プレイヤー
+#include "camera/Camera.h"
 #include "DirectXCommon.h"
 #include "BaseScene.h"
-#include "application/enemy/MidBossCore.h"
+#include "MidBossCore.h"
 
 #ifdef USE_IMGUI
-#include "externals/imgui/imgui.h"
+#include "imgui.h"
 #endif
 
 // =============================================================

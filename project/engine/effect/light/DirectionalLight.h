@@ -1,6 +1,6 @@
 #pragma once
-#include "engine/func/math/Vector3.h"
-#include "engine/func/math/Vector4.h"
+#include "Vector3.h"
+#include "Vector4.h"
 
 //=============================================================
 // DirectionalLightクラス

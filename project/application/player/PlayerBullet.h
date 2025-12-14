@@ -9,8 +9,8 @@
 #include <memory>
 #include "Object3d.h"
 #include "MyMath.h"
-#include "application/enemy/Enemy.h"
-#include <engine/effect/particle/ParticlerEmitter.h>
+#include "Enemy.h"
+#include <ParticlerEmitter.h>
 
 class Player;
 class MidBossCore;

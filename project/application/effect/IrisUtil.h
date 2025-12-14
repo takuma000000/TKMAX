@@ -7,7 +7,7 @@
 #include "SpriteCommon.h"
 #include "DirectXCommon.h"
 #include "WindowsAPI.h"
-#include "engine/func/math/Easing.h"
+#include "Easing.h"
 
 /// ------------------------------------------------------------
 /// 画面中央に配置されたアイリス用スプライトを生成し、

@@ -1,10 +1,10 @@
-#include "application/enemy/EnemySpawner.h"
+#include "EnemySpawner.h"
 #include "Enemy.h"
 #include "Object3dCommon.h"
-#include "engine/3d/camera/Camera.h"
+#include "camera/Camera.h"
 #include "DirectXCommon.h"
 #include "BaseScene.h"
-#include <engine/effect/particle/ParticleManager.h>
+#include <ParticleManager.h>
 
 namespace EnemySpawner {
 
