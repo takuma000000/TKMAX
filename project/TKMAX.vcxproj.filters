@@ -158,15 +158,29 @@
     <ClCompile Include="engine\3d\camera\DebugCamera.cpp">
       <Filter>engine\3d\camera</Filter>
     </ClCompile>
-    <ClCompile Include="application\enemy\MidBossCore.cpp" />
-    <ClCompile Include="engine\effect\post\BaseEffect.cpp" />
-    <ClCompile Include="engine\effect\post\RadialBlurEffect.cpp" />
-    <ClCompile Include="engine\effect\post\VignettingEffect.cpp" />
-    <ClCompile Include="engine\effect\post\WaterRippleEffect.cpp" />
-    <ClCompile Include="engine\effect\post\FogEffect.cpp" />
-    <ClCompile Include="application\effect\IrisUtil.cpp" />
     <ClCompile Include="application\boss\BossController.cpp">
       <Filter>application\boss</Filter>
+    </ClCompile>
+    <ClCompile Include="application\enemy\MidBossCore.cpp">
+      <Filter>application\enemy</Filter>
+    </ClCompile>
+    <ClCompile Include="application\effect\IrisUtil.cpp">
+      <Filter>application\effect</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\effect\post\WaterRippleEffect.cpp">
+      <Filter>engine\effect\post</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\effect\post\VignettingEffect.cpp">
+      <Filter>engine\effect\post</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\effect\post\RadialBlurEffect.cpp">
+      <Filter>engine\effect\post</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\effect\post\FogEffect.cpp">
+      <Filter>engine\effect\post</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\effect\post\BaseEffect.cpp">
+      <Filter>engine\effect\post</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -350,16 +364,32 @@
     <ClInclude Include="engine\3d\camera\DebugCamera.h">
       <Filter>engine\3d\camera</Filter>
     </ClInclude>
-    <ClInclude Include="application\enemy\MidBossCore.h" />
-    <ClInclude Include="engine\effect\post\BaseEffect.h" />
-    <ClInclude Include="engine\effect\post\RadialBlurEffect.h" />
-    <ClInclude Include="engine\effect\post\VignettingEffect.h" />
-    <ClInclude Include="engine\3d\ModelTypes.h" />
-    <ClInclude Include="engine\effect\post\WaterRippleEffect.h" />
-    <ClInclude Include="engine\effect\post\FogEffect.h" />
-    <ClInclude Include="application\effect\IrisUtil.h" />
     <ClInclude Include="application\boss\BossController.h">
       <Filter>application\boss</Filter>
+    </ClInclude>
+    <ClInclude Include="application\enemy\MidBossCore.h">
+      <Filter>application\enemy</Filter>
+    </ClInclude>
+    <ClInclude Include="application\effect\IrisUtil.h">
+      <Filter>application\effect</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\3d\ModelTypes.h">
+      <Filter>engine\3d</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\effect\post\WaterRippleEffect.h">
+      <Filter>engine\effect\post</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\effect\post\VignettingEffect.h">
+      <Filter>engine\effect\post</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\effect\post\RadialBlurEffect.h">
+      <Filter>engine\effect\post</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\effect\post\FogEffect.h">
+      <Filter>engine\effect\post</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\effect\post\BaseEffect.h">
+      <Filter>engine\effect\post</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -444,10 +474,11 @@
     <Filter Include="engine\3d\camera">
       <UniqueIdentifier>{c6c2f927-e1d7-4ebf-a28f-12f4b4721a7f}</UniqueIdentifier>
     </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="resources\shaders\Vignetting.PS.hlsl" />
-    <FxCompile Include="resources\shaders\RadialBlur.PS.hlsl" />
-    <FxCompile Include="resources\shaders\Fog.PS.hlsl" />
+    <Filter Include="application\effect">
+      <UniqueIdentifier>{9d5c1450-4a66-4169-9124-90c3049e3b70}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="engine\effect\post">
+      <UniqueIdentifier>{adf1554a-46fe-485b-99a1-5b8c8803a150}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>
