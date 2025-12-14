@@ -290,8 +290,45 @@ void BossController::UpdateOrbit(float dt, Enemy& boss, Vector3& pos, const Vect
 }
 
 void BossController::UpdateDashWindup(float dt, Enemy& boss, Vector3& pos, const Vector3& playerPos) {
-	pos = SmoothDamp(pos, dashStartPos_, 0.18f, dt);
 
+	// 予備動作に入った瞬間：ベース位置を固定
+	if (timer_ <= dt) {
+		windupBasePos_ = pos;
+		windupFxTimer_ = 0.0f;
+
+		// 開始フレーム：外殻リング（1回）
+		ParticleManager::GetInstance()->Emit("boss_windup_shell", windupBasePos_, 8);
+	}
+
+	// 継続：稲妻＆吸い込み（間引き）
+	windupFxTimer_ += dt;
+	if (windupFxTimer_ >= 0.06f) { // 約16フレームに1回
+		windupFxTimer_ = 0.0f;
+		ParticleManager::GetInstance()->Emit("boss_windup_crackle", windupBasePos_, 2);
+		ParticleManager::GetInstance()->Emit("boss_windup_inward", windupBasePos_, 2);
+	}
+
+	// -------------------------------------------------
+	// その場停止 ＋ ブルブル震え（3秒くらい）
+	// ・pos をベースに戻してから揺れを足す（ドリフト防止）
+	// -------------------------------------------------
+	pos = windupBasePos_;
+
+	float t = (dashWindup_ > 0.0001f) ? (timer_ / dashWindup_) : 1.0f;
+	t = std::clamp(t, 0.0f, 1.0f);
+
+	// 後半ほど強く（溜め感）
+	float ramp = t * t;
+	float amp = windupShakeAmp_ * (0.25f + 0.75f * ramp);
+	if (rageActive_) { amp *= 1.25f; } // 任意：怒り中は増幅
+
+	float sx = std::sin(timer_ * windupShakeFreq1_) * amp;
+	float sy = std::sin(timer_ * windupShakeFreq2_ + 1.7f) * (amp * 0.55f);
+
+	pos.x += sx;
+	pos.y += sy;
+
+	// 終了：突進へ
 	if (timer_ >= dashWindup_) {
 		ChangeState(State::DashRun);
 	}

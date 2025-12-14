@@ -144,7 +144,7 @@ private:
 	Vector3 dashEndPos_{};
 	Vector3 lastPlayerPos_{};
 
-	float dashWindup_ = 0.6f;
+	float dashWindup_ = 2.0f; // 予備動作時間
 	float recoverDuration_ = 1.0f;
 
 	float dashSpeed_ = 28.0f;
@@ -199,4 +199,11 @@ private:
 	int   lastHpForRage_ = -1;        // 前回HP（ダメージ検出用）
 	float noDamageTime_ = 0.0f;   // 最後に被ダメしてからの経過
 	float rageDecayDelay_ = 2.0f; // 秒間ノーダメなら減衰開始
+
+	// --- Windup Stop & Shake ---
+	Vector3 windupBasePos_{ 0.0f, 0.0f, 0.0f }; // 予備動作開始位置（固定）
+	float windupFxTimer_ = 0.0f; // エフェクト用タイマー
+	float windupShakeAmp_ = 0.3f; // 揺れ振幅
+	float windupShakeFreq1_ = 55.0f; // 揺れ周波数1
+	float windupShakeFreq2_ = 83.0f; // 揺れ周波数2
 };
