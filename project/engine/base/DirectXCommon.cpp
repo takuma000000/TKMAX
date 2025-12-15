@@ -12,6 +12,7 @@
 #include "VignettingEffect.h"
 #include "WaterRippleEffect.h"
 #include "FogEffect.h"
+#include "AuraEffect.h"
 
 #define ALIGN256(size) ((size + 255) & ~255)
 
@@ -922,6 +923,98 @@ void DirectXCommon::InitializeFogPipeline() {
 	fogInitialized_ = true;
 }
 
+void DirectXCommon::InitializeAuraPipeline() {
+	if (auraInitialized_) { return; }
+
+	// VS は CopyImage と共通
+	Microsoft::WRL::ComPtr<IDxcBlob> vsBlob =
+		CompileShader(L"resources/shaders/CopyImage.VS.hlsl", L"vs_6_0");
+	Microsoft::WRL::ComPtr<IDxcBlob> psBlob =
+		CompileShader(L"resources/shaders/Aura.PS.hlsl", L"ps_6_0");
+
+	// RootSignature（t0 + b0 + sampler）
+	CD3DX12_DESCRIPTOR_RANGE range{};
+	range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // t0
+
+	CD3DX12_ROOT_PARAMETER rootParams[2];
+	rootParams[0].InitAsDescriptorTable(1, &range, D3D12_SHADER_VISIBILITY_PIXEL); // SRV
+	rootParams[1].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_PIXEL);  // b0
+
+	D3D12_STATIC_SAMPLER_DESC sampler{};
+	sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+	sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+	sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+	sampler.MaxLOD = D3D12_FLOAT32_MAX;
+	sampler.ShaderRegister = 0; // s0
+	sampler.RegisterSpace = 0;
+	sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+	CD3DX12_ROOT_SIGNATURE_DESC rsDesc{};
+	rsDesc.Init(
+		_countof(rootParams), rootParams,
+		1, &sampler,
+		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
+	);
+
+	Microsoft::WRL::ComPtr<ID3DBlob> rsBlob;
+	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
+	HRESULT hr = D3D12SerializeRootSignature(
+		&rsDesc, D3D_ROOT_SIGNATURE_VERSION_1, &rsBlob, &errorBlob);
+	assert(SUCCEEDED(hr));
+
+	hr = device->CreateRootSignature(
+		0, rsBlob->GetBufferPointer(), rsBlob->GetBufferSize(),
+		IID_PPV_ARGS(&auraRootSignature_));
+	assert(SUCCEEDED(hr));
+
+	// PSO
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
+	psoDesc.pRootSignature = auraRootSignature_.Get();
+	psoDesc.VS = { vsBlob->GetBufferPointer(), vsBlob->GetBufferSize() };
+	psoDesc.PS = { psBlob->GetBufferPointer(), psBlob->GetBufferSize() };
+	psoDesc.InputLayout = { nullptr, 0 };
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	psoDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
+	psoDesc.NumRenderTargets = 1;
+	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+	psoDesc.SampleDesc.Count = 1;
+	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+
+	D3D12_DEPTH_STENCIL_DESC dsDesc{};
+	dsDesc.DepthEnable = FALSE;
+	dsDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+	dsDesc.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+	dsDesc.StencilEnable = FALSE;
+	psoDesc.DepthStencilState = dsDesc;
+	psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
+	hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&auraPipelineState_));
+	assert(SUCCEEDED(hr));
+
+	// 定数バッファ
+	auraConstantBuffer_ = CreateBufferResource(sizeof(AuraCB));
+	auraConstantBuffer_->Map(0, nullptr, &auraMappedData_);
+
+	// 初期値
+	auto* cb = reinterpret_cast<AuraCB*>(auraMappedData_);
+	cb->CenterUV = { 0.5f, 0.5f };
+	cb->Time = 0.0f;
+	cb->Scale = 0.22f;
+	cb->Intensity = 0.0f; // 最初はOFF
+	cb->UseRing = 1.0f;
+	cb->RingRadius = 0.12f;
+	cb->RingWidth = 22.0f;
+	cb->ColorA = { 0.2f, 0.6f, 1.0f };
+	cb->_pad0 = 0.0f;
+	cb->ColorB = { 1.0f, 0.85f, 0.2f };
+	cb->Mix = 0.25f;
+
+	auraInitialized_ = true;
+}
+
 void DirectXCommon::ApplyWaterRipple(
 	ID3D12Resource* inputTex,
 	uint32_t        inputSrvIndex,
@@ -1167,6 +1260,51 @@ void DirectXCommon::GenerateDXC() {
 
 }
 
+void DirectXCommon::ApplyAura(
+	ID3D12Resource* inputTex,
+	uint32_t        inputSrvIndex,
+	ID3D12Resource* outputTex,
+	D3D12_CPU_DESCRIPTOR_HANDLE outputRtv) {
+
+	if (!auraInitialized_ || !inputTex || !outputTex) {
+		return;
+	}
+
+	// 入力だけ RT → PS
+	D3D12_RESOURCE_BARRIER barrier{};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Transition.pResource = inputTex;
+	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	commandList->ResourceBarrier(1, &barrier);
+
+	// 出力
+	commandList->OMSetRenderTargets(1, &outputRtv, false, nullptr);
+
+	commandList->SetGraphicsRootSignature(auraRootSignature_.Get());
+	commandList->SetPipelineState(auraPipelineState_.Get());
+	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	if (srvManager_) {
+		ID3D12DescriptorHeap* heaps[] = { srvManager_->GetSrvDescriptorHeap().Get() };
+		commandList->SetDescriptorHeaps(1, heaps);
+		srvManager_->SetGraphicsRootDescriptorTable(0, inputSrvIndex);
+	}
+
+	if (auraConstantBuffer_) {
+		commandList->SetGraphicsRootConstantBufferView(
+			1, auraConstantBuffer_->GetGPUVirtualAddress());
+	}
+
+	commandList->DrawInstanced(3, 1, 0, 0);
+
+	// 入力だけ PS → RT
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	commandList->ResourceBarrier(1, &barrier);
+}
+
 void DirectXCommon::DrawPostEffectToSwapchain() {
 
 	// CopyImage パイプラインが未初期化なら初期化
@@ -1225,7 +1363,17 @@ void DirectXCommon::DrawPostEffectToSwapchain() {
 		std::swap(srcSrv, dstSrv);
 	}
 
-	// 4. Fog
+	// 4. Aura
+	if (auraEffect_ && auraEffect_->IsActive()) {
+		if (!auraInitialized_) {
+			InitializeAuraPipeline();
+		}
+		ApplyAura(srcTex, srcSrv, dstTex, getRtvFor(dstTex));
+		std::swap(srcTex, dstTex);
+		std::swap(srcSrv, dstSrv);
+	}
+
+	// 5. Fog
 	if (fogEffect_ && fogEffect_->IsActive()) {
 		if (!fogInitialized_) {
 			InitializeFogPipeline();
@@ -1238,6 +1386,7 @@ void DirectXCommon::DrawPostEffectToSwapchain() {
 	// 最後は srcTex を Swapchain へ
 	DrawTextureToSwapchain(srcTex, srcSrv);
 }
+
 
 Microsoft::WRL::ComPtr<IDxcBlob> DirectXCommon::CompileShader(const std::wstring& filePath, const wchar_t* profile) {
 	Log(ConvertString(std::format(L"Begin CompileShader, path:{}, profile:{}\n", filePath, profile)));
@@ -1512,6 +1661,34 @@ void DirectXCommon::SetFogParam(const Vector3& color,
 	cb->Time = time;
 	cb->worldScale = worldScale;
 	cb->worldPos = worldPos;
+}
+
+void DirectXCommon::SetAuraParam(
+	const Vector2& centerUV,
+	float time,
+	float scale,
+	float intensity,
+	float useRing,
+	float ringRadius,
+	float ringWidth,
+	const Vector3& colorA,
+	const Vector3& colorB,
+	float mix) {
+
+	if (!auraInitialized_) { InitializeAuraPipeline(); }
+	if (!auraMappedData_) { return; }
+
+	auto* cb = reinterpret_cast<AuraCB*>(auraMappedData_);
+	cb->CenterUV = centerUV;
+	cb->Time = time;
+	cb->Scale = scale;
+	cb->Intensity = intensity;
+	cb->UseRing = useRing;
+	cb->RingRadius = ringRadius;
+	cb->RingWidth = ringWidth;
+	cb->ColorA = colorA;
+	cb->ColorB = colorB;
+	cb->Mix = mix;
 }
 
 void DirectXCommon::InitializeFixFPS() {

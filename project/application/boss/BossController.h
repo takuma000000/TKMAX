@@ -50,6 +50,11 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	bool IsAuraActive() const { return auraActive_; }
+	/// <summary>
+	/// ダッシュ予備動作中かどうかを取得します。
+	/// </summary>
+	/// <returns></returns>
+	bool IsDashWindup() const { return state_ == State::DashWindup; }
 	// Getter===================================
 	/// <summary>
 	/// 予備動作に入ってからの経過秒を取得します。

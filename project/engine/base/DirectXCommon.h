@@ -17,6 +17,7 @@ class RadialBlurEffect;
 class VignettingEffect;
 class WaterRippleEffect;
 class FogEffect;
+class AuraEffect;
 
 //=============================================================
 // DirectXCommonクラス
@@ -60,6 +61,23 @@ public:
 		float   worldScale;   // 霧パターンの「世界空間スケール」
 		Vector3 worldPos;     // カメラ or プレイヤーのワールド座標
 		float   padding2;     // 16byte整列用
+	};
+	// AuraCB構造体
+	struct AuraCB {
+		Vector2 CenterUV;
+		float   Time;
+		float   Scale;
+
+		float   Intensity;
+		float   UseRing;
+		float   RingRadius;
+		float   RingWidth;
+
+		Vector3 ColorA;
+		float   _pad0;
+
+		Vector3 ColorB;
+		float   Mix;
 	};
 
 	// -------------------- 初期化 --------------------
@@ -251,6 +269,22 @@ public:
 	/// </summary>
 	void InitializeFogPipeline();
 	/// <summary>
+	/// Aura パイプラインの初期化
+	/// </summary>
+	void InitializeAuraPipeline();
+	/// <summary>
+	/// ポストエフェクトチェーン用：Aura適用
+	/// </summary>
+	/// <param name="inputTex"></param>
+	/// <param name="inputSrvIndex"></param>
+	/// <param name="outputTex"></param>
+	/// <param name="outputRtv"></param>
+	void ApplyAura(
+		ID3D12Resource* inputTex,
+		uint32_t        inputSrvIndex,
+		ID3D12Resource* outputTex,
+		D3D12_CPU_DESCRIPTOR_HANDLE outputRtv);
+	/// <summary>
 	/// ポストエフェクトなしで RenderTexture → Swapchain へ描画
 	/// </summary>
 	void DrawPostEffectToSwapchain();
@@ -323,6 +357,11 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	RadialBlurEffect* GetRadialBlurEffect() const { return radialBlurEffect_; }
+	/// <summary>
+	/// VignettingEffect を取得
+	/// </summary>
+	/// <returns></returns>
+	AuraEffect* GetAuraEffect() const { return auraEffect_; }
 	// ========================================================================
 	// Setter==================================================================
 	/// <summary>
@@ -384,6 +423,35 @@ public:
 		float noiseScale, float noiseStrength,
 		float time,
 		const Vector3& worldPos, float worldScale);
+	/// <summary>
+	/// Aura 用 パラメータセット
+	/// </summary>
+	/// <param name="centerUV"></param>
+	/// <param name="time"></param>
+	/// <param name="scale"></param>
+	/// <param name="intensity"></param>
+	/// <param name="useRing"></param>
+	/// <param name="ringRadius"></param>
+	/// <param name="ringWidth"></param>
+	/// <param name="colorA"></param>
+	/// <param name="colorB"></param>
+	/// <param name="mix"></param>
+	void SetAuraParam(
+		const Vector2& centerUV,
+		float time,
+		float scale,
+		float intensity,
+		float useRing,
+		float ringRadius,
+		float ringWidth,
+		const Vector3& colorA,
+		const Vector3& colorB,
+		float mix);
+	/// <summary>
+	/// AuraEffect をセット（必要なら）
+	/// </summary>
+	/// <param name="effect"></param>
+	void SetAuraEffect(AuraEffect* effect) { auraEffect_ = effect; }
 	// ========================================================================
 private:
 	//======================================================================
@@ -484,6 +552,14 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12PipelineState>  fogPipelineState_;
 	Microsoft::WRL::ComPtr<ID3D12Resource>       fogConstantBuffer_;
 	void* fogMappedData_ = nullptr;
+
+	// Aura 用 PSO
+	bool auraInitialized_ = false;
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> auraRootSignature_;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> auraPipelineState_;
+	Microsoft::WRL::ComPtr<ID3D12Resource> auraConstantBuffer_;
+	void* auraMappedData_ = nullptr;
+	AuraEffect* auraEffect_ = nullptr;
 	//======================================================================
 	// 定数バッファ / ポストエフェクト関連リソース
 	//======================================================================

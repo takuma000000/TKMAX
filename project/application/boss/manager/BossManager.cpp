@@ -1,6 +1,19 @@
 #include "BossManager.h"
 #include "GameScene.h"
 
+static Vector2 WorldToUV(const Vector3& world, const Matrix4x4& vp) {
+	float clipX = world.x * vp.m[0][0] + world.y * vp.m[1][0] + world.z * vp.m[2][0] + 1.0f * vp.m[3][0];
+	float clipY = world.x * vp.m[0][1] + world.y * vp.m[1][1] + world.z * vp.m[2][1] + 1.0f * vp.m[3][1];
+	float clipW = world.x * vp.m[0][3] + world.y * vp.m[1][3] + world.z * vp.m[2][3] + 1.0f * vp.m[3][3];
+
+	if (fabsf(clipW) < 0.0001f) { return { 0.5f, 0.5f }; }
+
+	float ndcX = clipX / clipW;
+	float ndcY = clipY / clipW;
+
+	return { ndcX * 0.5f + 0.5f, -ndcY * 0.5f + 0.5f };
+}
+
 void BossManager::Initialize(DirectXCommon* dxCommon, Camera* camera, BaseScene* parent, Player* player) {
 	dxCommon_ = dxCommon;
 	camera_ = camera;
@@ -60,6 +73,45 @@ void BossManager::Update(float dt) {
 	if (bossController_) {
 		bossController_->Update(dt, *boss_); // ボス挙動更新
 	}
+
+	// ===== Aura（予備動作中だけ）=====
+	if (dxCommon_ && camera_ && bossController_) {
+		AuraEffect* aura = dxCommon_->GetAuraEffect();
+		if (aura) {
+			const bool active = bossController_->IsAuraActive(); // DashWindup中 true :contentReference[oaicite:6]{index=6}
+			aura->SetActive(active);
+
+			if (active) {
+				// ボス中心をスクリーンUVへ
+				Matrix4x4 vp = camera_->GetViewProjectionMatrix();
+				Vector3 bossPos = boss_->GetWorldPosition();
+				Vector2 uv = WorldToUV(bossPos, vp);
+
+				// Controllerのパラメータをそのまま反映
+				aura->SetCenterUV(uv);
+				aura->SetIntensity(bossController_->GetAuraIntensity());
+				aura->SetUseRing(bossController_->GetAuraUseRing());
+				aura->SetColorA(bossController_->GetAuraColor()); // とりあえず単色運用
+
+				// いったんB色は固定（あとでImGuiで混色運用にする）
+				aura->SetColorB({ 1.0f, 0.85f, 0.2f });
+				aura->SetMix(0.0f);
+
+				// スケールは画面上の広がり（0.15〜0.35くらいで調整）
+				// ボス倍率は Controller の値を使う
+				float scale = 0.22f * bossController_->GetAuraScaleMul();
+				aura->SetScale(scale);
+
+				// リングは仮（欲しければ後で詰める）
+				aura->SetRingRadius(0.12f);
+				aura->SetRingWidth(22.0f);
+
+				// GPUへ送る
+				aura->PushToGpu();
+			}
+		}
+	}
+
 	// ボス本体更新
 	boss_->Update();
 

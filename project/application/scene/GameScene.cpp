@@ -106,7 +106,15 @@ void GameScene::Initialize() {
 	// 中心の強いフラッシュ
 	ParticleManager::GetInstance()->CreateParticleGroup("core_charge_flash", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
 	/// === LT弾のチャージエフェクト ===
+	// 外側を覆うエネルギー殻
 	ParticleManager::GetInstance()->CreateParticleGroup("trail_lt_path", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
+	/// --- Boss Windup FX（予備動作）---
+	// 外側を覆うリング状エネルギー
+	ParticleManager::GetInstance()->CreateParticleGroup(		"boss_windup_shell",		"./resources/gradationLine.png",		ParticleManager::ParticleType::RING);
+	// 火花がパチパチ飛ぶエフェクト
+	ParticleManager::GetInstance()->CreateParticleGroup(		"boss_windup_crackle",		"./resources/circle2.png",		ParticleManager::ParticleType::NORMAL	);
+	// 内向きに吸い込まれる粒子
+	ParticleManager::GetInstance()->CreateParticleGroup(		"boss_windup_inward",		"./resources/circle.png",		ParticleManager::ParticleType::NORMAL	);
 	// ──────────────── スカイボックスの初期化 ───────────────
 	skybox_ = std::make_unique<Skybox>();
 	skybox_->Initialize(dxCommon, srvManager, "resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
@@ -138,6 +146,10 @@ void GameScene::Initialize() {
 	fog_->Initialize(dxCommon);
 	fog_->SetActive(true);                // ゲームシーン中はずっと有効にしたい
 	dxCommon->SetFogEffect(fog_.get());   // DirectXCommon に登録
+	// AuraEffect の生成と初期化
+	aura_ = std::make_unique<AuraEffect>();
+	aura_->Initialize(dxCommon);
+	dxCommon->SetAuraEffect(aura_.get());
 }
 
 void GameScene::Finalize() {
@@ -153,6 +165,7 @@ void GameScene::Finalize() {
 		dxCommon->SetRadialBlurEffect(nullptr); // RadialBlurEffect の解除
 		dxCommon->SetVignettingEffect(nullptr); // VignettingEffect の解除
 		dxCommon->SetFogEffect(nullptr); // FogEffect の解除
+		dxCommon->SetAuraEffect(nullptr); // AuraEffect の解除
 	}
 }
 

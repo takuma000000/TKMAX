@@ -29,6 +29,7 @@
 #include "RadialBlurEffect.h"
 #include "VignettingEffect.h"
 #include "FogEffect.h"
+#include "AuraEffect.h"
 #include "IrisUtil.h"
 
 #include "Player.h"
@@ -311,4 +312,6 @@ private:
 	std::unique_ptr<VignettingEffect> vignetting_;
 	// Fog エフェクト
 	std::unique_ptr<FogEffect> fog_;
+	// Aura エフェクト
+	std::unique_ptr<AuraEffect> aura_ = nullptr;
 };

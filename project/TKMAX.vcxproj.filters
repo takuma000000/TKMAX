@@ -182,6 +182,7 @@
     <ClCompile Include="engine\effect\post\BaseEffect.cpp">
       <Filter>engine\effect\post</Filter>
     </ClCompile>
+    <ClCompile Include="engine\effect\post\AuraEffect.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -391,6 +392,7 @@
     <ClInclude Include="engine\effect\post\BaseEffect.h">
       <Filter>engine\effect\post</Filter>
     </ClInclude>
+    <ClInclude Include="engine\effect\post\AuraEffect.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
@@ -480,5 +482,8 @@
     <Filter Include="engine\effect\post">
       <UniqueIdentifier>{adf1554a-46fe-485b-99a1-5b8c8803a150}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="resources\shaders\Aura.PS.hlsl" />
   </ItemGroup>
 </Project>
