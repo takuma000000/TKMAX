@@ -44,6 +44,44 @@ public:
 	/// </summary>
 	/// <param name="boss"></param>
 	void ImGuiDebug(Enemy& boss);
+
+	/// <summary>
+	/// 怒りモードを設定する
+	/// </summary>
+	/// <returns></returns>
+	bool IsAuraActive() const { return auraActive_; }
+	// Getter===================================
+	/// <summary>
+	/// 予備動作に入ってからの経過秒を取得します。
+	/// </summary>
+	/// <returns></returns>
+	float GetAuraT() const { return auraT_; }
+	/// <summary>
+	/// 基準位置を取得します。
+	/// </summary>
+	/// <returns></returns>
+	const Vector3& GetAuraPos() const { return auraPos_; }
+	/// <summary>
+	/// オーラの色を取得します。
+	/// </summary>
+	/// <returns></returns>
+	const Vector3& GetAuraColor() const { return auraColor_; }
+	/// <summary>
+	/// オーラの強度を取得します。
+	/// </summary>
+	/// <returns></returns>
+	float GetAuraIntensity() const { return auraIntensity_; }
+	/// <summary>
+	/// オーラのスケール倍率を取得します。
+	/// </summary>
+	/// <returns></returns>
+	float GetAuraScaleMul() const { return auraScaleMul_; }
+	/// <summary>
+	/// 足元リングの使用有無を取得します。
+	/// </summary>
+	/// <returns></returns>
+	bool GetAuraUseRing() const { return auraUseRing_; }
+	// =========================================
 private:
 	// --- state updates ---
 	/// <summary>
@@ -120,7 +158,6 @@ private:
 	/// <returns></returns>
 	static Vector3 SmoothDamp(const Vector3& from, const Vector3& to, float factor, float dt);
 
-private:
 	State state_ = State::Enter;
 	float timer_ = 0.0f;
 
@@ -206,4 +243,13 @@ private:
 	float windupShakeAmp_ = 0.3f; // 揺れ振幅
 	float windupShakeFreq1_ = 55.0f; // 揺れ周波数1
 	float windupShakeFreq2_ = 83.0f; // 揺れ周波数2
+
+	// --- Aura（段階1：情報だけ。描画は次の段階） ---
+	bool   auraActive_ = false;
+	float  auraT_ = 0.0f;
+	Vector3 auraPos_{ 0.0f, 0.0f, 0.0f };
+	Vector3 auraColor_{ 0.2f, 0.85f, 1.0f }; // 初期は青寄り（あとでImGuiで変える）
+	float   auraIntensity_ = 1.0f;
+	float   auraScaleMul_ = 1.6f;            // ボスサイズに対する広がり倍率（仮）
+	bool    auraUseRing_ = true;             // 足元リングのON/OFF
 };

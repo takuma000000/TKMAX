@@ -39,11 +39,11 @@ void BossController::Update(float dt, Enemy& boss) {
 	timer_ += dt;
 
 	// ============================================================
-// Rage Gauge Update（毎フレーム）
-// ・ダメージを受けたら増える（noDamageTime_ をリセット）
-// ・一定秒ノーダメの時だけ減衰
-// ・減衰中にダメージを受けたら：減衰即中断＆猶予リセット＆増加
-// ============================================================
+	// Rage Gauge Update（毎フレーム）
+	// ・ダメージを受けたら増える（noDamageTime_ をリセット）
+	// ・一定秒ノーダメの時だけ減衰
+	// ・減衰中にダメージを受けたら：減衰即中断＆猶予リセット＆増加
+	// ============================================================
 	if (lastHpForRage_ < 0) {
 		lastHpForRage_ = boss.GetHP();
 		noDamageTime_ = 0.0f;
@@ -99,6 +99,17 @@ void BossController::Update(float dt, Enemy& boss) {
 	case State::Recover:    UpdateRecover(dt, boss, pos); break;
 	}
 
+	// オーラ情報更新
+	if (state_ == State::DashWindup) {
+		auraActive_ = true;
+		auraT_ += dt;
+		// 位置は windup 基準（ブレない）を使う
+		auraPos_ = windupBasePos_;
+	} else {
+		auraActive_ = false;
+		auraT_ = 0.0f;
+	}
+
 	ClampToArena(pos);
 	boss.SetPosition(pos);
 	boss.SyncTransform();
@@ -135,7 +146,7 @@ void BossController::ImGuiDebug(Enemy& boss) {
 	ImGui::Text("ボスHP: %d", boss.GetHP());
 	ImGui::Separator();
 
-	if (ImGui::Button("コントローラ初期化")) {
+	/*if (ImGui::Button("コントローラ初期化")) {
 		Reset();
 	}
 	ImGui::SameLine();
@@ -145,13 +156,13 @@ void BossController::ImGuiDebug(Enemy& boss) {
 	ImGui::SameLine();
 	if (ImGui::Button("強制：突進予備")) {
 		ChangeState(State::DashWindup);
-	}
+	}*/
 	ImGui::Separator();
 
 	// ----------------------------
 	// 旋回（Orbit）
 	// ----------------------------
-	if (ImGui::CollapsingHeader("旋回挙動", ImGuiTreeNodeFlags_DefaultOpen)) {
+	/*if (ImGui::CollapsingHeader("旋回挙動", ImGuiTreeNodeFlags_DefaultOpen)) {
 		ImGui::DragFloat("旋回Z位置", &orbitZ_, 0.1f);
 		ImGui::DragFloat("旋回Y高さ", &orbitY_, 0.1f);
 		ImGui::DragFloat("旋回半径X", &orbitRadiusX_, 0.1f);
@@ -160,23 +171,23 @@ void BossController::ImGuiDebug(Enemy& boss) {
 		ImGui::DragFloat("プレイヤー影響度", &orbitPlayerInfluence_, 0.01f);
 		ImGui::DragFloat("追従の強さ", &orbitFollow_, 0.01f);
 		ImGui::DragFloat("旋回時間", &orbitDuration_, 0.05f);
-	}
+	}*/
 
 	// ----------------------------
 	// 予測・フェイント
 	// ----------------------------
-	if (ImGui::CollapsingHeader("予測・フェイント", ImGuiTreeNodeFlags_DefaultOpen)) {
+	/*if (ImGui::CollapsingHeader("予測・フェイント", ImGuiTreeNodeFlags_DefaultOpen)) {
 		ImGui::DragFloat("予測時間", &predictLeadTime_, 0.01f);
 
 		ImGui::DragFloat("狙いズレX", &aimJitterX_, 0.05f);
 		ImGui::DragFloat("狙いズレY", &aimJitterY_, 0.05f);
 		ImGui::DragFloat("狙いズレZ", &aimJitterZ_, 0.05f);
-	}
+	}*/
 
 	// ----------------------------
 	// 突進
 	// ----------------------------
-	if (ImGui::CollapsingHeader("突進", ImGuiTreeNodeFlags_DefaultOpen)) {
+	/*if (ImGui::CollapsingHeader("突進", ImGuiTreeNodeFlags_DefaultOpen)) {
 		ImGui::DragFloat("予備動作時間", &dashWindup_, 0.01f);
 		ImGui::DragFloat("基本突進速度", &dashSpeed_, 0.1f);
 		ImGui::DragFloat("現在突進速度", &dashSpeedNow_, 0.1f);
@@ -195,12 +206,12 @@ void BossController::ImGuiDebug(Enemy& boss) {
 
 		ImGui::Text("現在の突進回数: %d", dashCount_);
 		ImGui::Text("突進方向反転値: %d", lastDashDir_);
-	}
+	}*/
 
 	// ----------------------------
 	// Rage params（調整用）
 	// ----------------------------
-	if (ImGui::CollapsingHeader("怒りゲージ設定", ImGuiTreeNodeFlags_DefaultOpen)) {
+	/*if (ImGui::CollapsingHeader("怒りゲージ設定", ImGuiTreeNodeFlags_DefaultOpen)) {
 		ImGui::DragFloat("GainPerHP", &rageGainPerHp_, 0.01f, 0.0f, 1.0f);
 		ImGui::DragFloat("DecayPerSec", &rageDecayPerSec_, 0.01f, 0.0f, 5.0f);
 		ImGui::DragFloat("OnThreshold", &rageOnThreshold_, 0.01f, 0.0f, 2.0f);
@@ -214,6 +225,19 @@ void BossController::ImGuiDebug(Enemy& boss) {
 			rageGauge_ = 0.0f;
 			rageActive_ = false;
 		}
+	}*/
+
+	// ----------------------------
+	// オーラ設定
+	// ----------------------------
+	if (ImGui::CollapsingHeader("オーラ(Aura)", ImGuiTreeNodeFlags_DefaultOpen)) {
+		ImGui::Text("AuraActive: %s", auraActive_ ? "true" : "false");
+		ImGui::Text("AuraT: %.2f", auraT_);
+
+		ImGui::Checkbox("足元リング", &auraUseRing_);
+		ImGui::DragFloat("強さ(Intensity)", &auraIntensity_, 0.01f, 0.0f, 10.0f);
+		ImGui::DragFloat("広がり倍率(ScaleMul)", &auraScaleMul_, 0.01f, 0.1f, 10.0f);
+		ImGui::ColorEdit3("色(Color)", &auraColor_.x);
 	}
 
 	ImGui::End();
@@ -293,8 +317,12 @@ void BossController::UpdateDashWindup(float dt, Enemy& boss, Vector3& pos, const
 
 	// 予備動作に入った瞬間：ベース位置を固定
 	if (timer_ <= dt) {
-		windupBasePos_ = pos;
-		windupFxTimer_ = 0.0f;
+		windupBasePos_ = pos; // 現在位置をベースに
+		windupFxTimer_ = 0.0f; // エフェクトタイマーリセット
+
+		auraActive_ = true; // オーラON
+		auraT_ = 0.0f; // タイマーリセット
+		auraPos_ = windupBasePos_; // 位置セット
 
 		// 開始フレーム：外殻リング（1回）
 		ParticleManager::GetInstance()->Emit("boss_windup_shell", windupBasePos_, 8);
@@ -321,7 +349,7 @@ void BossController::UpdateDashWindup(float dt, Enemy& boss, Vector3& pos, const
 	float ramp = t * t;
 	float amp = windupShakeAmp_ * (0.25f + 0.75f * ramp);
 	if (rageActive_) { amp *= 1.25f; } // 任意：怒り中は増幅
-
+	// サイン波でブルブル
 	float sx = std::sin(timer_ * windupShakeFreq1_) * amp;
 	float sy = std::sin(timer_ * windupShakeFreq2_ + 1.7f) * (amp * 0.55f);
 
