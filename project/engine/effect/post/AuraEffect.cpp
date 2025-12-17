@@ -18,6 +18,9 @@ void AuraEffect::PushToGpu() {
 
 	dxCommon_->SetAuraParam(
 		centerUV_,
+		topUV_,
+		bottomUV_,
+		aspect_,
 		time_,
 		scale_,
 		intensity_,
@@ -26,7 +29,13 @@ void AuraEffect::PushToGpu() {
 		ringWidth_,
 		colorA_,
 		colorB_,
-		mix_
+		mix_,
+		taper_,
+		noiseScale_,
+		noiseSpeed_,
+		flameStrength_,
+		edgePower_,
+		verticalFade_
 	);
 }
 
@@ -46,6 +55,8 @@ void AuraEffect::ImGuiDebug() {
 	ImGui::ColorEdit3("ColorA", &colorA_.x);
 	ImGui::ColorEdit3("ColorB", &colorB_.x);
 	ImGui::DragFloat("Mix", &mix_, 0.01f, 0.0f, 1.0f);
+
+	auraVolumeRenderer_.DrawImGui("Aura Volume");
 
 	ImGui::End();
 }

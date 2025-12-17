@@ -1,6 +1,7 @@
 #pragma once
 #include "BaseEffect.h"
 #include "MyMath.h"
+#include <AuraVolumeRenderer.h>
 
 class DirectXCommon;
 
@@ -26,6 +27,19 @@ public:
 	void SetColorA(const Vector3& c) { colorA_ = c; }
 	void SetColorB(const Vector3& c) { colorB_ = c; }
 	void SetMix(float m) { mix_ = m; } // 0=A, 1=B
+	void SetWorldPos(const Vector3& p) { worldPos_ = p; }
+	const Vector3& GetWorldPos() const { return worldPos_; }
+	float GetHeight() const { return height_; }
+	void SetHeight(float h) { height_ = h; }
+	void SetTopUV(const Vector2& v) { topUV_ = v; }
+	void SetBottomUV(const Vector2& v) { bottomUV_ = v; }
+	void SetAspect(float a) { aspect_ = a; }
+	void SetTaper(float v) { taper_ = v; }
+	void SetNoiseScale(float v) { noiseScale_ = v; }
+	void SetNoiseSpeed(float v) { noiseSpeed_ = v; }
+	void SetFlameStrength(float v) { flameStrength_ = v; }
+	void SetEdgePower(float v) { edgePower_ = v; }
+	void SetVerticalFade(float v) { verticalFade_ = v; }
 
 	// 毎フレーム dxCommon に送る
 	void PushToGpu();
@@ -47,5 +61,21 @@ private:
 	Vector3 colorB_{ 1.0f, 0.85f, 0.2f }; // 黄
 	float   mix_ = 0.25f; // 混色
 
-	bool active_ = false;
+	bool active_ = false; // エフェクト有効フラグ
+
+	Vector3 worldPos_{ 0.0f,0.0f,0.0f };
+	float height_ = 10.0f;
+
+	Vector2 topUV_ = { 0.5f, 0.3f };
+	Vector2 bottomUV_ = { 0.5f, 0.7f };
+	float aspect_ = 1.0f;
+
+	float taper_ = 0.65f;
+	float noiseScale_ = 6.0f;
+	float noiseSpeed_ = 1.2f;
+	float flameStrength_ = 1.2f;
+	float edgePower_ = 2.0f;
+	float verticalFade_ = 0.12f;
+
+	AuraVolumeRenderer auraVolumeRenderer_;
 };

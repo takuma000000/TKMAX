@@ -64,20 +64,47 @@ public:
 	};
 	// AuraCB構造体
 	struct AuraCB {
-		Vector2 CenterUV;
-		float   Time;
-		float   Scale;
+		Vector2 CenterUV; // 中心UV
+		float   Time; 	  // 経過時間
+		float   Radius;   // スケール
+		float   Intensity; // 明るさ
+		float   UseRing;   // リングを使うかどうか
+		float   RingRadius; // リングの半径
+		float   RingWidth; // リングの幅
+		Vector3 ColorA; // 色A
+		float   _pad0; 	  // 16byte整列
+		Vector3 ColorB; // 色B
+		float   Mix; 	// 色の混ぜ具合 (0=A, 1=B)
+		Vector2 TopUV;      // ボス頭のUV
+		Vector2 BottomUV;   // ボス足のUV
+		float   Aspect;        // 画面横/縦
+		float   Taper;         // 上に行くほど細く (例 0.65)
+		float   NoiseScale;    // 炎の細かさ
+		float   NoiseSpeed;    // 炎の速さ
+		float   FlameStrength; // 炎の立ち上がり強さ
+		float   EdgePower;     // 外周のキレ
+		float   VerticalFade;  // 上下のフェード
+		float   _pad1;         // 16byte整列
+	};
+	// AuraVolumeCB構造体
+	struct AuraVolumeCB {
+		Matrix4x4 ViewProj;
 
-		float   Intensity;
-		float   UseRing;
-		float   RingRadius;
-		float   RingWidth;
+		Vector3   CenterWS;
+		float     Radius;
 
-		Vector3 ColorA;
-		float   _pad0;
+		float     Height;
+		uint32_t  SliceCount;
+		float     Time;
+		float     _pad0;
 
-		Vector3 ColorB;
-		float   Mix;
+		Vector3   Color;
+		float     Intensity;
+
+		float     NoiseScale;
+		float     NoiseSpeed;
+		float     RimPower;
+		float     AlphaBase;
 	};
 
 	// -------------------- 初期化 --------------------
@@ -273,6 +300,10 @@ public:
 	/// </summary>
 	void InitializeAuraPipeline();
 	/// <summary>
+	/// AuraVolume パイプラインの初期化
+	/// </summary>
+	void InitializeAuraVolumePipeline();
+	/// <summary>
 	/// ポストエフェクトチェーン用：Aura適用
 	/// </summary>
 	/// <param name="inputTex"></param>
@@ -284,6 +315,34 @@ public:
 		uint32_t        inputSrvIndex,
 		ID3D12Resource* outputTex,
 		D3D12_CPU_DESCRIPTOR_HANDLE outputRtv);
+	/// <summary>
+	/// オーラボリュームの描画
+	/// </summary>
+	/// <param name="viewProj"></param>
+	/// <param name="centerWS"></param>
+	/// <param name="radius"></param>
+	/// <param name="height"></param>
+	/// <param name="sliceCount"></param>
+	/// <param name="time"></param>
+	/// <param name="color"></param>
+	/// <param name="intensity"></param>
+	/// <param name="noiseScale"></param>
+	/// <param name="noiseSpeed"></param>
+	/// <param name="rimPower"></param>
+	/// <param name="alphaBase"></param>
+	void DrawAuraVolume(
+		const Matrix4x4& viewProj,
+		const Vector3& centerWS,
+		float radius,
+		float height,
+		uint32_t sliceCount,
+		float time,
+		const Vector3& color,
+		float intensity,
+		float noiseScale,
+		float noiseSpeed,
+		float rimPower,
+		float alphaBase);
 	/// <summary>
 	/// ポストエフェクトなしで RenderTexture → Swapchain へ描画
 	/// </summary>
@@ -427,8 +486,11 @@ public:
 	/// Aura 用 パラメータセット
 	/// </summary>
 	/// <param name="centerUV"></param>
+	/// <param name="topUV"></param>
+	/// <param name="bottomUV"></param>
+	/// <param name="aspect"></param>
 	/// <param name="time"></param>
-	/// <param name="scale"></param>
+	/// <param name="radius"></param>
 	/// <param name="intensity"></param>
 	/// <param name="useRing"></param>
 	/// <param name="ringRadius"></param>
@@ -436,17 +498,32 @@ public:
 	/// <param name="colorA"></param>
 	/// <param name="colorB"></param>
 	/// <param name="mix"></param>
+	/// <param name="taper"></param>
+	/// <param name="noiseScale"></param>
+	/// <param name="noiseSpeed"></param>
+	/// <param name="flameStrength"></param>
+	/// <param name="edgePower"></param>
+	/// <param name="verticalFade"></param>
 	void SetAuraParam(
 		const Vector2& centerUV,
+		const Vector2& topUV,
+		const Vector2& bottomUV,
+		float aspect,
 		float time,
-		float scale,
+		float radius,
 		float intensity,
 		float useRing,
 		float ringRadius,
 		float ringWidth,
 		const Vector3& colorA,
 		const Vector3& colorB,
-		float mix);
+		float mix,
+		float taper,
+		float noiseScale,
+		float noiseSpeed,
+		float flameStrength,
+		float edgePower,
+		float verticalFade);
 	/// <summary>
 	/// AuraEffect をセット（必要なら）
 	/// </summary>
@@ -560,6 +637,16 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> auraConstantBuffer_;
 	void* auraMappedData_ = nullptr;
 	AuraEffect* auraEffect_ = nullptr;
+
+	// AuraVolume 用 PSO
+	bool auraVolumeInitialized_ = false;
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> auraVolumeRootSignature_;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> auraVolumePipelineState_;
+	Microsoft::WRL::ComPtr<ID3D12Resource> auraVolumeConstantBuffer_;
+	void* auraVolumeMappedData_ = nullptr;
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> auraVolumeVB_;
+	D3D12_VERTEX_BUFFER_VIEW auraVolumeVBView_{};
 	//======================================================================
 	// 定数バッファ / ポストエフェクト関連リソース
 	//======================================================================

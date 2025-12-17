@@ -183,6 +183,7 @@
       <Filter>engine\effect\post</Filter>
     </ClCompile>
     <ClCompile Include="engine\effect\post\AuraEffect.cpp" />
+    <ClCompile Include="engine\effect\post\AuraVolumeRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -393,6 +394,7 @@
       <Filter>engine\effect\post</Filter>
     </ClInclude>
     <ClInclude Include="engine\effect\post\AuraEffect.h" />
+    <ClInclude Include="engine\effect\post\AuraVolumeRenderer.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
@@ -484,6 +486,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="resources\shaders\Aura.PS.hlsl" />
+    <FxCompile Include="resources\shaders\AuraVolume.VS.hlsl" />
+    <FxCompile Include="resources\shaders\AuraVolume.PS.hlsl" />
   </ItemGroup>
 </Project>

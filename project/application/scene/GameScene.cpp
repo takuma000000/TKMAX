@@ -110,11 +110,11 @@ void GameScene::Initialize() {
 	ParticleManager::GetInstance()->CreateParticleGroup("trail_lt_path", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
 	/// --- Boss Windup FX（予備動作）---
 	// 外側を覆うリング状エネルギー
-	ParticleManager::GetInstance()->CreateParticleGroup(		"boss_windup_shell",		"./resources/gradationLine.png",		ParticleManager::ParticleType::RING);
+	ParticleManager::GetInstance()->CreateParticleGroup("boss_windup_shell", "./resources/gradationLine.png", ParticleManager::ParticleType::RING);
 	// 火花がパチパチ飛ぶエフェクト
-	ParticleManager::GetInstance()->CreateParticleGroup(		"boss_windup_crackle",		"./resources/circle2.png",		ParticleManager::ParticleType::NORMAL	);
+	ParticleManager::GetInstance()->CreateParticleGroup("boss_windup_crackle", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
 	// 内向きに吸い込まれる粒子
-	ParticleManager::GetInstance()->CreateParticleGroup(		"boss_windup_inward",		"./resources/circle.png",		ParticleManager::ParticleType::NORMAL	);
+	ParticleManager::GetInstance()->CreateParticleGroup("boss_windup_inward", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
 	// ──────────────── スカイボックスの初期化 ───────────────
 	skybox_ = std::make_unique<Skybox>();
 	skybox_->Initialize(dxCommon, srvManager, "resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
@@ -692,6 +692,9 @@ void GameScene::ImGuiDebug() {
 	// Fog のデバッグ
 	if (fog_) {
 		fog_->ImGuiDebug();
+	}
+	if (aura_) {
+		aura_->ImGuiDebug();
 	}
 	/////////////////////////////////////////////////////
 	ImGuiDebugGamepad(); // ゲームパッド入力デバッグ

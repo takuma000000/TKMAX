@@ -11,6 +11,7 @@
 #include "Player.h"
 #include "BaseScene.h"
 #include "BossController.h"
+#include "AuraVolumeRenderer.h"
 
 //=============================================================
 // BossManagerクラス
@@ -103,6 +104,9 @@ private:
 	bool bossZoomStarted_ = false; // ボス撃破後のカメラズーム演出が始まったか
 
 	std::unique_ptr<BossController> bossController_; // ボスコントローラー
+
+	// オーラボリュームレンダラー
+	std::unique_ptr<AuraVolumeRenderer> auraVolume_;
 
 	/// <summary>
 	/// ボス弾を更新します。

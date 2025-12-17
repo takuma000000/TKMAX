@@ -24,6 +24,10 @@ void BossManager::Initialize(DirectXCommon* dxCommon, Camera* camera, BaseScene*
 	bossP2BgmPlayed_ = false;
 	boss_.reset();
 	bossBullets_.clear();
+
+	// オーラボリュームレンダラー初期化
+	auraVolume_ = std::make_unique<AuraVolumeRenderer>();
+	auraVolume_->Initialize(dxCommon_);
 }
 
 void BossManager::StartBattle() {
@@ -82,29 +86,34 @@ void BossManager::Update(float dt) {
 			aura->SetActive(active);
 
 			if (active) {
-				// ボス中心をスクリーンUVへ
 				Matrix4x4 vp = camera_->GetViewProjectionMatrix();
 				Vector3 bossPos = boss_->GetWorldPosition();
-				Vector2 uv = WorldToUV(bossPos, vp);
 
-				// Controllerのパラメータをそのまま反映
-				aura->SetCenterUV(uv);
-				aura->SetIntensity(bossController_->GetAuraIntensity());
-				aura->SetUseRing(bossController_->GetAuraUseRing());
-				aura->SetColorA(bossController_->GetAuraColor()); // とりあえず単色運用
+				// ざっくり “頭〜足” を collider から推定（無ければ定数でもOK）
+				Vector3 col = boss_->GetColliderScale();
+				float halfH = col.y * 0.5f;
 
-				// いったんB色は固定（あとでImGuiで混色運用にする）
-				aura->SetColorB({ 1.0f, 0.85f, 0.2f });
-				aura->SetMix(0.0f);
+				Vector3 topW = bossPos + Vector3{ 0.0f, halfH, 0.0f };
+				Vector3 bottomW = bossPos - Vector3{ 0.0f, halfH, 0.0f };
 
-				// スケールは画面上の広がり（0.15〜0.35くらいで調整）
-				// ボス倍率は Controller の値を使う
-				float scale = 0.22f * bossController_->GetAuraScaleMul();
-				aura->SetScale(scale);
+				Vector2 centerUV = WorldToUV(bossPos, vp);
+				Vector2 topUV = WorldToUV(topW, vp);
+				Vector2 bottomUV = WorldToUV(bottomW, vp);
 
-				// リングは仮（欲しければ後で詰める）
-				aura->SetRingRadius(0.12f);
-				aura->SetRingWidth(22.0f);
+				float aspect = dxCommon_->GetViewport().Width / dxCommon_->GetViewport().Height;
+
+				aura->SetCenterUV(centerUV);
+				aura->SetTopUV(topUV);
+				aura->SetBottomUV(bottomUV);
+				aura->SetAspect(aspect);
+
+				// 立体っぽくする推奨初期値
+				aura->SetTaper(0.65f);
+				aura->SetNoiseScale(7.0f);
+				aura->SetNoiseSpeed(1.4f);
+				aura->SetFlameStrength(1.4f);
+				aura->SetEdgePower(2.2f);
+				aura->SetVerticalFade(0.12f);
 
 				// GPUへ送る
 				aura->PushToGpu();
@@ -134,10 +143,23 @@ void BossManager::Update(float dt) {
 }
 
 void BossManager::Draw(DirectXCommon* dxCommon) {
-	if (bossBattle_ && boss_) {
-		boss_->Draw(dxCommon);
+	if (!bossBattle_ || !boss_) { return; }
+
+	// ボス本体
+	boss_->Draw(dxCommon);
+
+	// 3Dオーラ
+	if (auraVolume_ && bossController_ && camera_) {
+		const bool active = bossController_->IsAuraActive();
+		auraVolume_->Draw(
+			camera_->GetViewProjectionMatrix(),
+			boss_->GetWorldPosition(),
+			boss_->GetColliderScale(),
+			active
+		);
 	}
 
+	// ボス弾など（元のまま）
 	for (auto& b : bossBullets_) {
 		b->Draw(dxCommon);
 	}

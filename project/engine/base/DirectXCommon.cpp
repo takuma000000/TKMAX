@@ -998,12 +998,14 @@ void DirectXCommon::InitializeAuraPipeline() {
 	auraConstantBuffer_ = CreateBufferResource(sizeof(AuraCB));
 	auraConstantBuffer_->Map(0, nullptr, &auraMappedData_);
 
-	// 初期値
 	auto* cb = reinterpret_cast<AuraCB*>(auraMappedData_);
 	cb->CenterUV = { 0.5f, 0.5f };
+	cb->TopUV = { 0.5f, 0.35f };
+	cb->BottomUV = { 0.5f, 0.70f };
+	cb->Aspect = WindowsAPI::kClientWidth / (float)WindowsAPI::kClientHeight;
 	cb->Time = 0.0f;
-	cb->Scale = 0.22f;
-	cb->Intensity = 0.0f; // 最初はOFF
+	cb->Radius = 0.22f;
+	cb->Intensity = 0.0f;
 	cb->UseRing = 1.0f;
 	cb->RingRadius = 0.12f;
 	cb->RingWidth = 22.0f;
@@ -1011,8 +1013,132 @@ void DirectXCommon::InitializeAuraPipeline() {
 	cb->_pad0 = 0.0f;
 	cb->ColorB = { 1.0f, 0.85f, 0.2f };
 	cb->Mix = 0.25f;
+	// 立体っぽい揺れ用
+	cb->Taper = 0.65f;
+	cb->NoiseScale = 7.0f;
+	cb->NoiseSpeed = 1.4f;
+	cb->FlameStrength = 1.4f;
+	cb->EdgePower = 2.2f;
+	cb->VerticalFade = 0.12f;
 
 	auraInitialized_ = true;
+}
+
+void DirectXCommon::InitializeAuraVolumePipeline() {
+	if (auraVolumeInitialized_) { return; }
+
+	// シェーダ
+	Microsoft::WRL::ComPtr<IDxcBlob> vsBlob =
+		CompileShader(L"resources/shaders/AuraVolume.VS.hlsl", L"vs_6_0");
+	Microsoft::WRL::ComPtr<IDxcBlob> psBlob =
+		CompileShader(L"resources/shaders/AuraVolume.PS.hlsl", L"ps_6_0");
+
+	// RootSignature: b0 だけ（VS/PS共通）
+	CD3DX12_ROOT_PARAMETER rootParams[1];
+	rootParams[0].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_ALL);
+
+	CD3DX12_ROOT_SIGNATURE_DESC rsDesc{};
+	rsDesc.Init(
+		1, rootParams,
+		0, nullptr,
+		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
+	);
+
+	Microsoft::WRL::ComPtr<ID3DBlob> rsBlob;
+	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
+	HRESULT hr = D3D12SerializeRootSignature(
+		&rsDesc,
+		D3D_ROOT_SIGNATURE_VERSION_1,
+		&rsBlob,
+		&errorBlob
+	);
+	assert(SUCCEEDED(hr));
+
+	hr = device->CreateRootSignature(
+		0,
+		rsBlob->GetBufferPointer(),
+		rsBlob->GetBufferSize(),
+		IID_PPV_ARGS(&auraVolumeRootSignature_)
+	);
+	assert(SUCCEEDED(hr));
+
+	// InputLayout（Quad）
+	D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,
+		  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12,
+		  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+	};
+
+	// PSO
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
+	psoDesc.pRootSignature = auraVolumeRootSignature_.Get();
+	psoDesc.VS = { vsBlob->GetBufferPointer(), vsBlob->GetBufferSize() };
+	psoDesc.PS = { psBlob->GetBufferPointer(), psBlob->GetBufferSize() };
+
+	psoDesc.InputLayout = { inputLayout, _countof(inputLayout) };
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+
+	psoDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
+	psoDesc.NumRenderTargets = 1;
+	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB; // RenderTextureと合わせ
+	psoDesc.SampleDesc.Count = 1;
+
+	// Rasterizer
+	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE; // 両面でOK
+
+	// Depth: ZTest ON / ZWrite OFF
+	D3D12_DEPTH_STENCIL_DESC dsDesc{};
+	dsDesc.DepthEnable = TRUE;
+	dsDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+	dsDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	dsDesc.StencilEnable = FALSE;
+	psoDesc.DepthStencilState = dsDesc;
+	psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
+	// Blend: 加算（ONE + ONE）
+	D3D12_BLEND_DESC blendDesc = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	blendDesc.RenderTarget[0].BlendEnable = TRUE;
+	blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_ONE;
+	blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+	blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ONE;
+	blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+	psoDesc.BlendState = blendDesc;
+
+	hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&auraVolumePipelineState_));
+	assert(SUCCEEDED(hr));
+
+	// 定数バッファ作成&マップ
+	auraVolumeConstantBuffer_ = CreateBufferResource(sizeof(AuraVolumeCB));
+	auraVolumeConstantBuffer_->Map(0, nullptr, &auraVolumeMappedData_);
+
+	// 頂点バッファ（Quad 6頂点）
+	struct Vtx { float px, py, pz; float u, v; };
+	Vtx v[6] = {
+		{-1, 0, 0, 0, 1},
+		{-1, 1, 0, 0, 0},
+		{ 1, 1, 0, 1, 0},
+
+		{-1, 0, 0, 0, 1},
+		{ 1, 1, 0, 1, 0},
+		{ 1, 0, 0, 1, 1},
+	};
+
+	auraVolumeVB_ = CreateBufferResource(sizeof(v));
+	void* mapped = nullptr;
+	auraVolumeVB_->Map(0, nullptr, &mapped);
+	memcpy(mapped, v, sizeof(v));
+	auraVolumeVB_->Unmap(0, nullptr);
+
+	auraVolumeVBView_.BufferLocation = auraVolumeVB_->GetGPUVirtualAddress();
+	auraVolumeVBView_.SizeInBytes = (UINT)sizeof(v);
+	auraVolumeVBView_.StrideInBytes = sizeof(Vtx);
+
+	auraVolumeInitialized_ = true;
 }
 
 void DirectXCommon::ApplyWaterRipple(
@@ -1303,6 +1429,56 @@ void DirectXCommon::ApplyAura(
 	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	commandList->ResourceBarrier(1, &barrier);
+}
+
+void DirectXCommon::DrawAuraVolume(
+	const Matrix4x4& viewProj,
+	const Vector3& centerWS,
+	float radius,
+	float height,
+	uint32_t sliceCount,
+	float time,
+	const Vector3& color,
+	float intensity,
+	float noiseScale,
+	float noiseSpeed,
+	float rimPower,
+	float alphaBase)
+{
+	if (!auraVolumeInitialized_) { InitializeAuraVolumePipeline(); }
+	if (!auraVolumeMappedData_) { return; }
+	if (!commandList) { return; }
+
+	// CB更新
+	auto* cb = reinterpret_cast<AuraVolumeCB*>(auraVolumeMappedData_);
+	cb->ViewProj = viewProj;
+	cb->CenterWS = centerWS;
+	cb->Radius = radius;
+	cb->Height = height;
+	cb->SliceCount = sliceCount;
+	cb->Time = time;
+	cb->_pad0 = 0.0f;
+
+	cb->Color = color;
+	cb->Intensity = intensity;
+
+	cb->NoiseScale = noiseScale;
+	cb->NoiseSpeed = noiseSpeed;
+	cb->RimPower = rimPower;
+	cb->AlphaBase = alphaBase;
+
+	// パイプライン
+	commandList->SetGraphicsRootSignature(auraVolumeRootSignature_.Get());
+	commandList->SetPipelineState(auraVolumePipelineState_.Get());
+	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	commandList->IASetVertexBuffers(0, 1, &auraVolumeVBView_);
+
+	// b0
+	commandList->SetGraphicsRootConstantBufferView(
+		0, auraVolumeConstantBuffer_->GetGPUVirtualAddress());
+
+	// 描画（6頂点のQuadを sliceCount 枚インスタンス）
+	commandList->DrawInstanced(6, sliceCount, 0, 0);
 }
 
 void DirectXCommon::DrawPostEffectToSwapchain() {
@@ -1665,30 +1841,52 @@ void DirectXCommon::SetFogParam(const Vector3& color,
 
 void DirectXCommon::SetAuraParam(
 	const Vector2& centerUV,
+	const Vector2& topUV,
+	const Vector2& bottomUV,
+	float aspect,
 	float time,
-	float scale,
+	float radius,
 	float intensity,
 	float useRing,
 	float ringRadius,
 	float ringWidth,
 	const Vector3& colorA,
 	const Vector3& colorB,
-	float mix) {
-
+	float mix,
+	float taper,
+	float noiseScale,
+	float noiseSpeed,
+	float flameStrength,
+	float edgePower,
+	float verticalFade)
+{
 	if (!auraInitialized_) { InitializeAuraPipeline(); }
 	if (!auraMappedData_) { return; }
 
 	auto* cb = reinterpret_cast<AuraCB*>(auraMappedData_);
 	cb->CenterUV = centerUV;
+	cb->TopUV = topUV;
+	cb->BottomUV = bottomUV;
+	cb->Aspect = aspect;
+
 	cb->Time = time;
-	cb->Scale = scale;
+	cb->Radius = radius;
+
 	cb->Intensity = intensity;
 	cb->UseRing = useRing;
 	cb->RingRadius = ringRadius;
 	cb->RingWidth = ringWidth;
+
 	cb->ColorA = colorA;
 	cb->ColorB = colorB;
 	cb->Mix = mix;
+
+	cb->Taper = taper;
+	cb->NoiseScale = noiseScale;
+	cb->NoiseSpeed = noiseSpeed;
+	cb->FlameStrength = flameStrength;
+	cb->EdgePower = edgePower;
+	cb->VerticalFade = verticalFade;
 }
 
 void DirectXCommon::InitializeFixFPS() {
