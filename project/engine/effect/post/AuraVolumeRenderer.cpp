@@ -29,11 +29,13 @@ void AuraVolumeRenderer::Draw(
 	time_ += 1.0f / 60.0f;
 
 	float radius = (collider.x * 0.5f) * radiusMul_;
-	float height = (collider.y) * heightMul_;
+	float height = (collider.y * 0.5f) * heightMul_;
+
+	Vector3 basePos = bossCenter - Vector3{ 0.0f, height * 0.5f, 0.0f }; // ボスの中心から下半分移動した位置を基準にする
 
 	dxCommon_->DrawAuraVolume(
 		viewProj,
-		bossCenter,
+		basePos,
 		radius,
 		height,
 		sliceCount_,
@@ -65,7 +67,7 @@ void AuraVolumeRenderer::DrawImGui(const char* label) {
 			color_ = { col[0], col[1], col[2] };
 		}
 
-		ImGui::SliderFloat("Intensity", &intensity_, 0.0f, 1.0f);
+		ImGui::SliderFloat("Intensity", &intensity_, 0.0f, 10.0f);
 		ImGui::SliderFloat("AlphaBase", &alphaBase_, 0.0f, 1.0f);
 
 		ImGui::SliderFloat("RadiusMul", &radiusMul_, 0.6f, 2.5f);

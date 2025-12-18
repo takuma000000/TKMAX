@@ -79,47 +79,47 @@ void BossManager::Update(float dt) {
 	}
 
 	// ===== Aura（予備動作中だけ）=====
-	if (dxCommon_ && camera_ && bossController_) {
-		AuraEffect* aura = dxCommon_->GetAuraEffect();
-		if (aura) {
-			const bool active = bossController_->IsAuraActive(); // DashWindup中 true :contentReference[oaicite:6]{index=6}
-			aura->SetActive(active);
+	//if (dxCommon_ && camera_ && bossController_) {
+	//	AuraEffect* aura = dxCommon_->GetAuraEffect();
+	//	if (aura) {
+	//		const bool active = bossController_->IsAuraActive(); // DashWindup中 true :contentReference[oaicite:6]{index=6}
+	//		aura->SetActive(active);
 
-			if (active) {
-				Matrix4x4 vp = camera_->GetViewProjectionMatrix();
-				Vector3 bossPos = boss_->GetWorldPosition();
+	//		if (active) {
+	//			Matrix4x4 vp = camera_->GetViewProjectionMatrix();
+	//			Vector3 bossPos = boss_->GetWorldPosition();
 
-				// ざっくり “頭〜足” を collider から推定（無ければ定数でもOK）
-				Vector3 col = boss_->GetColliderScale();
-				float halfH = col.y * 0.5f;
+	//			// ざっくり “頭〜足” を collider から推定（無ければ定数でもOK）
+	//			Vector3 col = boss_->GetColliderScale();
+	//			float halfH = col.y * 0.5f;
 
-				Vector3 topW = bossPos + Vector3{ 0.0f, halfH, 0.0f };
-				Vector3 bottomW = bossPos - Vector3{ 0.0f, halfH, 0.0f };
+	//			Vector3 topW = bossPos + Vector3{ 0.0f, halfH, 0.0f };
+	//			Vector3 bottomW = bossPos - Vector3{ 0.0f, halfH, 0.0f };
 
-				Vector2 centerUV = WorldToUV(bossPos, vp);
-				Vector2 topUV = WorldToUV(topW, vp);
-				Vector2 bottomUV = WorldToUV(bottomW, vp);
+	//			Vector2 centerUV = WorldToUV(bossPos, vp);
+	//			Vector2 topUV = WorldToUV(topW, vp);
+	//			Vector2 bottomUV = WorldToUV(bottomW, vp);
 
-				float aspect = dxCommon_->GetViewport().Width / dxCommon_->GetViewport().Height;
+	//			float aspect = dxCommon_->GetViewport().Width / dxCommon_->GetViewport().Height;
 
-				aura->SetCenterUV(centerUV);
-				aura->SetTopUV(topUV);
-				aura->SetBottomUV(bottomUV);
-				aura->SetAspect(aspect);
+	//			aura->SetCenterUV(centerUV);
+	//			aura->SetTopUV(topUV);
+	//			aura->SetBottomUV(bottomUV);
+	//			aura->SetAspect(aspect);
 
-				// 立体っぽくする推奨初期値
-				aura->SetTaper(0.65f);
-				aura->SetNoiseScale(7.0f);
-				aura->SetNoiseSpeed(1.4f);
-				aura->SetFlameStrength(1.4f);
-				aura->SetEdgePower(2.2f);
-				aura->SetVerticalFade(0.12f);
+	//			// 立体っぽくする推奨初期値
+	//			aura->SetTaper(0.65f);
+	//			aura->SetNoiseScale(7.0f);
+	//			aura->SetNoiseSpeed(1.4f);
+	//			aura->SetFlameStrength(1.4f);
+	//			aura->SetEdgePower(2.2f);
+	//			aura->SetVerticalFade(0.12f);
 
-				// GPUへ送る
-				aura->PushToGpu();
-			}
-		}
-	}
+	//			// GPUへ送る
+	//			aura->PushToGpu();
+	//		}
+	//	}
+	//}
 
 	// ボス本体更新
 	boss_->Update();
@@ -149,7 +149,7 @@ void BossManager::Draw(DirectXCommon* dxCommon) {
 	boss_->Draw(dxCommon);
 
 	// 3Dオーラ
-	if (auraVolume_ && bossController_ && camera_) {
+	/*if (auraVolume_ && bossController_ && camera_) {
 		const bool active = bossController_->IsAuraActive();
 		auraVolume_->Draw(
 			camera_->GetViewProjectionMatrix(),
@@ -157,7 +157,7 @@ void BossManager::Draw(DirectXCommon* dxCommon) {
 			boss_->GetColliderScale(),
 			active
 		);
-	}
+	}*/
 
 	// ボス弾など（元のまま）
 	for (auto& b : bossBullets_) {

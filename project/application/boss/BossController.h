@@ -3,6 +3,7 @@
 #include <algorithm>
 #include "Enemy.h"
 #include "MyMath.h"
+#include "AuraVolumeRenderer.h"
 
 #ifdef USE_IMGUI
 #include "imgui.h"
@@ -257,4 +258,7 @@ private:
 	float   auraIntensity_ = 1.0f;
 	float   auraScaleMul_ = 1.6f;            // ボスサイズに対する広がり倍率（仮）
 	bool    auraUseRing_ = true;             // 足元リングのON/OFF
+
+	// auraVolume_
+	AuraVolumeRenderer* auraVolume_ = nullptr;
 };

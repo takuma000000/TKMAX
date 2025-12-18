@@ -4,6 +4,8 @@
 void AuraEffect::Initialize(DirectXCommon* dxCommon) {
 	dxCommon_ = dxCommon;
 	active_ = false;
+
+	auraVolumeRenderer_.Initialize(dxCommon_); // AuraVolumeRenderer の初期化
 }
 
 void AuraEffect::Update(float dt) {
@@ -55,8 +57,6 @@ void AuraEffect::ImGuiDebug() {
 	ImGui::ColorEdit3("ColorA", &colorA_.x);
 	ImGui::ColorEdit3("ColorB", &colorB_.x);
 	ImGui::DragFloat("Mix", &mix_, 0.01f, 0.0f, 1.0f);
-
-	auraVolumeRenderer_.DrawImGui("Aura Volume");
 
 	ImGui::End();
 }

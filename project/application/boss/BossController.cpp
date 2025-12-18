@@ -240,6 +240,13 @@ void BossController::ImGuiDebug(Enemy& boss) {
 		ImGui::ColorEdit3("色(Color)", &auraColor_.x);
 	}
 
+#ifdef USE_IMGUI
+	if (auraVolume_) {
+		auraVolume_->DrawImGui("Aura Volume (3D)");
+	}
+#endif
+
+
 	ImGui::End();
 #endif
 }

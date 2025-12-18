@@ -51,7 +51,7 @@ private:
 
 	Vector2 centerUV_{ 0.5f, 0.5f };
 	float   scale_ = 0.22f;      // 画面上の広がり
-	float   intensity_ = 1.25f;  // 明るさ
+	float   intensity_ = 0.35f;  // 明るさ
 
 	bool    useRing_ = true;
 	float   ringRadius_ = 0.12f;
