@@ -46,7 +46,7 @@ void ParticleManager::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager
 
 }
 
-void ParticleManager::Update() {
+void ParticleManager::Update(float dt) {
 	MakeBillboardMatrix(); //ビルボードマトリクス作成
 
 	for (std::unordered_map<std::string, ParticleGroup>::iterator particleGroupIterator = particleGroups.begin(); particleGroupIterator != particleGroups.end();) { //各パーティクルグループの更新

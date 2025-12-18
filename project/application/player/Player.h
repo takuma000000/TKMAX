@@ -36,7 +36,7 @@ public:
 	/// <summary>
 	/// プレイヤーを更新します。
 	/// </summary>
-	void Update();
+	void Update(float dt);
 	/// <summary>
 	/// プレイヤーを描画します。
 	/// </summary>

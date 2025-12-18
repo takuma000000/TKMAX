@@ -150,6 +150,10 @@ void GameScene::Initialize() {
 	aura_ = std::make_unique<AuraEffect>();
 	aura_->Initialize(dxCommon);
 	dxCommon->SetAuraEffect(aura_.get());
+	// ──────────────── タイムスケールコントローラーの初期化 ───────────────
+	timeScale_.Initialize();
+	bossManager_->SetTimeScaleController(&timeScale_);
+	clearSlowRequested_ = false; // クリアスロー未要求状態で開始
 }
 
 void GameScene::Finalize() {
@@ -174,6 +178,10 @@ void GameScene::Update() {
 	Input::GetInstance()->Update();
 	// 毎フレームの最初に、前フレームのラインをクリア
 	LineRenderer::GetInstance()->BeginFrame();
+	// フレームタイム計測
+	const float rawDt = dt; /// デフォルトデルタタイム（補間なし）
+	timeScale_.Update(rawDt); // タイムスケールコントローラーの更新
+	const float scaledDt = rawDt * timeScale_.GetScale(); /// スローデルタタイム
 
 	// 描画コール・メモリの初期化
 	ResetDrawCallCount();
@@ -181,9 +189,9 @@ void GameScene::Update() {
 
 	// クリア演出中なら専用処理だけ回して終わり
 	if (clearSequence_) {
-		bool finished = UpdateClearSequence(dt);
+		bool finished = UpdateClearSequence(scaledDt); // クリア演出シーケンスの更新
+		// 終了したらシーン切り替え
 		if (finished) {
-			// アイリス閉じまで終わったので GameClearScene へ
 			sceneManager_->SetNextScene(new GameClearScene(dxCommon, srvManager));
 			return;
 		}
@@ -196,7 +204,7 @@ void GameScene::Update() {
 
 		// 敵の更新（敵ロジックは EnemyManager に完全委譲）
 		if (enemyManager_) {
-			enemyManager_->Update(dt);
+			enemyManager_->Update(scaledDt);
 		}
 
 		// 全てのWaveが終了していて、敵がいない → ボスへ進行 or クリア処理
@@ -233,15 +241,15 @@ void GameScene::Update() {
 		// スカイボックスの回転更新
 		skybox_->UpdateRotation();
 		// プレイヤーの更新
-		player_->Update();
+		player_->Update(scaledDt);
 		// ボスマネージャの更新
 		if (bossManager_) {
-			bossManager_->Update(dt);
+			bossManager_->Update(scaledDt);
 		}
 
 		// 画面エフェクトの更新=================================
 		if (radialBlur_) {
-			radialBlur_->Update(dt); // ラジアルブラーの更新
+			radialBlur_->Update(scaledDt); // ラジアルブラーの更新
 		}
 		if (vignetting_) {
 			// ボス戦中かどうかを BossManager から聞いてフラグを渡す
@@ -252,10 +260,10 @@ void GameScene::Update() {
 
 			vignetting_->SetBossWave(bossWave);
 
-			vignetting_->Update(dt); // ビネット更新（ボス戦中ならフェードIN、終わったらOUT）
+			vignetting_->Update(scaledDt); // ビネット更新（ボス戦中ならフェードIN、終わったらOUT）
 		}
 		if (fog_) {
-			fog_->Update(dt); // フォグの更新
+			fog_->Update(scaledDt); // フォグの更新
 		}
 		// ==================================================
 
@@ -416,7 +424,7 @@ void GameScene::Update() {
 		}
 
 		// その他のオブジェクト・パーティクルの更新
-		ParticleManager::GetInstance()->Update();
+		ParticleManager::GetInstance()->Update(scaledDt);
 
 		// ─── プレイヤー死亡時のGameOver遷移 ───
 		if (player_ && player_->IsDead()) {
@@ -704,6 +712,16 @@ void GameScene::ImGuiDebug() {
 }
 
 void GameScene::StartClearSequence() {
+	if (!clearSlowRequested_) {
+		timeScale_.RequestSlow(
+			0.15f,  // どれだけ遅くするか（スケール）
+			0.30f,  // 維持時間（秒）
+			0.02f,  // 入りの速さ（秒）
+			0.20f   // 戻りの速さ（秒）
+		);
+		clearSlowRequested_ = true;
+	}
+
 	clearSequence_ = true;
 	clearPhase_ = ClearPhase::CamZoom;
 	clearTimer_ = 0.0f;
@@ -876,9 +894,13 @@ bool GameScene::UpdateClearSequence(float dt) {
 		break;
 	}
 
+	// フレームタイム計測
+	const float rawDt = dt; /// デフォルトデルタタイム（補間なし）
+	timeScale_.Update(rawDt); // タイムスケールコントローラーの更新
+	const float scaledDt = rawDt * timeScale_.GetScale(); /// スローデルタタイム
 	// パーティクルは普通に動かす
-	ParticleManager::GetInstance()->Update();
-
+	ParticleManager::GetInstance()->Update(scaledDt);
+	
 	return false; // まだ演出継続中
 }
 

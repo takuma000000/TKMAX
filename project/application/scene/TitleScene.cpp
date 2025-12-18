@@ -226,7 +226,7 @@ void TitleScene::Update(){
 	if (skyPitch_ < 0.0f)    skyPitch_ += kTwoPi;
 	skybox_->SetRotation({ skyPitch_, 0.0f, 0.0f });
 
-	ParticleManager::GetInstance()->Update();
+	ParticleManager::GetInstance()->Update(dt);
 
 #ifdef USE_IMGUI
 

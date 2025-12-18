@@ -19,43 +19,39 @@ void Enemy::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	startX_ = object_->GetTranslate().x; // サイン波の基準用
 }
 
-void Enemy::Update() {
+void Enemy::Update(float dt) {
 
-	// 共通の固定フレーム時間
-	const float dt = 1.0f / 60.0f;
+	// 60fps基準の値をそのまま使えるようにする係数
+	// dt=1/60 のとき factor=1.0 になる
+	const float factor = dt * 60.0f;
 
 	// 死亡演出中ならこっちを優先
 	if (isDying_) {
 		deathTimer_ += dt;
-		float t = std::min(deathTimer_ / deathDuration_, 1.0f); // 0.0 → 1.0
+		float t = std::min(deathTimer_ / deathDuration_, 1.0f);
 
-		// 基本値を取得
 		Vector3 pos = object_->GetTranslate();
 		Vector3 rot = object_->GetRotate();
 		Vector3 scale = baseScale_;
 
 		switch (deathReaction_) {
 		case EnemyDeathReaction::BlowAway: {
-			// いままでの「吹っ飛び＋縮小」
-			float speed = 1.0f - t;                    // だんだん減速
-			pos += deathVelocity_ * speed * dt;        // 吹っ飛び
+			float speed = 1.0f - t;
+			pos += deathVelocity_ * speed * dt;
 
 			rot.x += deathRotateSpeed_.x * dt;
 			rot.y += deathRotateSpeed_.y * dt;
 			rot.z += deathRotateSpeed_.z * dt;
 
-			float s = 1.0f - t;                        // 全体的に縮む
+			float s = 1.0f - t;
 			scale = { baseScale_.x * s, baseScale_.y * s, baseScale_.z * s };
 			break;
 		}
 		case EnemyDeathReaction::RiseAbsorb: {
-			// その場付近で上に吸い込まれるように消える
-			pos += deathVelocity_ * dt;                // 上方向へ一定速度で移動
+			pos += deathVelocity_ * dt;
 
-			// 少しだけY軸回転
 			rot.y += deathRotateSpeed_.y * dt;
 
-			// XZだけ細くなっていく（縦方向はあまり潰さない）
 			float s = 1.0f - t;
 			scale = {
 				baseScale_.x * s * 0.5f,
@@ -65,13 +61,10 @@ void Enemy::Update() {
 			break;
 		}
 		case EnemyDeathReaction::Collapse: {
-			// 前のめりに崩れ落ちる
-			pos += deathVelocity_ * dt;                // 下＋ちょっと前に落ちる
+			pos += deathVelocity_ * dt;
 
-			// X 回転を強めに（前に倒れ込む）
 			rot.x += deathRotateSpeed_.x * dt;
 
-			// Yだけペシャンと潰れる感じ
 			float s = 1.0f - t;
 			scale = {
 				baseScale_.x,
@@ -81,23 +74,15 @@ void Enemy::Update() {
 			break;
 		}
 		case EnemyDeathReaction::BossFinal: {
-
-			// 0.0〜1.0 のうち、0.7 まではその場でガクガク、
-			// 0.7 以降で「上＋奥」にぶっ飛ぶイメージ
 			const float launchStartT = 0.5f;
 
 			if (t < launchStartT) {
-				// ─────────────────────
-				// ① ぶっ飛ぶ前：その場でガクガク＋脈打ち
-				// ─────────────────────
 				float shakeAmp = 0.25f;
 				float shakeFreq = 18.0f;
 
-				// ガクガク揺れ
-				pos.x += sinf(deathTimer_ * shakeFreq) * shakeAmp;                // 横揺れ
-				pos.y += cosf(deathTimer_ * shakeFreq * 0.7f) * shakeAmp * 0.6f; // 縦揺れ
+				pos.x += sinf(deathTimer_ * shakeFreq) * shakeAmp;
+				pos.y += cosf(deathTimer_ * shakeFreq * 0.7f) * shakeAmp * 0.6f;
 
-				// 脈打つようにスケール変化
 				float pulse = 1.0f + 0.10f * sinf(deathTimer_ * 10.0f);
 				scale = {
 					baseScale_.x * pulse,
@@ -105,27 +90,22 @@ void Enemy::Update() {
 					baseScale_.z * pulse,
 				};
 
-				// 揺れている間、体のあちこちから小爆発
 				ParticleManager* pm = ParticleManager::GetInstance();
-				if (std::rand() % 3 != 0) { // 出過ぎ防止
-					Vector3 center = GetWorldPosition(); // ボス中心位置
-					Vector3 off = { // コライダー範囲内ランダム
+				if (std::rand() % 3 != 0) {
+					Vector3 center = GetWorldPosition();
+					Vector3 off = {
 						(static_cast<float>(std::rand()) / RAND_MAX - 0.5f) * colliderScale_.x,
 						(static_cast<float>(std::rand()) / RAND_MAX - 0.5f) * colliderScale_.y,
 						(static_cast<float>(std::rand()) / RAND_MAX - 0.5f) * colliderScale_.z
 					};
-					Vector3 emitPos = center + off * 0.5f; // 少し内側から出す
-					pm->Emit("bossDeath_bomb", emitPos, 1); // 小爆発エフェクト
+					Vector3 emitPos = center + off * 0.5f;
+					pm->Emit("bossDeath_bomb", emitPos, 1);
 				}
 			} else {
-				// ② ぶっ飛びフェーズ
-
-				// 最初の1回だけ開始位置を固定＆「最後の大きい演出」を出す
 				if (!bossFinalLaunchStarted_) {
 					bossFinalLaunchStarted_ = true;
-					bossFinalLaunchStartPos_ = pos; // このフレームの位置をスタート位置として保存
+					bossFinalLaunchStartPos_ = pos;
 
-					// ★ ここで既存の「最後の大きい演出」を出す
 					ParticleManager* pm = ParticleManager::GetInstance();
 					Vector3 center = GetWorldPosition();
 					pm->Emit("bossDeath_ring", center, 2);
@@ -133,15 +113,14 @@ void Enemy::Update() {
 					pm->Emit("bossDeath_smoke", center, 24);
 				}
 
-				// ここから下は「回転上昇奥」の処理（今あるやつそのまま）
 				float u = (t - launchStartT) / (1.0f - launchStartT);
 				if (u < 0.0f) u = 0.0f;
 				if (u > 1.0f) u = 1.0f;
 
-				float k = u * u * u; // OutCubic っぽい
+				float k = u * u * u;
 
 				Vector3 upDir = { 0.0f, 1.0f, 0.0f };
-				Vector3 forwardDir = { 0.0f, 0.0f, 1.0f }; // +Z が奥
+				Vector3 forwardDir = { 0.0f, 0.0f, 1.0f };
 
 				float upDist = 15.0f;
 				float depthDist = 40.0f;
@@ -170,56 +149,50 @@ void Enemy::Update() {
 		object_->SetRotate(rot);
 		object_->SetScale(scale);
 
-		// ボスだけは「最後の30%だけフェードアウト」
 		if (deathReaction_ == EnemyDeathReaction::BossFinal) {
-			if (t < 0.7f) { // 最初の70%は不透明
-				deathAlpha_ = 1.0f; // 完全不透明
-			} else { // 最後の30%でフェードアウト
-				float u = (t - 0.7f) / 0.3f; // 0.0 → 1.0
-				if (u > 1.0f) u = 1.0f; // Clamp
-				deathAlpha_ = 1.0f - u; // 徐々に透明化
+			if (t < 0.7f) {
+				deathAlpha_ = 1.0f;
+			} else {
+				float u = (t - 0.7f) / 0.3f;
+				if (u > 1.0f) u = 1.0f;
+				deathAlpha_ = 1.0f - u;
 			}
-		} else { // 通常敵は最初から均等に透明化
-			deathAlpha_ = 1.0f - t; // 通常は全体で均等に透明化
+		} else {
+			deathAlpha_ = 1.0f - t;
 		}
 
-		object_->SetColor({ 1.0f, 1.0f, 1.0f, deathAlpha_ }); // 透明度設定
+		object_->SetColor({ 1.0f, 1.0f, 1.0f, deathAlpha_ });
 		object_->Update();
 
 		if (deathTimer_ >= deathDuration_) {
-			// 敵が完全に消える瞬間に専用エフェクトを出す
 			ParticleManager* pm = ParticleManager::GetInstance();
 			Vector3 emitPos = GetWorldPosition();
 
 			switch (deathReaction_) {
 			case EnemyDeathReaction::BlowAway:
-				// 吹っ飛び系：破片多め
 				pm->Emit("enemyDeath_core", emitPos, 1);
 				pm->Emit("enemyDeath_shard", emitPos, 20);
 				pm->Emit("enemyDeath_smoke", emitPos, 4);
 				break;
 			case EnemyDeathReaction::RiseAbsorb:
-				// 吸い込み系：ビット＋縦ラインメイン
 				pm->Emit("enemyDeath_core", emitPos, 1);
 				pm->Emit("enemyDeath_shard", emitPos, 14);
 				pm->Emit("enemyDeath_smoke", emitPos, 6);
 				break;
 			case EnemyDeathReaction::Collapse:
-				// 崩れ落ち系：破片少なめ＋控えめなラインメイテックフィルダーズ
 				pm->Emit("enemyDeath_shard", emitPos, 10);
 				pm->Emit("enemyDeath_smoke", emitPos, 3);
 				break;
 			case EnemyDeathReaction::BossFinal:
 				if (!bossFinalBigBurstDone_) {
-					// ボス用：最後にドカンと大きめエフェクト
-					pm->Emit("bossClear_core", emitPos, 1);   // 爆心
-					pm->Emit("bossClear_ring", emitPos, 3);   // でかいショックウェーブ
-					pm->Emit("bossClear_spark", emitPos, 80);  // 光の破片
-					pm->Emit("bossClear_debris", emitPos, 60);  // 重めの破片
+					pm->Emit("bossClear_core", emitPos, 1);
+					pm->Emit("bossClear_ring", emitPos, 3);
+					pm->Emit("bossClear_spark", emitPos, 80);
+					pm->Emit("bossClear_debris", emitPos, 60);
 				}
 				break;
 			}
-			isDead_ = true; // 完全に消えたフラグを立てる
+			isDead_ = true;
 		}
 		return;
 	}
@@ -232,127 +205,102 @@ void Enemy::Update() {
 		}
 	}
 
-	// ---- 位置更新（挙動別）----
 	Vector3 pos = object_->GetTranslate();
 
-	// freezeMove_ のときは「挙動による位置更新」を全部スキップ
 	if (!freezeMove_) {
-
-		switch (behavior_) { // 挙動別移動
-		case EnemyBehavior::StraightStop: { // いまの「Z手前に進んでstopZで止まる」
+		switch (behavior_) {
+		case EnemyBehavior::StraightStop: {
 			if (!stopMove_) {
-				pos += velocity_;
+				pos += velocity_ * factor;
 				if (pos.z <= stopZ_) { pos.z = stopZ_; stopMove_ = true; }
 			}
 			break;
 		}
-		case EnemyBehavior::SineX: { // Xをサイン波で揺らしながら前進
-			t_ += 0.05f;
-			pos.z += velocity_.z; // 手前へ
+		case EnemyBehavior::SineX: {
+			t_ += 0.05f * factor;
+			pos.z += velocity_.z * factor;
 			pos.x = startX_ + std::sinf(sinePhase_ + t_ * sineFreq_) * sineAmpX_;
 			if (pos.z <= stopZ_) { pos.z = stopZ_; }
 			break;
 		}
-		case EnemyBehavior::StrafeLtoR: { // Xを左右往復しながら前進
-			pos.z += velocity_.z;
-			// 簡易左右往復
-			strafePosX_ += strafeSpeed_ * strafeDir_;
+		case EnemyBehavior::StrafeLtoR: {
+			pos.z += velocity_.z * factor;
+			strafePosX_ += strafeSpeed_ * strafeDir_ * factor;
 			if (strafePosX_ > strafeRight_) { strafePosX_ = strafeRight_; strafeDir_ = -1; }
 			if (strafePosX_ < strafeLeft_) { strafePosX_ = strafeLeft_;  strafeDir_ = +1; }
 			pos.x = strafePosX_;
 			if (pos.z <= stopZ_) { pos.z = stopZ_; }
 			break;
 		}
-		case EnemyBehavior::ChasePlayer: { // プレイヤー方向にじわっと追尾
-			pos.z += velocity_.z;
+		case EnemyBehavior::ChasePlayer: {
+			pos.z += velocity_.z * factor;
 			if (playerGetter_) {
 				Vector3 toP = playerGetter_() - pos;
 				Vector3 desire = { toP.x, toP.y, 0.0f };
 				float len = MyMath::Length(desire);
 				if (len > 0.001f) {
 					Vector3 dir = MyMath::Normalize(desire);
-					pos.x += dir.x * chaseSpeed_;
-					pos.y += dir.y * chaseSpeed_;
+					pos.x += dir.x * chaseSpeed_ * factor;
+					pos.y += dir.y * chaseSpeed_ * factor;
 				}
 			}
 			if (pos.z <= stopZ_) { pos.z = stopZ_; }
 			break;
 		}
-		case EnemyBehavior::PounceFromAbove:
-		{
-			if (!pounceStarted_) {
-				break;
-			}
+		case EnemyBehavior::PounceFromAbove: {
+			if (!pounceStarted_) { break; }
 
-			// 軌道エフェクト用
 			ParticleManager* pm = ParticleManager::GetInstance();
 
-			// まだ落下中（曲線で近づいている）フェーズ
 			if (!pounceDiving_) {
-
 				pounceTime_ += dt;
 				float t = pounceTime_ / pounceDuration_;
 				if (t > 1.0f) t = 1.0f;
 
-				// 0→1 を少しなめらかに
 				auto EaseOutQuad = [](float x) {
 					return 1.0f - (1.0f - x) * (1.0f - x);
 					};
 				float u = EaseOutQuad(t);
 
-				// スタート→頂点→ターゲット を通るカーブ
 				Vector3 pos1 = MyMath::Vector3Lerp(pounceStart_, pounceApex_, u);
 				Vector3 pos2 = MyMath::Vector3Lerp(pounceApex_, pounceTarget_, u);
 				Vector3 newPos = MyMath::Vector3Lerp(pos1, pos2, u);
 
-				pos = newPos; // Enemy::Update 内の pos を更新
+				pos = newPos;
 
-				// このフレームの軌道位置に「レール＋スパーク」を出す
 				{
 					Vector3 emitPos = pos;
-					// コアレール（軌道の筋）
 					pm->Emit("enemyPounceTrail", emitPos, 2);
-					// スパーク（軌道から飛び散る光）
 					pm->Emit("enemyPounceSpark", emitPos, 3);
 				}
 
-				// 落下フェーズが終わったら「通過フェーズ」に切り替え
 				if (t >= 1.0f) {
-
-					// ここでは「これまでの軌道の延長線上」に進ませる
-					//    スタート→ターゲット方向を基準にして、そのまま突き抜ける
 					Vector3 dir = pounceTarget_ - pounceStart_;
 					float len = MyMath::Length(dir);
 					if (len > 0.001f) {
 						dir = MyMath::Normalize(dir);
 					} else {
-						// 万が一同一点だった場合の保険方向
 						dir = { 0.0f, -0.1f, -1.0f };
 					}
 
-					// 少し下向き成分を足して「落ちていく」感じを出す
 					dir.y -= 0.2f;
 					dir = MyMath::Normalize(dir);
 
-					float diveSpeed = 0.7f; // 落下後の突っ切り速度（好みで調整）
+					float diveSpeed = 0.7f;
 					velocity_ = dir * diveSpeed;
 
-					pounceDiving_ = true; // 通過フェーズへ
+					pounceDiving_ = true;
 				}
 			} else {
-				// 通過フェーズ：そのまま直線移動（もうプレイヤー方向に曲がらない）
-				pos += velocity_;
+				pos += velocity_ * factor;
 
-				// ダイブ中も軌道を残す（本数は落としてもOK）
 				Vector3 emitPos = pos;
 				pm->Emit("enemyPounceTrail", emitPos, 2);
 				pm->Emit("enemyPounceSpark", emitPos, 2);
 			}
 			break;
 		}
-		case EnemyBehavior::FreeRoam:
-		{
-			// 目標点がない or 近づきすぎたら、新しい目標点を決める
+		case EnemyBehavior::FreeRoam: {
 			auto random01 = []() {
 				return static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
 				};
@@ -361,53 +309,45 @@ void Enemy::Update() {
 			if (!hasRoamTarget_ || distToTarget < 0.5f) {
 				hasRoamTarget_ = true;
 
-				// 基本は範囲内ランダム
 				Vector3 target;
 				target.x = roamMin_.x + (roamMax_.x - roamMin_.x) * random01();
 				target.y = roamMin_.y + (roamMax_.y - roamMin_.y) * random01();
 				target.z = roamMin_.z + (roamMax_.z - roamMin_.z) * random01();
 
-				// 怒り時はプレイヤー方向に少し寄せる
 				if (isAngry_ && playerGetter_) {
 					Vector3 p = playerGetter_();
-					// プレイヤーのXだけ強めに反映して「間に割り込んでくる」感じ
 					target.x = (target.x * 0.4f) + (p.x * 0.6f);
-					// 範囲からはみ出さないようクランプ
 					target.x = std::max(roamMin_.x, std::min(roamMax_.x, target.x));
 				}
 
 				roamTarget_ = target;
 			}
 
-			// 目標に向かって移動
 			Vector3 toT = roamTarget_ - pos;
 			float len = MyMath::Length(toT);
 			if (len > 0.001f) {
 				Vector3 dir = toT / len;
 				float speed = isAngry_ ? roamSpeedAngry_ : roamSpeedNormal_;
-				pos += dir * speed;
+				pos += dir * speed * factor;
 			}
 
-			// 念のため範囲内にクランプ
 			pos.x = std::max(roamMin_.x, std::min(roamMax_.x, pos.x));
 			pos.y = std::max(roamMin_.y, std::min(roamMax_.y, pos.y));
 			pos.z = std::max(roamMin_.z, std::min(roamMax_.z, pos.z));
 			break;
 		}
-		} // switch(behavior_)
-	}
-
-	object_->SetTranslate(pos); // 位置反映
-
-	// ── プレイヤーを通り過ぎて画面外まで来たら「逃げた」として処理 ──
-	if (!isDying_) {
-		if (pos.z < -30.0f) { // しきい値は必要に応じて調整
-			escaped_ = true;  // 逃亡フラグ
-			isDead_ = true;  // Manager 側で erase してもらう
 		}
 	}
 
-	// ---- 当たり判定ワイヤーボックス描画 ----
+	object_->SetTranslate(pos);
+
+	if (!isDying_) {
+		if (pos.z < -30.0f) {
+			escaped_ = true;
+			isDead_ = true;
+		}
+	}
+
 	{
 		Vector3 center = GetWorldPosition();
 		Vector3 size = colliderScale_;
@@ -426,31 +366,28 @@ void Enemy::Update() {
 			}
 
 			Vector3 rayDir = reticle_->GetAimDirection();
-
 			lr->AddAABBWithRayHighlight(center, size, rayOrigin, rayDir, normal, hit);
 		} else {
 			lr->AddAABB(center, size, normal);
 		}
 	}
 
-	// ---- ロック中のパルス ----
 	if (isLocked_) {
-		pulseT_ += 0.12f;
+		pulseT_ += 0.12f * factor;
 		float s = 1.0f + 0.15f * sinf(pulseT_);
 		object_->SetScale({ baseScale_.x * s, baseScale_.y * s, baseScale_.z * s });
-	} else { // 通常スケールに戻す
+	} else {
 		object_->SetScale(baseScale_);
 	}
 
-	// ---- 将来の射撃フック ----
-	if (canShoot_ && !isDying_) { // 死亡演出中は撃たない
-		shootTimer_++;
+	if (canShoot_ && !isDying_) {
+		shootTimer_ += factor; // ★ フレーム加算→dt換算
 		if (shootTimer_ >= shootInterval_) {
 			shootTimer_ = 0.0f;
 		}
 	}
 
-	object_->Update(); // Object3d の更新
+	object_->Update();
 }
 
 void Enemy::Draw(DirectXCommon* dxCommon) {

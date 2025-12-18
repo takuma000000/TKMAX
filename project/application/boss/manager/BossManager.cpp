@@ -64,6 +64,10 @@ void BossManager::StartBattle() {
 	Vector3 arenaMin{ -18.0f, 3.0f, 35.0f }; // Y軸は地面から少し上
 	Vector3 arenaMax{ 18.0f, 12.0f, 70.0f }; // Y軸は天井より少し下
 	bossController_->Initialize(arenaMin, arenaMax); // 行動範囲セット
+
+	// リセット
+	bossZoomStarted_ = false;
+	slowTriggered_ = false;
 }
 
 void BossManager::Update(float dt) {
@@ -122,7 +126,7 @@ void BossManager::Update(float dt) {
 	//}
 
 	// ボス本体更新
-	boss_->Update();
+	boss_->Update(dt);
 
 	// ボス撃破ズーム開始（1回だけ）
 	if (!bossZoomStarted_ && boss_->IsDying()) {
@@ -130,6 +134,17 @@ void BossManager::Update(float dt) {
 			player_->StartBossDeathCameraZoom();
 		}
 		bossZoomStarted_ = true;
+
+		// ボスP2BGM再生
+		if (!slowTriggered_ && timeScale_) {
+			timeScale_->RequestSlow(
+				0.02f, // どれくらい遅くするか / 1.0f=通常速度
+				3.0f, // スロー持続時間
+				0.05f, // ブレンドイン時間
+				0.15f // ブレンドアウト時間
+			);
+			slowTriggered_ = true;
+		}
 	}
 
 	// ボス弾更新（共通処理にまとめた）

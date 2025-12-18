@@ -47,7 +47,7 @@ void EnemyManager::Update(float dt) {
 
 		// フラグを渡す
 		e->SetFreezeMove(freezeEnemies_);
-		e->Update();
+		e->Update(dt);
 
 		if (e->IsDead()) {
 			// ちゃんと倒した敵だけ、プレイヤーやカウンタに通知する

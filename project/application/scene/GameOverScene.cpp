@@ -101,10 +101,10 @@ void GameOverScene::Finalize(){}
 void GameOverScene::Update(){
 	Input::GetInstance()->Update();
 
-	if (player_) { player_->Update(); }
+	if (player_) { player_->Update(dt_); }
 	if (camera_) { camera_->Update(); }
 	if (dirLight_) { dirLight_->Update(); }
-	ParticleManager::GetInstance()->Update();
+	ParticleManager::GetInstance()->Update(dt_);
 
 	if (irisOpening_) {
 		irisScale_ = UpdateIrisScale(iris_.get(), irisOpenTween_, dt_);

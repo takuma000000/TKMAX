@@ -192,6 +192,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\effect\post\RadialBlurEffect.cpp" />
     <ClCompile Include="engine\effect\post\VignettingEffect.cpp" />
     <ClCompile Include="engine\effect\post\WaterRippleEffect.cpp" />
+    <ClCompile Include="engine\func\common\TimeScaleController.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\enemy\manager\EnemyManager.h" />
@@ -265,6 +266,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\effect\post\RadialBlurEffect.h" />
     <ClInclude Include="engine\effect\post\VignettingEffect.h" />
     <ClInclude Include="engine\effect\post\WaterRippleEffect.h" />
+    <ClInclude Include="engine\func\common\TimeScaleController.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

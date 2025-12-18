@@ -51,7 +51,7 @@ public:
 	/// <summary>
 	/// 敵を更新します。
 	/// </summary>
-	void Update();
+	void Update(float dt);
 	/// <summary>
 	/// 敵を描画します。
 	/// </summary>
@@ -397,7 +397,7 @@ private:
 	EnemyDeathReaction deathReaction_ = EnemyDeathReaction::BlowAway;
 
 	// --- BossFinal 用：ぶっ飛び＆カメラ演出 ---
-	bool   bossFinalBigBurstDone_ = false; // 大きい撃破円を出したか
+	bool   bossFinalBigBurstDone_ = false; // 大きいz撃破円を出したか
 	bool   bossFinalCameraInited_ = false; // カメラ初期化済みフラグ
 	Vector3 bossFinalCameraStartPos_{};    // カメラの開始位置
 	Vector3 bossFinalCameraEndPos_{};      // カメラの終了位置
@@ -436,8 +436,4 @@ private:
 	float angryTimer_ = 0.0f;
 	float angryDuration_ = 0.0f;
 	bool  freezeMove_ = false;
-	//--------------------------------------------------------------
-	//  固定フレーム想定
-	//--------------------------------------------------------------
-	const float dt = 1.0f / 60.0f;
 };

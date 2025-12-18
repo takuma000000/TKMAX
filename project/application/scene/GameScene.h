@@ -31,13 +31,13 @@
 #include "FogEffect.h"
 #include "AuraEffect.h"
 #include "IrisUtil.h"
-
 #include "Player.h"
 #include "Enemy.h"
 #include "EnemySpawner.h"
 #include "BossEnemy.h"
 #include "BossBullet.h"
 #include <Easing.h>
+#include "TimeScaleController.h"
 
 //=============================================================
 // GameSceneクラス
@@ -314,4 +314,9 @@ private:
 	std::unique_ptr<FogEffect> fog_;
 	// Aura エフェクト
 	std::unique_ptr<AuraEffect> aura_ = nullptr;
+	//======================================================================
+	// 時間制御
+	//======================================================================
+	TimeScaleController timeScale_; // 時間制御クラス
+	bool clearSlowRequested_ = false; // クリアスロー要求フラグ
 };

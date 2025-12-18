@@ -26,7 +26,7 @@ public:
 
 	// Enemy側が virtual じゃないので override は付けない
 	void Initialize(Object3dCommon* common, DirectXCommon* dxCommon);
-	void Update();
+	void Update(float dt);
 	void ImGuiDebug();
 
 private:

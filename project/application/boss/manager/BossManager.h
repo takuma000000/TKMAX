@@ -12,6 +12,7 @@
 #include "BaseScene.h"
 #include "BossController.h"
 #include "AuraVolumeRenderer.h"
+#include "TimeScaleController.h"
 
 //=============================================================
 // BossManagerクラス
@@ -70,14 +71,24 @@ public:
 	/// <returns></returns>
 	bool IsBossDead() const;
 	/// <summary>
+	/// クリアシーケンス開始時の処理。
+	/// </summary>
+	void OnClearSequenceStart();
+
+	// Getter===================================
+	/// <summary>
 	/// ボス本体を取得。
 	/// </summary>
 	/// <returns></returns>
 	BossEnemy* GetBoss() const { return boss_.get(); }
-
-	/// <summary>クリア演出開始時にボス関連を全部消す。</summary>
-	void OnClearSequenceStart();
-
+	// =========================================
+	// Setter===================================
+	/// <summary>
+	/// タイムスケールコントローラー設定。
+	/// </summary>
+	/// <param name="t"></param>
+	void SetTimeScaleController(TimeScaleController* t) { timeScale_ = t; }
+	// =========================================
 
 	void SetCamera(Camera* camera) {
 		camera_ = camera;
@@ -107,6 +118,10 @@ private:
 
 	// オーラボリュームレンダラー
 	std::unique_ptr<AuraVolumeRenderer> auraVolume_;
+
+	// タイムスケールコントローラー参照
+	TimeScaleController* timeScale_ = nullptr; // タイムスケールコントローラー参照
+	bool slowTriggered_ = false; // スローが発動したか
 
 	/// <summary>
 	/// ボス弾を更新します。

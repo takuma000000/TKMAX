@@ -184,6 +184,7 @@
     </ClCompile>
     <ClCompile Include="engine\effect\post\AuraEffect.cpp" />
     <ClCompile Include="engine\effect\post\AuraVolumeRenderer.cpp" />
+    <ClCompile Include="engine\func\common\TimeScaleController.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -395,6 +396,7 @@
     </ClInclude>
     <ClInclude Include="engine\effect\post\AuraEffect.h" />
     <ClInclude Include="engine\effect\post\AuraVolumeRenderer.h" />
+    <ClInclude Include="engine\func\common\TimeScaleController.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

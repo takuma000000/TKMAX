@@ -41,7 +41,7 @@ void Player::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	}
 }
 
-void Player::Update() {
+void Player::Update(float dt) {
 	if (!controlEnabled_) {
 		HandleFollowCamera(); // カメラ演出は動かす
 		return;
@@ -118,7 +118,7 @@ void Player::Update() {
 		jetEmitter_.Update();
 	}
 
-	ParticleManager::GetInstance()->Update(); // パーティクルマネージャー更新
+	ParticleManager::GetInstance()->Update(dt); // パーティクルマネージャー更新
 	object_->Update(); // プレイヤー本体更新
 }
 

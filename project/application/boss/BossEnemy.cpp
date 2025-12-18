@@ -12,17 +12,13 @@ void BossEnemy::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 
 	SetColliderScale(BossParam::InitColliderScale);
 	SetType(EnemyType::Boss);
-
-	//SetFreezeMove(true);
 }
 
-void BossEnemy::Update() {
+void BossEnemy::Update(float dt) {
 	if (IsDead()) { return; }
 
-	//SetFreezeMove(true);
-
 	// 位置ロック中は脈動エフェクト
-	Enemy::Update();
+	Enemy::Update(dt);
 }
 
 void BossEnemy::ImGuiDebug() {

@@ -11,7 +11,7 @@
 // ParticleManagerクラス
 // パーティクルの生成・更新・描画を管理するクラス。
 //=============================================================
-class ParticleManager{
+class ParticleManager {
 public:
 
 	enum class ParticleType {
@@ -22,7 +22,7 @@ public:
 	};
 
 	//座標変換情報
-	struct Transform{
+	struct Transform {
 		Vector3 scale;
 		Vector3 rotate;
 		Vector3 translate;
@@ -89,7 +89,7 @@ public:
 	/// <summary>
 	/// <summary>ParticleManagerの終了処理を行います。</summary>
 	/// </summary>
-	void Update();
+	void Update(float dt);
 	/// <summary>
 	/// <summary>ParticleManagerの描画を行います。</summary>
 	/// </summary>
