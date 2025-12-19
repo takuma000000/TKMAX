@@ -147,10 +147,8 @@ void BossManager::Update(float dt) {
 		// ボスP2BGM再生
 		if (!slowTriggered_ && timeScale_) {
 			timeScale_->RequestSlow(
-				0.2f, // どれくらい遅くするか / 1.0f=通常速度
-				6.0f, // スロー持続時間
-				0.7f, // スローに入る速さ
-				0.15f // スローから戻る速さ
+				0.1f,  // スケール
+				1.0f    // 持続時間
 			);
 			slowTriggered_ = true;
 		}

@@ -10,7 +10,18 @@ void TimeScaleController::Initialize() {
 	phase_ = Phase::None;
 }
 
-void TimeScaleController::RequestSlow(float scale, float duration, float blendIn, float blendOut) {
+void TimeScaleController::RequestSlow(float scale, float duration) {
+
+	float dur = std::max(0.0f, duration);
+
+	float blendIn = std::min(0.06f, dur * 0.25f);
+	float blendOut = std::clamp(dur * 0.80f, 0.10f, 0.40f);
+
+	RequestSlowAdvanced(scale, duration, blendIn, blendOut);
+}
+
+void TimeScaleController::RequestSlowAdvanced(float scale, float duration, float blendIn, float blendOut) {
+
 	targetScale_ = std::clamp(scale, 0.0f, 1.0f);
 	hold_ = std::max(0.0f, duration);
 	blendIn_ = std::max(0.0f, blendIn);

@@ -722,16 +722,6 @@ void GameScene::ImGuiDebug() {
 }
 
 void GameScene::StartClearSequence() {
-	if (!clearSlowRequested_) {
-		timeScale_.RequestSlow(
-			0.15f,  // どれだけ遅くするか（スケール）
-			0.30f,  // 維持時間（秒）
-			0.02f,  // 入りの速さ（秒）
-			0.20f   // 戻りの速さ（秒）
-		);
-		clearSlowRequested_ = true;
-	}
-
 	clearSequence_ = true;
 	clearPhase_ = ClearPhase::CamZoom;
 	clearTimer_ = 0.0f;

@@ -15,13 +15,19 @@ public:
 	void Update(float dt);
 
 	/// <summary>
-	/// スローモーション要求
+	/// スロー要求
+	/// </summary>
+	/// <param name="scale"></param>
+	/// <param name="duration"></param>
+	void RequestSlow(float scale, float duration); // 引数: スケール、維持時間
+	/// <summary>
+	/// スロー要求（詳細指定版）
 	/// </summary>
 	/// <param name="scale"></param>
 	/// <param name="duration"></param>
 	/// <param name="blendIn"></param>
 	/// <param name="blendOut"></param>
-	void RequestSlow(float scale, float duration, float blendIn, float blendOut); // 引数：スケール(0.0~1.0)、持続時間、ブレンドイン時間、ブレンドアウト時間
+	void RequestSlowAdvanced(float scale, float duration, float blendIn, float blendOut); // 引数: スケール、維持時間、入りの速さ、戻りの速さ
 
 	// Getter===================================
 	float GetScale() const { return currentScale_; }
