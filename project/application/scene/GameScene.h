@@ -38,6 +38,7 @@
 #include "BossBullet.h"
 #include <Easing.h>
 #include "TimeScaleController.h"
+#include "WaterRippleEffect.h"
 
 //=============================================================
 // GameSceneクラス
@@ -307,13 +308,15 @@ private:
 	// ポストエフェクト（RadialBlur）
 	//======================================================================
 	// RadialBlur エフェクト
-	std::unique_ptr<RadialBlurEffect> radialBlur_;
+	std::unique_ptr<RadialBlurEffect> radialBlur_ = nullptr;
 	// Vignetting エフェクト
-	std::unique_ptr<VignettingEffect> vignetting_;
+	std::unique_ptr<VignettingEffect> vignetting_ = nullptr;
 	// Fog エフェクト
-	std::unique_ptr<FogEffect> fog_;
+	std::unique_ptr<FogEffect> fog_ = nullptr;
 	// Aura エフェクト
 	std::unique_ptr<AuraEffect> aura_ = nullptr;
+	// WaterRipple エフェクト（波紋）
+	std::unique_ptr<WaterRippleEffect> waterRipple_ = nullptr;
 	//======================================================================
 	// 時間制御
 	//======================================================================

@@ -68,6 +68,7 @@ void BossManager::StartBattle() {
 	// リセット
 	bossZoomStarted_ = false;
 	slowTriggered_ = false;
+	rippleTriggered_ = false;
 }
 
 void BossManager::Update(float dt) {
@@ -134,6 +135,14 @@ void BossManager::Update(float dt) {
 			player_->StartBossDeathCameraZoom();
 		}
 		bossZoomStarted_ = true;
+
+		if (!rippleTriggered_ && waterRipple_ && camera_) {
+			Matrix4x4 vp = camera_->GetViewProjectionMatrix();
+			Vector3 bossPos = boss_->GetWorldPosition();
+			Vector2 uv = WorldToUV(bossPos, vp); // BossManager.cppの上に既にある関数
+			waterRipple_->Trigger(uv, 0.75f);    // durationは好み（とりあえず0.75秒）
+			rippleTriggered_ = true;
+		}
 
 		// ボスP2BGM再生
 		if (!slowTriggered_ && timeScale_) {

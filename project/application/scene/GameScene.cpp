@@ -150,6 +150,13 @@ void GameScene::Initialize() {
 	aura_ = std::make_unique<AuraEffect>();
 	aura_->Initialize(dxCommon);
 	dxCommon->SetAuraEffect(aura_.get());
+	// WaterRippleEffect の生成と初期化
+	waterRipple_ = std::make_unique<WaterRippleEffect>();
+	waterRipple_->Initialize(dxCommon);
+	if (bossManager_) {
+		bossManager_->SetWaterRippleEffect(waterRipple_.get());
+	}
+
 	// ──────────────── タイムスケールコントローラーの初期化 ───────────────
 	timeScale_.Initialize();
 	bossManager_->SetTimeScaleController(&timeScale_);
@@ -264,6 +271,9 @@ void GameScene::Update() {
 		}
 		if (fog_) {
 			fog_->Update(scaledDt); // フォグの更新
+		}
+		if (waterRipple_) {
+			waterRipple_->Update(scaledDt); // 波紋の更新（スローに合わせてゆっくり進む）
 		}
 		// ==================================================
 

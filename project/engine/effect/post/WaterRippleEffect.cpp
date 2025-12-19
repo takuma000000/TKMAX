@@ -16,7 +16,15 @@ void WaterRippleEffect::Update(float dt) {
 	if (!dxCommon_) { return; }
 
 	if (!active_) {
-		// オフのときは何もしない（DrawPostEffect側で描かれない）
+		dxCommon_->SetWaterRippleParam(
+			centerUV_,
+			0.0f,
+			0.0f,
+			frequency_,
+			width_,
+			color_,
+			0.0f
+		);
 		return;
 	}
 

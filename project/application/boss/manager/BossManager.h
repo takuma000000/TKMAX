@@ -13,6 +13,7 @@
 #include "BossController.h"
 #include "AuraVolumeRenderer.h"
 #include "TimeScaleController.h"
+#include "WaterRippleEffect.h"
 
 //=============================================================
 // BossManagerクラス
@@ -88,17 +89,21 @@ public:
 	/// </summary>
 	/// <param name="t"></param>
 	void SetTimeScaleController(TimeScaleController* t) { timeScale_ = t; }
-	// =========================================
-
+	/// <summary>
+	/// ウォーターリップルエフェクト設定。
+	/// </summary>
+	/// <param name="r"></param>
+	void SetWaterRippleEffect(WaterRippleEffect* r) { waterRipple_ = r; }
+	/// <summary>
+	/// カメラ設定。
+	/// </summary>
+	/// <param name="camera"></param>
 	void SetCamera(Camera* camera) {
 		camera_ = camera;
-		if (boss_) {
-			boss_->SetCamera(camera_);
-		}
-		for (auto& b : bossBullets_) {
-			b->SetCamera(camera_);
-		}
+		if (boss_) { boss_->SetCamera(camera_); }
+		for (auto& b : bossBullets_) { b->SetCamera(camera_); }
 	}
+	// =========================================
 
 private:
 	DirectXCommon* dxCommon_ = nullptr;
@@ -122,6 +127,9 @@ private:
 	// タイムスケールコントローラー参照
 	TimeScaleController* timeScale_ = nullptr; // タイムスケールコントローラー参照
 	bool slowTriggered_ = false; // スローが発動したか
+	// ウォーターリップルエフェクト参照
+	WaterRippleEffect* waterRipple_ = nullptr; // 参照だけ（所有はGameScene）
+	bool rippleTriggered_ = false;             // 波紋が発動したか
 
 	/// <summary>
 	/// ボス弾を更新します。
