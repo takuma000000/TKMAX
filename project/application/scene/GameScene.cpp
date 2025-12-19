@@ -152,11 +152,9 @@ void GameScene::Initialize() {
 	dxCommon->SetAuraEffect(aura_.get());
 	// WaterRippleEffect の生成と初期化
 	waterRipple_ = std::make_unique<WaterRippleEffect>();
-	waterRipple_->Initialize(dxCommon);
-	if (bossManager_) {
-		bossManager_->SetWaterRippleEffect(waterRipple_.get());
-	}
-
+	waterRipple_->Initialize(dxCommon); // 波紋エフェクトの初期化
+	dxCommon->SetWaterRippleEffect(waterRipple_.get()); // DirectXCommon に登録
+	bossManager_->SetWaterRippleEffect(waterRipple_.get()); // BossManager にも登録
 	// ──────────────── タイムスケールコントローラーの初期化 ───────────────
 	timeScale_.Initialize();
 	bossManager_->SetTimeScaleController(&timeScale_);

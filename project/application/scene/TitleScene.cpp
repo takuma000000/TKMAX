@@ -199,7 +199,18 @@ void TitleScene::Update(){
 
 		// 画面中心から波紋。UV(0.5, 0.5)
 		if (rippleEffect_) {
-			rippleEffect_->Trigger({ 0.5f, 0.5f }, 1.0f); // 持続0.8秒くらい
+			WaterRippleEffect::RippleDesc d{};
+			d.duration = 1.0f;
+
+			// タイトル用（今のタイトル目線値があるならここに入れる）
+			d.radiusMax = 0.857f;
+			d.amplitude = 0.1f;
+			d.frequency = 80.0f;
+			d.width = 10.0f;
+			d.color = { 1.0f, 1.0f, 1.0f };
+			d.colorIntensity = 0.0f;
+			/// 中心から波紋を発生
+			rippleEffect_->Trigger({ 0.5f, 0.5f }, d); // 中心から波紋
 		}
 	}
 
@@ -248,8 +259,6 @@ void TitleScene::Update(){
 		camera->Update();
 	}
 	ImGui::End();
-
-	rippleEffect_->ImGuiDebug();
 
 #endif // USE_IMGUI
 }

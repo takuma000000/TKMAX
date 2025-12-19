@@ -14,6 +14,18 @@ static Vector2 WorldToUV(const Vector3& world, const Matrix4x4& vp) {
 	return { ndcX * 0.5f + 0.5f, -ndcY * 0.5f + 0.5f };
 }
 
+static WaterRippleEffect::RippleDesc MakeBossKillRipple()
+{
+	WaterRippleEffect::RippleDesc d{};
+	d.duration = 0.35f;
+	d.radiusMax = 1.45f;
+	d.amplitude = 0.12f;
+	d.frequency = 85.0f;
+	d.width = 10.0f;
+	/*d.colorIntensity = 0.20f;*/
+	return d;
+}
+
 void BossManager::Initialize(DirectXCommon* dxCommon, Camera* camera, BaseScene* parent, Player* player) {
 	dxCommon_ = dxCommon;
 	camera_ = camera;
@@ -136,12 +148,13 @@ void BossManager::Update(float dt) {
 		}
 		bossZoomStarted_ = true;
 
+		// 波紋（ボス撃破専用）
 		if (!rippleTriggered_ && waterRipple_ && camera_) {
-			Matrix4x4 vp = camera_->GetViewProjectionMatrix();
-			Vector3 bossPos = boss_->GetWorldPosition();
-			Vector2 uv = WorldToUV(bossPos, vp); // BossManager.cppの上に既にある関数
-			waterRipple_->Trigger(uv, 0.75f);    // durationは好み（とりあえず0.75秒）
-			rippleTriggered_ = true;
+			Matrix4x4 vp = camera_->GetViewProjectionMatrix(); // ビュープロジェクション行列取得
+			Vector3 bossPos = boss_->GetWorldPosition(); // ボスワールド座標取得
+			Vector2 uv = WorldToUV(bossPos, vp); // 波紋UV座標変換
+			waterRipple_->Trigger(uv, MakeBossKillRipple()); // 波紋開始
+			rippleTriggered_ = true; // フラグ立て
 		}
 
 		// ボスP2BGM再生
