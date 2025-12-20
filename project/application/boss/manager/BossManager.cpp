@@ -14,14 +14,13 @@ static Vector2 WorldToUV(const Vector3& world, const Matrix4x4& vp) {
 	return { ndcX * 0.5f + 0.5f, -ndcY * 0.5f + 0.5f };
 }
 
-static WaterRippleEffect::RippleDesc MakeBossKillRipple()
-{
+static WaterRippleEffect::RippleDesc MakeBossKillRipple(){
 	WaterRippleEffect::RippleDesc d{};
-	d.duration = 0.35f;
-	d.radiusMax = 1.45f;
-	d.amplitude = 0.12f;
-	d.frequency = 85.0f;
-	d.width = 10.0f;
+	d.duration = 0.35f; // 持続時間
+	d.radiusMax = 1.45f; // 最大半径(UV)
+	d.amplitude = 0.1f; // ゆがみ量
+	d.frequency = 85.0f; // 細かさ
+	d.width = 10.0f; // 帯の幅（大きいほどシャープ）
 	/*d.colorIntensity = 0.20f;*/
 	return d;
 }
@@ -160,8 +159,8 @@ void BossManager::Update(float dt) {
 		// ボスP2BGM再生
 		if (!slowTriggered_ && timeScale_) {
 			timeScale_->RequestSlow(
-				0.1f,  // スケール
-				1.0f    // 持続時間
+				0.00001f,  // スケール
+				1.7f    // 持続時間
 			);
 			slowTriggered_ = true;
 		}
