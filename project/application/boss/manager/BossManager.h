@@ -24,6 +24,33 @@ public:
 	BossManager() = default;
 	~BossManager() = default;
 
+	// Boss戦設定構造体
+	struct BossBattleConfig {
+		Vector3 spawnPos;
+		Vector3 arenaMin;
+		Vector3 arenaMax;
+
+		WaterRippleEffect::RippleDesc killRipple;
+
+		float killSlowScale = 1.0f;
+		float killSlowDuration = 0.0f;
+	};
+	// 撃破シーケンス状態構造体
+	struct KillSequenceState {
+		bool zoomStarted = false;
+		bool slowTriggered = false;
+		bool rippleTriggered = false;
+
+		/// <summary>
+		/// リセット。
+		/// </summary>
+		void Reset() {
+			zoomStarted = false;
+			slowTriggered = false;
+			rippleTriggered = false;
+		}
+	};
+
 	/// <summary>
 	/// 初期化。
 	/// </summary>
@@ -116,23 +143,18 @@ private:
 
 	std::unique_ptr<BossEnemy> boss_;             // ボス本体
 	std::vector<std::unique_ptr<BossBullet>> bossBullets_; // ボス弾リスト
-
-	bool bossZoomStarted_ = false; // ボス撃破後のカメラズーム演出が始まったか
-
 	std::unique_ptr<BossController> bossController_; // ボスコントローラー
-
-	// オーラボリュームレンダラー
-	std::unique_ptr<AuraVolumeRenderer> auraVolume_;
+	std::unique_ptr<AuraVolumeRenderer> auraVolume_; // オーラボリュームレンダラー
 
 	// タイムスケールコントローラー参照
 	TimeScaleController* timeScale_ = nullptr; // タイムスケールコントローラー参照
-	bool slowTriggered_ = false; // スローが発動したか
 	// ウォーターリップルエフェクト参照
 	WaterRippleEffect* waterRipple_ = nullptr; // 参照だけ（所有はGameScene）
-	bool rippleTriggered_ = false;             // 波紋が発動したか
 
 	/// <summary>
 	/// ボス弾を更新します。
 	/// </summary>
 	void UpdateBossBullets();
+
+	KillSequenceState killSeq_; // 撃破シーケンス状態
 };

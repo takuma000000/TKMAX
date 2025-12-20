@@ -14,15 +14,28 @@ static Vector2 WorldToUV(const Vector3& world, const Matrix4x4& vp) {
 	return { ndcX * 0.5f + 0.5f, -ndcY * 0.5f + 0.5f };
 }
 
-static WaterRippleEffect::RippleDesc MakeBossKillRipple(){
-	WaterRippleEffect::RippleDesc d{};
-	d.duration = 0.35f; // 持続時間
-	d.radiusMax = 1.45f; // 最大半径(UV)
-	d.amplitude = 0.1f; // ゆがみ量
-	d.frequency = 85.0f; // 細かさ
-	d.width = 10.0f; // 帯の幅（大きいほどシャープ）
-	/*d.colorIntensity = 0.20f;*/
-	return d;
+namespace {
+	BossManager::BossBattleConfig MakeBossConfig() {
+		BossManager::BossBattleConfig c{};
+		c.spawnPos = { 0.0f, 0.0f, 200.0f };
+
+		c.arenaMin = { -18.0f, 3.0f, 35.0f };
+		c.arenaMax = { 18.0f,12.0f, 70.0f };
+
+		WaterRippleEffect::RippleDesc d{};
+		d.duration = 0.35f;
+		d.radiusMax = 1.45f;
+		d.amplitude = 0.10f;
+		d.frequency = 85.0f;
+		d.width = 10.0f;
+		c.killRipple = d;
+
+		c.killSlowScale = 0.00001f;
+		c.killSlowDuration = 1.7f;
+		return c;
+	}
+
+	const BossManager::BossBattleConfig kBossConfig = MakeBossConfig();
 }
 
 void BossManager::Initialize(DirectXCommon* dxCommon, Camera* camera, BaseScene* parent, Player* player) {
@@ -66,20 +79,13 @@ void BossManager::StartBattle() {
 			});
 	}
 
-	// 初期位置セット
-	boss_->SetPosition({ 0, 0, 200 });
+	boss_->SetPosition(kBossConfig.spawnPos);
 
 	// --- ボス挙動コントローラ生成 ---
 	bossController_ = std::make_unique<BossController>();
-	// ボスの行動範囲
-	Vector3 arenaMin{ -18.0f, 3.0f, 35.0f }; // Y軸は地面から少し上
-	Vector3 arenaMax{ 18.0f, 12.0f, 70.0f }; // Y軸は天井より少し下
-	bossController_->Initialize(arenaMin, arenaMax); // 行動範囲セット
-
+	bossController_->Initialize(kBossConfig.arenaMin, kBossConfig.arenaMax);
 	// リセット
-	bossZoomStarted_ = false;
-	slowTriggered_ = false;
-	rippleTriggered_ = false;
+	killSeq_.Reset();
 }
 
 void BossManager::Update(float dt) {
@@ -141,28 +147,24 @@ void BossManager::Update(float dt) {
 	boss_->Update(dt);
 
 	// ボス撃破ズーム開始（1回だけ）
-	if (!bossZoomStarted_ && boss_->IsDying()) {
+	if (!killSeq_.zoomStarted && boss_->IsDying()) {
 		if (player_) {
 			player_->StartBossDeathCameraZoom();
 		}
-		bossZoomStarted_ = true;
+		killSeq_.zoomStarted = true;
 
-		// 波紋（ボス撃破専用）
-		if (!rippleTriggered_ && waterRipple_ && camera_) {
-			Matrix4x4 vp = camera_->GetViewProjectionMatrix(); // ビュープロジェクション行列取得
-			Vector3 bossPos = boss_->GetWorldPosition(); // ボスワールド座標取得
-			Vector2 uv = WorldToUV(bossPos, vp); // 波紋UV座標変換
-			waterRipple_->Trigger(uv, MakeBossKillRipple()); // 波紋開始
-			rippleTriggered_ = true; // フラグ立て
+		// 波紋
+		if (!killSeq_.rippleTriggered && waterRipple_ && camera_) {
+			Matrix4x4 vp = camera_->GetViewProjectionMatrix();
+			Vector2 uv = WorldToUV(boss_->GetWorldPosition(), vp);
+			waterRipple_->Trigger(uv, kBossConfig.killRipple);
+			killSeq_.rippleTriggered = true;
 		}
 
-		// ボスP2BGM再生
-		if (!slowTriggered_ && timeScale_) {
-			timeScale_->RequestSlow(
-				0.00001f,  // スケール
-				1.7f    // 持続時間
-			);
-			slowTriggered_ = true;
+		// スロー
+		if (!killSeq_.slowTriggered && timeScale_) {
+			timeScale_->RequestSlow(kBossConfig.killSlowScale, kBossConfig.killSlowDuration);
+			killSeq_.slowTriggered = true;
 		}
 	}
 
