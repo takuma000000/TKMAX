@@ -134,6 +134,18 @@ public:
 	}
 	// ================================================================================
 
+	/// <summary>
+	/// Wave2の三角形編隊をスポーンします
+	/// </summary>
+	void SpawnWave2_Triangle();
+	/// <summary>
+	/// Wave2のライン編隊をスポーンします
+	/// </summary>
+	void SpawnWave2_Line();
+	/// <summary>
+	/// Wave2のファストカラム編隊をスポーンします
+	/// </summary>
+	void SpawnWave2_FastColumn();
 private:
 	/// <summary>
 	/// 敵をプレイヤー向けにセットアップします
@@ -192,18 +204,6 @@ private:
 	/// </summary>
 	/// <param name="id"></param>
 	void SpawnWave2SubWave(int id);
-	/// <summary>
-	/// Wave2の三角形編隊をスポーンします
-	/// </summary>
-	void SpawnWave2_Triangle();
-	/// <summary>
-	/// Wave2のライン編隊をスポーンします
-	/// </summary>
-	void SpawnWave2_Line();
-	/// <summary>
-	/// Wave2のファストカラム編隊をスポーンします
-	/// </summary>
-	void SpawnWave2_FastColumn();
 	//======================================================================
 	// Wave3（中ボスステージ） 関連
 	//======================================================================
@@ -240,4 +240,21 @@ private:
 	// デバッグ系フラグ
 	//======================================================================
 	bool freezeEnemies_ = false; // デバッグ用：敵移動停止フラグ
+
+
+
+	using SpawnFn = void (EnemyManager::*)();
+	using UpdateFn = void (EnemyManager::*)(float);
+
+	struct WaveOps {
+		SpawnFn spawn = nullptr;
+		UpdateFn update = nullptr;
+	};
+
+	static const WaveOps kWaveOps_[4]; // W1,W2,W3,Done(=nullptr)
+
+	// 各Waveの「開始処理」（今 switch の case に書いてた中身を移す）
+	void BeginWave1();
+	void BeginWave2();
+	void BeginWave3();
 };

@@ -277,7 +277,18 @@ public:
 	/// 敵のタイプを設定します。
 	/// </summary>
 	/// <param name="t"></param>
-	void SetType(EnemyType t) { type_ = t; }
+	void SetType(EnemyType t) {
+		type_ = t;
+
+		// ★ ボスは Enemy 側のロック脈動を無効化（Boss側で見せ方を作る前提）
+		lockPulseEnabled_ = (type_ != EnemyType::Boss);
+
+		// 念のため：無効化した瞬間にパルス時間もリセット
+		if (!lockPulseEnabled_) {
+			pulseT_ = 0.0f;
+		}
+	}
+
 	/// <summary>
 	/// FreeRoam用のパラメータを設定します。
 	/// </summary>
@@ -436,4 +447,7 @@ private:
 	float angryTimer_ = 0.0f;
 	float angryDuration_ = 0.0f;
 	bool  freezeMove_ = false;
+
+	// Enemy.h の private: に追加
+	bool lockPulseEnabled_ = true; // ★ ロック中の脈動を有効にするか（ボスはOFFにする）
 };

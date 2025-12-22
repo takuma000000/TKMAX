@@ -3,6 +3,15 @@
 #include "MyMath.h"
 #include "manager/BossManager.h"
 
+const EnemyManager::WaveOps EnemyManager::kWaveOps_[4] = {
+	/* W1  */ { &EnemyManager::BeginWave1, &EnemyManager::UpdateWave1 },
+	/* W2  */ { &EnemyManager::BeginWave2, &EnemyManager::UpdateWave2 },
+	/* W3  */ { &EnemyManager::BeginWave3, &EnemyManager::UpdateWave3 },
+	/* Done*/ { nullptr, nullptr },
+};
+
+
+
 void EnemyManager::Initialize(DirectXCommon* dx, Camera* camera, BaseScene* parent, Player* player) {
 	dx_ = dx;
 	cam_ = camera;
@@ -77,34 +86,10 @@ void EnemyManager::Update(float dt) {
 	// ───────────────────────────────────────────────
 	// ● Wave進行
 	// ───────────────────────────────────────────────
-	switch (wavePhase_) {
-	case WavePhase::W1: {
-		// Wave1: 「5体倒すまで無限湧き」
-		// 5体倒したら次のWaveへ
-		if (defeatedEnemyCount_ && *defeatedEnemyCount_ >= wave1DefeatTarget_) {
-			GoToNextWave();
-			return; // このフレームはここまで
-		}
-
-		// Wave1 用のスポーン制御
-		UpdateWave1(dt);
-		break;
-	}
-	case WavePhase::W2: {
-		// --- Wave2 新仕様 ---
-		UpdateWave2(dt);
-		break;
-	}
-	case WavePhase::W3: {
-		// --- Wave3: 中ボスステージ（蘇生核含む） ---
-		// 中ボスの生存数・核の状態などは UpdateWave3 側で管理する
-		UpdateWave3(dt);
-		break;
-	}
-	case WavePhase::Done:
-	default:
-		// 何もしない（全Wave終了・ボス管理などに任せる）
-		break;
+		// Waveごとの更新（分岐しない）
+	const auto ops = kWaveOps_[static_cast<int>(wavePhase_)];
+	if (ops.update) {
+		(this->*ops.update)(dt);
 	}
 }
 
@@ -170,53 +155,26 @@ void EnemyManager::InitializeWaves() {
 }
 
 void EnemyManager::SpawnCurrentWave() {
-	if (!enemies_ || !dx_ || !cam_ || !parent_) {
-		return;
-	}
+	if (!enemies_ || !dx_ || !cam_ || !parent_) { return; }
 
-	// いったん全消し
 	enemies_->clear();
 
-	switch (wavePhase_) {
-	case WavePhase::W1: {
-		// タイマー初期化と最初の1体スポーンだけを行う。
-		wave1SpawnTimer_ = 0.0f;
-		if (maxEnemyCount_) {
-			*maxEnemyCount_ = wave1DefeatTarget_; // ゲージ用にリセット
-		}
-		SpawnWave1Enemy(); // 最初の1体だけ出す
-		break;
-	}
-	case WavePhase::W2: {
-		wave2SubWave_ = 0;            // サブWave初期化
-		SpawnWave2SubWave(0);         // 最初のサブWaveをスポーン
-		break;
-	}
-	case WavePhase::W3: {
-		// ここから中ボスステージ
-		SpawnWave3MidBossStage();
-		break;
-	}
-	case WavePhase::Done:
-	default:
-		// 何もしない
-		break;
+	const auto ops = kWaveOps_[static_cast<int>(wavePhase_)];
+	if (ops.spawn) {
+		(this->*ops.spawn)();
 	}
 }
 
 void EnemyManager::GoToNextWave() {
-	if (wavePhase_ == WavePhase::W1) {
-		wavePhase_ = WavePhase::W2;
-		SpawnCurrentWave();
-	} else if (wavePhase_ == WavePhase::W2) {
-		wavePhase_ = WavePhase::W3;
-		SpawnCurrentWave();
-	} else if (wavePhase_ == WavePhase::W3) {
-		wavePhase_ = WavePhase::Done; // 最終Waveまで終了
-		// Done のときは Spawnしない（終わり）
+	int next = static_cast<int>(wavePhase_) + 1;
+	if (next > static_cast<int>(WavePhase::Done)) {
+		next = static_cast<int>(WavePhase::Done);
 	}
+	wavePhase_ = static_cast<WavePhase>(next);
 
-	// Waveごとに撃破カウントリセットする仕様ならここも移植
+	// Done なら spawn=nullptr なので何も起きない（分岐不要）
+	SpawnCurrentWave();
+
 	if (defeatedEnemyCount_) {
 		*defeatedEnemyCount_ = 0;
 	}
@@ -367,17 +325,24 @@ void EnemyManager::UpdateWave2(float dt) {
 	SpawnWave2SubWave(wave2SubWave_); // 次のサブWaveをスポーン
 }
 
+namespace {
+	using SubWaveFn = void (EnemyManager::*)();
+
+	static const SubWaveFn kWave2SubWaveTable[] = {
+		&EnemyManager::SpawnWave2_Triangle,
+		&EnemyManager::SpawnWave2_Line,
+		&EnemyManager::SpawnWave2_FastColumn,
+	};
+}
+
 void EnemyManager::SpawnWave2SubWave(int id) {
-	if (!enemies_ || !dx_ || !cam_ || !parent_) return;
+	if (!enemies_ || !dx_ || !cam_ || !parent_) { return; }
 	enemies_->clear(); // 念のためクリア
 
-	switch (id) { // サブWaveごとにパターン分け
-	case 0: SpawnWave2_Triangle();   break; // 下2 上1 の三角隊列
-	case 1: SpawnWave2_Line();       break; // 横一列
-	case 2: SpawnWave2_FastColumn(); break; // 右側高速通過
-	default:
-		break;
-	}
+	const int count = static_cast<int>(std::size(kWave2SubWaveTable));
+	if (id < 0 || id >= count) { return; }
+
+	(this->*kWave2SubWaveTable[id])();
 }
 
 // ───────────────────────────────────────────────
@@ -713,6 +678,29 @@ void EnemyManager::SpawnWave3ExtraMidBoss() {
 	);
 }
 
+void EnemyManager::BeginWave1() {
+	wave1SpawnTimer_ = 0.0f;
+	if (maxEnemyCount_) {
+		*maxEnemyCount_ = wave1DefeatTarget_;
+	}
+	SpawnWave1Enemy(); // 最初の1体だけ出す（元のまま）
+}
+
+void EnemyManager::BeginWave2() {
+	// Wave2の初期化（InitializeWaves と同等にする）
+	wave2SubWave_ = 0;
+	wave2Waiting_ = false;
+	wave2WaitTimer_ = 0.0f;
+
+	// Wave2開始：最初のサブWaveを出す
+	SpawnWave2SubWave(wave2SubWave_);
+}
+
+void EnemyManager::BeginWave3() {
+	// Wave3開始：中ボスステージ生成関数の中で必要なリセットは全部やってる
+	SpawnWave3MidBossStage();
+}
+
 void EnemyManager::Draw(DirectXCommon* dx) {
 	if (!enemies_) { // enemies_ がまだ紐付いてなかったら何もしない
 		return;
@@ -752,14 +740,13 @@ void EnemyManager::ImGuiDebug() {
 	ImGui::ProgressBar(progress, ImVec2(200, 20), "撃破進行度");
 
 	// ===== Wave 状態表示 =====
-	const char* waveLabel = "";
-	switch (wavePhase_) {
-	case WavePhase::W1:   waveLabel = "Wave1";        break;
-	case WavePhase::W2:   waveLabel = "Wave2";        break;
-	case WavePhase::W3:   waveLabel = "Wave3";        break;
-	case WavePhase::Done: waveLabel = "Bossフェーズ"; break;
-	}
-	ImGui::Text("現在のWave: %s", waveLabel);
+	static const char* kWaveLabel[] = {
+	"Wave1",
+	"Wave2",
+	"Wave3",
+	"Bossフェーズ"
+	};
+	ImGui::Text("現在のWave: %s", kWaveLabel[static_cast<int>(wavePhase_)]);
 
 	// 「次のWaveへ」ボタン
 	if (ImGui::Button("次のWaveへ")) {

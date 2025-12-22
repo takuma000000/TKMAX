@@ -121,15 +121,15 @@ void BossController::ImGuiDebug(Enemy& boss) {
 	// ----------------------------
 	// 状態表示
 	// ----------------------------
-	const char* stateName = "不明";
-	switch (state_) {
-	case State::Enter:      stateName = "登場"; break;
-	case State::Orbit:      stateName = "旋回"; break;
-	case State::DashWindup: stateName = "突進予備動作"; break;
-	case State::DashRun:    stateName = "突進中"; break;
-	case State::Recover:    stateName = "復帰"; break;
-	}
-	ImGui::Text("状態: %s", stateName);
+	static const char* kStateName[] = {
+	"登場",
+	"旋回",
+	"突進予備動作",
+	"突進中",
+	"復帰"
+	};
+
+	ImGui::Text("状態: %s", kStateName[static_cast<int>(state_)]);
 	ImGui::Text("怒り: %s", rageActive_ ? "怒りモード" : "怒ってない");
 	// ----------------------------
 	// Rage Gauge
@@ -436,31 +436,19 @@ void BossController::PrepareDash(const Vector3& currentPos, const Vector3& playe
 	float side = (playerPos.x >= 0.0f) ? -1.0f : +1.0f;
 	side *= static_cast<float>(lastDashDir_);
 
-	if (dashType_ == DashType::Cross) {
-		dashStartPos_ = {
-			side * dashStartX_,
-			orbitY_,
-			dashStartZ_
-		};
+	const DashOffsets& o = kDashOffsets_[static_cast<int>(dashType_)];
 
-		dashEndPos_ = {
-			-side * dashEndX_,
-			orbitY_,
-			dashEndZ_
-		};
-	} else { // Hook
-		dashStartPos_ = {
-			side * dashStartX_,
-			orbitY_,
-			dashStartZ_ + 10.0f
-		};
+	dashStartPos_ = {
+		side * dashStartX_,
+		orbitY_,
+		dashStartZ_ + o.startZOff
+	};
 
-		dashEndPos_ = {
-			-side * dashEndX_,
-			orbitY_,
-			dashEndZ_ - 5.0f
-		};
-	}
+	dashEndPos_ = {
+		-side * dashEndX_,
+		orbitY_,
+		dashEndZ_ + o.endZOff
+	};
 }
 
 void BossController::ClampToArena(Vector3& p) {

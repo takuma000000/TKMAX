@@ -372,14 +372,16 @@ void Enemy::Update(float dt) {
 		}
 	}
 
-	if (isLocked_) {
+	// ★ ロック脈動（ボスは無効化）
+	if (isLocked_ && lockPulseEnabled_) {
 		pulseT_ += 0.12f * factor;
 		float s = 1.0f + 0.15f * sinf(pulseT_);
 		object_->SetScale({ baseScale_.x * s, baseScale_.y * s, baseScale_.z * s });
 	} else {
+		// ロックしていても脈動が無効なら、基準スケールを維持
 		object_->SetScale(baseScale_);
 	}
-
+ 
 	if (canShoot_ && !isDying_) {
 		shootTimer_ += factor; // ★ フレーム加算→dt換算
 		if (shootTimer_ >= shootInterval_) {

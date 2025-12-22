@@ -89,6 +89,18 @@ public:
 	bool GetAuraUseRing() const { return auraUseRing_; }
 	// =========================================
 private:
+	// --- constants ---
+	// Dash offsets
+	struct DashOffsets {
+		float startZOff;
+		float endZOff;
+	};
+	// ダッシュ開始・終了Zオフセット
+	static constexpr DashOffsets kDashOffsets_[2] = {
+		/* Cross */ {  0.0f,  0.0f },
+		/* Hook  */ { 10.0f, -5.0f },
+	};
+
 	// --- state updates ---
 	/// <summary>
 	/// 侵入
