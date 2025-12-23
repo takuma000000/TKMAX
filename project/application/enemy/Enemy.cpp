@@ -25,95 +25,108 @@ void Enemy::Update(float dt) {
 	// dt=1/60 のとき factor=1.0 になる
 	const float factor = dt * 60.0f;
 
-	// 死亡演出中ならこっちを優先
-	if (isDying_) {
-		deathTimer_ += dt;
-		float t = std::min(deathTimer_ / deathDuration_, 1.0f);
+	// =========================================================
+	// Data-driven：死亡リアクション / 行動 の関数テーブル
+	// （switch を排除）
+	// =========================================================
+	struct DeathCtx {
+		float dt;
+		float t; // 0..1
+		Vector3 pos;
+		Vector3 rot;
+		Vector3 scale;
+	};
 
-		Vector3 pos = object_->GetTranslate();
-		Vector3 rot = object_->GetRotate();
-		Vector3 scale = baseScale_;
+	struct MoveCtx {
+		float dt;
+		float factor;
+		Vector3 pos;
+	};
 
-		switch (deathReaction_) {
-		case EnemyDeathReaction::BlowAway: {
-			float speed = 1.0f - t;
-			pos += deathVelocity_ * speed * dt;
+	struct Local {
 
-			rot.x += deathRotateSpeed_.x * dt;
-			rot.y += deathRotateSpeed_.y * dt;
-			rot.z += deathRotateSpeed_.z * dt;
+		// ---------- Death reactions ----------
+		static void Death_BlowAway(Enemy* self, DeathCtx& c) {
+			float speed = 1.0f - c.t;
+			c.pos += self->deathVelocity_ * speed * c.dt;
 
-			float s = 1.0f - t;
-			scale = { baseScale_.x * s, baseScale_.y * s, baseScale_.z * s };
-			break;
+			c.rot.x += self->deathRotateSpeed_.x * c.dt;
+			c.rot.y += self->deathRotateSpeed_.y * c.dt;
+			c.rot.z += self->deathRotateSpeed_.z * c.dt;
+
+			float s = 1.0f - c.t;
+			c.scale = { self->baseScale_.x * s, self->baseScale_.y * s, self->baseScale_.z * s };
 		}
-		case EnemyDeathReaction::RiseAbsorb: {
-			pos += deathVelocity_ * dt;
 
-			rot.y += deathRotateSpeed_.y * dt;
+		static void Death_RiseAbsorb(Enemy* self, DeathCtx& c) {
+			c.pos += self->deathVelocity_ * c.dt;
 
-			float s = 1.0f - t;
-			scale = {
-				baseScale_.x * s * 0.5f,
-				baseScale_.y * (1.0f - t * 0.2f),
-				baseScale_.z * s * 0.5f
+			c.rot.y += self->deathRotateSpeed_.y * c.dt;
+
+			float s = 1.0f - c.t;
+			c.scale = {
+				self->baseScale_.x * s * 0.5f,
+				self->baseScale_.y * (1.0f - c.t * 0.2f),
+				self->baseScale_.z * s * 0.5f
 			};
-			break;
 		}
-		case EnemyDeathReaction::Collapse: {
-			pos += deathVelocity_ * dt;
 
-			rot.x += deathRotateSpeed_.x * dt;
+		static void Death_Collapse(Enemy* self, DeathCtx& c) {
+			c.pos += self->deathVelocity_ * c.dt;
 
-			float s = 1.0f - t;
-			scale = {
-				baseScale_.x,
-				baseScale_.y * s * 0.2f,
-				baseScale_.z
+			c.rot.x += self->deathRotateSpeed_.x * c.dt;
+
+			float s = 1.0f - c.t;
+			c.scale = {
+				self->baseScale_.x,
+				self->baseScale_.y * s * 0.2f,
+				self->baseScale_.z
 			};
-			break;
 		}
-		case EnemyDeathReaction::BossFinal: {
+
+		static void Death_BossFinal(Enemy* self, DeathCtx& c) {
 			const float launchStartT = 0.5f;
 
-			if (t < launchStartT) {
+			if (c.t < launchStartT) {
 				float shakeAmp = 0.25f;
 				float shakeFreq = 18.0f;
 
-				pos.x += sinf(deathTimer_ * shakeFreq) * shakeAmp;
-				pos.y += cosf(deathTimer_ * shakeFreq * 0.7f) * shakeAmp * 0.6f;
+				c.pos.x += sinf(self->deathTimer_ * shakeFreq) * shakeAmp;
+				c.pos.y += cosf(self->deathTimer_ * shakeFreq * 0.7f) * shakeAmp * 0.6f;
 
-				float pulse = 1.0f + 0.10f * sinf(deathTimer_ * 10.0f);
-				scale = {
-					baseScale_.x * pulse,
-					baseScale_.y * pulse,
-					baseScale_.z * pulse,
+				float pulse = 1.0f + 0.10f * sinf(self->deathTimer_ * 10.0f);
+				c.scale = {
+					self->baseScale_.x * pulse,
+					self->baseScale_.y * pulse,
+					self->baseScale_.z * pulse,
 				};
 
 				ParticleManager* pm = ParticleManager::GetInstance();
 				if (std::rand() % 3 != 0) {
-					Vector3 center = GetWorldPosition();
+					Vector3 center = self->GetWorldPosition();
 					Vector3 off = {
-						(static_cast<float>(std::rand()) / RAND_MAX - 0.5f) * colliderScale_.x,
-						(static_cast<float>(std::rand()) / RAND_MAX - 0.5f) * colliderScale_.y,
-						(static_cast<float>(std::rand()) / RAND_MAX - 0.5f) * colliderScale_.z
+						(static_cast<float>(std::rand()) / RAND_MAX - 0.5f) * self->colliderScale_.x,
+						(static_cast<float>(std::rand()) / RAND_MAX - 0.5f) * self->colliderScale_.y,
+						(static_cast<float>(std::rand()) / RAND_MAX - 0.5f) * self->colliderScale_.z
 					};
 					Vector3 emitPos = center + off * 0.5f;
 					pm->Emit("bossDeath_bomb", emitPos, 1);
 				}
+
 			} else {
-				if (!bossFinalLaunchStarted_) {
-					bossFinalLaunchStarted_ = true;
-					bossFinalLaunchStartPos_ = pos;
+
+				if (!self->bossFinalLaunchStarted_) {
+					self->bossFinalLaunchStarted_ = true;
+					self->bossFinalLaunchStartPos_ = c.pos;
 
 					ParticleManager* pm = ParticleManager::GetInstance();
-					Vector3 center = GetWorldPosition();
+					Vector3 center = self->GetWorldPosition();
 					pm->Emit("bossDeath_ring", center, 2);
 					pm->Emit("bossDeath_bomb", center, 10);
 					pm->Emit("bossDeath_smoke", center, 24);
 				}
 
-				float u = (t - launchStartT) / (1.0f - launchStartT);
+				float u = (c.t - launchStartT) / (1.0f - launchStartT);
 				if (u < 0.0f) u = 0.0f;
 				if (u > 1.0f) u = 1.0f;
 
@@ -125,29 +138,197 @@ void Enemy::Update(float dt) {
 				float upDist = 15.0f;
 				float depthDist = 40.0f;
 
-				pos = bossFinalLaunchStartPos_
+				c.pos = self->bossFinalLaunchStartPos_
 					+ upDir * (upDist * k)
 					+ forwardDir * (depthDist * k);
 
-				rot.x += 2.5f * dt;
-				rot.y += 3.0f * dt;
-				rot.z += 1.5f * dt;
+				c.rot.x += 2.5f * c.dt;
+				c.rot.y += 3.0f * c.dt;
+				c.rot.z += 1.5f * c.dt;
 
 				float s = 1.0f - 0.3f * k;
 				if (s < 0.1f) s = 0.1f;
-				scale = {
-					baseScale_.x * s,
-					baseScale_.y * s,
-					baseScale_.z * s,
+				c.scale = {
+					self->baseScale_.x * s,
+					self->baseScale_.y * s,
+					self->baseScale_.z * s,
 				};
 			}
-			break;
-		}
 		}
 
-		object_->SetTranslate(pos);
-		object_->SetRotate(rot);
-		object_->SetScale(scale);
+		// ---------- Movement behaviors ----------
+		static void Move_StraightStop(Enemy* self, MoveCtx& c) {
+			if (!self->stopMove_) {
+				c.pos += self->velocity_ * c.factor;
+				if (c.pos.z <= self->stopZ_) { c.pos.z = self->stopZ_; self->stopMove_ = true; }
+			}
+		}
+
+		static void Move_SineX(Enemy* self, MoveCtx& c) {
+			self->t_ += 0.05f * c.factor;
+			c.pos.z += self->velocity_.z * c.factor;
+			c.pos.x = self->startX_ + std::sinf(self->sinePhase_ + self->t_ * self->sineFreq_) * self->sineAmpX_;
+			if (c.pos.z <= self->stopZ_) { c.pos.z = self->stopZ_; }
+		}
+
+		static void Move_StrafeLtoR(Enemy* self, MoveCtx& c) {
+			c.pos.z += self->velocity_.z * c.factor;
+			self->strafePosX_ += self->strafeSpeed_ * self->strafeDir_ * c.factor;
+			if (self->strafePosX_ > self->strafeRight_) { self->strafePosX_ = self->strafeRight_; self->strafeDir_ = -1; }
+			if (self->strafePosX_ < self->strafeLeft_) { self->strafePosX_ = self->strafeLeft_;  self->strafeDir_ = +1; }
+			c.pos.x = self->strafePosX_;
+			if (c.pos.z <= self->stopZ_) { c.pos.z = self->stopZ_; }
+		}
+
+		static void Move_ChasePlayer(Enemy* self, MoveCtx& c) {
+			c.pos.z += self->velocity_.z * c.factor;
+			if (self->playerGetter_) {
+				Vector3 toP = self->playerGetter_() - c.pos;
+				Vector3 desire = { toP.x, toP.y, 0.0f };
+				float len = MyMath::Length(desire);
+				if (len > 0.001f) {
+					Vector3 dir = MyMath::Normalize(desire);
+					c.pos.x += dir.x * self->chaseSpeed_ * c.factor;
+					c.pos.y += dir.y * self->chaseSpeed_ * c.factor;
+				}
+			}
+			if (c.pos.z <= self->stopZ_) { c.pos.z = self->stopZ_; }
+		}
+
+		static void Move_PounceFromAbove(Enemy* self, MoveCtx& c) {
+			if (!self->pounceStarted_) { return; }
+
+			ParticleManager* pm = ParticleManager::GetInstance();
+
+			if (!self->pounceDiving_) {
+				self->pounceTime_ += c.dt;
+				float t = self->pounceTime_ / self->pounceDuration_;
+				if (t > 1.0f) t = 1.0f;
+
+				auto EaseOutQuad = [](float x) {
+					return 1.0f - (1.0f - x) * (1.0f - x);
+					};
+				float u = EaseOutQuad(t);
+
+				Vector3 pos1 = MyMath::Vector3Lerp(self->pounceStart_, self->pounceApex_, u);
+				Vector3 pos2 = MyMath::Vector3Lerp(self->pounceApex_, self->pounceTarget_, u);
+				Vector3 newPos = MyMath::Vector3Lerp(pos1, pos2, u);
+
+				c.pos = newPos;
+
+				{
+					Vector3 emitPos = c.pos;
+					pm->Emit("enemyPounceTrail", emitPos, 2);
+					pm->Emit("enemyPounceSpark", emitPos, 3);
+				}
+
+				if (t >= 1.0f) {
+					Vector3 dir = self->pounceTarget_ - self->pounceStart_;
+					float len = MyMath::Length(dir);
+					if (len > 0.001f) {
+						dir = MyMath::Normalize(dir);
+					} else {
+						dir = { 0.0f, -0.1f, -1.0f };
+					}
+
+					dir.y -= 0.2f;
+					dir = MyMath::Normalize(dir);
+
+					float diveSpeed = 0.7f;
+					self->velocity_ = dir * diveSpeed;
+
+					self->pounceDiving_ = true;
+				}
+
+			} else {
+
+				c.pos += self->velocity_ * c.factor;
+
+				Vector3 emitPos = c.pos;
+				pm->Emit("enemyPounceTrail", emitPos, 2);
+				pm->Emit("enemyPounceSpark", emitPos, 2);
+			}
+		}
+
+		static void Move_FreeRoam(Enemy* self, MoveCtx& c) {
+			auto random01 = []() {
+				return static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
+				};
+
+			float distToTarget = MyMath::Length(self->roamTarget_ - c.pos);
+			if (!self->hasRoamTarget_ || distToTarget < 0.5f) {
+				self->hasRoamTarget_ = true;
+
+				Vector3 target;
+				target.x = self->roamMin_.x + (self->roamMax_.x - self->roamMin_.x) * random01();
+				target.y = self->roamMin_.y + (self->roamMax_.y - self->roamMin_.y) * random01();
+				target.z = self->roamMin_.z + (self->roamMax_.z - self->roamMin_.z) * random01();
+
+				if (self->isAngry_ && self->playerGetter_) {
+					Vector3 p = self->playerGetter_();
+					target.x = (target.x * 0.4f) + (p.x * 0.6f);
+					target.x = std::max(self->roamMin_.x, std::min(self->roamMax_.x, target.x));
+				}
+
+				self->roamTarget_ = target;
+			}
+
+			Vector3 toT = self->roamTarget_ - c.pos;
+			float len = MyMath::Length(toT);
+			if (len > 0.001f) {
+				Vector3 dir = toT / len;
+				float speed = self->isAngry_ ? self->roamSpeedAngry_ : self->roamSpeedNormal_;
+				c.pos += dir * speed * c.factor;
+			}
+
+			c.pos.x = std::max(self->roamMin_.x, std::min(self->roamMax_.x, c.pos.x));
+			c.pos.y = std::max(self->roamMin_.y, std::min(self->roamMax_.y, c.pos.y));
+			c.pos.z = std::max(self->roamMin_.z, std::min(self->roamMax_.z, c.pos.z));
+		}
+	};
+
+	// Death table（enum順：BlowAway, RiseAbsorb, Collapse, BossFinal）
+	using DeathFn = void(*)(Enemy*, DeathCtx&);
+	static const DeathFn kDeathTable[] = {
+		&Local::Death_BlowAway,
+		&Local::Death_RiseAbsorb,
+		&Local::Death_Collapse,
+		&Local::Death_BossFinal,
+	};
+
+	// Move table（enum順：StraightStop, SineX, StrafeLtoR, ChasePlayer, PounceFromAbove, FreeRoam）
+	using MoveFn = void(*)(Enemy*, MoveCtx&);
+	static const MoveFn kMoveTable[] = {
+		&Local::Move_StraightStop,
+		&Local::Move_SineX,
+		&Local::Move_StrafeLtoR,
+		&Local::Move_ChasePlayer,
+		&Local::Move_PounceFromAbove,
+		&Local::Move_FreeRoam,
+	};
+
+	// =========================================================
+	// 死亡演出（Data-driven）
+	// =========================================================
+	if (isDying_) {
+		deathTimer_ += dt;
+		float t = std::min(deathTimer_ / deathDuration_, 1.0f);
+
+		DeathCtx c{};
+		c.dt = dt;
+		c.t = t;
+		c.pos = object_->GetTranslate();
+		c.rot = object_->GetRotate();
+		c.scale = baseScale_;
+
+		const int di = static_cast<int>(deathReaction_);
+		if (0 <= di && di < static_cast<int>(std::size(kDeathTable))) {
+			kDeathTable[di](this, c);
+		}
+
+		object_->SetTranslate(c.pos);
+		object_->SetRotate(c.rot);
+		object_->SetScale(c.scale);
 
 		if (deathReaction_ == EnemyDeathReaction::BossFinal) {
 			if (t < 0.7f) {
@@ -168,36 +349,37 @@ void Enemy::Update(float dt) {
 			ParticleManager* pm = ParticleManager::GetInstance();
 			Vector3 emitPos = GetWorldPosition();
 
-			switch (deathReaction_) {
-			case EnemyDeathReaction::BlowAway:
+			// ここもテーブル化できるけど、今回は「主要switch排除」が目的なので
+			// いったん必要最小限：deathReaction_ ごとに出すものを if でまとめる
+			// ※完全排除したいなら「Emitテーブル」も作る（言ってくれ）
+			if (deathReaction_ == EnemyDeathReaction::BlowAway) {
 				pm->Emit("enemyDeath_core", emitPos, 1);
 				pm->Emit("enemyDeath_shard", emitPos, 20);
 				pm->Emit("enemyDeath_smoke", emitPos, 4);
-				break;
-			case EnemyDeathReaction::RiseAbsorb:
+			} else if (deathReaction_ == EnemyDeathReaction::RiseAbsorb) {
 				pm->Emit("enemyDeath_core", emitPos, 1);
 				pm->Emit("enemyDeath_shard", emitPos, 14);
 				pm->Emit("enemyDeath_smoke", emitPos, 6);
-				break;
-			case EnemyDeathReaction::Collapse:
+			} else if (deathReaction_ == EnemyDeathReaction::Collapse) {
 				pm->Emit("enemyDeath_shard", emitPos, 10);
 				pm->Emit("enemyDeath_smoke", emitPos, 3);
-				break;
-			case EnemyDeathReaction::BossFinal:
+			} else if (deathReaction_ == EnemyDeathReaction::BossFinal) {
 				if (!bossFinalBigBurstDone_) {
 					pm->Emit("bossClear_core", emitPos, 1);
 					pm->Emit("bossClear_ring", emitPos, 3);
 					pm->Emit("bossClear_spark", emitPos, 80);
 					pm->Emit("bossClear_debris", emitPos, 60);
 				}
-				break;
 			}
+
 			isDead_ = true;
 		}
 		return;
 	}
 
-	// ===== 怒りタイマー更新 =====
+	// =========================================================
+	// 怒りタイマー更新
+	// =========================================================
 	if (isAngry_) {
 		angryTimer_ += dt;
 		if (angryTimer_ >= angryDuration_) {
@@ -205,149 +387,31 @@ void Enemy::Update(float dt) {
 		}
 	}
 
-	Vector3 pos = object_->GetTranslate();
+	// =========================================================
+	// 行動（Data-driven）
+	// =========================================================
+	MoveCtx m{};
+	m.dt = dt;
+	m.factor = factor;
+	m.pos = object_->GetTranslate();
 
 	if (!freezeMove_) {
-		switch (behavior_) {
-		case EnemyBehavior::StraightStop: {
-			if (!stopMove_) {
-				pos += velocity_ * factor;
-				if (pos.z <= stopZ_) { pos.z = stopZ_; stopMove_ = true; }
-			}
-			break;
-		}
-		case EnemyBehavior::SineX: {
-			t_ += 0.05f * factor;
-			pos.z += velocity_.z * factor;
-			pos.x = startX_ + std::sinf(sinePhase_ + t_ * sineFreq_) * sineAmpX_;
-			if (pos.z <= stopZ_) { pos.z = stopZ_; }
-			break;
-		}
-		case EnemyBehavior::StrafeLtoR: {
-			pos.z += velocity_.z * factor;
-			strafePosX_ += strafeSpeed_ * strafeDir_ * factor;
-			if (strafePosX_ > strafeRight_) { strafePosX_ = strafeRight_; strafeDir_ = -1; }
-			if (strafePosX_ < strafeLeft_) { strafePosX_ = strafeLeft_;  strafeDir_ = +1; }
-			pos.x = strafePosX_;
-			if (pos.z <= stopZ_) { pos.z = stopZ_; }
-			break;
-		}
-		case EnemyBehavior::ChasePlayer: {
-			pos.z += velocity_.z * factor;
-			if (playerGetter_) {
-				Vector3 toP = playerGetter_() - pos;
-				Vector3 desire = { toP.x, toP.y, 0.0f };
-				float len = MyMath::Length(desire);
-				if (len > 0.001f) {
-					Vector3 dir = MyMath::Normalize(desire);
-					pos.x += dir.x * chaseSpeed_ * factor;
-					pos.y += dir.y * chaseSpeed_ * factor;
-				}
-			}
-			if (pos.z <= stopZ_) { pos.z = stopZ_; }
-			break;
-		}
-		case EnemyBehavior::PounceFromAbove: {
-			if (!pounceStarted_) { break; }
-
-			ParticleManager* pm = ParticleManager::GetInstance();
-
-			if (!pounceDiving_) {
-				pounceTime_ += dt;
-				float t = pounceTime_ / pounceDuration_;
-				if (t > 1.0f) t = 1.0f;
-
-				auto EaseOutQuad = [](float x) {
-					return 1.0f - (1.0f - x) * (1.0f - x);
-					};
-				float u = EaseOutQuad(t);
-
-				Vector3 pos1 = MyMath::Vector3Lerp(pounceStart_, pounceApex_, u);
-				Vector3 pos2 = MyMath::Vector3Lerp(pounceApex_, pounceTarget_, u);
-				Vector3 newPos = MyMath::Vector3Lerp(pos1, pos2, u);
-
-				pos = newPos;
-
-				{
-					Vector3 emitPos = pos;
-					pm->Emit("enemyPounceTrail", emitPos, 2);
-					pm->Emit("enemyPounceSpark", emitPos, 3);
-				}
-
-				if (t >= 1.0f) {
-					Vector3 dir = pounceTarget_ - pounceStart_;
-					float len = MyMath::Length(dir);
-					if (len > 0.001f) {
-						dir = MyMath::Normalize(dir);
-					} else {
-						dir = { 0.0f, -0.1f, -1.0f };
-					}
-
-					dir.y -= 0.2f;
-					dir = MyMath::Normalize(dir);
-
-					float diveSpeed = 0.7f;
-					velocity_ = dir * diveSpeed;
-
-					pounceDiving_ = true;
-				}
-			} else {
-				pos += velocity_ * factor;
-
-				Vector3 emitPos = pos;
-				pm->Emit("enemyPounceTrail", emitPos, 2);
-				pm->Emit("enemyPounceSpark", emitPos, 2);
-			}
-			break;
-		}
-		case EnemyBehavior::FreeRoam: {
-			auto random01 = []() {
-				return static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
-				};
-
-			float distToTarget = MyMath::Length(roamTarget_ - pos);
-			if (!hasRoamTarget_ || distToTarget < 0.5f) {
-				hasRoamTarget_ = true;
-
-				Vector3 target;
-				target.x = roamMin_.x + (roamMax_.x - roamMin_.x) * random01();
-				target.y = roamMin_.y + (roamMax_.y - roamMin_.y) * random01();
-				target.z = roamMin_.z + (roamMax_.z - roamMin_.z) * random01();
-
-				if (isAngry_ && playerGetter_) {
-					Vector3 p = playerGetter_();
-					target.x = (target.x * 0.4f) + (p.x * 0.6f);
-					target.x = std::max(roamMin_.x, std::min(roamMax_.x, target.x));
-				}
-
-				roamTarget_ = target;
-			}
-
-			Vector3 toT = roamTarget_ - pos;
-			float len = MyMath::Length(toT);
-			if (len > 0.001f) {
-				Vector3 dir = toT / len;
-				float speed = isAngry_ ? roamSpeedAngry_ : roamSpeedNormal_;
-				pos += dir * speed * factor;
-			}
-
-			pos.x = std::max(roamMin_.x, std::min(roamMax_.x, pos.x));
-			pos.y = std::max(roamMin_.y, std::min(roamMax_.y, pos.y));
-			pos.z = std::max(roamMin_.z, std::min(roamMax_.z, pos.z));
-			break;
-		}
+		const int bi = static_cast<int>(behavior_);
+		if (0 <= bi && bi < static_cast<int>(std::size(kMoveTable))) {
+			kMoveTable[bi](this, m);
 		}
 	}
 
-	object_->SetTranslate(pos);
+	object_->SetTranslate(m.pos);
 
 	if (!isDying_) {
-		if (pos.z < -30.0f) {
+		if (m.pos.z < -30.0f) {
 			escaped_ = true;
 			isDead_ = true;
 		}
 	}
 
+	// AABB 表示（そのまま）
 	{
 		Vector3 center = GetWorldPosition();
 		Vector3 size = colliderScale_;
@@ -372,18 +436,18 @@ void Enemy::Update(float dt) {
 		}
 	}
 
-	// ★ ロック脈動（ボスは無効化）
+	// ロック脈動（そのまま）
 	if (isLocked_ && lockPulseEnabled_) {
 		pulseT_ += 0.12f * factor;
 		float s = 1.0f + 0.15f * sinf(pulseT_);
 		object_->SetScale({ baseScale_.x * s, baseScale_.y * s, baseScale_.z * s });
 	} else {
-		// ロックしていても脈動が無効なら、基準スケールを維持
 		object_->SetScale(baseScale_);
 	}
- 
+
+	// 射撃（そのまま）
 	if (canShoot_ && !isDying_) {
-		shootTimer_ += factor; // ★ フレーム加算→dt換算
+		shootTimer_ += factor; // フレーム加算→dt換算
 		if (shootTimer_ >= shootInterval_) {
 			shootTimer_ = 0.0f;
 		}
@@ -491,28 +555,28 @@ void Enemy::StartDeathReaction(const Vector3& hitDir) {
 	}
 	dir = MyMath::Normalize(dir);
 
-	switch (r) {
-	case 0: // 吹っ飛び
-	default:
+	auto Pick0_BlowAway = [&]() {
 		deathReaction_ = EnemyDeathReaction::BlowAway;
-		deathDuration_ = 3.0f; // 1秒で消える
-		deathVelocity_ = dir * 4.0f;             // ヒット方向へ吹っ飛ぶ
-		deathRotateSpeed_ = { 1.5f, 2.0f, 0.8f }; // ぐるっと回転
-		break;
-	case 1: // 上に吸い込まれる
+		deathDuration_ = 3.0f;
+		deathVelocity_ = dir * 4.0f;
+		deathRotateSpeed_ = { 1.5f, 2.0f, 0.8f };
+		};
+
+	auto Pick1_RiseAbsorb = [&]() {
 		deathReaction_ = EnemyDeathReaction::RiseAbsorb;
 		deathDuration_ = 1.2f;
-		deathVelocity_ = { 0.0f, 3.0f, 0.0f };   // 上方向にスッと上がる
-		deathRotateSpeed_ = { 0.0f, 2.0f, 0.0f }; // 少しだけY回転
-		break;
-	case 2: // 崩れ落ち
+		deathVelocity_ = { 0.0f, 3.0f, 0.0f };
+		deathRotateSpeed_ = { 0.0f, 2.0f, 0.0f };
+		};
+
+	auto Pick2_Collapse = [&]() {
 		deathReaction_ = EnemyDeathReaction::Collapse;
 		deathDuration_ = 0.9f;
-		// ちょい前＋下に崩れ落ちる
 		deathVelocity_ = { dir.x * 1.5f, -3.0f, dir.z * 1.5f };
-		deathRotateSpeed_ = { 3.0f, 0.5f, 0.0f }; // 前に倒れ込む感じ
-		break;
-	}
+		deathRotateSpeed_ = { 3.0f, 0.5f, 0.0f };
+		};
+
+	if (r == 0) { Pick0_BlowAway(); } else if (r == 1) { Pick1_RiseAbsorb(); } else { Pick2_Collapse(); }
 }
 
 void Enemy::SyncTransform() {

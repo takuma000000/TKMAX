@@ -640,16 +640,22 @@ void EnemyManager::SpawnWave3ExtraMidBoss() {
 		}
 	}
 
-	// 片方だけ生きている想定なので、空いている側に復活させる
-	Vector3 spawnPos = wave3LeftPos_;
-	if (leftAlive && !rightAlive) {
-		spawnPos = wave3RightPos_;
-	} else if (!leftAlive && rightAlive) {
-		spawnPos = wave3LeftPos_;
-	} else {
-		// 想定外だけど、両方死んでいたら左側に出しておく
-		spawnPos = wave3LeftPos_;
-	}
+	// =========================================================
+	// ★PDF方針：値の違いのための if/else をテーブル化
+	// state: 0=両方死, 1=左だけ生, 2=右だけ生, 3=両方生(想定外)
+	// 空いてる側に出す：左生->右 / 右生->左 / その他->左
+	// =========================================================
+	const int state = (leftAlive ? 1 : 0) | (rightAlive ? 2 : 0);
+
+	static const int kSpawnSide[4] = {
+		0, // 0: 両方死 -> 左
+		1, // 1: 左だけ生 -> 右（空いてる側）
+		0, // 2: 右だけ生 -> 左（空いてる側）
+		0, // 3: 両方生(想定外) -> 左
+	};
+
+	const Vector3 kSidePos[2] = { wave3LeftPos_, wave3RightPos_ };
+	const Vector3 spawnPos = kSidePos[kSpawnSide[state]];
 
 	auto camPtr = cam_;
 	auto dxPtr = dx_;

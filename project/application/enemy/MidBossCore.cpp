@@ -96,15 +96,8 @@ void MidBossCore::Update(float dt) {
 		LineRenderer::Color hit{ 1.0f, 0.0f, 0.0f, 1.0f };
 
 		if (reticle_) {
-			Vector3 rayOrigin;
-			if (playerGetter_) {
-				rayOrigin = playerGetter_();
-			} else {
-				rayOrigin = reticle_->GetCenterWorldPos();
-			}
-
-			Vector3 rayDir = reticle_->GetAimDirection();
-
+			const Vector3 rayOrigin = playerGetter_ ? playerGetter_() : reticle_->GetCenterWorldPos();
+			const Vector3 rayDir = reticle_->GetAimDirection();
 			lr->AddAABBWithRayHighlight(center, size, rayOrigin, rayDir, normal, hit);
 		} else {
 			lr->AddAABB(center, size, normal);
@@ -112,27 +105,40 @@ void MidBossCore::Update(float dt) {
 	}
 
 	// ============================
-	// 核チャージ演出（蘇生エネルギー）
-	// ============================
+// 核チャージ演出（蘇生エネルギー）
+// データドリブン版（挙動そのまま）
+// ============================
 	{
 		ParticleManager* pm = ParticleManager::GetInstance();
 		Vector3 center = GetWorldPosition();
 
-		// 外殻：拡大球リング（ゆっくり波打つ）
-		if (rand() % 3 == 0) { // 毎フレーム出すと重いので1/3確率
-			pm->Emit("core_charge_shell", center, 1);
-		}
-		// 中心に向かって吸い込まれる粒子
-		for (int i = 0; i < 2; i++) {
-			pm->Emit("core_charge_inward", center, 1);
-		}
-		// ぐるぐる回る細い帯
-		if (rand() % 5 == 0) {
-			pm->Emit("core_charge_ribbon", center, 1);
-		}
-		// 時々バチッと光る放電
-		if (rand() % 20 == 0) {
-			pm->Emit("core_charge_flash", center, 3);
+		struct EmitRule {
+			const char* name;   // パーティクル名
+			int emitCount;      // pm->Emit の第3引数
+			int repeat;         // 同フレームで何回 Emit するか
+			int probability;   // 1なら毎回、3なら1/3、5なら1/5…
+		};
+
+		static const EmitRule kChargeRules[] = {
+			// 外殻：拡大球リング（1/3）
+			{ "core_charge_shell",  1, 1, 3 },
+
+			// 中心に吸い込まれる粒子（毎フレーム2回）
+			{ "core_charge_inward", 1, 2, 1 },
+
+			// ぐるぐる回る細い帯（1/5）
+			{ "core_charge_ribbon", 1, 1, 5 },
+
+			// 放電フラッシュ（1/20）
+			{ "core_charge_flash",  3, 1, 20 },
+		};
+
+		for (const auto& rule : kChargeRules) {
+			if (rule.probability <= 1 || (std::rand() % rule.probability) == 0) {
+				for (int i = 0; i < rule.repeat; ++i) {
+					pm->Emit(rule.name, center, rule.emitCount);
+				}
+			}
 		}
 	}
 }
