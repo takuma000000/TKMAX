@@ -10,8 +10,6 @@ const EnemyManager::WaveOps EnemyManager::kWaveOps_[4] = {
 	/* Done*/ { nullptr, nullptr },
 };
 
-
-
 void EnemyManager::Initialize(DirectXCommon* dx, Camera* camera, BaseScene* parent, Player* player) {
 	dx_ = dx;
 	cam_ = camera;
@@ -34,7 +32,7 @@ void EnemyManager::Update(float dt) {
 	}
 
 	// ───────────────────────────────
-	// ● Wave3 の核が居れば更新
+	/// ● Wave3 の核が居れば更新
 	// ───────────────────────────────
 	if (midBossCore_) {
 		midBossCore_->Update(dt);
@@ -48,9 +46,9 @@ void EnemyManager::Update(float dt) {
 		}
 	}
 
-	/// ───────────────────────────────────────────────
+	// ───────────────────────────────────────────────
 	/// ● 敵の状態を更新し、死亡したものは削除＆カウント
-	/// ───────────────────────────────────────────────
+	// ───────────────────────────────────────────────
 	for (auto it = enemies_->begin(); it != enemies_->end();) {
 		Enemy* e = it->get();
 
@@ -84,7 +82,15 @@ void EnemyManager::Update(float dt) {
 	}
 
 	// ───────────────────────────────────────────────
-	// ● Wave進行
+	/// ● CSV出現パターンの更新
+	// ───────────────────────────────────────────────
+	if (useCsvSpawn_) { // CSV出現パターンを使うなら
+		UpdateCsvSpawn(dt); // CSV出現パターンの更新
+		return; // Wave進行はしない
+	}
+
+	// ───────────────────────────────────────────────
+	/// ● Wave進行
 	// ───────────────────────────────────────────────
 		// Waveごとの更新（分岐しない）
 	const auto ops = kWaveOps_[static_cast<int>(wavePhase_)];
@@ -99,10 +105,9 @@ void EnemyManager::UpdateClosestEnemy() {
 		return;
 	}
 
-	/// ───────────────────────────────────────────────
+	// ───────────────────────────────────────────────
 	/// ● プレイヤーに最も近い「ザコ敵」を検出し、ターゲットとして設定する
-	/// ───────────────────────────────────────────────
-
+	// ───────────────────────────────────────────────
 	Enemy* closestEnemy = nullptr;
 	float closestDistance = std::numeric_limits<float>::max();
 	Vector3 playerPos = player_->GetPosition();
@@ -118,15 +123,19 @@ void EnemyManager::UpdateClosestEnemy() {
 			}
 		}
 	}
-
 	// ───── 検出結果をプレイヤーに通知 ─────
 	player_->SetEnemy(closestEnemy);
 	player_->SetAllEnemies(enemies_);
 }
 
 void EnemyManager::InitializeWaves() {
+	// enemies_ or player_ が無効なら何もしない
 	if (!enemies_ || !player_) {
 		return;
+	}
+	// CSV出現パターンを使うなら読み込み
+	if (useCsvSpawn_) {
+		LoadSpawnCsv();
 	}
 
 	enemies_->clear();
@@ -685,6 +694,9 @@ void EnemyManager::SpawnWave3ExtraMidBoss() {
 }
 
 void EnemyManager::BeginWave1() {
+	// Wave1の初期化（InitializeWaves と同等にする）
+	if (useCsvSpawn_) { ResetCsvForCurrentWave(); return; }
+
 	wave1SpawnTimer_ = 0.0f;
 	if (maxEnemyCount_) {
 		*maxEnemyCount_ = wave1DefeatTarget_;
@@ -817,4 +829,89 @@ void EnemyManager::ImGuiDebug() {
 		midBossCore_->ImGuiDebug();
 	}
 #endif
+}
+
+// EnemyManager.cpp
+#include "CsvSpawnLoader.h"
+
+int EnemyManager::CurrentWaveIndex() const {
+	switch (wavePhase_) {
+	case WavePhase::W1: return 1;
+	case WavePhase::W2: return 2;
+	case WavePhase::W3: return 3;
+	default: return 0;
+	}
+}
+
+void EnemyManager::LoadSpawnCsv() {
+	spawnEvents_.clear();
+	spawnCursor_ = 0;
+	csvWaveTime_ = 0.0f;
+
+	// ★君が置いたパスに合わせる（ここだけ要調整）
+	const std::string path = "./resources/data/enemy_spawn.csv";
+	CsvSpawnLoader::Load(path, spawnEvents_);
+}
+
+void EnemyManager::ResetCsvForCurrentWave() {
+	csvWaveTime_ = 0.0f;
+
+	// 念のため、現在Waveより前のイベントは飛ばす（並びが多少崩れても平気）
+	const int w = CurrentWaveIndex();
+	while (spawnCursor_ < spawnEvents_.size() && spawnEvents_[spawnCursor_].wave < w) {
+		spawnCursor_++;
+	}
+}
+
+void EnemyManager::SpawnFromEvent(const SpawnEvent& e) {
+	if (!enemies_ || !dx_ || !cam_ || !parent_) { return; }
+
+	// EnemyConfig は今までのSetupEnemyForPlayerに寄せるのが自然
+	EnemySpawner::EnemyConfig cfg = [this](Enemy& en) { SetupEnemyForPlayer(en); };
+
+	if (e.pattern == "Line") {
+		EnemySpawner::SpawnLine(*enemies_, e.count, e.y, e.z, e.x, e.spacing, dx_, cam_, parent_, cfg);
+	} else if (e.pattern == "V") {
+		// count = 片側数 / spacing = xStep / paramA = zStep
+		EnemySpawner::SpawnV(*enemies_, e.count, e.y, e.z, e.x, e.spacing, e.paramA, dx_, cam_, parent_, cfg);
+	} else if (e.pattern == "Column") {
+		// x = x / z = zStart / spacing = zStep / y = yStart / paramA = yStep
+		EnemySpawner::SpawnColumn(*enemies_, e.count, e.x, e.z, e.spacing, e.y, e.paramA, dx_, cam_, parent_, cfg);
+	} else if (e.pattern == "Triangle3") {
+		// paramA = size（空ならデフォ）
+		float size = (e.paramA > 0.0f) ? e.paramA : 2.0f;
+		EnemySpawner::SpawnTriangle3(*enemies_, e.x, e.y, e.z, size, dx_, cam_, parent_, cfg);
+	} else if (e.pattern == "MidBoss") {
+		// いまの君の実装は関数が引数なしなので、まずは既存関数を呼ぶのが最短
+		SpawnWave3MidBossStage();
+	}
+}
+
+void EnemyManager::UpdateCsvSpawn(float dt) {
+	const int w = CurrentWaveIndex();
+	if (w == 0) { return; }
+
+	csvWaveTime_ += dt;
+
+	// 今Waveのイベントを時間到達した分だけスポーン
+	while (spawnCursor_ < spawnEvents_.size()) {
+		const auto& e = spawnEvents_[spawnCursor_];
+		if (e.wave != w) { break; }
+		if (csvWaveTime_ < e.time) { break; }
+
+		SpawnFromEvent(e);
+		spawnCursor_++;
+	}
+
+	// このWaveのイベントを全部吐き切ったか？
+	bool waveEventsDone = true;
+	if (spawnCursor_ < spawnEvents_.size()) {
+		waveEventsDone = (spawnEvents_[spawnCursor_].wave != w);
+	}
+
+	// 全イベント吐き切り＆敵がいないなら次Waveへ（今の進行ロジックに自然に乗る）
+	if (waveEventsDone && (!enemies_ || enemies_->empty())) {
+		GoToNextWave();
+		ResetCsvForCurrentWave();
+	}
 }

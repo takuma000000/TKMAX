@@ -185,6 +185,7 @@
     <ClCompile Include="engine\effect\post\AuraEffect.cpp" />
     <ClCompile Include="engine\effect\post\AuraVolumeRenderer.cpp" />
     <ClCompile Include="engine\func\common\TimeScaleController.cpp" />
+    <ClCompile Include="application\enemy\csv\CsvSpawnLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -397,6 +398,7 @@
     <ClInclude Include="engine\effect\post\AuraEffect.h" />
     <ClInclude Include="engine\effect\post\AuraVolumeRenderer.h" />
     <ClInclude Include="engine\func\common\TimeScaleController.h" />
+    <ClInclude Include="application\enemy\csv\CsvSpawnLoader.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
