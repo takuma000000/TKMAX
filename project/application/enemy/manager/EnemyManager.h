@@ -10,6 +10,7 @@
 #include "DirectXCommon.h"
 #include "BaseScene.h"
 #include "MidBossCore.h"
+#include "EnemyWaveConfig.h"
 
 #ifdef USE_IMGUI
 #include "imgui.h"
@@ -253,8 +254,22 @@ private:
 
 	static const WaveOps kWaveOps_[4]; // W1,W2,W3,Done(=nullptr)
 
-	// 各Waveの「開始処理」（今 switch の case に書いてた中身を移す）
+	/// <summary>
+	/// Wave1の開始
+	/// </summary>
 	void BeginWave1();
+	/// <summary>
+	/// Wave2の開始
+	/// </summary>
 	void BeginWave2();
+	/// <summary>
+	/// Wave3の開始
+	/// </summary>
 	void BeginWave3();
+
+	// =====================================================================
+	// 敵ウェーブ設定データ
+	// =====================================================================
+	EnemyWaveConfig waveConfig_{}; // 敵ウェーブ設定データ
+	bool waveConfigLoaded_ = false; // 敵ウェーブ設定データが読み込まれたかどうか
 };

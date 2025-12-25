@@ -1,0 +1,15 @@
+# wave,type,id,a,b,c,d,e,f
+
+Wave1,Settings,spawnInterval,0.80,0,0,0,0,0
+Wave1,Settings,maxSimultaneous,3,0,0,0,0,0
+Wave1,SpawnPos,base,0,5.0,100.0,0,0,0          # xは0（RandXで足す）
+Wave1,RandX,range,0,-20.0,20.0,0,0,0
+
+Wave2,Wait,base,1.20,0,0,0,0,0
+Wave2,SubWave,0,Triangle,1,6.0,80.0,0.0,7.0,5.0
+Wave2,SubWave,1,Line,4,4.5,90.0,-12.0,8.0,0
+Wave2,SubWave,2,Column,3,18.0,100.0,10.0,5.0,0.0
+
+Wave3,MidBossPos,left,-12.0,6.0,80.0,0,0,0
+Wave3,MidBossPos,right,12.0,6.0,80.0,0,0,0
+Wave3,CoreRand,params,18.0,35.0,75.0,6.0,0,0

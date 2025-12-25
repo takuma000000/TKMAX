@@ -15,6 +15,24 @@ void EnemyManager::Initialize(DirectXCommon* dx, Camera* camera, BaseScene* pare
 	cam_ = camera;
 	parent_ = parent;
 	player_ = player;
+
+	// CSV読み込み（resources/data に置く運用）
+	waveConfigLoaded_ = waveConfig_.Load("./resources/data/enemy_waves.csv");
+
+	// 読めても読めなくても、挙動が壊れないように「既存メンバ」に流し込む
+	{
+		const auto& w1 = waveConfig_.GetWave1();
+		wave1SpawnInterval_ = w1.spawnInterval;
+		wave1MaxSimultaneous_ = w1.maxSimultaneous;
+	}
+
+	wave2WaitDuration_ = waveConfig_.GetWave2WaitDuration();
+
+	{
+		const auto& w3 = waveConfig_.GetWave3();
+		wave3LeftPos_ = w3.midBossLeft;
+		wave3RightPos_ = w3.midBossRight;
+	}
 }
 
 void EnemyManager::BindEnemies(std::vector<std::unique_ptr<Enemy>>* enemies,
@@ -237,11 +255,11 @@ void EnemyManager::SpawnWave1Enemy() {
 	}
 
 	// 出現位置（Xはちょっとランダム、Zは奥から）
-	float y = 5.0f;
-	float z = 100.0f;
-	float xRange = 20.0f;
+	const auto& w1 = waveConfig_.GetWave1();
+	float y = w1.baseY;
+	float z = w1.baseZ;
 	float rx = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX); // 0〜1
-	float x = -xRange + rx * (xRange * 2.0f); // -xRange〜+xRange
+	float x = w1.randXMin + rx * (w1.randXMax - w1.randXMin);
 
 	DirectXCommon* dxPtr = dx_;
 	Camera* camPtr = cam_;
@@ -347,17 +365,20 @@ void EnemyManager::SpawnWave2SubWave(int id) {
 void EnemyManager::SpawnWave2_Triangle() {
 	if (!enemies_ || !dx_ || !cam_ || !parent_) return;
 
+	const auto& s = waveConfig_.GetWave2SubWave(0);
+
 	int idx = 0;
 
 	EnemySpawner::SpawnV(
 		*enemies_,
-		1,  // 1段
-		6.0f, 80.0f,
-		0.0f,
-		7.0f,
-		5.0f,
+		s.triCountPerSide,
+		s.triY, s.triZ,
+		s.triXCenter,
+		s.triXStep,
+		s.triZStep,
 		dx_, cam_, parent_,
 		[this, &idx](Enemy& e) {
+			// ここは挙動。触らない。
 			e.SetBehavior(EnemyBehavior::SineX);
 			e.SetVelocity({ 0,0,-0.30f });
 			e.SetSineParams(4.0f, 1.4f);
@@ -372,12 +393,15 @@ void EnemyManager::SpawnWave2_Triangle() {
 void EnemyManager::SpawnWave2_Line() {
 	if (!enemies_ || !dx_ || !cam_ || !parent_) return;
 
+	const auto& s = waveConfig_.GetWave2SubWave(1);
+
 	EnemySpawner::SpawnLine(
 		*enemies_,
-		4, 4.5f, 90.0f,
-		-12.0f, 8.0f,
+		s.lineCount, s.lineY, s.lineZ,
+		s.lineXStart, s.lineXStep,
 		dx_, cam_, parent_,
 		[this](Enemy& e) {
+			// 挙動は触らない
 			e.SetBehavior(EnemyBehavior::StraightStop);
 			e.SetVelocity({ 0,0,-0.32f });
 			e.SetStopZ(52.0f);
@@ -391,16 +415,19 @@ void EnemyManager::SpawnWave2_Line() {
 void EnemyManager::SpawnWave2_FastColumn() {
 	if (!enemies_ || !dx_ || !cam_ || !parent_) return;
 
+	const auto& s = waveConfig_.GetWave2SubWave(2);
+
 	EnemySpawner::SpawnColumn(
 		*enemies_,
-		3,
-		18.0f,
-		100.0f,
-		10.0f,
-		5.0f,
-		0.0f,
+		s.colCount,
+		s.colX,
+		s.colZStart,
+		s.colZStep,
+		s.colYStart,
+		s.colYStep,
 		dx_, cam_, parent_,
 		[this](Enemy& e) {
+			// 挙動は触らない
 			e.SetBehavior(EnemyBehavior::StraightStop);
 			e.SetVelocity({ -0.20f, 0.0f, -0.75f });
 			e.SetStopZ(-50.0f); // 通過するだけ
@@ -576,17 +603,18 @@ void EnemyManager::SpawnWave3Core() {
 		return;
 	}
 
-	// 画面内っぽい範囲でランダムに配置（ざっくり）
-	float xRange = 18.0f;
-	float zMin = 35.0f;
-	float zMax = 75.0f;
+	const auto& w3 = waveConfig_.GetWave3();
+
+	float xRange = w3.coreXRange;
+	float zMin = w3.coreZMin;
+	float zMax = w3.coreZMax;
 
 	float rx = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
 	float rz = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
 
 	float x = -xRange + rx * (xRange * 2.0f);
 	float z = zMin + rz * (zMax - zMin);
-	float y = 6.0f;
+	float y = w3.coreY;
 
 	// すでにコアが居たら一旦消して作り直し
 	midBossCore_ = std::make_unique<MidBossCore>();
