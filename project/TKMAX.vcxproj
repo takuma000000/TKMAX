@@ -115,7 +115,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   <ItemGroup>
     <ClCompile Include="application\enemy\manager\EnemyManager.cpp" />
     <ClCompile Include="application\boss\manager\BossManager.cpp" />
-    <ClCompile Include="application\enemy\csv\CsvSpawnLoader.cpp" />
     <ClCompile Include="engine\effect\post\AuraVolumeRenderer.cpp" />
     <ClCompile Include="engine\effect\post\AuraEffect.cpp" />
     <ClCompile Include="engine\effect\post\BaseEffect.cpp" />
@@ -198,7 +197,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   <ItemGroup>
     <ClInclude Include="application\enemy\manager\EnemyManager.h" />
     <ClInclude Include="application\boss\manager\BossManager.h" />
-    <ClInclude Include="application\enemy\csv\CsvSpawnLoader.h" />
     <ClInclude Include="engine\effect\post\AuraVolumeRenderer.h" />
     <ClInclude Include="engine\effect\post\AuraEffect.h" />
     <ClInclude Include="engine\effect\post\BaseEffect.h" />

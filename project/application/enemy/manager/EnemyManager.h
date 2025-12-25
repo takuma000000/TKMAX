@@ -10,7 +10,6 @@
 #include "DirectXCommon.h"
 #include "BaseScene.h"
 #include "MidBossCore.h"
-#include "CsvSpawnLoader.h"
 
 #ifdef USE_IMGUI
 #include "imgui.h"
@@ -258,18 +257,4 @@ private:
 	void BeginWave1();
 	void BeginWave2();
 	void BeginWave3();
-
-
-
-	// csv_spawn 用
-	bool useCsvSpawn_ = false;            // CSV駆動モード
-	std::vector<SpawnEvent> spawnEvents_;
-	size_t spawnCursor_ = 0;             // spawnEvents_ の現在位置
-	float csvWaveTime_ = 0.0f;           // 現在Wave開始からの経過秒
-
-	void LoadSpawnCsv();
-	void ResetCsvForCurrentWave();
-	void UpdateCsvSpawn(float dt);
-	int  CurrentWaveIndex() const;      // W1->1, W2->2, W3->3
-	void SpawnFromEvent(const SpawnEvent& e);
 };
