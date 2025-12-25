@@ -35,7 +35,7 @@ public:
 	/// <param name="camera"></param>
 	/// <param name="parent"></param>
 	/// <param name="player"></param>
-	void Initialize(DirectXCommon* dx, Camera* camera, BaseScene* parent, Player* player);
+	void Initialize(TKM::DirectXCommon* dx, TKM::Camera* camera, BaseScene* parent, Player* player);
 
 	/// <summary>
 	/// 敵全体の更新
@@ -47,7 +47,7 @@ public:
 	/// 敵全体の描画
 	/// </summary>
 	/// <param name="dx"></param>
-	void Draw(DirectXCommon* dx);
+	void Draw(TKM::DirectXCommon* dx);
 
 	/// <summary>
 	/// デバッグ用ImGui表示
@@ -124,7 +124,7 @@ public:
 	/// カメラを設定します
 	/// </summary>
 	/// <param name="camera"></param>
-	void SetCamera(Camera* camera) {
+	void SetCamera(TKM::Camera* camera) {
 		cam_ = camera;
 		for (auto& e : *enemies_) { // 敵全員にカメラをセット
 			if (e) e->SetCamera(cam_); // 敵にもカメラをセット
@@ -157,8 +157,8 @@ private:
 	//======================================================================
 	// 基本参照・共通情報
 	//======================================================================
-	DirectXCommon* dx_ = nullptr;
-	Camera* cam_ = nullptr;
+	TKM::DirectXCommon* dx_ = nullptr;
+	TKM::Camera* cam_ = nullptr;
 	BaseScene* parent_ = nullptr;
 	Player* player_ = nullptr;
 

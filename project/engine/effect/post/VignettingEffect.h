@@ -11,7 +11,7 @@ public:
 	VignettingEffect() = default;
 	~VignettingEffect() override = default;
 
-	void Initialize(DirectXCommon* dx) override;
+	void Initialize(TKM::DirectXCommon* dx) override;
 	void Update(float dt) override;
 	void Draw() override {} // 今回は DX 側で DrawPostEffectToSwapchain を呼ぶので何もしない
 

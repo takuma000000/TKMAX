@@ -9,7 +9,7 @@ SrvManager::~SrvManager(){
 	test = 0;
 }
 
-void SrvManager::Initialize(DirectXCommon* directXCommon){
+void SrvManager::Initialize(TKM::DirectXCommon* directXCommon){
 	//引数で受け取ってメンバ変数に記録する
 	this->directXCommon_ = directXCommon;
 

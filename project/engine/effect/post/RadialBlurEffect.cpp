@@ -1,7 +1,7 @@
 #include "RadialBlurEffect.h"
 #include "DirectXCommon.h"
 
-void RadialBlurEffect::Initialize(DirectXCommon* dx) {
+void RadialBlurEffect::Initialize(TKM::DirectXCommon* dx) {
 	BaseEffect::Initialize(dx);
 
 	if (dxCommon_) {

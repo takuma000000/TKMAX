@@ -4,6 +4,8 @@
 #include <imgui.h>
 #endif
 
+using TKM::Sprite;
+
 void BaseScene::Initialize() {
 }
 
@@ -85,7 +87,7 @@ void BaseScene::ImGuiDebugInfo() {
 	ImGui::Separator();
 
 	ImGui::Text("アクティブ Sprite 数 : %d", Sprite::GetActiveCount());
-	ImGui::Text("アクティブ Object3D 数 : %d", Object3d::GetActiveCount());
+	ImGui::Text("アクティブ Object3D 数 : %d", TKM::Object3d::GetActiveCount());
 	ImGui::Separator();
 
 	int totalParticles = 0;

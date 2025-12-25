@@ -4,7 +4,7 @@
 /// LT弾用の「衝撃ラジアルブラー」エフェクト
 class RadialBlurEffect : public BaseEffect {
 public:
-	void Initialize(DirectXCommon* dx) override;
+	void Initialize(TKM::DirectXCommon* dx) override;
 	void Update(float dt) override;
 	void Draw() override;
 

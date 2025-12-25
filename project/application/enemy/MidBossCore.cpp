@@ -3,8 +3,8 @@
 #include "ModelManager.h"
 #include <algorithm>
 
-void MidBossCore::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
-	object_ = std::make_unique<Object3d>();
+void MidBossCore::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon) {
+	object_ = std::make_unique<TKM::Object3d>();
 	object_->Initialize(common, dxCommon);
 	object_->SetModel("sphere.obj"); // 核用の見た目
 
@@ -18,7 +18,7 @@ void MidBossCore::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
 	colliderScale_ = { 1.71f, 1.71f, 1.71f };
 }
 
-void MidBossCore::SetCamera(Camera* cam) {
+void MidBossCore::SetCamera(TKM::Camera* cam) {
 	camera_ = cam;
 	if (object_) {
 		object_->SetCamera(cam);
@@ -143,7 +143,7 @@ void MidBossCore::Update(float dt) {
 	}
 }
 
-void MidBossCore::Draw(DirectXCommon* dxCommon) {
+void MidBossCore::Draw(TKM::DirectXCommon* dxCommon) {
 	if (!object_) return;
 	object_->Draw(dxCommon);
 }

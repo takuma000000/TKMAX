@@ -15,7 +15,7 @@ ParticleManager* ParticleManager::GetInstance() {
 	return instance;
 }
 
-void ParticleManager::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager, Camera* camera) {
+void ParticleManager::Initialize(TKM::DirectXCommon* dxCommon, SrvManager* srvManager, TKM::Camera* camera) {
 	//引数で受け取る
 	dxCommon_ = dxCommon;
 	srvManager_ = srvManager;
@@ -43,7 +43,6 @@ void ParticleManager::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager
 	CreateVR(); //頂点リソース生成
 	CreateVB(); //頂点バッファビュー生成
 	WriteResource(); //マテリアルリソース生成
-
 }
 
 void ParticleManager::Update(float dt) {
@@ -383,8 +382,8 @@ void ParticleManager::CreateParticleGroup(const std::string& name, const std::st
 	newGroup.type = type;
 
 	// テクスチャ読み込み＆SRV取得
-	TextureManager::GetInstance()->LoadTexture(textureFilePath);
-	uint32_t srvIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
+	TKM::TextureManager::GetInstance()->LoadTexture(textureFilePath);
+	uint32_t srvIndex = TKM::TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
 	newGroup.materialData.textureIndex = srvIndex;
 	// インスタンシング用バッファ作成
 	newGroup.kNumInstance = kNumMaxInstance;

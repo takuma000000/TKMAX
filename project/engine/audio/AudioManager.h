@@ -36,54 +36,55 @@ struct SoundData {
 // AudioManagerクラス
 // 音声データの読み込み・再生・管理を行うクラス。
 //=============================================================
-class AudioManager{
-public:
+namespace TKM {
+	class AudioManager {
+	public:
 
-	// 初期化と終了
-	/// <summary>オーディオマネージャを初期化します。</summary>
-	void Initialize();
-	///<summary>オーディオマネージャを終了します。</summary>
-	void Finalize();
+		// 初期化と終了
+		/// <summary>オーディオマネージャを初期化します。</summary>
+		void Initialize();
+		///<summary>オーディオマネージャを終了します。</summary>
+		void Finalize();
 
-	// 音声データの読み込み
-	/// <summary>音声データを読み込みます。</summary>
-	bool LoadSound(const std::string& key, const std::string& filename);
+		// 音声データの読み込み
+		/// <summary>音声データを読み込みます。</summary>
+		bool LoadSound(const std::string& key, const std::string& filename);
 
-	// 音声データの再生
-	/// <summary>音声データを再生します。</summary>
-	void PlaySound(const std::string& key);
+		// 音声データの再生
+		/// <summary>音声データを再生します。</summary>
+		void PlaySound(const std::string& key);
 
-	// 音声データの解放
-	/// <summary>音声データを解放します。</summary>
-	void UnloadSound(const std::string& key);
+		// 音声データの解放
+		/// <summary>音声データを解放します。</summary>
+		void UnloadSound(const std::string& key);
 
-	static AudioManager* instance;
-	//シングルトンインスタンスの取得
-	/// <summary>シングルトンインスタンスを取得します。</summary>
-	static AudioManager* GetInstance();
+		static AudioManager* instance;
+		//シングルトンインスタンスの取得
+		/// <summary>シングルトンインスタンスを取得します。</summary>
+		static AudioManager* GetInstance();
 
-private:
-	Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
-	IXAudio2MasteringVoice* masterVoice = nullptr;
+	private:
+		Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
+		IXAudio2MasteringVoice* masterVoice = nullptr;
 
-	// 音声データの管理マップ
-	std::unordered_map<std::string, SoundData> soundMap;
+		// 音声データの管理マップ
+		std::unordered_map<std::string, SoundData> soundMap;
 
-	// WAVファイル読み込み
-	/// <summary>WAVファイルを読み込みます。</summary>
-	SoundData LoadWaveFile(const std::string& filename);
+		// WAVファイル読み込み
+		/// <summary>WAVファイルを読み込みます。</summary>
+		SoundData LoadWaveFile(const std::string& filename);
 
-	////シングルトン-----------------------------------------------
+		////シングルトン-----------------------------------------------
 
-	//コンストラクタ、デストラクタの隠蔽
-	AudioManager() = default;
-	~AudioManager() = default;
-	//コピーインストラクタの封印
-	AudioManager(AudioManager&) = delete;
-	//コピー代入演算子の封印
-	AudioManager& operator=(AudioManager&) = delete;
+		//コンストラクタ、デストラクタの隠蔽
+		AudioManager() = default;
+		~AudioManager() = default;
+		//コピーインストラクタの封印
+		AudioManager(AudioManager&) = delete;
+		//コピー代入演算子の封印
+		AudioManager& operator=(AudioManager&) = delete;
 
-	////---------------------------------------------------------
+		////---------------------------------------------------------
 
-};
-
+	};
+}

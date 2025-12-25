@@ -4,12 +4,12 @@
 #include <limits>
 #include "RadialBlurEffect.h"
 
-void Player::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
+void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon) {
 	common_ = common; // Object3d共通
 	dxCommon_ = dxCommon; // DirectX共通
 
 	// 3Dオブジェクト作成
-	object_ = std::make_unique<Object3d>();
+	object_ = std::make_unique<TKM::Object3d>();
 	object_->Initialize(common_, dxCommon_);
 	object_->SetModel("jett.obj");
 	object_->SetEnvironment("./resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
@@ -360,7 +360,7 @@ void Player::StartBossDeathCameraZoom() {
 	}
 }
 
-void Player::Draw(DirectXCommon* dxCommon) {
+void Player::Draw(TKM::DirectXCommon* dxCommon) {
 	object_->Draw(dxCommon); // プレイヤー本体描画
 
 	// クリア演出中などで隠したいときはフラグでOFF

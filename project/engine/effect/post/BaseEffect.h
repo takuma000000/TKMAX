@@ -1,6 +1,8 @@
 #pragma once
+namespace TKM{
+	class DirectXCommon;
+}
 
-class DirectXCommon;
 
 /// 画面ポストエフェクトの基底クラス
 class BaseEffect {
@@ -8,7 +10,7 @@ public:
 	virtual ~BaseEffect() = default;
 
 	/// DX 共通を渡して初期化
-	virtual void Initialize(DirectXCommon* dx) {
+	virtual void Initialize(TKM::DirectXCommon* dx) {
 		dxCommon_ = dx;
 	}
 
@@ -20,5 +22,5 @@ public:
 	virtual void Draw() = 0;
 
 protected:
-	DirectXCommon* dxCommon_ = nullptr;
+	TKM::DirectXCommon* dxCommon_ = nullptr;
 };

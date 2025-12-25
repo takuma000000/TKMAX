@@ -6,232 +6,234 @@
 #include "imgui.h"
 #endif
 
-void Skybox::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager, const std::string& texturePath) {
-	dxCommon_ = dxCommon;
+namespace TKM {
+	void Skybox::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager, const std::string& texturePath) {
+		dxCommon_ = dxCommon;
 
-	TextureManager::GetInstance()->LoadTexture(texturePath); // テクスチャ読み込み
-	srvHandleGPU_ = TextureManager::GetInstance()->GetSrvHandleGPU(texturePath); // SRVハンドル取得
+		TextureManager::GetInstance()->LoadTexture(texturePath); // テクスチャ読み込み
+		srvHandleGPU_ = TextureManager::GetInstance()->GetSrvHandleGPU(texturePath); // SRVハンドル取得
 
-	// 定数バッファ
-	constantBuffer_ = dxCommon_->CreateBufferResource(sizeof(TransformationMatrix));
-	constantBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&mappedData_));
-	// カメラ用リソース
-	materialBuffer_ = dxCommon_->CreateBufferResource(sizeof(Material));
-	materialBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&mappedMaterial_));
+		// 定数バッファ
+		constantBuffer_ = dxCommon_->CreateBufferResource(sizeof(TransformationMatrix));
+		constantBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&mappedData_));
+		// カメラ用リソース
+		materialBuffer_ = dxCommon_->CreateBufferResource(sizeof(Material));
+		materialBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&mappedMaterial_));
 
-	*mappedMaterial_ = { // マテリアル初期値設定
-		{1.0f, 1.0f, 1.0f, 1.0f}, // color
-		1, // enableLighting
-		MyMath::MakeIdentity4x4(), // uvTransform
-		1.0f // shininess
-	};
+		*mappedMaterial_ = { // マテリアル初期値設定
+			{1.0f, 1.0f, 1.0f, 1.0f}, // color
+			1, // enableLighting
+			MyMath::MakeIdentity4x4(), // uvTransform
+			1.0f // shininess
+		};
 
-	CreateVertexBuffer(); // 頂点バッファ生成
-	CreateRootSignature(); // RootSignature生成
-	CreatePipelineState(); // PSO生成
-}
-
-
-void Skybox::CreateVertexBuffer() {
-	// 1x1x1のキューブを構成する36頂点
-	std::vector<Vertex> vertices = {
-		// +Y面（上）
-		{{-1,  1, -1}}, {{ 1,  1, -1}}, {{ 1,  1,  1}},
-		{{-1,  1, -1}}, {{ 1,  1,  1}}, {{-1,  1,  1}},
-
-		// -Y面（下）
-		{{-1, -1, -1}}, {{ 1, -1,  1}}, {{ 1, -1, -1}},
-		{{-1, -1, -1}}, {{-1, -1,  1}}, {{ 1, -1,  1}},
-
-		// -X面（左）
-		{{-1, -1, -1}}, {{-1,  1,  1}}, {{-1,  1, -1}},
-		{{-1, -1, -1}}, {{-1, -1,  1}}, {{-1,  1,  1}},
-
-		// +X面（右）
-		{{ 1, -1, -1}}, {{ 1,  1, -1}}, {{ 1,  1,  1}},
-		{{ 1, -1, -1}}, {{ 1,  1,  1}}, {{ 1, -1,  1}},
-
-		// -Z面（奥）
-		{{-1, -1, -1}}, {{ 1,  1, -1}}, {{ 1, -1, -1}},
-		{{-1, -1, -1}}, {{-1,  1, -1}}, {{ 1,  1, -1}},
-
-		// +Z面（手前）
-		{{-1, -1,  1}}, {{ 1, -1,  1}}, {{ 1,  1,  1}},
-		{{-1, -1,  1}}, {{ 1,  1,  1}}, {{-1,  1,  1}},
-	};
-
-
-	vertexCount_ = static_cast<UINT>(vertices.size()); // 頂点数
-	size_t bufferSize = sizeof(Vertex) * vertexCount_; // バッファサイズ
-
-	// 頂点バッファ生成
-	vertexBuffer_ = dxCommon_->CreateBufferResource(bufferSize);
-
-	// 書き込み
-	void* mapped = nullptr;
-	vertexBuffer_->Map(0, nullptr, &mapped);
-	memcpy(mapped, vertices.data(), bufferSize);
-	vertexBuffer_->Unmap(0, nullptr);
-
-	// ビューの設定
-	vertexBufferView_.BufferLocation = vertexBuffer_->GetGPUVirtualAddress();
-	vertexBufferView_.SizeInBytes = static_cast<UINT>(bufferSize);
-	vertexBufferView_.StrideInBytes = sizeof(Vertex);
-}
-
-void Skybox::CreateRootSignature() {
-	// SRV用のディスクリプタレンジ
-	D3D12_DESCRIPTOR_RANGE descRange{};
-	descRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	descRange.NumDescriptors = 1;
-	descRange.BaseShaderRegister = 0;
-	descRange.RegisterSpace = 0;
-	descRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-
-	D3D12_ROOT_PARAMETER rootParams[3]{}; // ルートパラメータ3つ
-
-	// b0: VP行列用CBV（VS用）
-	rootParams[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParams[0].Descriptor.ShaderRegister = 0;
-	rootParams[0].Descriptor.RegisterSpace = 0;
-	rootParams[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-
-	// b0: Material (PS) ← これを追加！
-	rootParams[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParams[1].Descriptor.ShaderRegister = 0;
-	rootParams[1].Descriptor.RegisterSpace = 0;
-	rootParams[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-
-	// t0: Cubemap用SRV（PS用）
-	rootParams[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParams[2].DescriptorTable.NumDescriptorRanges = 1;
-	rootParams[2].DescriptorTable.pDescriptorRanges = &descRange;
-	rootParams[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	
-	// スタティックサンプラー
-	D3D12_STATIC_SAMPLER_DESC samplerDesc{};
-	samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-	samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	samplerDesc.ShaderRegister = 0;
-	samplerDesc.RegisterSpace = 0;
-	samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	
-	// ルートシグネチャの生成
-	D3D12_ROOT_SIGNATURE_DESC rootSigDesc{};
-	rootSigDesc.NumParameters = _countof(rootParams);
-	rootSigDesc.pParameters = rootParams;
-	rootSigDesc.NumStaticSamplers = 1;
-	rootSigDesc.pStaticSamplers = &samplerDesc;
-	rootSigDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-
-	Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob; // 署名
-	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob; // エラー
-	HRESULT hr = D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errorBlob);
-	assert(SUCCEEDED(hr));
-
-	hr = dxCommon_->GetDevice()->CreateRootSignature( // ルートシグネチャ生成
-		0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), // バッファ情報
-		IID_PPV_ARGS(&rootSignature_));
-	assert(SUCCEEDED(hr));
-}
-
-
-void Skybox::CreatePipelineState() {
-	HRESULT hr;
-
-	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob; // エラーブロブ
-
-	Microsoft::WRL::ComPtr<IDxcBlob> vsBlob; // 頂点シェーダ
-	vsBlob = dxCommon_->CompileShader(L"resources/shaders/SkyBox.VS.hlsl", L"vs_6_0"); // コンパイル
-	Microsoft::WRL::ComPtr<IDxcBlob> psBlob; // ピクセルシェーダ
-	psBlob = dxCommon_->CompileShader(L"resources/shaders/SkyBox.PS.hlsl", L"ps_6_0"); // コンパイル
-
-	assert(vsBlob != nullptr);
-	assert(psBlob != nullptr);
-
-	D3D12_INPUT_ELEMENT_DESC inputLayout[] = { // 入力レイアウト
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,
-		  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-	};
-
-	// グラフィックスパイプライン設定
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
-	psoDesc.pRootSignature = rootSignature_.Get();
-	psoDesc.VS = { vsBlob->GetBufferPointer(), vsBlob->GetBufferSize() };
-	psoDesc.PS = { psBlob->GetBufferPointer(), psBlob->GetBufferSize() };
-	psoDesc.InputLayout = { inputLayout, _countof(inputLayout) };
-	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
-	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-
-	// Skybox用深度設定
-	psoDesc.DepthStencilState.DepthEnable = true;
-	psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
-	psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
-	psoDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
-	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	psoDesc.NumRenderTargets = 1;
-	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
-	psoDesc.SampleDesc.Count = 1;
-	psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
-
-	hr = dxCommon_->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState_));
-	assert(SUCCEEDED(hr));
-}
-
-void Skybox::Draw() {
-	if (!camera_) return;
-
-	translation_ = camera_->GetTranslate(); // カメラ位置＝スカイボックスの位置
-
-	// コマンドリスト取得
-	ID3D12GraphicsCommandList* cmdList = dxCommon_->GetCommandList();
-	cmdList->SetPipelineState(pipelineState_.Get());
-	cmdList->SetGraphicsRootSignature(rootSignature_.Get());
-	cmdList->IASetVertexBuffers(0, 1, &vertexBufferView_);
-	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	// ViewMatrixの位置成分を無効化（スカイボックスが固定されるように）
-	Matrix4x4 view = camera_->GetViewMatrix();
-	view.m[3][0] = 0.0f;
-	view.m[3][1] = 0.0f;
-	view.m[3][2] = 0.0f;
-
-	Matrix4x4 proj = camera_->GetProjectionMatrix(); // プロジェクション行列
-	Matrix4x4 world = MyMath::MakeAffineMatrix(scale_, rotation_, translation_); // ワールド行列
-
-	mappedData_->viewProjection = MyMath::Multiply(view, proj); // VP行列計算
-	mappedData_->world = world; // ワールド行列セット
-
-	// ルートパラメータ設定
-	cmdList->SetGraphicsRootConstantBufferView(0, constantBuffer_->GetGPUVirtualAddress());
-	cmdList->SetGraphicsRootConstantBufferView(1, materialBuffer_->GetGPUVirtualAddress());
-
-	if (srvHandleGPU_.ptr != 0) { // SRVハンドルが有効な場合のみ設定
-		cmdList->SetGraphicsRootDescriptorTable(2, srvHandleGPU_); // キューブマップSRV
+		CreateVertexBuffer(); // 頂点バッファ生成
+		CreateRootSignature(); // RootSignature生成
+		CreatePipelineState(); // PSO生成
 	}
 
-	cmdList->DrawInstanced(vertexCount_, 1, 0, 0); // 描画
-}
 
-void Skybox::UpdateRotation(){
-	constexpr float kTwoPi = 6.2831853f;
+	void Skybox::CreateVertexBuffer() {
+		// 1x1x1のキューブを構成する36頂点
+		std::vector<Vertex> vertices = {
+			// +Y面（上）
+			{{-1,  1, -1}}, {{ 1,  1, -1}}, {{ 1,  1,  1}},
+			{{-1,  1, -1}}, {{ 1,  1,  1}}, {{-1,  1,  1}},
 
-	rotation_.x -= rotationSpeedX_;
-	if (rotation_.x > kTwoPi) rotation_.x -= kTwoPi;
-	if (rotation_.x < 0.0f)   rotation_.x += kTwoPi;
-}
+			// -Y面（下）
+			{{-1, -1, -1}}, {{ 1, -1,  1}}, {{ 1, -1, -1}},
+			{{-1, -1, -1}}, {{-1, -1,  1}}, {{ 1, -1,  1}},
 
-void Skybox::ImGuiUpdate(){
+			// -X面（左）
+			{{-1, -1, -1}}, {{-1,  1,  1}}, {{-1,  1, -1}},
+			{{-1, -1, -1}}, {{-1, -1,  1}}, {{-1,  1,  1}},
+
+			// +X面（右）
+			{{ 1, -1, -1}}, {{ 1,  1, -1}}, {{ 1,  1,  1}},
+			{{ 1, -1, -1}}, {{ 1,  1,  1}}, {{ 1, -1,  1}},
+
+			// -Z面（奥）
+			{{-1, -1, -1}}, {{ 1,  1, -1}}, {{ 1, -1, -1}},
+			{{-1, -1, -1}}, {{-1,  1, -1}}, {{ 1,  1, -1}},
+
+			// +Z面（手前）
+			{{-1, -1,  1}}, {{ 1, -1,  1}}, {{ 1,  1,  1}},
+			{{-1, -1,  1}}, {{ 1,  1,  1}}, {{-1,  1,  1}},
+		};
+
+
+		vertexCount_ = static_cast<UINT>(vertices.size()); // 頂点数
+		size_t bufferSize = sizeof(Vertex) * vertexCount_; // バッファサイズ
+
+		// 頂点バッファ生成
+		vertexBuffer_ = dxCommon_->CreateBufferResource(bufferSize);
+
+		// 書き込み
+		void* mapped = nullptr;
+		vertexBuffer_->Map(0, nullptr, &mapped);
+		memcpy(mapped, vertices.data(), bufferSize);
+		vertexBuffer_->Unmap(0, nullptr);
+
+		// ビューの設定
+		vertexBufferView_.BufferLocation = vertexBuffer_->GetGPUVirtualAddress();
+		vertexBufferView_.SizeInBytes = static_cast<UINT>(bufferSize);
+		vertexBufferView_.StrideInBytes = sizeof(Vertex);
+	}
+
+	void Skybox::CreateRootSignature() {
+		// SRV用のディスクリプタレンジ
+		D3D12_DESCRIPTOR_RANGE descRange{};
+		descRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		descRange.NumDescriptors = 1;
+		descRange.BaseShaderRegister = 0;
+		descRange.RegisterSpace = 0;
+		descRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+		D3D12_ROOT_PARAMETER rootParams[3]{}; // ルートパラメータ3つ
+
+		// b0: VP行列用CBV（VS用）
+		rootParams[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+		rootParams[0].Descriptor.ShaderRegister = 0;
+		rootParams[0].Descriptor.RegisterSpace = 0;
+		rootParams[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+
+		// b0: Material (PS) ← これを追加！
+		rootParams[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+		rootParams[1].Descriptor.ShaderRegister = 0;
+		rootParams[1].Descriptor.RegisterSpace = 0;
+		rootParams[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+		// t0: Cubemap用SRV（PS用）
+		rootParams[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		rootParams[2].DescriptorTable.NumDescriptorRanges = 1;
+		rootParams[2].DescriptorTable.pDescriptorRanges = &descRange;
+		rootParams[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+		// スタティックサンプラー
+		D3D12_STATIC_SAMPLER_DESC samplerDesc{};
+		samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+		samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		samplerDesc.ShaderRegister = 0;
+		samplerDesc.RegisterSpace = 0;
+		samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+		// ルートシグネチャの生成
+		D3D12_ROOT_SIGNATURE_DESC rootSigDesc{};
+		rootSigDesc.NumParameters = _countof(rootParams);
+		rootSigDesc.pParameters = rootParams;
+		rootSigDesc.NumStaticSamplers = 1;
+		rootSigDesc.pStaticSamplers = &samplerDesc;
+		rootSigDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+
+		Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob; // 署名
+		Microsoft::WRL::ComPtr<ID3DBlob> errorBlob; // エラー
+		HRESULT hr = D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errorBlob);
+		assert(SUCCEEDED(hr));
+
+		hr = dxCommon_->GetDevice()->CreateRootSignature( // ルートシグネチャ生成
+			0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), // バッファ情報
+			IID_PPV_ARGS(&rootSignature_));
+		assert(SUCCEEDED(hr));
+	}
+
+
+	void Skybox::CreatePipelineState() {
+		HRESULT hr;
+
+		Microsoft::WRL::ComPtr<ID3DBlob> errorBlob; // エラーブロブ
+
+		Microsoft::WRL::ComPtr<IDxcBlob> vsBlob; // 頂点シェーダ
+		vsBlob = dxCommon_->CompileShader(L"resources/shaders/SkyBox.VS.hlsl", L"vs_6_0"); // コンパイル
+		Microsoft::WRL::ComPtr<IDxcBlob> psBlob; // ピクセルシェーダ
+		psBlob = dxCommon_->CompileShader(L"resources/shaders/SkyBox.PS.hlsl", L"ps_6_0"); // コンパイル
+
+		assert(vsBlob != nullptr);
+		assert(psBlob != nullptr);
+
+		D3D12_INPUT_ELEMENT_DESC inputLayout[] = { // 入力レイアウト
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,
+			  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		};
+
+		// グラフィックスパイプライン設定
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
+		psoDesc.pRootSignature = rootSignature_.Get();
+		psoDesc.VS = { vsBlob->GetBufferPointer(), vsBlob->GetBufferSize() };
+		psoDesc.PS = { psBlob->GetBufferPointer(), psBlob->GetBufferSize() };
+		psoDesc.InputLayout = { inputLayout, _countof(inputLayout) };
+		psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+		psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+		psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+
+		// Skybox用深度設定
+		psoDesc.DepthStencilState.DepthEnable = true;
+		psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+		psoDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
+		psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+		psoDesc.NumRenderTargets = 1;
+		psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+		psoDesc.SampleDesc.Count = 1;
+		psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
+		hr = dxCommon_->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState_));
+		assert(SUCCEEDED(hr));
+	}
+
+	void Skybox::Draw() {
+		if (!camera_) return;
+
+		translation_ = camera_->GetTranslate(); // カメラ位置＝スカイボックスの位置
+
+		// コマンドリスト取得
+		ID3D12GraphicsCommandList* cmdList = dxCommon_->GetCommandList();
+		cmdList->SetPipelineState(pipelineState_.Get());
+		cmdList->SetGraphicsRootSignature(rootSignature_.Get());
+		cmdList->IASetVertexBuffers(0, 1, &vertexBufferView_);
+		cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+		// ViewMatrixの位置成分を無効化（スカイボックスが固定されるように）
+		Matrix4x4 view = camera_->GetViewMatrix();
+		view.m[3][0] = 0.0f;
+		view.m[3][1] = 0.0f;
+		view.m[3][2] = 0.0f;
+
+		Matrix4x4 proj = camera_->GetProjectionMatrix(); // プロジェクション行列
+		Matrix4x4 world = MyMath::MakeAffineMatrix(scale_, rotation_, translation_); // ワールド行列
+
+		mappedData_->viewProjection = MyMath::Multiply(view, proj); // VP行列計算
+		mappedData_->world = world; // ワールド行列セット
+
+		// ルートパラメータ設定
+		cmdList->SetGraphicsRootConstantBufferView(0, constantBuffer_->GetGPUVirtualAddress());
+		cmdList->SetGraphicsRootConstantBufferView(1, materialBuffer_->GetGPUVirtualAddress());
+
+		if (srvHandleGPU_.ptr != 0) { // SRVハンドルが有効な場合のみ設定
+			cmdList->SetGraphicsRootDescriptorTable(2, srvHandleGPU_); // キューブマップSRV
+		}
+
+		cmdList->DrawInstanced(vertexCount_, 1, 0, 0); // 描画
+	}
+
+	void Skybox::UpdateRotation() {
+		constexpr float kTwoPi = 6.2831853f;
+
+		rotation_.x -= rotationSpeedX_;
+		if (rotation_.x > kTwoPi) rotation_.x -= kTwoPi;
+		if (rotation_.x < 0.0f)   rotation_.x += kTwoPi;
+	}
+
+	void Skybox::ImGuiUpdate() {
 #ifdef USE_IMGUI
-	ImGui::Begin("スカイボックス");
-	ImGui::DragFloat3("スケール", &scale_.x, 0.1f, 0.0f, 100.0f);
-	ImGui::Separator();
-	ImGui::DragFloat("回転速度 X軸", &rotationSpeedX_, 0.0001f, -0.02f, 0.02f);
-	ImGui::Separator();
-	ImGui::Text("上下の傾き: %.3f rad", rotation_.x);
-	ImGui::End();
+		ImGui::Begin("スカイボックス");
+		ImGui::DragFloat3("スケール", &scale_.x, 0.1f, 0.0f, 100.0f);
+		ImGui::Separator();
+		ImGui::DragFloat("回転速度 X軸", &rotationSpeedX_, 0.0001f, -0.02f, 0.02f);
+		ImGui::Separator();
+		ImGui::Text("上下の傾き: %.3f rad", rotation_.x);
+		ImGui::End();
 #endif
+	}
 }

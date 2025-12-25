@@ -10,6 +10,8 @@
 #include "imgui.h"
 #endif
 
+using namespace TKM;
+
 void GameScene::Initialize() {
 	// ──────────────── NULLチェック ────────────────
 	assert(this != nullptr && "this is nullptr in GameScene::Initialize");
@@ -527,7 +529,7 @@ void GameScene::Draw() {
 	LineRenderer::GetInstance()->Draw(vp);
 
 	// スプライトまとめ
-	SpriteCommon::GetInstance()->DrawSetCommon();
+	TKM::SpriteCommon::GetInstance()->DrawSetCommon();
 	// ---- 最前面の白円は Sprite パスで最後に描く ----
 	if (irisOpening_ && iris_) {
 		iris_->Draw(); // 開く
@@ -546,9 +548,9 @@ void GameScene::SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float s
 	}
 }
 
-Camera* GameScene::UpdateActiveCamera() {
+TKM::Camera* GameScene::UpdateActiveCamera() {
 	// ──────────────── アクティブカメラの決定＆更新 ───────────────
-	Camera* activeCamera = camera.get();
+	TKM::Camera* activeCamera = camera.get();
 	if (useDebugCamera_ && debugCamera_) {
 		// デバッグカメラを更新
 		debugCamera_->Update();
@@ -633,7 +635,7 @@ void GameScene::InitializeSprite() {
 
 	// ゲームスタート文字
 	startSprite_ = std::make_unique<Sprite>();
-	startSprite_->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/start.png");
+	startSprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon, "./resources/start.png");
 	startSprite_->SetAnchorPoint({ 0.5f, 0.5f }); // 中央基準
 	startSprite_->SetPosition({ startStartPos_.x, startStartPos_.y });
 	startSprite_->SetSize({ 100, 100 }); // 画像サイズに合わせ調整
@@ -672,7 +674,7 @@ void GameScene::InitializeObjects() {
 // カメラを作成し、各オブジェクトに適用する
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeCamera() {
-	camera = std::make_unique<Camera>();
+	camera = std::make_unique<TKM::Camera>();
 	camera->SetRotate({ camPitchStart_, camYawStart_, 0.0f });
 	camera->SetTranslate({ 0.0f,0.0f,-30.0f });
 

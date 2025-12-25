@@ -5,8 +5,8 @@
 #include <cstdlib> 
 #include <AABB.h>
 
-void Enemy::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
-	object_ = std::make_unique<Object3d>(); // Object3d のインスタンスを生成
+void Enemy::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon) {
+	object_ = std::make_unique<TKM::Object3d>(); // Object3d のインスタンスを生成
 	object_->Initialize(common, dxCommon); // 初期化
 	object_->SetModel("enemy.obj"); // モデル名は適宜変更
 
@@ -456,12 +456,12 @@ void Enemy::Update(float dt) {
 	object_->Update();
 }
 
-void Enemy::Draw(DirectXCommon* dxCommon) {
+void Enemy::Draw(TKM::DirectXCommon* dxCommon) {
 	if (!object_) return;
 	object_->Draw(dxCommon); // Object3d の描画
 }
 
-void Enemy::SetCamera(Camera* camera) {
+void Enemy::SetCamera(TKM::Camera* camera) {
 	this->camera = camera; // メンバ変数に保存
 	if (object_) {
 		object_->SetCamera(camera); // Object3d に反映

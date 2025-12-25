@@ -24,7 +24,7 @@ public:
 	/// </summary>
 	/// <param name="common"></param>
 	/// <param name="dxCommon"></param>
-	void Initialize(Object3dCommon* common, DirectXCommon* dxCommon);
+	void Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon);
 	/// <summary>
 	/// 敵を更新します。
 	/// </summary>
@@ -34,7 +34,7 @@ public:
 	/// 敵を描画します。
 	/// </summary>
 	/// <param name="dxCommon"></param>
-	void Draw(DirectXCommon* dxCommon);
+	void Draw(TKM::DirectXCommon* dxCommon);
 
 	/// <summary>
 	/// デバッグ用ImGui表示。
@@ -108,7 +108,7 @@ public:
 	/// カメラ設定
 	/// </summary>
 	/// <param name="cam"></param>
-	void SetCamera(Camera* cam);
+	void SetCamera(TKM::Camera* cam);
 	/// <summary>
 	/// 親シーンを設定します。
 	/// </summary>
@@ -131,8 +131,8 @@ public:
 	void SetPlayer(std::function<Vector3()> getter) { playerGetter_ = std::move(getter); }
 	// ========================================
 private:
-	std::unique_ptr<Object3d> object_;
-	Camera* camera_ = nullptr;
+	std::unique_ptr<TKM::Object3d> object_;
+	TKM::Camera* camera_ = nullptr;
 	BaseScene* parent_ = nullptr;
 	Reticle* reticle_ = nullptr;
 	std::function<Vector3()> playerGetter_;

@@ -24,7 +24,7 @@
 //=============================================================
 class GameClearScene : public BaseScene {
 public:
-	GameClearScene(DirectXCommon* dxCommon, SrvManager* srvManager)
+	GameClearScene(TKM::DirectXCommon* dxCommon, SrvManager* srvManager)
 		: dxCommon(dxCommon), srvManager(srvManager) {
 	}
 	~GameClearScene() = default;
@@ -47,18 +47,18 @@ public:
 	void Draw() override;
 
 private:
-	DirectXCommon* dxCommon = nullptr;
+	TKM::DirectXCommon* dxCommon = nullptr;
 	SrvManager* srvManager = nullptr;
 
 	// --- カメラ・ライト ---
-	std::unique_ptr<Camera> camera_;
+	std::unique_ptr<TKM::Camera> camera_;
 	std::unique_ptr<DirectionalLight> dirLight_;
 
 	// --- 自機 ---
 	std::unique_ptr<Player> player_;
 
 	// --- スカイボックス ---
-	std::unique_ptr<Skybox> skybox_;
+	std::unique_ptr<TKM::Skybox> skybox_;
 	float skyPitch_ = 0.0f;        // X軸回転量
 	float skyRotSpeedX_ = 0.002f;  // X軸回転速度（GameOverSceneとほぼ同じ）
 
@@ -72,10 +72,10 @@ private:
 	Vector3 planeEnd_ = { 35.0f, 0.0f, 8.0f };
 
 	// 「GAME CLEAR」用スプライト
-	std::unique_ptr<Sprite> clearSprite_;
+	std::unique_ptr<TKM::Sprite> clearSprite_;
 
 	// --- 画面遷移用アイリス（他シーンと同じ演出）---
-	std::unique_ptr<Sprite> iris_;
+	std::unique_ptr<TKM::Sprite> iris_;
 	bool  irisOpening_ = true;     // 入場時は開き演出から
 	bool  irisClosing_ = false;    // Aボタンで閉じ演出開始
 	float irisScale_ = 0.0f;       // 現フレームのサイズ

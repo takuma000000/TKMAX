@@ -7,7 +7,9 @@
 
 //前方宣言
 class WindowsAPI;
-class DirectXCommon;
+namespace TKM {
+	class DirectXCommon;
+}
 class SrvManager;
 class Input;
 class ImGuiManager;
@@ -56,7 +58,7 @@ public:
 	/// DirectXCommonのゲッター。
 	/// </summary>
 	/// <returns></returns>
-	DirectXCommon* GetDirectXCommon() const { return dxCommon.get(); }
+	TKM::DirectXCommon* GetDirectXCommon() const { return dxCommon.get(); }
 	/// <summary>
 	/// SrvManagerのゲッター。
 	/// </summary>
@@ -75,7 +77,7 @@ protected:
 
 	// 汎用メンバ変数
 	std::unique_ptr<WindowsAPI> windowsAPI;
-	std::unique_ptr<DirectXCommon> dxCommon;
+	std::unique_ptr<TKM::DirectXCommon> dxCommon;
 	std::unique_ptr<SrvManager> srvManager;
 
 	//ポインタ...ImGuiManager

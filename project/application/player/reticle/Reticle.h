@@ -39,8 +39,8 @@ public:
 	/// <param name="modelSmall"></param>
 	/// <param name="modelFar"></param>
 	void Initialize(
-		Object3dCommon* common,
-		DirectXCommon* dx,
+		TKM::Object3dCommon* common,
+		TKM::DirectXCommon* dx,
 		const char* modelBig = "reticle_big.obj",
 		const char* modelMid = "reticle_normal.obj",
 		const char* modelSmall = "reticle_small.obj",
@@ -51,7 +51,7 @@ public:
 		dx_ = dx;
 
 		auto initLayer = [&](Layer& L, const char* model) {
-			L.obj = std::make_unique<Object3d>();
+			L.obj = std::make_unique<TKM::Object3d>();
 			L.obj->Initialize(common_, dx_);
 			L.obj->SetModel(model);
 			L.obj->SetScale(L.scale);
@@ -205,7 +205,7 @@ public:
 	/// 描画
 	/// </summary>
 	/// <param name="dx"></param>
-	void Draw(DirectXCommon* dx) {
+	void Draw(TKM::DirectXCommon* dx) {
 		if (!visible_) return;
 		for (auto& L : layers_) {
 			if (L.obj && L.visible) L.obj->Draw(dx);
@@ -250,7 +250,7 @@ public:
 	/// カメラ設定
 	/// </summary>
 	/// <param name="cam"></param>
-	void SetCamera(Camera* cam) {
+	void SetCamera(TKM::Camera* cam) {
 		cam_ = cam;
 		for (auto& L : layers_) {
 			if (L.obj) L.obj->SetCamera(cam_);
@@ -311,7 +311,7 @@ private:
 	// 各レイヤ
 	//--------------------------------------------------
 	struct Layer { // 上から順に引数
-		std::unique_ptr<Object3d> obj; // 3Dオブジェクト本体
+		std::unique_ptr<TKM::Object3d> obj; // 3Dオブジェクト本体
 		Vector3 scale = { 1,1,1 };     // スケール
 		float   spinSpeed = 0.0f;      // 自己回転速度（ラジアン/秒）
 		float   selfAngle = 0.0f;      // 自己回転角度（ラジアン）
@@ -320,9 +320,9 @@ private:
 	//--------------------------------------------------
 	// 内部データ（共通）
 	//--------------------------------------------------
-	Object3dCommon* common_ = nullptr;
-	DirectXCommon* dx_ = nullptr;
-	Camera* cam_ = nullptr;
+	TKM::Object3dCommon* common_ = nullptr;
+	TKM::DirectXCommon* dx_ = nullptr;
+	TKM::Camera* cam_ = nullptr;
 
 	std::function<Vector3(void)> getPos_;
 	std::function<float(void)>   getYaw_;

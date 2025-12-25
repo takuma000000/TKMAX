@@ -1,7 +1,7 @@
 #include "BossEnemy.h"
 #include <cmath>
 
-void BossEnemy::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
+void BossEnemy::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon) {
 	Enemy::Initialize(common, dxCommon);
 
 	SetModel("enemy.obj");

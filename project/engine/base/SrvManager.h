@@ -4,7 +4,9 @@
 #include <dxgi1_6.h>
 #include <wrl.h>
 
-class DirectXCommon;
+namespace TKM {
+	class DirectXCommon;
+}
 
 //=============================================================
 // SrvManagerクラス
@@ -13,7 +15,7 @@ class DirectXCommon;
 class SrvManager {
 
 private:
-	DirectXCommon* directXCommon_ = nullptr;
+	TKM::DirectXCommon* directXCommon_ = nullptr;
 
 	//SRV用のデスクリプタサイズ
 	uint32_t descriptorSize;
@@ -30,7 +32,7 @@ public:
 	//初期化
 	/// <summary>SRVマネージャを初期化します。</summary>
 	/// <param name="directXCommon">DirectX共通。</param>
-	void Initialize(DirectXCommon* directXCommon);
+	void Initialize(TKM::DirectXCommon* directXCommon);
 	//ヒープセットコマンド
 	/// <summary>SRVデスクリプタヒープをセットします。</summary>
 	void PreDraw();

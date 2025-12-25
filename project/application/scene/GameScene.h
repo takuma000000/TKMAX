@@ -46,7 +46,7 @@
 //=============================================================
 class GameScene : public BaseScene {
 public:
-	GameScene(DirectXCommon* dxCommon, SrvManager* srvManager) : dxCommon(dxCommon), srvManager(srvManager) {}
+	GameScene(TKM::DirectXCommon* dxCommon, SrvManager* srvManager) : dxCommon(dxCommon), srvManager(srvManager) {}
 	~GameScene() = default;
 
 	/// <summary>
@@ -108,7 +108,7 @@ public:
 	/// アクティブなカメラを更新します。
 	/// </summary>
 	/// <returns></returns>
-	Camera* UpdateActiveCamera();
+	TKM::Camera* UpdateActiveCamera();
 	/// <summary>
 	/// クリア演出シーケンスを開始します。
 	/// </summary>
@@ -129,7 +129,7 @@ public:
 	/// カメラのポインタを取得します。
 	/// </summary>
 	/// <returns></returns>
-	Camera* GetCameraPtr() {
+	TKM::Camera* GetCameraPtr() {
 		if (useDebugCamera_ && debugCamera_) { return debugCamera_.get(); }
 		return camera.get();
 	}
@@ -137,7 +137,7 @@ public:
 	/// DirectXCommonのポインタを取得します。
 	/// </summary>
 	/// <returns></returns>
-	DirectXCommon* GetDX() { return dxCommon; }
+	TKM::DirectXCommon* GetDX() { return dxCommon; }
 	/// <summary>
 	/// プレイヤーのポインタを取得します。
 	/// </summary>
@@ -148,19 +148,19 @@ private:
 	//======================================================================
 	// 基本システム
 	//======================================================================
-	DirectXCommon* dxCommon = nullptr;
+	TKM::DirectXCommon* dxCommon = nullptr;
 	SrvManager* srvManager = nullptr;
 	//======================================================================
 	// カメラ / ライト / スカイボックス
 	//======================================================================
-	std::unique_ptr<Camera> camera = nullptr;
+	std::unique_ptr<TKM::Camera> camera = nullptr;
 
-	std::unique_ptr<DebugCamera> debugCamera_ = nullptr; // デバッグカメラ
+	std::unique_ptr<TKM::DebugCamera> debugCamera_ = nullptr; // デバッグカメラ
 	bool useDebugCamera_ = false;                        // デバッグカメラ使用フラグ
 
 	std::unique_ptr<DirectionalLight> directionalLight_ = nullptr;// ディレクショナルライト
 
-	std::unique_ptr<Skybox> skybox_;// スカイボックス
+	std::unique_ptr<TKM::Skybox> skybox_;// スカイボックス
 
 	// --- カメラインロ用 ---
 	bool  camIntroActive_ = false;   // いま回転中か
@@ -212,7 +212,7 @@ private:
 	//======================================================================
 	// アイリス開き演出（ゲーム開始）
 	//======================================================================
-	std::unique_ptr<Sprite> iris_ = nullptr;
+	std::unique_ptr<TKM::Sprite> iris_ = nullptr;
 	// Iris（開く）用
 	bool   irisOpening_ = true;
 	float  irisScale_ = 5.0f;
@@ -222,7 +222,7 @@ private:
 
 	Ease::Tween irisTween_;          // Iris用イージング
 	bool        emitOpenBurst_ = true;  // 開いた瞬間にエフェクトを出すか
-	std::unique_ptr<Sprite> irisShadow_ = nullptr; // Irisの影
+	std::unique_ptr<TKM::Sprite> irisShadow_ = nullptr; // Irisの影
 	float emitOpenDelaySec_ = 0.7f;  // 開始から何秒遅らせるか（お好み）
 	float emitOpenElapsed_ = 0.0f;  // 経過時間
 	const float dt = 0.016f;           // 可変なら実測のdeltaTimeを使ってOK
@@ -239,7 +239,7 @@ private:
 	//======================================================================
 	// 「ゲームスタート」スライドイン演出
 	//======================================================================
-	std::unique_ptr<Sprite> startSprite_;  // 「ゲームスタート」スプライト
+	std::unique_ptr<TKM::Sprite> startSprite_;  // 「ゲームスタート」スプライト
 	float startT_ = 0.0f;         // イージング進行度(0→1)
 	bool  startSlideIn_ = false;        // スライド中フラグ
 	bool  startVisible_ = false;        // 表示も最初はしない（演出終了後に出す）

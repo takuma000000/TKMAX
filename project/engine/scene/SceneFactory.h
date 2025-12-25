@@ -13,7 +13,7 @@ public:
 	/// </summary>
 	/// <param name="dxCommon"></param>
 	/// <param name="srvManager"></param>
-	SceneFactory(DirectXCommon* dxCommon, SrvManager* srvManager)
+	SceneFactory(TKM::DirectXCommon* dxCommon, SrvManager* srvManager)
 		: dxCommon(dxCommon), srvManager(srvManager) {
 	}
 
@@ -25,7 +25,7 @@ public:
 	BaseScene* CreateScene(const std::string& sceneName) override;
 
 private:
-	DirectXCommon* dxCommon = nullptr;
+	TKM::DirectXCommon* dxCommon = nullptr;
 	SrvManager* srvManager = nullptr;
 
 };

@@ -85,7 +85,7 @@ public:
 	/// <param name="dxCommon"></param>
 	/// <param name="srvManager"></param>
 	/// <param name="camera"></param>
-	void Initialize(DirectXCommon* dxCommon, SrvManager* srvManager, Camera* camera);
+	void Initialize(TKM::DirectXCommon* dxCommon, SrvManager* srvManager, TKM::Camera* camera);
 	/// <summary>
 	/// <summary>ParticleManagerの終了処理を行います。</summary>
 	/// </summary>
@@ -174,7 +174,7 @@ public:
 	/// <summary>カメラをセットします。</summary>
 	/// </summary>
 	/// <param name="cam"></param>
-	void SetCamera(Camera* cam) { camera_ = cam; }
+	void SetCamera(TKM::Camera* cam) { camera_ = cam; }
 	// =========================================
 
 private:
@@ -184,9 +184,9 @@ private:
 	~ParticleManager() = default;
 	ParticleManager(ParticleManager&) = delete;
 	ParticleManager& operator= (ParticleManager&) = delete;
-	DirectXCommon* dxCommon_ = nullptr;
+	TKM::DirectXCommon* dxCommon_ = nullptr;
 	SrvManager* srvManager_ = nullptr;
-	Camera* camera_ = nullptr;
+	TKM::Camera* camera_ = nullptr;
 
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;

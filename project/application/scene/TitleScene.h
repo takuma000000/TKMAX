@@ -31,7 +31,7 @@
 //=============================================================
 class TitleScene : public BaseScene{
 public:
-	TitleScene(DirectXCommon* dxCommon, SrvManager* srvManager) : dxCommon(dxCommon), srvManager(srvManager) {}
+	TitleScene(TKM::DirectXCommon* dxCommon, SrvManager* srvManager) : dxCommon(dxCommon), srvManager(srvManager) {}
 
 	/// <summary>タイトルシーンを初期化します。</summary>
 	void Initialize() override;
@@ -43,14 +43,14 @@ public:
 	void Draw() override;
 
 private:
-	DirectXCommon* dxCommon = nullptr;
+	TKM::DirectXCommon* dxCommon = nullptr;
 	SrvManager* srvManager = nullptr;
 
-	std::unique_ptr<Sprite> sprite = nullptr; // 2Dスプライト共通
-	std::unique_ptr<Camera> camera = nullptr; // カメラ
+	std::unique_ptr<TKM::Sprite> sprite = nullptr; // 2Dスプライト共通
+	std::unique_ptr<TKM::Camera> camera = nullptr; // カメラ
 
 	// 背景用の自機（ヘリ）
-	std::unique_ptr<Object3d> heli_ = nullptr;
+	std::unique_ptr<TKM::Object3d> heli_ = nullptr;
 
 	// 旋回タイマー
 	float t_ = 0.0f;
@@ -67,7 +67,7 @@ private:
 	float camDist_ = 20.0f;  // カメラ距離（+Z側）
 	float camY_ = 3.0f;   // カメラ高さ
 
-	std::unique_ptr<Skybox> skybox_ = nullptr;
+	std::unique_ptr<TKM::Skybox> skybox_ = nullptr;
 	float skyPitch_ = 0.0f;
 	float skyRotSpeedX_ = 0.002f;
 
@@ -92,10 +92,10 @@ private:
 	float enemyTime_ = 0.0f;
 
 	// 1体だけ置いてるコンテナ
-	std::vector<std::unique_ptr<Object3d>> titleEnemies_;
+	std::vector<std::unique_ptr<TKM::Object3d>> titleEnemies_;
 
 	// Iris（白円）トランジション
-	std::unique_ptr<Sprite> iris_ = nullptr;
+	std::unique_ptr<TKM::Sprite> iris_ = nullptr;
 	bool irisClosing_ = false;   // trueで「閉じる」演出中
 	float irisScale_ = 0.2f;    // 開始スケール（小さめ）
 	float irisSpeed_ = 2.8f;    // 拡大速度（好みで調整）

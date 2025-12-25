@@ -6,7 +6,8 @@
 #include <imgui_impl_dx12.h>
 #endif
 
-void ImGuiManager::Initialize(WindowsAPI* winApp, DirectXCommon* dxCommon){
+
+void ImGuiManager::Initialize(WindowsAPI* winApp, TKM::DirectXCommon* dxCommon){
 #ifdef USE_IMGUI
 	HRESULT hr;
 	dxCommon_ = dxCommon;

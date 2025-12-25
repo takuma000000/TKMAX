@@ -47,7 +47,7 @@ public:
 	/// </summary>
 	/// <param name="common"></param>
 	/// <param name="dxCommon"></param>
-	void Initialize(Object3dCommon* common, DirectXCommon* dxCommon);
+	void Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon);
 	/// <summary>
 	/// 敵を更新します。
 	/// </summary>
@@ -56,7 +56,7 @@ public:
 	/// 敵を描画します。
 	/// </summary>
 	/// <param name="dxCommon"></param>
-	void Draw(DirectXCommon* dxCommon);
+	void Draw(TKM::DirectXCommon* dxCommon);
 	/// <summary>
 	/// ImGuiデバッグ表示。
 	/// </summary>
@@ -184,7 +184,7 @@ public:
 	/// カメラを設定します。
 	/// </summary>
 	/// <param name="camera"></param>
-	void SetCamera(Camera* camera);
+	void SetCamera(TKM::Camera* camera);
 	/// <summary>
 	/// 位置を設定します。
 	/// </summary>
@@ -339,8 +339,8 @@ private:
 	//--------------------------------------------------------------
 	//  Enemy 内部データ（基本）
 	//--------------------------------------------------------------
-	std::unique_ptr<Object3d> object_;
-	Camera* camera = nullptr;
+	std::unique_ptr<TKM::Object3d> object_;
+	TKM::Camera* camera = nullptr;
 	BaseScene* parentScene_ = nullptr;
 	Reticle* reticle_ = nullptr;
 	//--------------------------------------------------------------

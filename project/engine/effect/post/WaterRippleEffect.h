@@ -18,7 +18,7 @@ public:
 	/// 初期化
 	/// </summary>
 	/// <param name="dx"></param>
-	void Initialize(DirectXCommon* dx) override {
+	void Initialize(TKM::DirectXCommon* dx) override {
 		BaseEffect::Initialize(dx);
 	}
 	/// <summary>

@@ -4,7 +4,7 @@
 
 class FogEffect : public BaseEffect {
 public:
-	void Initialize(DirectXCommon* dx) override {
+	void Initialize(TKM::DirectXCommon* dx) override {
 		BaseEffect::Initialize(dx);
 	}
 

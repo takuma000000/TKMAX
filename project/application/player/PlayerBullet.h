@@ -27,7 +27,7 @@ public:
 	/// </summary>
 	/// <param name="common"></param>
 	/// <param name="dxCommon"></param>
-	void Initialize(Object3dCommon* common, DirectXCommon* dxCommon);
+	void Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon);
 	/// <summary>
 	/// プレイヤーの弾を更新します。
 	/// </summary>
@@ -36,7 +36,7 @@ public:
 	/// プレイヤーの弾を描画します。
 	/// </summary>
 	/// <param name="dxCommon"></param>
-	void Draw(DirectXCommon* dxCommon);
+	void Draw(TKM::DirectXCommon* dxCommon);
 
 	/// <summary>
 	/// デバッグ用ImGui表示。
@@ -81,7 +81,7 @@ public:
 	/// カメラを設定します。
 	/// </summary>
 	/// <param name="camera"></param>
-	void SetCamera(Camera* camera) {
+	void SetCamera(TKM::Camera* camera) {
 		if (object_) {
 			object_->SetCamera(camera);
 		}
@@ -134,7 +134,7 @@ private:
 	//======================================================================
 	Player* player_ = nullptr;
 
-	std::unique_ptr<Object3d> object_;
+	std::unique_ptr<TKM::Object3d> object_;
 	Vector3 velocity_{}; // 弾の現在速度
 	Vector3 prevPos_{}; // 前フレームの位置（トンネリング対策用）
 

@@ -22,7 +22,7 @@
 //=============================================================
 class GameOverScene : public BaseScene{
 public:
-	GameOverScene(DirectXCommon* dxCommon, SrvManager* srvManager)
+	GameOverScene(TKM::DirectXCommon* dxCommon, SrvManager* srvManager)
 		: dxCommon_(dxCommon), srvManager_(srvManager) {
 	}
 	/// <summary>
@@ -43,15 +43,15 @@ public:
 	void Draw() override;
 
 private:
-	DirectXCommon* dxCommon_ = nullptr;
+	TKM::DirectXCommon* dxCommon_ = nullptr;
 	SrvManager* srvManager_ = nullptr;
 
-	std::unique_ptr<Camera> camera_;
+	std::unique_ptr<TKM::Camera> camera_;
 	std::unique_ptr<Player> player_;
 	std::unique_ptr<DirectionalLight> dirLight_;
 
 	// 画面を覆う虹彩絞り演出用
-	std::unique_ptr<Sprite> iris_;
+	std::unique_ptr<TKM::Sprite> iris_;
 	bool  irisOpening_ = true;     // 入場時は開き演出から
 	bool  irisClosing_ = false;    // T押下で閉じ演出開始
 	float irisScale_ = 0.0f;       // 現フレームのサイズ
@@ -60,7 +60,7 @@ private:
 	Ease::Tween irisOpenTween_;    // 開き用（OutBack, 0.8s）
 	Ease::Tween irisCloseTween_;   // 閉じ用（InBack, 0.8s）
 
-	std::unique_ptr<Skybox> skybox_; // 背景スカイボックス
+	std::unique_ptr<TKM::Skybox> skybox_; // 背景スカイボックス
 	float skyPitch_ = 0.0f;        // X軸回転量
 	float skyRotSpeedX_ = 0.002f;  // X軸回転速度
 
@@ -83,7 +83,7 @@ private:
 	int perFrameSparkBudget_ = 25;
 
 	// === 「GAME OVER」スプライト ===	
-	std::unique_ptr<Sprite> overSprite_;
+	std::unique_ptr<TKM::Sprite> overSprite_;
 
 	// フェードイン（0→1）とスケール（0.8→1.0）
 	Ease::Tween overAlphaTween_;

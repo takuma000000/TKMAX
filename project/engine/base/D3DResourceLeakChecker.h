@@ -4,8 +4,9 @@
 // D3DResourceLeakCheckerクラス
 // DirectXリソースのリークを検出するためのクラス。
 //=============================================================
-class D3DResourceLeakChecker{
-public:
-	~D3DResourceLeakChecker();
-};
-
+namespace TKM {
+	class D3DResourceLeakChecker {
+	public:
+		~D3DResourceLeakChecker();
+	};
+}

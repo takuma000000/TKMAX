@@ -9,12 +9,17 @@
 #include "imgui.h"
 #endif
 
+using TKM::Camera;
+using TKM::TextureManager;
+using TKM::ModelManager;
+using TKM::Sprite;
+
 void TitleScene::Initialize(){
 	camera = std::make_unique<Camera>();
 	camera->SetRotate({ 0.0f, 0.0f, 0.0f });
 	camera->SetTranslate({ 0.0f, camY_, -30.0f });
 
-	// ------------ テクスチャ読み込み --------------
+	// ------------ テクスチャ読み込み -----------using TKM::Camera;---
 	TextureManager::GetInstance()->LoadTexture("./resources/circle.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/circle2.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/title_kuraran.png");
@@ -25,15 +30,15 @@ void TitleScene::Initialize(){
 	ModelManager::GetInstance()->LoadModel("enemy.obj", dxCommon);
 	//-----------------------------------------
 
-	heli_ = std::make_unique<Object3d>();
-	heli_->Initialize(Object3dCommon::GetInstance(), dxCommon);
+	heli_ = std::make_unique<TKM::Object3d>();
+	heli_->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon);
 	heli_->SetModel("jett.obj");
 	heli_->SetCamera(camera.get());
 	heli_->SetScale({ scale_, scale_, scale_ });
 	heli_->SetTranslate({ 0.0f, baseY_, 0.0f });
 
 	sprite = std::make_unique<Sprite>();
-	sprite->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/title_kuraran.png");
+	sprite->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon, "./resources/title_kuraran.png");
 	// 画面中央に表示
 	sprite->SetPosition({ 0.0f,0.0f });
 	sprite->SetSize({ 1.0f, 1.0f });
@@ -41,7 +46,7 @@ void TitleScene::Initialize(){
 	dirLight_ = std::make_unique<DirectionalLight>();
 	dirLight_->Initialize({ 1,1,1,1 }, { 0.0f, -1.0f, 0.0f }, 1.0f);
 
-	skybox_ = std::make_unique<Skybox>();
+	skybox_ = std::make_unique<TKM::Skybox>();
 	skybox_->Initialize(dxCommon, srvManager, "resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
 	skybox_->SetCamera(camera.get());
 
@@ -70,8 +75,8 @@ void TitleScene::Initialize(){
 	// タイトル敵を1体だけ置く
 	titleEnemies_.clear();
 	{
-		auto e = std::make_unique<Object3d>();
-		e->Initialize(Object3dCommon::GetInstance(), dxCommon);
+		auto e = std::make_unique<TKM::Object3d>();
+		e->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon);
 		e->SetModel("enemy.obj");
 		e->SetCamera(camera.get());
 		e->SetScale({ enemyScale_, enemyScale_, enemyScale_ });
@@ -265,13 +270,13 @@ void TitleScene::Update(){
 
 void TitleScene::Draw(){
 	// 3Dは3Dでまとめて
-	Object3dCommon::GetInstance()->DrawSetCommon();
+	TKM::Object3dCommon::GetInstance()->DrawSetCommon();
 	if (heli_) heli_->Draw(dxCommon);
 	for (auto& e : titleEnemies_) e->Draw(dxCommon);
 	if (skybox_) skybox_->Draw();
 
 	// ---- ここで Sprite パイプラインに戻す ----
-	SpriteCommon::GetInstance()->DrawSetCommon();
+	TKM::SpriteCommon::GetInstance()->DrawSetCommon();
 	if (sprite) sprite->Draw();     // タイトル画像
 	if (iris_)  iris_->Draw();      // 白円(アイリス)
 

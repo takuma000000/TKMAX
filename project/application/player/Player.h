@@ -32,7 +32,7 @@ public:
 	/// </summary>
 	/// <param name="common"></param>
 	/// <param name="dxCommon"></param>
-	void Initialize(Object3dCommon* common, DirectXCommon* dxCommon);
+	void Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon);
 	/// <summary>
 	/// プレイヤーを更新します。
 	/// </summary>
@@ -41,7 +41,7 @@ public:
 	/// プレイヤーを描画します。
 	/// </summary>
 	/// <param name="dxCommon"></param>
-	void Draw(DirectXCommon* dxCommon);
+	void Draw(TKM::DirectXCommon* dxCommon);
 	/// <summary>
 	/// デバッグ用ImGui表示。
 	/// </summary>
@@ -154,7 +154,7 @@ public:
 	/// カメラを設定します。
 	/// </summary>
 	/// <param name="camera"></param>
-	void SetCamera(Camera* camera)
+	void SetCamera(TKM::Camera* camera)
 	{
 		this->camera = camera;
 		if (object_) { object_->SetCamera(camera); }
@@ -259,15 +259,15 @@ private:
 	//======================================================================
 	// 参照ポインタ / 共通オブジェクト
 	//======================================================================
-	Camera* camera = nullptr;
-	Object3dCommon* common_ = nullptr;
-	DirectXCommon* dxCommon_ = nullptr;
+	TKM::Camera* camera = nullptr;
+	TKM::Object3dCommon* common_ = nullptr;
+	TKM::DirectXCommon* dxCommon_ = nullptr;
 	Enemy* enemy_ = nullptr;
 	MidBossCore* core_ = nullptr;
 	RadialBlurEffect* radialBlur_ = nullptr;
 
 	BaseScene* parentScene_ = nullptr;
-	std::unique_ptr<Object3d> object_;
+	std::unique_ptr<TKM::Object3d> object_;
 	std::list<std::unique_ptr<PlayerBullet>> bullets_;
 	std::vector<std::unique_ptr<Enemy>>* allEnemies_ = nullptr;
 

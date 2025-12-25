@@ -10,7 +10,7 @@ const EnemyManager::WaveOps EnemyManager::kWaveOps_[4] = {
 	/* Done*/ { nullptr, nullptr },
 };
 
-void EnemyManager::Initialize(DirectXCommon* dx, Camera* camera, BaseScene* parent, Player* player) {
+void EnemyManager::Initialize(TKM::DirectXCommon* dx, TKM::Camera* camera, BaseScene* parent, Player* player) {
 	dx_ = dx;
 	cam_ = camera;
 	parent_ = parent;
@@ -271,8 +271,8 @@ void EnemyManager::SpawnWave1Enemy() {
 	float rx = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX); // 0〜1
 	float x = w1.randXMin + rx * (w1.randXMax - w1.randXMin);
 
-	DirectXCommon* dxPtr = dx_;
-	Camera* camPtr = cam_;
+	TKM::DirectXCommon* dxPtr = dx_;
+	TKM::Camera* camPtr = cam_;
 	BaseScene* parentPtr = parent_;
 
 	EnemySpawner::SpawnLine(
@@ -630,7 +630,7 @@ void EnemyManager::SpawnWave3Core() {
 	midBossCore_ = std::make_unique<MidBossCore>();
 
 	// Object3d 用共通（Enemy でも使ってるやつ）
-	auto* common = Object3dCommon::GetInstance();
+	auto* common = TKM::Object3dCommon::GetInstance();
 
 	midBossCore_->Initialize(common, dx_);
 	midBossCore_->SetCamera(cam_);
@@ -741,7 +741,7 @@ void EnemyManager::BeginWave3() {
 	SpawnWave3MidBossStage();
 }
 
-void EnemyManager::Draw(DirectXCommon* dx) {
+void EnemyManager::Draw(TKM::DirectXCommon* dx) {
 	if (!enemies_) { // enemies_ がまだ紐付いてなかったら何もしない
 		return;
 	}

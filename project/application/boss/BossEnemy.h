@@ -25,7 +25,7 @@ public:
 	~BossEnemy() = default;
 
 	// Enemy側が virtual じゃないので override は付けない
-	void Initialize(Object3dCommon* common, DirectXCommon* dxCommon);
+	void Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon);
 	void Update(float dt);
 	void ImGuiDebug();
 

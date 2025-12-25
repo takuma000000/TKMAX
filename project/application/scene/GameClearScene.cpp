@@ -10,6 +10,8 @@
 
 #include <cmath>
 
+using namespace TKM;
+
 void GameClearScene::Initialize() {
 	// ─────────────────────
 	// モデル・テクスチャ読み込み
@@ -22,7 +24,7 @@ void GameClearScene::Initialize() {
 	// ─────────────────────
 	// カメラ
 	// ─────────────────────
-	camera_ = std::make_unique<Camera>();
+	camera_ = std::make_unique<TKM::Camera>();
 	// ちょい見下ろしで中央を見る
 	camera_->SetRotate({ 0.1f, 0.0f, 0.0f });
 	camera_->SetTranslate({ 0.0f, 3.0f, -20.0f });
@@ -65,7 +67,7 @@ void GameClearScene::Initialize() {
 	// 「GAME CLEAR」スプライト（中央にドン）
 	// ─────────────────────
 	clearSprite_ = std::make_unique<Sprite>();
-	clearSprite_->Initialize(SpriteCommon::GetInstance(), dxCommon, "./resources/clear.png");
+	clearSprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon, "./resources/clear.png");
 	clearSprite_->SetAnchorPoint({ 0.5f, 0.5f });
 	clearSprite_->SetPosition({ WindowsAPI::kClientWidth * 0.5f, WindowsAPI::kClientHeight * 0.5f });
 	clearSprite_->SetColor({ 1,1,1,1 });
@@ -203,7 +205,7 @@ void GameClearScene::Draw() {
 	}
 
 	// --- 2Dスプライト（文字など）---
-	SpriteCommon::GetInstance()->DrawSetCommon();
+	TKM::SpriteCommon::GetInstance()->DrawSetCommon();
 	if (clearSprite_) {
 		clearSprite_->Draw();
 	}

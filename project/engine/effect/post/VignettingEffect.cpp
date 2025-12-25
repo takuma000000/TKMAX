@@ -2,7 +2,7 @@
 #include "DirectXCommon.h"
 #include <cmath>
 
-void VignettingEffect::Initialize(DirectXCommon* dx) {
+void VignettingEffect::Initialize(TKM::DirectXCommon* dx) {
 	BaseEffect::Initialize(dx);
 	// パイプライン初期化
 	dxCommon_->InitializeVignettingPipeline();

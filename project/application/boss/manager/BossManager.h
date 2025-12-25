@@ -58,7 +58,7 @@ public:
 	/// <param name="camera"></param>
 	/// <param name="parent"></param>
 	/// <param name="player"></param>
-	void Initialize(DirectXCommon* dxCommon, Camera* camera, BaseScene* parent, Player* player);
+	void Initialize(TKM::DirectXCommon* dxCommon, TKM::Camera* camera, BaseScene* parent, Player* player);
 	/// <summary>
 	/// ボス戦開始。
 	/// </summary>
@@ -72,7 +72,7 @@ public:
 	/// 描画。
 	/// </summary>
 	/// <param name="dxCommon"></param>
-	void Draw(DirectXCommon* dxCommon);
+	void Draw(TKM::DirectXCommon* dxCommon);
 
 	/// <summary>
 	/// ボス弾をスポーンさせる。
@@ -125,7 +125,7 @@ public:
 	/// カメラ設定。
 	/// </summary>
 	/// <param name="camera"></param>
-	void SetCamera(Camera* camera) {
+	void SetCamera(TKM::Camera* camera) {
 		camera_ = camera;
 		if (boss_) { boss_->SetCamera(camera_); }
 		for (auto& b : bossBullets_) { b->SetCamera(camera_); }
@@ -133,8 +133,8 @@ public:
 	// =========================================
 
 private:
-	DirectXCommon* dxCommon_ = nullptr;
-	Camera* camera_ = nullptr;
+	TKM::DirectXCommon* dxCommon_ = nullptr;
+	TKM::Camera* camera_ = nullptr;
 	BaseScene* parentScene_ = nullptr;
 	Player* player_ = nullptr;
 

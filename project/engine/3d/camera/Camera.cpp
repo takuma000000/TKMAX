@@ -1,35 +1,38 @@
 #include "Camera.h"
 
-Camera::Camera()
-	//初期化
-	:transform({ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} })
-	, fovY(0.45f)
-	, aspectRatio(float(WindowsAPI::kClientWidth) / float(WindowsAPI::kClientHeight))
-	, nearClip(0.1f)
-	, farClip(100.0f)
-	, worldMatrix(MyMath::MakeAffineMatrix(transform.scale, transform.rotate, transform.translate))
-	, viewMatrix(MyMath::Inverse4x4(worldMatrix))
-	, projectionMatrix(MyMath::MakePerspectiveFovMatrix(fovY, aspectRatio, nearClip, farClip))
-	, viewProjectionMatrix(MyMath::Multiply(viewMatrix, projectionMatrix))
-{}
+namespace TKM {
+	Camera::Camera()
+		//初期化
+		:transform({ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} })
+		, fovY(0.45f)
+		, aspectRatio(float(WindowsAPI::kClientWidth) / float(WindowsAPI::kClientHeight))
+		, nearClip(0.1f)
+		, farClip(100.0f)
+		, worldMatrix(MyMath::MakeAffineMatrix(transform.scale, transform.rotate, transform.translate))
+		, viewMatrix(MyMath::Inverse4x4(worldMatrix))
+		, projectionMatrix(MyMath::MakePerspectiveFovMatrix(fovY, aspectRatio, nearClip, farClip))
+		, viewProjectionMatrix(MyMath::Multiply(viewMatrix, projectionMatrix))
+	{
+	}
 
-void Camera::Update(){
-	//cameraTransformからcameraMatrixを作る
-	worldMatrix = MyMath::MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
-	//cameraMatrixからviewMatrixを作る
-	viewMatrix = MyMath::Inverse4x4(worldMatrix);
-	//projectionMatrixを作って投資投影行列を書き込む
-	projectionMatrix = MyMath::MakePerspectiveFovMatrix(fovY, aspectRatio, nearClip, farClip);
-	//合成行列
-	viewProjectionMatrix = MyMath::Multiply(viewMatrix, projectionMatrix);
-}
+	void Camera::Update() {
+		//cameraTransformからcameraMatrixを作る
+		worldMatrix = MyMath::MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+		//cameraMatrixからviewMatrixを作る
+		viewMatrix = MyMath::Inverse4x4(worldMatrix);
+		//projectionMatrixを作って投資投影行列を書き込む
+		projectionMatrix = MyMath::MakePerspectiveFovMatrix(fovY, aspectRatio, nearClip, farClip);
+		//合成行列
+		viewProjectionMatrix = MyMath::Multiply(viewMatrix, projectionMatrix);
+	}
 
-void Camera::ImGuiDebug() {
+	void Camera::ImGuiDebug() {
 #ifdef USE_IMGUI
-	ImGui::Begin("カメラ");
-	ImGui::DragFloat3("位置", &transform.translate.x, 0.01f);
-	ImGui::DragFloat3("回転", &transform.rotate.x, 0.01f);
-	ImGui::DragFloat3("拡縮", &transform.scale.x, 0.01f);
-	ImGui::End();
+		ImGui::Begin("カメラ");
+		ImGui::DragFloat3("位置", &transform.translate.x, 0.01f);
+		ImGui::DragFloat3("回転", &transform.rotate.x, 0.01f);
+		ImGui::DragFloat3("拡縮", &transform.scale.x, 0.01f);
+		ImGui::End();
 #endif
+	}
 }

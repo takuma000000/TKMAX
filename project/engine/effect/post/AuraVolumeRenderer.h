@@ -2,11 +2,13 @@
 #include <cstdint>
 #include "MyMath.h"
 
-class DirectXCommon;
+namespace TKM {
+	class DirectXCommon;
+}
 
 class AuraVolumeRenderer {
 public:
-	void Initialize(DirectXCommon* dxCommon);
+	void Initialize(TKM::DirectXCommon* dxCommon);
 
 	void Draw(
 		const Matrix4x4& viewProj,
@@ -28,7 +30,7 @@ public:
 	bool IsAlwaysOn() const { return alwaysOn_; }
 
 private:
-	DirectXCommon* dxCommon_ = nullptr;
+	TKM::DirectXCommon* dxCommon_ = nullptr;
 
 	uint32_t sliceCount_ = 12;   // 8〜16が目安
 	float radiusMul_ = 1.25f;    // collider.x に掛ける

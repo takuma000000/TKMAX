@@ -38,7 +38,7 @@ namespace {
 	const BossManager::BossBattleConfig kBossConfig = MakeBossConfig();
 }
 
-void BossManager::Initialize(DirectXCommon* dxCommon, Camera* camera, BaseScene* parent, Player* player) {
+void BossManager::Initialize(TKM::DirectXCommon* dxCommon, TKM::Camera* camera, BaseScene* parent, Player* player) {
 	dxCommon_ = dxCommon;
 	camera_ = camera;
 	parentScene_ = parent;
@@ -68,7 +68,7 @@ void BossManager::StartBattle() {
 	bossP2BgmPlayed_ = false;
 
 	boss_ = std::make_unique<BossEnemy>();
-	boss_->Initialize(Object3dCommon::GetInstance(), dxCommon_);
+	boss_->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_);
 	boss_->SetCamera(camera_);
 	boss_->SetParentScene(parentScene_);
 
@@ -178,7 +178,7 @@ void BossManager::Update(float dt) {
 #endif
 }
 
-void BossManager::Draw(DirectXCommon* dxCommon) {
+void BossManager::Draw(TKM::DirectXCommon* dxCommon) {
 	if (!bossBattle_ || !boss_) { return; }
 
 	// ボス本体
@@ -207,7 +207,7 @@ void BossManager::SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float
 	}
 
 	auto bullet = std::make_unique<BossBullet>();
-	bullet->Initialize(Object3dCommon::GetInstance(), dxCommon_, camera_, pos, dir, speed, damage, lifeFrame);
+	bullet->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_, camera_, pos, dir, speed, damage, lifeFrame);
 	bossBullets_.push_back(std::move(bullet));
 }
 

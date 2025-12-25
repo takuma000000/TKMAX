@@ -9,7 +9,7 @@ LineRenderer* LineRenderer::GetInstance() {
 	return &inst;
 }
 
-void LineRenderer::Initialize(DirectXCommon* dxCommon, size_t maxLines) {
+void LineRenderer::Initialize(TKM::DirectXCommon* dxCommon, size_t maxLines) {
 	dx_ = dxCommon;
 	maxVertices_ = maxLines * 2;
 	vertices_.reserve(maxVertices_);

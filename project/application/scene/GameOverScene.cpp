@@ -7,6 +7,8 @@
 #include "TitleScene.h"
 #include <SkyBox.h>
 
+using namespace TKM;
+
 void GameOverScene::Initialize(){
 	ModelManager::GetInstance()->LoadModel("jett.obj", dxCommon_);
 	TextureManager::GetInstance()->LoadTexture("./resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
@@ -82,7 +84,7 @@ void GameOverScene::Initialize(){
 
 	// スプライト生成
 	overSprite_ = std::make_unique<Sprite>();
-	overSprite_->Initialize(SpriteCommon::GetInstance(), dxCommon_, "./resources/over.png");
+	overSprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, "./resources/over.png");
 	overSprite_->SetAnchorPoint({ 0.5f, 0.5f });
 	overSprite_->SetPosition({ WindowsAPI::kClientWidth * 0.5f, WindowsAPI::kClientHeight * 0.5f });
 
@@ -347,7 +349,7 @@ void GameOverScene::Draw(){
 	ParticleManager::GetInstance()->Draw();
 
 	// 2D（任意のオーバーレイ）
-	SpriteCommon::GetInstance()->DrawSetCommon();
+	TKM::SpriteCommon::GetInstance()->DrawSetCommon();
 	if ((irisOpening_ || irisClosing_) && iris_) {
 		iris_->Draw(); // 常に最前面
 	}

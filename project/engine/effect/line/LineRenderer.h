@@ -16,7 +16,7 @@ public:
 
 	static LineRenderer* GetInstance();
 
-	void Initialize(DirectXCommon* dxCommon, size_t maxLines = 1024);
+	void Initialize(TKM::DirectXCommon* dxCommon, size_t maxLines = 1024);
 	void BeginFrame(); // 1フレーム目頭で呼ぶ（バッファをクリア）
 	void AddLine(const Vector3& a, const Vector3& b, const Color& c);
 	void Draw(const Matrix4x4& viewProj); // GameScene::Draw の中から呼ぶ
@@ -54,7 +54,7 @@ private:
 		Color   col;
 	};
 
-	DirectXCommon* dx_ = nullptr;
+	TKM::DirectXCommon* dx_ = nullptr;
 
 	std::vector<Vertex> vertices_;
 	size_t maxVertices_ = 0;  // maxLines * 2

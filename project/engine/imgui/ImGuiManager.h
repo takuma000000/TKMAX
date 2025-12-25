@@ -13,7 +13,7 @@ public:
 	/// </summary>
 	/// <param name="winApp"></param>
 	/// <param name="dxCommon"></param>
-	void Initialize(WindowsAPI* winApp, DirectXCommon* dxCommon);
+	void Initialize(WindowsAPI* winApp, TKM::DirectXCommon* dxCommon);
 	/// <summary>
 	/// ImGuiの終了処理を行う関数
 	/// </summary>
@@ -48,7 +48,7 @@ public:
 	//=======================================================
 private:
 	WindowsAPI* winApp_ = nullptr;
-	DirectXCommon* dxCommon_ = nullptr;
+	TKM::DirectXCommon* dxCommon_ = nullptr;
 
 	//SRV用デスクリプタ―ヒープ
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvHeap_;

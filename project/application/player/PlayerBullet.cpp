@@ -7,9 +7,9 @@
 #include "Player.h"
 #include "MidBossCore.h"
 
-void PlayerBullet::Initialize(Object3dCommon* common, DirectXCommon* dxCommon) {
+void PlayerBullet::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon) {
 	// 3Dオブジェクト作成
-	object_ = std::make_unique<Object3d>();
+	object_ = std::make_unique<TKM::Object3d>();
 	object_->Initialize(common, dxCommon);
 	object_->SetModel("sphere.obj");
 	object_->SetScale({ kDefaultScale, kDefaultScale, kDefaultScale });
@@ -184,7 +184,7 @@ void PlayerBullet::Update() {
 	object_->Update();
 }
 
-void PlayerBullet::Draw(DirectXCommon* dxCommon) {
+void PlayerBullet::Draw(TKM::DirectXCommon* dxCommon) {
 	object_->Draw(dxCommon); // 3Dオブジェクトの描画
 }
 

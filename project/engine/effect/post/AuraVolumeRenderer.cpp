@@ -5,7 +5,7 @@
 #include <imgui.h>
 #endif
 
-void AuraVolumeRenderer::Initialize(DirectXCommon* dxCommon) {
+void AuraVolumeRenderer::Initialize(TKM::DirectXCommon* dxCommon) {
 	dxCommon_ = dxCommon;
 	if (!dxCommon_) { return; }
 	dxCommon_->InitializeAuraVolumePipeline();

@@ -23,10 +23,10 @@ public:
 	/// <param name="speed"></param>
 	/// <param name="damage"></param>
 	/// <param name="lifeFrame"></param>
-	void Initialize(Object3dCommon* common, DirectXCommon* dx, Camera* cam,
+	void Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dx, TKM::Camera* cam,
 		const Vector3& pos, const Vector3& dir,
 		float speed, int damage, int lifeFrame) {
-		obj_ = std::make_unique<Object3d>();
+		obj_ = std::make_unique<TKM::Object3d>();
 		obj_->Initialize(common, dx);
 		obj_->SetModel("sphere.obj");              // モデル指定
 		obj_->SetScale({ kDefaultScale, kDefaultScale, kDefaultScale }); // スケール
@@ -55,7 +55,7 @@ public:
 	/// 弾を描画します。
 	/// </summary>
 	/// <param name="dx"></param>
-	void Draw(DirectXCommon* dx) {
+	void Draw(TKM::DirectXCommon* dx) {
 		if (!dead_) obj_->Draw(dx);
 	}
 
@@ -87,7 +87,7 @@ public:
 	/// カメラ設定。
 	/// </summary>
 	/// <param name="cam"></param>
-	void SetCamera(Camera* cam) {
+	void SetCamera(TKM::Camera* cam) {
 		if (obj_) { obj_->SetCamera(cam); }
 	}
 	// =========================================
@@ -95,11 +95,11 @@ private:
 	//======================================================================
 	// 参照
 	//======================================================================
-	Camera* cam_ = nullptr;
+	TKM::Camera* cam_ = nullptr;
 	//======================================================================
 	// 本体データ
 	//======================================================================
-	std::unique_ptr<Object3d> obj_; // モデル本体
+	std::unique_ptr<TKM::Object3d> obj_; // モデル本体
 	//======================================================================
 	// 移動・状態
 	//======================================================================

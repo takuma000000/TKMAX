@@ -14,7 +14,7 @@ void FogEffect::Update(float dt) {
 		time_ += dt * timeScale_;
 	}
 
-	// ★ 自動ドリフト（カメラが動かなくても霧が流れる）
+	// 自動ドリフト（カメラが動かなくても霧が流れる）
 	driftOffsetXZ_.x += driftSpeedXZ_.x * dt;
 	driftOffsetXZ_.y += driftSpeedXZ_.y * dt;
 

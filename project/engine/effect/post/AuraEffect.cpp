@@ -1,7 +1,7 @@
 #include "AuraEffect.h"
 #include "DirectXCommon.h"
 
-void AuraEffect::Initialize(DirectXCommon* dxCommon) {
+void AuraEffect::Initialize(TKM::DirectXCommon* dxCommon) {
 	dxCommon_ = dxCommon;
 	active_ = false;
 

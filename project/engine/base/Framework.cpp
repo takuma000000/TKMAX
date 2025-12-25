@@ -10,6 +10,11 @@
 #include <Object3dCommon.h>
 #include <SpriteCommon.h>
 
+using TKM::TextureManager;
+using TKM::ModelManager;
+using TKM::Object3dCommon;
+using TKM::AudioManager;
+
 void Framework::Initialize() {
 	//シーンマネージャの生成
 	sceneManager_ = std::make_unique<SceneManager>();
@@ -19,7 +24,7 @@ void Framework::Initialize() {
 	windowsAPI->Initialize();
 
 	// DirectXCommon の初期化
-	dxCommon = std::make_unique<DirectXCommon>();
+	dxCommon = std::make_unique<TKM::DirectXCommon>();
 	dxCommon->Initialize(windowsAPI.get());
 
 	// SRVマネージャの初期化
@@ -47,7 +52,7 @@ void Framework::Initialize() {
 	AudioManager::GetInstance()->Initialize(); // AudioManagerを初期化
 
 	Object3dCommon::GetInstance()->Initialize(dxCommon.get()); // Object3dCommonを初期化
-	SpriteCommon::GetInstance()->Initialize(dxCommon.get());   // SpriteCommonを初期化
+	TKM::SpriteCommon::GetInstance()->Initialize(dxCommon.get());   // SpriteCommonを初期化
 	Input::GetInstance()->Initialize(windowsAPI.get());        // Inputを初期化
 }
 
