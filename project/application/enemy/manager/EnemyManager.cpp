@@ -228,6 +228,16 @@ void EnemyManager::UpdateWave1(float dt) {
 		return;
 	}
 
+	// Wave1の目標撃破数に達したら次のWaveへ
+	if (defeatedEnemyCount_ && *defeatedEnemyCount_ >= wave1DefeatTarget_) {
+
+		// Wave2に移るときWave1の残敵が邪魔なら消す（混ざるの防止）
+		enemies_->clear();
+
+		GoToNextWave();
+		return;
+	}
+
 	// 現在生存している敵の数（死亡演出中も含めるかどうかは好みだが、ここでは「まだ画面に居るやつ」を数える）
 	int aliveCount = 0;
 	for (auto& e : *enemies_) {
