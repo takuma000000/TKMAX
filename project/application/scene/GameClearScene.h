@@ -24,7 +24,7 @@
 //=============================================================
 class GameClearScene : public BaseScene {
 public:
-	GameClearScene(TKM::DirectXCommon* dxCommon, SrvManager* srvManager)
+	GameClearScene(TKM::DirectXCommon* dxCommon, TKM::SrvManager* srvManager)
 		: dxCommon(dxCommon), srvManager(srvManager) {
 	}
 	~GameClearScene() = default;
@@ -48,11 +48,11 @@ public:
 
 private:
 	TKM::DirectXCommon* dxCommon = nullptr;
-	SrvManager* srvManager = nullptr;
+	TKM::SrvManager* srvManager = nullptr;
 
 	// --- カメラ・ライト ---
 	std::unique_ptr<TKM::Camera> camera_;
-	std::unique_ptr<DirectionalLight> dirLight_;
+	std::unique_ptr<TKM::DirectionalLight> dirLight_;
 
 	// --- 自機 ---
 	std::unique_ptr<Player> player_;

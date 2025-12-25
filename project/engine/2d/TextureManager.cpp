@@ -10,12 +10,12 @@ namespace TKM {
 	//ImGuiで0番を使用するため、1番から使用
 	uint32_t TextureManager::kSRVIndexTop = 1;
 
-	void TextureManager::Initialize(TKM::DirectXCommon* dxCommon, SrvManager* srvManager) {
+	void TextureManager::Initialize(TKM::DirectXCommon* dxCommon, TKM::SrvManager* srvManager) {
 		dxCommon_ = dxCommon;
 		srvManager_ = srvManager;
 
 		//SRVの数と同数
-		textureDatas.reserve(SrvManager::kMaxSRVCount);
+		textureDatas.reserve(TKM::SrvManager::kMaxSRVCount);
 	}
 
 	void TextureManager::LoadTexture(const std::string& filePath) {

@@ -13,7 +13,7 @@
 // MyGameクラス
 // ゲーム全体を管理するクラス。
 //=============================================================
-class MyGame : public Framework{
+class MyGame : public TKM::Framework{
 public://メンバ関数
 	/// <summary>
 	/// シーンを初期化します。

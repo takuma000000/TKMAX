@@ -46,7 +46,7 @@
 //=============================================================
 class GameScene : public BaseScene {
 public:
-	GameScene(TKM::DirectXCommon* dxCommon, SrvManager* srvManager) : dxCommon(dxCommon), srvManager(srvManager) {}
+	GameScene(TKM::DirectXCommon* dxCommon, TKM::SrvManager* srvManager) : dxCommon(dxCommon), srvManager(srvManager) {}
 	~GameScene() = default;
 
 	/// <summary>
@@ -149,7 +149,7 @@ private:
 	// 基本システム
 	//======================================================================
 	TKM::DirectXCommon* dxCommon = nullptr;
-	SrvManager* srvManager = nullptr;
+	TKM::SrvManager* srvManager = nullptr;
 	//======================================================================
 	// カメラ / ライト / スカイボックス
 	//======================================================================
@@ -158,7 +158,7 @@ private:
 	std::unique_ptr<TKM::DebugCamera> debugCamera_ = nullptr; // デバッグカメラ
 	bool useDebugCamera_ = false;                        // デバッグカメラ使用フラグ
 
-	std::unique_ptr<DirectionalLight> directionalLight_ = nullptr;// ディレクショナルライト
+	std::unique_ptr<TKM::DirectionalLight> directionalLight_ = nullptr;// ディレクショナルライト
 
 	std::unique_ptr<TKM::Skybox> skybox_;// スカイボックス
 
@@ -245,8 +245,8 @@ private:
 	bool  startVisible_ = false;        // 表示も最初はしない（演出終了後に出す）
 	bool  startPlayed_ = false;        // 一度だけ出すためのフラグ
 
-	Vector2 startStartPos_ = { WindowsAPI::kClientWidth + 400.0f, WindowsAPI::kClientHeight * 0.5f }; // 右外
-	Vector2 startEndPos_ = { WindowsAPI::kClientWidth * 0.5f,  WindowsAPI::kClientHeight * 0.5f };  // 中央
+	Vector2 startStartPos_ = { TKM::WindowsAPI::kClientWidth + 400.0f, TKM::WindowsAPI::kClientHeight * 0.5f }; // 右外
+	Vector2 startEndPos_ = { TKM::WindowsAPI::kClientWidth * 0.5f,  TKM::WindowsAPI::kClientHeight * 0.5f };  // 中央
 
 	Ease::Tween startTween_;        // イージング
 	float       startDuration_ = 1.0f;   // アニメ時間
@@ -314,7 +314,7 @@ private:
 	// Fog エフェクト
 	std::unique_ptr<FogEffect> fog_ = nullptr;
 	// Aura エフェクト
-	std::unique_ptr<AuraEffect> aura_ = nullptr;
+	std::unique_ptr<TKM::AuraEffect> aura_ = nullptr;
 	// WaterRipple エフェクト（波紋）
 	std::unique_ptr<WaterRippleEffect> waterRipple_ = nullptr;
 	//======================================================================

@@ -91,11 +91,11 @@ void BaseScene::ImGuiDebugInfo() {
 	ImGui::Separator();
 
 	int totalParticles = 0;
-	for (const auto& pair : ParticleManager::GetInstance()->GetParticleGroups()) {
+	for (const auto& pair : TKM::ParticleManager::GetInstance()->GetParticleGroups()) {
 		totalParticles += static_cast<int>(pair.second.particles.size());
 	}
 	ImGui::Text("アクティブ Particles: %d", totalParticles);
-	ImGui::Text("パーティクルグループ数: %d", ParticleManager::GetInstance()->GetParticleGroups().size());
+	ImGui::Text("パーティクルグループ数: %d", TKM::ParticleManager::GetInstance()->GetParticleGroups().size());
 	ImGui::End();
 #endif
 }

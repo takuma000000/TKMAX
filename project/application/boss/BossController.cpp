@@ -332,15 +332,15 @@ void BossController::UpdateDashWindup(float dt, Enemy& boss, Vector3& pos, const
 		auraPos_ = windupBasePos_; // 位置セット
 
 		// 開始フレーム：外殻リング（1回）
-		ParticleManager::GetInstance()->Emit("boss_windup_shell", windupBasePos_, 8);
+		TKM::ParticleManager::GetInstance()->Emit("boss_windup_shell", windupBasePos_, 8);
 	}
 
 	// 継続：稲妻＆吸い込み（間引き）
 	windupFxTimer_ += dt;
 	if (windupFxTimer_ >= 0.06f) { // 約16フレームに1回
 		windupFxTimer_ = 0.0f;
-		ParticleManager::GetInstance()->Emit("boss_windup_crackle", windupBasePos_, 2);
-		ParticleManager::GetInstance()->Emit("boss_windup_inward", windupBasePos_, 2);
+		TKM::ParticleManager::GetInstance()->Emit("boss_windup_crackle", windupBasePos_, 2);
+		TKM::ParticleManager::GetInstance()->Emit("boss_windup_inward", windupBasePos_, 2);
 	}
 
 	// -------------------------------------------------

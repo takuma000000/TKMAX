@@ -7,7 +7,7 @@
 #endif
 
 
-void ImGuiManager::Initialize(WindowsAPI* winApp, TKM::DirectXCommon* dxCommon){
+void ImGuiManager::Initialize(TKM::WindowsAPI* winApp, TKM::DirectXCommon* dxCommon) {
 #ifdef USE_IMGUI
 	HRESULT hr;
 	dxCommon_ = dxCommon;

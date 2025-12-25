@@ -101,7 +101,7 @@ void Enemy::Update(float dt) {
 					self->baseScale_.z * pulse,
 				};
 
-				ParticleManager* pm = ParticleManager::GetInstance();
+				TKM::ParticleManager* pm = TKM::ParticleManager::GetInstance();
 				if (std::rand() % 3 != 0) {
 					Vector3 center = self->GetWorldPosition();
 					Vector3 off = {
@@ -119,7 +119,7 @@ void Enemy::Update(float dt) {
 					self->bossFinalLaunchStarted_ = true;
 					self->bossFinalLaunchStartPos_ = c.pos;
 
-					ParticleManager* pm = ParticleManager::GetInstance();
+					TKM::ParticleManager* pm = TKM::ParticleManager::GetInstance();
 					Vector3 center = self->GetWorldPosition();
 					pm->Emit("bossDeath_ring", center, 2);
 					pm->Emit("bossDeath_bomb", center, 10);
@@ -198,7 +198,7 @@ void Enemy::Update(float dt) {
 		static void Move_PounceFromAbove(Enemy* self, MoveCtx& c) {
 			if (!self->pounceStarted_) { return; }
 
-			ParticleManager* pm = ParticleManager::GetInstance();
+			TKM::ParticleManager* pm = TKM::ParticleManager::GetInstance();
 
 			if (!self->pounceDiving_) {
 				self->pounceTime_ += c.dt;
@@ -346,7 +346,7 @@ void Enemy::Update(float dt) {
 		object_->Update();
 
 		if (deathTimer_ >= deathDuration_) {
-			ParticleManager* pm = ParticleManager::GetInstance();
+			TKM::ParticleManager* pm = TKM::ParticleManager::GetInstance();
 			Vector3 emitPos = GetWorldPosition();
 
 			// ここもテーブル化できるけど、今回は「主要switch排除」が目的なので
@@ -416,10 +416,10 @@ void Enemy::Update(float dt) {
 		Vector3 center = GetWorldPosition();
 		Vector3 size = colliderScale_;
 
-		auto* lr = LineRenderer::GetInstance();
+		auto* lr = TKM::LineRenderer::GetInstance();
 
-		LineRenderer::Color normal{ 0.0f, 1.0f, 0.0f, 1.0f };
-		LineRenderer::Color hit{ 1.0f, 0.0f, 0.0f, 1.0f };
+		TKM::LineRenderer::Color normal{ 0.0f, 1.0f, 0.0f, 1.0f };
+		TKM::LineRenderer::Color hit{ 1.0f, 0.0f, 0.0f, 1.0f };
 
 		if (reticle_) {
 			Vector3 rayOrigin;

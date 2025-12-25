@@ -13,7 +13,7 @@ public:
 	/// </summary>
 	/// <param name="winApp"></param>
 	/// <param name="dxCommon"></param>
-	void Initialize(WindowsAPI* winApp, TKM::DirectXCommon* dxCommon);
+	void Initialize(TKM::WindowsAPI* winApp, TKM::DirectXCommon* dxCommon);
 	/// <summary>
 	/// ImGuiの終了処理を行う関数
 	/// </summary>
@@ -47,7 +47,7 @@ public:
 	void SetColorRainbow();
 	//=======================================================
 private:
-	WindowsAPI* winApp_ = nullptr;
+	TKM::WindowsAPI* winApp_ = nullptr;
 	TKM::DirectXCommon* dxCommon_ = nullptr;
 
 	//SRV用デスクリプタ―ヒープ

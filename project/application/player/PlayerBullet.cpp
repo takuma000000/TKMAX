@@ -38,7 +38,7 @@ void PlayerBullet::Update() {
 
 	// LTホーミング弾だけ、飛行中にスパークをばら撒く（全部盛りポイント）
 	if (trailGroup_ == "trail_lt") {
-		ParticleManager* pm = ParticleManager::GetInstance();
+		TKM::ParticleManager* pm = TKM::ParticleManager::GetInstance();
 		Vector3 emitPos = pos;
 
 		// 軽い光の尾
@@ -81,7 +81,7 @@ void PlayerBullet::Update() {
 			isHit_ = true;
 			isDead_ = true;
 
-			ParticleManager* pm = ParticleManager::GetInstance();
+			TKM::ParticleManager* pm = TKM::ParticleManager::GetInstance();
 			Vector3 hitPos = bulletPos;
 
 			bool isLTBullet = (trailGroup_ == "trail_lt");
@@ -135,7 +135,7 @@ void PlayerBullet::Update() {
 			isHit_ = true;
 			isDead_ = true;
 
-			ParticleManager* pm = ParticleManager::GetInstance();
+			TKM::ParticleManager* pm = TKM::ParticleManager::GetInstance();
 			Vector3 hitPos = bulletPos;
 
 			bool isLTBullet = (trailGroup_ == "trail_lt");

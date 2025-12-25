@@ -9,7 +9,7 @@
 void MyGame::Initialize(){
 
 	//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-	Framework::Initialize(); //基底クラスの初期化処理
+	TKM::Framework::Initialize(); //基底クラスの初期化処理
 
 	// Initialize sceneManager_
 	sceneManager_ = std::make_unique<SceneManager>();
@@ -40,7 +40,7 @@ void MyGame::Finalize(){
 	imguiManager->Finalize();
 
 	//基底クラスの終了処理
-	Framework::Finalize();
+	TKM::Framework::Finalize();
 
 }
 
@@ -48,7 +48,7 @@ void MyGame::Update(){
 	//---------------------------------------------------------
 
 	//基底クラスの更新処理
-	Framework::Update();
+	TKM::Framework::Update();
 
 	// ** ImGui処理開始 **
 	imguiManager->Begin();

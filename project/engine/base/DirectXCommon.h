@@ -13,12 +13,18 @@
 #include "SystemIncludes.h"
 
 // PostEffect
+namespace TKM {
+	/*class RadialBlurEffect;
+	class VignettingEffect;
+	class WaterRippleEffect;
+	class FogEffect;*/
+	class AuraEffect;
+}
+
 class RadialBlurEffect;
 class VignettingEffect;
 class WaterRippleEffect;
 class FogEffect;
-class AuraEffect;
-
 //=============================================================
 // DirectXCommonクラス
 // DirectX12の初期化・描画・リソース管理を行うクラス。
@@ -421,7 +427,7 @@ namespace TKM {
 		/// VignettingEffect を取得
 		/// </summary>
 		/// <returns></returns>
-		AuraEffect* GetAuraEffect() const { return auraEffect_; }
+		TKM::AuraEffect* GetAuraEffect() const { return auraEffect_; }
 		// ========================================================================
 		// Setter==================================================================
 		/// <summary>
@@ -529,7 +535,7 @@ namespace TKM {
 		/// AuraEffect をセット（必要なら）
 		/// </summary>
 		/// <param name="effect"></param>
-		void SetAuraEffect(AuraEffect* effect) { auraEffect_ = effect; }
+		void SetAuraEffect(TKM::AuraEffect* effect) { auraEffect_ = effect; }
 		// ========================================================================
 	private:
 		//======================================================================
@@ -637,7 +643,7 @@ namespace TKM {
 		Microsoft::WRL::ComPtr<ID3D12PipelineState> auraPipelineState_;
 		Microsoft::WRL::ComPtr<ID3D12Resource> auraConstantBuffer_;
 		void* auraMappedData_ = nullptr;
-		AuraEffect* auraEffect_ = nullptr;
+		TKM::AuraEffect* auraEffect_ = nullptr;
 
 		// AuraVolume 用 PSO
 		bool auraVolumeInitialized_ = false;

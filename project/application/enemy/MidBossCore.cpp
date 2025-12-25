@@ -72,7 +72,7 @@ void MidBossCore::Update(float dt) {
 
 		if (deathTimer_ >= deathDuration_) {
 			// 消える瞬間にエフェクト
-			ParticleManager* pm = ParticleManager::GetInstance();
+			TKM::ParticleManager* pm = TKM::ParticleManager::GetInstance();
 			Vector3 emitPos = GetWorldPosition();
 			pm->Emit("enemyDeath_core", emitPos, 1);
 			pm->Emit("enemyDeath_smoke", emitPos, 4);
@@ -90,10 +90,10 @@ void MidBossCore::Update(float dt) {
 		Vector3 center = GetWorldPosition();
 		Vector3 size = colliderScale_;
 
-		auto* lr = LineRenderer::GetInstance();
+		auto* lr = TKM::LineRenderer::GetInstance();
 
-		LineRenderer::Color normal{ 0.0f, 1.0f, 0.0f, 1.0f };
-		LineRenderer::Color hit{ 1.0f, 0.0f, 0.0f, 1.0f };
+		TKM::LineRenderer::Color normal{ 0.0f, 1.0f, 0.0f, 1.0f };
+		TKM::LineRenderer::Color hit{ 1.0f, 0.0f, 0.0f, 1.0f };
 
 		if (reticle_) {
 			const Vector3 rayOrigin = playerGetter_ ? playerGetter_() : reticle_->GetCenterWorldPos();
@@ -109,7 +109,7 @@ void MidBossCore::Update(float dt) {
 // データドリブン版（挙動そのまま）
 // ============================
 	{
-		ParticleManager* pm = ParticleManager::GetInstance();
+		TKM::ParticleManager* pm = TKM::ParticleManager::GetInstance();
 		Vector3 center = GetWorldPosition();
 
 		struct EmitRule {

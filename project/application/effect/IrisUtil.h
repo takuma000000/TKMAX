@@ -23,11 +23,11 @@ inline std::unique_ptr<TKM::Sprite> CreateCenteredIrisSprite(
 	// 画面中央
 	sprite->SetAnchorPoint({ 0.5f, 0.5f });
 	sprite->SetPosition(
-		{ WindowsAPI::kClientWidth * 0.5f, WindowsAPI::kClientHeight * 0.5f });
+		{ TKM::WindowsAPI::kClientWidth * 0.5f, TKM::WindowsAPI::kClientHeight * 0.5f });
 
 	// 画面対角長から「絶対にはみ出す」スケールを計算
-	const float w = static_cast<float>(WindowsAPI::kClientWidth);
-	const float h = static_cast<float>(WindowsAPI::kClientHeight);
+	const float w = static_cast<float>(TKM::WindowsAPI::kClientWidth);
+	const float h = static_cast<float>(TKM::WindowsAPI::kClientHeight);
 	const float diag = std::sqrt(w * w + h * h);
 
 	// 2 倍くらいにしておけば端がチラ見えしない

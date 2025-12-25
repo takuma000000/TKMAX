@@ -24,7 +24,7 @@ public:
 	/// オブジェクトやモジュールの初期化を行う。
 	/// </summary>
 	/// <param name="winApp"></param>
-	void Initialize(WindowsAPI* winApp);
+	void Initialize(TKM::WindowsAPI* winApp);
 	/// <summary>
 	/// オブジェクトやモジュールの終了処理（クリーンアップ）を行う。
 	/// <para>Inputの終了処理を行います。</para>
@@ -117,7 +117,7 @@ private:
 	BYTE key[256] = {};
 	BYTE keyPre[256] = {};
 	ComPtr<IDirectInput8> directInput;
-	WindowsAPI* winApp = nullptr;
+	TKM::WindowsAPI* winApp = nullptr;
 
 	// XInput 用のメンバ変数
 	XINPUT_STATE controllerState = {};

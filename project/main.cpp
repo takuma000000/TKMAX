@@ -1,6 +1,6 @@
 #include "MyGame.h"
 
-Framework* gFramework = nullptr; // グローバル変数でFrameworkを保持
+TKM::Framework* gFramework = nullptr; // グローバル変数でFrameworkを保持
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 

@@ -43,7 +43,7 @@ void TitleScene::Initialize(){
 	sprite->SetPosition({ 0.0f,0.0f });
 	sprite->SetSize({ 1.0f, 1.0f });
 
-	dirLight_ = std::make_unique<DirectionalLight>();
+	dirLight_ = std::make_unique<TKM::DirectionalLight>();
 	dirLight_->Initialize({ 1,1,1,1 }, { 0.0f, -1.0f, 0.0f }, 1.0f);
 
 	skybox_ = std::make_unique<TKM::Skybox>();
@@ -85,7 +85,7 @@ void TitleScene::Initialize(){
 	}
 
 	//---------------パーティクル----------------
-	ParticleManager::GetInstance()->Initialize(dxCommon, srvManager, camera.get());
+	TKM::ParticleManager::GetInstance()->Initialize(dxCommon, srvManager, camera.get());
 	//-----------------------------------------
 
 	// ---------------水面波紋エフェクト----------------
@@ -242,7 +242,7 @@ void TitleScene::Update(){
 	if (skyPitch_ < 0.0f)    skyPitch_ += kTwoPi;
 	skybox_->SetRotation({ skyPitch_, 0.0f, 0.0f });
 
-	ParticleManager::GetInstance()->Update(dt);
+	TKM::ParticleManager::GetInstance()->Update(dt);
 
 #ifdef USE_IMGUI
 
@@ -280,5 +280,5 @@ void TitleScene::Draw(){
 	if (sprite) sprite->Draw();     // タイトル画像
 	if (iris_)  iris_->Draw();      // 白円(アイリス)
 
-	ParticleManager::GetInstance()->Draw();
+	TKM::ParticleManager::GetInstance()->Draw();
 }

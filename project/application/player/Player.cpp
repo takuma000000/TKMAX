@@ -25,14 +25,14 @@ void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommo
 	reticle_->GetCenterWorldPos(); // 中心位置取得用
 
 	// パーティクルグループ作成
-	ParticleManager::GetInstance()->CreateParticleGroup(
-		"jetSmoke", "./resources/circle.png", ParticleManager::ParticleType::NORMAL); // ジェット煙
-	ParticleManager::GetInstance()->CreateParticleGroup(
-		"damageSpark", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL); // 故障スパーク（バチバチ）
-	ParticleManager::GetInstance()->CreateParticleGroup("trail_rb", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL); // 弾の軌跡
-	ParticleManager::GetInstance()->CreateParticleGroup("trail_lb", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL); // 弾の軌跡
-	ParticleManager::GetInstance()->CreateParticleGroup("trail_rt", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL); // 弾の軌跡
-	ParticleManager::GetInstance()->CreateParticleGroup("trail_lt", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL); // 弾の軌跡
+	TKM::ParticleManager::GetInstance()->CreateParticleGroup(
+		"jetSmoke", "./resources/circle.png", TKM::ParticleManager::ParticleType::NORMAL); // ジェット煙
+	TKM::ParticleManager::GetInstance()->CreateParticleGroup(
+		"damageSpark", "./resources/circle2.png", TKM::ParticleManager::ParticleType::NORMAL); // 故障スパーク（バチバチ）
+	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_rb", "./resources/circle2.png", TKM::ParticleManager::ParticleType::NORMAL); // 弾の軌跡
+	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lb", "./resources/circle2.png", TKM::ParticleManager::ParticleType::NORMAL); // 弾の軌跡
+	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_rt", "./resources/circle2.png", TKM::ParticleManager::ParticleType::NORMAL); // 弾の軌跡
+	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lt", "./resources/circle2.png", TKM::ParticleManager::ParticleType::NORMAL); // 弾の軌跡
 
 	if (enableJetSmoke_) { // ジェット煙初期化
 		Vector3 jetPos = object_->GetTranslate();
@@ -98,12 +98,12 @@ void Player::Update(float dt) {
 		Vector3 center = object_->GetTranslate();
 		Vector3 size = colliderScale_;
 
-		auto* lr = LineRenderer::GetInstance();
+		auto* lr = TKM::LineRenderer::GetInstance();
 
-		LineRenderer::Color col =
+		TKM::LineRenderer::Color col =
 			(hitFlashTimer_ > 0.0f)
-			? LineRenderer::Color{ 1.0f, 0.0f, 0.0f, 1.0f }
-		: LineRenderer::Color{ 0.0f, 1.0f, 0.0f, 1.0f };
+			? TKM::LineRenderer::Color{ 1.0f, 0.0f, 0.0f, 1.0f }
+		: TKM::LineRenderer::Color{ 0.0f, 1.0f, 0.0f, 1.0f };
 
 		lr->AddAABB(center, size, col);
 	}
@@ -118,7 +118,7 @@ void Player::Update(float dt) {
 		jetEmitter_.Update();
 	}
 
-	ParticleManager::GetInstance()->Update(dt); // パーティクルマネージャー更新
+	TKM::ParticleManager::GetInstance()->Update(dt); // パーティクルマネージャー更新
 	object_->Update(); // プレイヤー本体更新
 }
 
@@ -237,7 +237,7 @@ void Player::Death()
 					Vector3 p = base + dir * r;                   // スポット位置
 
 					// Emitの第2引数は非const参照なのでローカル変数を渡す
-					ParticleManager::GetInstance()->Emit("damageSpark", p, perSpot);
+					TKM::ParticleManager::GetInstance()->Emit("damageSpark", p, perSpot);
 				}
 
 				// 激しさ”演出：軽めシェイクを継続
@@ -279,7 +279,7 @@ void Player::Death()
 
 				// パーティクル少なめの爆散
 				Vector3 pos = object_->GetTranslate();
-				ParticleManager::GetInstance()->Emit("uv", pos, 20);
+				TKM::ParticleManager::GetInstance()->Emit("uv", pos, 20);
 
 				deathTimer_ = 0.0f;
 			}
@@ -319,7 +319,7 @@ void Player::Death()
 			// まばらなチリ
 			if (static_cast<int>(deathTimer_ * 60.0f) % 10 == 0) {
 				Vector3 ep = object_->GetTranslate();
-				ParticleManager::GetInstance()->Emit("uv", ep, 2);
+				TKM::ParticleManager::GetInstance()->Emit("uv", ep, 2);
 			}
 
 			object_->Update();

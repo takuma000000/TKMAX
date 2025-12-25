@@ -149,7 +149,7 @@ void GameScene::Initialize() {
 	fog_->SetActive(true);                // ゲームシーン中はずっと有効にしたい
 	dxCommon->SetFogEffect(fog_.get());   // DirectXCommon に登録
 	// AuraEffect の生成と初期化
-	aura_ = std::make_unique<AuraEffect>();
+	aura_ = std::make_unique<TKM::AuraEffect>();
 	aura_->Initialize(dxCommon);
 	dxCommon->SetAuraEffect(aura_.get());
 	// WaterRippleEffect の生成と初期化

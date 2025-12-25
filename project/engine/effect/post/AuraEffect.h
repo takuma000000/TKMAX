@@ -7,6 +7,7 @@ namespace TKM {
 	class DirectXCommon;
 }
 
+namespace TKM {
 	class AuraEffect : public BaseEffect {
 	public:
 		void Initialize(TKM::DirectXCommon* dxCommon);
@@ -81,3 +82,4 @@ namespace TKM {
 
 		AuraVolumeRenderer auraVolumeRenderer_;
 	};
+}

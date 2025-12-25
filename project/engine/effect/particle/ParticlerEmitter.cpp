@@ -12,7 +12,7 @@ void ParticleEmitter::Initialize(std::string name, Vector3 pos){
 }
 
 void ParticleEmitter::Emit(){
-	ParticleManager::GetInstance()->Emit(name, emitter.transform.translate, emitter.count); // パーティクル発生
+	TKM::ParticleManager::GetInstance()->Emit(name, emitter.transform.translate, emitter.count); // パーティクル発生
 }
 
 void ParticleEmitter::Update() {

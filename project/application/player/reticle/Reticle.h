@@ -141,9 +141,9 @@ public:
 		Vector3 aimPoint = origin + dir * dist;
 
 		// ガイドライン（プレイヤー→先端）
-		LineRenderer::GetInstance()->AddLine(
+		TKM::LineRenderer::GetInstance()->AddLine(
 			origin, aimPoint,
-			LineRenderer::Color{ 0.0f, 1.0f, 0.0f, 1.0f }
+			TKM::LineRenderer::Color{ 0.0f, 1.0f, 0.0f, 1.0f }
 		);
 		//--------------------------------------------------
 		// 4) 4層レティクルの配置

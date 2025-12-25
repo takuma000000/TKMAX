@@ -28,7 +28,7 @@ namespace EnemySpawner {
 
 		if (useSpawnEffect) {
 			Vector3 emitPos = spawnPos;
-			ParticleManager::GetInstance()->Emit("enemySpawn", emitPos, kSpawnParticleCount);
+			TKM::ParticleManager::GetInstance()->Emit("enemySpawn", emitPos, kSpawnParticleCount);
 		}
 
 		enemies.push_back(std::move(e));

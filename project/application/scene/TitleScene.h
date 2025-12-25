@@ -31,7 +31,7 @@
 //=============================================================
 class TitleScene : public BaseScene{
 public:
-	TitleScene(TKM::DirectXCommon* dxCommon, SrvManager* srvManager) : dxCommon(dxCommon), srvManager(srvManager) {}
+	TitleScene(TKM::DirectXCommon* dxCommon, TKM::SrvManager* srvManager) : dxCommon(dxCommon), srvManager(srvManager) {}
 
 	/// <summary>タイトルシーンを初期化します。</summary>
 	void Initialize() override;
@@ -44,7 +44,7 @@ public:
 
 private:
 	TKM::DirectXCommon* dxCommon = nullptr;
-	SrvManager* srvManager = nullptr;
+	TKM::SrvManager* srvManager = nullptr;
 
 	std::unique_ptr<TKM::Sprite> sprite = nullptr; // 2Dスプライト共通
 	std::unique_ptr<TKM::Camera> camera = nullptr; // カメラ
@@ -71,7 +71,7 @@ private:
 	float skyPitch_ = 0.0f;
 	float skyRotSpeedX_ = 0.002f;
 
-	std::unique_ptr<DirectionalLight> dirLight_ = nullptr;
+	std::unique_ptr<TKM::DirectionalLight> dirLight_ = nullptr;
 
 	enum class EnemyMotion {
 		EightXZ,  // XZの8の字

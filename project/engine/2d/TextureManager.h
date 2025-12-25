@@ -10,8 +10,8 @@
 
 namespace TKM{
 	class DirectXCommon;
+	class SrvManager;
 }
-class SrvManager;
 
 //=============================================================
 // TextureManagerクラス
@@ -39,7 +39,7 @@ namespace TKM {
 		static uint32_t kSRVIndexTop;
 
 		TKM::DirectXCommon* dxCommon_ = nullptr;
-		SrvManager* srvManager_ = nullptr;
+		TKM::SrvManager* srvManager_ = nullptr;
 
 	public:
 		//シングルトンインスタンスの取得
@@ -53,7 +53,7 @@ namespace TKM {
 		/// <summary>テクスチャマネージャを初期化します。</summary>
 		/// <param name="dxCommon">DirectX共通。</param>
 		/// <param name="srvManager">SRVマネージャ。</param>
-		void Initialize(TKM::DirectXCommon* dxCommon, SrvManager* srvManager);
+		void Initialize(TKM::DirectXCommon* dxCommon, TKM::SrvManager* srvManager);
 
 	public: //テクスチャファイル読み込み関数
 		//テクスチャファイルの読み込み

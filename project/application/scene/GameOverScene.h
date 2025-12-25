@@ -22,7 +22,7 @@
 //=============================================================
 class GameOverScene : public BaseScene{
 public:
-	GameOverScene(TKM::DirectXCommon* dxCommon, SrvManager* srvManager)
+	GameOverScene(TKM::DirectXCommon* dxCommon, TKM::SrvManager* srvManager)
 		: dxCommon_(dxCommon), srvManager_(srvManager) {
 	}
 	/// <summary>
@@ -44,11 +44,11 @@ public:
 
 private:
 	TKM::DirectXCommon* dxCommon_ = nullptr;
-	SrvManager* srvManager_ = nullptr;
+	TKM::SrvManager* srvManager_ = nullptr;
 
 	std::unique_ptr<TKM::Camera> camera_;
 	std::unique_ptr<Player> player_;
-	std::unique_ptr<DirectionalLight> dirLight_;
+	std::unique_ptr<TKM::DirectionalLight> dirLight_;
 
 	// 画面を覆う虹彩絞り演出用
 	std::unique_ptr<TKM::Sprite> iris_;

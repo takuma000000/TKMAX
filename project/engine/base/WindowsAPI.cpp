@@ -5,115 +5,117 @@
 #include <iostream>
 #include "Framework.h"
 #include "Input.h"
-extern Framework* gFramework; // グローバルポインタでFrameworkを参照
+extern TKM::Framework* gFramework; // グローバルポインタでFrameworkを参照
 
 #ifdef USE_IMGUI
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 #endif
 
-//ウィンドウプロシージャ
-LRESULT CALLBACK WindowsAPI::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+namespace TKM {
+	//ウィンドウプロシージャ
+	LRESULT CALLBACK WindowsAPI::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 
-	// 先にホイール量だけ拾う（ImGuiより前）
-	if (msg == WM_MOUSEWHEEL) {
-		int delta = GET_WHEEL_DELTA_WPARAM(wparam); // 通常 ±120
-		Input::GetInstance()->SetWheel(delta / WHEEL_DELTA); // 120 → 1, -120 → -1
-		// return しないで、この後 ImGui / switch にも流す
-	}
+		// 先にホイール量だけ拾う（ImGuiより前）
+		if (msg == WM_MOUSEWHEEL) {
+			int delta = GET_WHEEL_DELTA_WPARAM(wparam); // 通常 ±120
+			Input::GetInstance()->SetWheel(delta / WHEEL_DELTA); // 120 → 1, -120 → -1
+			// return しないで、この後 ImGui / switch にも流す
+		}
 
 #ifdef USE_IMGUI
-	// ImGui のウィンドウ処理
-	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) {
-		return true;
-	}
+		// ImGui のウィンドウ処理
+		if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) {
+			return true;
+		}
 #endif
 
-	// メッセージに応じてゲーム固有の処理を行う
-	switch (msg) {
+		// メッセージに応じてゲーム固有の処理を行う
+		switch (msg) {
 
-		// ウィンドウが閉じられた
-	case WM_CLOSE:
-		if (gFramework) {
-			gFramework->SetEndRequest(true); // Frameworkの終了フラグを設定
+			// ウィンドウが閉じられた
+		case WM_CLOSE:
+			if (gFramework) {
+				gFramework->SetEndRequest(true); // Frameworkの終了フラグを設定
+			}
+			DestroyWindow(hwnd);
+			return 0;
+
+			// ウィンドウが破壊された
+		case WM_DESTROY:
+			PostQuitMessage(0);
+			return 0;
 		}
-		DestroyWindow(hwnd);
-		return 0;
 
-		// ウィンドウが破壊された
-	case WM_DESTROY:
-		PostQuitMessage(0);
-		return 0;
+		// 標準のメッセージ処理を行う
+		return DefWindowProc(hwnd, msg, wparam, lparam);
 	}
 
-	// 標準のメッセージ処理を行う
-	return DefWindowProc(hwnd, msg, wparam, lparam);
-}
-
-void WindowsAPI::Initialize() {
-	//COMライブラリの初期化
-	CoInitializeEx(0, COINIT_MULTITHREADED);
-	//システムターマーの分解能を上げる
-	timeBeginPeriod(1);
+	void WindowsAPI::Initialize() {
+		//COMライブラリの初期化
+		CoInitializeEx(0, COINIT_MULTITHREADED);
+		//システムターマーの分解能を上げる
+		timeBeginPeriod(1);
 
 #pragma region Windowの生成
-	//ウィンドウプロシージャ
-	wc.lpfnWndProc = WindowProc;
-	//ウィンドウクラス名( なんでも良い )
-	wc.lpszClassName = L"CG2WindowClass";
-	//インスタンスハンドル
-	wc.hInstance = GetModuleHandle(nullptr);
-	//カーソル
-	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+		//ウィンドウプロシージャ
+		wc.lpfnWndProc = WindowProc;
+		//ウィンドウクラス名( なんでも良い )
+		wc.lpszClassName = L"CG2WindowClass";
+		//インスタンスハンドル
+		wc.hInstance = GetModuleHandle(nullptr);
+		//カーソル
+		wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
 
-	//ウィンドウクラスを登録する
-	RegisterClass(&wc);
+		//ウィンドウクラスを登録する
+		RegisterClass(&wc);
 
-	//ウィンドウサイズを表す構造体にクライアント領域を入れる
-	RECT wrc = { 0,0,kClientWidth ,kClientHeight };
+		//ウィンドウサイズを表す構造体にクライアント領域を入れる
+		RECT wrc = { 0,0,kClientWidth ,kClientHeight };
 
-	//クライアント領域を元に実際のサイズに wrc を変更してもらう
-	AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
+		//クライアント領域を元に実際のサイズに wrc を変更してもらう
+		AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
 
-	//ウィンドウの生成
-	hwnd = CreateWindow(
-		wc.lpszClassName,		//利用するクラス名
-		L"TKMAX",				//タイトルバーの文字( なんでも良い )
-		WS_OVERLAPPEDWINDOW,	//ウィンドウスタイル
-		CW_USEDEFAULT,			//表示X座標(Windowsに任せる)
-		CW_USEDEFAULT,			//表示Y座標(WindowsOSに任せる)
-		wrc.right - wrc.left,	//ウィンドウ横幅
-		wrc.bottom - wrc.top,	//ウィンドウ縦幅
-		nullptr,				//親ウィンドウハンドル
-		nullptr,				//メニューハンドル
-		wc.hInstance,			//インスタンスハンドル
-		nullptr					//オプション
-	);
+		//ウィンドウの生成
+		hwnd = CreateWindow(
+			wc.lpszClassName,		//利用するクラス名
+			L"TKMAX",				//タイトルバーの文字( なんでも良い )
+			WS_OVERLAPPEDWINDOW,	//ウィンドウスタイル
+			CW_USEDEFAULT,			//表示X座標(Windowsに任せる)
+			CW_USEDEFAULT,			//表示Y座標(WindowsOSに任せる)
+			wrc.right - wrc.left,	//ウィンドウ横幅
+			wrc.bottom - wrc.top,	//ウィンドウ縦幅
+			nullptr,				//親ウィンドウハンドル
+			nullptr,				//メニューハンドル
+			wc.hInstance,			//インスタンスハンドル
+			nullptr					//オプション
+		);
 
-	//ウィンドウを表示する
-	ShowWindow(hwnd, SW_SHOW);
+		//ウィンドウを表示する
+		ShowWindow(hwnd, SW_SHOW);
 
 #pragma endregion
-}
-
-void WindowsAPI::Update() {
-}
-
-void WindowsAPI::Finalize() {
-	CloseWindow(hwnd); // ウィンドウを閉じる
-	CoUninitialize(); // COMライブラリの終了
-}
-
-bool WindowsAPI::ProcessMessage() {
-	MSG msg{};
-
-	if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) { // メッセージがあるか確認
-		TranslateMessage(&msg); // 仮想キーコードを文字コードに変換
-		DispatchMessage(&msg); // ウィンドウプロシージャにメッセージを送る
 	}
 
-	if (msg.message == WM_QUIT) { // WM_QUITメッセージが来たら終了
-		return true;
+	void WindowsAPI::Update() {
 	}
 
-	return false;
+	void WindowsAPI::Finalize() {
+		CloseWindow(hwnd); // ウィンドウを閉じる
+		CoUninitialize(); // COMライブラリの終了
+	}
+
+	bool WindowsAPI::ProcessMessage() {
+		MSG msg{};
+
+		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) { // メッセージがあるか確認
+			TranslateMessage(&msg); // 仮想キーコードを文字コードに変換
+			DispatchMessage(&msg); // ウィンドウプロシージャにメッセージを送る
+		}
+
+		if (msg.message == WM_QUIT) { // WM_QUITメッセージが来たら終了
+			return true;
+		}
+
+		return false;
+	}
 }

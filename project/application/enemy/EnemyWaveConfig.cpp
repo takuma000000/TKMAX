@@ -16,7 +16,7 @@ int EnemyWaveConfig::ToI(const std::string& s) {
 
 bool EnemyWaveConfig::Load(const char* path) {
 	std::vector<std::vector<std::string>> rows;
-	if (!CsvReader::ReadFile(path, rows)) {
+	if (!TKM::CsvReader::ReadFile(path, rows)) {
 		return false;
 	}
 

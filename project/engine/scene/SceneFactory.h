@@ -13,7 +13,7 @@ public:
 	/// </summary>
 	/// <param name="dxCommon"></param>
 	/// <param name="srvManager"></param>
-	SceneFactory(TKM::DirectXCommon* dxCommon, SrvManager* srvManager)
+	SceneFactory(TKM::DirectXCommon* dxCommon, TKM::SrvManager* srvManager)
 		: dxCommon(dxCommon), srvManager(srvManager) {
 	}
 
@@ -26,6 +26,5 @@ public:
 
 private:
 	TKM::DirectXCommon* dxCommon = nullptr;
-	SrvManager* srvManager = nullptr;
-
+	TKM::SrvManager* srvManager = nullptr;
 };

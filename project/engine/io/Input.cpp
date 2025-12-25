@@ -13,7 +13,7 @@ Input* Input::GetInstance(){
 	return instance;
 }
 
-void Input::Initialize(WindowsAPI* windowsAPI){
+void Input::Initialize(TKM::WindowsAPI* windowsAPI){
 	HRESULT result;
 
 	this->winApp = windowsAPI; // WindowsAPIのポインタを保存
