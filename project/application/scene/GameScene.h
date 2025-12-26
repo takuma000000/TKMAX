@@ -44,7 +44,7 @@
 // GameSceneクラス
 // ゲーム本編を管理するシーンクラス。
 //=============================================================
-class GameScene : public BaseScene {
+class GameScene : public TKM::BaseScene {
 public:
 	GameScene(TKM::DirectXCommon* dxCommon, TKM::SrvManager* srvManager) : dxCommon(dxCommon), srvManager(srvManager) {}
 	~GameScene() = default;
@@ -308,18 +308,18 @@ private:
 	// ポストエフェクト（RadialBlur）
 	//======================================================================
 	// RadialBlur エフェクト
-	std::unique_ptr<RadialBlurEffect> radialBlur_ = nullptr;
+	std::unique_ptr<TKM::RadialBlurEffect> radialBlur_ = nullptr;
 	// Vignetting エフェクト
-	std::unique_ptr<VignettingEffect> vignetting_ = nullptr;
+	std::unique_ptr<TKM::VignettingEffect> vignetting_ = nullptr;
 	// Fog エフェクト
-	std::unique_ptr<FogEffect> fog_ = nullptr;
+	std::unique_ptr<TKM::FogEffect> fog_ = nullptr;
 	// Aura エフェクト
 	std::unique_ptr<TKM::AuraEffect> aura_ = nullptr;
 	// WaterRipple エフェクト（波紋）
-	std::unique_ptr<WaterRippleEffect> waterRipple_ = nullptr;
+	std::unique_ptr<TKM::WaterRippleEffect> waterRipple_ = nullptr;
 	//======================================================================
 	// 時間制御
 	//======================================================================
-	TimeScaleController timeScale_; // 時間制御クラス
+	TKM::TimeScaleController timeScale_; // 時間制御クラス
 	bool clearSlowRequested_ = false; // クリアスロー要求フラグ
 };

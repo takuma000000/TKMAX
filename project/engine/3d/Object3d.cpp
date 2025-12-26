@@ -183,7 +183,7 @@ namespace TKM {
 		model_ = ModelManager::GetInstance()->FindModel(filePath);
 	}
 
-	void Object3d::SetParentScene(BaseScene* parentScene) {
+	void Object3d::SetParentScene(TKM::BaseScene* parentScene) {
 		parentScene_ = parentScene; // 親シーンを設定
 	}
 

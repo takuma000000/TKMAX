@@ -29,7 +29,7 @@
 // TitleSceneクラス
 // タイトル画面を管理するシーンクラス。
 //=============================================================
-class TitleScene : public BaseScene{
+class TitleScene : public TKM::BaseScene{
 public:
 	TitleScene(TKM::DirectXCommon* dxCommon, TKM::SrvManager* srvManager) : dxCommon(dxCommon), srvManager(srvManager) {}
 
@@ -118,7 +118,7 @@ private:
 	static constexpr float kTwoPi = kPi * 2.0f;                 // 2π
 
 	// 波紋エフェクト
-	std::unique_ptr<WaterRippleEffect> rippleEffect_ = nullptr;
+	std::unique_ptr<TKM::WaterRippleEffect> rippleEffect_ = nullptr;
 
 	const float dt = 1.0f / 60.0f; // 固定フレームレート用デルタタイム
 };

@@ -272,5 +272,5 @@ private:
 	bool    auraUseRing_ = true;             // 足元リングのON/OFF
 
 	// auraVolume_
-	AuraVolumeRenderer* auraVolume_ = nullptr;
+	TKM::AuraVolumeRenderer* auraVolume_ = nullptr;
 };

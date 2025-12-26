@@ -35,7 +35,7 @@ public:
 	/// <param name="camera"></param>
 	/// <param name="parent"></param>
 	/// <param name="player"></param>
-	void Initialize(TKM::DirectXCommon* dx, TKM::Camera* camera, BaseScene* parent, Player* player);
+	void Initialize(TKM::DirectXCommon* dx, TKM::Camera* camera, TKM::BaseScene* parent, Player* player);
 
 	/// <summary>
 	/// 敵全体の更新
@@ -159,7 +159,7 @@ private:
 	//======================================================================
 	TKM::DirectXCommon* dx_ = nullptr;
 	TKM::Camera* cam_ = nullptr;
-	BaseScene* parent_ = nullptr;
+	TKM::BaseScene* parent_ = nullptr;
 	Player* player_ = nullptr;
 
 	// GameScene 側の実体を「参照」するだけ

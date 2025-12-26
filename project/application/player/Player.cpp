@@ -63,7 +63,7 @@ void Player::Update(float dt) {
 
 	// RTホールド中はターゲットをロック表示（切り替わり時は前の敵を解除）
 	{
-		Input* input = Input::GetInstance();
+		TKM::Input* input = TKM::Input::GetInstance();
 		Enemy* cur = (enemy_ && !enemy_->IsDead()) ? enemy_ : nullptr;
 
 		bool hold = (input->GetRightTrigger() > kTriggerThreshold) && (canUseSpecial_ || debugUnlimitedSpecial_);
@@ -377,7 +377,7 @@ void Player::SetPosition(const Vector3& pos) {
 	object_->SetTranslate(pos); // 位置設定
 }
 
-void Player::SetParentScene(BaseScene* scene) {
+void Player::SetParentScene(TKM::BaseScene* scene) {
 	parentScene_ = scene; // 親シーン設定
 }
 
@@ -461,7 +461,7 @@ void Player::HandleShooting() {
 }
 
 void Player::RBShoot() {
-	Input* input = Input::GetInstance();
+	TKM::Input* input = TKM::Input::GetInstance();
 
 	// ▼ RB：通常弾（レティクルが描いているガイドライン通りに発射）
 	if (input->PushButton(XINPUT_GAMEPAD_RIGHT_SHOULDER)) {
@@ -540,7 +540,7 @@ void Player::RBShoot() {
 }
 
 void Player::RTShoot() {
-	Input* input = Input::GetInstance();
+	TKM::Input* input = TKM::Input::GetInstance();
 	// RT：一撃必殺（最も近い敵に必中弾）
 	const bool pressed = (input->GetRightTrigger() > kTriggerThreshold);
 
@@ -585,7 +585,7 @@ void Player::RTShoot() {
 }
 
 void Player::LBShoot() {
-	Input* input = Input::GetInstance();
+	TKM::Input* input = TKM::Input::GetInstance();
 	// ▼ LB：全敵必中弾
 	if (input->TriggerButton(XINPUT_GAMEPAD_LEFT_SHOULDER) && allEnemies_) {
 		for (auto& enemy : *allEnemies_) { // 全敵ループ
@@ -616,7 +616,7 @@ void Player::LBShoot() {
 }
 
 void Player::LTShoot() {
-	Input* input = Input::GetInstance();
+	TKM::Input* input = TKM::Input::GetInstance();
 	if ((input->GetLeftTrigger() > kTriggerThreshold) && !ltHeld_) {
 		auto bullet = std::make_unique<PlayerBullet>();
 		bullet->Initialize(common_, dxCommon_);

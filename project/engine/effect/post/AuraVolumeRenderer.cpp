@@ -5,87 +5,89 @@
 #include <imgui.h>
 #endif
 
-void AuraVolumeRenderer::Initialize(TKM::DirectXCommon* dxCommon) {
-	dxCommon_ = dxCommon;
-	if (!dxCommon_) { return; }
-	dxCommon_->InitializeAuraVolumePipeline();
+namespace TKM {
+	void AuraVolumeRenderer::Initialize(TKM::DirectXCommon* dxCommon) {
+		dxCommon_ = dxCommon;
+		if (!dxCommon_) { return; }
+		dxCommon_->InitializeAuraVolumePipeline();
 
-	//alwaysOn_ = true; // デバッグ用：常にONにする
-}
+		//alwaysOn_ = true; // デバッグ用：常にONにする
+	}
 
-void AuraVolumeRenderer::Draw(
-	const Matrix4x4& viewProj,
-	const Vector3& bossCenter,
-	const Vector3& collider,
-	bool active)
-{
-	if (!dxCommon_) { return; }
+	void AuraVolumeRenderer::Draw(
+		const Matrix4x4& viewProj,
+		const Vector3& bossCenter,
+		const Vector3& collider,
+		bool active)
+	{
+		if (!dxCommon_) { return; }
 
-	// ★ 強制ONなら active を無視する
-	if (!alwaysOn_ && !active) { return; }
+		// ★ 強制ONなら active を無視する
+		if (!alwaysOn_ && !active) { return; }
 
-	drawCallsThisFrame_++;
+		drawCallsThisFrame_++;
 
-	time_ += 1.0f / 60.0f;
+		time_ += 1.0f / 60.0f;
 
-	float radius = (collider.x * 0.5f) * radiusMul_;
-	float height = (collider.y * 0.5f) * heightMul_;
+		float radius = (collider.x * 0.5f) * radiusMul_;
+		float height = (collider.y * 0.5f) * heightMul_;
 
-	Vector3 basePos = bossCenter - Vector3{ 0.0f, height * 0.5f, 0.0f }; // ボスの中心から下半分移動した位置を基準にする
+		Vector3 basePos = bossCenter - Vector3{ 0.0f, height * 0.5f, 0.0f }; // ボスの中心から下半分移動した位置を基準にする
 
-	dxCommon_->DrawAuraVolume(
-		viewProj,
-		basePos,
-		radius,
-		height,
-		sliceCount_,
-		time_,
-		color_,
-		intensity_,
-		noiseScale_,
-		noiseSpeed_,
-		rimPower_,
-		alphaBase_
-	);
-}
+		dxCommon_->DrawAuraVolume(
+			viewProj,
+			basePos,
+			radius,
+			height,
+			sliceCount_,
+			time_,
+			color_,
+			intensity_,
+			noiseScale_,
+			noiseSpeed_,
+			rimPower_,
+			alphaBase_
+		);
+	}
 
 #ifdef USE_IMGUI
-void AuraVolumeRenderer::DrawImGui(const char* label) {
-	if (ImGui::Begin(label)) {
+	void AuraVolumeRenderer::DrawImGui(const char* label) {
+		if (ImGui::Begin(label)) {
 
-		// ★ これが 2 以上なら「同フレームに2回呼ばれてる」= 二重描画
-		ImGui::Text("DrawCallsThisFrame: %u", drawCallsThisFrame_);
+			// ★ これが 2 以上なら「同フレームに2回呼ばれてる」= 二重描画
+			ImGui::Text("DrawCallsThisFrame: %u", drawCallsThisFrame_);
 
-		ImGui::Checkbox("Always On", &alwaysOn_);
+			ImGui::Checkbox("Always On", &alwaysOn_);
 
-		// フレームごとに表示後リセット（このUIを毎フレーム呼ぶ前提）
-		drawCallsThisFrame_ = 0;
+			// フレームごとに表示後リセット（このUIを毎フレーム呼ぶ前提）
+			drawCallsThisFrame_ = 0;
 
-		// ---- 見た目調整 ----
-		float col[3] = { color_.x, color_.y, color_.z };
-		if (ImGui::ColorEdit3("Color", col)) {
-			color_ = { col[0], col[1], col[2] };
+			// ---- 見た目調整 ----
+			float col[3] = { color_.x, color_.y, color_.z };
+			if (ImGui::ColorEdit3("Color", col)) {
+				color_ = { col[0], col[1], col[2] };
+			}
+
+			ImGui::SliderFloat("Intensity", &intensity_, 0.0f, 10.0f);
+			ImGui::SliderFloat("AlphaBase", &alphaBase_, 0.0f, 1.0f);
+
+			ImGui::SliderFloat("RadiusMul", &radiusMul_, 0.6f, 2.5f);
+			ImGui::SliderFloat("HeightMul", &heightMul_, 0.6f, 3.0f);
+
+			int slices = (int)sliceCount_;
+			if (ImGui::SliderInt("SliceCount", &slices, 4, 32)) {
+				sliceCount_ = (uint32_t)slices;
+			}
+
+			ImGui::Separator();
+			ImGui::SliderFloat("NoiseScale", &noiseScale_, 0.1f, 30.0f);
+			ImGui::SliderFloat("NoiseSpeed", &noiseSpeed_, 0.0f, 6.0f);
+			ImGui::SliderFloat("RimPower", &rimPower_, 0.1f, 8.0f);
+
+			ImGui::Separator();
+			ImGui::Text("Tip: If it looks like 2 auras, try SliceCount down (8-12) and AlphaBase <= 0.6");
 		}
-
-		ImGui::SliderFloat("Intensity", &intensity_, 0.0f, 10.0f);
-		ImGui::SliderFloat("AlphaBase", &alphaBase_, 0.0f, 1.0f);
-
-		ImGui::SliderFloat("RadiusMul", &radiusMul_, 0.6f, 2.5f);
-		ImGui::SliderFloat("HeightMul", &heightMul_, 0.6f, 3.0f);
-
-		int slices = (int)sliceCount_;
-		if (ImGui::SliderInt("SliceCount", &slices, 4, 32)) {
-			sliceCount_ = (uint32_t)slices;
-		}
-
-		ImGui::Separator();
-		ImGui::SliderFloat("NoiseScale", &noiseScale_, 0.1f, 30.0f);
-		ImGui::SliderFloat("NoiseSpeed", &noiseSpeed_, 0.0f, 6.0f);
-		ImGui::SliderFloat("RimPower", &rimPower_, 0.1f, 8.0f);
-
-		ImGui::Separator();
-		ImGui::Text("Tip: If it looks like 2 auras, try SliceCount down (8-12) and AlphaBase <= 0.6");
+		ImGui::End();
 	}
-	ImGui::End();
-}
 #endif
+}

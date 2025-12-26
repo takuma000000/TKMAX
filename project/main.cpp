@@ -4,7 +4,7 @@ TKM::Framework* gFramework = nullptr; // グローバル変数でFrameworkを保
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
-	gFramework = new MyGame();
+	gFramework = new TKM::MyGame();
 
 	gFramework->Run();
 

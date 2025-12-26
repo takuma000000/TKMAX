@@ -89,7 +89,7 @@ void TitleScene::Initialize(){
 	//-----------------------------------------
 
 	// ---------------水面波紋エフェクト----------------
-	rippleEffect_ = std::make_unique<WaterRippleEffect>();
+	rippleEffect_ = std::make_unique<TKM::WaterRippleEffect>();
 	rippleEffect_->Initialize(dxCommon);
 	// DirectXCommon 側に「現在の ripple はこれだよ」と教える
 	dxCommon->SetWaterRippleEffect(rippleEffect_.get());
@@ -107,7 +107,7 @@ void TitleScene::Update(){
 	ResetDrawCallCount();
 	UpdatePerformanceInfo();
 
-	Input::GetInstance()->Update();
+	TKM::Input::GetInstance()->Update();
 
 	// === ヘリの旋回＋上下動（上下幅拡大版） ===
 	t_ += 0.01f * std::max(0.0f, speed_);
@@ -197,14 +197,14 @@ void TitleScene::Update(){
 	}
 
 	// SPACE / A でアイリス（閉）開始＋波紋
-	if (!irisClosing_ && (Input::GetInstance()->TriggerKey(DIK_SPACE) ||
-		Input::GetInstance()->TriggerButton(XINPUT_GAMEPAD_A))) {
+	if (!irisClosing_ && (TKM::Input::GetInstance()->TriggerKey(DIK_SPACE) ||
+		TKM::Input::GetInstance()->TriggerButton(XINPUT_GAMEPAD_A))) {
 
 		irisClosing_ = true;
 
 		// 画面中心から波紋。UV(0.5, 0.5)
 		if (rippleEffect_) {
-			WaterRippleEffect::RippleDesc d{};
+			TKM::WaterRippleEffect::RippleDesc d{};
 			d.duration = 1.0f;
 
 			// タイトル用（今のタイトル目線値があるならここに入れる）
@@ -231,7 +231,7 @@ void TitleScene::Update(){
 	}
 
 	// Yキーでゲームオーバーシーンへ
-	if (Input::GetInstance()->TriggerKey(DIK_Y)) {
+	if (TKM::Input::GetInstance()->TriggerKey(DIK_Y)) {
 		sceneManager_->SetNextScene(new GameOverScene(dxCommon, srvManager));
 		return;
 	}

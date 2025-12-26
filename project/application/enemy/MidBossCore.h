@@ -113,7 +113,7 @@ public:
 	/// 親シーンを設定します。
 	/// </summary>
 	/// <param name="scene"></param>
-	void SetParentScene(BaseScene* scene) { parent_ = scene; }
+	void SetParentScene(TKM::BaseScene* scene) { parent_ = scene; }
 	/// <summary>
 	/// 当たり判定用スケールを設定します。
 	/// </summary>
@@ -133,7 +133,7 @@ public:
 private:
 	std::unique_ptr<TKM::Object3d> object_;
 	TKM::Camera* camera_ = nullptr;
-	BaseScene* parent_ = nullptr;
+	TKM::BaseScene* parent_ = nullptr;
 	Reticle* reticle_ = nullptr;
 	std::function<Vector3()> playerGetter_;
 

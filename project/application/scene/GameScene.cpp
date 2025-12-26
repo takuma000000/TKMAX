@@ -132,7 +132,7 @@ void GameScene::Initialize() {
 	bossManager_->Initialize(dxCommon, camera.get(), this, player_.get());
 	// ──────────────── 画面エフェクトの初期化 ───────────────
 	// RadialBlurEffect の生成と初期化
-	radialBlur_ = std::make_unique<RadialBlurEffect>();
+	radialBlur_ = std::make_unique<TKM::RadialBlurEffect>();
 	radialBlur_->Initialize(dxCommon);
 	// DirectX 側に「このシーンの RadialBlurEffect」を登録
 	dxCommon->SetRadialBlurEffect(radialBlur_.get());
@@ -141,10 +141,10 @@ void GameScene::Initialize() {
 		player_->SetRadialBlurEffect(radialBlur_.get());
 	}
 	// VignettingEffect の生成と初期化
-	vignetting_ = std::make_unique<VignettingEffect>();
+	vignetting_ = std::make_unique<TKM::VignettingEffect>();
 	vignetting_->Initialize(dxCommon);
 	// FogEffect の生成と初期化 ＆ 常時ON
-	fog_ = std::make_unique<FogEffect>();
+	fog_ = std::make_unique<TKM::FogEffect>();
 	fog_->Initialize(dxCommon);
 	fog_->SetActive(true);                // ゲームシーン中はずっと有効にしたい
 	dxCommon->SetFogEffect(fog_.get());   // DirectXCommon に登録
@@ -153,7 +153,7 @@ void GameScene::Initialize() {
 	aura_->Initialize(dxCommon);
 	dxCommon->SetAuraEffect(aura_.get());
 	// WaterRippleEffect の生成と初期化
-	waterRipple_ = std::make_unique<WaterRippleEffect>();
+	waterRipple_ = std::make_unique<TKM::WaterRippleEffect>();
 	waterRipple_->Initialize(dxCommon); // 波紋エフェクトの初期化
 	dxCommon->SetWaterRippleEffect(waterRipple_.get()); // DirectXCommon に登録
 	bossManager_->SetWaterRippleEffect(waterRipple_.get()); // BossManager にも登録

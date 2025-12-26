@@ -20,7 +20,7 @@
 //=============================================================
 // GameOverScene
 //=============================================================
-class GameOverScene : public BaseScene{
+class GameOverScene : public TKM::BaseScene{
 public:
 	GameOverScene(TKM::DirectXCommon* dxCommon, TKM::SrvManager* srvManager)
 		: dxCommon_(dxCommon), srvManager_(srvManager) {

@@ -13,30 +13,32 @@
 // MyGameクラス
 // ゲーム全体を管理するクラス。
 //=============================================================
-class MyGame : public TKM::Framework{
-public://メンバ関数
-	/// <summary>
-	/// シーンを初期化します。
-	/// </summary>
-	void Initialize() override;
-	/// <summary>
-	/// シーンを終了します。
-	/// </summary>
-	void Finalize() override;
-	/// <summary>
-	/// 毎フレーム更新を行う関数。
-	/// </summary>
-	void Update() override;
-	/// <summary>
-	/// 毎フレーム描画を行う関数。
-	/// </summary>
-	void Draw() override;
+namespace TKM {
+	class MyGame : public TKM::Framework {
+	public://メンバ関数
+		/// <summary>
+		/// シーンを初期化します。
+		/// </summary>
+		void Initialize() override;
+		/// <summary>
+		/// シーンを終了します。
+		/// </summary>
+		void Finalize() override;
+		/// <summary>
+		/// 毎フレーム更新を行う関数。
+		/// </summary>
+		void Update() override;
+		/// <summary>
+		/// 毎フレーム描画を行う関数。
+		/// </summary>
+		void Draw() override;
 
-private:
-	D3D12_VIEWPORT viewport;
-	D3D12_RECT scissorRect;
+	private:
+		D3D12_VIEWPORT viewport;
+		D3D12_RECT scissorRect;
 
-	bool endRequest_ = false; // 終了フラグ
-	std::unique_ptr<SceneManager> sceneManager_ = nullptr; // シーンマネージャー
+		bool endRequest_ = false; // 終了フラグ
+		std::unique_ptr<TKM::SceneManager> sceneManager_ = nullptr; // シーンマネージャー
 
-};
+	};
+}

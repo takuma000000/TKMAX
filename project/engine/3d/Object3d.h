@@ -9,8 +9,8 @@ namespace TKM {
 	class Camera;
 	class Model;
 	class Object3dCommon;
+	class BaseScene;
 }
-class BaseScene;
 
 //座標変換行列データ
 struct TransformationMatrix {
@@ -131,7 +131,7 @@ namespace TKM {
 		/// 親シーンの設定。
 		/// </summary>
 		/// <param name="parentScene"></param>
-		void SetParentScene(BaseScene* parentScene);
+		void SetParentScene(TKM::BaseScene* parentScene);
 		/// <summary>
 		/// 環境マップの設定。
 		/// </summary>
@@ -264,7 +264,7 @@ namespace TKM {
 		//SRV切り替え
 		bool useMonsterBall = true;
 
-		BaseScene* parentScene_ = nullptr;
+		TKM::BaseScene* parentScene_ = nullptr;
 
 		inline static int activeCount_ = 0; // 静的メンバ変数
 	};

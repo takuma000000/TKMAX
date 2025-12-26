@@ -18,7 +18,7 @@ using TKM::AudioManager;
 namespace TKM {
 	void Framework::Initialize() {
 		//シーンマネージャの生成
-		sceneManager_ = std::make_unique<SceneManager>();
+		sceneManager_ = std::make_unique<TKM::SceneManager>();
 
 		// WindowsAPI の初期化
 		windowsAPI = std::make_unique<WindowsAPI>();

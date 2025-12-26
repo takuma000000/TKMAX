@@ -96,7 +96,7 @@ public:
 		// 2) 左スティックで center_ を直接動かす
 		//--------------------------------------------------
 		if (stickControl_) {
-			auto* in = Input::GetInstance();
+			auto* in = TKM::Input::GetInstance();
 
 			float rx = static_cast<float>(in->GetLeftStickX());
 			float ry = static_cast<float>(in->GetLeftStickY());

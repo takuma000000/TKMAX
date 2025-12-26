@@ -139,7 +139,7 @@ public:
 	/// 親シーンを取得します。
 	/// </summary>
 	/// <returns></returns>
-	BaseScene* GetParentScene() const { return parentScene_; }
+	TKM::BaseScene* GetParentScene() const { return parentScene_; }
 	/// <summary>
 	/// 敵が撃破されたかどうかを取得します。
 	/// </summary>
@@ -194,7 +194,7 @@ public:
 	/// 親シーンを設定します。
 	/// </summary>
 	/// <param name="scene"></param>
-	void SetParentScene(BaseScene* scene);
+	void SetParentScene(TKM::BaseScene* scene);
 	/// <summary>
 	/// 位置ロックフラグを設定します。
 	/// </summary>
@@ -341,7 +341,7 @@ private:
 	//--------------------------------------------------------------
 	std::unique_ptr<TKM::Object3d> object_;
 	TKM::Camera* camera = nullptr;
-	BaseScene* parentScene_ = nullptr;
+	TKM::BaseScene* parentScene_ = nullptr;
 	Reticle* reticle_ = nullptr;
 	//--------------------------------------------------------------
 	//  HP / 生存状態

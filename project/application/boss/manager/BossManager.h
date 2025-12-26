@@ -30,7 +30,7 @@ public:
 		Vector3 arenaMin;
 		Vector3 arenaMax;
 
-		WaterRippleEffect::RippleDesc killRipple;
+		TKM::WaterRippleEffect::RippleDesc killRipple;
 
 		float killSlowScale = 1.0f;
 		float killSlowDuration = 0.0f;
@@ -58,7 +58,7 @@ public:
 	/// <param name="camera"></param>
 	/// <param name="parent"></param>
 	/// <param name="player"></param>
-	void Initialize(TKM::DirectXCommon* dxCommon, TKM::Camera* camera, BaseScene* parent, Player* player);
+	void Initialize(TKM::DirectXCommon* dxCommon, TKM::Camera* camera, TKM::BaseScene* parent, Player* player);
 	/// <summary>
 	/// ボス戦開始。
 	/// </summary>
@@ -115,12 +115,12 @@ public:
 	/// タイムスケールコントローラー設定。
 	/// </summary>
 	/// <param name="t"></param>
-	void SetTimeScaleController(TimeScaleController* t) { timeScale_ = t; }
+	void SetTimeScaleController(TKM::TimeScaleController* t) { timeScale_ = t; }
 	/// <summary>
 	/// ウォーターリップルエフェクト設定。
 	/// </summary>
 	/// <param name="r"></param>
-	void SetWaterRippleEffect(WaterRippleEffect* r) { waterRipple_ = r; }
+	void SetWaterRippleEffect(TKM::WaterRippleEffect* r) { waterRipple_ = r; }
 	/// <summary>
 	/// カメラ設定。
 	/// </summary>
@@ -135,7 +135,7 @@ public:
 private:
 	TKM::DirectXCommon* dxCommon_ = nullptr;
 	TKM::Camera* camera_ = nullptr;
-	BaseScene* parentScene_ = nullptr;
+	TKM::BaseScene* parentScene_ = nullptr;
 	Player* player_ = nullptr;
 
 	bool bossBattle_ = false;                     // ボス戦フラグ
@@ -144,12 +144,12 @@ private:
 	std::unique_ptr<BossEnemy> boss_;             // ボス本体
 	std::vector<std::unique_ptr<BossBullet>> bossBullets_; // ボス弾リスト
 	std::unique_ptr<BossController> bossController_; // ボスコントローラー
-	std::unique_ptr<AuraVolumeRenderer> auraVolume_; // オーラボリュームレンダラー
+	std::unique_ptr<TKM::AuraVolumeRenderer> auraVolume_; // オーラボリュームレンダラー
 
 	// タイムスケールコントローラー参照
-	TimeScaleController* timeScale_ = nullptr; // タイムスケールコントローラー参照
+	TKM::TimeScaleController* timeScale_ = nullptr; // タイムスケールコントローラー参照
 	// ウォーターリップルエフェクト参照
-	WaterRippleEffect* waterRipple_ = nullptr; // 参照だけ（所有はGameScene）
+	TKM::WaterRippleEffect* waterRipple_ = nullptr; // 参照だけ（所有はGameScene）
 
 	/// <summary>
 	/// ボス弾を更新します。

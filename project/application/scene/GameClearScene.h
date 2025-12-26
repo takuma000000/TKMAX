@@ -22,7 +22,7 @@
 // ゲームクリア画面を管理するシーンクラス。
 // 背景スカイボックス回転＋自機のジェットコースター演出。
 //=============================================================
-class GameClearScene : public BaseScene {
+class GameClearScene : public TKM::BaseScene {
 public:
 	GameClearScene(TKM::DirectXCommon* dxCommon, TKM::SrvManager* srvManager)
 		: dxCommon(dxCommon), srvManager(srvManager) {

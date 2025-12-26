@@ -470,7 +470,7 @@ void Enemy::SetCamera(TKM::Camera* camera) {
 void Enemy::SetPosition(const Vector3& pos) {
 	object_->SetTranslate(pos); // 位置設定
 }
-void Enemy::SetParentScene(BaseScene* scene) {
+void Enemy::SetParentScene(TKM::BaseScene* scene) {
 	parentScene_ = scene; // メンバ変数に保存
 }
 Vector3 Enemy::GetWorldPosition() const {

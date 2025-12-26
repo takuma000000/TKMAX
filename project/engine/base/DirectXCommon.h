@@ -14,17 +14,13 @@
 
 // PostEffect
 namespace TKM {
-	/*class RadialBlurEffect;
+	class RadialBlurEffect;
 	class VignettingEffect;
 	class WaterRippleEffect;
-	class FogEffect;*/
+	class FogEffect;
 	class AuraEffect;
 }
 
-class RadialBlurEffect;
-class VignettingEffect;
-class WaterRippleEffect;
-class FogEffect;
 //=============================================================
 // DirectXCommonクラス
 // DirectX12の初期化・描画・リソース管理を行うクラス。
@@ -422,7 +418,7 @@ namespace TKM {
 		/// RadialBlurEffect を取得
 		/// </summary>
 		/// <returns></returns>
-		RadialBlurEffect* GetRadialBlurEffect() const { return radialBlurEffect_; }
+		TKM::RadialBlurEffect* GetRadialBlurEffect() const { return radialBlurEffect_; }
 		/// <summary>
 		/// VignettingEffect を取得
 		/// </summary>
@@ -439,12 +435,12 @@ namespace TKM {
 		/// RadialBlurEffect をセット（必要なら）
 		/// </summary>
 		/// <param name="effect"></param>
-		void SetRadialBlurEffect(RadialBlurEffect* effect) { radialBlurEffect_ = effect; }
+		void SetRadialBlurEffect(TKM::RadialBlurEffect* effect) { radialBlurEffect_ = effect; }
 		/// <summary>
 		/// VignettingEffect をセット（必要なら）
 		/// </summary>
 		/// <param name="effect"></param>
-		void SetVignettingEffect(VignettingEffect* effect) { vignettingEffect_ = effect; }
+		void SetVignettingEffect(TKM::VignettingEffect* effect) { vignettingEffect_ = effect; }
 		/// <summary>
 		/// Vignetting 用 パラメータセット
 		/// </summary>
@@ -457,7 +453,7 @@ namespace TKM {
 		/// WaterRippleEffect をセット（必要なら）
 		/// </summary>
 		/// <param name="effect"></param>
-		void SetWaterRippleEffect(WaterRippleEffect* effect) { rippleEffect_ = effect; }
+		void SetWaterRippleEffect(TKM::WaterRippleEffect* effect) { rippleEffect_ = effect; }
 		/// <summary>
 		/// WaterRipple 用 パラメータセット
 		/// </summary>
@@ -471,7 +467,7 @@ namespace TKM {
 		/// FogEffect をセット（必要なら）
 		/// </summary>
 		/// <param name="effect"></param>
-		void SetFogEffect(FogEffect* effect) { fogEffect_ = effect; }
+		void SetFogEffect(TKM::FogEffect* effect) { fogEffect_ = effect; }
 		/// <summary>
 		/// Fog 用 パラメータセット
 		/// </summary>
@@ -611,13 +607,13 @@ namespace TKM {
 		// RadialBlur 用 PSO
 		Microsoft::WRL::ComPtr<ID3D12PipelineState> radialBlurPipelineState_;
 		bool                                         radialBlurInitialized_ = false;
-		RadialBlurEffect* radialBlurEffect_ = nullptr; // 現在シーンの RadialBlurEffect（なければ nullptr）
+		TKM::RadialBlurEffect* radialBlurEffect_ = nullptr; // 現在シーンの RadialBlurEffect（なければ nullptr）
 
 		// Vignetting 用 PSO
 		Microsoft::WRL::ComPtr<ID3D12RootSignature>  vignettingRootSignature_;
 		Microsoft::WRL::ComPtr<ID3D12PipelineState>  vignettingPipelineState_;
 		bool                                         vignettingInitialized_ = false;
-		VignettingEffect* vignettingEffect_ = nullptr; // 現在シーンの VignettingEffect（なければ nullptr）
+		TKM::VignettingEffect* vignettingEffect_ = nullptr; // 現在シーンの VignettingEffect（なければ nullptr）
 		Microsoft::WRL::ComPtr<ID3D12Resource> vignettingConstantBuffer_; // Vignetting 用 定数バッファ
 		void* vignettingMappedData_ = nullptr; // Vignetting 用 定数バッファマッピングデータポインタ
 
@@ -625,12 +621,12 @@ namespace TKM {
 		Microsoft::WRL::ComPtr<ID3D12RootSignature>  rippleRootSignature_;
 		Microsoft::WRL::ComPtr<ID3D12PipelineState>  ripplePipelineState_;
 		bool                                         rippleInitialized_ = false;
-		WaterRippleEffect* rippleEffect_ = nullptr; // 現在シーンの WaterRippleEffect
+		TKM::WaterRippleEffect* rippleEffect_ = nullptr; // 現在シーンの WaterRippleEffect
 		Microsoft::WRL::ComPtr<ID3D12Resource> rippleConstantBuffer_; // Ripple 用 定数バッファ
 		void* rippleMappedData_ = nullptr; // Ripple 用 定数バッファマッピングデータポインタ
 
 		// Fog 用 PSO
-		FogEffect* fogEffect_ = nullptr;
+		TKM::FogEffect* fogEffect_ = nullptr;
 		bool fogInitialized_ = false;
 		Microsoft::WRL::ComPtr<ID3D12RootSignature>  fogRootSignature_;
 		Microsoft::WRL::ComPtr<ID3D12PipelineState>  fogPipelineState_;

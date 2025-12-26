@@ -9,10 +9,10 @@
 class WindowsAPI;
 namespace TKM {
 	class DirectXCommon;
+	class SrvManager;
+	class Input;
+	class ImGuiManager;
 }
-class SrvManager;
-class Input;
-class ImGuiManager;
 
 //=============================================================
 // Frameworkクラス
@@ -82,13 +82,12 @@ namespace TKM {
 		std::unique_ptr<SrvManager> srvManager;
 
 		//ポインタ...ImGuiManager
-		std::unique_ptr<ImGuiManager>  imguiManager = nullptr;
+		std::unique_ptr<TKM::ImGuiManager>  imguiManager = nullptr;
 
 		//シーンファクトリー
 		std::unique_ptr<AbstractSceneFactory> sceneFactory_ = nullptr;
 
 	private:
-		std::unique_ptr<SceneManager> sceneManager_ = nullptr;
-
+		std::unique_ptr<TKM::SceneManager> sceneManager_ = nullptr;
 	};
 }

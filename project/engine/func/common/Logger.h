@@ -12,4 +12,3 @@ namespace Logger {
 	/// <param name="message"></param>
 	void Log(const std::string& message);
 };
-

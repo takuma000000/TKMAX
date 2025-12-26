@@ -19,7 +19,9 @@
 #endif
 
 class MidBossCore;
-class RadialBlurEffect;
+namespace TKM {
+	class RadialBlurEffect;
+}
 
 //=============================================================
 // Playerクラス
@@ -169,7 +171,7 @@ public:
 	/// 親シーンを設定します。
 	/// </summary>
 	/// <param name="parentScene"></param>
-	void SetParentScene(BaseScene* parentScene);
+	void SetParentScene(TKM::BaseScene* parentScene);
 	/// <summary>
 	/// ターゲット敵を設定します。
 	/// </summary>
@@ -211,7 +213,7 @@ public:
 	/// 放射状ブラーエフェクトを設定します。
 	/// </summary>
 	/// <param name="effect"></param>
-	void SetRadialBlurEffect(RadialBlurEffect* effect) { radialBlur_ = effect; }
+	void SetRadialBlurEffect(TKM::RadialBlurEffect* effect) { radialBlur_ = effect; }
 	// =========================================
 
 	enum class DeathPhase { None, FaultSparks, FlyAway }; // 撃墜演出フェーズ
@@ -264,9 +266,9 @@ private:
 	TKM::DirectXCommon* dxCommon_ = nullptr;
 	Enemy* enemy_ = nullptr;
 	MidBossCore* core_ = nullptr;
-	RadialBlurEffect* radialBlur_ = nullptr;
+	TKM::RadialBlurEffect* radialBlur_ = nullptr;
 
-	BaseScene* parentScene_ = nullptr;
+	TKM::BaseScene* parentScene_ = nullptr;
 	std::unique_ptr<TKM::Object3d> object_;
 	std::list<std::unique_ptr<PlayerBullet>> bullets_;
 	std::vector<std::unique_ptr<Enemy>>* allEnemies_ = nullptr;

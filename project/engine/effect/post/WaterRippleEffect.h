@@ -2,54 +2,56 @@
 #include "BaseEffect.h"
 #include "MyMath.h"
 
-class WaterRippleEffect : public BaseEffect {
-public:
-	struct RippleDesc {
-		float  duration = 0.6f;        // 継続秒
-		float  radiusMax = 0.857f;     // 最大半径(UV)
-		float  amplitude = 0.1f;       // ゆがみ量
-		float  frequency = 80.0f;      // 細かさ
-		float  width = 10.0f;          // 帯の幅（大きいほどシャープ）
-		Vector3 color = { 1.0f,1.0f,1.0f };
-		float  colorIntensity = 0.0f;  // 色の強さ
-	};
+namespace TKM {
+	class WaterRippleEffect : public TKM::BaseEffect {
+	public:
+		struct RippleDesc {
+			float  duration = 0.6f;        // 継続秒
+			float  radiusMax = 0.857f;     // 最大半径(UV)
+			float  amplitude = 0.1f;       // ゆがみ量
+			float  frequency = 80.0f;      // 細かさ
+			float  width = 10.0f;          // 帯の幅（大きいほどシャープ）
+			Vector3 color = { 1.0f,1.0f,1.0f };
+			float  colorIntensity = 0.0f;  // 色の強さ
+		};
 
-	/// <summary>
-	/// 初期化
-	/// </summary>
-	/// <param name="dx"></param>
-	void Initialize(TKM::DirectXCommon* dx) override {
-		BaseEffect::Initialize(dx);
-	}
-	/// <summary>
-	/// 毎フレーム更新
-	/// </summary>
-	/// <param name="dt"></param>
-	void Update(float dt) override;
-	/// <summary>
-	/// 描画処理（何もしない）
-	/// </summary>
-	void Draw() override {}
+		/// <summary>
+		/// 初期化
+		/// </summary>
+		/// <param name="dx"></param>
+		void Initialize(TKM::DirectXCommon* dx) override {
+			TKM::BaseEffect::Initialize(dx);
+		}
+		/// <summary>
+		/// 毎フレーム更新
+		/// </summary>
+		/// <param name="dt"></param>
+		void Update(float dt) override;
+		/// <summary>
+		/// 描画処理（何もしない）
+		/// </summary>
+		void Draw() override {}
 
-	/// <summary>
-	/// 波紋がアクティブか？
-	/// </summary>
-	/// <returns></returns>
-	bool IsActive() const { return active_; }
-	/// <summary>
-	/// 波紋開始（詳細指定版）
-	/// </summary>
-	/// <param name="centerUV"></param>
-	/// <param name="desc"></param>
-	void Trigger(const Vector2& centerUV, const RippleDesc& desc);
+		/// <summary>
+		/// 波紋がアクティブか？
+		/// </summary>
+		/// <returns></returns>
+		bool IsActive() const { return active_; }
+		/// <summary>
+		/// 波紋開始（詳細指定版）
+		/// </summary>
+		/// <param name="centerUV"></param>
+		/// <param name="desc"></param>
+		void Trigger(const Vector2& centerUV, const RippleDesc& desc);
 
 #ifdef USE_IMGUI
-	void ImGuiDebug();
+		void ImGuiDebug();
 #endif
 
-private:
-	bool   active_ = false; // エフェクト有効フラグ
-	float  time_ = 0.0f; // 経過時間
-	Vector2 centerUV_ = { 0.5f, 0.5f }; // 波紋中心 (UV)
-	RippleDesc currentDesc_{}; // 現在の波紋設定
-};
+	private:
+		bool   active_ = false; // エフェクト有効フラグ
+		float  time_ = 0.0f; // 経過時間
+		Vector2 centerUV_ = { 0.5f, 0.5f }; // 波紋中心 (UV)
+		RippleDesc currentDesc_{}; // 現在の波紋設定
+	};
+}

@@ -10,7 +10,7 @@ const EnemyManager::WaveOps EnemyManager::kWaveOps_[4] = {
 	/* Done*/ { nullptr, nullptr },
 };
 
-void EnemyManager::Initialize(TKM::DirectXCommon* dx, TKM::Camera* camera, BaseScene* parent, Player* player) {
+void EnemyManager::Initialize(TKM::DirectXCommon* dx, TKM::Camera* camera, TKM::BaseScene* parent, Player* player) {
 	dx_ = dx;
 	cam_ = camera;
 	parent_ = parent;
@@ -273,7 +273,7 @@ void EnemyManager::SpawnWave1Enemy() {
 
 	TKM::DirectXCommon* dxPtr = dx_;
 	TKM::Camera* camPtr = cam_;
-	BaseScene* parentPtr = parent_;
+	TKM::BaseScene* parentPtr = parent_;
 
 	EnemySpawner::SpawnLine(
 		*enemies_,

@@ -22,7 +22,7 @@ namespace {
 		c.arenaMin = { -18.0f, 3.0f, 35.0f };
 		c.arenaMax = { 18.0f,12.0f, 70.0f };
 
-		WaterRippleEffect::RippleDesc d{};
+		TKM::WaterRippleEffect::RippleDesc d{};
 		d.duration = 0.35f;
 		d.radiusMax = 1.45f;
 		d.amplitude = 0.10f;
@@ -38,7 +38,7 @@ namespace {
 	const BossManager::BossBattleConfig kBossConfig = MakeBossConfig();
 }
 
-void BossManager::Initialize(TKM::DirectXCommon* dxCommon, TKM::Camera* camera, BaseScene* parent, Player* player) {
+void BossManager::Initialize(TKM::DirectXCommon* dxCommon, TKM::Camera* camera, TKM::BaseScene* parent, Player* player) {
 	dxCommon_ = dxCommon;
 	camera_ = camera;
 	parentScene_ = parent;
@@ -50,7 +50,7 @@ void BossManager::Initialize(TKM::DirectXCommon* dxCommon, TKM::Camera* camera, 
 	bossBullets_.clear();
 
 	// オーラボリュームレンダラー初期化
-	auraVolume_ = std::make_unique<AuraVolumeRenderer>();
+	auraVolume_ = std::make_unique<TKM::AuraVolumeRenderer>();
 	auraVolume_->Initialize(dxCommon_);
 }
 

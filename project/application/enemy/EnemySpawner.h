@@ -7,8 +7,8 @@ class Enemy;
 namespace TKM { 
 	class Camera;
 	class DirectXCommon;
+	class BaseScene;
 }
-class BaseScene;
 
 //=============================================================
 // EnemySpawner名前空間
@@ -27,7 +27,7 @@ namespace EnemySpawner {
 	void SpawnLine(std::vector<std::unique_ptr<Enemy>>& enemies,
 		int count, float y, float z,
 		float xStart, float xStep,
-		TKM::DirectXCommon* dx, TKM::Camera* cam, BaseScene* parent,
+		TKM::DirectXCommon* dx, TKM::Camera* cam, TKM::BaseScene* parent,
 		EnemyConfig config); // 追加オーバーロード
 	/// <summary>V字隊列で敵をスポーンします。</summary>
 	/// <param name="countPerSide">片側の数。</param><param name="y">高さ。</param>
@@ -36,7 +36,7 @@ namespace EnemySpawner {
 	void SpawnV(std::vector<std::unique_ptr<Enemy>>& enemies,
 		int countPerSide, float y, float z,
 		float xCenter, float xStep, float zStep,
-		TKM::DirectXCommon* dx, TKM::Camera* cam, BaseScene* parent,
+		TKM::DirectXCommon* dx, TKM::Camera* cam, TKM::BaseScene* parent,
 		EnemyConfig config);
 	/// <summary>縦一列で敵をスポーンします。</summary>
 	/// <param name="count">数。</param><param name="x">X位置。</param>
@@ -45,7 +45,7 @@ namespace EnemySpawner {
 	void SpawnColumn(std::vector<std::unique_ptr<Enemy>>& enemies,
 		int count, float x, float zStart, float zStep,
 		float yStart, float yStep,
-		TKM::DirectXCommon* dx, TKM::Camera* cam, BaseScene* parent,
+		TKM::DirectXCommon* dx, TKM::Camera* cam, TKM::BaseScene* parent,
 		EnemyConfig config);
 	/// <summary>
 	/// 三角形配置で敵をスポーンします。
@@ -63,6 +63,6 @@ namespace EnemySpawner {
 		std::vector<std::unique_ptr<Enemy>>& enemies,
 		float centerX, float centerY, float z,
 		float size,
-		TKM::DirectXCommon* dx, TKM::Camera* cam, BaseScene* parent,
+		TKM::DirectXCommon* dx, TKM::Camera* cam, TKM::BaseScene* parent,
 		EnemyConfig config);
 }

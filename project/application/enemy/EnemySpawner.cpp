@@ -14,7 +14,7 @@ namespace EnemySpawner {
 	static void CreateAndPushEnemy(
 		std::vector<std::unique_ptr<Enemy>>& enemies,
 		const Vector3& spawnPos,
-		TKM::DirectXCommon* dx, TKM::Camera* cam, BaseScene* parent,
+		TKM::DirectXCommon* dx, TKM::Camera* cam, TKM::BaseScene* parent,
 		const EnemyConfig& config,
 		bool useSpawnEffect
 	) {
@@ -38,7 +38,7 @@ namespace EnemySpawner {
 	void SpawnLine(std::vector<std::unique_ptr<Enemy>>& enemies,
 		int count, float y, float z,
 		float xStart, float xStep,
-		TKM::DirectXCommon* dx, TKM::Camera* cam, BaseScene* parent, EnemyConfig config) {
+		TKM::DirectXCommon* dx, TKM::Camera* cam, TKM::BaseScene* parent, EnemyConfig config) {
 
 		for (int i = 0; i < count; ++i) {
 			Vector3 spawnPos = { xStart + xStep * i, y, z };
@@ -50,7 +50,7 @@ namespace EnemySpawner {
 	void SpawnV(std::vector<std::unique_ptr<Enemy>>& enemies,
 		int countPerSide, float y, float z,
 		float xCenter, float xStep, float zStep,
-		TKM::DirectXCommon* dx, TKM::Camera* cam, BaseScene* parent, EnemyConfig config) {
+		TKM::DirectXCommon* dx, TKM::Camera* cam, TKM::BaseScene* parent, EnemyConfig config) {
 
 		// 中央
 			{
@@ -75,7 +75,7 @@ namespace EnemySpawner {
 	void SpawnColumn(std::vector<std::unique_ptr<Enemy>>& enemies,
 		int count, float x, float zStart, float zStep,
 		float yStart, float yStep,
-		TKM::DirectXCommon* dx, TKM::Camera* cam, BaseScene* parent, EnemyConfig config) {
+		TKM::DirectXCommon* dx, TKM::Camera* cam, TKM::BaseScene* parent, EnemyConfig config) {
 
 		for (int i = 0; i < count; ++i) {
 			Vector3 spawnPos = { x, yStart + yStep * i, zStart + zStep * i };
@@ -88,7 +88,7 @@ namespace EnemySpawner {
 		std::vector<std::unique_ptr<Enemy>>& enemies,
 		float centerX, float centerY, float z,
 		float size,
-		TKM::DirectXCommon* dx, TKM::Camera* cam, BaseScene* parent,
+		TKM::DirectXCommon* dx, TKM::Camera* cam, TKM::BaseScene* parent,
 		EnemyConfig config) {
 
 		// 上（先頭）
@@ -105,5 +105,4 @@ namespace EnemySpawner {
 				CreateAndPushEnemy(enemies, spawnPos, dx, cam, parent, config, false);
 			}
 	}
-
 }
