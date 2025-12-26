@@ -184,15 +184,13 @@ void Player::ImGuiDebug() {
 #endif
 }
 
-void Player::RemoveEnemyIfDead()
-{
+void Player::RemoveEnemyIfDead() {
 	if (enemy_ && enemy_->IsDead()) { // 敵が死んでたら参照をクリア
 		enemy_ = nullptr;
 	}
 }
 
-void Player::Death()
-{
+void Player::Death() {
 	// ---- HPが0になったら「故障スパーク → 撃墜」二段階 ----
 	if (hp_ <= 0) {
 
