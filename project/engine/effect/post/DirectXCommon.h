@@ -109,6 +109,36 @@ namespace TKM {
 			float     RimPower;
 			float     AlphaBase;
 		};
+		// FogVolumeCB構造体（空間霧用）
+		struct FogVolumeCB {
+			Matrix4x4 ViewProj;
+
+			Vector3 CenterWS; float _pad0;
+
+			Vector3 HalfSizeWS; float Density;
+
+			Vector3 CamRightWS; float _pad1;
+			Vector3 CamUpWS;    float _pad2;
+			Vector3 CamFwdWS;   float _pad3;
+
+			uint32_t SliceCount;
+			float Time;
+			float NoiseScale;
+			float NoiseSpeed;
+
+			Vector3 FogColor;
+			float Softness;
+
+			float FogStart;
+			float FogEnd;
+
+			float NoiseStrength;
+			float WorldScale;
+
+			Vector3 WorldPos;
+			float _padX;
+
+		};
 
 		// -------------------- 初期化 --------------------
 		/// <summary>
@@ -307,6 +337,10 @@ namespace TKM {
 		/// </summary>
 		void InitializeAuraVolumePipeline();
 		/// <summary>
+		/// FogVolume パイプラインの初期化
+		/// </summary>
+		void InitializeFogVolumePipeline();
+		/// <summary>
 		/// ポストエフェクトチェーン用：Aura適用
 		/// </summary>
 		/// <param name="inputTex"></param>
@@ -346,6 +380,36 @@ namespace TKM {
 			float noiseSpeed,
 			float rimPower,
 			float alphaBase);
+		/// <summary>
+		/// 空間霧ボリュームの描画
+		/// </summary>
+		/// <param name="viewProj"></param>
+		/// <param name="centerWS"></param>
+		/// <param name="halfSizeWS"></param>
+		/// <param name="camRightWS"></param>
+		/// <param name="camUpWS"></param>
+		/// <param name="camFwdWS"></param>
+		/// <param name="sliceCount"></param>
+		/// <param name="time"></param>
+		/// <param name="fogColor"></param>
+		/// <param name="density"></param>
+		/// <param name="noiseScale"></param>
+		/// <param name="noiseSpeed"></param>
+		/// <param name="softness"></param>
+		void DrawFogVolume(
+			const Matrix4x4& viewProj,
+			const Vector3& centerWS,
+			const Vector3& halfSizeWS,
+			const Vector3& camRightWS,
+			const Vector3& camUpWS,
+			const Vector3& camFwdWS,
+			uint32_t sliceCount,
+			float time,
+			const Vector3& fogColor,
+			float density,
+			float noiseScale,
+			float noiseSpeed,
+			float softness);
 		/// <summary>
 		/// ポストエフェクトなしで RenderTexture → Swapchain へ描画
 		/// </summary>
@@ -650,6 +714,16 @@ namespace TKM {
 
 		Microsoft::WRL::ComPtr<ID3D12Resource> auraVolumeVB_;
 		D3D12_VERTEX_BUFFER_VIEW auraVolumeVBView_{};
+
+		// FogVolume 用 PSO
+		bool fogVolumeInitialized_ = false;
+		Microsoft::WRL::ComPtr<ID3D12RootSignature> fogVolumeRootSignature_;
+		Microsoft::WRL::ComPtr<ID3D12PipelineState> fogVolumePipelineState_;
+		Microsoft::WRL::ComPtr<ID3D12Resource> fogVolumeConstantBuffer_;
+		void* fogVolumeMappedData_ = nullptr;
+
+		Microsoft::WRL::ComPtr<ID3D12Resource> fogVolumeVB_;
+		D3D12_VERTEX_BUFFER_VIEW fogVolumeVBView_{};
 		//======================================================================
 		// 定数バッファ / ポストエフェクト関連リソース
 		//======================================================================

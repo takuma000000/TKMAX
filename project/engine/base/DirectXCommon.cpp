@@ -1142,6 +1142,118 @@ namespace TKM {
 		auraVolumeInitialized_ = true;
 	}
 
+	void DirectXCommon::InitializeFogVolumePipeline() {
+		if (fogVolumeInitialized_) { return; }
+
+		// シェーダ
+		Microsoft::WRL::ComPtr<IDxcBlob> vsBlob =
+			CompileShader(L"resources/shaders/FogVolume.VS.hlsl", L"vs_6_0");
+		Microsoft::WRL::ComPtr<IDxcBlob> psBlob =
+			CompileShader(L"resources/shaders/FogVolume.PS.hlsl", L"ps_6_0");
+
+		// RootSignature: b0 のみ
+		CD3DX12_ROOT_PARAMETER rootParams[1];
+		rootParams[0].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_ALL);
+
+		CD3DX12_ROOT_SIGNATURE_DESC rsDesc{};
+		rsDesc.Init(
+			1, rootParams,
+			0, nullptr,
+			D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
+		);
+
+		Microsoft::WRL::ComPtr<ID3DBlob> rsBlob;
+		Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
+		HRESULT hr = D3D12SerializeRootSignature(
+			&rsDesc, D3D_ROOT_SIGNATURE_VERSION_1, &rsBlob, &errorBlob
+		);
+		assert(SUCCEEDED(hr));
+
+		hr = device->CreateRootSignature(
+			0, rsBlob->GetBufferPointer(), rsBlob->GetBufferSize(),
+			IID_PPV_ARGS(&fogVolumeRootSignature_)
+		);
+		assert(SUCCEEDED(hr));
+
+		// InputLayout（Quad）
+		D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,
+			  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12,
+			  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		};
+
+		// PSO
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
+		psoDesc.pRootSignature = fogVolumeRootSignature_.Get();
+		psoDesc.VS = { vsBlob->GetBufferPointer(), vsBlob->GetBufferSize() };
+		psoDesc.PS = { psBlob->GetBufferPointer(), psBlob->GetBufferSize() };
+
+		psoDesc.InputLayout = { inputLayout, _countof(inputLayout) };
+		psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+
+		psoDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
+		psoDesc.NumRenderTargets = 1;
+		psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+		psoDesc.SampleDesc.Count = 1;
+
+		// Rasterizer
+		psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+		psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+
+		// Depth: ZTest ON / ZWrite OFF
+		D3D12_DEPTH_STENCIL_DESC dsDesc{};
+		dsDesc.DepthEnable = TRUE;
+		dsDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+		dsDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+		dsDesc.StencilEnable = FALSE;
+		psoDesc.DepthStencilState = dsDesc;
+		psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
+		// Blend: αブレンド（霧）
+		D3D12_BLEND_DESC blendDesc = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+		blendDesc.RenderTarget[0].BlendEnable = TRUE;
+		blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+		blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+		blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+		blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_INV_SRC_ALPHA;
+		blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+		psoDesc.BlendState = blendDesc;
+
+		hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&fogVolumePipelineState_));
+		assert(SUCCEEDED(hr));
+
+		// 定数バッファ
+		fogVolumeConstantBuffer_ = CreateBufferResource(sizeof(FogVolumeCB));
+		fogVolumeConstantBuffer_->Map(0, nullptr, &fogVolumeMappedData_);
+
+		// 頂点バッファ（Quad 6頂点 / XY は [-1..1]）
+		struct Vtx { float px, py, pz; float u, v; };
+		Vtx v[6] = {
+			{-1, -1, 0, 0, 1},
+			{-1,  1, 0, 0, 0},
+			{ 1,  1, 0, 1, 0},
+
+			{-1, -1, 0, 0, 1},
+			{ 1,  1, 0, 1, 0},
+			{ 1, -1, 0, 1, 1},
+		};
+
+		fogVolumeVB_ = CreateBufferResource(sizeof(v));
+		void* mapped = nullptr;
+		fogVolumeVB_->Map(0, nullptr, &mapped);
+		memcpy(mapped, v, sizeof(v));
+		fogVolumeVB_->Unmap(0, nullptr);
+
+		fogVolumeVBView_.BufferLocation = fogVolumeVB_->GetGPUVirtualAddress();
+		fogVolumeVBView_.SizeInBytes = (UINT)sizeof(v);
+		fogVolumeVBView_.StrideInBytes = sizeof(Vtx);
+
+		fogVolumeInitialized_ = true;
+	}
+
 	void DirectXCommon::ApplyWaterRipple(
 		ID3D12Resource* inputTex,
 		uint32_t        inputSrvIndex,
@@ -1480,6 +1592,62 @@ namespace TKM {
 
 		// 描画（6頂点のQuadを sliceCount 枚インスタンス）
 		commandList->DrawInstanced(6, sliceCount, 0, 0);
+	}
+
+	void DirectXCommon::DrawFogVolume(
+		const Matrix4x4& viewProj,
+		const Vector3& centerWS,
+		const Vector3& halfSizeWS,
+		const Vector3& camRightWS,
+		const Vector3& camUpWS,
+		const Vector3& camFwdWS,
+		uint32_t sliceCount,
+		float time,
+		const Vector3& fogColor,
+		float density,
+		float noiseScale,
+		float noiseSpeed,
+		float softness) {
+
+		if (!fogVolumeInitialized_) { InitializeFogVolumePipeline(); }
+
+		auto* cb = reinterpret_cast<FogVolumeCB*>(fogVolumeMappedData_);
+		cb->ViewProj = viewProj;
+
+		cb->CenterWS = centerWS;
+		cb->_pad0 = 0.0f;
+
+		cb->HalfSizeWS = halfSizeWS;
+		cb->Density = density;
+
+		cb->CamRightWS = camRightWS; cb->_pad1 = 0.0f;
+		cb->CamUpWS = camUpWS;       cb->_pad2 = 0.0f;
+		cb->CamFwdWS = camFwdWS;     cb->_pad3 = 0.0f;
+
+		cb->SliceCount = sliceCount;
+		cb->Time = time;
+		cb->NoiseScale = noiseScale;
+		cb->NoiseSpeed = noiseSpeed;
+
+		cb->FogColor = fogColor;
+		cb->Softness = softness;
+
+		cb->FogStart = 0.15f;      // 下側が濃くなる開始（0..1）
+		cb->FogEnd = 0.95f;      // 濃くなる上限（0..1）
+		cb->NoiseStrength = 0.55f; // Fog.PSと同じ感じ
+		cb->WorldScale = 1.0f;     // ノイズ座標のスケール
+		cb->WorldPos = centerWS;   // とりあえず中心基準が分かりやすい
+
+
+		commandList->SetGraphicsRootSignature(fogVolumeRootSignature_.Get());
+		commandList->SetPipelineState(fogVolumePipelineState_.Get());
+		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+		commandList->IASetVertexBuffers(0, 1, &fogVolumeVBView_);
+		commandList->SetGraphicsRootConstantBufferView(0, fogVolumeConstantBuffer_->GetGPUVirtualAddress());
+
+		// 6頂点 × sliceCount インスタンス
+		commandList->DrawInstanced(6, (UINT)max(sliceCount, 1u), 0, 0);
 	}
 
 	void DirectXCommon::DrawPostEffectToSwapchain() {

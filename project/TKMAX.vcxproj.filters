@@ -187,6 +187,7 @@
     <ClCompile Include="engine\func\common\TimeScaleController.cpp" />
     <ClCompile Include="engine\csv\CsvReader.cpp" />
     <ClCompile Include="application\enemy\EnemyWaveConfig.cpp" />
+    <ClCompile Include="resources\shaders\FogVolume3D.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -222,7 +223,7 @@
     <ClInclude Include="engine\base\D3DResourceLeakChecker.h">
       <Filter>engine\base</Filter>
     </ClInclude>
-    <ClInclude Include="engine\base\DirectXCommon.h">
+    <ClInclude Include="engine\effect\post\DirectXCommon.h">
       <Filter>engine\base</Filter>
     </ClInclude>
     <ClInclude Include="engine\base\Framework.h">
@@ -401,6 +402,7 @@
     <ClInclude Include="engine\func\common\TimeScaleController.h" />
     <ClInclude Include="engine\csv\CsvReader.h" />
     <ClInclude Include="application\enemy\EnemyWaveConfig.h" />
+    <ClInclude Include="engine\effect\post\FogVolume3D.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
@@ -494,5 +496,7 @@
   <ItemGroup>
     <FxCompile Include="resources\shaders\AuraVolume.VS.hlsl" />
     <FxCompile Include="resources\shaders\AuraVolume.PS.hlsl" />
+    <FxCompile Include="resources\shaders\FogVolume.VS.hlsl" />
+    <FxCompile Include="resources\shaders\FogVolume.PS.hlsl" />
   </ItemGroup>
 </Project>

@@ -146,7 +146,7 @@ void GameScene::Initialize() {
 	// FogEffect の生成と初期化 ＆ 常時ON
 	fog_ = std::make_unique<TKM::FogEffect>();
 	fog_->Initialize(dxCommon);
-	fog_->SetActive(true);                // ゲームシーン中はずっと有効にしたい
+	fog_->SetActive(false);                // ゲームシーン中はずっと有効にしたい
 	dxCommon->SetFogEffect(fog_.get());   // DirectXCommon に登録
 	// AuraEffect の生成と初期化
 	aura_ = std::make_unique<TKM::AuraEffect>();
@@ -157,6 +157,15 @@ void GameScene::Initialize() {
 	waterRipple_->Initialize(dxCommon); // 波紋エフェクトの初期化
 	dxCommon->SetWaterRippleEffect(waterRipple_.get()); // DirectXCommon に登録
 	bossManager_->SetWaterRippleEffect(waterRipple_.get()); // BossManager にも登録
+	// FogVolume3D の生成と初期化
+	fogVolume3D_ = std::make_unique<TKM::FogVolume3D>();
+	fogVolume3D_->Initialize(dxCommon);
+	// 初期パラメータ例
+	auto& d = fogVolume3D_->GetDesc();
+	d.centerWS = { 0.0f, 6.0f, 20.0f };
+	d.halfSizeWS = { 900.0f, 220.0f, 900.0f };
+	d.sliceCount = 80;     // まずこれくらいで板感減らす
+	d.density = 0.03f;  // 濃すぎなら 0.015f まで落としてOK
 	// ──────────────── タイムスケールコントローラーの初期化 ───────────────
 	timeScale_.Initialize();
 	bossManager_->SetTimeScaleController(&timeScale_);
@@ -274,6 +283,9 @@ void GameScene::Update() {
 		}
 		if (waterRipple_) {
 			waterRipple_->Update(scaledDt); // 波紋の更新（スローに合わせてゆっくり進む）
+		}
+		if (fogVolume3D_) {
+			fogVolume3D_->Update(scaledDt);
 		}
 		// ==================================================
 
@@ -516,6 +528,22 @@ void GameScene::Draw() {
 		}
 	}
 
+	// FogVolume（空間霧）
+	if (fogVolume3D_) {
+		TKM::Camera* activeCamera = (useDebugCamera_ && debugCamera_) ? (TKM::Camera*)debugCamera_.get() : camera.get();
+		if (activeCamera) {
+			const Matrix4x4& camW = activeCamera->GetWorldMatrix();
+
+			// ※あなたの行列の取り方（translationが m[3] なので、基底は row0/1/2 と仮定）
+			Vector3 right{ camW.m[0][0], camW.m[0][1], camW.m[0][2] };
+			Vector3 up{ camW.m[1][0], camW.m[1][1], camW.m[1][2] };
+			Vector3 fwd{ camW.m[2][0], camW.m[2][1], camW.m[2][2] };
+
+			Matrix4x4 vp = activeCamera->GetViewProjectionMatrix();
+			fogVolume3D_->Draw(vp, right, up, fwd);
+		}
+	}
+
 	// パーティクル描画
 	ParticleManager::GetInstance()->Draw();
 
@@ -713,6 +741,9 @@ void GameScene::ImGuiDebug() {
 	}
 	if (aura_) {
 		aura_->ImGuiDebug();
+	}
+	if(fogVolume3D_) {
+		fogVolume3D_->ImGuiDebug();
 	}
 	/////////////////////////////////////////////////////
 	ImGuiDebugGamepad(); // ゲームパッド入力デバッグ
