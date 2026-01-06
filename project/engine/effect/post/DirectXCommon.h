@@ -139,6 +139,33 @@ namespace TKM {
 			float _padX;
 
 		};
+		// SmokeVolumeCB構造体（立体煙用）
+		struct SmokeVolumeCB {
+			Matrix4x4 ViewProj;
+
+			Vector3 CenterWS; float _pad0;
+			Vector3 HalfSizeWS; float Density;
+
+			Vector3 CamRightWS; float _pad1;
+			Vector3 CamUpWS;    float _pad2;
+			Vector3 CamFwdWS;   float _pad3;
+
+			uint32_t SliceCount;
+			float Time;
+			float BaseScale;
+			float FlowSpeed;
+
+			float DetailScale;
+			float DetailStrength;
+			float Threshold;
+			float Softness;
+
+			Vector3 SmokeColor;
+			float AlphaMax;
+
+			float RiseSpeed;
+			float _padX[3];
+		};
 
 		// -------------------- 初期化 --------------------
 		/// <summary>
@@ -341,6 +368,10 @@ namespace TKM {
 		/// </summary>
 		void InitializeFogVolumePipeline();
 		/// <summary>
+		/// SmokeVolume パイプラインの初期化
+		/// </summary>
+		void InitializeSmokeVolumePipeline();
+		/// <summary>
 		/// ポストエフェクトチェーン用：Aura適用
 		/// </summary>
 		/// <param name="inputTex"></param>
@@ -420,7 +451,50 @@ namespace TKM {
 			float noiseStrength,
 			float worldScale,
 			const Vector3& worldPos);
-
+		/// <summary>
+		/// スモークボリュームの描画
+		/// </summary>
+		/// <param name="viewProj"></param>
+		/// <param name="centerWS"></param>
+		/// <param name="halfSizeWS"></param>
+		/// <param name="camRightWS"></param>
+		/// <param name="camUpWS"></param>
+		/// <param name="camFwdWS"></param>
+		/// <param name="sliceCount"></param>
+		/// <param name="time"></param>
+		/// <param name="smokeColor"></param>
+		/// <param name="density"></param>
+		/// <param name="baseScale"></param>
+		/// <param name="detailScale"></param>
+		/// <param name="detailStrength"></param>
+		/// <param name="threshold"></param>
+		/// <param name="softness"></param>
+		/// <param name="flowSpeed"></param>
+		/// <param name="riseSpeed"></param>
+		/// <param name="alphaMax"></param>
+		/// <param name="worldScale"></param>
+		/// <param name="worldPos"></param>
+		void DrawSmokeVolume(
+			const Matrix4x4& viewProj,
+			const Vector3& centerWS,
+			const Vector3& halfSizeWS,
+			const Vector3& camRightWS,
+			const Vector3& camUpWS,
+			const Vector3& camFwdWS,
+			uint32_t sliceCount,
+			float time,
+			const Vector3& smokeColor,
+			float density,
+			float baseScale,
+			float detailScale,
+			float detailStrength,
+			float threshold,
+			float softness,
+			float flowSpeed,
+			float riseSpeed,
+			float alphaMax,
+			float worldScale,
+			const Vector3& worldPos);
 		/// <summary>
 		/// ポストエフェクトなしで RenderTexture → Swapchain へ描画
 		/// </summary>
@@ -735,6 +809,17 @@ namespace TKM {
 
 		Microsoft::WRL::ComPtr<ID3D12Resource> fogVolumeVB_;
 		D3D12_VERTEX_BUFFER_VIEW fogVolumeVBView_{};
+
+		// SmokeVolume 用 PSO
+		bool smokeVolumeInitialized_ = false;
+		Microsoft::WRL::ComPtr<ID3D12RootSignature> smokeVolumeRootSignature_;
+		Microsoft::WRL::ComPtr<ID3D12PipelineState> smokeVolumePipelineState_;
+		Microsoft::WRL::ComPtr<ID3D12Resource> smokeVolumeVertexBuffer_;
+		D3D12_VERTEX_BUFFER_VIEW smokeVolumeVBView_{};
+
+		Microsoft::WRL::ComPtr<ID3D12Resource> smokeVolumeConstantBuffer_;
+		SmokeVolumeCB* smokeVolumeCB_ = nullptr;
+
 		//======================================================================
 		// 定数バッファ / ポストエフェクト関連リソース
 		//======================================================================

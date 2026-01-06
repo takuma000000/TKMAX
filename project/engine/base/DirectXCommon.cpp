@@ -1254,6 +1254,104 @@ namespace TKM {
 		fogVolumeInitialized_ = true;
 	}
 
+	void DirectXCommon::InitializeSmokeVolumePipeline() {
+		if (smokeVolumeInitialized_) { return; }
+
+		// シェーダ
+		Microsoft::WRL::ComPtr<IDxcBlob> vsBlob =
+			CompileShader(L"resources/shaders/SmokeVolume.VS.hlsl", L"vs_6_0");
+		Microsoft::WRL::ComPtr<IDxcBlob> psBlob =
+			CompileShader(L"resources/shaders/SmokeVolume.PS.hlsl", L"ps_6_0");
+
+		// RootSignature: b0 のみ
+		CD3DX12_ROOT_PARAMETER rootParams[1];
+		rootParams[0].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_ALL);
+
+		CD3DX12_ROOT_SIGNATURE_DESC rsDesc;
+		rsDesc.Init(_countof(rootParams), rootParams, 0, nullptr,
+			D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+
+		Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob;
+		Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
+		HRESULT hr = D3D12SerializeRootSignature(&rsDesc, D3D_ROOT_SIGNATURE_VERSION_1,
+			signatureBlob.GetAddressOf(), errorBlob.GetAddressOf());
+		assert(SUCCEEDED(hr));
+
+		hr = device->CreateRootSignature(0, signatureBlob->GetBufferPointer(),
+			signatureBlob->GetBufferSize(), IID_PPV_ARGS(smokeVolumeRootSignature_.GetAddressOf()));
+		assert(SUCCEEDED(hr));
+
+		// InputLayout（Fogと同じ）
+		D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
+			{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+			{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		};
+
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
+		psoDesc.pRootSignature = smokeVolumeRootSignature_.Get();
+		psoDesc.VS = { vsBlob->GetBufferPointer(), vsBlob->GetBufferSize() };
+		psoDesc.PS = { psBlob->GetBufferPointer(), psBlob->GetBufferSize() };
+		psoDesc.InputLayout = { inputLayout, _countof(inputLayout) };
+
+		psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+		psoDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
+
+		psoDesc.NumRenderTargets = 1;
+		psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+		psoDesc.SampleDesc.Count = 1;
+
+		// Rasterizer
+		psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+		psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+
+		// Depth: ZTest ON / ZWrite OFF
+		D3D12_DEPTH_STENCIL_DESC dsDesc{};
+		dsDesc.DepthEnable = TRUE;
+		dsDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+		dsDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+		dsDesc.StencilEnable = FALSE;
+		psoDesc.DepthStencilState = dsDesc;
+		psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
+		// Blend: αブレンド（Fogと同じ）
+		D3D12_BLEND_DESC blendDesc = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+		blendDesc.RenderTarget[0].BlendEnable = TRUE;
+		blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+		blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+		blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+		blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_INV_SRC_ALPHA;
+		blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+		psoDesc.BlendState = blendDesc;
+
+		hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(smokeVolumePipelineState_.GetAddressOf()));
+		assert(SUCCEEDED(hr));
+
+		// ===== クアッドVB（FogのコピペでOK）=====
+		struct Vtx { Vector3 pos; Vector2 uv; };
+		Vtx v[6] = {
+			{{-1, -1, 0}, {0,1}}, {{-1,  1, 0}, {0,0}}, {{ 1,  1, 0}, {1,0}},
+			{{-1, -1, 0}, {0,1}}, {{ 1,  1, 0}, {1,0}}, {{ 1, -1, 0}, {1,1}},
+		};
+
+		smokeVolumeVertexBuffer_ = CreateBufferResource(sizeof(v));
+		void* mapped = nullptr;
+		smokeVolumeVertexBuffer_->Map(0, nullptr, &mapped);
+		memcpy(mapped, v, sizeof(v));
+		smokeVolumeVertexBuffer_->Unmap(0, nullptr);
+
+		smokeVolumeVBView_.BufferLocation = smokeVolumeVertexBuffer_->GetGPUVirtualAddress();
+		smokeVolumeVBView_.SizeInBytes = (UINT)sizeof(v);
+		smokeVolumeVBView_.StrideInBytes = sizeof(Vtx);
+
+		// ===== 定数バッファ =====
+		smokeVolumeConstantBuffer_ = CreateBufferResource(sizeof(SmokeVolumeCB));
+		smokeVolumeConstantBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&smokeVolumeCB_));
+
+		smokeVolumeInitialized_ = true;
+	}
+
 	void DirectXCommon::ApplyWaterRipple(
 		ID3D12Resource* inputTex,
 		uint32_t        inputSrvIndex,
@@ -1659,6 +1757,67 @@ namespace TKM {
 		commandList->SetGraphicsRootConstantBufferView(0, fogVolumeConstantBuffer_->GetGPUVirtualAddress());
 
 		// 6頂点 × sliceCount インスタンス
+		commandList->DrawInstanced(6, (UINT)max(sliceCount, 1u), 0, 0);
+	}
+
+	void DirectXCommon::DrawSmokeVolume(
+		const Matrix4x4& viewProj,
+		const Vector3& centerWS,
+		const Vector3& halfSizeWS,
+		const Vector3& camRightWS,
+		const Vector3& camUpWS,
+		const Vector3& camFwdWS,
+		uint32_t sliceCount,
+		float time,
+		const Vector3& smokeColor,
+		float density,
+		float baseScale,
+		float detailScale,
+		float detailStrength,
+		float threshold,
+		float softness,
+		float flowSpeed,
+		float riseSpeed,
+		float alphaMax,
+		float worldScale,
+		const Vector3& worldPos) {
+
+		if (!smokeVolumeInitialized_) { InitializeSmokeVolumePipeline(); }
+
+		auto* cb = smokeVolumeCB_;
+		cb->ViewProj = viewProj;
+
+		cb->CenterWS = centerWS;
+		cb->HalfSizeWS = halfSizeWS;
+		cb->Density = density;
+
+		cb->CamRightWS = camRightWS;
+		cb->CamUpWS = camUpWS;
+		cb->CamFwdWS = camFwdWS;
+
+		cb->SliceCount = sliceCount;
+		cb->Time = time;
+
+		cb->BaseScale = baseScale * worldScale;
+		cb->FlowSpeed = flowSpeed;
+
+		cb->DetailScale = detailScale * worldScale;
+		cb->DetailStrength = detailStrength;
+		cb->Threshold = threshold;
+		cb->Softness = softness;
+
+		cb->SmokeColor = smokeColor;
+		cb->AlphaMax = alphaMax;
+
+		cb->RiseSpeed = riseSpeed;
+
+		commandList->SetGraphicsRootSignature(smokeVolumeRootSignature_.Get());
+		commandList->SetPipelineState(smokeVolumePipelineState_.Get());
+		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+		commandList->IASetVertexBuffers(0, 1, &smokeVolumeVBView_);
+		commandList->SetGraphicsRootConstantBufferView(0, smokeVolumeConstantBuffer_->GetGPUVirtualAddress());
+
 		commandList->DrawInstanced(6, (UINT)max(sliceCount, 1u), 0, 0);
 	}
 

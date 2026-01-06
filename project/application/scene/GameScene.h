@@ -40,6 +40,7 @@
 #include "TimeScaleController.h"
 #include "WaterRippleEffect.h"
 #include "FogVolume3D.h"
+#include "SmokeVolume3D.h"
 
 //=============================================================
 // GameSceneクラス
@@ -318,8 +319,10 @@ private:
 	std::unique_ptr<TKM::AuraEffect> aura_ = nullptr;
 	// WaterRipple エフェクト（波紋）
 	std::unique_ptr<TKM::WaterRippleEffect> waterRipple_ = nullptr;
-	// 3Dフォグボリューム
+	// FogVolume3D エフェクト
 	std::unique_ptr<TKM::FogVolume3D> fogVolume3D_ = nullptr;
+	// SmokeVolume3D エフェクト
+	std::unique_ptr<TKM::SmokeVolume3D> smokeVolume3D_ = nullptr;
 	//======================================================================
 	// 時間制御
 	//======================================================================

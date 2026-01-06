@@ -166,6 +166,9 @@ void GameScene::Initialize() {
 	d.halfSizeWS = { 900.0f, 220.0f, 900.0f };
 	d.sliceCount = 80;     // まずこれくらいで板感減らす
 	d.density = 0.19f;  // 濃すぎなら 0.015f まで落としてOK
+	// SmokeVolume3D の生成と初期化
+	smokeVolume3D_ = std::make_unique<TKM::SmokeVolume3D>();
+	smokeVolume3D_->Initialize(dxCommon);
 	// ──────────────── タイムスケールコントローラーの初期化 ───────────────
 	timeScale_.Initialize();
 	bossManager_->SetTimeScaleController(&timeScale_);
@@ -286,6 +289,9 @@ void GameScene::Update() {
 		}
 		if (fogVolume3D_) {
 			fogVolume3D_->Update(scaledDt);
+		}
+		if (smokeVolume3D_) {
+			smokeVolume3D_->Update(scaledDt);
 		}
 		// ==================================================
 
@@ -543,6 +549,20 @@ void GameScene::Draw() {
 			fogVolume3D_->Draw(vp, right, up, fwd);
 		}
 	}
+	// SmokeVolume（空間スモーク）
+	if (smokeVolume3D_) {
+		TKM::Camera* activeCamera = (useDebugCamera_ && debugCamera_) ? (TKM::Camera*)debugCamera_.get() : camera.get();
+		if (activeCamera) {
+			const Matrix4x4& camW = activeCamera->GetWorldMatrix();
+
+			Vector3 right{ camW.m[0][0], camW.m[0][1], camW.m[0][2] };
+			Vector3 up{ camW.m[1][0], camW.m[1][1], camW.m[1][2] };
+			Vector3 fwd{ camW.m[2][0], camW.m[2][1], camW.m[2][2] };
+
+			Matrix4x4 vp = activeCamera->GetViewProjectionMatrix();
+			smokeVolume3D_->Draw(vp, right, up, fwd);
+		}
+	}
 
 	// パーティクル描画
 	ParticleManager::GetInstance()->Draw();
@@ -744,6 +764,9 @@ void GameScene::ImGuiDebug() {
 	}
 	if (fogVolume3D_) {
 		fogVolume3D_->ImGuiDebug();
+	}
+	if (smokeVolume3D_) {
+		smokeVolume3D_->ImGuiDebug();
 	}
 	/////////////////////////////////////////////////////
 	ImGuiDebugGamepad(); // ゲームパッド入力デバッグ
