@@ -189,6 +189,7 @@
     <ClCompile Include="application\enemy\EnemyWaveConfig.cpp" />
     <ClCompile Include="resources\shaders\FogVolume3D.cpp" />
     <ClCompile Include="engine\effect\post\SmokeVolume3D.cpp" />
+    <ClCompile Include="engine\effect\post\LaserBeam3D.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -405,6 +406,7 @@
     <ClInclude Include="application\enemy\EnemyWaveConfig.h" />
     <ClInclude Include="engine\effect\post\FogVolume3D.h" />
     <ClInclude Include="engine\effect\post\SmokeVolume3D.h" />
+    <ClInclude Include="engine\effect\post\LaserBeam3D.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
@@ -502,5 +504,7 @@
     <FxCompile Include="resources\shaders\FogVolume.PS.hlsl" />
     <FxCompile Include="resources\shaders\SmokeVolume.VS.hlsl" />
     <FxCompile Include="resources\shaders\SmokeVolume.PS.hlsl" />
+    <FxCompile Include="resources\shaders\LaserBeam.VS.hlsl" />
+    <FxCompile Include="resources\shaders\LaserBeam.PS.hlsl" />
   </ItemGroup>
 </Project>

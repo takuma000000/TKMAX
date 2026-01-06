@@ -1,3 +1,4 @@
+#define NOMINMAX
 #include "DirectXCommon.h"
 #include "SrvManager.h"
 #include <cassert>
@@ -7,6 +8,7 @@
 #include "thread"
 #include "d3dx12.h"
 #include <vector>
+#include "algorithm"
 
 #include "RadialBlurEffect.h" 
 #include "VignettingEffect.h"
@@ -1352,6 +1354,110 @@ namespace TKM {
 		smokeVolumeInitialized_ = true;
 	}
 
+	void TKM::DirectXCommon::InitializeLaserBeamPipeline() {
+		if (laserBeamInitialized_) { return; }
+
+		Microsoft::WRL::ComPtr<IDxcBlob> vsBlob =
+			CompileShader(L"resources/shaders/LaserBeam.VS.hlsl", L"vs_6_0");
+		Microsoft::WRL::ComPtr<IDxcBlob> psBlob =
+			CompileShader(L"resources/shaders/LaserBeam.PS.hlsl", L"ps_6_0");
+
+		// RootSignature: b0 only
+		CD3DX12_ROOT_PARAMETER rootParams[1];
+		rootParams[0].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_ALL);
+
+		CD3DX12_ROOT_SIGNATURE_DESC rsDesc{};
+		rsDesc.Init(1, rootParams, 0, nullptr,
+			D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+
+		Microsoft::WRL::ComPtr<ID3DBlob> rsBlob;
+		Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
+		HRESULT hr = D3D12SerializeRootSignature(&rsDesc, D3D_ROOT_SIGNATURE_VERSION_1, &rsBlob, &errorBlob);
+		assert(SUCCEEDED(hr));
+
+		hr = device->CreateRootSignature(
+			0, rsBlob->GetBufferPointer(), rsBlob->GetBufferSize(),
+			IID_PPV_ARGS(&laserBeamRootSignature_));
+		assert(SUCCEEDED(hr));
+
+		// InputLayout（Quad）
+		D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,
+			  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12,
+			  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		};
+
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
+		psoDesc.pRootSignature = laserBeamRootSignature_.Get();
+		psoDesc.VS = { vsBlob->GetBufferPointer(), vsBlob->GetBufferSize() };
+		psoDesc.PS = { psBlob->GetBufferPointer(), psBlob->GetBufferSize() };
+
+		psoDesc.InputLayout = { inputLayout, _countof(inputLayout) };
+		psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+
+		psoDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
+		psoDesc.NumRenderTargets = 1;
+		psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+		psoDesc.SampleDesc.Count = 1;
+
+		// Rasterizer
+		psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+		psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+
+		// Depth: ZTest ON / ZWrite OFF（空間上の光なのでZで馴染ませる）
+		D3D12_DEPTH_STENCIL_DESC dsDesc{};
+		dsDesc.DepthEnable = TRUE;
+		dsDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+		dsDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+		dsDesc.StencilEnable = FALSE;
+		psoDesc.DepthStencilState = dsDesc;
+		psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
+		// Blend: 加算（レーザー）
+		D3D12_BLEND_DESC blendDesc = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+		blendDesc.RenderTarget[0].BlendEnable = TRUE;
+		blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_ONE;
+		blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+		blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+		blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ONE;
+		blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+		psoDesc.BlendState = blendDesc;
+
+		hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&laserBeamPipelineState_));
+		assert(SUCCEEDED(hr));
+
+		// ConstantBuffer
+		laserBeamConstantBuffer_ = CreateBufferResource(sizeof(LaserBeamCB));
+		laserBeamConstantBuffer_->Map(0, nullptr, &laserBeamMappedData_);
+
+		// VertexBuffer（Quad 6 vertices / Fogと同型）
+		struct Vtx { float px, py, pz; float u, v; };
+		Vtx v[6] = {
+			{-1, -1, 0, 0, 1},
+			{-1,  1, 0, 0, 0},
+			{ 1,  1, 0, 1, 0},
+
+			{-1, -1, 0, 0, 1},
+			{ 1,  1, 0, 1, 0},
+			{ 1, -1, 0, 1, 1},
+		};
+
+		laserBeamVB_ = CreateBufferResource(sizeof(v));
+		void* mapped = nullptr;
+		laserBeamVB_->Map(0, nullptr, &mapped);
+		memcpy(mapped, v, sizeof(v));
+		laserBeamVB_->Unmap(0, nullptr);
+
+		laserBeamVBView_.BufferLocation = laserBeamVB_->GetGPUVirtualAddress();
+		laserBeamVBView_.SizeInBytes = (UINT)sizeof(v);
+		laserBeamVBView_.StrideInBytes = sizeof(Vtx);
+
+		laserBeamInitialized_ = true;
+	}
+
 	void DirectXCommon::ApplyWaterRipple(
 		ID3D12Resource* inputTex,
 		uint32_t        inputSrvIndex,
@@ -1757,7 +1863,7 @@ namespace TKM {
 		commandList->SetGraphicsRootConstantBufferView(0, fogVolumeConstantBuffer_->GetGPUVirtualAddress());
 
 		// 6頂点 × sliceCount インスタンス
-		commandList->DrawInstanced(6, (UINT)max(sliceCount, 1u), 0, 0);
+		commandList->DrawInstanced(6, (UINT)std::max(sliceCount, 1u), 0, 0);
 	}
 
 	void DirectXCommon::DrawSmokeVolume(
@@ -1818,7 +1924,63 @@ namespace TKM {
 		commandList->IASetVertexBuffers(0, 1, &smokeVolumeVBView_);
 		commandList->SetGraphicsRootConstantBufferView(0, smokeVolumeConstantBuffer_->GetGPUVirtualAddress());
 
-		commandList->DrawInstanced(6, (UINT)max(sliceCount, 1u), 0, 0);
+		commandList->DrawInstanced(6, (UINT)std::max(sliceCount, 1u), 0, 0);
+	}
+
+	void TKM::DirectXCommon::DrawLaserBeamVolume(
+		const Matrix4x4& viewProj,
+		const Vector3& startWS,
+		const Vector3& endWS,
+		float radius,
+		const Vector3& camRightWS,
+		const Vector3& camUpWS,
+		const Vector3& camFwdWS,
+		uint32_t sliceCount,
+		float time,
+		const Vector3& color,
+		float intensity,
+		float coreSharpness,
+		float edgeSoftness,
+		float noiseScale,
+		float noiseSpeed,
+		uint32_t telegraph) {
+
+		if (!laserBeamInitialized_) { InitializeLaserBeamPipeline(); }
+		if (!laserBeamMappedData_) { return; }
+
+		auto* cb = reinterpret_cast<LaserBeamCB*>(laserBeamMappedData_);
+		cb->ViewProj = viewProj;
+		cb->StartWS = startWS;
+		cb->Radius = radius;
+		cb->EndWS = endWS;
+		cb->Intensity = intensity;
+
+		cb->CamRightWS = camRightWS;
+		cb->CamUpWS = camUpWS;
+		cb->CamFwdWS = camFwdWS;
+
+		cb->SliceCount = sliceCount;
+		cb->Time = time;
+		cb->CoreSharpness = coreSharpness;
+		cb->EdgeSoftness = edgeSoftness;
+
+		cb->Color = color;
+		cb->NoiseScale = noiseScale;
+		cb->NoiseSpeed = noiseSpeed;
+		cb->Telegraph = telegraph;
+
+		ID3D12GraphicsCommandList* cmd = commandList.Get();
+
+		cmd->SetGraphicsRootSignature(laserBeamRootSignature_.Get());
+		cmd->SetPipelineState(laserBeamPipelineState_.Get());
+
+		cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		cmd->IASetVertexBuffers(0, 1, &laserBeamVBView_);
+
+		cmd->SetGraphicsRootConstantBufferView(0, laserBeamConstantBuffer_->GetGPUVirtualAddress());
+
+		// 6 vertices * sliceCount instances
+		cmd->DrawInstanced(6, std::max(1u, sliceCount), 0, 0);
 	}
 
 	void DirectXCommon::DrawPostEffectToSwapchain() {

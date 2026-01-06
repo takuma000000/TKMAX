@@ -17,6 +17,10 @@ public:
 		DashWindup,
 		DashRun,
 		Recover,
+		// --- Rage専用攻撃 ---
+		LaserWindup,
+		LaserFire,
+		LaserRecover,
 	};
 
 	enum class DashType { // ダッシュの種類
@@ -56,6 +60,18 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	bool IsDashWindup() const { return state_ == State::DashWindup; }
+
+	// =========================
+	// Laser（怒り中攻撃）情報
+	// =========================
+	bool IsLaserWindup() const { return state_ == State::LaserWindup; }
+	bool IsLaserFiring() const { return state_ == State::LaserFire; }
+	bool IsLaserActive() const { return laserActive_; }        // 予告 or 発射中
+	bool IsLaserTelegraph() const { return laserTelegraph_; }  // 予告中
+	const Vector3& GetLaserStartWS() const { return laserStartWS_; }
+	const Vector3& GetLaserEndWS() const { return laserEndWS_; }
+	float GetLaserRadius() const { return laserRadius_; }
+
 	// Getter===================================
 	/// <summary>
 	/// 予備動作に入ってからの経過秒を取得します。
@@ -139,6 +155,11 @@ private:
 	/// <param name="boss"></param>
 	/// <param name="pos"></param>
 	void UpdateRecover(float dt, Enemy& boss, Vector3& pos);
+
+	// --- Laser ---
+	void UpdateLaserWindup(float dt, Enemy& boss, Vector3& pos, const Vector3& playerPos);
+	void UpdateLaserFire(float dt, Enemy& boss, Vector3& pos, const Vector3& playerPos);
+	void UpdateLaserRecover(float dt, Enemy& boss, Vector3& pos);
 
 	// --- helpers ---
 	/// <summary>
@@ -254,6 +275,26 @@ private:
 	int   lastHpForRage_ = -1;        // 前回HP（ダメージ検出用）
 	float noDamageTime_ = 0.0f;   // 最後に被ダメしてからの経過
 	float rageDecayDelay_ = 2.0f; // 秒間ノーダメなら減衰開始
+
+	// =========================
+	// Laser（怒り中のみ）
+	// =========================
+	float laserCooldown_ = 5.0f;      // 連発防止
+	float laserCooldownT_ = 0.0f;
+	float laserChance_ = 0.40f;       // Orbit終了時にレーザーへ分岐する確率（怒り中）
+	float laserWindup_ = 0.70f;       // 予告
+	float laserFire_ = 1.10f;         // 発射
+	float laserRecover_ = 0.55f;      // 復帰
+	float laserRadius_ = 2.2f;        // 当たり判定の太さ
+	float laserMuzzleYOffset_ = 10.0f; // 発射位置Yオフセット（ボス中心＋）
+	float laserTrackStrength_ = 0.15f; // 発射中の軽い追尾（0で固定）
+
+	bool  laserActive_ = false;        // 予告 or 発射
+	bool  laserTelegraph_ = false;     // 予告中
+	Vector3 laserStartWS_{ 0.0f,0.0f,0.0f };
+	Vector3 laserEndWS_{ 0.0f,0.0f,0.0f };
+	Vector3 laserBasePos_{ 0.0f,0.0f,0.0f }; // レーザー中の固定基準
+	Vector3 laserAimFixed_{ 0.0f,0.0f,0.0f }; // 予告開始時の狙い（固定）
 
 	// --- Windup Stop & Shake ---
 	Vector3 windupBasePos_{ 0.0f, 0.0f, 0.0f }; // 予備動作開始位置（固定）
