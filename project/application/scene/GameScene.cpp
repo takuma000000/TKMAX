@@ -165,7 +165,7 @@ void GameScene::Initialize() {
 	d.centerWS = { 0.0f, 6.0f, 20.0f };
 	d.halfSizeWS = { 900.0f, 220.0f, 900.0f };
 	d.sliceCount = 80;     // まずこれくらいで板感減らす
-	d.density = 0.03f;  // 濃すぎなら 0.015f まで落としてOK
+	d.density = 0.19f;  // 濃すぎなら 0.015f まで落としてOK
 	// ──────────────── タイムスケールコントローラーの初期化 ───────────────
 	timeScale_.Initialize();
 	bossManager_->SetTimeScaleController(&timeScale_);
@@ -742,7 +742,7 @@ void GameScene::ImGuiDebug() {
 	if (aura_) {
 		aura_->ImGuiDebug();
 	}
-	if(fogVolume3D_) {
+	if (fogVolume3D_) {
 		fogVolume3D_->ImGuiDebug();
 	}
 	/////////////////////////////////////////////////////
@@ -931,7 +931,7 @@ bool GameScene::UpdateClearSequence(float dt) {
 	const float scaledDt = rawDt * timeScale_.GetScale(); /// スローデルタタイム
 	// パーティクルは普通に動かす
 	ParticleManager::GetInstance()->Update(scaledDt);
-	
+
 	return false; // まだ演出継続中
 }
 

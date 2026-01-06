@@ -1556,8 +1556,7 @@ namespace TKM {
 		float noiseScale,
 		float noiseSpeed,
 		float rimPower,
-		float alphaBase)
-	{
+		float alphaBase) {
 		if (!auraVolumeInitialized_) { InitializeAuraVolumePipeline(); }
 		if (!auraVolumeMappedData_) { return; }
 		if (!commandList) { return; }
@@ -1607,7 +1606,12 @@ namespace TKM {
 		float density,
 		float noiseScale,
 		float noiseSpeed,
-		float softness) {
+		float softness,
+		float fogStart,
+		float fogEnd,
+		float noiseStrength,
+		float worldScale,
+		const Vector3& worldPos) {
 
 		if (!fogVolumeInitialized_) { InitializeFogVolumePipeline(); }
 
@@ -1638,6 +1642,14 @@ namespace TKM {
 		cb->WorldScale = 1.0f;     // ノイズ座標のスケール
 		cb->WorldPos = centerWS;   // とりあえず中心基準が分かりやすい
 
+		cb->FogColor = fogColor;
+		cb->Softness = softness;
+
+		cb->FogStart = fogStart;
+		cb->FogEnd = fogEnd;
+		cb->NoiseStrength = noiseStrength;
+		cb->WorldScale = worldScale;
+		cb->WorldPos = worldPos;
 
 		commandList->SetGraphicsRootSignature(fogVolumeRootSignature_.Get());
 		commandList->SetPipelineState(fogVolumePipelineState_.Get());
@@ -1974,8 +1986,7 @@ namespace TKM {
 		float frequency,
 		float width,
 		const Vector3& color,
-		float colorIntensity)
-	{
+		float colorIntensity) {
 		if (!rippleMappedData_) return;
 
 		auto* cb = reinterpret_cast<WaterRippleCB*>(rippleMappedData_);
@@ -2027,8 +2038,7 @@ namespace TKM {
 		float noiseSpeed,
 		float flameStrength,
 		float edgePower,
-		float verticalFade)
-	{
+		float verticalFade) {
 		if (!auraInitialized_) { InitializeAuraPipeline(); }
 		if (!auraMappedData_) { return; }
 

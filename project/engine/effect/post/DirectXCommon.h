@@ -381,7 +381,7 @@ namespace TKM {
 			float rimPower,
 			float alphaBase);
 		/// <summary>
-		/// 空間霧ボリュームの描画
+		/// フォグボリュームの描画
 		/// </summary>
 		/// <param name="viewProj"></param>
 		/// <param name="centerWS"></param>
@@ -396,6 +396,11 @@ namespace TKM {
 		/// <param name="noiseScale"></param>
 		/// <param name="noiseSpeed"></param>
 		/// <param name="softness"></param>
+		/// <param name="fogStart"></param>
+		/// <param name="fogEnd"></param>
+		/// <param name="noiseStrength"></param>
+		/// <param name="worldScale"></param>
+		/// <param name="worldPos"></param>
 		void DrawFogVolume(
 			const Matrix4x4& viewProj,
 			const Vector3& centerWS,
@@ -409,7 +414,13 @@ namespace TKM {
 			float density,
 			float noiseScale,
 			float noiseSpeed,
-			float softness);
+			float softness,
+			float fogStart,
+			float fogEnd,
+			float noiseStrength,
+			float worldScale,
+			const Vector3& worldPos);
+
 		/// <summary>
 		/// ポストエフェクトなしで RenderTexture → Swapchain へ描画
 		/// </summary>

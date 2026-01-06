@@ -22,6 +22,8 @@ namespace TKM {
 		if (!active_) { return; }
 		if (!dxCommon_) { return; }
 
+		desc_.worldPos = desc_.centerWS;
+
 		dxCommon_->DrawFogVolume(
 			viewProj,
 			desc_.centerWS,
@@ -35,7 +37,12 @@ namespace TKM {
 			desc_.density,
 			desc_.noiseScale,
 			desc_.noiseSpeed,
-			desc_.softness
+			desc_.softness,
+			desc_.fogStart,
+			desc_.fogEnd,
+			desc_.noiseStrength,
+			desc_.worldScale,
+			desc_.worldPos
 		);
 	}
 

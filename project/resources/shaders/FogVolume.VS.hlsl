@@ -36,6 +36,16 @@ cbuffer FogVolumeCB : register(b0)
 
     float3 FogColor;
     float Softness;
+
+    // --- 以降はPS側で主に使用（VSは未使用だがCBレイアウトを一致させる） ---
+    float FogStart;
+    float FogEnd;
+
+    float NoiseStrength;
+    float WorldScale;
+
+    float3 WorldPos;
+    float _padX;
 };
 
 VSOut main(VSIn input, uint instanceId : SV_InstanceID)
