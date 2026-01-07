@@ -567,6 +567,7 @@ void GameScene::Draw() {
 	// パーティクル描画
 	ParticleManager::GetInstance()->Draw();
 
+#ifdef USE_IMGUI
 	// ライン描画
 	Matrix4x4 vp;
 	if (useDebugCamera_ && debugCamera_) {
@@ -575,6 +576,7 @@ void GameScene::Draw() {
 		vp = camera->GetViewProjectionMatrix();
 	}
 	LineRenderer::GetInstance()->Draw(vp);
+#endif
 
 	// スプライトまとめ
 	TKM::SpriteCommon::GetInstance()->DrawSetCommon();

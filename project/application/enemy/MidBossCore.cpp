@@ -85,6 +85,7 @@ void MidBossCore::Update(float dt) {
 	// 通常時（今は動かない核なのでロジックほぼ無し）
 	object_->Update();
 
+#ifdef USE_IMGUI
 	// ---- 当たり判定の可視化（Enemy と同じ箱描画）----
 	{
 		Vector3 center = GetWorldPosition();
@@ -103,6 +104,7 @@ void MidBossCore::Update(float dt) {
 			lr->AddAABB(center, size, normal);
 		}
 	}
+#endif
 
 	// ============================
 // 核チャージ演出（蘇生エネルギー）

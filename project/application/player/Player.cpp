@@ -93,6 +93,7 @@ void Player::Update(float dt) {
 		}
 	}
 
+#ifdef USE_IMGUI
 	// ───────── 自機当たり判定ワイヤーボックス描画 ─────────
 	{
 		Vector3 center = object_->GetTranslate();
@@ -107,6 +108,7 @@ void Player::Update(float dt) {
 
 		lr->AddAABB(center, size, col);
 	}
+#endif
 
 	Death(); // 撃墜処理
 
