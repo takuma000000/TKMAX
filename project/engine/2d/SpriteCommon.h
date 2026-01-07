@@ -10,32 +10,50 @@ namespace TKM {
 	class SpriteCommon {
 
 	public://メンバ関数...初期化
-		/// <summary>シングルトンインスタンスを取得します。</summary>
+		/// <summary>
+		/// シングルトンインスタンス。
+		/// </summary>
 		static SpriteCommon* instance;
-		//シングルトンインスタンスの取得
+		/// <summary>
+		/// シングルトンインスタンスの取得。
+		/// </summary>
+		/// <returns></returns>
 		static SpriteCommon* GetInstance();
 
-		/// <summary>スプライト共通機能を初期化します。</summary>
-		/// <param name="dxCommon">DirectX共通。</param>
+		/// <summary>
+		/// スプライト共通機能を初期化します。
+		/// </summary>
+		/// <param name="dxCommon"></param>
 		void Initialize(DirectXCommon* dxCommon);
-		/// <summary>スプライト共通機能を終了します。</summary>
+		/// <summary>
+		/// スプライト共通機能を終了します。
+		/// </summary>
 		void Finalize();
 
-		//共通描画設定
-		/// <summary>スプライト描画の共通設定を行います。</summary>
+		/// <summary>
+		/// スプライト描画の共通設定を行います。
+		/// </summary>
 		void DrawSetCommon();
 
 	private://メンバ関数
-		//ルートシグネチャの生成
-		/// <summary>ルートシグネチャを生成します。</summary>
+		/// <summary>
+		/// ルートシグネチャを生成します。
+		/// </summary>
 		void GenerateRootSignature();
-		//グラフィックスパイプラインの生成
-		/// <summary>グラフィックスパイプラインを生成します。</summary>
+		/// <summary>
+		/// グラフィックスパイプラインを生成します。
+		/// </summary>
 		void GenerateGraficsPipeline();
 
-	public://getter
-		/// <summary>DirectXCommonのゲッター。</summary>
+	public:
+		
+		// Getter=====================================
+		/// <summary>
+		/// DirectXCommonの取得。
+		/// </summary>
+		/// <returns></returns>
 		DirectXCommon* GetDxCommon() const { return dxCommon_; }
+		// ===========================================
 
 	private:
 		DirectXCommon* dxCommon_;
@@ -62,6 +80,5 @@ namespace TKM {
 		SpriteCommon& operator=(SpriteCommon&) = delete;
 
 		////---------------------------------------------------------
-
 	};
 } //namespace TKM

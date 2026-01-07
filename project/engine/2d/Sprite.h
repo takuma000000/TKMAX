@@ -18,7 +18,7 @@ namespace TKM {
 
 		Sprite();
 		~Sprite();
-
+		// 変換情報
 		struct Transform {
 			Vector3 scale;
 			Vector3 rotate;
@@ -46,90 +46,139 @@ namespace TKM {
 			Matrix4x4 World;
 		};
 
-		//getter
-		/// <summary>各種ゲッター。</summary>
-		/// <returns>各種値。</returns>
+		// Gettet=====================================
+		/// <summary>
+		/// 位置の取得。
+		/// </summary>
+		/// <returns></returns>
 		const Vector2& GetPosition() const { return position; }
-		///<summary>変換情報の取得。</summary>
-		///<returns>変換情報。</returns>
+		/// <summary>
+		/// 変換情報の取得。
+		/// </summary>
+		/// <returns></returns>
 		const Transform& GetTransform() const { return transform; }
-		///<summary>回転角の取得。</summary>
-		///<returns>回転角。</returns>
+		/// <summary>
+		/// 回転角の取得。
+		/// </summary>
+		/// <returns></returns>
 		float GetRotation() const { return rotation; }
-		///<summary>色の取得。</summary>
-		///<returns>色。</returns>
+		/// <summary>
+		/// 色の取得。
+		/// </summary>
+		/// <returns></returns>
 		const Vector4& GetColor() const { return materialData->color; }
-		///<summary>サイズの取得。</summary>
-		///<returns>サイズ。</returns>
+		/// <summary>
+		/// サイズの取得。
+		/// </summary>
+		/// <returns></returns>
 		const Vector2& GetSize() const { return size; }
-		///<summary>アンカーポイントの取得。</summary>
-		///<returns>アンカーポイント。</returns>
+		/// <summary>
+		/// アンカーポイントの取得。
+		/// </summary>
+		/// <returns></returns>
 		const Vector2& GetAnchorPoint() const { return anchorPoint; }
-		///<summary>左右フリップの取得。</summary>
-		///<returns>左右フリップ。</returns>
+		/// <summary>
+		/// 左右フリップの取得。
+		/// </summary>
+		/// <returns></returns>
 		bool GetIsFlipX() const { return isFlipX_; }
-		///<summary>上下フリップの取得。</summary>
-		///<returns>上下フリップ。</returns>
+		/// <summary>
+		/// 上下フリップの取得。
+		/// </summary>
+		/// <returns></returns>
 		bool GetIsFlipY() const { return isFlipY_; }
-		///<summary>テクスチャ左上座標の取得。</summary>
-		///<returns>テクスチャ左上座標。</returns>
+		/// <summary>
+		/// テクスチャ左上座標の取得。
+		/// </summary>
+		/// <returns></returns>
 		const Vector2& GetTextureLeftTop() const { return textureLeftTop; }
-		///<summary>テクスチャ切り出しサイズの取得。</summary>
-		///<returns>テクスチャ切り出しサイズ。</returns>
+		/// <summary>
+		/// テクスチャ切り出しサイズの取得。
+		/// </summary>
+		/// <returns></returns>
 		const Vector2& GetTextureSize() const { return textureSize; }
-		///<summary>アクティブスプライト数の取得。</summary>
-		///<returns>アクティブスプライト数。</returns>
+		/// <summary>
+		/// アクティブスプライト数の取得。
+		/// </summary>
+		/// <returns></returns>
 		static int GetActiveCount() { return activeCount_; }
-		//setter
-
-		//
-		/// <summary>各種セッター。</summary>
-		/// <param name="value">各種値。</param>
+		// ===========================================
+		// Settet=====================================
+		/// <summary>
+		/// 位置の設定。
+		/// </summary>
+		/// <param name="position"></param>
 		void SetPosition(const Vector2& position) { this->position = position; }
-		///<summary>変換情報の設定。</summary>
-		///<param name="transform">変換情報。</param>
+		/// <summary>
+		/// 変換情報の設定。
+		/// </summary>
+		/// <param name="transform"></param>
 		void SetTransform(const Transform& transform) { this->transform = transform; }
-		///<summary>回転角の設定。</summary>
-		///<param name="rotation">回転角。</param>
+		/// <summary>
+		/// 回転角の設定。
+		/// </summary>
+		/// <param name="rotation"></param>
 		void SetRotation(float rotation) { this->rotation = rotation; }
-		///<summary>色の設定。</summary>
-		///<param name="color">色。</param>
+		/// <summary>
+		/// 色の設定。
+		/// </summary>
+		/// <param name="color"></param>
 		void SetColor(const Vector4& color) { materialData->color = color; }
-		///<summary>サイズの設定。</summary>
-		///<param name="size">サイズ。</param>
+		/// <summary>
+		/// サイズの設定。
+		/// </summary>
+		/// <param name="size"></param>
 		void SetSize(const Vector2& size) { this->size = size; }
-		///<summary>アンカーポイントの設定。</summary>
-		///<param name="anchorPoint">アンカーポイント。</param>
+		/// <summary>
+		/// アンカーポイントの設定。
+		/// </summary>
+		/// <param name="anchorPoint"></param>
 		void SetAnchorPoint(const Vector2& anchorPoint) { this->anchorPoint = anchorPoint; }
-		///<summary>左右フリップの設定。</summary>
-		///<param name="isFlipX">左右フリップ。</param>
+		/// <summary>
+		/// 左右フリップの設定。
+		/// </summary>
+		/// <param name="isFlipX"></param>
 		void SetIsFlipX(bool isFlipX) { this->isFlipX_ = isFlipX; }
-		///<summary>上下フリップの設定。</summary>
-		///<param name="isFlipY">上下フリップ。</param>
+		/// <summary>
+		/// 上下フリップの設定。
+		/// </summary>
+		/// <param name="isFlipY"></param>
 		void SetIsFlipY(bool isFlipY) { this->isFlipY_ = isFlipY; }
-		///<summary>テクスチャ左上座標の設定。</summary>
-		///<param name="textureLeftTop">テクスチャ左上座標。</param>
+		/// <summary>
+		/// テクスチャ左上座標の設定。
+		/// </summary>
+		/// <param name="textureLeftTop"></param>
 		void SetTextureLeftTop(const Vector2& textureLeftTop) { this->textureLeftTop = textureLeftTop; }
-		///<summary>テクスチャ切り出しサイズの設定。</summary>
-		///<param name="textureSize">テクスチャ切り出しサイズ。</param>
+		/// <summary>
+		/// テクスチャ切り出しサイズの設定。
+		/// </summary>
+		/// <param name="textureSize"></param>
 		void SetTextureSize(const Vector2& textureSize) { this->textureSize = textureSize; }
-		///<summary>親シーンの設定。</summary>
-		///<param name="parentScene">親シーン。</param>
+		/// <summary>
+		/// 親シーンの設定。
+		/// </summary>
+		/// <param name="parentScene"></param>
 		void SetParentScene(BaseScene* parentScene);
 
 	public://メンバ関数
-		/// <summary>スプライトを初期化します。</summary>
-		/// <param name="spriteCommon">スプライト共通設定。</param>
-		/// <param name="dxCommon">DirectX共通。</param>
-		/// <param name="textureFilePath">使用するテクスチャのファイルパス。</param>
+		/// <summary>
+		/// スプライトを初期化します。
+		/// </summary>
+		/// <param name="spriteCommon"></param>
+		/// <param name="dxCommon"></param>
+		/// <param name="textureFilePath"></param>
 		void Initialize(SpriteCommon* spriteCommon, TKM::DirectXCommon* dxCommon, const std::string textureFilePath);
-		/// <summary>スプライトを終了します。</summary>
+		/// <summary>
+		/// スプライトを更新します。
+		/// </summary>
 		void Update();
-		/// <summary>スプライトを描画します。</summary>
+		/// <summary>
+		/// スプライトを描画します。
+		/// </summary>
 		void Draw();
-
-		// ImGuiのデバッグ処理
-		/// <summary>デバッグ用ImGui表示。</summary>
+		/// <summary>
+		/// ImGuiデバッグ表示。
+		/// </summary>
 		void ImGuiDebug();
 
 	private:
@@ -177,8 +226,9 @@ namespace TKM {
 		//テクスチャ切り出しサイズ
 		Vector2 textureSize = { 64.0f,64.0f };
 
-		//テクスチャサイズをイメージに合わせる
-		/// <summary>テクスチャサイズをイメージに合わせる。</summary>
+		/// <summary>
+		/// テクスチャサイズを調整する。
+		/// </summary>
 		void AdjustTextureSize();
 
 		//ファイルパスを保存するメンバー変数

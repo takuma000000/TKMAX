@@ -42,25 +42,29 @@ namespace TKM {
 		TKM::SrvManager* srvManager_ = nullptr;
 
 	public:
-		//シングルトンインスタンスの取得
-		/// <summary>シングルトンインスタンスを取得します。</summary>
+		/// <summary>
+		/// シングルトンインスタンスの取得。
+		/// </summary>
+		/// <returns></returns>
 		static TextureManager* GetInstance();
-		//終了
-		/// <summary>テクスチャマネージャを終了します。</summary>
+		/// <summary>
+		/// シングルトンインスタンスの破棄。
+		/// </summary>
 		void Finalize();
 
-		//初期化
-		/// <summary>テクスチャマネージャを初期化します。</summary>
-		/// <param name="dxCommon">DirectX共通。</param>
-		/// <param name="srvManager">SRVマネージャ。</param>
+		/// <summary>
+		/// テクスチャマネージャを初期化します。
+		/// </summary>
+		/// <param name="dxCommon"></param>
+		/// <param name="srvManager"></param>
 		void Initialize(TKM::DirectXCommon* dxCommon, TKM::SrvManager* srvManager);
 
 	public: //テクスチャファイル読み込み関数
-		//テクスチャファイルの読み込み
-		/// <summary>テクスチャファイルを読み込みます。</summary>
+		/// <summary>
+		/// テクスチャを読み込みます。
+		/// </summary>
+		/// <param name="filePath"></param>
 		void LoadTexture(const std::string& filePath);
-
-
 	public:
 		//テクスチャ1枚分のデータ
 		struct TextureData {
@@ -106,18 +110,25 @@ namespace TKM {
 		std::unordered_map<std::string, TextureData> textureDatas;
 
 	public:
-		/// <summary>ファイルパスからSRVインデックスを取得します。</summary>
-		/// <param name="filePath">テクスチャのファイルパス。</param>
+		// Getter=====================================
+		/// <summary>
+		/// ファイルパスからテクスチャ番号を取得します。
+		/// </summary>
+		/// <param name="filePath"></param>
+		/// <returns></returns>
 		uint32_t GetTextureIndexByFilePath(const std::string& filePath);
-		//テクスチャ番号からGPUハンドルを取得
-		/// <summary>ファイルパスからGPUハンドルを取得します。</summary>
-		/// <param name="filePath">テクスチャのファイルパス。</param>
+		/// <summary>
+		/// ファイルパスからSRVのCPUハンドルを取得します。
+		/// </summary>
+		/// <param name="filePath"></param>
+		/// <returns></returns>
 		D3D12_GPU_DESCRIPTOR_HANDLE GetSrvHandleGPU(const std::string& filePath);
-
-		//メタデータを取得
-		/// <summary>ファイルパスからメタデータを取得します。</summary>
-		/// <param name="filePath">テクスチャのファイルパス。</param>
+		/// <summary>
+		/// ファイルパスからテクスチャメタデータを取得します。
+		/// </summary>
+		/// <param name="filePath"></param>
+		/// <returns></returns>
 		const DirectX::TexMetadata& GetMetadata(const std::string& filePath);
-
+		// ===========================================
 	};
 }

@@ -150,9 +150,7 @@ namespace TKM {
 		dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);//VBVを設定
 		//TransformationMatrixCBufferの場所を設定
 		dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
-		//描画
-		//dxCommon_->GetCommandList()->DrawInstanced(6, 1, 0, 0);
-
+		
 		//IndexBufferViewを設定
 		//IBVを設定
 		dxCommon_->GetCommandList()->IASetIndexBuffer(&indexBufferView);
@@ -179,13 +177,10 @@ namespace TKM {
 
 	void Sprite::ImGuiDebug() {
 #ifdef USE_IMGUI
-
 		// ImGui ウィジェット: スプライトの座標操作
 		ImGui::Begin("Sprite");
-
 		// スプライトの座標を操作するスライダー
 		ImGui::SliderFloat2("Sprite Position", &position.x, 0.0f, 500.0f, "%.1f");
-
 		ImGui::End();
 
 #endif
@@ -194,7 +189,6 @@ namespace TKM {
 	void Sprite::AdjustTextureSize() {
 		//テクスチャデータを取得
 		const DirectX::TexMetadata& metadata = TextureManager::GetInstance()->GetMetadata(textureFilePath);
-
 		textureSize.x = static_cast<float>(metadata.width); //テクスチャの幅を取得
 		textureSize.y = static_cast<float>(metadata.height); //テクスチャの高さを取得
 		//画像サイズをテクスチャサイズに合わせる
