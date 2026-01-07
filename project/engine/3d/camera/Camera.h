@@ -38,42 +38,87 @@ namespace TKM {
 		/// <summary>カメラを生成します。</summary>
 		Camera();
 
-		/// <summary>カメラを更新します。</summary>
+		/// <summary>
+		/// カメラを更新します。
+		/// </summary>
 		void Update();
-
-		/// <summary>デバッグ用ImGui表示。</summary>
+		/// <summary>
+		/// ImGuiデバッグ表示。
+		/// </summary>
 		void ImGuiDebug();
 
-		//setter
-		/// <summary>カメラの各種パラメータを設定します。</summary>
+		// Setter=====================================
+		/// <summary>
+		/// 回転の設定。
+		/// </summary>
+		/// <param name="rotate"></param>
 		void SetRotate(const Vector3& rotate) { this->transform.rotate = rotate; }
-		/// <summary>カメラの各種パラメータを設定します。</summary>
+		/// <summary>
+		/// スケールの設定。
+		/// </summary>
+		/// <param name="scale"></param>
 		void SetScale(const Vector3& scale) { this->transform.scale = scale; }
-		/// <summary>カメラの各種パラメータを設定します。</summary>
+		/// <summary>
+		/// 平行移動の設定。
+		/// </summary>
+		/// <param name="translate"></param>
 		void SetTranslate(const Vector3& translate) { this->transform.translate = translate; }
-		/// <summary>カメラの各種パラメータを設定します。</summary>
+		/// <summary>
+		/// 垂直方向視野角の設定。
+		/// </summary>
+		/// <param name="horizontal"></param>
 		void SetFovY(float horizontal) { this->fovY = horizontal; }
-		/// <summary>カメラの各種パラメータを設定します。</summary>
+		/// <summary>
+		/// アスペクト比の設定。
+		/// </summary>
+		/// <param name="aspect"></param>
 		void SetAspectRatio(float aspect) { this->aspectRatio = aspect; }
-		/// <summary>カメラの各種パラメータを設定します。</summary>
+		/// <summary>
+		/// ニアクリップ距離の設定。
+		/// </summary>
+		/// <param name="nearClip"></param>
 		void SetNearClip(float nearClip) { this->nearClip = nearClip; }
-		/// <summary>カメラの各種パラメータを設定します。</summary>
+		/// <summary>
+		/// ファークリップ距離の設定。
+		/// </summary>
+		/// <param name="farClip"></param>
 		void SetFarClip(float farClip) { this->farClip = farClip; }
-		//getter
-		/// <summary>各種行列やパラメータを取得します。</summary>
+		// Getter=====================================
+		/// <summary>
+		/// ワールド行列の取得。
+		/// </summary>
+		/// <returns></returns>
 		const Matrix4x4& GetWorldMatrix() const { return worldMatrix; }
-		/// <summary>各種行列やパラメータを取得します。</summary>
+		/// <summary>
+		/// ビュー行列の取得。
+		/// </summary>
+		/// <returns></returns>
 		const Matrix4x4& GetViewMatrix() const { return viewMatrix; }
-		/// <summary>各種行列やパラメータを取得します。</summary>
+		/// <summary>
+		/// 射影行列の取得。
+		/// </summary>
+		/// <returns></returns>
 		const Matrix4x4& GetProjectionMatrix() const { return projectionMatrix; }
-		/// <summary>各種行列やパラメータを取得します。</summary>
+		/// <summary>
+		/// ビュー射影行列の取得。
+		/// </summary>
+		/// <returns></returns>
 		const Matrix4x4& GetViewProjectionMatrix() const { return viewProjectionMatrix; }
-		/// <summary>各種行列やパラメータを取得します。</summary>
+		/// <summary>
+		/// 回転の取得。
+		/// </summary>
+		/// <returns></returns>
 		const Vector3& GetRotate() const { return transform.rotate; }
-		/// <summary>各種行列やパラメータを取得します。</summary>
+		/// <summary>
+		/// 平行移動の取得。
+		/// </summary>
+		/// <returns></returns>
 		const Vector3& GetTranslate() const { return transform.translate; }
-		/// <summary>各種行列やパラメータを取得します。</summary>
+		/// <summary>
+		/// スケールの取得。
+		/// </summary>
+		/// <returns></returns>
 		const Vector3& GetScale() const { return transform.scale; }
-
+		// ===========================================
 	};
 } // namespace TKM
