@@ -11,21 +11,13 @@
 
 class BossController {
 public:
-	enum class State { // ボスの状態
+	enum class State {
 		Enter,
 		Orbit,
-		DashWindup,
-		DashRun,
-		Recover,
-		// --- Rage専用攻撃 ---
 		LaserWindup,
 		LaserFire,
 		LaserRecover,
-	};
-
-	enum class DashType { // ダッシュの種類
-		Cross,
-		Hook,
+		Recover,
 	};
 
 	/// <summary>
@@ -55,12 +47,7 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	bool IsAuraActive() const { return auraActive_; }
-	/// <summary>
-	/// ダッシュ予備動作中かどうかを取得します。
-	/// </summary>
-	/// <returns></returns>
-	bool IsDashWindup() const { return state_ == State::DashWindup; }
-
+	
 	// =========================
 	// Laser（怒り中攻撃）情報
 	// =========================
@@ -105,18 +92,6 @@ public:
 	bool GetAuraUseRing() const { return auraUseRing_; }
 	// =========================================
 private:
-	// --- constants ---
-	// Dash offsets
-	struct DashOffsets {
-		float startZOff;
-		float endZOff;
-	};
-	// ダッシュ開始・終了Zオフセット
-	static constexpr DashOffsets kDashOffsets_[2] = {
-		/* Cross */ {  0.0f,  0.0f },
-		/* Hook  */ { 10.0f, -5.0f },
-	};
-
 	// --- state updates ---
 	/// <summary>
 	/// 侵入
@@ -133,21 +108,6 @@ private:
 	/// <param name="pos"></param>
 	/// <param name="playerPos"></param>
 	void UpdateOrbit(float dt, Enemy& boss, Vector3& pos, const Vector3& playerPos);
-	/// <summary>
-	/// ダッシュ予備動作
-	/// </summary>
-	/// <param name="dt"></param>
-	/// <param name="boss"></param>
-	/// <param name="pos"></param>
-	/// <param name="playerPos"></param>
-	void UpdateDashWindup(float dt, Enemy& boss, Vector3& pos, const Vector3& playerPos);
-	/// <summary>
-	/// ダッシュ実行
-	/// </summary>
-	/// <param name="dt"></param>
-	/// <param name="boss"></param>
-	/// <param name="pos"></param>
-	void UpdateDashRun(float dt, Enemy& boss, Vector3& pos);
 	/// <summary>
 	/// 回復
 	/// </summary>
@@ -167,12 +127,6 @@ private:
 	/// </summary>
 	/// <param name="s"></param>
 	void ChangeState(State s);
-	/// <summary>
-	/// ダッシュ準備
-	/// </summary>
-	/// <param name="currentPos"></param>
-	/// <param name="playerPos"></param>
-	void PrepareDash(const Vector3& currentPos, const Vector3& playerPos);
 	/// <summary>
 	/// アリーナ内に位置をクランプする
 	/// </summary>
@@ -200,8 +154,6 @@ private:
 	State state_ = State::Enter;
 	float timer_ = 0.0f;
 
-	DashType dashType_ = DashType::Cross; // ダッシュの種類
-
 	Vector3 arenaMin_{ -18.0f, 3.0f, 35.0f };
 	Vector3 arenaMax_{ 18.0f, 12.0f, 70.0f };
 
@@ -215,31 +167,7 @@ private:
 	float orbitFollow_ = 0.16f;
 	float orbitDuration_ = 3.2f;
 
-	// Dash
-	Vector3 dashStartPos_{};
-	Vector3 dashEndPos_{};
-	Vector3 lastPlayerPos_{};
-
-	float dashWindup_ = 2.0f; // 予備動作時間
 	float recoverDuration_ = 1.0f;
-
-	float dashSpeed_ = 28.0f;
-
-	// 予測の外し量（どれくらいズラすか）
-	float aimJitterX_ = 2.0f;   // 左右ズレ（ワールド座標）
-	float aimJitterY_ = 0.0f;   // 基本0（水平勝負なら）
-	float aimJitterZ_ = 1.0f;   // 奥行ズレ
-
-	float dashStartX_ = 15.0f;
-	float dashEndX_ = 15.0f;
-	float dashStartZ_ = 62.0f;
-	float dashEndZ_ = 42.0f;
-	float dashStartYBias_ = 0.0f;
-	float dashEndYBias_ = 0.0f;
-
-	int dashRepeat_ = 2;
-	int dashCount_ = 0;
-	int lastDashDir_ = 1;
 
 	std::mt19937 rng_;
 
@@ -253,16 +181,6 @@ private:
 	Vector3 playerVel = { 0.0f, 0.0f, 0.0f }; // プレイヤー速度キャッシュ
 
 	float recoverAngle_ = 0.0f; // 回復時のOrbit角度スタート位置
-
-	// --- Recover中の「殴れたら凶悪化」判定 ---
-	int  recoverStartHP_ = 0;
-	int  recoverDamageThreshold_ = 6;   // とりあえず6（分かりやすく）
-	bool nextDashFixed_ = false;        // 次ダッシュを固定するか
-	DashType nextDashType_ = DashType::Cross;
-
-	// 次ダッシュだけ速度補正（凶悪化の体感用）
-	float nextDashSpeedMul_ = 1.0f;
-	float dashSpeedNow_ = 28.0f;        // 実際にDashRunで使う速度
 
 	// --- 怒りモード（有無のみ） ---
 	bool rageActive_ = false; // 怒っているか
