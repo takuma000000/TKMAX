@@ -328,4 +328,38 @@ private:
 	//======================================================================
 	TKM::TimeScaleController timeScale_; // 時間制御クラス
 	bool clearSlowRequested_ = false; // クリアスロー要求フラグ
+
+	// 操作ガイドUI
+	std::unique_ptr<TKM::Sprite> uiLT_;
+	std::unique_ptr<TKM::Sprite> uiLB_;
+	std::unique_ptr<TKM::Sprite> uiRB_;
+
+	// ---- 操作ガイドUIチューニング用 ----
+	bool uiGuideTuner_ = true;
+
+	// 現在値（ゲームで使う）
+	Vector2 uiLTPos_ = { 0.0f, 0.0f };
+	Vector2 uiLBPos_ = { 0.0f, 0.0f };
+	Vector2 uiRBPos_ = { 0.0f, 0.0f };
+
+	Vector2 uiLTSize_ = { 260.0f, 150.0f };
+	Vector2 uiLBSize_ = { 260.0f, 150.0f };
+	Vector2 uiRBSize_ = { 260.0f, 150.0f };
+
+	// 押してる時だけ拡大（1.05〜1.12くらいが気持ちいい）
+	float uiPressedScale_ = 1.08f;
+
+	// 色（見やすくしたいならここも調整できる）
+	float uiIdleAlpha_ = 0.75f;
+	Vector4 uiIdleColor_ = { 1.0f, 1.0f, 1.0f, 0.75f };
+	Vector4 uiOnColor_ = { 1.0f, 0.25f, 0.25f, 1.0f };
+
+	// 初期配置を覚えとく（Reset用）
+	Vector2 uiLTPosDefault_ = { 0.0f, 0.0f };
+	Vector2 uiLBPosDefault_ = { 0.0f, 0.0f };
+	Vector2 uiRBPosDefault_ = { 0.0f, 0.0f };
+
+	Vector2 uiSizeDefault_ = { 260.0f, 150.0f };
+
+
 };

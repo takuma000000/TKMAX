@@ -451,6 +451,29 @@ void GameScene::Update() {
 			startSprite_->Update();
 		}
 
+		// --- 操作ガイドUI：押してる時は赤 ---
+		Input* in = Input::GetInstance();
+
+		// RB / LB
+		bool rbDown = in->PushButton(XINPUT_GAMEPAD_RIGHT_SHOULDER);
+		bool lbDown = in->PushButton(XINPUT_GAMEPAD_LEFT_SHOULDER);
+
+		// LT（アナログ）
+		bool ltDown = (in->GetLeftTrigger() > 30); // 30は好みで
+
+		// 通常色 / 押下色
+		const Vector4 idle = { 1.0f, 1.0f, 1.0f, 0.75f }; // 白（薄め）
+		const Vector4 on = { 1.0f, 0.25f, 0.25f, 1.0f }; // 赤（ハッキリ）
+
+		if (uiRB_) uiRB_->SetColor(rbDown ? on : idle);
+		if (uiLB_) uiLB_->SetColor(lbDown ? on : idle);
+		if (uiLT_) uiLT_->SetColor(ltDown ? on : idle);
+
+		if (uiLT_) { uiLT_->Update(); }
+		if (uiLB_) { uiLB_->Update(); }
+		if (uiRB_) { uiRB_->Update(); }
+
+
 		// その他のオブジェクト・パーティクルの更新
 		ParticleManager::GetInstance()->Update(scaledDt);
 
@@ -590,6 +613,11 @@ void GameScene::Draw() {
 	if (startVisible_) {
 		startSprite_->Draw(); // ゲームスタート文字
 	}
+	// 操作ガイドUI（常時表示）
+	if (uiLT_) { uiLT_->Draw(); }
+	if (uiLB_) { uiLB_->Draw(); }
+	if (uiRB_) { uiRB_->Draw(); }
+
 }
 
 void GameScene::SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float speed, int damage, int lifeFrame) {
@@ -668,6 +696,9 @@ void GameScene::LoadTextures() {
 	TextureManager::GetInstance()->LoadTexture("./resources/reticle.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/damageSpark.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/firework_star.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/LB.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/LT.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/RB.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/uvChecker.dds");
 }
 
@@ -691,6 +722,41 @@ void GameScene::InitializeSprite() {
 	startSprite_->SetSize({ 100, 100 }); // 画像サイズに合わせ調整
 	startSprite_->SetColor({ 1,1,1,1 }); // アルファ1で開始
 	startTween_.Reset(0.0f, 1.0f, startDuration_, Ease::Type::OutBack);
+
+	// ---- 操作ガイドUI（右下） ----
+	uiLT_ = std::make_unique<Sprite>();
+	uiLB_ = std::make_unique<Sprite>();
+	uiRB_ = std::make_unique<Sprite>();
+
+	uiLT_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon, "./resources/LT.png");
+	uiLB_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon, "./resources/LB.png");
+	uiRB_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon, "./resources/RB.png");
+
+	// 右下基準（右下にピタッと寄せる）
+	uiLT_->SetAnchorPoint({ 1.0f, 1.0f });
+	uiLB_->SetAnchorPoint({ 1.0f, 1.0f });
+	uiRB_->SetAnchorPoint({ 1.0f, 1.0f });
+
+	// 画像でかいのでUI用に縮小（好みで調整）
+	const Vector2 uiSize = { 260.0f, 150.0f };
+	uiLT_->SetSize(uiSize);
+	uiLB_->SetSize(uiSize);
+	uiRB_->SetSize(uiSize);
+
+	uiLT_->SetColor({ 1,1,1,0.85f });
+	uiLB_->SetColor({ 1,1,1,0.85f });
+	uiRB_->SetColor({ 1,1,1,0.85f });
+
+	// 右下に積む（RBが一番下）
+	const float w = (float)WindowsAPI::kClientWidth;
+	const float h = (float)WindowsAPI::kClientHeight;
+	const float margin = 20.0f;
+	const float spacing = 10.0f;
+
+	uiRB_->SetPosition({ w - margin, h - margin });
+	uiLB_->SetPosition({ w - margin, h - margin - (uiSize.y + spacing) * 1.0f });
+	uiLT_->SetPosition({ w - margin, h - margin - (uiSize.y + spacing) * 2.0f });
+
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
