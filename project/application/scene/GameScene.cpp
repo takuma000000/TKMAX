@@ -901,6 +901,8 @@ bool GameScene::UpdateClearSequence(float dt) {
 	// 花火用タイマー（クリア演出中だけ使うローカル static）
 	static float fireTimer = 0.0f;
 
+	bool finished = false;
+
 	switch (clearPhase_) {
 	case ClearPhase::CamZoom: // カメラ寄せ
 	{
@@ -971,17 +973,15 @@ bool GameScene::UpdateClearSequence(float dt) {
 			// 一度に何発分の花火を出すか（単発）
 			const int kBurstCount = 1;
 
-			for (int i = 0; i < kBurstCount; ++i) { // 複数発分ループ
-				// スクリーン座標風の -1.0〜1.0
-				float sx = randRange(-1.0f, 1.0f);    // 左右
-				float sy = randRange(-0.8f, 0.8f);   // 上下（ちょい上下狭め）
-
+			for (int i = 0; i < kBurstCount; ++i) {
+				float sx = randRange(-1.0f, 1.0f);
+				float sy = randRange(-0.8f, 0.8f);
 				float depth = randRange(minDepth, maxDepth);
 
 				// カメラ前方 depth の位置を中心に、Right/Up 方向でオフセット
 				Vector3 center = camPos + camFwd * depth + camRight * (sx * halfWidth) + camUp * (sy * halfHeight);
 
-				SpawnFirework(center); // 花火発生関数を呼ぶ
+				SpawnFirework(center);
 			}
 		}
 
@@ -1006,8 +1006,7 @@ bool GameScene::UpdateClearSequence(float dt) {
 			iris_->Update();
 
 			if (irisCloseTween_.Finished()) {
-				// クリア演出完了 → true を返す
-				return true;
+				finished = true; // ここでreturnしない（下で smoke/fog 更新してから返す）
 			}
 		}
 		break;
@@ -1016,14 +1015,23 @@ bool GameScene::UpdateClearSequence(float dt) {
 		break;
 	}
 
-	// フレームタイム計測
-	const float rawDt = dt; /// デフォルトデルタタイム（補間なし）
-	timeScale_.Update(rawDt); // タイムスケールコントローラーの更新
-	const float scaledDt = rawDt * timeScale_.GetScale(); /// スローデルタタイム
+	// ここから「クリア演出中でも動かしたいもの」をまとめて更新する
+	const float rawDt = dt;
+	timeScale_.Update(rawDt);
+	const float scaledDt = rawDt * timeScale_.GetScale();
+
 	// パーティクルは普通に動かす
 	ParticleManager::GetInstance()->Update(scaledDt);
 
-	return false; // まだ演出継続中
+	// ★ クリア演出中でも Fog/Smoke は常時動かす（ここが今回の修正）
+	if (fogVolume3D_) {
+		fogVolume3D_->Update(scaledDt);
+	}
+	if (smokeVolume3D_) {
+		smokeVolume3D_->Update(scaledDt);
+	}
+
+	return finished;
 }
 
 void GameScene::SpawnFirework(const Vector3& center) {
