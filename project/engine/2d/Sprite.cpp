@@ -136,8 +136,9 @@ namespace TKM {
 		transformSprite.rotate = { 0.0f,0.0f,rotation };
 		transformSprite.scale = { size.x,size.y,1.0f };
 
-		//テクスチャサイズをイメージに合わせる
-		AdjustTextureSize();
+		if (autoAdjustTextureSize_) {
+			AdjustTextureSize();
+		}
 	}
 
 	void Sprite::Draw() {

@@ -102,6 +102,11 @@ namespace TKM {
 		/// </summary>
 		/// <returns></returns>
 		static int GetActiveCount() { return activeCount_; }
+		/// <summary>
+		/// 親シーンの取得。
+		/// </summary>
+		/// <returns></returns>
+		bool GetAutoAdjustTextureSize() const { return autoAdjustTextureSize_; }
 		// ===========================================
 		// Settet=====================================
 		/// <summary>
@@ -159,6 +164,12 @@ namespace TKM {
 		/// </summary>
 		/// <param name="parentScene"></param>
 		void SetParentScene(BaseScene* parentScene);
+		/// <summary>
+		/// テクスチャサイズの自動調整の有効化・無効化。
+		/// </summary>
+		/// <param name="enable"></param>
+		void SetAutoAdjustTextureSize(bool enable) { autoAdjustTextureSize_ = enable; }
+		// ===========================================
 
 	public://メンバ関数
 		/// <summary>
@@ -238,5 +249,6 @@ namespace TKM {
 
 		inline static int activeCount_ = 0;
 
+		bool autoAdjustTextureSize_ = true; // テクスチャサイズ自動調整フラグ
 	};
 } // namespace TKM

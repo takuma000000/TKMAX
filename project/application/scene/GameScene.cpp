@@ -729,8 +729,11 @@ void GameScene::InitializeSprite() {
 	uiRB_ = std::make_unique<Sprite>();
 
 	uiLT_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon, "./resources/LT.png");
+	uiLT_->SetAutoAdjustTextureSize(false);
 	uiLB_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon, "./resources/LB.png");
+	uiLB_->SetAutoAdjustTextureSize(false);
 	uiRB_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon, "./resources/RB.png");
+	uiRB_->SetAutoAdjustTextureSize(false);
 
 	// 右下基準（右下にピタッと寄せる）
 	uiLT_->SetAnchorPoint({ 1.0f, 1.0f });
@@ -738,7 +741,7 @@ void GameScene::InitializeSprite() {
 	uiRB_->SetAnchorPoint({ 1.0f, 1.0f });
 
 	// 画像でかいのでUI用に縮小（好みで調整）
-	const Vector2 uiSize = { 260.0f, 150.0f };
+	const Vector2 uiSize = { 100, 100.0f };
 	uiLT_->SetSize(uiSize);
 	uiLB_->SetSize(uiSize);
 	uiRB_->SetSize(uiSize);
@@ -756,7 +759,6 @@ void GameScene::InitializeSprite() {
 	uiRB_->SetPosition({ w - margin, h - margin });
 	uiLB_->SetPosition({ w - margin, h - margin - (uiSize.y + spacing) * 1.0f });
 	uiLT_->SetPosition({ w - margin, h - margin - (uiSize.y + spacing) * 2.0f });
-
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
