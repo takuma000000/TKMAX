@@ -618,6 +618,7 @@ void GameScene::Draw() {
 	if (uiLB_) { uiLB_->Draw(); }
 	if (uiRB_) { uiRB_->Draw(); }
 
+	if (bossManager_) { bossManager_->DrawUI(); }
 }
 
 void GameScene::SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float speed, int damage, int lifeFrame) {

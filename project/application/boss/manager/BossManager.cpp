@@ -68,6 +68,11 @@ void BossManager::Initialize(TKM::DirectXCommon* dxCommon, TKM::Camera* camera, 
 	laserBeam3D_->GetDesc().sliceCount = 64;
 	laserBeam3D_->GetDesc().noiseScale = 1.0f;
 	laserBeam3D_->GetDesc().noiseSpeed = 1.0f;
+
+	hpUI_ = std::make_unique<TKM::BossHpBarUI>();
+	TKM::BossHpBarUI::Desc d{};
+	hpUI_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, parentScene_, d);
+	hpUI_->SetVisible(false);
 }
 
 void BossManager::StartBattle() {
@@ -101,6 +106,10 @@ void BossManager::StartBattle() {
 	bossController_->Initialize(kBossConfig.arenaMin, kBossConfig.arenaMax);
 
 	killSeq_.Reset();
+
+	if (hpUI_) {
+		hpUI_->SetVisible(true);
+	}
 }
 
 void BossManager::Update(float dt) {
@@ -124,6 +133,10 @@ void BossManager::Update(float dt) {
 		d.startWS = li.startWS;
 		d.endWS = li.endWS;
 		d.radius = li.radius; // 見た目の太さ＝当たり判定半径に一致させる
+	}
+
+	if (hpUI_ && boss_) {
+		hpUI_->Update(dt, boss_.get());
 	}
 
 	// ボス本体更新
@@ -180,6 +193,12 @@ void BossManager::Draw(TKM::DirectXCommon* dxCommon) {
 
 		Matrix4x4 vp = camera_->GetViewProjectionMatrix();
 		laserBeam3D_->Draw(vp, right, up, fwd);
+	}
+}
+
+void BossManager::DrawUI() {
+	if (hpUI_ && bossBattle_ && boss_ && !boss_->IsDead()) {
+		hpUI_->Draw();
 	}
 }
 
@@ -262,6 +281,10 @@ bool BossManager::IsBossAlive() const {
 
 bool BossManager::IsBossDead() const {
 	return boss_ && boss_->IsDead();
+
+	if (hpUI_ && boss_ && boss_->IsDead()) {
+		hpUI_->SetVisible(false);
+	}
 }
 
 void BossManager::OnClearSequenceStart() {

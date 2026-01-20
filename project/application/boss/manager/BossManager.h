@@ -15,6 +15,7 @@
 #include "TimeScaleController.h"
 #include "WaterRippleEffect.h"
 #include "LaserBeam3D.h"
+#include "BossHpBarUI.h"
 
 //=============================================================
 // BossManagerクラス
@@ -95,6 +96,11 @@ public:
 	/// </summary>
 	/// <param name="dxCommon"></param>
 	void Draw(TKM::DirectXCommon* dxCommon);
+
+	/// <summary>
+	/// UI描画。
+	/// </summary>
+	void DrawUI();
 
 	/// <summary>
 	/// ボス弾をスポーンさせる。
@@ -180,4 +186,6 @@ private:
 	void UpdateBossBullets();
 
 	KillSequenceState killSeq_; // 撃破シーケンス状態
+
+	std::unique_ptr<TKM::BossHpBarUI> hpUI_; // ボスHPバーUI
 };

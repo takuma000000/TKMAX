@@ -190,6 +190,7 @@
     <ClCompile Include="resources\shaders\FogVolume3D.cpp" />
     <ClCompile Include="engine\effect\post\SmokeVolume3D.cpp" />
     <ClCompile Include="engine\effect\post\LaserBeam3D.cpp" />
+    <ClCompile Include="application\boss\BossHpBarUI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -407,6 +408,7 @@
     <ClInclude Include="engine\effect\post\FogVolume3D.h" />
     <ClInclude Include="engine\effect\post\SmokeVolume3D.h" />
     <ClInclude Include="engine\effect\post\LaserBeam3D.h" />
+    <ClInclude Include="application\boss\BossHpBarUI.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
