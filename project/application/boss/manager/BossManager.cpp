@@ -137,12 +137,12 @@ void BossManager::Update(float dt) {
 		killSeq_.zoomStarted = true;
 
 		// 波紋
-		if (!killSeq_.rippleTriggered && waterRipple_ && camera_) {
+		/*if (!killSeq_.rippleTriggered && waterRipple_ && camera_) {
 			Matrix4x4 vp = camera_->GetViewProjectionMatrix();
 			Vector2 uv = WorldToUV(boss_->GetWorldPosition(), vp);
 			waterRipple_->Trigger(uv, kBossConfig.killRipple);
 			killSeq_.rippleTriggered = true;
-		}
+		}*/
 
 		// スロー
 		if (!killSeq_.slowTriggered && timeScale_) {
