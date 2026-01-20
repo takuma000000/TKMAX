@@ -451,6 +451,29 @@ void GameScene::Update() {
 			startSprite_->Update();
 		}
 
+		// --- 操作ガイドUI：押してる時は赤 ---
+		Input* in = Input::GetInstance();
+
+		// RB / LB
+		bool rbDown = in->PushButton(XINPUT_GAMEPAD_RIGHT_SHOULDER);
+		bool lbDown = in->PushButton(XINPUT_GAMEPAD_LEFT_SHOULDER);
+
+		// LT（アナログ）
+		bool ltDown = (in->GetLeftTrigger() > 30); // 30は好みで
+
+		// 通常色 / 押下色
+		const Vector4 idle = { 1.0f, 1.0f, 1.0f, 0.75f }; // 白（薄め）
+		const Vector4 on = { 1.0f, 0.25f, 0.25f, 1.0f }; // 赤（ハッキリ）
+
+		if (uiRB_) uiRB_->SetColor(rbDown ? on : idle);
+		if (uiLB_) uiLB_->SetColor(lbDown ? on : idle);
+		if (uiLT_) uiLT_->SetColor(ltDown ? on : idle);
+
+		if (uiLT_) { uiLT_->Update(); }
+		if (uiLB_) { uiLB_->Update(); }
+		if (uiRB_) { uiRB_->Update(); }
+
+
 		// その他のオブジェクト・パーティクルの更新
 		ParticleManager::GetInstance()->Update(scaledDt);
 
@@ -567,6 +590,7 @@ void GameScene::Draw() {
 	// パーティクル描画
 	ParticleManager::GetInstance()->Draw();
 
+#ifdef USE_IMGUI
 	// ライン描画
 	Matrix4x4 vp;
 	if (useDebugCamera_ && debugCamera_) {
@@ -575,6 +599,7 @@ void GameScene::Draw() {
 		vp = camera->GetViewProjectionMatrix();
 	}
 	LineRenderer::GetInstance()->Draw(vp);
+#endif
 
 	// スプライトまとめ
 	TKM::SpriteCommon::GetInstance()->DrawSetCommon();
@@ -588,6 +613,11 @@ void GameScene::Draw() {
 	if (startVisible_) {
 		startSprite_->Draw(); // ゲームスタート文字
 	}
+	// 操作ガイドUI（常時表示）
+	if (uiLT_) { uiLT_->Draw(); }
+	if (uiLB_) { uiLB_->Draw(); }
+	if (uiRB_) { uiRB_->Draw(); }
+
 }
 
 void GameScene::SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float speed, int damage, int lifeFrame) {
@@ -666,6 +696,9 @@ void GameScene::LoadTextures() {
 	TextureManager::GetInstance()->LoadTexture("./resources/reticle.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/damageSpark.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/firework_star.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/LB.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/LT.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/RB.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/uvChecker.dds");
 }
 
@@ -689,6 +722,41 @@ void GameScene::InitializeSprite() {
 	startSprite_->SetSize({ 100, 100 }); // 画像サイズに合わせ調整
 	startSprite_->SetColor({ 1,1,1,1 }); // アルファ1で開始
 	startTween_.Reset(0.0f, 1.0f, startDuration_, Ease::Type::OutBack);
+
+	// ---- 操作ガイドUI（右下） ----
+	uiLT_ = std::make_unique<Sprite>();
+	uiLB_ = std::make_unique<Sprite>();
+	uiRB_ = std::make_unique<Sprite>();
+
+	uiLT_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon, "./resources/LT.png");
+	uiLB_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon, "./resources/LB.png");
+	uiRB_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon, "./resources/RB.png");
+
+	// 右下基準（右下にピタッと寄せる）
+	uiLT_->SetAnchorPoint({ 1.0f, 1.0f });
+	uiLB_->SetAnchorPoint({ 1.0f, 1.0f });
+	uiRB_->SetAnchorPoint({ 1.0f, 1.0f });
+
+	// 画像でかいのでUI用に縮小（好みで調整）
+	const Vector2 uiSize = { 260.0f, 150.0f };
+	uiLT_->SetSize(uiSize);
+	uiLB_->SetSize(uiSize);
+	uiRB_->SetSize(uiSize);
+
+	uiLT_->SetColor({ 1,1,1,0.85f });
+	uiLB_->SetColor({ 1,1,1,0.85f });
+	uiRB_->SetColor({ 1,1,1,0.85f });
+
+	// 右下に積む（RBが一番下）
+	const float w = (float)WindowsAPI::kClientWidth;
+	const float h = (float)WindowsAPI::kClientHeight;
+	const float margin = 20.0f;
+	const float spacing = 10.0f;
+
+	uiRB_->SetPosition({ w - margin, h - margin });
+	uiLB_->SetPosition({ w - margin, h - margin - (uiSize.y + spacing) * 1.0f });
+	uiLT_->SetPosition({ w - margin, h - margin - (uiSize.y + spacing) * 2.0f });
+
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -833,6 +901,8 @@ bool GameScene::UpdateClearSequence(float dt) {
 	// 花火用タイマー（クリア演出中だけ使うローカル static）
 	static float fireTimer = 0.0f;
 
+	bool finished = false;
+
 	switch (clearPhase_) {
 	case ClearPhase::CamZoom: // カメラ寄せ
 	{
@@ -903,17 +973,15 @@ bool GameScene::UpdateClearSequence(float dt) {
 			// 一度に何発分の花火を出すか（単発）
 			const int kBurstCount = 1;
 
-			for (int i = 0; i < kBurstCount; ++i) { // 複数発分ループ
-				// スクリーン座標風の -1.0〜1.0
-				float sx = randRange(-1.0f, 1.0f);    // 左右
-				float sy = randRange(-0.8f, 0.8f);   // 上下（ちょい上下狭め）
-
+			for (int i = 0; i < kBurstCount; ++i) {
+				float sx = randRange(-1.0f, 1.0f);
+				float sy = randRange(-0.8f, 0.8f);
 				float depth = randRange(minDepth, maxDepth);
 
 				// カメラ前方 depth の位置を中心に、Right/Up 方向でオフセット
 				Vector3 center = camPos + camFwd * depth + camRight * (sx * halfWidth) + camUp * (sy * halfHeight);
 
-				SpawnFirework(center); // 花火発生関数を呼ぶ
+				SpawnFirework(center);
 			}
 		}
 
@@ -938,8 +1006,7 @@ bool GameScene::UpdateClearSequence(float dt) {
 			iris_->Update();
 
 			if (irisCloseTween_.Finished()) {
-				// クリア演出完了 → true を返す
-				return true;
+				finished = true; // ここでreturnしない（下で smoke/fog 更新してから返す）
 			}
 		}
 		break;
@@ -948,14 +1015,23 @@ bool GameScene::UpdateClearSequence(float dt) {
 		break;
 	}
 
-	// フレームタイム計測
-	const float rawDt = dt; /// デフォルトデルタタイム（補間なし）
-	timeScale_.Update(rawDt); // タイムスケールコントローラーの更新
-	const float scaledDt = rawDt * timeScale_.GetScale(); /// スローデルタタイム
+	// ここから「クリア演出中でも動かしたいもの」をまとめて更新する
+	const float rawDt = dt;
+	timeScale_.Update(rawDt);
+	const float scaledDt = rawDt * timeScale_.GetScale();
+
 	// パーティクルは普通に動かす
 	ParticleManager::GetInstance()->Update(scaledDt);
 
-	return false; // まだ演出継続中
+	// ★ クリア演出中でも Fog/Smoke は常時動かす（ここが今回の修正）
+	if (fogVolume3D_) {
+		fogVolume3D_->Update(scaledDt);
+	}
+	if (smokeVolume3D_) {
+		smokeVolume3D_->Update(scaledDt);
+	}
+
+	return finished;
 }
 
 void GameScene::SpawnFirework(const Vector3& center) {

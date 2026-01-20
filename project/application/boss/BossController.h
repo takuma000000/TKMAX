@@ -11,17 +11,13 @@
 
 class BossController {
 public:
-	enum class State { // ボスの状態
+	enum class State {
 		Enter,
 		Orbit,
-		DashWindup,
-		DashRun,
+		LaserWindup,
+		LaserFire,
+		LaserRecover,
 		Recover,
-	};
-
-	enum class DashType { // ダッシュの種類
-		Cross,
-		Hook,
 	};
 
 	/// <summary>
@@ -51,11 +47,18 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	bool IsAuraActive() const { return auraActive_; }
-	/// <summary>
-	/// ダッシュ予備動作中かどうかを取得します。
-	/// </summary>
-	/// <returns></returns>
-	bool IsDashWindup() const { return state_ == State::DashWindup; }
+	
+	// =========================
+	// Laser（怒り中攻撃）情報
+	// =========================
+	bool IsLaserWindup() const { return state_ == State::LaserWindup; }
+	bool IsLaserFiring() const { return state_ == State::LaserFire; }
+	bool IsLaserActive() const { return laserActive_; }        // 予告 or 発射中
+	bool IsLaserTelegraph() const { return laserTelegraph_; }  // 予告中
+	const Vector3& GetLaserStartWS() const { return laserStartWS_; }
+	const Vector3& GetLaserEndWS() const { return laserEndWS_; }
+	float GetLaserRadius() const { return laserRadius_; }
+
 	// Getter===================================
 	/// <summary>
 	/// 予備動作に入ってからの経過秒を取得します。
@@ -89,18 +92,6 @@ public:
 	bool GetAuraUseRing() const { return auraUseRing_; }
 	// =========================================
 private:
-	// --- constants ---
-	// Dash offsets
-	struct DashOffsets {
-		float startZOff;
-		float endZOff;
-	};
-	// ダッシュ開始・終了Zオフセット
-	static constexpr DashOffsets kDashOffsets_[2] = {
-		/* Cross */ {  0.0f,  0.0f },
-		/* Hook  */ { 10.0f, -5.0f },
-	};
-
 	// --- state updates ---
 	/// <summary>
 	/// 侵入
@@ -118,21 +109,6 @@ private:
 	/// <param name="playerPos"></param>
 	void UpdateOrbit(float dt, Enemy& boss, Vector3& pos, const Vector3& playerPos);
 	/// <summary>
-	/// ダッシュ予備動作
-	/// </summary>
-	/// <param name="dt"></param>
-	/// <param name="boss"></param>
-	/// <param name="pos"></param>
-	/// <param name="playerPos"></param>
-	void UpdateDashWindup(float dt, Enemy& boss, Vector3& pos, const Vector3& playerPos);
-	/// <summary>
-	/// ダッシュ実行
-	/// </summary>
-	/// <param name="dt"></param>
-	/// <param name="boss"></param>
-	/// <param name="pos"></param>
-	void UpdateDashRun(float dt, Enemy& boss, Vector3& pos);
-	/// <summary>
 	/// 回復
 	/// </summary>
 	/// <param name="dt"></param>
@@ -140,18 +116,17 @@ private:
 	/// <param name="pos"></param>
 	void UpdateRecover(float dt, Enemy& boss, Vector3& pos);
 
+	// --- Laser ---
+	void UpdateLaserWindup(float dt, Enemy& boss, Vector3& pos, const Vector3& playerPos);
+	void UpdateLaserFire(float dt, Enemy& boss, Vector3& pos, const Vector3& playerPos);
+	void UpdateLaserRecover(float dt, Enemy& boss, Vector3& pos);
+
 	// --- helpers ---
 	/// <summary>
 	/// 状態変更
 	/// </summary>
 	/// <param name="s"></param>
 	void ChangeState(State s);
-	/// <summary>
-	/// ダッシュ準備
-	/// </summary>
-	/// <param name="currentPos"></param>
-	/// <param name="playerPos"></param>
-	void PrepareDash(const Vector3& currentPos, const Vector3& playerPos);
 	/// <summary>
 	/// アリーナ内に位置をクランプする
 	/// </summary>
@@ -179,8 +154,6 @@ private:
 	State state_ = State::Enter;
 	float timer_ = 0.0f;
 
-	DashType dashType_ = DashType::Cross; // ダッシュの種類
-
 	Vector3 arenaMin_{ -18.0f, 3.0f, 35.0f };
 	Vector3 arenaMax_{ 18.0f, 12.0f, 70.0f };
 
@@ -194,31 +167,7 @@ private:
 	float orbitFollow_ = 0.16f;
 	float orbitDuration_ = 3.2f;
 
-	// Dash
-	Vector3 dashStartPos_{};
-	Vector3 dashEndPos_{};
-	Vector3 lastPlayerPos_{};
-
-	float dashWindup_ = 2.0f; // 予備動作時間
 	float recoverDuration_ = 1.0f;
-
-	float dashSpeed_ = 28.0f;
-
-	// 予測の外し量（どれくらいズラすか）
-	float aimJitterX_ = 2.0f;   // 左右ズレ（ワールド座標）
-	float aimJitterY_ = 0.0f;   // 基本0（水平勝負なら）
-	float aimJitterZ_ = 1.0f;   // 奥行ズレ
-
-	float dashStartX_ = 15.0f;
-	float dashEndX_ = 15.0f;
-	float dashStartZ_ = 62.0f;
-	float dashEndZ_ = 42.0f;
-	float dashStartYBias_ = 0.0f;
-	float dashEndYBias_ = 0.0f;
-
-	int dashRepeat_ = 2;
-	int dashCount_ = 0;
-	int lastDashDir_ = 1;
 
 	std::mt19937 rng_;
 
@@ -233,16 +182,6 @@ private:
 
 	float recoverAngle_ = 0.0f; // 回復時のOrbit角度スタート位置
 
-	// --- Recover中の「殴れたら凶悪化」判定 ---
-	int  recoverStartHP_ = 0;
-	int  recoverDamageThreshold_ = 6;   // とりあえず6（分かりやすく）
-	bool nextDashFixed_ = false;        // 次ダッシュを固定するか
-	DashType nextDashType_ = DashType::Cross;
-
-	// 次ダッシュだけ速度補正（凶悪化の体感用）
-	float nextDashSpeedMul_ = 1.0f;
-	float dashSpeedNow_ = 28.0f;        // 実際にDashRunで使う速度
-
 	// --- 怒りモード（有無のみ） ---
 	bool rageActive_ = false; // 怒っているか
 	// --- Rage Gauge ---
@@ -254,6 +193,26 @@ private:
 	int   lastHpForRage_ = -1;        // 前回HP（ダメージ検出用）
 	float noDamageTime_ = 0.0f;   // 最後に被ダメしてからの経過
 	float rageDecayDelay_ = 2.0f; // 秒間ノーダメなら減衰開始
+
+	// =========================
+	// Laser（怒り中のみ）
+	// =========================
+	float laserCooldown_ = 5.0f;      // 連発防止
+	float laserCooldownT_ = 0.0f;
+	float laserChance_ = 0.40f;       // Orbit終了時にレーザーへ分岐する確率（怒り中）
+	float laserWindup_ = 0.70f;       // 予告
+	float laserFire_ = 1.10f;         // 発射
+	float laserRecover_ = 0.55f;      // 復帰
+	float laserRadius_ = 2.2f;        // 当たり判定の太さ
+	float laserMuzzleYOffset_ = 10.0f; // 発射位置Yオフセット（ボス中心＋）
+	float laserTrackStrength_ = 0.15f; // 発射中の軽い追尾（0で固定）
+
+	bool  laserActive_ = false;        // 予告 or 発射
+	bool  laserTelegraph_ = false;     // 予告中
+	Vector3 laserStartWS_{ 0.0f,0.0f,0.0f };
+	Vector3 laserEndWS_{ 0.0f,0.0f,0.0f };
+	Vector3 laserBasePos_{ 0.0f,0.0f,0.0f }; // レーザー中の固定基準
+	Vector3 laserAimFixed_{ 0.0f,0.0f,0.0f }; // 予告開始時の狙い（固定）
 
 	// --- Windup Stop & Shake ---
 	Vector3 windupBasePos_{ 0.0f, 0.0f, 0.0f }; // 予備動作開始位置（固定）

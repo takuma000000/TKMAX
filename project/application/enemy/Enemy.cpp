@@ -411,6 +411,7 @@ void Enemy::Update(float dt) {
 		}
 	}
 
+#ifdef USE_IMGUI
 	// AABB 表示（そのまま）
 	{
 		Vector3 center = GetWorldPosition();
@@ -435,6 +436,7 @@ void Enemy::Update(float dt) {
 			lr->AddAABB(center, size, normal);
 		}
 	}
+#endif
 
 	// ロック脈動（そのまま）
 	if (isLocked_ && lockPulseEnabled_) {

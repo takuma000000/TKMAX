@@ -14,6 +14,7 @@
 #include "AuraVolumeRenderer.h"
 #include "TimeScaleController.h"
 #include "WaterRippleEffect.h"
+#include "LaserBeam3D.h"
 
 //=============================================================
 // BossManagerクラス
@@ -50,6 +51,27 @@ public:
 			rippleTriggered = false;
 		}
 	};
+
+	// =========================
+	// Laser（怒り中攻撃）情報
+	// =========================
+	struct LaserInfo {
+		bool active = false;       // 予告 or 発射中
+		bool telegraph = false;    // 予告中
+		Vector3 startWS{ 0.0f,0.0f,0.0f };
+		Vector3 endWS{ 0.0f,0.0f,0.0f };
+		float radius = 0.0f;       // 当たり判定半径
+	};
+
+	/// <summary>
+	/// 現在のレーザー情報を取得（描画/当たり判定用）
+	/// </summary>
+	LaserInfo GetLaserInfo() const;
+
+	/// <summary>
+	/// 点（球）とレーザー線分の当たり判定
+	/// </summary>
+	static bool TestLaserHit(const LaserInfo& laser, const Vector3& sphereCenterWS, float sphereRadius);
 
 	/// <summary>
 	/// 初期化。
@@ -145,11 +167,12 @@ private:
 	std::vector<std::unique_ptr<BossBullet>> bossBullets_; // ボス弾リスト
 	std::unique_ptr<BossController> bossController_; // ボスコントローラー
 	std::unique_ptr<TKM::AuraVolumeRenderer> auraVolume_; // オーラボリュームレンダラー
+	std::unique_ptr<TKM::LaserBeam3D> laserBeam3D_; // レーザー描画
 
 	// タイムスケールコントローラー参照
-	TKM::TimeScaleController* timeScale_ = nullptr; // タイムスケールコントローラー参照
+	TKM::TimeScaleController* timeScale_ = nullptr;
 	// ウォーターリップルエフェクト参照
-	TKM::WaterRippleEffect* waterRipple_ = nullptr; // 参照だけ（所有はGameScene）
+	TKM::WaterRippleEffect* waterRipple_ = nullptr;
 
 	/// <summary>
 	/// ボス弾を更新します。

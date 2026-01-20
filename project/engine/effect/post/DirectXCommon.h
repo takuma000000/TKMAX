@@ -166,6 +166,36 @@ namespace TKM {
 			float RiseSpeed;
 			float _padX[3];
 		};
+		// LaserBeamCB構造体（レーザービーム用）
+		struct LaserBeamCB {
+			Matrix4x4 ViewProj;
+
+			Vector3 StartWS;
+			float Radius;
+
+			Vector3 EndWS;
+			float Intensity;
+
+			Vector3 CamRightWS;
+			float _pad0;
+			Vector3 CamUpWS;
+			float _pad1;
+			Vector3 CamFwdWS;
+			float _pad2;
+
+			uint32_t SliceCount;
+			float Time;
+			float CoreSharpness;
+			float EdgeSoftness;
+
+			Vector3 Color;
+			float NoiseScale;
+
+			float NoiseSpeed;
+			uint32_t Telegraph;
+			float _pad3;
+			float _pad4;
+		};
 
 		// -------------------- 初期化 --------------------
 		/// <summary>
@@ -372,6 +402,10 @@ namespace TKM {
 		/// </summary>
 		void InitializeSmokeVolumePipeline();
 		/// <summary>
+		/// LaserBeam パイプラインの初期化
+		/// </summary>
+		void InitializeLaserBeamPipeline();
+		/// <summary>
 		/// ポストエフェクトチェーン用：Aura適用
 		/// </summary>
 		/// <param name="inputTex"></param>
@@ -495,6 +529,42 @@ namespace TKM {
 			float alphaMax,
 			float worldScale,
 			const Vector3& worldPos);
+		/// <summary>
+		/// レーザービームボリュームの描画
+		/// </summary>
+		/// <param name="viewProj"></param>
+		/// <param name="startWS"></param>
+		/// <param name="endWS"></param>
+		/// <param name="radius"></param>
+		/// <param name="camRightWS"></param>
+		/// <param name="camUpWS"></param>
+		/// <param name="camFwdWS"></param>
+		/// <param name="sliceCount"></param>
+		/// <param name="time"></param>
+		/// <param name="color"></param>
+		/// <param name="intensity"></param>
+		/// <param name="coreSharpness"></param>
+		/// <param name="edgeSoftness"></param>
+		/// <param name="noiseScale"></param>
+		/// <param name="noiseSpeed"></param>
+		/// <param name="telegraph"></param>
+		void DrawLaserBeamVolume(
+			const Matrix4x4& viewProj,
+			const Vector3& startWS,
+			const Vector3& endWS,
+			float radius,
+			const Vector3& camRightWS,
+			const Vector3& camUpWS,
+			const Vector3& camFwdWS,
+			uint32_t sliceCount,
+			float time,
+			const Vector3& color,
+			float intensity,
+			float coreSharpness,
+			float edgeSoftness,
+			float noiseScale,
+			float noiseSpeed,
+			uint32_t telegraph);
 		/// <summary>
 		/// ポストエフェクトなしで RenderTexture → Swapchain へ描画
 		/// </summary>
@@ -819,6 +889,16 @@ namespace TKM {
 
 		Microsoft::WRL::ComPtr<ID3D12Resource> smokeVolumeConstantBuffer_;
 		SmokeVolumeCB* smokeVolumeCB_ = nullptr;
+
+		// LaserBeamVolume 用 PSO
+		bool laserBeamInitialized_ = false;
+		Microsoft::WRL::ComPtr<ID3D12RootSignature> laserBeamRootSignature_;
+		Microsoft::WRL::ComPtr<ID3D12PipelineState>  laserBeamPipelineState_;
+		Microsoft::WRL::ComPtr<ID3D12Resource>       laserBeamConstantBuffer_;
+		void* laserBeamMappedData_ = nullptr;
+
+		Microsoft::WRL::ComPtr<ID3D12Resource> laserBeamVB_;
+		D3D12_VERTEX_BUFFER_VIEW laserBeamVBView_{};
 
 		//======================================================================
 		// 定数バッファ / ポストエフェクト関連リソース

@@ -1,5 +1,6 @@
 #include "BossManager.h"
 #include "GameScene.h"
+#include <algorithm>
 
 static Vector2 WorldToUV(const Vector3& world, const Matrix4x4& vp) {
 	float clipX = world.x * vp.m[0][0] + world.y * vp.m[1][0] + world.z * vp.m[2][0] + 1.0f * vp.m[3][0];
@@ -52,10 +53,24 @@ void BossManager::Initialize(TKM::DirectXCommon* dxCommon, TKM::Camera* camera, 
 	// オーラボリュームレンダラー初期化
 	auraVolume_ = std::make_unique<TKM::AuraVolumeRenderer>();
 	auraVolume_->Initialize(dxCommon_);
+
+	// LaserBeam3D 初期化
+	laserBeam3D_ = std::make_unique<TKM::LaserBeam3D>();
+	laserBeam3D_->Initialize(dxCommon_);
+	laserBeam3D_->GetDesc().active = false;
+	laserBeam3D_->GetDesc().telegraph = false;
+
+	// 初期見た目（好みで調整OK）
+	laserBeam3D_->GetDesc().color = { 0.2f, 0.85f, 1.0f };
+	laserBeam3D_->GetDesc().intensity = 3.0f;
+	laserBeam3D_->GetDesc().coreSharpness = 7.0f;
+	laserBeam3D_->GetDesc().edgeSoftness = 1.2f;
+	laserBeam3D_->GetDesc().sliceCount = 64;
+	laserBeam3D_->GetDesc().noiseScale = 1.0f;
+	laserBeam3D_->GetDesc().noiseSpeed = 1.0f;
 }
 
 void BossManager::StartBattle() {
-	// すでにボス戦中なら何もしない
 	if (bossBattle_) {
 		return;
 	}
@@ -84,64 +99,32 @@ void BossManager::StartBattle() {
 	// --- ボス挙動コントローラ生成 ---
 	bossController_ = std::make_unique<BossController>();
 	bossController_->Initialize(kBossConfig.arenaMin, kBossConfig.arenaMax);
-	// リセット
+
 	killSeq_.Reset();
 }
 
 void BossManager::Update(float dt) {
 	if (!bossBattle_ || !boss_) {
-		// ボス戦中でないなら弾だけ掃除しておく
 		UpdateBossBullets();
 		return;
 	}
 
-	// --- ボス挙動更新 ---
 	if (bossController_) {
-		bossController_->Update(dt, *boss_); // ボス挙動更新
+		bossController_->Update(dt, *boss_);
 	}
 
-	// ===== Aura（予備動作中だけ）=====
-	//if (dxCommon_ && camera_ && bossController_) {
-	//	AuraEffect* aura = dxCommon_->GetAuraEffect();
-	//	if (aura) {
-	//		const bool active = bossController_->IsAuraActive(); // DashWindup中 true :contentReference[oaicite:6]{index=6}
-	//		aura->SetActive(active);
+	// --- LaserBeam 更新＆BossControllerのレーザー情報を反映 ---
+	if (laserBeam3D_) {
+		laserBeam3D_->Update(dt);
 
-	//		if (active) {
-	//			Matrix4x4 vp = camera_->GetViewProjectionMatrix();
-	//			Vector3 bossPos = boss_->GetWorldPosition();
-
-	//			// ざっくり “頭〜足” を collider から推定（無ければ定数でもOK）
-	//			Vector3 col = boss_->GetColliderScale();
-	//			float halfH = col.y * 0.5f;
-
-	//			Vector3 topW = bossPos + Vector3{ 0.0f, halfH, 0.0f };
-	//			Vector3 bottomW = bossPos - Vector3{ 0.0f, halfH, 0.0f };
-
-	//			Vector2 centerUV = WorldToUV(bossPos, vp);
-	//			Vector2 topUV = WorldToUV(topW, vp);
-	//			Vector2 bottomUV = WorldToUV(bottomW, vp);
-
-	//			float aspect = dxCommon_->GetViewport().Width / dxCommon_->GetViewport().Height;
-
-	//			aura->SetCenterUV(centerUV);
-	//			aura->SetTopUV(topUV);
-	//			aura->SetBottomUV(bottomUV);
-	//			aura->SetAspect(aspect);
-
-	//			// 立体っぽくする推奨初期値
-	//			aura->SetTaper(0.65f);
-	//			aura->SetNoiseScale(7.0f);
-	//			aura->SetNoiseSpeed(1.4f);
-	//			aura->SetFlameStrength(1.4f);
-	//			aura->SetEdgePower(2.2f);
-	//			aura->SetVerticalFade(0.12f);
-
-	//			// GPUへ送る
-	//			aura->PushToGpu();
-	//		}
-	//	}
-	//}
+		LaserInfo li = GetLaserInfo();
+		auto& d = laserBeam3D_->GetDesc();
+		d.active = li.active;
+		d.telegraph = li.telegraph;
+		d.startWS = li.startWS;
+		d.endWS = li.endWS;
+		d.radius = li.radius; // 見た目の太さ＝当たり判定半径に一致させる
+	}
 
 	// ボス本体更新
 	boss_->Update(dt);
@@ -168,7 +151,6 @@ void BossManager::Update(float dt) {
 		}
 	}
 
-	// ボス弾更新（共通処理にまとめた）
 	UpdateBossBullets();
 
 #ifdef USE_IMGUI
@@ -181,23 +163,23 @@ void BossManager::Update(float dt) {
 void BossManager::Draw(TKM::DirectXCommon* dxCommon) {
 	if (!bossBattle_ || !boss_) { return; }
 
-	// ボス本体
 	boss_->Draw(dxCommon);
 
-	// 3Dオーラ
-	/*if (auraVolume_ && bossController_ && camera_) {
-		const bool active = bossController_->IsAuraActive();
-		auraVolume_->Draw(
-			camera_->GetViewProjectionMatrix(),
-			boss_->GetWorldPosition(),
-			boss_->GetColliderScale(),
-			active
-		);
-	}*/
-
-	// ボス弾など（元のまま）
 	for (auto& b : bossBullets_) {
 		b->Draw(dxCommon);
+	}
+
+	// --- LaserBeam 描画（空間上） ---
+	if (laserBeam3D_ && camera_) {
+		const Matrix4x4& camW = camera_->GetWorldMatrix();
+
+		// ※GameSceneと同じ取り方（translationが m[3]、基底が row0/1/2 前提）
+		Vector3 right{ camW.m[0][0], camW.m[0][1], camW.m[0][2] };
+		Vector3 up{ camW.m[1][0], camW.m[1][1], camW.m[1][2] };
+		Vector3 fwd{ camW.m[2][0], camW.m[2][1], camW.m[2][2] };
+
+		Matrix4x4 vp = camera_->GetViewProjectionMatrix();
+		laserBeam3D_->Draw(vp, right, up, fwd);
 	}
 }
 
@@ -209,6 +191,65 @@ void BossManager::SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float
 	auto bullet = std::make_unique<BossBullet>();
 	bullet->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_, camera_, pos, dir, speed, damage, lifeFrame);
 	bossBullets_.push_back(std::move(bullet));
+}
+
+BossManager::LaserInfo BossManager::GetLaserInfo() const {
+	LaserInfo li{};
+	if (!bossController_) { return li; }
+	li.active = bossController_->IsLaserActive();
+	li.telegraph = bossController_->IsLaserTelegraph();
+	li.startWS = bossController_->GetLaserStartWS();
+	li.endWS = bossController_->GetLaserEndWS();
+	li.radius = bossController_->GetLaserRadius();
+	return li;
+}
+
+static float Dot3(const Vector3& a, const Vector3& b) {
+	return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+static float LengthSq3(const Vector3& v) {
+	return Dot3(v, v);
+}
+
+static Vector3 Sub3(const Vector3& a, const Vector3& b) {
+	return { a.x - b.x, a.y - b.y, a.z - b.z };
+}
+
+static Vector3 Add3(const Vector3& a, const Vector3& b) {
+	return { a.x + b.x, a.y + b.y, a.z + b.z };
+}
+
+static Vector3 Mul3(const Vector3& a, float s) {
+	return { a.x * s, a.y * s, a.z * s };
+}
+
+bool BossManager::TestLaserHit(const LaserInfo& laser, const Vector3& sphereCenterWS, float sphereRadius) {
+	if (!laser.active) { return false; }
+
+	const Vector3 p0 = laser.startWS;
+	const Vector3 p1 = laser.endWS;
+	const Vector3 c = sphereCenterWS;
+
+	Vector3 d = Sub3(p1, p0);
+	float dlen2 = LengthSq3(d);
+
+	if (dlen2 < 1e-6f) {
+		Vector3 dc = Sub3(c, p0);
+		float dist2 = LengthSq3(dc);
+		float r = laser.radius + sphereRadius;
+		return dist2 <= r * r;
+	}
+
+	float t = Dot3(Sub3(c, p0), d) / dlen2;
+	t = std::clamp(t, 0.0f, 1.0f);
+
+	Vector3 q = Add3(p0, Mul3(d, t));
+	Vector3 cq = Sub3(c, q);
+
+	float dist2 = LengthSq3(cq);
+	float r = laser.radius + sphereRadius;
+	return dist2 <= r * r;
 }
 
 bool BossManager::IsBattleActive() const {
@@ -224,7 +265,6 @@ bool BossManager::IsBossDead() const {
 }
 
 void BossManager::OnClearSequenceStart() {
-	// クリア演出に入るタイミングでボス関連を全部破棄
 	bossBattle_ = false;
 	bossBullets_.clear();
 	boss_.reset();
