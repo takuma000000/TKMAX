@@ -98,6 +98,10 @@ public:
 	/// 撃墜演出フェーズの更新。
 	/// </summary>
 	void StartBossDeathCameraZoom();
+	/// <summary>
+	/// RB弾が回復中かどうか。
+	/// </summary>
+	bool IsRbRefilling() const { return rbRefilling_; }
 	// Getter===================================
 	/// <summary>
 	/// プレイヤーの弾リストを取得します。
@@ -140,6 +144,14 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	Vector3 GetColliderScale() const { return colliderScale_; }
+	/// <summary>
+	/// RB弾の残数を取得します。
+	/// </summary>
+	int GetRbAmmo() const { return rbAmmo_; }
+	/// <summary>
+	/// RB弾の最大数を取得します。
+	/// </summary>
+	int GetRbAmmoMax() const { return kRbAmmoMax_; }
 	// =========================================
 	// Setter===================================
 	/// <summary>

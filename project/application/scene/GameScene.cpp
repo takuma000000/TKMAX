@@ -261,6 +261,15 @@ void GameScene::Update() {
 		skybox_->UpdateRotation();
 		// プレイヤーの更新
 		player_->Update(scaledDt);
+		// RB弾ゲージ更新（両サイドから中央へ減る）
+		if (rbGaugeUI_ && player_) {
+			rbGaugeUI_->Update(
+				scaledDt,
+				player_->GetRbAmmo(),
+				player_->GetRbAmmoMax(),
+				player_->IsRbRefilling()
+			);
+		}
 		// ボスマネージャの更新
 		if (bossManager_) {
 			bossManager_->Update(scaledDt);
@@ -617,7 +626,7 @@ void GameScene::Draw() {
 	if (uiLT_) { uiLT_->Draw(); }
 	if (uiLB_) { uiLB_->Draw(); }
 	if (uiRB_) { uiRB_->Draw(); }
-
+	if (rbGaugeUI_) rbGaugeUI_->Draw();
 	if (bossManager_) { bossManager_->DrawUI(); }
 }
 
@@ -760,6 +769,11 @@ void GameScene::InitializeSprite() {
 	uiRB_->SetPosition({ w - margin, h - margin });
 	uiLB_->SetPosition({ w - margin, h - margin - (uiSize.y + spacing) * 1.0f });
 	uiLT_->SetPosition({ w - margin, h - margin - (uiSize.y + spacing) * 2.0f });
+
+	// ---- RB弾ゲージ（画面下中央）----
+	rbGaugeUI_ = std::make_unique<TKM::RBGaugeUI>();
+	TKM::RBGaugeUI::Desc d{};
+	rbGaugeUI_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon, this, d);
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -817,14 +831,14 @@ void GameScene::ImGuiDebug() {
 	/////////////////////////////////////////////////////
 	//enemyManager_->ImGuiDebug(); // 敵マネージャのデバッグ表示
 	/////////////////////////////////////////////////////
-	camera->ImGuiDebug(); // カメラのデバッグ表示
+	//camera->ImGuiDebug(); // カメラのデバッグ表示
 
 	ImGui::Begin("デバッグカメラ");
 	ImGui::Checkbox("オン/オフ", &useDebugCamera_);
 	ImGui::Text("DebugCam: RMB rotate, LMB/Z, MMB/Y");
 	ImGui::End();
 	/////////////////////////////////////////////////////
-	skybox_->ImGuiUpdate(); // スカイボックスのデバッグ表示
+	//skybox_->ImGuiUpdate(); // スカイボックスのデバッグ表示
 	/////////////////////////////////////////////////////
 	// Fog のデバッグ
 	/*if (fog_) {

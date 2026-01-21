@@ -41,6 +41,7 @@
 #include "WaterRippleEffect.h"
 #include "FogVolume3D.h"
 #include "SmokeVolume3D.h"
+#include "RBGaugeUI.h"
 
 //=============================================================
 // GameSceneクラス
@@ -361,5 +362,5 @@ private:
 
 	Vector2 uiSizeDefault_ = { 260.0f, 150.0f };
 
-
+	std::unique_ptr<TKM::RBGaugeUI> rbGaugeUI_;
 };
