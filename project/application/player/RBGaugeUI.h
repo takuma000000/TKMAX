@@ -8,6 +8,7 @@
 #include "DirectXCommon.h"
 #include "BaseScene.h"
 #include "WindowsAPI.h"
+#include <vector>
 
 namespace TKM {
 
@@ -115,5 +116,53 @@ namespace TKM {
 		std::unique_ptr<Sprite> fillR_;
 		std::unique_ptr<Sprite> lagL_;
 		std::unique_ptr<Sprite> lagR_;
+
+		// パンチ（減った瞬間だけ縮んで戻る）
+		float punchTimer_ = 0.0f;
+		static constexpr float kPunchSec_ = 0.08f; // 好みで
+
+		int prevAmmo_ = -1;
+
+		struct Chip {
+			std::unique_ptr<Sprite> sp;
+			Vector2 pos{};
+			Vector2 vel{};
+			float life = 0.0f;
+			float maxLife = 0.0f;
+			float size = 6.0f;
+			bool active = false;
+		};
+
+		std::vector<Chip> chips_;
+
+		// 破片パラメータ（好みで調整）
+		static constexpr int   kChipPool_ = 64;
+		static constexpr float kChipLife_ = 0.22f;
+		static constexpr float kChipSpeed_ = 140.0f;
+		static constexpr float kChipSpread_ = 90.0f;
+		static constexpr float kChipGravity_ = 520.0f;
+		static constexpr float kChipSizeMin_ = 4.0f;
+		static constexpr float kChipSizeMax_ = 10.0f;
+
+		// 前フレームの「片側幅」を保持（削れた量から破片数を決める）
+		float prevHalfW_ = 0.0f;
+
+		/// <summary>
+		/// 破片を発生させる。
+		/// </summary>
+		/// <param name="cx"></param>
+		/// <param name="y"></param>
+		/// <param name="oldHalf"></param>
+		/// <param name="newHalf"></param>
+		void SpawnChips_(float cx, float y, float oldHalf, float newHalf);
+		/// <summary>
+		/// 破片を更新する。
+		/// </summary>
+		/// <param name="dt"></param>
+		void UpdateChips_(float dt);
+		/// <summary>
+		/// 破片を描画する。
+		/// </summary>
+		void DrawChips_();
 	};
 } // namespace TKM
