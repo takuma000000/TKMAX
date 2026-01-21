@@ -39,6 +39,11 @@ void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommo
 		jetPos.z -= kJetSmokeOffsetZ;           // 機体のケツあたり
 		jetEmitter_.Initialize("jetSmoke", jetPos);
 	}
+
+	rbAmmo_ = kRbAmmoMax_;// ロケット弾初期弾数
+	rbEmptyTimer_ = 0.0f; // ロケット弾空タイマー初期化
+	rbRefilling_ = false; // ロケット弾リフィル中フラグ初期化
+	rbRefillValue_ = float(rbAmmo_); // ロケット弾リフィル値初期化
 }
 
 void Player::Update(float dt) {
@@ -172,16 +177,28 @@ void Player::ImGuiDebug() {
 	//---------------- プレイヤー弾ステータス ----------------
 	ImGui::Begin("P弾ステータス");
 	ImGui::SliderFloat("弾速度(RB,RT,LB)", &normalBulletSpeed_, 0.1f, 15.0); // RB,RT,LBの弾速度調整
+
 	ImGui::Separator();
-	int idx = 0;
-	for (const auto& bullet : bullets_) {   // Player が持ってる bullets_ :contentReference[oaicite:1]{index=1}
-		ImGui::Text("Bullet %d : %s",
-			idx++,
-			bullet->IsHit() ? "Hit" : "Flying");  // PlayerBullet::IsHit() 
+
+	float rate = float(rbAmmo_) / float(kRbAmmoMax_);
+	char label[64];
+	std::snprintf(
+		label,
+		sizeof(label),
+		"RB弾数 %d / %d",
+		rbAmmo_,
+		kRbAmmoMax_
+	);
+	ImGui::ProgressBar(rate, ImVec2(260.0f, 18.0f), label);
+
+	if (rbRefilling_) {
+		ImGui::Text("RB回復中...");
+	} else if (rbAmmo_ <= 0) {
+		ImGui::Text("RB回復まで %.2f 秒", std::max(0.0f, kRbEmptyWaitSec_ - rbEmptyTimer_));
+	} else {
+		ImGui::Text("RBアイドル回復まで %.2f 秒", std::max(0.0f, kRbEmptyWaitSec_ - rbNoFireTimer_));
 	}
-	if (idx == 0) {
-		ImGui::Text("弾なし");
-	}
+
 	ImGui::End();
 #endif
 }
@@ -454,6 +471,57 @@ void Player::HandleFollowCamera() {
 }
 
 void Player::HandleShooting() {
+	//====================
+// RB弾 リチャージ更新（0回復 + アイドル回復）
+//====================
+	{
+		// 「撃ってない時間」を進める（回復中は進めなくてOK）
+		if (!rbRefilling_) {
+			rbNoFireTimer_ += dt;
+		}
+
+		// --- 回復開始条件 ---
+		// A) 弾が0で、一定時間経過
+		// B) 弾が残っていても、一定時間撃っていない（アイドル）
+		const bool empty = (rbAmmo_ <= 0);
+		const bool idleReady = (!empty && rbNoFireTimer_ >= kRbEmptyWaitSec_);
+		const bool emptyReady = (empty && (rbEmptyTimer_ >= kRbEmptyWaitSec_));
+
+		// 弾が0なら空タイマーを進める（0じゃないなら0に戻す）
+		if (!rbRefilling_) {
+			if (empty) {
+				rbEmptyTimer_ += dt;
+			} else {
+				rbEmptyTimer_ = 0.0f;
+			}
+		}
+
+		// 回復開始
+		if (!rbRefilling_ && (idleReady || emptyReady)) {
+			rbRefilling_ = true;
+
+			// 回復開始時の初期値：
+			// 0回復なら 0 から
+			// アイドル回復なら 現在弾数から一気に増える
+			rbRefillValue_ = empty ? 0.0f : float(rbAmmo_);
+		}
+
+		// 回復中：一気に増えて全回復
+		if (rbRefilling_) {
+			const float speed = float(kRbAmmoMax_) / std::max(0.001f, kRbRefillSec_); // 弾/秒
+			rbRefillValue_ += speed * dt;
+
+			rbAmmo_ = std::clamp(int(rbRefillValue_), 0, kRbAmmoMax_);
+
+			if (rbAmmo_ >= kRbAmmoMax_) {
+				rbAmmo_ = kRbAmmoMax_;
+				rbRefilling_ = false;
+				rbEmptyTimer_ = 0.0f;
+				rbNoFireTimer_ = 0.0f; // ★満タンになったらアイドル判定もリセット
+			}
+		}
+	}
+
 	RBShoot(); // RB弾処理
 	RTShoot(); // RT弾処理
 	LBShoot(); // LB弾処理
@@ -463,80 +531,87 @@ void Player::HandleShooting() {
 void Player::RBShoot() {
 	TKM::Input* input = TKM::Input::GetInstance();
 
-	// ▼ RB：通常弾（レティクルが描いているガイドライン通りに発射）
-	if (input->PushButton(XINPUT_GAMEPAD_RIGHT_SHOULDER)) {
-		auto bullet = std::make_unique<PlayerBullet>();
-		bullet->Initialize(common_, dxCommon_);
+	// ▼ RB：通常弾
+	if (!input->PushButton(XINPUT_GAMEPAD_RIGHT_SHOULDER)) {
+		return;
+	}
 
-		// 発射位置＝プレイヤー位置（レティクルもここを起点に線を伸ばしている）
-		Vector3 startPos = object_->GetTranslate();
-		bullet->SetPosition(startPos); // 弾位置設定
+	if (rbAmmo_ <= 0 || rbRefilling_) { // 弾切れ中は発射不可
+		return;
+	}
 
-		// ---- 向き：Reticle が計算した「aimDir」をそのまま使う ----
-		Vector3 dir = { 0, 0, 1 }; // デフォは前方
+	auto bullet = std::make_unique<PlayerBullet>();
+	bullet->Initialize(common_, dxCommon_);
 
-		if (reticle_) {
-			dir = reticle_->GetAimDirection();
-			float len = MyMath::Length(dir);
-			if (len <= 0.01f) {
-				dir = { 0, 0, 1 }; // 念のための保険
-			}
+	// 発射位置＝プレイヤー位置
+	Vector3 startPos = object_->GetTranslate();
+	bullet->SetPosition(startPos);
+
+	// ---- 向き：Reticle の aimDir を使う ----
+	Vector3 dir = { 0, 0, 1 };
+
+	if (reticle_) {
+		dir = reticle_->GetAimDirection();
+		float len = MyMath::Length(dir);
+		if (len <= 0.01f) {
+			dir = { 0, 0, 1 };
+		}
+	}
+
+	bullet->SetVelocity(dir * normalBulletSpeed_);
+	bullet->SetCamera(camera);
+	bullet->SetPlayer(this);
+	bullet->SetTrailGroup("trail_rb");
+	bullet->SetCore(core_);
+
+	// ==============================
+	// ターゲット決定
+	// ==============================
+	Enemy* targetEnemy = nullptr;
+
+	if (allEnemies_) {
+		Vector3 rayDir = dir;
+		float len = MyMath::Length(rayDir);
+		if (len > 0.001f) {
+			rayDir = rayDir / len;
 		}
 
-		// 速度セット（見た目用）
-		bullet->SetVelocity(dir * normalBulletSpeed_);
-		bullet->SetCamera(camera);
-		bullet->SetPlayer(this);
-		bullet->SetTrailGroup("trail_rb");
-		bullet->SetCore(core_);
+		Vector3 rayEnd = startPos + rayDir * 150.0f;
+		float closestDist = std::numeric_limits<float>::max();
 
-		// ==============================
-		// ここから「どの敵を狙うか」を決定
-		// ==============================
-		Enemy* targetEnemy = nullptr;
+		for (auto& e : *allEnemies_) {
+			if (!e) continue;
+			if (e->IsDead() || e->IsDying()) continue;
 
-		if (allEnemies_) {
-			// レイの終点（Reticle の maxDist と合わせる。いま 150.0f を使ってるなら同じ値）
-			Vector3 rayDir = dir;
-			float len = MyMath::Length(rayDir);
-			if (len > 0.001f) {
-				rayDir = rayDir / len;
-			}
-			Vector3 rayEnd = startPos + rayDir * 150.0f;
+			Vector3 center = e->GetWorldPosition();
+			Vector3 size = e->GetColliderScale();
+			AABB box(center, size);
 
-			float closestDist = std::numeric_limits<float>::max();
-
-			for (auto& e : *allEnemies_) {
-				if (!e) continue;
-				if (e->IsDead() || e->IsDying()) continue;
-
-				Vector3 center = e->GetWorldPosition();
-				Vector3 size = e->GetColliderScale(); // Enemy の AABB と同じスケールを使用
-
-				AABB box(center, size);
-
-				if (box.IsIntersectSegment(startPos, rayEnd)) {
-					// 一番手前の敵を採用
-					float dist = MyMath::Length(center - startPos);
-					if (dist < closestDist) {
-						closestDist = dist;
-						targetEnemy = e.get();
-					}
+			if (box.IsIntersectSegment(startPos, rayEnd)) {
+				float dist = MyMath::Length(center - startPos);
+				if (dist < closestDist) {
+					closestDist = dist;
+					targetEnemy = e.get();
 				}
 			}
 		}
-
-		// レイで誰も引っ掛からなかったら、ロック中の敵（ボス含む）を使う
-		if (!targetEnemy) {
-			if (enemy_ && !enemy_->IsDead()) {
-				targetEnemy = enemy_;   // BossEnemy* でも Enemy* に代入OK
-			}
-		}
-		// 見つかった敵をこの弾のターゲットにする
-		bullet->SetEnemy(targetEnemy); // nullptr なら「何にも当たらない」通常弾
-		// 弾リストに追加
-		bullets_.push_back(std::move(bullet));
 	}
+
+	// ロック中の敵（ボス含む）
+	if (!targetEnemy) {
+		if (enemy_ && !enemy_->IsDead()) {
+			targetEnemy = enemy_;
+		}
+	}
+
+	bullet->SetEnemy(targetEnemy);
+	bullets_.push_back(std::move(bullet));
+
+	// ★ 発射成功したら消費
+	rbAmmo_ = std::max(0, rbAmmo_ - 1);
+	// ★「撃ってない時間」リセット
+	rbNoFireTimer_ = 0.0f;
+
 }
 
 void Player::RTShoot() {

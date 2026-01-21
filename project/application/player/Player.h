@@ -156,8 +156,7 @@ public:
 	/// カメラを設定します。
 	/// </summary>
 	/// <param name="camera"></param>
-	void SetCamera(TKM::Camera* camera)
-	{
+	void SetCamera(TKM::Camera* camera) {
 		this->camera = camera;
 		if (object_) { object_->SetCamera(camera); }
 		if (reticle_) { reticle_->SetCamera(camera); }
@@ -362,8 +361,22 @@ private:
 	Vector3 colliderScale_ = { 2.0f, 2.0f, 6.0f }; // 当たり判定用スケール
 	float   hitFlashTimer_ = 0.0f;                 // 被弾フラッシュ用タイマー
 
-	// 
+	/// 
 	bool bossDeathBlurActive_ = false;
 	float bossDeathBlurT_ = 0.0f;
 	const float bossDeathBlurDuration_ = 1.5f; // ブラー強めの時間
+
+	///
+	//====================
+	// RB弾（弾数制限）
+	//====================
+	static constexpr int kRbAmmoMax_ = 500;
+	int rbAmmo_;
+	bool debugUnlimitedRB_ = false; // デバッグで無限
+	static constexpr float kRbEmptyWaitSec_ = 3.0f;   // 0になってから回復開始まで待つ秒数
+	static constexpr float kRbRefillSec_ = 0.60f;  // 回復にかける秒数（短いほど「一気に増える」）
+	float rbEmptyTimer_ = 0.0f;      // 0になってからの経過
+	float rbRefillValue_ = 0.0f;     // 回復中の弾数（floatで滑らかに）
+	bool  rbRefilling_ = false;      // 回復中フラグ
+	float rbNoFireTimer_ = 0.0f; // 最後にRBを撃ってからの経過秒数
 };

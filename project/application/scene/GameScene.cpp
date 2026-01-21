@@ -815,7 +815,7 @@ void GameScene::ImGuiDebug() {
 		bossManager_->GetBoss()->ImGuiDebug(); // ボスのデバッグ表示
 	}
 	/////////////////////////////////////////////////////
-	enemyManager_->ImGuiDebug(); // 敵マネージャのデバッグ表示
+	//enemyManager_->ImGuiDebug(); // 敵マネージャのデバッグ表示
 	/////////////////////////////////////////////////////
 	camera->ImGuiDebug(); // カメラのデバッグ表示
 
@@ -827,15 +827,15 @@ void GameScene::ImGuiDebug() {
 	skybox_->ImGuiUpdate(); // スカイボックスのデバッグ表示
 	/////////////////////////////////////////////////////
 	// Fog のデバッグ
-	if (fog_) {
+	/*if (fog_) {
 		fog_->ImGuiDebug();
-	}
-	if (aura_) {
+	}*/
+	/*if (aura_) {
 		aura_->ImGuiDebug();
-	}
-	if (fogVolume3D_) {
+	}*/
+	/*if (fogVolume3D_) {
 		fogVolume3D_->ImGuiDebug();
-	}
+	}*/
 	if (smokeVolume3D_) {
 		smokeVolume3D_->ImGuiDebug();
 	}
