@@ -15,9 +15,9 @@ using TKM::ModelManager;
 using TKM::Sprite;
 
 void TitleScene::Initialize(){
-	camera = std::make_unique<Camera>();
-	camera->SetRotate({ 0.0f, 0.0f, 0.0f });
-	camera->SetTranslate({ 0.0f, camY_, -30.0f });
+	camera_ = std::make_unique<Camera>();
+	camera_->SetRotate({ 0.0f, 0.0f, 0.0f });
+	camera_->SetTranslate({ 0.0f, camY_, -30.0f });
 
 	// ------------ テクスチャ読み込み -----------using TKM::Camera;---
 	TextureManager::GetInstance()->LoadTexture("./resources/circle.png");
@@ -26,33 +26,33 @@ void TitleScene::Initialize(){
 	TextureManager::GetInstance()->LoadTexture("./resources/rostock_laage_airport_4k.dds");
 	//--------------------------------------------
 	// ------------ モデル読み込み --------------
-	ModelManager::GetInstance()->LoadModel("jett.obj", dxCommon);
-	ModelManager::GetInstance()->LoadModel("enemy.obj", dxCommon);
+	ModelManager::GetInstance()->LoadModel("jett.obj", dxCommon_);
+	ModelManager::GetInstance()->LoadModel("enemy.obj", dxCommon_);
 	//-----------------------------------------
 
 	heli_ = std::make_unique<TKM::Object3d>();
-	heli_->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon);
+	heli_->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_);
 	heli_->SetModel("jett.obj");
-	heli_->SetCamera(camera.get());
+	heli_->SetCamera(camera_.get());
 	heli_->SetScale({ scale_, scale_, scale_ });
 	heli_->SetTranslate({ 0.0f, baseY_, 0.0f });
 
-	sprite = std::make_unique<Sprite>();
-	sprite->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon, "./resources/title_kuraran.png");
+	sprite_ = std::make_unique<Sprite>();
+	sprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, "./resources/title_kuraran.png");
 	// 画面中央に表示
-	sprite->SetPosition({ 0.0f,0.0f });
-	sprite->SetSize({ 1.0f, 1.0f });
+	sprite_->SetPosition({ 0.0f,0.0f });
+	sprite_->SetSize({ 1.0f, 1.0f });
 
 	dirLight_ = std::make_unique<TKM::DirectionalLight>();
 	dirLight_->Initialize({ 1,1,1,1 }, { 0.0f, -1.0f, 0.0f }, 1.0f);
 
 	skybox_ = std::make_unique<TKM::Skybox>();
-	skybox_->Initialize(dxCommon, srvManager, "resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
-	skybox_->SetCamera(camera.get());
+	skybox_->Initialize(dxCommon_, srvManager_, "resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
+	skybox_->SetCamera(camera_.get());
 
 	// === Iris sprite (白円) 共通ユーティリティ版 ===
 	// 画面中央配置＋画面を覆う最大スケール irisMax_ をまとめて計算
-	iris_ = CreateCenteredIrisSprite(dxCommon, irisMax_, "./resources/circle2.png");
+	iris_ = CreateCenteredIrisSprite(dxCommon_, irisMax_, "./resources/circle2.png");
 	// 色だけここで上書き（白・不透明）
 	iris_->SetColor({ 1,1,1,1 });
 	// 開始／終了スケールの設定
@@ -68,7 +68,7 @@ void TitleScene::Initialize(){
 	irisTween_.Reset(
 		irisStartScale_,          // start
 		irisEndScale_,            // end
-		kIrisDurationSec,         // 所要時間
+		kIrisDurationSec_,         // 所要時間
 		Ease::Type::InBack        // ちょっと勢いつけて開く感じ
 	);
 
@@ -76,23 +76,23 @@ void TitleScene::Initialize(){
 	titleEnemies_.clear();
 	{
 		auto e = std::make_unique<TKM::Object3d>();
-		e->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon);
+		e->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_);
 		e->SetModel("enemy.obj");
-		e->SetCamera(camera.get());
+		e->SetCamera(camera_.get());
 		e->SetScale({ enemyScale_, enemyScale_, enemyScale_ });
 		e->SetTranslate({ enemyRadius_, enemyBaseY_, 0.0f }); // 右前方あたり
 		titleEnemies_.push_back(std::move(e));
 	}
 
 	//---------------パーティクル----------------
-	TKM::ParticleManager::GetInstance()->Initialize(dxCommon, srvManager, camera.get());
+	TKM::ParticleManager::GetInstance()->Initialize(dxCommon_, srvManager_, camera_.get());
 	//-----------------------------------------
 
 	// ---------------水面波紋エフェクト----------------
 	rippleEffect_ = std::make_unique<TKM::WaterRippleEffect>();
-	rippleEffect_->Initialize(dxCommon);
+	rippleEffect_->Initialize(dxCommon_);
 	// DirectXCommon 側に「現在の ripple はこれだよ」と教える
-	dxCommon->SetWaterRippleEffect(rippleEffect_.get());
+	dxCommon_->SetWaterRippleEffect(rippleEffect_.get());
 
 	// ---------------BGMロード・再生----------------
 	// タイトルBGMロード
@@ -164,10 +164,10 @@ void TitleScene::Update(){
 		}
 		case EnemyMotion::Swoop: {
 			// 周期的にカメラへスッと寄って戻る
-			float phase = std::fmod(enemyTime_, kTwoPi);
+			float phase = std::fmod(enemyTime_, kTwoPi_);
 			// 0→1→0 の台形イージング
 			float w = std::clamp(
-				1.0f - std::abs(std::fmod(phase, kPi) - kHalfPi) / kHalfPi,
+				1.0f - std::abs(std::fmod(phase, kPi_) - kHalfPi_) / kHalfPi_,
 				0.0f, 1.0f);
 			float swoop = -enemyRadius_ * 0.6f * w; // 手前(−Z)に引き寄せ
 
@@ -189,11 +189,11 @@ void TitleScene::Update(){
 	}
 
 	dirLight_->Update(); // 平行光源更新
-	camera->Update(); // カメラ更新
-	sprite->Update(); // タイトル画像更新
+	camera_->Update(); // カメラ更新
+	sprite_->Update(); // タイトル画像更新
 
 	if (rippleEffect_) {
-		rippleEffect_->Update(dt);
+		rippleEffect_->Update(dt_);
 	}
 
 	// SPACE / A でアイリス（閉）開始＋波紋
@@ -225,14 +225,14 @@ void TitleScene::Update(){
 
 		if (irisTween_.Finished()) {
 			irisClosing_ = false; // 状態を戻しておく（お好み）
-			sceneManager_->SetNextScene(new GameScene(dxCommon, srvManager));
+			sceneManager_->SetNextScene(new GameScene(dxCommon_, srvManager_));
 			return;
 		}
 	}
 
 	// Yキーでゲームオーバーシーンへ
 	if (TKM::Input::GetInstance()->TriggerKey(DIK_Y)) {
-		sceneManager_->SetNextScene(new GameOverScene(dxCommon, srvManager));
+		sceneManager_->SetNextScene(new GameOverScene(dxCommon_, srvManager_));
 		return;
 	}
 
@@ -242,7 +242,7 @@ void TitleScene::Update(){
 	if (skyPitch_ < 0.0f)    skyPitch_ += kTwoPi;
 	skybox_->SetRotation({ skyPitch_, 0.0f, 0.0f });
 
-	TKM::ParticleManager::GetInstance()->Update(dt);
+	TKM::ParticleManager::GetInstance()->Update(dt_);
 
 #ifdef USE_IMGUI
 
@@ -260,8 +260,8 @@ void TitleScene::Update(){
 	ImGui::SliderFloat("Cam Dist", &camDist_, 2.0f, 60.0f);
 	ImGui::SliderFloat("Cam Y", &camY_, -5.0f, 20.0f);
 	if (ImGui::Button("Apply Camera")) {
-		camera->SetTranslate({ 0.0f, camY_, -camDist_ });
-		camera->Update();
+		camera_->SetTranslate({ 0.0f, camY_, -camDist_ });
+		camera_->Update();
 	}
 	ImGui::End();
 
@@ -271,13 +271,13 @@ void TitleScene::Update(){
 void TitleScene::Draw(){
 	// 3Dは3Dでまとめて
 	TKM::Object3dCommon::GetInstance()->DrawSetCommon();
-	if (heli_) heli_->Draw(dxCommon);
-	for (auto& e : titleEnemies_) e->Draw(dxCommon);
+	if (heli_) heli_->Draw(dxCommon_);
+	for (auto& e : titleEnemies_) e->Draw(dxCommon_);
 	if (skybox_) skybox_->Draw();
 
 	// ---- ここで Sprite パイプラインに戻す ----
 	TKM::SpriteCommon::GetInstance()->DrawSetCommon();
-	if (sprite) sprite->Draw();     // タイトル画像
+	if (sprite_) sprite_->Draw();     // タイトル画像
 	if (iris_)  iris_->Draw();      // 白円(アイリス)
 
 	TKM::ParticleManager::GetInstance()->Draw();

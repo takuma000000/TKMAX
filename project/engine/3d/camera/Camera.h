@@ -11,27 +11,25 @@
 // ビュー行列と射影行列を扱うカメラクラス。
 //=============================================================
 namespace TKM {
-	class Camera
-	{
-
+	class Camera {
 		struct Transform {
-			Vector3 scale;
-			Vector3 rotate;
-			Vector3 translate;
+			Vector3 scale_;
+			Vector3 rotate_;
+			Vector3 translate_;
 		};
 
 	private:
-		Transform transform;
-		Matrix4x4 worldMatrix;
-		Matrix4x4 viewMatrix;
+		Transform transform_;
+		Matrix4x4 worldMatrix_;
+		Matrix4x4 viewMatrix_;
 
-		Matrix4x4 projectionMatrix;
-		float fovY;	//水平方向視野角
-		float aspectRatio;	//アスペクト比
-		float nearClip;	//ニアクリップ距離
-		float farClip;	//ファークリップ距離
+		Matrix4x4 projectionMatrix_;
+		float fovY_;	//水平方向視野角
+		float aspectRatio_;	//アスペクト比
+		float nearClip_;	//ニアクリップ距離
+		float farClip_;	//ファークリップ距離
 
-		Matrix4x4 viewProjectionMatrix;
+		Matrix4x4 viewProjectionMatrix_;
 
 	public://メンバ関数
 
@@ -52,73 +50,73 @@ namespace TKM {
 		/// 回転の設定。
 		/// </summary>
 		/// <param name="rotate"></param>
-		void SetRotate(const Vector3& rotate) { this->transform.rotate = rotate; }
+		void SetRotate(const Vector3& rotate) { this->transform_.rotate_ = rotate; }
 		/// <summary>
 		/// スケールの設定。
 		/// </summary>
 		/// <param name="scale"></param>
-		void SetScale(const Vector3& scale) { this->transform.scale = scale; }
+		void SetScale(const Vector3& scale) { this->transform_.scale_ = scale; }
 		/// <summary>
 		/// 平行移動の設定。
 		/// </summary>
 		/// <param name="translate"></param>
-		void SetTranslate(const Vector3& translate) { this->transform.translate = translate; }
+		void SetTranslate(const Vector3& translate) { this->transform_.translate_ = translate; }
 		/// <summary>
 		/// 垂直方向視野角の設定。
 		/// </summary>
 		/// <param name="horizontal"></param>
-		void SetFovY(float horizontal) { this->fovY = horizontal; }
+		void SetFovY(float horizontal) { this->fovY_ = horizontal; }
 		/// <summary>
 		/// アスペクト比の設定。
 		/// </summary>
 		/// <param name="aspect"></param>
-		void SetAspectRatio(float aspect) { this->aspectRatio = aspect; }
+		void SetAspectRatio(float aspect) { this->aspectRatio_ = aspect; }
 		/// <summary>
 		/// ニアクリップ距離の設定。
 		/// </summary>
 		/// <param name="nearClip"></param>
-		void SetNearClip(float nearClip) { this->nearClip = nearClip; }
+		void SetNearClip(float nearClip) { this->nearClip_ = nearClip; }
 		/// <summary>
 		/// ファークリップ距離の設定。
 		/// </summary>
 		/// <param name="farClip"></param>
-		void SetFarClip(float farClip) { this->farClip = farClip; }
+		void SetFarClip(float farClip) { this->farClip_ = farClip; }
 		// Getter=====================================
 		/// <summary>
 		/// ワールド行列の取得。
 		/// </summary>
 		/// <returns></returns>
-		const Matrix4x4& GetWorldMatrix() const { return worldMatrix; }
+		const Matrix4x4& GetWorldMatrix() const { return worldMatrix_; }
 		/// <summary>
 		/// ビュー行列の取得。
 		/// </summary>
 		/// <returns></returns>
-		const Matrix4x4& GetViewMatrix() const { return viewMatrix; }
+		const Matrix4x4& GetViewMatrix() const { return viewMatrix_; }
 		/// <summary>
 		/// 射影行列の取得。
 		/// </summary>
 		/// <returns></returns>
-		const Matrix4x4& GetProjectionMatrix() const { return projectionMatrix; }
+		const Matrix4x4& GetProjectionMatrix() const { return projectionMatrix_; }
 		/// <summary>
 		/// ビュー射影行列の取得。
 		/// </summary>
 		/// <returns></returns>
-		const Matrix4x4& GetViewProjectionMatrix() const { return viewProjectionMatrix; }
+		const Matrix4x4& GetViewProjectionMatrix() const { return viewProjectionMatrix_; }
 		/// <summary>
 		/// 回転の取得。
 		/// </summary>
 		/// <returns></returns>
-		const Vector3& GetRotate() const { return transform.rotate; }
+		const Vector3& GetRotate() const { return transform_.rotate_; }
 		/// <summary>
 		/// 平行移動の取得。
 		/// </summary>
 		/// <returns></returns>
-		const Vector3& GetTranslate() const { return transform.translate; }
+		const Vector3& GetTranslate() const { return transform_.translate_; }
 		/// <summary>
 		/// スケールの取得。
 		/// </summary>
 		/// <returns></returns>
-		const Vector3& GetScale() const { return transform.scale; }
+		const Vector3& GetScale() const { return transform_.scale_; }
 		// ===========================================
 	};
 } // namespace TKM

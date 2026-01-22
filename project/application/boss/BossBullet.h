@@ -29,7 +29,7 @@ public:
 		obj_ = std::make_unique<TKM::Object3d>();
 		obj_->Initialize(common, dx);
 		obj_->SetModel("sphere.obj");              // モデル指定
-		obj_->SetScale({ kDefaultScale, kDefaultScale, kDefaultScale }); // スケール
+		obj_->SetScale({ kDefaultScale_, kDefaultScale_, kDefaultScale_ }); // スケール
 		obj_->SetTranslate(pos);
 		if (cam) obj_->SetCamera(cam);
 
@@ -43,11 +43,11 @@ public:
 	/// </summary>
 	void Update() {
 		if (dead_) return;
-		Vector3 p = obj_->GetTranslate();
-		p.x += dir_.x * speed_;
-		p.y += dir_.y * speed_;
-		p.z += dir_.z * speed_;
-		obj_->SetTranslate(p);
+		Vector3 p_ = obj_->GetTranslate();
+		p_.x += dir_.x * speed_;
+		p_.y += dir_.y * speed_;
+		p_.z += dir_.z * speed_;
+		obj_->SetTranslate(p_);
 		obj_->Update();
 		if (--life_ <= 0) dead_ = true;
 	}
@@ -73,7 +73,7 @@ public:
 	/// 簡易当たり判定半径を返します。
 	/// </summary>
 	/// <returns></returns>
-	float Radius() const { return kDefaultScale; } // 簡易当たり半径
+	float Radius() const { return kDefaultScale_; } // 簡易当たり半径
 
 	// Getter===================================
 	/// <summary>
@@ -111,5 +111,5 @@ private:
 	//======================================================================
 	// 定数（マジックナンバー解消）
 	//======================================================================
-	static constexpr float kDefaultScale = 0.6f;  // 見た目の大きさ
+	static constexpr float kDefaultScale_ = 0.6f;  // 見た目の大きさ
 };

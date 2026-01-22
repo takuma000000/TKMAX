@@ -203,8 +203,8 @@ namespace TKM {
 		Matrix4x4 proj = camera_->GetProjectionMatrix(); // プロジェクション行列
 		Matrix4x4 world = MyMath::MakeAffineMatrix(scale_, rotation_, translation_); // ワールド行列
 
-		mappedData_->viewProjection = MyMath::Multiply(view, proj); // VP行列計算
-		mappedData_->world = world; // ワールド行列セット
+		mappedData_->viewProjection_ = MyMath::Multiply(view, proj); // VP行列計算
+		mappedData_->world_ = world; // ワールド行列セット
 
 		// ルートパラメータ設定
 		cmdList->SetGraphicsRootConstantBufferView(0, constantBuffer_->GetGPUVirtualAddress());

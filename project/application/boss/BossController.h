@@ -177,8 +177,8 @@ private:
 	Vector3 prevPlayerPos_{};
 	bool hasPrevPlayerPos_ = false;
 
-	Vector3 playerPos = { 0.0f, 0.0f, 0.0f }; // プレイヤー位置キャッシュ
-	Vector3 playerVel = { 0.0f, 0.0f, 0.0f }; // プレイヤー速度キャッシュ
+	Vector3 playerPos_ = { 0.0f, 0.0f, 0.0f }; // プレイヤー位置キャッシュ
+	Vector3 playerVel_ = { 0.0f, 0.0f, 0.0f }; // プレイヤー速度キャッシュ
 
 	float recoverAngle_ = 0.0f; // 回復時のOrbit角度スタート位置
 

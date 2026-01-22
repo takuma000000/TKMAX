@@ -13,12 +13,12 @@ namespace TKM {
 		/// <para>HWNDを取得します。</para>
 		/// </summary>
 		/// <returns></returns>
-		HWND GetHwnd() const { return hwnd; }
+		HWND GetHwnd() const { return hwnd_; }
 		/// <summary>
 		/// <para>HINSTANCEを取得します。</para>
 		/// </summary>
 		/// <returns></returns>
-		HINSTANCE GetHInstance() const { return wc.hInstance; }
+		HINSTANCE GetHInstance() const { return wc_.hInstance; }
 
 	public://静的メンバ関数
 		/// <summary>
@@ -44,8 +44,8 @@ namespace TKM {
 
 	public://定数
 		//クライアント領域のサイズ
-		static const int32_t kClientWidth = 1280;
-		static const int32_t kClientHeight = 720;
+		static const int32_t kClientWidth_ = 1280;
+		static const int32_t kClientHeight_ = 720;
 
 	public:
 		//メッセージの処理
@@ -54,8 +54,8 @@ namespace TKM {
 
 	private:
 		//ウィンドウハンドル
-		HWND hwnd = nullptr;
+		HWND hwnd_ = nullptr;
 		//ウィンドウクラスの設定
-		WNDCLASS wc{};
+		WNDCLASS wc_{};
 	};
 }

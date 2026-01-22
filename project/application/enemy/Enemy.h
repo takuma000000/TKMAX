@@ -288,7 +288,6 @@ public:
 			pulseT_ = 0.0f;
 		}
 	}
-
 	/// <summary>
 	/// FreeRoam用のパラメータを設定します。
 	/// </summary>
@@ -340,7 +339,7 @@ private:
 	//  Enemy 内部データ（基本）
 	//--------------------------------------------------------------
 	std::unique_ptr<TKM::Object3d> object_;
-	TKM::Camera* camera = nullptr;
+	TKM::Camera* camera_ = nullptr;
 	TKM::BaseScene* parentScene_ = nullptr;
 	Reticle* reticle_ = nullptr;
 	//--------------------------------------------------------------

@@ -19,12 +19,12 @@ namespace TKM {
 		TKM::DirectXCommon* directXCommon_ = nullptr;
 
 		//SRV用のデスクリプタサイズ
-		uint32_t descriptorSize;
+		uint32_t descriptorSize_;
 		//SRVデスクリプタヒープ
-		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeap;
+		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeap_;
 
 		//次に使用するSRVインデックス
-		uint32_t useIndex = 0;
+		uint32_t useIndex_ = 0;
 
 	public:
 		//デストラクタ
@@ -74,8 +74,8 @@ namespace TKM {
 
 		//getter
 		/// <summary>SRVデスクリプタヒープのゲッター。</summary>
-		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> GetSrvDescriptorHeap() const { return descriptorHeap; }
+		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> GetSrvDescriptorHeap() const { return descriptorHeap_; }
 		///<summary>SRVデスクリプタサイズのゲッター。</summary>
-		uint32_t GetDescriptorSizeSRV() { return descriptorSize; }
+		uint32_t GetDescriptorSizeSRV() { return descriptorSize_; }
 	};
 }

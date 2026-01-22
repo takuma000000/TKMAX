@@ -21,44 +21,44 @@ namespace TKM {
 		sceneManager_ = std::make_unique<TKM::SceneManager>();
 
 		// WindowsAPI の初期化
-		windowsAPI = std::make_unique<WindowsAPI>();
-		windowsAPI->Initialize();
+		windowsAPI_ = std::make_unique<WindowsAPI>();
+		windowsAPI_->Initialize();
 
 		// DirectXCommon の初期化
-		dxCommon = std::make_unique<TKM::DirectXCommon>();
-		dxCommon->Initialize(windowsAPI.get());
+		dxCommon_ = std::make_unique<TKM::DirectXCommon>();
+		dxCommon_->Initialize(windowsAPI_.get());
 
 		// SRVマネージャの初期化
-		srvManager = std::make_unique<SrvManager>();
-		srvManager->Initialize(dxCommon.get());
-		assert(srvManager != nullptr && "SrvManager initialization failed");
+		srvManager_ = std::make_unique<SrvManager>();
+		srvManager_->Initialize(dxCommon_.get());
+		assert(srvManager_ != nullptr && "SrvManager initialization failed");
 
 		// DirectXCommon に SrvManager を教える
-		dxCommon->SetSrvManager(srvManager.get());
+		dxCommon_->SetSrvManager(srvManager_.get());
 
 		// RenderTexture 用の RTV/SRV を作成（ここで rtvHandles[2] が有効になる）
-		dxCommon->CreateRenderTextureRTV();
+		dxCommon_->CreateRenderTextureRTV();
 
 		// RenderTexture 用の RTV/SRV を作成
-		dxCommon->CreateRenderTextureRTV();
+		dxCommon_->CreateRenderTextureRTV();
 
 		// CopyImage 用パイプラインを初期化
-		dxCommon->InitializeCopyImagePipeline();
+		dxCommon_->InitializeCopyImagePipeline();
 
 		//テクスチャマネージャの初期化
-		TextureManager::GetInstance()->Initialize(dxCommon.get(), srvManager.get());
+		TextureManager::GetInstance()->Initialize(dxCommon_.get(), srvManager_.get());
 		// モデルマネージャの初期化
-		ModelManager::GetInstance()->Initialize(dxCommon.get());
+		ModelManager::GetInstance()->Initialize(dxCommon_.get());
 		// オーディオマネージャの初期化
 		AudioManager::GetInstance()->Initialize(); // AudioManagerを初期化
 
-		Object3dCommon::GetInstance()->Initialize(dxCommon.get()); // Object3dCommonを初期化
-		TKM::SpriteCommon::GetInstance()->Initialize(dxCommon.get());   // SpriteCommonを初期化
-		Input::GetInstance()->Initialize(windowsAPI.get());        // Inputを初期化
+		Object3dCommon::GetInstance()->Initialize(dxCommon_.get()); // Object3dCommonを初期化
+		TKM::SpriteCommon::GetInstance()->Initialize(dxCommon_.get());   // SpriteCommonを初期化
+		Input::GetInstance()->Initialize(windowsAPI_.get());        // Inputを初期化
 	}
 
 	void Framework::Finalize() {
-		windowsAPI->Finalize(); // WindowsAPI の終了
+		windowsAPI_->Finalize(); // WindowsAPI の終了
 
 		Input::GetInstance()->Finalize(); // Inputの終了
 	}

@@ -11,55 +11,55 @@ namespace TKM {
 
 		// --- frame ---
 		frame_ = std::make_unique<Sprite>();
-		frame_->Initialize(spriteCommon_, dxCommon_, desc_.frameTex);
+		frame_->Initialize(spriteCommon_, dxCommon_, desc_.frameTex_);
 		frame_->SetParentScene(parentScene_);
 		frame_->SetAutoAdjustTextureSize(false); // 枠も自前制御（"そのままサイズ"事故防止）
 		frame_->SetAnchorPoint({ 0.0f, 0.0f });
-		frame_->SetPosition(desc_.pos);
-		frame_->SetSize({ desc_.size.x + 10.0f, desc_.size.y + 10.0f });
+		frame_->SetPosition(desc_.pos_);
+		frame_->SetSize({ desc_.size_.x + 10.0f, desc_.size_.y + 10.0f });
 		// uvCheckerはデバッグ用の当て布なので薄く
 		frame_->SetColor({ 1.0f, 1.0f, 1.0f, 0.18f });
 
 		// 遅延バー（後ろ）
 		lagFill_ = std::make_unique<Sprite>();
-		lagFill_->Initialize(spriteCommon_, dxCommon_, desc_.fillTex);
+		lagFill_->Initialize(spriteCommon_, dxCommon_, desc_.fillTex_);
 		lagFill_->SetParentScene(parentScene_);
 		lagFill_->SetAutoAdjustTextureSize(false);
 		lagFill_->SetAnchorPoint({ 0.0f, 0.0f });
-		lagFill_->SetPosition({ desc_.pos.x + 5.0f, desc_.pos.y + 5.0f });
-		lagFill_->SetSize(desc_.size);
+		lagFill_->SetPosition({ desc_.pos_.x + 5.0f, desc_.pos_.y + 5.0f });
+		lagFill_->SetSize(desc_.size_);
 		lagFill_->SetColor({ 1.0f, 0.35f, 0.35f, 1.0f }); // ダメージ色
 
 		// 本体バー（前）
 		fill_ = std::make_unique<Sprite>();
-		fill_->Initialize(spriteCommon_, dxCommon_, desc_.fillTex);
+		fill_->Initialize(spriteCommon_, dxCommon_, desc_.fillTex_);
 		fill_->SetParentScene(parentScene_);
 		fill_->SetAutoAdjustTextureSize(false);
 		fill_->SetAnchorPoint({ 0.0f, 0.0f });
-		fill_->SetPosition({ desc_.pos.x + 5.0f, desc_.pos.y + 5.0f });
-		fill_->SetSize(desc_.size);
-		fill_->SetColor(desc_.baseColor);
+		fill_->SetPosition({ desc_.pos_.x + 5.0f, desc_.pos_.y + 5.0f });
+		fill_->SetSize(desc_.size_);
+		fill_->SetColor(desc_.baseColor_);
 
 		// 減った区間の残像（lag - fill の差分だけ光って消える）
 		drainGlow_ = std::make_unique<Sprite>();
-		drainGlow_->Initialize(spriteCommon_, dxCommon_, desc_.fillTex);
+		drainGlow_->Initialize(spriteCommon_, dxCommon_, desc_.fillTex_);
 		drainGlow_->SetParentScene(parentScene_);
 		drainGlow_->SetAutoAdjustTextureSize(false);
 		drainGlow_->SetAnchorPoint({ 0.0f, 0.0f });
-		drainGlow_->SetPosition({ desc_.pos.x + 5.0f, desc_.pos.y + 5.0f });
-		drainGlow_->SetSize({ 0.0f, desc_.size.y });
+		drainGlow_->SetPosition({ desc_.pos_.x + 5.0f, desc_.pos_.y + 5.0f });
+		drainGlow_->SetSize({ 0.0f, desc_.size_.y });
 		drainGlow_->SetColor({ 1.0f, 1.0f, 1.0f, 0.0f });
 
 		// 破片プール
-		shards_.resize(desc_.segmentCount);
-		for (auto& s : shards_) {
-			s.sp = std::make_unique<Sprite>();
-			s.sp->Initialize(spriteCommon_, dxCommon_, desc_.shardTex);
-			s.sp->SetParentScene(parentScene_);
-			s.sp->SetAutoAdjustTextureSize(false);
-			s.sp->SetAnchorPoint({ 0.5f, 0.5f });
-			s.sp->SetSize({ 18.0f, 18.0f });
-			s.alive = false;
+		shards_.resize(desc_.segmentCount_);
+		for (auto& s_ : shards_) {
+			s_.sp_ = std::make_unique<Sprite>();
+			s_.sp_->Initialize(spriteCommon_, dxCommon_, desc_.shardTex_);
+			s_.sp_->SetParentScene(parentScene_);
+			s_.sp_->SetAutoAdjustTextureSize(false);
+			s_.sp_->SetAnchorPoint({ 0.5f, 0.5f });
+			s_.sp_->SetSize({ 18.0f, 18.0f });
+			s_.alive_ = false;
 		}
 
 		initialized_ = false;
@@ -72,34 +72,34 @@ namespace TKM {
 
 	void BossHpBarUI::SpawnShards_(int segBegin, int segEnd) {
 		segBegin = std::max(segBegin, 0);
-		segEnd = std::min(segEnd, desc_.segmentCount);
+		segEnd = std::min(segEnd, desc_.segmentCount_);
 
 		// 右端から“減った分”を砕く
-		const float segW = desc_.size.x / float(desc_.segmentCount);
+		const float segW_ = desc_.size_.x / float(desc_.segmentCount_);
 		for (int i = segBegin; i < segEnd; ++i) {
 			// 空いてる破片スロットを探す
-			Shard* slot = nullptr;
+			Shard* slot_ = nullptr;
 			for (auto& s : shards_) {
-				if (!s.alive) { slot = &s; break; }
+				if (!s.alive_) { slot_ = &s; break; }
 			}
-			if (!slot) { break; }
+			if (!slot_) { break; }
 
-			float x = (desc_.pos.x + 5.0f) + segW * (float(i) + 0.5f);
-			float y = (desc_.pos.y + 5.0f) + desc_.size.y * 0.5f;
+			float x_ = (desc_.pos_.x + 5.0f) + segW_ * (float(i) + 0.5f);
+			float y_ = (desc_.pos_.y + 5.0f) + desc_.size_.y * 0.5f;
 
-			slot->alive = true;
-			slot->t = 0.0f;
-			slot->life = desc_.shardLife;
+			slot_->alive_ = true;
+			slot_->t_ = 0.0f;
+			slot_->life_ = desc_.shardLife_;
 
-			float spd = RandRange_(desc_.shardSpeedMin, desc_.shardSpeedMax);
-			float ang = RandRange_(-1.3f, 1.3f);
-			slot->vel = { std::cos(ang) * spd, std::sin(ang) * spd - 120.0f };
+			float spd_ = RandRange_(desc_.shardSpeedMin_, desc_.shardSpeedMax_);
+			float ang_ = RandRange_(-1.3f, 1.3f);
+			slot_->vel_ = { std::cos(ang_) * spd_, std::sin(ang_) * spd_ - 120.0f };
 
-			slot->rot = 0.0f;
-			slot->rotVel = RandRange_(-desc_.shardRotSpeed, desc_.shardRotSpeed);
+			slot_->rot_ = 0.0f;
+			slot_->rotVel_ = RandRange_(-desc_.shardRotSpeed_, desc_.shardRotSpeed_);
 
-			slot->sp->SetPosition({ x, y });
-			slot->sp->SetColor({ 1,1,1,1 });
+			slot_->sp_->SetPosition({ x_, y_ });
+			slot_->sp_->SetColor({ 1,1,1,1 });
 		}
 	}
 
@@ -122,13 +122,13 @@ namespace TKM {
 
 		// 被弾検出：hpが減った瞬間だけ演出
 		if (hp_ < lastHp_) {
-			shakeTimer_ = desc_.shakeTime;
+			shakeTimer_ = desc_.shakeTime_;
 			hitPulse_ = 0.12f;
-			drainGlowTimer_ = desc_.drainGlowTime;
+			drainGlowTimer_ = desc_.drainGlowTime_;
 
-			int oldSeg = int((float(lastHp_) / float(maxHp_)) * desc_.segmentCount);
-			int newSeg = int((float(hp_) / float(maxHp_)) * desc_.segmentCount);
-			SpawnShards_(newSeg, oldSeg);
+			int oldSeg_ = int((float(lastHp_) / float(maxHp_)) * desc_.segmentCount_);
+			int newSeg_ = int((float(hp_) / float(maxHp_)) * desc_.segmentCount_);
+			SpawnShards_(newSeg_, oldSeg_);
 
 			lastHp_ = hp_;
 		} else if (hp_ > lastHp_) {
@@ -138,72 +138,72 @@ namespace TKM {
 		}
 
 		// ヒットパルス（スカッシュ）
-		float pulse = 1.0f;
+		float pulse_ = 1.0f;
 		if (hitPulse_ > 0.0f) {
 			hitPulse_ -= dt;
 			if (hitPulse_ < 0.0f) { hitPulse_ = 0.0f; }
-			float t = hitPulse_ / 0.12f;  // 1..0
-			pulse = 1.0f + (t * 0.30f);
+			float t_ = hitPulse_ / 0.12f;  // 1..0
+			pulse_ = 1.0f + (t_ * 0.30f);
 		}
 
 		// 本体バー：即時反映
-		float rate = float(hp_) / float(maxHp_);
-		float w = desc_.size.x * rate;
-		fill_->SetSize({ w, desc_.size.y * pulse });
+		float rate_ = float(hp_) / float(maxHp_);
+		float w_ = desc_.size_.x * rate_;
+		fill_->SetSize({ w_, desc_.size_.y * pulse_ });
 
 		// 遅延バー：あとから追従
 		if (lagHp_ > float(hp_)) {
-			lagHp_ = std::max(float(hp_), lagHp_ - desc_.lagSpeed * dt);
+			lagHp_ = std::max(float(hp_), lagHp_ - desc_.lagSpeed_ * dt);
 		} else {
 			lagHp_ = float(hp_);
 		}
-		float lagRate = lagHp_ / float(maxHp_);
-		float lw = desc_.size.x * lagRate;
-		lagFill_->SetSize({ lw, desc_.size.y * (1.0f + (pulse - 1.0f) * 0.5f) });
+		float lagRate_ = lagHp_ / float(maxHp_);
+		float lw_ = desc_.size_.x * lagRate_;
+		lagFill_->SetSize({ lw_, desc_.size_.y * (1.0f + (pulse_ - 1.0f) * 0.5f) });
 
 		// シェイク（位置を揺らす）
-		Vector2 basePos = desc_.pos;
-		Vector2 fillPos = { desc_.pos.x + 5.0f, desc_.pos.y + 5.0f };
-		Vector2 off{ 0.0f, 0.0f };
+		Vector2 basePos_ = desc_.pos_;
+		Vector2 fillPos_ = { desc_.pos_.x + 5.0f, desc_.pos_.y + 5.0f };
+		Vector2 off_{ 0.0f, 0.0f };
 
 		if (shakeTimer_ > 0.0f) {
 			shakeTimer_ -= dt;
 			if (shakeTimer_ < 0.0f) { shakeTimer_ = 0.0f; }
-			off = {
-				RandRange_(-desc_.shakePower, desc_.shakePower),
-				RandRange_(-desc_.shakePower, desc_.shakePower)
+			off_ = {
+				RandRange_(-desc_.shakePower_, desc_.shakePower_),
+				RandRange_(-desc_.shakePower_, desc_.shakePower_)
 			};
 		}
 
-		frame_->SetPosition({ basePos.x + off.x, basePos.y + off.y });
-		fill_->SetPosition({ fillPos.x + off.x, fillPos.y + off.y });
-		lagFill_->SetPosition({ fillPos.x + off.x, fillPos.y + off.y });
+		frame_->SetPosition({ basePos_.x + off_.x, basePos_.y + off_.y });
+		fill_->SetPosition({ fillPos_.x + off_.x, fillPos_.y + off_.y });
+		lagFill_->SetPosition({ fillPos_.x + off_.x, fillPos_.y + off_.y });
 
 		// -----------------------------
 		// 色変化：単純回避
 		// -----------------------------
-		bool draining = (lagHp_ > float(hp_));
-		float hpRate = float(hp_) / float(maxHp_);
+		bool draining_ = (lagHp_ > float(hp_));
+		float hpRate_ = float(hp_) / float(maxHp_);
 
-		float lowT = 0.0f;
-		if (hpRate < desc_.lowHpStartRate) {
-			lowT = (desc_.lowHpStartRate - hpRate) / std::max(0.0001f, desc_.lowHpStartRate);
+		float lowT_ = 0.0f;
+		if (hpRate_ < desc_.lowHpStartRate_) {
+			lowT_ = (desc_.lowHpStartRate_ - hpRate_) / std::max(0.0001f, desc_.lowHpStartRate_);
 		}
 
-		Vector4 col = LerpColor_(desc_.baseColor, desc_.lowHpColor, lowT);
+		Vector4 col_ = LerpColor_(desc_.baseColor_, desc_.lowHpColor_, lowT_);
 
-		if (draining) {
-			float flicker = 0.5f + 0.5f * std::sin(time_ * 32.0f);
-			float t = 0.55f + 0.20f * flicker;
-			col = LerpColor_(col, desc_.drainColor, t);
+		if (draining_) {
+			float flicker_ = 0.5f + 0.5f * std::sin(time_ * 32.0f);
+			float t_ = 0.55f + 0.20f * flicker_;
+			col_ = LerpColor_(col_, desc_.drainColor_, t_);
 		}
 
 		if (hitPulse_ > 0.0f) {
-			float t = std::clamp(hitPulse_ / 0.12f, 0.0f, 1.0f);
-			col = LerpColor_(col, desc_.flashColor, t);
+			float t_ = std::clamp(hitPulse_ / 0.12f, 0.0f, 1.0f);
+			col_ = LerpColor_(col_, desc_.flashColor_, t_);
 		}
 
-		fill_->SetColor(col);
+		fill_->SetColor(col_);
 
 		// -----------------------------
 		// 減った区間の残像（lw - w）
@@ -213,14 +213,14 @@ namespace TKM {
 				drainGlowTimer_ -= dt;
 				if (drainGlowTimer_ < 0.0f) { drainGlowTimer_ = 0.0f; }
 
-				float a = drainGlowTimer_ / std::max(0.0001f, desc_.drainGlowTime);
-				float glowW = std::max(0.0f, lw - w);
+				float a_ = drainGlowTimer_ / std::max(0.0001f, desc_.drainGlowTime_);
+				float glowW_ = std::max(0.0f, lw_ - w_);
 
-				drainGlow_->SetSize({ glowW, desc_.size.y });
-				drainGlow_->SetPosition({ (fillPos.x + off.x) + w, (fillPos.y + off.y) });
-				drainGlow_->SetColor({ 1.0f, 0.55f, 0.55f, 0.65f * a });
+				drainGlow_->SetSize({ glowW_, desc_.size_.y });
+				drainGlow_->SetPosition({ (fillPos_.x + off_.x) + w_, (fillPos_.y + off_.y) });
+				drainGlow_->SetColor({ 1.0f, 0.55f, 0.55f, 0.65f * a_ });
 			} else {
-				drainGlow_->SetSize({ 0.0f, desc_.size.y });
+				drainGlow_->SetSize({ 0.0f, desc_.size_.y });
 				drainGlow_->SetColor({ 1.0f, 1.0f, 1.0f, 0.0f });
 			}
 		}
@@ -233,30 +233,30 @@ namespace TKM {
 
 		// 破片更新
 		for (auto& s : shards_) {
-			if (!s.alive) { continue; }
+			if (!s.alive_) { continue; }
 
-			s.t += dt;
-			if (s.t >= s.life) {
-				s.alive = false;
+			s.t_ += dt;
+			if (s.t_ >= s.life_) {
+				s.alive_ = false;
 				continue;
 			}
 
-			Vector2 p = s.sp->GetPosition();
-			p.x += s.vel.x * dt;
-			p.y += s.vel.y * dt;
+			Vector2 p_ = s.sp_->GetPosition();
+			p_.x += s.vel_.x * dt;
+			p_.y += s.vel_.y * dt;
 
 			// 重力っぽく
-			s.vel.y += 520.0f * dt;
+			s.vel_.y += 520.0f * dt;
 
-			s.rot += s.rotVel * dt;
+			s.rot_ += s.rotVel_ * dt;
 
 			// フェード
-			float a = 1.0f - (s.t / s.life);
-			s.sp->SetColor({ 1,1,1,a });
+			float a_ = 1.0f - (s.t_ / s.life_);
+			s.sp_->SetColor({ 1,1,1,a_ });
 
-			s.sp->SetPosition(p);
-			s.sp->SetRotation(s.rot);
-			s.sp->Update();
+			s.sp_->SetPosition(p_);
+			s.sp_->SetRotation(s.rot_);
+			s.sp_->Update();
 		}
 	}
 
@@ -268,10 +268,9 @@ namespace TKM {
 		if (fill_) { fill_->Draw(); }
 
 		for (auto& s : shards_) {
-			if (s.alive && s.sp) {
-				s.sp->Draw();
+			if (s.alive_ && s.sp_) {
+				s.sp_->Draw();
 			}
 		}
 	}
-
 } // namespace TKM

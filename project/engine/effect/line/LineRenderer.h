@@ -51,8 +51,8 @@ namespace TKM {
 		~LineRenderer() = default;
 
 		struct Vertex {
-			Vector3 pos;
-			Color   col;
+			Vector3 pos_;
+			Color   col_;
 		};
 
 		TKM::DirectXCommon* dx_ = nullptr;
@@ -67,7 +67,13 @@ namespace TKM {
 		Microsoft::WRL::ComPtr<ID3D12PipelineState>       pso_;
 		Microsoft::WRL::ComPtr<ID3D12RootSignature>       rootSig_;
 
+		/// <summary>
+		/// 頂点バッファを作成する。
+		/// </summary>
 		void CreateBuffer();
+		/// <summary>
+		/// パイプラインを作成する。
+		/// </summary>
 		void CreatePipeline();
 	};
 }

@@ -93,7 +93,7 @@ namespace TKM {
 
 		int totalParticles = 0;
 		for (const auto& pair : TKM::ParticleManager::GetInstance()->GetParticleGroups()) {
-			totalParticles += static_cast<int>(pair.second.particles.size());
+			totalParticles += static_cast<int>(pair.second.particles_.size());
 		}
 		ImGui::Text("アクティブ Particles: %d", totalParticles);
 		ImGui::Text("パーティクルグループ数: %d", TKM::ParticleManager::GetInstance()->GetParticleGroups().size());

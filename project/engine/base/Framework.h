@@ -54,17 +54,17 @@ namespace TKM {
 		/// WindowsAPIのゲッター。
 		/// </summary>
 		/// <returns></returns>
-		WindowsAPI* GetWindowsAPI() const { return windowsAPI.get(); }
+		WindowsAPI* GetWindowsAPI() const { return windowsAPI_.get(); }
 		/// <summary>
 		/// DirectXCommonのゲッター。
 		/// </summary>
 		/// <returns></returns>
-		TKM::DirectXCommon* GetDirectXCommon() const { return dxCommon.get(); }
+		TKM::DirectXCommon* GetDirectXCommon() const { return dxCommon_.get(); }
 		/// <summary>
 		/// SrvManagerのゲッター。
 		/// </summary>
 		/// <returns></returns>
-		SrvManager* GetSrvManager() const { return srvManager.get(); }
+		SrvManager* GetSrvManager() const { return srvManager_.get(); }
 		// ==============================================
 		// Setter========================================
 		/// <summary>
@@ -77,12 +77,12 @@ namespace TKM {
 		bool endRequest_ = false;    // 終了フラグ
 
 		// 汎用メンバ変数
-		std::unique_ptr<WindowsAPI> windowsAPI;
-		std::unique_ptr<TKM::DirectXCommon> dxCommon;
-		std::unique_ptr<SrvManager> srvManager;
+		std::unique_ptr<WindowsAPI> windowsAPI_;
+		std::unique_ptr<TKM::DirectXCommon> dxCommon_;
+		std::unique_ptr<SrvManager> srvManager_;
 
 		//ポインタ...ImGuiManager
-		std::unique_ptr<TKM::ImGuiManager>  imguiManager = nullptr;
+		std::unique_ptr<TKM::ImGuiManager>  imguiManager_ = nullptr;
 
 		//シーンファクトリー
 		std::unique_ptr<AbstractSceneFactory> sceneFactory_ = nullptr;

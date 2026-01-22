@@ -15,14 +15,14 @@ namespace TKM {
 		this->directXCommon_ = directXCommon;
 
 		//SRV用のヒープでディスクリプタの数は128。SRVはShader内で触るものなので、ShaderVisibleはtrue
-		descriptorHeap = directXCommon_->CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kMaxSRVCount, true);
+		descriptorHeap_ = directXCommon_->CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, kMaxSRVCount, true);
 		//デスクリプタ1個分のサイズを取得して記録
-		descriptorSize = directXCommon_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		descriptorSize_ = directXCommon_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	}
 
 	void SrvManager::PreDraw() {
 		//描画用のDescriptorHeapの設定
-		ID3D12DescriptorHeap* descriptorHeaps[] = { descriptorHeap.Get() };
+		ID3D12DescriptorHeap* descriptorHeaps[] = { descriptorHeap_.Get() };
 		directXCommon_->GetCommandList()->SetDescriptorHeaps(1, descriptorHeaps);
 	}
 
@@ -32,19 +32,19 @@ namespace TKM {
 
 	uint32_t SrvManager::Allocate() {
 		// 上限に達していないかチェック
-		assert(useIndex < kMaxSRVCount);
+		assert(useIndex_ < kMaxSRVCount);
 
 		// returnする番号を一旦記録しておく
-		uint32_t index = useIndex;
+		uint32_t index = useIndex_;
 		// 次回のために番号を 1 進める
-		useIndex++;
+		useIndex_++;
 		// 上で記録した番号をreturn
 		return index;
 	}
 
 	bool SrvManager::Available() const {
 		// 現在のインデックスが最大数未満であればtrueを返す
-		return useIndex < kMaxSRVCount;
+		return useIndex_ < kMaxSRVCount;
 	}
 
 
@@ -63,11 +63,11 @@ namespace TKM {
 	}
 
 	D3D12_CPU_DESCRIPTOR_HANDLE SrvManager::GetCPUDescriptorHandle(uint32_t index) {
-		return GetCPUDescriptorHandleSUB(descriptorHeap.Get(), descriptorSize, index);
+		return GetCPUDescriptorHandleSUB(descriptorHeap_.Get(), descriptorSize_, index);
 	}
 
 	D3D12_GPU_DESCRIPTOR_HANDLE SrvManager::GetGPUDescriptorHandle(uint32_t index) {
-		return GetGPUDescriptorHandleSUB(descriptorHeap.Get(), descriptorSize, index);
+		return GetGPUDescriptorHandleSUB(descriptorHeap_.Get(), descriptorSize_, index);
 	}
 
 	void SrvManager::CreateSRVforTexture2D(uint32_t srvIndex, ID3D12Resource* pResource, DXGI_FORMAT Format, UINT MipLevels) {

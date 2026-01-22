@@ -49,7 +49,7 @@
 //=============================================================
 class GameScene : public TKM::BaseScene {
 public:
-	GameScene(TKM::DirectXCommon* dxCommon, TKM::SrvManager* srvManager) : dxCommon(dxCommon), srvManager(srvManager) {}
+	GameScene(TKM::DirectXCommon* dxCommon, TKM::SrvManager* srvManager) : dxCommon_(dxCommon), srvManager_(srvManager) {}
 	~GameScene() = default;
 
 	/// <summary>
@@ -134,13 +134,13 @@ public:
 	/// <returns></returns>
 	TKM::Camera* GetCameraPtr() {
 		if (useDebugCamera_ && debugCamera_) { return debugCamera_.get(); }
-		return camera.get();
+		return camera_.get();
 	}
 	/// <summary>
 	/// DirectXCommonのポインタを取得します。
 	/// </summary>
 	/// <returns></returns>
-	TKM::DirectXCommon* GetDX() { return dxCommon; }
+	TKM::DirectXCommon* GetDX() { return dxCommon_; }
 	/// <summary>
 	/// プレイヤーのポインタを取得します。
 	/// </summary>
@@ -151,12 +151,12 @@ private:
 	//======================================================================
 	// 基本システム
 	//======================================================================
-	TKM::DirectXCommon* dxCommon = nullptr;
-	TKM::SrvManager* srvManager = nullptr;
+	TKM::DirectXCommon* dxCommon_ = nullptr;
+	TKM::SrvManager* srvManager_ = nullptr;
 	//======================================================================
 	// カメラ / ライト / スカイボックス
 	//======================================================================
-	std::unique_ptr<TKM::Camera> camera = nullptr;
+	std::unique_ptr<TKM::Camera> camera_ = nullptr;
 
 	std::unique_ptr<TKM::DebugCamera> debugCamera_ = nullptr; // デバッグカメラ
 	bool useDebugCamera_ = false;                        // デバッグカメラ使用フラグ
@@ -180,7 +180,7 @@ private:
 	float camPitchEnd_ = 0.05f;    // 少しだけ水平へ
 
 	// スカイボックス回転
-	static constexpr float kSkyRotSpeedX = 0.002f;
+	static constexpr float kSkyRotSpeedX_ = 0.002f;
 	//======================================================================
 	// プレイヤー / 敵 / マネージャ
 	//======================================================================
@@ -203,15 +203,15 @@ private:
 	// パーティクル / 風エフェクト
 	//======================================================================
 	//パーティクル
-	std::unique_ptr<ParticleEmitter> particleEmitter = nullptr;
+	std::unique_ptr<ParticleEmitter> particleEmitter_ = nullptr;
 
 	// 風エフェクト用
 	void  UpdateAirStreak(float dt);
 	float airStreakTimer_ = 0.0f;
 
 	// airStreak（風エフェクト）
-	static constexpr float kAirBoxHalfWidth = 40.0f;
-	static constexpr float kAirBoxHalfHeight = 25.0f;
+	static constexpr float kAirBoxHalfWidth_ = 40.0f;
+	static constexpr float kAirBoxHalfHeight_ = 25.0f;
 	//======================================================================
 	// アイリス開き演出（ゲーム開始）
 	//======================================================================
@@ -228,10 +228,10 @@ private:
 	std::unique_ptr<TKM::Sprite> irisShadow_ = nullptr; // Irisの影
 	float emitOpenDelaySec_ = 0.7f;  // 開始から何秒遅らせるか（お好み）
 	float emitOpenElapsed_ = 0.0f;  // 経過時間
-	const float dt = 0.016f;           // 可変なら実測のdeltaTimeを使ってOK
+	const float dt_ = 0.016f;           // 可変なら実測のdeltaTimeを使ってOK
 
 	// アイリス演出時間
-	static constexpr float kIrisDurationSec = 0.8f;
+	static constexpr float kIrisDurationSec_ = 0.8f;
 	//======================================================================
 	// アイリス閉じ演出（タイトル戻り）
 	//======================================================================
@@ -248,8 +248,8 @@ private:
 	bool  startVisible_ = false;        // 表示も最初はしない（演出終了後に出す）
 	bool  startPlayed_ = false;        // 一度だけ出すためのフラグ
 
-	Vector2 startStartPos_ = { TKM::WindowsAPI::kClientWidth + 400.0f, TKM::WindowsAPI::kClientHeight * 0.5f }; // 右外
-	Vector2 startEndPos_ = { TKM::WindowsAPI::kClientWidth * 0.5f,  TKM::WindowsAPI::kClientHeight * 0.5f };  // 中央
+	Vector2 startStartPos_ = { TKM::WindowsAPI::kClientWidth_ + 400.0f, TKM::WindowsAPI::kClientHeight_ * 0.5f }; // 右外
+	Vector2 startEndPos_ = { TKM::WindowsAPI::kClientWidth_ * 0.5f,  TKM::WindowsAPI::kClientHeight_ * 0.5f };  // 中央
 
 	Ease::Tween startTween_;        // イージング
 	float       startDuration_ = 1.0f;   // アニメ時間
@@ -264,9 +264,9 @@ private:
 	bool  startGlowOn_ = true;   // ON/OFF
 
 	// 「ゲームスタート」演出
-	static constexpr float kStartSlideInSec = 1.0f;
-	static constexpr float kStartHoldSec = 1.0f;
-	static constexpr float kStartFadeSec = 0.6f;
+	static constexpr float kStartSlideInSec_ = 1.0f;
+	static constexpr float kStartHoldSec_ = 1.0f;
+	static constexpr float kStartFadeSec_ = 0.6f;
 	//======================================================================
 	// プレイヤー死亡・ゲームオーバー遷移
 	//======================================================================
@@ -294,8 +294,8 @@ private:
 	float   clearPlayerFlyDistance_ = 80.0f;   // Z方向に飛ばす距離目安
 
 	// クリア演出
-	static constexpr float kPlayerFlyMinTime = 1.8f;
-	static constexpr float kPlayerFlyDistance = 80.0f;
+	static constexpr float kPlayerFlyMinTime_ = 1.8f;
+	static constexpr float kPlayerFlyDistance_ = 80.0f;
 	//======================================================================
 	// 花火演出
 	//======================================================================
@@ -306,7 +306,7 @@ private:
 	Vector3 lastEmitPos_ = { 0.0f, 0.0f, 0.0f }; // 最後にエフェクトを出した位置
 
 	// 花火
-	static constexpr int kFireworkBurstCount = 60;
+	static constexpr int kFireworkBurstCount_ = 60;
 	//======================================================================
 	// ポストエフェクト（RadialBlur）
 	//======================================================================

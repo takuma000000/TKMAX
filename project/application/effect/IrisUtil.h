@@ -17,25 +17,25 @@ inline std::unique_ptr<TKM::Sprite> CreateCenteredIrisSprite(
 	float& outMaxScale,
 	const char* texturePath = "./resources/circle2.png")
 {
-	auto sprite = std::make_unique<TKM::Sprite>();
-	sprite->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon, texturePath);
+	auto sprite_ = std::make_unique<TKM::Sprite>();
+	sprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon, texturePath);
 
 	// 画面中央
-	sprite->SetAnchorPoint({ 0.5f, 0.5f });
-	sprite->SetPosition(
-		{ TKM::WindowsAPI::kClientWidth * 0.5f, TKM::WindowsAPI::kClientHeight * 0.5f });
+	sprite_->SetAnchorPoint({ 0.5f, 0.5f });
+	sprite_->SetPosition(
+		{ TKM::WindowsAPI::kClientWidth_ * 0.5f, TKM::WindowsAPI::kClientHeight_ * 0.5f });
 
 	// 画面対角長から「絶対にはみ出す」スケールを計算
-	const float w = static_cast<float>(TKM::WindowsAPI::kClientWidth);
-	const float h = static_cast<float>(TKM::WindowsAPI::kClientHeight);
-	const float diag = std::sqrt(w * w + h * h);
+	const float w_ = static_cast<float>(TKM::WindowsAPI::kClientWidth_);
+	const float h_ = static_cast<float>(TKM::WindowsAPI::kClientHeight_);
+	const float diag_ = std::sqrt(w_ * w_ + h_ * h_);
 
 	// 2 倍くらいにしておけば端がチラ見えしない
-	outMaxScale = diag * 2.0f;
+	outMaxScale = diag_ * 2.0f;
 
-	sprite->SetSize({ outMaxScale, outMaxScale });
+	sprite_->SetSize({ outMaxScale, outMaxScale });
 
-	return sprite;
+	return sprite_;
 }
 
 /// ------------------------------------------------------------
@@ -47,8 +47,8 @@ inline float UpdateIrisScale(TKM::Sprite* iris, Ease::Tween& tween, float dt)
 {
 	if (!iris) { return 0.0f; }
 
-	float scale = tween.Update(dt);
-	iris->SetSize({ scale, scale });
+	float scale_ = tween.Update(dt);
+	iris->SetSize({ scale_, scale_ });
 	iris->Update();
-	return scale;
+	return scale_;
 }

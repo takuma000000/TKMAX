@@ -582,51 +582,51 @@ namespace TKM {
 		/// D3D12デバイスのゲッター
 		/// </summary>
 		/// <returns></returns>
-		ID3D12Device* GetDevice() const { return device.Get(); }
+		ID3D12Device* GetDevice() const { return device_.Get(); }
 		/// <summary>
 		/// コマンドキューのゲッター
 		/// </summary>
 		/// <returns></returns>
-		ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
+		ID3D12GraphicsCommandList* GetCommandList() const { return commandList_.Get(); }
 		/// <summary>
 		/// ビューポートのゲッター
 		/// </summary>
 		/// <returns></returns>
-		D3D12_VIEWPORT GetViewport() const { return viewport; }
+		D3D12_VIEWPORT GetViewport() const { return viewport_; }
 		/// <summary>
 		/// シザー矩形のゲッター
 		/// </summary>
 		/// <returns></returns>
-		D3D12_RECT GetRect() const { return scissorRect; }
+		D3D12_RECT GetRect() const { return scissorRect_; }
 		/// <summary>
 		/// デスクリプタサイズのゲッター
 		/// </summary>
 		/// <returns></returns>
-		uint32_t GetDescriptorSizeRTV() const { return descriptorSizeRTV; }
+		uint32_t GetDescriptorSizeRTV() const { return descriptorSizeRTV_; }
 		/// <summary>
 		/// デスクリプタサイズのゲッター
 		/// </summary>
 		/// <returns></returns>
-		uint32_t GetDescriptorSizeDSV() const { return descriptorSizeDSV; }
+		uint32_t GetDescriptorSizeDSV() const { return descriptorSizeDSV_; }
 		/// <summary>
 		/// デスクリプタサイズのゲッター
 		/// </summary>
 		/// <returns></returns>
-		size_t GetBackBufferCount() const { return backBufferChange; }
+		size_t GetBackBufferCount() const { return backBufferChange_; }
 		/// <summary>
 		/// DSVハンドルのゲッター
 		/// </summary>
 		/// <returns></returns>
 		D3D12_CPU_DESCRIPTOR_HANDLE GetDSVHandle() const {
-			return dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+			return dsvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
 		}
 		/// <summary>
 		/// 現在のRTVハンドルのゲッター
 		/// </summary>
 		/// <returns></returns>
 		D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentRTVHandle() const {
-			UINT index = swapChain->GetCurrentBackBufferIndex();
-			return rtvHandles[index];
+			UINT index = swapChain_->GetCurrentBackBufferIndex();
+			return rtvHandles_[index];
 		}
 		/// <summary>
 		/// RenderTexture 用 SRV インデックスのゲッター
@@ -770,55 +770,55 @@ namespace TKM {
 		// DirectX関連コア（デバイス / ファクトリ / スワップチェーン）
 		//======================================================================
 		// -------------------- DirectX関連 --------------------
-		Microsoft::WRL::ComPtr<ID3D12Device>       device;       // D3D12デバイス
-		Microsoft::WRL::ComPtr<IDXGIFactory7>      dxgiFactory;  // DXGIファクトリ
-		Microsoft::WRL::ComPtr<IDXGISwapChain4>    swapChain;    // スワップチェーン
-		Microsoft::WRL::ComPtr<ID3D12Debug1>       debugController; // デバッグコントローラ
-		Microsoft::WRL::ComPtr<IDXGIAdapter4>      useAdapter;   // 使用アダプタ
+		Microsoft::WRL::ComPtr<ID3D12Device>       device_;       // D3D12デバイス
+		Microsoft::WRL::ComPtr<IDXGIFactory7>      dxgiFactory_;  // DXGIファクトリ
+		Microsoft::WRL::ComPtr<IDXGISwapChain4>    swapChain_;    // スワップチェーン
+		Microsoft::WRL::ComPtr<ID3D12Debug1>       debugController_; // デバッグコントローラ
+		Microsoft::WRL::ComPtr<IDXGIAdapter4>      useAdapter_;   // 使用アダプタ
 
-		Microsoft::WRL::ComPtr<ID3D12CommandAllocator>      commandAllocator;
-		Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList>   commandList;
-		Microsoft::WRL::ComPtr<ID3D12CommandQueue>          commandQueue;
+		Microsoft::WRL::ComPtr<ID3D12CommandAllocator>      commandAllocator_;
+		Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList>   commandList_;
+		Microsoft::WRL::ComPtr<ID3D12CommandQueue>          commandQueue_;
 		//======================================================================
 		// ヒープ / フェンス / レンダーターゲット / 深度
 		//======================================================================
-		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap;
-		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap;
-		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap;
-		Microsoft::WRL::ComPtr<ID3D12Fence>          fence;
+		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap_;
+		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap_;
+		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap_;
+		Microsoft::WRL::ComPtr<ID3D12Fence>          fence_;
 
-		Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource;
-		std::array<Microsoft::WRL::ComPtr<ID3D12Resource>, 2> swapChainResources;
+		Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource_;
+		std::array<Microsoft::WRL::ComPtr<ID3D12Resource>, 2> swapChainResources_;
 
-		DXGI_SWAP_CHAIN_DESC1          swapChainDesc{};
-		D3D12_RENDER_TARGET_VIEW_DESC  rtvDesc{};
-		D3D12_DEPTH_STENCIL_VIEW_DESC  dsvDesc{};
-		D3D12_VIEWPORT                 viewport{};
-		D3D12_RECT                     scissorRect{};
-		D3D12_RESOURCE_BARRIER         barrier{};
+		DXGI_SWAP_CHAIN_DESC1          swapChainDesc_{};
+		D3D12_RENDER_TARGET_VIEW_DESC  rtvDesc_{};
+		D3D12_DEPTH_STENCIL_VIEW_DESC  dsvDesc_{};
+		D3D12_VIEWPORT                 viewport_{};
+		D3D12_RECT                     scissorRect_{};
+		D3D12_RESOURCE_BARRIER         barrier_{};
 		// -------------------- 描画状態 --------------------
 		D3D12_RESOURCE_STATES renderTextureState = D3D12_RESOURCE_STATE_RENDER_TARGET;
 		// -------------------- デスクリプタサイズ --------------------
-		uint32_t descriptorSizeRTV = 0;
-		uint32_t descriptorSizeDSV = 0;
-		uint32_t descriptorSizeSRV = 0;
+		uint32_t descriptorSizeRTV_ = 0;
+		uint32_t descriptorSizeDSV_ = 0;
+		uint32_t descriptorSizeSRV_ = 0;
 		// -------------------- ImGui/RTV --------------------
 		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvHeap_;
-		D3D12_CPU_DESCRIPTOR_HANDLE                  rtvStartHandle{};
-		D3D12_CPU_DESCRIPTOR_HANDLE                  rtvHandles[4]{};
+		D3D12_CPU_DESCRIPTOR_HANDLE                  rtvStartHandle_{};
+		D3D12_CPU_DESCRIPTOR_HANDLE                  rtvHandles_[4]{};
 		//======================================================================
 		// DXC（シェーダコンパイラ）
 		//======================================================================
 		// -------------------- DXC --------------------
-		Microsoft::WRL::ComPtr<IDxcUtils>          dxcUtils;
-		Microsoft::WRL::ComPtr<IDxcCompiler3>      dxcCompiler;
-		Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler;
+		Microsoft::WRL::ComPtr<IDxcUtils>          dxcUtils_;
+		Microsoft::WRL::ComPtr<IDxcCompiler3>      dxcCompiler_;
+		Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler_;
 		//======================================================================
 		// RootSignature / PipelineState
 		//======================================================================
 		// -------------------- Root & PSO --------------------
-		Microsoft::WRL::ComPtr<ID3D12RootSignature>  rootSignature;
-		Microsoft::WRL::ComPtr<ID3D12PipelineState>  graphicsPipelineState;
+		Microsoft::WRL::ComPtr<ID3D12RootSignature>  rootSignature_;
+		Microsoft::WRL::ComPtr<ID3D12PipelineState>  graphicsPipelineState_;
 		Microsoft::WRL::ComPtr<ID3D12RootSignature>  copyImageRootSignature_;
 		Microsoft::WRL::ComPtr<ID3D12PipelineState>  copyImagePipelineState_;
 		bool                                          copyImageInitialized_ = false;
@@ -909,32 +909,32 @@ namespace TKM {
 
 		Microsoft::WRL::ComPtr<ID3D12Resource> thresholdBuffer_;
 		// ThresholdParam構造体
-		struct ThresholdParam { float threshold; float padding[3]; }; // 16バイトアライメントのためにパディングを追加
+		struct ThresholdParam { float threshold_; float padding_[3]; }; // 16バイトアライメントのためにパディングを追加
 
 		ThresholdParam* thresholdMappedData_ = nullptr;
 
-		Microsoft::WRL::ComPtr<ID3D12Resource> renderTextureResource;
+		Microsoft::WRL::ComPtr<ID3D12Resource> renderTextureResource_;
 		// RenderTexture 用 SRV のインデックス
 		uint32_t renderTextureSrvIndex_ = 0;
 
 		// ポストエフェクト用 ping-pong テクスチャ
-		Microsoft::WRL::ComPtr<ID3D12Resource> postEffectTextureResource;
+		Microsoft::WRL::ComPtr<ID3D12Resource> postEffectTextureResource_;
 		uint32_t postEffectSrvIndex_ = 0;
 		//======================================================================
 		// フェンス / シンクロ
 		//======================================================================
-		uint64_t fenceValue = 0;
-		HANDLE   fenceEvent = nullptr;
-		UINT     fenceVal = 0;
+		uint64_t fenceValue_ = 0;
+		HANDLE   fenceEvent_ = nullptr;
+		UINT     fenceVal_ = 0;
 		//======================================================================
 		// 外部参照 / 定数
 		//======================================================================
 		// -------------------- 外部参照 --------------------
-		WindowsAPI* windowsAPI = nullptr;
+		WindowsAPI* windowsAPI_ = nullptr;
 		SrvManager* srvManager_ = nullptr;
 		// -------------------- 定数 --------------------
-		uint32_t               backBufferChange = 2;
-		static constexpr uint32_t kRenderTextureRTVIndex = 2;
-		static constexpr uint32_t kDepthSRVIndex = 11;
+		uint32_t               backBufferChange_ = 2;
+		static constexpr uint32_t kRenderTextureRTVIndex_ = 2;
+		static constexpr uint32_t kDepthSRVIndex_ = 11;
 	};
 }

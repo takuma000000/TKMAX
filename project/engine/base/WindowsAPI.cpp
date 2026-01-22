@@ -58,26 +58,26 @@ namespace TKM {
 
 #pragma region Windowの生成
 		//ウィンドウプロシージャ
-		wc.lpfnWndProc = WindowProc;
+		wc_.lpfnWndProc = WindowProc;
 		//ウィンドウクラス名( なんでも良い )
-		wc.lpszClassName = L"CG2WindowClass";
+		wc_.lpszClassName = L"CG2WindowClass";
 		//インスタンスハンドル
-		wc.hInstance = GetModuleHandle(nullptr);
+		wc_.hInstance = GetModuleHandle(nullptr);
 		//カーソル
-		wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+		wc_.hCursor = LoadCursor(nullptr, IDC_ARROW);
 
 		//ウィンドウクラスを登録する
-		RegisterClass(&wc);
+		RegisterClass(&wc_);
 
 		//ウィンドウサイズを表す構造体にクライアント領域を入れる
-		RECT wrc = { 0,0,kClientWidth ,kClientHeight };
+		RECT wrc = { 0,0,kClientWidth_ ,kClientHeight_ };
 
 		//クライアント領域を元に実際のサイズに wrc を変更してもらう
 		AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
 
 		//ウィンドウの生成
-		hwnd = CreateWindow(
-			wc.lpszClassName,		//利用するクラス名
+		hwnd_ = CreateWindow(
+			wc_.lpszClassName,		//利用するクラス名
 			L"TKMAX",				//タイトルバーの文字( なんでも良い )
 			WS_OVERLAPPEDWINDOW,	//ウィンドウスタイル
 			CW_USEDEFAULT,			//表示X座標(Windowsに任せる)
@@ -86,12 +86,12 @@ namespace TKM {
 			wrc.bottom - wrc.top,	//ウィンドウ縦幅
 			nullptr,				//親ウィンドウハンドル
 			nullptr,				//メニューハンドル
-			wc.hInstance,			//インスタンスハンドル
+			wc_.hInstance,			//インスタンスハンドル
 			nullptr					//オプション
 		);
 
 		//ウィンドウを表示する
-		ShowWindow(hwnd, SW_SHOW);
+		ShowWindow(hwnd_, SW_SHOW);
 
 #pragma endregion
 	}
@@ -100,7 +100,7 @@ namespace TKM {
 	}
 
 	void WindowsAPI::Finalize() {
-		CloseWindow(hwnd); // ウィンドウを閉じる
+		CloseWindow(hwnd_); // ウィンドウを閉じる
 		CoUninitialize(); // COMライブラリの終了
 	}
 

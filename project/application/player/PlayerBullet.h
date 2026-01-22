@@ -174,6 +174,6 @@ private:
 	// 共通パラメータ（マジックナンバー解消）
 	//======================================================================
 	// 共通パラメータ（マジックナンバー解消）
-	static constexpr float kDefaultScale = 0.2f;  // 弾の見た目サイズ
-	static constexpr float kDespawnZ = 150.0f; // 消えるZ位置
+	static constexpr float kDefaultScale_ = 0.2f;  // 弾の見た目サイズ
+	static constexpr float kDespawnZ_ = 150.0f; // 消えるZ位置
 };

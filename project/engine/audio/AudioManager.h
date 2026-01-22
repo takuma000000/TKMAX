@@ -9,27 +9,27 @@
 
 //チャンクヘッダ
 struct ChunkHeader {
-	char id[4]; //チャンク毎のID
-	int32_t size; //チャンクサイズ
+	char id_[4]; //チャンク毎のID
+	int32_t size_; //チャンクサイズ
 };
 //RIFFヘッダチャンク
 struct RiffHeader {
-	ChunkHeader chunk; //"RIFF"
-	char type[4]; //"WAVE"
+	ChunkHeader chunk_; //"RIFF"
+	char type_[4]; //"WAVE"
 };
 //FMTチャンク
 struct FormatChunk {
-	ChunkHeader chunk; //"FMT"
-	WAVEFORMATEX fmt; //波形フォーマット
+	ChunkHeader chunk_; //"FMT"
+	WAVEFORMATEX fmt_; //波形フォーマット
 };
 //音声データ
 struct SoundData {
 	//波形フォーマット
-	WAVEFORMATEX wfex;
+	WAVEFORMATEX wfex_;
 	//バッファの先頭アドレス
-	BYTE* pBuffer;
+	BYTE* pBuffer_;
 	//バッファのサイズ
-	unsigned int bufferSize;
+	unsigned int bufferSize_;
 };
 
 //=============================================================
@@ -39,23 +39,30 @@ struct SoundData {
 namespace TKM {
 	class AudioManager {
 	public:
-
-		// 初期化と終了
-		/// <summary>オーディオマネージャを初期化します。</summary>
+		/// <summary>
+		/// オーディオマネージャを初期化します。
+		/// </summary>
 		void Initialize();
-		///<summary>オーディオマネージャを終了します。</summary>
+		/// <summary>
+		/// オーディオマネージャを終了処理します。
+		/// </summary>
 		void Finalize();
-
-		// 音声データの読み込み
-		/// <summary>音声データを読み込みます。</summary>
+		/// <summary>
+		/// 音声データを読み込みます。
+		/// </summary>
+		/// <param name="key"></param>
+		/// <param name="filename"></param>
+		/// <returns></returns>
 		bool LoadSound(const std::string& key, const std::string& filename);
-
-		// 音声データの再生
-		/// <summary>音声データを再生します。</summary>
+		/// <summary>
+		/// 音声データを再生します。
+		/// </summary>
+		/// <param name="key"></param>
 		void PlaySound(const std::string& key);
-
-		// 音声データの解放
-		/// <summary>音声データを解放します。</summary>
+		/// <summary>
+		/// 音声データを解放します。
+		/// </summary>
+		/// <param name="key"></param>
 		void UnloadSound(const std::string& key);
 
 		static AudioManager* instance;
@@ -64,14 +71,17 @@ namespace TKM {
 		static AudioManager* GetInstance();
 
 	private:
-		Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
-		IXAudio2MasteringVoice* masterVoice = nullptr;
+		Microsoft::WRL::ComPtr<IXAudio2> xAudio2_;
+		IXAudio2MasteringVoice* masterVoice_ = nullptr;
 
 		// 音声データの管理マップ
-		std::unordered_map<std::string, SoundData> soundMap;
+		std::unordered_map<std::string, SoundData> soundMap_;
 
-		// WAVファイル読み込み
-		/// <summary>WAVファイルを読み込みます。</summary>
+		/// <summary>
+		///		
+		/// </summary>
+		/// <param name="filename"></param>
+		/// <returns></returns>
 		SoundData LoadWaveFile(const std::string& filename);
 
 		////シングルトン-----------------------------------------------
@@ -85,6 +95,5 @@ namespace TKM {
 		AudioManager& operator=(AudioManager&) = delete;
 
 		////---------------------------------------------------------
-
 	};
 }

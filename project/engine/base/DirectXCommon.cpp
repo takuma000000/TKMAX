@@ -75,7 +75,7 @@ namespace TKM {
 		descriptorHeapDesc.Flags = shaderVisible ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE : D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 		//デスクリプタヒープの生成
 		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeap;
-		HRESULT hr = device->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&descriptorHeap));
+		HRESULT hr = device_->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&descriptorHeap));
 		assert(SUCCEEDED(hr));
 
 		return descriptorHeap;
@@ -122,46 +122,46 @@ namespace TKM {
 		const Vector4 kRenderTargetClearValue{ 1.0f, 0.0f, 0.0f, 1.0f }; // 赤色でクリア
 
 		// ========= 1枚目：シーン用 RenderTexture =========
-		renderTextureResource =
+		renderTextureResource_ =
 			CreateRenderTextureResource(
-				device,
-				WindowsAPI::kClientWidth,
-				WindowsAPI::kClientHeight,
+				device_,
+				WindowsAPI::kClientWidth_,
+				WindowsAPI::kClientHeight_,
 				DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
 				kRenderTargetClearValue);
 
-		renderTextureResource->SetName(L"RenderTexture");
+		renderTextureResource_->SetName(L"RenderTexture");
 
-		UINT descriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		UINT descriptorSize = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
 		// RTV: インデックス2に RenderTexture
-		rtvHandles[2] = rtvHeap_->GetCPUDescriptorHandleForHeapStart();
-		rtvHandles[2].ptr += descriptorSize * 2;
+		rtvHandles_[2] = rtvHeap_->GetCPUDescriptorHandleForHeapStart();
+		rtvHandles_[2].ptr += descriptorSize * 2;
 
-		device->CreateRenderTargetView(
-			renderTextureResource.Get(),
-			&rtvDesc,
-			rtvHandles[2]);
+		device_->CreateRenderTargetView(
+			renderTextureResource_.Get(),
+			&rtvDesc_,
+			rtvHandles_[2]);
 
 		// ========= 2枚目：ポストエフェクト用 PostEffectTexture =========
-		postEffectTextureResource =
+		postEffectTextureResource_ =
 			CreateRenderTextureResource(
-				device,
-				WindowsAPI::kClientWidth,
-				WindowsAPI::kClientHeight,
+				device_,
+				WindowsAPI::kClientWidth_,
+				WindowsAPI::kClientHeight_,
 				DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
 				kRenderTargetClearValue);
 
-		postEffectTextureResource->SetName(L"PostEffectTexture");
+		postEffectTextureResource_->SetName(L"PostEffectTexture");
 
 		// RTV: インデックス3に PostEffectTexture
-		rtvHandles[3] = rtvHeap_->GetCPUDescriptorHandleForHeapStart();
-		rtvHandles[3].ptr += descriptorSize * 3;
+		rtvHandles_[3] = rtvHeap_->GetCPUDescriptorHandleForHeapStart();
+		rtvHandles_[3].ptr += descriptorSize * 3;
 
-		device->CreateRenderTargetView(
-			postEffectTextureResource.Get(),
-			&rtvDesc,
-			rtvHandles[3]);
+		device_->CreateRenderTargetView(
+			postEffectTextureResource_.Get(),
+			&rtvDesc_,
+			rtvHandles_[3]);
 
 		// ============================
 		// SRV を 2つ作成
@@ -172,7 +172,7 @@ namespace TKM {
 		renderTextureSrvIndex_ = srvManager_->Allocate();
 		srvManager_->CreateSRVforTexture2D(
 			renderTextureSrvIndex_,
-			renderTextureResource.Get(),
+			renderTextureResource_.Get(),
 			DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
 			1);
 
@@ -180,7 +180,7 @@ namespace TKM {
 		postEffectSrvIndex_ = srvManager_->Allocate();
 		srvManager_->CreateSRVforTexture2D(
 			postEffectSrvIndex_,
-			postEffectTextureResource.Get(),
+			postEffectTextureResource_.Get(),
 			DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
 			1);
 	}
@@ -203,36 +203,36 @@ namespace TKM {
 		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-		commandList->ResourceBarrier(1, &barrier);
+		commandList_->ResourceBarrier(1, &barrier);
 
 		// ===== 2. 出力RTVセット & 描画 =====
-		commandList->OMSetRenderTargets(1, &outputRtv, false, nullptr);
+		commandList_->OMSetRenderTargets(1, &outputRtv, false, nullptr);
 
 		// パイプライン設定
-		commandList->SetGraphicsRootSignature(fogRootSignature_.Get());
-		commandList->SetPipelineState(fogPipelineState_.Get());
-		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		commandList_->SetGraphicsRootSignature(fogRootSignature_.Get());
+		commandList_->SetPipelineState(fogPipelineState_.Get());
+		commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 		// SRV ヒープ + t0
 		if (srvManager_) {
 			ID3D12DescriptorHeap* heaps[] = { srvManager_->GetSrvDescriptorHeap().Get() };
-			commandList->SetDescriptorHeaps(1, heaps);
+			commandList_->SetDescriptorHeaps(1, heaps);
 			srvManager_->SetGraphicsRootDescriptorTable(0, inputSrvIndex);
 		}
 
 		// b0: 定数バッファ
 		if (fogConstantBuffer_) {
-			commandList->SetGraphicsRootConstantBufferView(
+			commandList_->SetGraphicsRootConstantBufferView(
 				1, fogConstantBuffer_->GetGPUVirtualAddress());
 		}
 
 		// フルスクリーントライアングル
-		commandList->DrawInstanced(3, 1, 0, 0);
+		commandList_->DrawInstanced(3, 1, 0, 0);
 
 		// ===== 3. 入力テクスチャだけ PS → RT に戻す =====
 		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-		commandList->ResourceBarrier(1, &barrier);
+		commandList_->ResourceBarrier(1, &barrier);
 	}
 
 	void DirectXCommon::DrawTextureToSwapchain(
@@ -251,28 +251,28 @@ namespace TKM {
 			barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-			commandList->ResourceBarrier(1, &barrier);
+			commandList_->ResourceBarrier(1, &barrier);
 		}
 
 		// SwapChain の現在の RTV 取得
-		UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
-		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtvHandles[backBufferIndex];
-		commandList->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
+		UINT backBufferIndex = swapChain_->GetCurrentBackBufferIndex();
+		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtvHandles_[backBufferIndex];
+		commandList_->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
 
 		// パイプライン / RootSignature 設定
-		commandList->SetGraphicsRootSignature(copyImageRootSignature_.Get());
-		commandList->SetPipelineState(copyImagePipelineState_.Get());
-		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		commandList_->SetGraphicsRootSignature(copyImageRootSignature_.Get());
+		commandList_->SetPipelineState(copyImagePipelineState_.Get());
+		commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 		// SRV ヒープ + t0
 		if (srvManager_) {
 			ID3D12DescriptorHeap* heaps[] = { srvManager_->GetSrvDescriptorHeap().Get() };
-			commandList->SetDescriptorHeaps(1, heaps);
+			commandList_->SetDescriptorHeaps(1, heaps);
 			srvManager_->SetGraphicsRootDescriptorTable(0, inputSrvIndex);
 		}
 
 		// フルスクリーントライアングル
-		commandList->DrawInstanced(3, 1, 0, 0);
+		commandList_->DrawInstanced(3, 1, 0, 0);
 
 		// 入力テクスチャを RenderTarget 戻し
 		{
@@ -283,33 +283,33 @@ namespace TKM {
 			barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-			commandList->ResourceBarrier(1, &barrier);
+			commandList_->ResourceBarrier(1, &barrier);
 		}
 	}
 
 	void DirectXCommon::BeginDrawToSwapchain() {
 
 		// 現在のバックバッファインデックス取得
-		UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+		UINT backBufferIndex = swapChain_->GetCurrentBackBufferIndex();
 
 		// Present → RenderTarget へ遷移
-		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barrier.Transition.pResource = swapChainResources[backBufferIndex].Get();
-		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-		commandList->ResourceBarrier(1, &barrier);
+		barrier_.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier_.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrier_.Transition.pResource = swapChainResources_[backBufferIndex].Get();
+		barrier_.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+		barrier_.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+		barrier_.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		commandList_->ResourceBarrier(1, &barrier_);
 
 		// RTV / DSV を Swapchain 用にセット
-		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtvHandles[backBufferIndex];
-		D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-		commandList->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
+		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtvHandles_[backBufferIndex];
+		D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
+		commandList_->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
 
 		// 画面クリア（お好みの色でOK）
 		float clearColor[] = { 0.1f, 0.25f, 0.5f, 1.0f };
-		commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-		commandList->ClearDepthStencilView(
+		commandList_->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+		commandList_->ClearDepthStencilView(
 			dsvHandle,
 			D3D12_CLEAR_FLAG_DEPTH,
 			1.0f,
@@ -319,8 +319,8 @@ namespace TKM {
 		);
 
 		// ビューポート / シザー設定
-		commandList->RSSetViewports(1, &viewport);
-		commandList->RSSetScissorRects(1, &scissorRect);
+		commandList_->RSSetViewports(1, &viewport_);
+		commandList_->RSSetScissorRects(1, &scissorRect_);
 	}
 
 	void DirectXCommon::InitializeCopyImagePipeline() {
@@ -373,7 +373,7 @@ namespace TKM {
 		);
 		assert(SUCCEEDED(hr));
 
-		hr = device->CreateRootSignature(
+		hr = device_->CreateRootSignature(
 			0,
 			rsBlob->GetBufferPointer(),
 			rsBlob->GetBufferSize(),
@@ -411,7 +411,7 @@ namespace TKM {
 		psoDesc.DepthStencilState = dsDesc;
 		psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
-		hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&copyImagePipelineState_));
+		hr = device_->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&copyImagePipelineState_));
 		assert(SUCCEEDED(hr));
 
 		copyImageInitialized_ = true;
@@ -420,47 +420,47 @@ namespace TKM {
 	void DirectXCommon::DrawRenderTextureToSwapchain() {
 
 		assert(copyImageInitialized_ && "InitializeCopyImagePipeline を先に呼んでください");
-		assert(renderTextureResource && "RenderTexture が作られていません");
+		assert(renderTextureResource_ && "RenderTexture が作られていません");
 
 		// 1. RenderTarget → PixelShaderResource へバリア
 		{
 			D3D12_RESOURCE_BARRIER barrier{};
 			barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 			barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-			barrier.Transition.pResource = renderTextureResource.Get();
+			barrier.Transition.pResource = renderTextureResource_.Get();
 			barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-			commandList->ResourceBarrier(1, &barrier);
+			commandList_->ResourceBarrier(1, &barrier);
 		}
 
 		// 2. パイプライン / RootSignature 設定
-		commandList->SetGraphicsRootSignature(copyImageRootSignature_.Get());
-		commandList->SetPipelineState(copyImagePipelineState_.Get());
-		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		commandList_->SetGraphicsRootSignature(copyImageRootSignature_.Get());
+		commandList_->SetPipelineState(copyImagePipelineState_.Get());
+		commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 		// 3. SRV ヒープをセットし、t0 に RenderTexture の SRV をバインド
 		if (srvManager_) {
 			ID3D12DescriptorHeap* heaps[] = { srvManager_->GetSrvDescriptorHeap().Get() };
-			commandList->SetDescriptorHeaps(1, heaps);
+			commandList_->SetDescriptorHeaps(1, heaps);
 
 			// RootParameter0 の DescriptorTable に renderTextureSrvIndex_ をセット
 			srvManager_->SetGraphicsRootDescriptorTable(0, renderTextureSrvIndex_);
 		}
 
 		// 4. フルスクリーン三角形を描画 (頂点数3)
-		commandList->DrawInstanced(3, 1, 0, 0);
+		commandList_->DrawInstanced(3, 1, 0, 0);
 
 		// 5. PixelShaderResource → RenderTarget に戻す
 		{
 			D3D12_RESOURCE_BARRIER barrier{};
 			barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 			barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-			barrier.Transition.pResource = renderTextureResource.Get();
+			barrier.Transition.pResource = renderTextureResource_.Get();
 			barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-			commandList->ResourceBarrier(1, &barrier);
+			commandList_->ResourceBarrier(1, &barrier);
 		}
 	}
 
@@ -508,7 +508,7 @@ namespace TKM {
 		psoDesc.DepthStencilState = dsDesc;
 		psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
-		HRESULT hr = device->CreateGraphicsPipelineState(
+		HRESULT hr = device_->CreateGraphicsPipelineState(
 			&psoDesc, IID_PPV_ARGS(&radialBlurPipelineState_));
 		assert(SUCCEEDED(hr));
 
@@ -533,27 +533,27 @@ namespace TKM {
 		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-		commandList->ResourceBarrier(1, &barrier);
+		commandList_->ResourceBarrier(1, &barrier);
 
 		// ===== 2. 出力RTVセット & 描画 =====
-		commandList->OMSetRenderTargets(1, &outputRtv, false, nullptr);
+		commandList_->OMSetRenderTargets(1, &outputRtv, false, nullptr);
 
-		commandList->SetGraphicsRootSignature(copyImageRootSignature_.Get());
-		commandList->SetPipelineState(radialBlurPipelineState_.Get());
-		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		commandList_->SetGraphicsRootSignature(copyImageRootSignature_.Get());
+		commandList_->SetPipelineState(radialBlurPipelineState_.Get());
+		commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 		if (srvManager_) {
 			ID3D12DescriptorHeap* heaps[] = { srvManager_->GetSrvDescriptorHeap().Get() };
-			commandList->SetDescriptorHeaps(1, heaps);
+			commandList_->SetDescriptorHeaps(1, heaps);
 			srvManager_->SetGraphicsRootDescriptorTable(0, inputSrvIndex);
 		}
 
-		commandList->DrawInstanced(3, 1, 0, 0);
+		commandList_->DrawInstanced(3, 1, 0, 0);
 
 		// ===== 3. 入力テクスチャだけ PS → RT に戻す =====
 		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-		commandList->ResourceBarrier(1, &barrier);
+		commandList_->ResourceBarrier(1, &barrier);
 	}
 
 	void DirectXCommon::InitializeVignettingPipeline() {
@@ -607,7 +607,7 @@ namespace TKM {
 		);
 		assert(SUCCEEDED(hr));
 
-		hr = device->CreateRootSignature(
+		hr = device_->CreateRootSignature(
 			0,
 			rsBlob->GetBufferPointer(),
 			rsBlob->GetBufferSize(),
@@ -638,7 +638,7 @@ namespace TKM {
 		psoDesc.DepthStencilState = dsDesc;
 		psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
-		hr = device->CreateGraphicsPipelineState(
+		hr = device_->CreateGraphicsPipelineState(
 			&psoDesc, IID_PPV_ARGS(&vignettingPipelineState_));
 		assert(SUCCEEDED(hr));
 
@@ -677,32 +677,32 @@ namespace TKM {
 			barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-			commandList->ResourceBarrier(1, &barrier);
+			commandList_->ResourceBarrier(1, &barrier);
 		}
 
 		// 出力RTVセット
-		commandList->OMSetRenderTargets(1, &outputRtv, false, nullptr);
+		commandList_->OMSetRenderTargets(1, &outputRtv, false, nullptr);
 
 		// パイプライン設定
-		commandList->SetGraphicsRootSignature(vignettingRootSignature_.Get());
-		commandList->SetPipelineState(vignettingPipelineState_.Get());
-		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		commandList_->SetGraphicsRootSignature(vignettingRootSignature_.Get());
+		commandList_->SetPipelineState(vignettingPipelineState_.Get());
+		commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 		// SRV ヒープ + t0
 		if (srvManager_) {
 			ID3D12DescriptorHeap* heaps[] = { srvManager_->GetSrvDescriptorHeap().Get() };
-			commandList->SetDescriptorHeaps(1, heaps);
+			commandList_->SetDescriptorHeaps(1, heaps);
 			srvManager_->SetGraphicsRootDescriptorTable(0, inputSrvIndex);
 		}
 
 		// b0: 定数バッファ
 		if (vignettingConstantBuffer_) {
-			commandList->SetGraphicsRootConstantBufferView(
+			commandList_->SetGraphicsRootConstantBufferView(
 				1, vignettingConstantBuffer_->GetGPUVirtualAddress());
 		}
 
 		// フルスクリーントライアングル
-		commandList->DrawInstanced(3, 1, 0, 0);
+		commandList_->DrawInstanced(3, 1, 0, 0);
 
 		// 入力テクスチャを RenderTarget 戻し
 		{
@@ -713,7 +713,7 @@ namespace TKM {
 			barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-			commandList->ResourceBarrier(1, &barrier);
+			commandList_->ResourceBarrier(1, &barrier);
 		}
 	}
 
@@ -768,7 +768,7 @@ namespace TKM {
 		);
 		assert(SUCCEEDED(hr));
 
-		hr = device->CreateRootSignature(
+		hr = device_->CreateRootSignature(
 			0,
 			rsBlob->GetBufferPointer(),
 			rsBlob->GetBufferSize(),
@@ -799,7 +799,7 @@ namespace TKM {
 		psoDesc.DepthStencilState = dsDesc;
 		psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
-		hr = device->CreateGraphicsPipelineState(
+		hr = device_->CreateGraphicsPipelineState(
 			&psoDesc, IID_PPV_ARGS(&ripplePipelineState_));
 		assert(SUCCEEDED(hr));
 
@@ -871,7 +871,7 @@ namespace TKM {
 		);
 		assert(SUCCEEDED(hr));
 
-		hr = device->CreateRootSignature(
+		hr = device_->CreateRootSignature(
 			0,
 			rsBlob->GetBufferPointer(),
 			rsBlob->GetBufferSize(),
@@ -902,7 +902,7 @@ namespace TKM {
 		psoDesc.DepthStencilState = dsDesc;
 		psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
-		hr = device->CreateGraphicsPipelineState(
+		hr = device_->CreateGraphicsPipelineState(
 			&psoDesc, IID_PPV_ARGS(&fogPipelineState_));
 		assert(SUCCEEDED(hr));
 
@@ -967,7 +967,7 @@ namespace TKM {
 			&rsDesc, D3D_ROOT_SIGNATURE_VERSION_1, &rsBlob, &errorBlob);
 		assert(SUCCEEDED(hr));
 
-		hr = device->CreateRootSignature(
+		hr = device_->CreateRootSignature(
 			0, rsBlob->GetBufferPointer(), rsBlob->GetBufferSize(),
 			IID_PPV_ARGS(&auraRootSignature_));
 		assert(SUCCEEDED(hr));
@@ -994,7 +994,7 @@ namespace TKM {
 		psoDesc.DepthStencilState = dsDesc;
 		psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
-		hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&auraPipelineState_));
+		hr = device_->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&auraPipelineState_));
 		assert(SUCCEEDED(hr));
 
 		// 定数バッファ
@@ -1005,7 +1005,7 @@ namespace TKM {
 		cb->CenterUV = { 0.5f, 0.5f };
 		cb->TopUV = { 0.5f, 0.35f };
 		cb->BottomUV = { 0.5f, 0.70f };
-		cb->Aspect = WindowsAPI::kClientWidth / (float)WindowsAPI::kClientHeight;
+		cb->Aspect = WindowsAPI::kClientWidth_ / (float)WindowsAPI::kClientHeight_;
 		cb->Time = 0.0f;
 		cb->Radius = 0.22f;
 		cb->Intensity = 0.0f;
@@ -1057,7 +1057,7 @@ namespace TKM {
 		);
 		assert(SUCCEEDED(hr));
 
-		hr = device->CreateRootSignature(
+		hr = device_->CreateRootSignature(
 			0,
 			rsBlob->GetBufferPointer(),
 			rsBlob->GetBufferSize(),
@@ -1112,7 +1112,7 @@ namespace TKM {
 		blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 		psoDesc.BlendState = blendDesc;
 
-		hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&auraVolumePipelineState_));
+		hr = device_->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&auraVolumePipelineState_));
 		assert(SUCCEEDED(hr));
 
 		// 定数バッファ作成&マップ
@@ -1171,7 +1171,7 @@ namespace TKM {
 		);
 		assert(SUCCEEDED(hr));
 
-		hr = device->CreateRootSignature(
+		hr = device_->CreateRootSignature(
 			0, rsBlob->GetBufferPointer(), rsBlob->GetBufferSize(),
 			IID_PPV_ARGS(&fogVolumeRootSignature_)
 		);
@@ -1224,7 +1224,7 @@ namespace TKM {
 		blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 		psoDesc.BlendState = blendDesc;
 
-		hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&fogVolumePipelineState_));
+		hr = device_->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&fogVolumePipelineState_));
 		assert(SUCCEEDED(hr));
 
 		// 定数バッファ
@@ -1279,7 +1279,7 @@ namespace TKM {
 			signatureBlob.GetAddressOf(), errorBlob.GetAddressOf());
 		assert(SUCCEEDED(hr));
 
-		hr = device->CreateRootSignature(0, signatureBlob->GetBufferPointer(),
+		hr = device_->CreateRootSignature(0, signatureBlob->GetBufferPointer(),
 			signatureBlob->GetBufferSize(), IID_PPV_ARGS(smokeVolumeRootSignature_.GetAddressOf()));
 		assert(SUCCEEDED(hr));
 
@@ -1327,7 +1327,7 @@ namespace TKM {
 		blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 		psoDesc.BlendState = blendDesc;
 
-		hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(smokeVolumePipelineState_.GetAddressOf()));
+		hr = device_->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(smokeVolumePipelineState_.GetAddressOf()));
 		assert(SUCCEEDED(hr));
 
 		// ===== クアッドVB（FogのコピペでOK）=====
@@ -1375,7 +1375,7 @@ namespace TKM {
 		HRESULT hr = D3D12SerializeRootSignature(&rsDesc, D3D_ROOT_SIGNATURE_VERSION_1, &rsBlob, &errorBlob);
 		assert(SUCCEEDED(hr));
 
-		hr = device->CreateRootSignature(
+		hr = device_->CreateRootSignature(
 			0, rsBlob->GetBufferPointer(), rsBlob->GetBufferSize(),
 			IID_PPV_ARGS(&laserBeamRootSignature_));
 		assert(SUCCEEDED(hr));
@@ -1426,7 +1426,7 @@ namespace TKM {
 		blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 		psoDesc.BlendState = blendDesc;
 
-		hr = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&laserBeamPipelineState_));
+		hr = device_->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&laserBeamPipelineState_));
 		assert(SUCCEEDED(hr));
 
 		// ConstantBuffer
@@ -1472,33 +1472,33 @@ namespace TKM {
 		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-		commandList->ResourceBarrier(1, &barrier);
+		commandList_->ResourceBarrier(1, &barrier);
 
 		// ===== 2. 出力RTVセット & 描画 =====
-		commandList->OMSetRenderTargets(1, &outputRtv, false, nullptr);
+		commandList_->OMSetRenderTargets(1, &outputRtv, false, nullptr);
 
-		commandList->SetGraphicsRootSignature(rippleRootSignature_.Get());
-		commandList->SetPipelineState(ripplePipelineState_.Get());
-		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		commandList_->SetGraphicsRootSignature(rippleRootSignature_.Get());
+		commandList_->SetPipelineState(ripplePipelineState_.Get());
+		commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 		if (srvManager_) {
 			ID3D12DescriptorHeap* heaps[] = { srvManager_->GetSrvDescriptorHeap().Get() };
-			commandList->SetDescriptorHeaps(1, heaps);
+			commandList_->SetDescriptorHeaps(1, heaps);
 			srvManager_->SetGraphicsRootDescriptorTable(0, inputSrvIndex);
 		}
 
 		if (rippleConstantBuffer_) {
-			commandList->SetGraphicsRootConstantBufferView(
+			commandList_->SetGraphicsRootConstantBufferView(
 				1, rippleConstantBuffer_->GetGPUVirtualAddress());
 		}
 
-		commandList->DrawInstanced(3, 1, 0, 0);
+		commandList_->DrawInstanced(3, 1, 0, 0);
 
 		// ===== 3. 入力テクスチャだけ PS → RT に戻す =====
 		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 
-		commandList->ResourceBarrier(1, &barrier);
+		commandList_->ResourceBarrier(1, &barrier);
 	}
 
 	void DirectXCommon::Initialize(WindowsAPI* windowsAPI) {
@@ -1509,7 +1509,7 @@ namespace TKM {
 		assert(windowsAPI);
 
 		//借りてきたWinAppのインスタンスを記録
-		this->windowsAPI = windowsAPI;
+		this->windowsAPI_ = windowsAPI;
 
 		// DirectX初期化
 		InitializeDevice(); // デバイス初期化
@@ -1531,11 +1531,11 @@ namespace TKM {
 
 #ifdef _DEBUG
 
-		if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)))) {
+		if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController_)))) {
 			//デバッグレイヤーを有効化する
-			debugController->EnableDebugLayer();
+			debugController_->EnableDebugLayer();
 			//さらにGPU側でもチェックを行うようにする
-			debugController->SetEnableGPUBasedValidation(TRUE);
+			debugController_->SetEnableGPUBasedValidation(TRUE);
 		}
 
 #endif
@@ -1543,21 +1543,21 @@ namespace TKM {
 
 
 		//DXGIファクトリーの生成
-		dxgiFactory = nullptr;
+		dxgiFactory_ = nullptr;
 
 		//"HRESULTはWindows系のエラーコード"であり、
 		//関数が成功したかどうかを SUCCEEDEDマクロ で判定できる	
-		hr = CreateDXGIFactory(IID_PPV_ARGS(&dxgiFactory));
+		hr = CreateDXGIFactory(IID_PPV_ARGS(&dxgiFactory_));
 
 		//初期化の根本的な部分でエラーが出た場合はプログラムが間違っているか、
 		//どうにも出来ない場合が多いので assert にしておく
 		assert(SUCCEEDED(hr));
 
 		//良い順にアダプタを頼む
-		for (UINT i = 0; dxgiFactory->EnumAdapterByGpuPreference(i, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&useAdapter)) != DXGI_ERROR_NOT_FOUND; ++i) { //アダプターの列挙
+		for (UINT i = 0; dxgiFactory_->EnumAdapterByGpuPreference(i, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&useAdapter_)) != DXGI_ERROR_NOT_FOUND; ++i) { //アダプターの列挙
 			//アダプターの情報を取得する
 			DXGI_ADAPTER_DESC3 adapterDesc{};
-			hr = useAdapter->GetDesc3(&adapterDesc);
+			hr = useAdapter_->GetDesc3(&adapterDesc);
 			assert(SUCCEEDED(hr));//取得できないのは一大事
 
 			//ソフトウェアアダプタでなければ採用
@@ -1566,12 +1566,12 @@ namespace TKM {
 				Log(ConvertString(std::format(L"Use Adapter:{}\n", adapterDesc.Description)));
 				break;
 			}
-			useAdapter = nullptr;//ソフトウェアアダプタの場合は見なかったことにする
+			useAdapter_ = nullptr;//ソフトウェアアダプタの場合は見なかったことにする
 		}
 		//適切なアダプタが見つからなかったので起動できない
-		assert(useAdapter != nullptr);
+		assert(useAdapter_ != nullptr);
 
-		device = nullptr;
+		device_ = nullptr;
 		//機能レベルとログ出力用の文字列
 		D3D_FEATURE_LEVEL featureLevels[] = { //試す機能レベル一覧
 			D3D_FEATURE_LEVEL_12_2,D3D_FEATURE_LEVEL_12_1,D3D_FEATURE_LEVEL_12_0
@@ -1581,7 +1581,7 @@ namespace TKM {
 		//高い順に生成できるか試していく
 		for (size_t i = 0; _countof(featureLevels); ++i) {
 			//採用したアダプターでデバイスを生成
-			hr = D3D12CreateDevice(useAdapter.Get(), featureLevels[i], IID_PPV_ARGS(&device));
+			hr = D3D12CreateDevice(useAdapter_.Get(), featureLevels[i], IID_PPV_ARGS(&device_));
 			//指定した機能レベルでデバイスが生成できたかを確認
 			if (SUCCEEDED(hr)) {
 				//生成できたのでログ出力を行って
@@ -1590,7 +1590,7 @@ namespace TKM {
 			}
 		}
 		//デバイスの生成がうまくいかなかったので起動できない
-		assert(device != nullptr);
+		assert(device_ != nullptr);
 		//初期化完了のログを出す
 		Log("Complet create D3D12Device!!!\n");
 
@@ -1599,7 +1599,7 @@ namespace TKM {
 
 		// 情報キューを取得してメッセージのフィルタリング設定を行う
 		Microsoft::WRL::ComPtr<ID3D12InfoQueue> infoQueue = nullptr;
-		if (SUCCEEDED(device->QueryInterface(IID_PPV_ARGS(&infoQueue)))) {
+		if (SUCCEEDED(device_->QueryInterface(IID_PPV_ARGS(&infoQueue)))) {
 			infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
 			infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
 			infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
@@ -1621,7 +1621,7 @@ namespace TKM {
 
 #pragma region commandAllocator
 		//コマンドアロケーターを生成する
-		hr = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator));
+		hr = device_->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator_));
 		//コマンドアロケーターの生成がうまくいかなかったので起動出来ない
 		assert(SUCCEEDED(hr));
 
@@ -1630,7 +1630,7 @@ namespace TKM {
 #pragma region commandList
 
 		//コマンドリストを生成する
-		hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator.Get(), nullptr, IID_PPV_ARGS(&commandList));
+		hr = device_->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator_.Get(), nullptr, IID_PPV_ARGS(&commandList_));
 		//コマンドリストの生成がうまくいかなかったので起動出来ない
 		assert(SUCCEEDED(hr));
 
@@ -1639,7 +1639,7 @@ namespace TKM {
 #pragma region CommandQueue
 		//コマンドキューを生成する
 		D3D12_COMMAND_QUEUE_DESC CommandQueueDesc{};
-		hr = device->CreateCommandQueue(&CommandQueueDesc, IID_PPV_ARGS(&commandQueue));
+		hr = device_->CreateCommandQueue(&CommandQueueDesc, IID_PPV_ARGS(&commandQueue_));
 		//コマンドキューの生成がうまくいかなかったので起動出来ない
 		assert(SUCCEEDED(hr));
 
@@ -1651,15 +1651,15 @@ namespace TKM {
 
 #pragma region スワップチェーンの生成
 		//スワップチェーンを生成する
-		swapChainDesc.Width = WindowsAPI::kClientWidth;	//画面の幅。ウィンドウのクライアント領域を同じものにしておく
-		swapChainDesc.Height = WindowsAPI::kClientHeight;//画面の高さ。ウィンドウのクライアント領域を同じものにしておく
-		swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;	//色の形式
-		swapChainDesc.SampleDesc.Count = 1;	//マルチサンプルしない
-		swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;	//描画のターゲットとして利用する
-		swapChainDesc.BufferCount = 2;	//ダブルバッファ
-		swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;	//モニタに写したら、中身を破棄
+		swapChainDesc_.Width = WindowsAPI::kClientWidth_;	//画面の幅。ウィンドウのクライアント領域を同じものにしておく
+		swapChainDesc_.Height = WindowsAPI::kClientHeight_;//画面の高さ。ウィンドウのクライアント領域を同じものにしておく
+		swapChainDesc_.Format = DXGI_FORMAT_R8G8B8A8_UNORM;	//色の形式
+		swapChainDesc_.SampleDesc.Count = 1;	//マルチサンプルしない
+		swapChainDesc_.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;	//描画のターゲットとして利用する
+		swapChainDesc_.BufferCount = 2;	//ダブルバッファ
+		swapChainDesc_.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;	//モニタに写したら、中身を破棄
 		//コマンドキュー、ウィンドウハンドル、設定を渡して生成する	
-		hr = dxgiFactory->CreateSwapChainForHwnd(commandQueue.Get(), windowsAPI->GetHwnd(), &swapChainDesc, nullptr, nullptr, reinterpret_cast<IDXGISwapChain1**>(swapChain.GetAddressOf()));
+		hr = dxgiFactory_->CreateSwapChainForHwnd(commandQueue_.Get(), windowsAPI_->GetHwnd(), &swapChainDesc_, nullptr, nullptr, reinterpret_cast<IDXGISwapChain1**>(swapChain_.GetAddressOf()));
 		assert(SUCCEEDED(hr));
 
 #pragma endregion
@@ -1668,22 +1668,22 @@ namespace TKM {
 
 	void DirectXCommon::GenerateZBuffer() {
 		// device と width, height を正しく設定
-		int32_t width = WindowsAPI::kClientWidth;  // クライアント領域の幅
-		int32_t height = WindowsAPI::kClientHeight; // クライアント領域の高さ
+		int32_t width = WindowsAPI::kClientWidth_;  // クライアント領域の幅
+		int32_t height = WindowsAPI::kClientHeight_; // クライアント領域の高さ
 
 		// Zバッファ（深度ステンシルテクスチャ）を作成
-		depthStencilResource = CreateDepthStencilTextureResource(device, width, height);
+		depthStencilResource_ = CreateDepthStencilTextureResource(device_, width, height);
 	}
 
 	void DirectXCommon::GenerateDescpitorHeap() {
 		//DescriptorSizeを取得しておく
-		descriptorSizeRTV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-		descriptorSizeDSV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+		descriptorSizeRTV_ = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		descriptorSizeDSV_ = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
 #pragma region ディスクリプタヒープの生成
 
 		//RTV用のヒープでディスクリプタの数は2。RTVはShader内で触るものではないので、ShaderVisibleはfalse
-		rtvDescriptorHeap = this->CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
+		rtvDescriptorHeap_ = this->CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
 
 #pragma endregion
 	}
@@ -1692,13 +1692,13 @@ namespace TKM {
 		HRESULT hr;
 
 		// DXCのユーティリティとコンパイラのインスタンスを生成
-		hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
+		hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils_));
 		assert(SUCCEEDED(hr));
 		// DXCコンパイラのインスタンスを生成
-		hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
+		hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler_));
 		assert(SUCCEEDED(hr));
 		// インクルードハンドラの生成
-		hr = dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
+		hr = dxcUtils_->CreateDefaultIncludeHandler(&includeHandler_);
 		assert(SUCCEEDED(hr));
 
 	}
@@ -1720,32 +1720,32 @@ namespace TKM {
 		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-		commandList->ResourceBarrier(1, &barrier);
+		commandList_->ResourceBarrier(1, &barrier);
 
 		// 出力
-		commandList->OMSetRenderTargets(1, &outputRtv, false, nullptr);
+		commandList_->OMSetRenderTargets(1, &outputRtv, false, nullptr);
 
-		commandList->SetGraphicsRootSignature(auraRootSignature_.Get());
-		commandList->SetPipelineState(auraPipelineState_.Get());
-		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		commandList_->SetGraphicsRootSignature(auraRootSignature_.Get());
+		commandList_->SetPipelineState(auraPipelineState_.Get());
+		commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 		if (srvManager_) {
 			ID3D12DescriptorHeap* heaps[] = { srvManager_->GetSrvDescriptorHeap().Get() };
-			commandList->SetDescriptorHeaps(1, heaps);
+			commandList_->SetDescriptorHeaps(1, heaps);
 			srvManager_->SetGraphicsRootDescriptorTable(0, inputSrvIndex);
 		}
 
 		if (auraConstantBuffer_) {
-			commandList->SetGraphicsRootConstantBufferView(
+			commandList_->SetGraphicsRootConstantBufferView(
 				1, auraConstantBuffer_->GetGPUVirtualAddress());
 		}
 
-		commandList->DrawInstanced(3, 1, 0, 0);
+		commandList_->DrawInstanced(3, 1, 0, 0);
 
 		// 入力だけ PS → RT
 		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-		commandList->ResourceBarrier(1, &barrier);
+		commandList_->ResourceBarrier(1, &barrier);
 	}
 
 	void DirectXCommon::DrawAuraVolume(
@@ -1763,7 +1763,7 @@ namespace TKM {
 		float alphaBase) {
 		if (!auraVolumeInitialized_) { InitializeAuraVolumePipeline(); }
 		if (!auraVolumeMappedData_) { return; }
-		if (!commandList) { return; }
+		if (!commandList_) { return; }
 
 		// CB更新
 		auto* cb = reinterpret_cast<AuraVolumeCB*>(auraVolumeMappedData_);
@@ -1784,17 +1784,17 @@ namespace TKM {
 		cb->AlphaBase = alphaBase;
 
 		// パイプライン
-		commandList->SetGraphicsRootSignature(auraVolumeRootSignature_.Get());
-		commandList->SetPipelineState(auraVolumePipelineState_.Get());
-		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		commandList->IASetVertexBuffers(0, 1, &auraVolumeVBView_);
+		commandList_->SetGraphicsRootSignature(auraVolumeRootSignature_.Get());
+		commandList_->SetPipelineState(auraVolumePipelineState_.Get());
+		commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		commandList_->IASetVertexBuffers(0, 1, &auraVolumeVBView_);
 
 		// b0
-		commandList->SetGraphicsRootConstantBufferView(
+		commandList_->SetGraphicsRootConstantBufferView(
 			0, auraVolumeConstantBuffer_->GetGPUVirtualAddress());
 
 		// 描画（6頂点のQuadを sliceCount 枚インスタンス）
-		commandList->DrawInstanced(6, sliceCount, 0, 0);
+		commandList_->DrawInstanced(6, sliceCount, 0, 0);
 	}
 
 	void DirectXCommon::DrawFogVolume(
@@ -1855,15 +1855,15 @@ namespace TKM {
 		cb->WorldScale = worldScale;
 		cb->WorldPos = worldPos;
 
-		commandList->SetGraphicsRootSignature(fogVolumeRootSignature_.Get());
-		commandList->SetPipelineState(fogVolumePipelineState_.Get());
-		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		commandList_->SetGraphicsRootSignature(fogVolumeRootSignature_.Get());
+		commandList_->SetPipelineState(fogVolumePipelineState_.Get());
+		commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		commandList->IASetVertexBuffers(0, 1, &fogVolumeVBView_);
-		commandList->SetGraphicsRootConstantBufferView(0, fogVolumeConstantBuffer_->GetGPUVirtualAddress());
+		commandList_->IASetVertexBuffers(0, 1, &fogVolumeVBView_);
+		commandList_->SetGraphicsRootConstantBufferView(0, fogVolumeConstantBuffer_->GetGPUVirtualAddress());
 
 		// 6頂点 × sliceCount インスタンス
-		commandList->DrawInstanced(6, (UINT)std::max(sliceCount, 1u), 0, 0);
+		commandList_->DrawInstanced(6, (UINT)std::max(sliceCount, 1u), 0, 0);
 	}
 
 	void DirectXCommon::DrawSmokeVolume(
@@ -1917,14 +1917,14 @@ namespace TKM {
 
 		cb->RiseSpeed = riseSpeed;
 
-		commandList->SetGraphicsRootSignature(smokeVolumeRootSignature_.Get());
-		commandList->SetPipelineState(smokeVolumePipelineState_.Get());
-		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		commandList_->SetGraphicsRootSignature(smokeVolumeRootSignature_.Get());
+		commandList_->SetPipelineState(smokeVolumePipelineState_.Get());
+		commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		commandList->IASetVertexBuffers(0, 1, &smokeVolumeVBView_);
-		commandList->SetGraphicsRootConstantBufferView(0, smokeVolumeConstantBuffer_->GetGPUVirtualAddress());
+		commandList_->IASetVertexBuffers(0, 1, &smokeVolumeVBView_);
+		commandList_->SetGraphicsRootConstantBufferView(0, smokeVolumeConstantBuffer_->GetGPUVirtualAddress());
 
-		commandList->DrawInstanced(6, (UINT)std::max(sliceCount, 1u), 0, 0);
+		commandList_->DrawInstanced(6, (UINT)std::max(sliceCount, 1u), 0, 0);
 	}
 
 	void TKM::DirectXCommon::DrawLaserBeamVolume(
@@ -1969,7 +1969,7 @@ namespace TKM {
 		cb->NoiseSpeed = noiseSpeed;
 		cb->Telegraph = telegraph;
 
-		ID3D12GraphicsCommandList* cmd = commandList.Get();
+		ID3D12GraphicsCommandList* cmd = commandList_.Get();
 
 		cmd->SetGraphicsRootSignature(laserBeamRootSignature_.Get());
 		cmd->SetPipelineState(laserBeamPipelineState_.Get());
@@ -1991,23 +1991,23 @@ namespace TKM {
 		}
 
 		// オフスク2枚がなければ従来どおり
-		if (!renderTextureResource || !postEffectTextureResource) {
+		if (!renderTextureResource_ || !postEffectTextureResource_) {
 			DrawRenderTextureToSwapchain();
 			return;
 		}
 
 		// チェーン用の src/dst
-		ID3D12Resource* srcTex = renderTextureResource.Get();
+		ID3D12Resource* srcTex = renderTextureResource_.Get();
 		uint32_t        srcSrv = renderTextureSrvIndex_;
-		ID3D12Resource* dstTex = postEffectTextureResource.Get();
+		ID3D12Resource* dstTex = postEffectTextureResource_.Get();
 		uint32_t        dstSrv = postEffectSrvIndex_;
 
 		// dstTex に対応する RTV を返すヘルパー
 		auto getRtvFor = [&](ID3D12Resource* tex) {
-			if (tex == renderTextureResource.Get()) {
-				return rtvHandles[2]; // RenderTexture 用
+			if (tex == renderTextureResource_.Get()) {
+				return rtvHandles_[2]; // RenderTexture 用
 			} else {
-				return rtvHandles[3]; // PostEffectTexture 用
+				return rtvHandles_[3]; // PostEffectTexture 用
 			}
 			};
 
@@ -2071,7 +2071,7 @@ namespace TKM {
 
 		// シェーダソースコードを読み込む
 		Microsoft::WRL::ComPtr<IDxcBlobEncoding> shaderSource = nullptr;
-		HRESULT hr = dxcUtils->LoadFile(filePath.c_str(), nullptr, &shaderSource);
+		HRESULT hr = dxcUtils_->LoadFile(filePath.c_str(), nullptr, &shaderSource);
 		assert(SUCCEEDED(hr));
 		// シェーダソースコードをコンパイルする
 		DxcBuffer shaderSourceBuffer;
@@ -2092,11 +2092,11 @@ namespace TKM {
 		// コンパイル実行
 		Microsoft::WRL::ComPtr<IDxcResult> shaderResult = nullptr;
 		// includeHandlerから生のポインタを取得
-		hr = dxcCompiler->Compile(
+		hr = dxcCompiler_->Compile(
 			&shaderSourceBuffer,
 			arguments,
 			_countof(arguments),
-			includeHandler.Get(), // ここを修正
+			includeHandler_.Get(), // ここを修正
 			IID_PPV_ARGS(&shaderResult)
 		);
 
@@ -2142,7 +2142,7 @@ namespace TKM {
 
 		// 実際に頂点リソースを作る
 		Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = nullptr;
-		hr = device->CreateCommittedResource( // ヒープの設定
+		hr = device_->CreateCommittedResource( // ヒープの設定
 			&uploadHeapProperties,
 			D3D12_HEAP_FLAG_NONE,
 			&vertexResourceDesc,
@@ -2174,7 +2174,7 @@ namespace TKM {
 
 		//Resourceの生成
 		Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr;
-		HRESULT hr = device->CreateCommittedResource(
+		HRESULT hr = device_->CreateCommittedResource(
 			&heapProperties,//Heapの設定
 			D3D12_HEAP_FLAG_NONE,//Heapの特殊な設定。特になし
 			&resourceDesc,//Resouceの設定
@@ -2190,10 +2190,10 @@ namespace TKM {
 	Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages) {
 		//SubresourceDataの配列を用意して、画像データを詰め込む
 		std::vector<D3D12_SUBRESOURCE_DATA> subresources;
-		DirectX::PrepareUpload(device.Get(), mipImages.GetImages(), mipImages.GetImageCount(), mipImages.GetMetadata(), subresources);
+		DirectX::PrepareUpload(device_.Get(), mipImages.GetImages(), mipImages.GetImageCount(), mipImages.GetMetadata(), subresources);
 		uint64_t intermediateSize = GetRequiredIntermediateSize(texture, 0, UINT(subresources.size()));
 		Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = CreateBufferResource(intermediateSize);
-		UpdateSubresources(commandList.Get(), texture, intermediateResource.Get(), 0, 0, UINT(subresources.size()), subresources.data());
+		UpdateSubresources(commandList_.Get(), texture, intermediateResource.Get(), 0, 0, UINT(subresources.size()), subresources.data());
 		// textureへの状態遷移 -> D3D12_RESOURCE_STATE_COPY_DESTからD3D12_RESOURCE_STATE_GENERIC_READへResourceStateを変更する
 		D3D12_RESOURCE_BARRIER barrier{};
 		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
@@ -2202,7 +2202,7 @@ namespace TKM {
 		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
 		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_GENERIC_READ;
-		commandList->ResourceBarrier(1, &barrier);
+		commandList_->ResourceBarrier(1, &barrier);
 		return intermediateResource;
 	}
 
@@ -2214,79 +2214,79 @@ namespace TKM {
 #pragma region SwapChainからResourceを引っ張てくる
 
 		//SwapChainからResourceを引っ張てくる
-		hr = swapChain->GetBuffer(0, IID_PPV_ARGS(&swapChainResources[0]));
+		hr = swapChain_->GetBuffer(0, IID_PPV_ARGS(&swapChainResources_[0]));
 		//うまく取得できなければ起動できない
 		assert(SUCCEEDED(hr));
-		hr = swapChain->GetBuffer(1, IID_PPV_ARGS(&swapChainResources[1]));
+		hr = swapChain_->GetBuffer(1, IID_PPV_ARGS(&swapChainResources_[1]));
 		assert(SUCCEEDED(hr));
 
 #pragma endregion
 
 		//RTVの設定
-		rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;	//出力結果をSRGBに変換して書き込む
-		rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;	//2dテスクチャとして書き込む
+		rtvDesc_.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;	//出力結果をSRGBに変換して書き込む
+		rtvDesc_.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;	//2dテスクチャとして書き込む
 		//ディスクリプタの先頭を取得する
-		rtvStartHandle = rtvHeap_->GetCPUDescriptorHandleForHeapStart();
+		rtvStartHandle_ = rtvHeap_->GetCPUDescriptorHandleForHeapStart();
 
 		//裏表の2つ分
 		//RTVを2つ作るのでディスクリプタを2つ用意
 		// rtvHandles[0] に最初のデスクリプタハンドルを設定
-		rtvHandles[0] = rtvStartHandle;
+		rtvHandles_[0] = rtvStartHandle_;
 
 		// デスクリプタのサイズを取得
-		UINT descriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		UINT descriptorSize = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
 		// rtvHandles[1] に、最初のハンドルからのオフセットを設定
-		rtvHandles[1].ptr = rtvHandles[0].ptr + descriptorSize;
+		rtvHandles_[1].ptr = rtvHandles_[0].ptr + descriptorSize;
 
 		//2つ目を作る
-		device->CreateRenderTargetView(swapChainResources[0].Get(), &rtvDesc, rtvHandles[0]);
-		device->CreateRenderTargetView(swapChainResources[1].Get(), &rtvDesc, rtvHandles[1]);
+		device_->CreateRenderTargetView(swapChainResources_[0].Get(), &rtvDesc_, rtvHandles_[0]);
+		device_->CreateRenderTargetView(swapChainResources_[1].Get(), &rtvDesc_, rtvHandles_[1]);
 	}
 
 	void DirectXCommon::InitializeDSV() {
 		//DepthStencilTextureをウィンドウのサイズで作成
-		depthStencilResource = CreateDepthStencilTextureResource(device.Get(), WindowsAPI::kClientWidth, WindowsAPI::kClientHeight);
+		depthStencilResource_ = CreateDepthStencilTextureResource(device_.Get(), WindowsAPI::kClientWidth_, WindowsAPI::kClientHeight_);
 
 		//DSV用のHeapでDiscriptorの数は1。DSVはShader内で触るものではないので、ShaderVisibleはfalse
-		dsvDescriptorHeap = this->CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
+		dsvDescriptorHeap_ = this->CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
 
 		//DSVの設定
-		dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;//Format。基本的にはResourceに合わせる
-		dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;//2dTexture
+		dsvDesc_.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;//Format。基本的にはResourceに合わせる
+		dsvDesc_.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;//2dTexture
 		//DSVHeapの先頭にDSVを作る
-		device->CreateDepthStencilView(depthStencilResource.Get(), &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+		device_->CreateDepthStencilView(depthStencilResource_.Get(), &dsvDesc_, dsvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart());
 	}
 
 	void DirectXCommon::InitializeFence() {
 		HRESULT hr;
 
 		//フェンスの生成
-		fence = nullptr;
-		fenceValue = 0;
-		hr = device->CreateFence(fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
+		fence_ = nullptr;
+		fenceValue_ = 0;
+		hr = device_->CreateFence(fenceValue_, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence_));
 		assert(SUCCEEDED(hr));
 
-		fenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL); // フェンス完了通知用イベントの作成
-		assert(fenceEvent != nullptr);
+		fenceEvent_ = CreateEvent(NULL, FALSE, FALSE, NULL); // フェンス完了通知用イベントの作成
+		assert(fenceEvent_ != nullptr);
 	}
 
 	void DirectXCommon::InitializeViewport() {
 		//ビューポート矩形の設定
-		viewport.Width = WindowsAPI::kClientWidth;
-		viewport.Height = WindowsAPI::kClientHeight;
-		viewport.TopLeftX = 0;
-		viewport.TopLeftY = 0;
-		viewport.MinDepth = 0.0f;
-		viewport.MaxDepth = 1.0f;
+		viewport_.Width = WindowsAPI::kClientWidth_;
+		viewport_.Height = WindowsAPI::kClientHeight_;
+		viewport_.TopLeftX = 0;
+		viewport_.TopLeftY = 0;
+		viewport_.MinDepth = 0.0f;
+		viewport_.MaxDepth = 1.0f;
 	}
 
 	void DirectXCommon::InitializeScissorRect() {
 		//シザリング矩形の設定
-		scissorRect.left = 0;
-		scissorRect.right = WindowsAPI::kClientWidth;
-		scissorRect.top = 0;
-		scissorRect.bottom = WindowsAPI::kClientHeight;
+		scissorRect_.left = 0;
+		scissorRect_.right = WindowsAPI::kClientWidth_;
+		scissorRect_.top = 0;
+		scissorRect_.bottom = WindowsAPI::kClientHeight_;
 	}
 
 	void DirectXCommon::SetVignettingParam(
@@ -2424,18 +2424,18 @@ namespace TKM {
 		// RenderTexture を描画先にする (9ページ)
 		// =========================================
 		// kRenderTextureRTVIndex は DirectXCommon.h で 2 に定義されている
-		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtvHandles[kRenderTextureRTVIndex];
-		D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtvHandles_[kRenderTextureRTVIndex_];
+		D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
 
 		// RenderTarget / Depth をセット
-		commandList->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
+		commandList_->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
 
 		// =========================================
 		// RenderTexture をクリア (今は赤で確認用)
 		// =========================================
 		float clearColor[4] = { 1.0f, 0.0f, 0.0f, 1.0f }; // 背景色：赤
-		commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-		commandList->ClearDepthStencilView(
+		commandList_->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+		commandList_->ClearDepthStencilView(
 			dsvHandle,
 			D3D12_CLEAR_FLAG_DEPTH,
 			1.0f,
@@ -2447,54 +2447,54 @@ namespace TKM {
 		// =========================================
 		// ビューポート＆シザー設定
 		// =========================================
-		commandList->RSSetViewports(1, &viewport);
-		commandList->RSSetScissorRects(1, &scissorRect);
+		commandList_->RSSetViewports(1, &viewport_);
+		commandList_->RSSetScissorRects(1, &scissorRect_);
 	}
 
 	void DirectXCommon::PostDraw() {
 		HRESULT hr;
 
 		// これから書き込むバックバッファのインデックスを取得    
-		UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+		UINT backBufferIndex = swapChain_->GetCurrentBackBufferIndex();
 
 		// 1. 描画コマンドの記録 (リソースバリア設定)
-		barrier.Transition.pResource = swapChainResources[backBufferIndex].Get();
-		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-		commandList->ResourceBarrier(1, &barrier);
+		barrier_.Transition.pResource = swapChainResources_[backBufferIndex].Get();
+		barrier_.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		barrier_.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+		commandList_->ResourceBarrier(1, &barrier_);
 
 		// 2. コマンドリストの終了
-		hr = commandList->Close();
+		hr = commandList_->Close();
 		assert(SUCCEEDED(hr));
 
 		// 3. コマンドリストをキューに送信
-		ID3D12CommandList* commandLists[] = { commandList.Get() };
-		commandQueue->ExecuteCommandLists(1, commandLists);
+		ID3D12CommandList* commandLists[] = { commandList_.Get() };
+		commandQueue_->ExecuteCommandLists(1, commandLists);
 
 		// 4. Present の呼び出し（フレームを表示）
-		swapChain->Present(1, 0);
+		swapChain_->Present(1, 0);
 
 		// 5. フェンスでGPU処理が終了するまで待機
-		fenceValue++;
-		hr = commandQueue->Signal(fence.Get(), fenceValue);
+		fenceValue_++;
+		hr = commandQueue_->Signal(fence_.Get(), fenceValue_);
 		assert(SUCCEEDED(hr));
 
 		//FPS固定
 		UpdateFixFPS();
 
 		// GPUがコマンドリストの実行を終了するまで待つ
-		if (fence->GetCompletedValue() < fenceValue) {
-			hr = fence->SetEventOnCompletion(fenceValue, fenceEvent);
+		if (fence_->GetCompletedValue() < fenceValue_) {
+			hr = fence_->SetEventOnCompletion(fenceValue_, fenceEvent_);
 			assert(SUCCEEDED(hr));
-			WaitForSingleObject(fenceEvent, INFINITE);
+			WaitForSingleObject(fenceEvent_, INFINITE);
 		}
 
 		// 6. アロケータのリセット（GPU完了後に実行）
-		hr = commandAllocator->Reset();
+		hr = commandAllocator_->Reset();
 		assert(SUCCEEDED(hr));
 
 		// 7. コマンドリストのリセット（次のフレームの準備）
-		hr = commandList->Reset(commandAllocator.Get(), nullptr);
+		hr = commandList_->Reset(commandAllocator_.Get(), nullptr);
 		assert(SUCCEEDED(hr));
 	}
 }

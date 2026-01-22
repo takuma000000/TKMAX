@@ -68,46 +68,45 @@ namespace TKM {
 	public:
 		//テクスチャ1枚分のデータ
 		struct TextureData {
-			DirectX::TexMetadata metadata;
-			Microsoft::WRL::ComPtr<ID3D12Resource> resource;
-			Microsoft::WRL::ComPtr <ID3D12Resource> intermediateResource;
-			uint32_t srvIndex = 0;
-			D3D12_CPU_DESCRIPTOR_HANDLE srvHnadleCPU{};
-			D3D12_GPU_DESCRIPTOR_HANDLE srvHnadleGPU{};
+			DirectX::TexMetadata metadata_;
+			Microsoft::WRL::ComPtr<ID3D12Resource> resource_;
+			Microsoft::WRL::ComPtr <ID3D12Resource> intermediateResource_;
+			uint32_t srvIndex_ = 0;
+			D3D12_CPU_DESCRIPTOR_HANDLE srvHnadleCPU_{};
+			D3D12_GPU_DESCRIPTOR_HANDLE srvHnadleGPU_{};
 
 			// デフォルトコンストラクタ（手動で定義）
 			TextureData() = default;
 
 			// ムーブコンストラクタ
 			TextureData(TextureData&& other) noexcept
-				: metadata(std::move(other.metadata)),
-				resource(std::move(other.resource)),
-				intermediateResource(std::move(other.intermediateResource)),
-				srvIndex(other.srvIndex),
-				srvHnadleCPU(other.srvHnadleCPU),
-				srvHnadleGPU(other.srvHnadleGPU) {
-				other.srvIndex = 0;
+				: metadata_(std::move(other.metadata_)),
+				resource_(std::move(other.resource_)),
+				intermediateResource_(std::move(other.intermediateResource_)),
+				srvIndex_(other.srvIndex_),
+				srvHnadleCPU_(other.srvHnadleCPU_),
+				srvHnadleGPU_(other.srvHnadleGPU_) {
+				other.srvIndex_ = 0;
 			}
 
 			// ムーブ代入演算子
 			TextureData& operator=(TextureData&& other) noexcept {
 				if (this != &other) {
-					metadata = std::move(other.metadata);
-					resource = std::move(other.resource);
-					intermediateResource = std::move(other.intermediateResource);
-					srvIndex = other.srvIndex;
-					srvHnadleCPU = other.srvHnadleCPU;
-					srvHnadleGPU = other.srvHnadleGPU;
-					other.srvIndex = 0;
+					metadata_ = std::move(other.metadata_);
+					resource_ = std::move(other.resource_);
+					intermediateResource_ = std::move(other.intermediateResource_);
+					srvIndex_ = other.srvIndex_;
+					srvHnadleCPU_ = other.srvHnadleCPU_;
+					srvHnadleGPU_ = other.srvHnadleGPU_;
+					other.srvIndex_ = 0;
 				}
 				return *this;
 			}
 
 		};
 
-
 		//テクスチャデータ
-		std::unordered_map<std::string, TextureData> textureDatas;
+		std::unordered_map<std::string, TextureData> textureDatas_;
 
 	public:
 		// Getter=====================================

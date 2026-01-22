@@ -16,7 +16,7 @@ void GameClearScene::Initialize() {
 	// ─────────────────────
 	// モデル・テクスチャ読み込み
 	// ─────────────────────
-	ModelManager::GetInstance()->LoadModel("jett.obj", dxCommon);
+	ModelManager::GetInstance()->LoadModel("jett.obj", dxCommon_);
 	TextureManager::GetInstance()->LoadTexture("./resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
 	TextureManager::GetInstance()->LoadTexture("./resources/clear.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/circle2.png");
@@ -40,14 +40,14 @@ void GameClearScene::Initialize() {
 	// スカイボックス
 	// ─────────────────────
 	skybox_ = std::make_unique<Skybox>();
-	skybox_->Initialize(dxCommon, srvManager, "resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
+	skybox_->Initialize(dxCommon_, srvManager_, "resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
 	skybox_->SetCamera(camera_.get());
 
 	// ─────────────────────
 	// 自機（ジェットコースター演出）
 	// ─────────────────────
 	player_ = std::make_unique<Player>();
-	player_->Initialize(Object3dCommon::GetInstance(), dxCommon);
+	player_->Initialize(Object3dCommon::GetInstance(), dxCommon_);
 	player_->SetCamera(camera_.get());
 
 	player_->SetControlEnabled(false);  // 入力&通常ゲーム処理を全部止める
@@ -67,15 +67,15 @@ void GameClearScene::Initialize() {
 	// 「GAME CLEAR」スプライト（中央にドン）
 	// ─────────────────────
 	clearSprite_ = std::make_unique<Sprite>();
-	clearSprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon, "./resources/clear.png");
+	clearSprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, "./resources/clear.png");
 	clearSprite_->SetAnchorPoint({ 0.5f, 0.5f });
-	clearSprite_->SetPosition({ WindowsAPI::kClientWidth * 0.5f, WindowsAPI::kClientHeight * 0.5f });
+	clearSprite_->SetPosition({ WindowsAPI::kClientWidth_ * 0.5f, WindowsAPI::kClientHeight_ * 0.5f });
 	clearSprite_->SetColor({ 1,1,1,1 });
 
 	// ─────────────────────
 	// 画面遷移アイリス（他シーンと同じ仕様）
 	// ─────────────────────
-	iris_ = CreateCenteredIrisSprite(dxCommon, irisMaxScale_);
+	iris_ = CreateCenteredIrisSprite(dxCommon_, irisMaxScale_);
 
 	// 入場は「覆った状態 → 0」へ（OutBack, 0.8s）
 	irisScale_ = irisMaxScale_;
@@ -118,7 +118,7 @@ void GameClearScene::Update() {
 	if (irisClosing_) {
 		irisScale_ = UpdateIrisScale(iris_.get(), irisCloseTween_, dt_);
 		if (irisCloseTween_.Finished()) {
-			sceneManager_->SetNextScene(new TitleScene(dxCommon, srvManager));
+			sceneManager_->SetNextScene(new TitleScene(dxCommon_, srvManager_));
 			return;
 		}
 	}
@@ -198,7 +198,7 @@ void GameClearScene::Draw() {
 	// --- 3D ---
 	Object3dCommon::GetInstance()->DrawSetCommon();
 	if (player_) {
-		player_->Draw(dxCommon);
+		player_->Draw(dxCommon_);
 	}
 	if (skybox_) {
 		skybox_->Draw();

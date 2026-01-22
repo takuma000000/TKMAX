@@ -6,13 +6,13 @@ void ParticleEmitter::Initialize(std::string name, Vector3 pos){
 	emitter.count = 1;           // 毎フレーム1個出す
 	emitter.frequency = 0.0f;    // 0なら常時Emit
 	emitter.frequencyTime = 0.0f;  // 経過時間初期化
-	emitter.transform.translate = pos; // エミッター位置設定
-	emitter.transform.rotate = { 0.0f,0.0f,0.0f }; // 回転は0固定
-	emitter.transform.scale = { 1.0f,1.0f,1.0f }; // スケールは1固定
+	emitter.transform.translate_ = pos; // エミッター位置設定
+	emitter.transform.rotate_ = { 0.0f,0.0f,0.0f }; // 回転は0固定
+	emitter.transform.scale_ = { 1.0f,1.0f,1.0f }; // スケールは1固定
 }
 
 void ParticleEmitter::Emit(){
-	TKM::ParticleManager::GetInstance()->Emit(name, emitter.transform.translate, emitter.count); // パーティクル発生
+	TKM::ParticleManager::GetInstance()->Emit(name, emitter.transform.translate_, emitter.count); // パーティクル発生
 }
 
 void ParticleEmitter::Update() {

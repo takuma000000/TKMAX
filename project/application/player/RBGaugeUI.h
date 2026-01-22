@@ -16,25 +16,25 @@ namespace TKM {
 	public:
 		struct Desc {
 			// 位置は「中央基準」で扱う（左右端→中央の計算が楽）
-			Vector2 center = { WindowsAPI::kClientWidth * 0.5f, WindowsAPI::kClientHeight - 60.0f };
-			Vector2 size = { 520.0f, 18.0f }; // 全体幅/高さ
+			Vector2 center_ = { WindowsAPI::kClientWidth_ * 0.5f, WindowsAPI::kClientHeight_ - 60.0f };
+			Vector2 size_ = { 520.0f, 18.0f }; // 全体幅/高さ
 
 			// shake
-			float shakeTime = 0.12f;
-			float shakePower = 4.0f;
+			float shakeTime_ = 0.12f;
+			float shakePower_ = 4.0f;
 
 			// lag（遅延バー）
-			float lagSpeed = 900.0f; // 大きいほど速く追従（弾なので速めが気持ちいい）
+			float lagSpeed_ = 900.0f; // 大きいほど速く追従（弾なので速めが気持ちいい）
 
 			// テクスチャ
-			std::string frameTex = "./resources/circle.png";      // 仮（差し替えOK）
-			std::string fillTex = "./resources/gradationLine.png";  // 仮（差し替えOK）
+			std::string frameTex_ = "./resources/circle.png";      // 仮（差し替えOK）
+			std::string fillTex_ = "./resources/gradationLine.png";  // 仮（差し替えOK）
 
 			// 色（単純回避用）
-			Vector4 baseColor = { 0.25f, 0.95f, 1.0f, 1.0f };   // 通常
-			Vector4 drainColor = { 1.0f, 0.75f, 0.15f, 1.0f };   // 減ってる最中（撃った直後）
-			Vector4 refillColor = { 0.55f, 1.0f, 0.55f, 1.0f };   // 回復中
-			Vector4 lagColor = { 0.65f, 0.65f, 0.65f, 1.0f };  // 遅延バー
+			Vector4 baseColor_ = { 0.25f, 0.95f, 1.0f, 1.0f };   // 通常
+			Vector4 drainColor_ = { 1.0f, 0.75f, 0.15f, 1.0f };   // 減ってる最中（撃った直後）
+			Vector4 refillColor_ = { 0.55f, 1.0f, 0.55f, 1.0f };   // 回復中
+			Vector4 lagColor_ = { 0.65f, 0.65f, 0.65f, 1.0f };  // 遅延バー
 		};
 
 	public:
@@ -124,13 +124,13 @@ namespace TKM {
 		int prevAmmo_ = -1;
 
 		struct Chip {
-			std::unique_ptr<Sprite> sp;
-			Vector2 pos{};
-			Vector2 vel{};
-			float life = 0.0f;
-			float maxLife = 0.0f;
-			float size = 6.0f;
-			bool active = false;
+			std::unique_ptr<Sprite> sp_;
+			Vector2 pos_{};
+			Vector2 vel_{};
+			float life_ = 0.0f;
+			float maxLife_ = 0.0f;
+			float size_ = 6.0f;
+			bool active_ = false;
 		};
 
 		std::vector<Chip> chips_;

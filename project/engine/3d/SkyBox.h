@@ -41,26 +41,26 @@ namespace TKM {
 
 		// 定数バッファ用構造体
 		struct TransformationMatrix {
-			Matrix4x4 viewProjection;
-			Matrix4x4 world;
+			Matrix4x4 viewProjection_;
+			Matrix4x4 world_;
 		};
 		// マテリアル用構造体
 		struct Material {
-			Vector4 color;
-			uint32_t enableLighting;
-			Matrix4x4 uvTransform;
-			float shininess;
+			Vector4 color_;
+			uint32_t enableLighting_;
+			Matrix4x4 uvTransform_;
+			float shininess_;
 		};
 		// GPU用カメラ構造体
 		struct CameraForGPU {
-			Vector3 worldPosition;//カメラの位置
-			float padding;//16byte境界に合わせるためのパディング
+			Vector3 worldPosition_;//カメラの位置
+			float padding_;//16byte境界に合わせるためのパディング
 		};
 
 	private:
 		// 頂点構造体
 		struct Vertex {
-			Vector3 position;
+			Vector3 position_;
 		};
 
 		DirectXCommon* dxCommon_ = nullptr;
@@ -86,9 +86,9 @@ namespace TKM {
 		Vector3 translation_ = { 0.0f, 0.0f, 0.0f }; // デフォルト位置
 
 		//カメラ用のリソースを作る
-		Microsoft::WRL::ComPtr<ID3D12Resource> cameraResource;
+		Microsoft::WRL::ComPtr<ID3D12Resource> cameraResource_;
 		//データを書き込む
-		CameraForGPU* cameraData = nullptr;
+		CameraForGPU* cameraData_ = nullptr;
 
 		Microsoft::WRL::ComPtr<ID3D12Resource> textureResource_;
 

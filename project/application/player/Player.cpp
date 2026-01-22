@@ -16,7 +16,7 @@ void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommo
 
 	reticle_ = std::make_unique<Reticle>();
 	reticle_->Initialize(common_, dxCommon_, "reticle_big.obj"); // モデル指定可
-	if (camera) reticle_->SetCamera(camera);
+	if (camera_) reticle_->SetCamera(camera_);
 	// Player から位置とヨー角(radians)を渡す（循環依存を避けるためコールバック）
 	reticle_->BindOwner(
 		[this]() { return object_->GetTranslate(); },
@@ -36,7 +36,7 @@ void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommo
 
 	if (enableJetSmoke_) { // ジェット煙初期化
 		Vector3 jetPos = object_->GetTranslate();
-		jetPos.z -= kJetSmokeOffsetZ;           // 機体のケツあたり
+		jetPos.z -= kJetSmokeOffsetZ_;           // 機体のケツあたり
 		jetEmitter_.Initialize("jetSmoke", jetPos);
 	}
 
@@ -120,7 +120,7 @@ void Player::Update(float dt) {
 	// ---- ジェット煙（HPが0なら停止）----
 	if (enableJetSmoke_ && hp_ > 0) {
 		Vector3 jetPos = object_->GetTranslate();
-		jetPos.z -= kJetSmokeOffsetZ;
+		jetPos.z -= kJetSmokeOffsetZ_;
 		jetEmitter_.SetPosition(jetPos);
 		jetEmitter_.Update();
 	}
@@ -559,7 +559,7 @@ void Player::RBShoot() {
 	}
 
 	bullet->SetVelocity(dir * normalBulletSpeed_);
-	bullet->SetCamera(camera);
+	bullet->SetCamera(camera_);
 	bullet->SetPlayer(this);
 	bullet->SetTrailGroup("trail_rb");
 	bullet->SetCore(core_);
@@ -637,7 +637,7 @@ void Player::RTShoot() {
 			// 弾設定
 			bullet->SetPosition(startPos); // 弾位置設定
 			bullet->SetVelocity(dir * normalBulletSpeed_); // 速度設定
-			bullet->SetCamera(camera); // カメラ設定
+			bullet->SetCamera(camera_); // カメラ設定
 			bullet->SetEnemy(enemy_); // 敵設定
 			bullet->SetPlayer(this); // プレイヤー設定
 			bullet->SetSpecialAttack(true); // 一撃必殺フラグON
@@ -676,7 +676,7 @@ void Player::LBShoot() {
 			// 弾設定
 			bullet->SetPosition(startPos); // 弾位置設定
 			bullet->SetVelocity(dir * normalBulletSpeed_); // 速度設定
-			bullet->SetCamera(camera); // カメラ設定
+			bullet->SetCamera(camera_); // カメラ設定
 			bullet->SetEnemy(enemy.get()); // 敵設定
 			bullet->SetPlayer(this); // プレイヤー設定
 
@@ -700,8 +700,8 @@ void Player::LTShoot() {
 		Vector3 p0 = object_->GetTranslate();
 		bullet->SetPosition(p0);
 		bullet->SetEnemy(enemy_);
-		bullet->SetHoming(true, kHomingBulletSpeed); // ベジェ終了後に効く追尾速度
-		bullet->SetCamera(camera);
+		bullet->SetHoming(true, kHomingBulletSpeed_); // ベジェ終了後に効く追尾速度
+		bullet->SetCamera(camera_);
 		bullet->SetPlayer(this);
 		bullet->SetTrailGroup("trail_lt");
 
@@ -771,10 +771,10 @@ void Player::LTShoot() {
 }
 
 void Player::UpdateCameraFollowThirdPerson(float dt) {
-	if (!camera) return;
+	if (!camera_) return;
 
 	Vector3 playerPos = object_->GetTranslate();
-	Vector3 camRot = camera->GetRotate();
+	Vector3 camRot = camera_->GetRotate();
 
 	// ベース値は従来どおり
 	const float baseDistance = 40.0f;
@@ -837,7 +837,7 @@ void Player::UpdateCameraFollowThirdPerson(float dt) {
 
 
 	Vector3 cameraPos = playerPos + offset + cameraShakeOffset_;
-	camera->SetTranslate(cameraPos);
+	camera_->SetTranslate(cameraPos);
 }
 
 void Player::ZoomCamera() {

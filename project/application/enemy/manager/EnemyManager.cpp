@@ -21,17 +21,17 @@ void EnemyManager::Initialize(TKM::DirectXCommon* dx, TKM::Camera* camera, TKM::
 
 	// 読めても読めなくても、挙動が壊れないように「既存メンバ」に流し込む
 	{
-		const auto& w1 = waveConfig_.GetWave1();
-		wave1SpawnInterval_ = w1.spawnInterval;
-		wave1MaxSimultaneous_ = w1.maxSimultaneous;
+		const auto& w1_ = waveConfig_.GetWave1();
+		wave1SpawnInterval_ = w1_.spawnInterval_;
+		wave1MaxSimultaneous_ = w1_.maxSimultaneous_;
 	}
 
 	wave2WaitDuration_ = waveConfig_.GetWave2WaitDuration();
 
 	{
-		const auto& w3 = waveConfig_.GetWave3();
-		wave3LeftPos_ = w3.midBossLeft;
-		wave3RightPos_ = w3.midBossRight;
+		const auto& w3_ = waveConfig_.GetWave3();
+		wave3LeftPos_ = w3_.midBossLeft_;
+		wave3RightPos_ = w3_.midBossRight_;
 	}
 }
 
@@ -68,18 +68,18 @@ void EnemyManager::Update(float dt) {
 	/// ● 敵の状態を更新し、死亡したものは削除＆カウント
 	// ───────────────────────────────────────────────
 	for (auto it = enemies_->begin(); it != enemies_->end();) {
-		Enemy* e = it->get();
+		Enemy* e_ = it->get();
 
 		// フラグを渡す
-		e->SetFreezeMove(freezeEnemies_);
-		e->Update(dt);
+		e_->SetFreezeMove(freezeEnemies_);
+		e_->Update(dt);
 
-		if (e->IsDead()) {
+		if (e_->IsDead()) {
 			// ちゃんと倒した敵だけ、プレイヤーやカウンタに通知する
-			if (e->GetDefeated()) {
+			if (e_->GetDefeated()) {
 
 				if (player_) {
-					player_->OnEnemyDestroyed(e);
+					player_->OnEnemyDestroyed(e_);
 				}
 
 				if (defeatedEnemyCount_) {
@@ -103,9 +103,9 @@ void EnemyManager::Update(float dt) {
 	/// ● Wave進行
 	// ───────────────────────────────────────────────
 		// Waveごとの更新（分岐しない）
-	const auto ops = kWaveOps_[static_cast<int>(wavePhase_)];
-	if (ops.update) {
-		(this->*ops.update)(dt);
+	const auto ops_ = kWaveOps_[static_cast<int>(wavePhase_)];
+	if (ops_.update_) {
+		(this->*ops_.update_)(dt);
 	}
 }
 
@@ -118,23 +118,23 @@ void EnemyManager::UpdateClosestEnemy() {
 	// ───────────────────────────────────────────────
 	/// ● プレイヤーに最も近い「ザコ敵」を検出し、ターゲットとして設定する
 	// ───────────────────────────────────────────────
-	Enemy* closestEnemy = nullptr;
-	float closestDistance = std::numeric_limits<float>::max();
-	Vector3 playerPos = player_->GetPosition();
+	Enemy* closestEnemy_ = nullptr;
+	float closestDistance_ = std::numeric_limits<float>::max();
+	Vector3 playerPos_ = player_->GetPosition();
 
 	// ───── 敵リストを走査して、最も近い生存中の敵を探す ─────
 	for (auto& enemy : *enemies_) {
 		if (!enemy->IsDead() && !enemy->IsDying()) { // 生存中の敵のみ対象
-			float dist = MyMath::Length(enemy->GetWorldPosition() - playerPos);
+			float dist_ = MyMath::Length(enemy->GetWorldPosition() - playerPos_);
 
-			if (dist < closestDistance) {
-				closestDistance = dist;
-				closestEnemy = enemy.get();
+			if (dist_ < closestDistance_) {
+				closestDistance_ = dist_;
+				closestEnemy_ = enemy.get();
 			}
 		}
 	}
 	// ───── 検出結果をプレイヤーに通知 ─────
-	player_->SetEnemy(closestEnemy);
+	player_->SetEnemy(closestEnemy_);
 	player_->SetAllEnemies(enemies_);
 }
 
@@ -173,18 +173,18 @@ void EnemyManager::SpawnCurrentWave() {
 
 	enemies_->clear();
 
-	const auto ops = kWaveOps_[static_cast<int>(wavePhase_)];
-	if (ops.spawn) {
-		(this->*ops.spawn)();
+	const auto ops_ = kWaveOps_[static_cast<int>(wavePhase_)];
+	if (ops_.spawn_) {
+		(this->*ops_.spawn_)();
 	}
 }
 
 void EnemyManager::GoToNextWave() {
-	int next = static_cast<int>(wavePhase_) + 1;
-	if (next > static_cast<int>(WavePhase::Done)) {
-		next = static_cast<int>(WavePhase::Done);
+	int next_ = static_cast<int>(wavePhase_) + 1;
+	if (next_ > static_cast<int>(WavePhase::Done)) {
+		next_ = static_cast<int>(WavePhase::Done);
 	}
-	wavePhase_ = static_cast<WavePhase>(next);
+	wavePhase_ = static_cast<WavePhase>(next_);
 
 	// Done なら spawn=nullptr なので何も起きない（分岐不要）
 	SpawnCurrentWave();
@@ -230,24 +230,23 @@ void EnemyManager::UpdateWave1(float dt) {
 
 	// Wave1の目標撃破数に達したら次のWaveへ
 	if (defeatedEnemyCount_ && *defeatedEnemyCount_ >= wave1DefeatTarget_) {
-
 		// Wave2に移るときWave1の残敵が邪魔なら消す（混ざるの防止）
 		enemies_->clear();
-
+		// 次のWaveへ
 		GoToNextWave();
 		return;
 	}
 
 	// 現在生存している敵の数（死亡演出中も含めるかどうかは好みだが、ここでは「まだ画面に居るやつ」を数える）
-	int aliveCount = 0;
+	int aliveCount_ = 0;
 	for (auto& e : *enemies_) {
 		if (!e->IsDead()) {
-			++aliveCount;
+			++aliveCount_;
 		}
 	}
 
 	// 同時出現数が上限ならスポーンしない
-	if (aliveCount >= wave1MaxSimultaneous_) {
+	if (aliveCount_ >= wave1MaxSimultaneous_) {
 		return;
 	}
 
@@ -265,47 +264,47 @@ void EnemyManager::SpawnWave1Enemy() {
 	}
 
 	// 出現位置（Xはちょっとランダム、Zは奥から）
-	const auto& w1 = waveConfig_.GetWave1();
-	float y = w1.baseY;
-	float z = w1.baseZ;
-	float rx = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX); // 0〜1
-	float x = w1.randXMin + rx * (w1.randXMax - w1.randXMin);
+	const auto& w1_ = waveConfig_.GetWave1();
+	float y_ = w1_.baseY_;
+	float z_ = w1_.baseZ_;
+	float rx_ = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX); // 0〜1
+	float x_ = w1_.randXMin_ + rx_ * (w1_.randXMax_ - w1_.randXMin_);
 
-	TKM::DirectXCommon* dxPtr = dx_;
-	TKM::Camera* camPtr = cam_;
-	TKM::BaseScene* parentPtr = parent_;
+	TKM::DirectXCommon* dxPtr_ = dx_;
+	TKM::Camera* camPtr_ = cam_;
+	TKM::BaseScene* parentPtr_ = parent_;
 
 	EnemySpawner::SpawnLine(
 		*enemies_,
 		1,          // 1体だけ
-		y,
-		z,
-		x,
+		y_,
+		z_,
+		x_,
 		0.0f,       // xStep は未使用（1体なので）
-		dxPtr,
-		camPtr,
-		parentPtr,
-		[this, x, z](Enemy& e) {
+		dxPtr_,
+		camPtr_,
+		parentPtr_,
+		[this, x_, z_](Enemy& e) {
 
 			e.SetBehavior(EnemyBehavior::PounceFromAbove);
 
-			Vector3 start = { x, 20.0f, z }; // 高い位置から降ってくる
-			Vector3 playerPos = player_->GetPosition(); // プレイヤー位置取得
+			Vector3 start_ = { x_, 20.0f, z_ }; // 高い位置から降ってくる
+			Vector3 playerPos_ = player_->GetPosition(); // プレイヤー位置取得
 			// プレイヤーの少し手前に着地するようにターゲット設定
-			Vector3 target = {
-				playerPos.x,
-				playerPos.y,
-				playerPos.z + 3.0f
+			Vector3 target_ = {
+				playerPos_.x,
+				playerPos_.y,
+				playerPos_.z + 3.0f
 			};
 			// 曲線の頂点（アペックス）を計算
 			Vector3 apex = {
-				(start.x + target.x) * 0.5f,
+				(start_.x + target_.x) * 0.5f,
 				30.0f,   // 曲線の頂点の高さ
-				(start.z + target.z) * 0.5f
+				(start_.z + target_.z) * 0.5f
 			};
 
-			e.SetPosition(start); // 開始位置にセット
-			e.SetPounceParameters(start, apex, target, 1.6f); // 1.6秒で移動
+			e.SetPosition(start_); // 開始位置にセット
+			e.SetPounceParameters(start_, apex, target_, 1.6f); // 1.6秒で移動
 			e.SetHP(1); // Wave1敵のHP設定
 			e.SetScale({ 1.0f,1.0f,1.0f }); // スケールリセット
 
@@ -352,7 +351,7 @@ void EnemyManager::UpdateWave2(float dt) {
 namespace {
 	using SubWaveFn = void (EnemyManager::*)();
 
-	static const SubWaveFn kWave2SubWaveTable[] = {
+	static const SubWaveFn kWave2SubWaveTable_[] = {
 		&EnemyManager::SpawnWave2_Triangle,
 		&EnemyManager::SpawnWave2_Line,
 		&EnemyManager::SpawnWave2_FastColumn,
@@ -363,10 +362,10 @@ void EnemyManager::SpawnWave2SubWave(int id) {
 	if (!enemies_ || !dx_ || !cam_ || !parent_) { return; }
 	enemies_->clear(); // 念のためクリア
 
-	const int count = static_cast<int>(std::size(kWave2SubWaveTable));
-	if (id < 0 || id >= count) { return; }
+	const int count_ = static_cast<int>(std::size(kWave2SubWaveTable_));
+	if (id < 0 || id >= count_) { return; }
 
-	(this->*kWave2SubWaveTable[id])();
+	(this->*kWave2SubWaveTable_[id])();
 }
 
 // ───────────────────────────────────────────────
@@ -375,26 +374,26 @@ void EnemyManager::SpawnWave2SubWave(int id) {
 void EnemyManager::SpawnWave2_Triangle() {
 	if (!enemies_ || !dx_ || !cam_ || !parent_) return;
 
-	const auto& s = waveConfig_.GetWave2SubWave(0);
+	const auto& s_ = waveConfig_.GetWave2SubWave(0);
 
-	int idx = 0;
+	int idx_ = 0;
 
 	EnemySpawner::SpawnV(
 		*enemies_,
-		s.triCountPerSide,
-		s.triY, s.triZ,
-		s.triXCenter,
-		s.triXStep,
-		s.triZStep,
+		s_.triCountPerSide_,
+		s_.triY_, s_.triZ_,
+		s_.triXCenter_,
+		s_.triXStep_,
+		s_.triZStep_,
 		dx_, cam_, parent_,
-		[this, &idx](Enemy& e) {
+		[this, &idx_](Enemy& e) {
 			// ここは挙動。触らない。
 			e.SetBehavior(EnemyBehavior::SineX);
 			e.SetVelocity({ 0,0,-0.30f });
 			e.SetSineParams(4.0f, 1.4f);
-			e.SetSinePhase(0.6f * float(idx++));
+			e.SetSinePhase(0.6f * float(idx_++));
 			e.SetHP(3);
-
+			// プレイヤー関連セットアップを共通化
 			SetupEnemyForPlayer(e);
 		}
 	);
@@ -403,12 +402,12 @@ void EnemyManager::SpawnWave2_Triangle() {
 void EnemyManager::SpawnWave2_Line() {
 	if (!enemies_ || !dx_ || !cam_ || !parent_) return;
 
-	const auto& s = waveConfig_.GetWave2SubWave(1);
+	const auto& s_ = waveConfig_.GetWave2SubWave(1);
 
 	EnemySpawner::SpawnLine(
 		*enemies_,
-		s.lineCount, s.lineY, s.lineZ,
-		s.lineXStart, s.lineXStep,
+		s_.lineCount_, s_.lineY_, s_.lineZ_,
+		s_.lineXStart_, s_.lineXStep_,
 		dx_, cam_, parent_,
 		[this](Enemy& e) {
 			// 挙動は触らない
@@ -416,7 +415,7 @@ void EnemyManager::SpawnWave2_Line() {
 			e.SetVelocity({ 0,0,-0.32f });
 			e.SetStopZ(52.0f);
 			e.SetHP(2);
-
+			// プレイヤー関連セットアップを共通化
 			SetupEnemyForPlayer(e);
 		}
 	);
@@ -425,16 +424,16 @@ void EnemyManager::SpawnWave2_Line() {
 void EnemyManager::SpawnWave2_FastColumn() {
 	if (!enemies_ || !dx_ || !cam_ || !parent_) return;
 
-	const auto& s = waveConfig_.GetWave2SubWave(2);
+	const auto& s_ = waveConfig_.GetWave2SubWave(2);
 
 	EnemySpawner::SpawnColumn(
 		*enemies_,
-		s.colCount,
-		s.colX,
-		s.colZStart,
-		s.colZStep,
-		s.colYStart,
-		s.colYStep,
+		s_.colCount_,
+		s_.colX_,
+		s_.colZStart_,
+		s_.colZStep_,
+		s_.colYStart_,
+		s_.colYStep_,
 		dx_, cam_, parent_,
 		[this](Enemy& e) {
 			// 挙動は触らない
@@ -454,25 +453,25 @@ void EnemyManager::UpdateWave3(float dt) {
 	}
 
 	// ── 中ボスが何体生きているかだけ Enemy から数える ──
-	int aliveMidBossCount = 0;
+	int aliveMidBossCount_ = 0;
 	for (auto& e : *enemies_) {
 		if (!e) continue;
 		if (e->GetType() == EnemyType::Wave3MidBoss && !e->IsDead() && !e->IsDying()) {
-			aliveMidBossCount++; // 生存中の中ボスをカウント
+			aliveMidBossCount_++; // 生存中の中ボスをカウント
 		}
 	}
 
 	// ── 核の生存状態は MidBossCore で判定 ──
-	bool coreAlive = (midBossCore_ && !midBossCore_->IsDead() && !midBossCore_->IsDying());
+	bool coreAlive_ = (midBossCore_ && !midBossCore_->IsDead() && !midBossCore_->IsDying());
 
 	// 「このフレームで中ボスが減ったか？」
-	bool midBossJustDied = (aliveMidBossCount < wave3PrevAliveMidBossCount_);
+	bool midBossJustDied_ = (aliveMidBossCount_ < wave3PrevAliveMidBossCount_);
 
 	// ---- 中ボスが 0 体になったら Wave3 終了判定 ----
-	if (aliveMidBossCount == 0) {
+	if (aliveMidBossCount_ == 0) {
 		// 蘇生中ならコアを強制的に殺してキャンセル
 		if (wave3ReviveInProgress_) {
-			if (coreAlive) {
+			if (coreAlive_) {
 				midBossCore_->StartDeathReaction({ 0.0f, 0.0f, 1.0f });
 			}
 			wave3ReviveInProgress_ = false;
@@ -488,47 +487,47 @@ void EnemyManager::UpdateWave3(float dt) {
 			GoToNextWave();
 		}
 
-		wave3PrevAliveMidBossCount_ = aliveMidBossCount;
+		wave3PrevAliveMidBossCount_ = aliveMidBossCount_;
 		return;
 	}
 
 	// ---- 中ボスが 1 体になった瞬間に核を出す ----
-	if (aliveMidBossCount == 1 && !wave3ReviveInProgress_ && midBossJustDied) {
+	if (aliveMidBossCount_ == 1 && !wave3ReviveInProgress_ && midBossJustDied_) {
 		wave3ReviveInProgress_ = true;
 		wave3CoreTimer_ = 0.0f;
 		SpawnWave3Core();
 
 		// 残り1体の中ボスを怒りモードにする
-		const float angryDuration = 8.0f; // 何秒怒らせるか（あとで調整）
+		const float angryDuration_ = 8.0f; // 何秒怒らせるか（あとで調整）
 		for (auto& e : *enemies_) {
 			if (!e) continue;
 			if (e->GetType() != EnemyType::Wave3MidBoss) continue;
 			if (e->IsDead() || e->IsDying()) continue;
 
-			e->SetAngry(angryDuration);
+			e->SetAngry(angryDuration_);
 		}
 
-		wave3PrevAliveMidBossCount_ = aliveMidBossCount;
+		wave3PrevAliveMidBossCount_ = aliveMidBossCount_;
 		return;
 	}
 
 	// まだ蘇生フェーズに入っていないなら何もしない
 	if (!wave3ReviveInProgress_) {
-		wave3PrevAliveMidBossCount_ = aliveMidBossCount;
+		wave3PrevAliveMidBossCount_ = aliveMidBossCount_;
 		return;
 	}
 
 	// ---- ここから「蘇生フェーズ中」 ----
 
 	// 核が既に壊されている → 蘇生キャンセル
-	if (!coreAlive) {
+	if (!coreAlive_) {
 		wave3ReviveInProgress_ = false;
 		wave3CoreTimer_ = 0.0f;
 		if (player_) {
 			player_->SetMidBossCore(nullptr);
 		}
 		midBossCore_.reset();
-		wave3PrevAliveMidBossCount_ = aliveMidBossCount;
+		wave3PrevAliveMidBossCount_ = aliveMidBossCount_;
 		return;
 	}
 
@@ -549,7 +548,7 @@ void EnemyManager::UpdateWave3(float dt) {
 		wave3CoreTimer_ = 0.0f;
 	}
 
-	wave3PrevAliveMidBossCount_ = aliveMidBossCount;
+	wave3PrevAliveMidBossCount_ = aliveMidBossCount_;
 }
 
 void EnemyManager::SpawnWave3MidBossStage() {
@@ -565,9 +564,9 @@ void EnemyManager::SpawnWave3MidBossStage() {
 	wave3ReviveInProgress_ = false;
 	wave3CoreTimer_ = 0.0f;
 
-	auto camPtr = cam_;
-	auto dxPtr = dx_;
-	auto parentPtr = parent_;
+	auto camPtr_ = cam_;
+	auto dxPtr_ = dx_;
+	auto parentPtr_ = parent_;
 
 	// 左右 2 体の中ボスを直線で出して、手前で停止させる
 	EnemySpawner::SpawnLine(
@@ -577,7 +576,7 @@ void EnemyManager::SpawnWave3MidBossStage() {
 		wave3LeftPos_.z,
 		wave3LeftPos_.x,
 		(wave3RightPos_.x - wave3LeftPos_.x),
-		dxPtr, camPtr, parentPtr,
+		dxPtr_, camPtr_, parentPtr_,
 		[this](Enemy& e) {
 
 			// 中ボスの挙動設定
@@ -613,30 +612,30 @@ void EnemyManager::SpawnWave3Core() {
 		return;
 	}
 
-	const auto& w3 = waveConfig_.GetWave3();
+	const auto& w3_ = waveConfig_.GetWave3();
 
-	float xRange = w3.coreXRange;
-	float zMin = w3.coreZMin;
-	float zMax = w3.coreZMax;
+	float xRange_ = w3_.coreXRange_;
+	float zMin_ = w3_.coreZMin_;
+	float zMax_ = w3_.coreZMax_;
 
-	float rx = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
-	float rz = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
+	float rx_ = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
+	float rz_ = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
 
-	float x = -xRange + rx * (xRange * 2.0f);
-	float z = zMin + rz * (zMax - zMin);
-	float y = w3.coreY;
+	float x_ = -xRange_ + rx_ * (xRange_ * 2.0f);
+	float z_ = zMin_ + rz_ * (zMax_ - zMin_);
+	float y_ = w3_.coreY_;
 
 	// すでにコアが居たら一旦消して作り直し
 	midBossCore_ = std::make_unique<MidBossCore>();
 
 	// Object3d 用共通（Enemy でも使ってるやつ）
-	auto* common = TKM::Object3dCommon::GetInstance();
+	auto* common_ = TKM::Object3dCommon::GetInstance();
 
-	midBossCore_->Initialize(common, dx_);
+	midBossCore_->Initialize(common_, dx_);
 	midBossCore_->SetCamera(cam_);
 	midBossCore_->SetParentScene(parent_);
 
-	midBossCore_->SetPosition({ x, y, z });
+	midBossCore_->SetPosition({ x_, y_, z_ });
 	midBossCore_->SetScale({ 0.8f, 0.8f, 0.8f });
 	midBossCore_->SetHP(wave3CoreHP_);
 
@@ -658,8 +657,8 @@ void EnemyManager::SpawnWave3ExtraMidBoss() {
 	}
 
 	// どっちサイドの中ボスが生きているか調べる
-	bool leftAlive = false;
-	bool rightAlive = false;
+	bool leftAlive_ = false;
+	bool rightAlive_ = false;
 
 	for (auto& e : *enemies_) {
 		if (!e) continue;
@@ -668,9 +667,9 @@ void EnemyManager::SpawnWave3ExtraMidBoss() {
 
 		Vector3 pos = e->GetWorldPosition();
 		if (pos.x < 0.0f) {
-			leftAlive = true;
+			leftAlive_ = true;
 		} else {
-			rightAlive = true;
+			rightAlive_ = true;
 		}
 	}
 
@@ -679,32 +678,32 @@ void EnemyManager::SpawnWave3ExtraMidBoss() {
 	// state: 0=両方死, 1=左だけ生, 2=右だけ生, 3=両方生(想定外)
 	// 空いてる側に出す：左生->右 / 右生->左 / その他->左
 	// =========================================================
-	const int state = (leftAlive ? 1 : 0) | (rightAlive ? 2 : 0);
+	const int state_ = (leftAlive_ ? 1 : 0) | (rightAlive_ ? 2 : 0);
 
-	static const int kSpawnSide[4] = {
+	static const int kSpawnSide_[4] = {
 		0, // 0: 両方死 -> 左
 		1, // 1: 左だけ生 -> 右（空いてる側）
 		0, // 2: 右だけ生 -> 左（空いてる側）
 		0, // 3: 両方生(想定外) -> 左
 	};
 
-	const Vector3 kSidePos[2] = { wave3LeftPos_, wave3RightPos_ };
-	const Vector3 spawnPos = kSidePos[kSpawnSide[state]];
+	const Vector3 kSidePos_[2] = { wave3LeftPos_, wave3RightPos_ };
+	const Vector3 spawnPos_ = kSidePos_[kSpawnSide_[state_]];
 
-	auto camPtr = cam_;
-	auto dxPtr = dx_;
-	auto parentPtr = parent_;
+	auto camPtr_ = cam_;
+	auto dxPtr_ = dx_;
+	auto parentPtr_ = parent_;
 
 	EnemySpawner::SpawnLine(
 		*enemies_,
 		1,
-		spawnPos.y,
-		spawnPos.z,
-		spawnPos.x,
+		spawnPos_.y,
+		spawnPos_.z,
+		spawnPos_.x,
 		0.0f,
-		dxPtr,
-		camPtr,
-		parentPtr,
+		dxPtr_,
+		camPtr_,
+		parentPtr_,
 		[this](Enemy& e) {
 			e.SetBehavior(EnemyBehavior::StraightStop);
 			e.SetVelocity({ 0.0f, 0.0f, -0.2f });
@@ -767,26 +766,26 @@ void EnemyManager::ImGuiDebug() {
 	ImGui::Separator();
 
 	// 撃破数／最大数
-	int defeated = defeatedEnemyCount_ ? *defeatedEnemyCount_ : 0;
-	int maxCount = maxEnemyCount_ ? *maxEnemyCount_ : static_cast<int>(enemies_->size());
+	int defeated_ = defeatedEnemyCount_ ? *defeatedEnemyCount_ : 0;
+	int maxCount_ = maxEnemyCount_ ? *maxEnemyCount_ : static_cast<int>(enemies_->size());
 
-	ImGui::Text("撃破数: %d / %d", defeated, maxCount);
+	ImGui::Text("撃破数: %d / %d", defeated_, maxCount_);
 
 	// 撃破進捗バー
-	float progress = 0.0f;
-	if (maxCount > 0) {
-		progress = static_cast<float>(defeated) / static_cast<float>(maxCount);
+	float progress_ = 0.0f;
+	if (maxCount_ > 0) {
+		progress_ = static_cast<float>(defeated_) / static_cast<float>(maxCount_);
 	}
-	ImGui::ProgressBar(progress, ImVec2(200, 20), "撃破進行度");
+	ImGui::ProgressBar(progress_, ImVec2(200, 20), "撃破進行度");
 
 	// ===== Wave 状態表示 =====
-	static const char* kWaveLabel[] = {
+	static const char* kWaveLabel_[] = {
 	"Wave1",
 	"Wave2",
 	"Wave3",
 	"Bossフェーズ"
 	};
-	ImGui::Text("現在のWave: %s", kWaveLabel[static_cast<int>(wavePhase_)]);
+	ImGui::Text("現在のWave: %s", kWaveLabel_[static_cast<int>(wavePhase_)]);
 
 	// 「次のWaveへ」ボタン
 	if (ImGui::Button("次のWaveへ")) {
@@ -804,9 +803,9 @@ void EnemyManager::ImGuiDebug() {
 	if (wavePhase_ == WavePhase::W3) {
 		ImGui::Text("=== Wave3 MidBoss / Core Debug ===");
 
-		int aliveMidBoss = 0;
-		int dyingMidBoss = 0;
-		int deadMidBoss = 0;
+		int aliveMidBoss_ = 0;
+		int dyingMidBoss_ = 0;
+		int deadMidBoss_ = 0;
 
 		// 中ボスの状態を数える
 		for (auto& e : *enemies_) {
@@ -814,24 +813,24 @@ void EnemyManager::ImGuiDebug() {
 			if (e->GetType() != EnemyType::Wave3MidBoss) continue;
 
 			if (e->IsDead()) {
-				deadMidBoss++;
+				deadMidBoss_++;
 			} else if (e->IsDying()) {
-				dyingMidBoss++;
+				dyingMidBoss_++;
 			} else {
-				aliveMidBoss++;
+				aliveMidBoss_++;
 			}
 		}
 
-		bool coreAlive = (midBossCore_ && !midBossCore_->IsDead() && !midBossCore_->IsDying());
+		bool coreAlive_ = (midBossCore_ && !midBossCore_->IsDead() && !midBossCore_->IsDying());
 
-		ImGui::Text("MidBoss Alive:%d  Dying:%d  Dead:%d", aliveMidBoss, dyingMidBoss, deadMidBoss);
+		ImGui::Text("MidBoss Alive:%d  Dying:%d  Dead:%d", aliveMidBoss_, dyingMidBoss_, deadMidBoss_);
 		ImGui::Text("prevAliveMidBossCount: %d", wave3PrevAliveMidBossCount_);
 
-		bool midBossJustDiedDbg = (aliveMidBoss < wave3PrevAliveMidBossCount_);
-		ImGui::Text("midBossJustDied: %s", midBossJustDiedDbg ? "true" : "false");
+		bool midBossJustDiedDbg_ = (aliveMidBoss_ < wave3PrevAliveMidBossCount_);
+		ImGui::Text("midBossJustDied: %s", midBossJustDiedDbg_ ? "true" : "false");
 
 		ImGui::Text("ReviveInProgress: %s", wave3ReviveInProgress_ ? "true" : "false");
-		ImGui::Text("CoreAlive: %s", coreAlive ? "true" : "false");
+		ImGui::Text("CoreAlive: %s", coreAlive_ ? "true" : "false");
 		ImGui::Text("CoreTimer: %.2f / %.2f", wave3CoreTimer_, wave3CoreLifetime_);
 
 		ImGui::Separator();

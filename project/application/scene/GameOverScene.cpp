@@ -67,7 +67,7 @@ void GameOverScene::Initialize(){
 	irisOpenTween_.Reset(
 		irisMaxScale_,         // start（画面全体を覆っている状態）
 		0.0f,                  // end   （完全に開いた状態）
-		kIrisDuration,         // 時間（元コードをそのまま使用）
+		kIrisDuration_,         // 時間（元コードをそのまま使用）
 		Ease::Type::OutBack    // 開くときの跳ね返り感
 	);
 
@@ -81,12 +81,11 @@ void GameOverScene::Initialize(){
 	// 予備：上向き流星/昇天ストリーク
 	PM->CreateParticleGroup("fallStreakUp", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
 
-
 	// スプライト生成
 	overSprite_ = std::make_unique<Sprite>();
 	overSprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, "./resources/over.png");
 	overSprite_->SetAnchorPoint({ 0.5f, 0.5f });
-	overSprite_->SetPosition({ WindowsAPI::kClientWidth * 0.5f, WindowsAPI::kClientHeight * 0.5f });
+	overSprite_->SetPosition({ WindowsAPI::kClientWidth_ * 0.5f, WindowsAPI::kClientHeight_ * 0.5f });
 
 	// アルファ0で開始（見えない状態）
 	overSprite_->SetColor({ 1, 1, 1, 0 });
@@ -119,7 +118,7 @@ void GameOverScene::Update(){
 	// ─── Tキーでタイトルへ戻る（アイリス閉じ：InBack/0.8s） ───
 	if (!irisClosing_ && Input::GetInstance()->TriggerKey(DIK_T)) {
 		irisClosing_ = true;
-		irisCloseTween_.Reset(0.0f, irisMaxScale_, kIrisDuration, Ease::Type::InBack);
+		irisCloseTween_.Reset(0.0f, irisMaxScale_, kIrisDuration_, Ease::Type::InBack);
 	}
 
 	if (irisClosing_) {

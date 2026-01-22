@@ -26,7 +26,7 @@ public:
 	/// </summary>
 	/// <param name="pos"></param>
 	void SetPosition(const Vector3& pos) {
-		emitter.transform.translate = pos;
+		emitter.transform.translate_ = pos;
 	};
 private:
 	//エミッター構造体

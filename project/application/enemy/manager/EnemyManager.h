@@ -170,7 +170,7 @@ private:
 	// Wave 状態は EnemyManager が持つようにする
 	WavePhase wavePhase_ = WavePhase::W1;
 
-	const float dt = 1.0f / 60.0f; // 固定フレームレート想定
+	const float dt_ = 1.0f / 60.0f; // 固定フレームレート想定
 	//======================================================================
 	// Wave1 関連
 	//======================================================================
@@ -248,8 +248,8 @@ private:
 	using UpdateFn = void (EnemyManager::*)(float);
 
 	struct WaveOps {
-		SpawnFn spawn = nullptr;
-		UpdateFn update = nullptr;
+		SpawnFn spawn_ = nullptr;
+		UpdateFn update_ = nullptr;
 	};
 
 	static const WaveOps kWaveOps_[4]; // W1,W2,W3,Done(=nullptr)

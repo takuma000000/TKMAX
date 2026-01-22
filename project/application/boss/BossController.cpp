@@ -24,7 +24,7 @@ void BossController::Initialize(const Vector3& arenaMin, const Vector3& arenaMax
 	// 予測系
 	hasPrevPlayerPos_ = false;
 	prevPlayerPos_ = { 0.0f, 0.0f, 0.0f };
-	playerVel = { 0.0f, 0.0f, 0.0f };
+	playerVel_ = { 0.0f, 0.0f, 0.0f };
 }
 
 void BossController::Reset() {
@@ -45,7 +45,7 @@ void BossController::Reset() {
 	// 予測系もリセットしておくと安全
 	hasPrevPlayerPos_ = false;
 	prevPlayerPos_ = { 0.0f, 0.0f, 0.0f };
-	playerVel = { 0.0f, 0.0f, 0.0f };
+	playerVel_ = { 0.0f, 0.0f, 0.0f };
 }
 
 void BossController::Update(float dt, Enemy& boss) {
@@ -63,12 +63,12 @@ void BossController::Update(float dt, Enemy& boss) {
 		lastHpForRage_ = boss.GetHP();
 		noDamageTime_ = 0.0f;
 	}
-	int hpNow = boss.GetHP();
-	int dmg = std::max(0, lastHpForRage_ - hpNow);
-	lastHpForRage_ = hpNow;
+	int hpNow_ = boss.GetHP();
+	int dmg_ = std::max(0, lastHpForRage_ - hpNow_);
+	lastHpForRage_ = hpNow_;
 
-	if (dmg > 0) {
-		rageGauge_ += static_cast<float>(dmg) * rageGainPerHp_;
+	if (dmg_ > 0) {
+		rageGauge_ += static_cast<float>(dmg_) * rageGainPerHp_;
 		noDamageTime_ = 0.0f;
 	} else {
 		noDamageTime_ += dt;
@@ -86,25 +86,25 @@ void BossController::Update(float dt, Enemy& boss) {
 
 	// ① 最新playerPos
 	if (boss.GetPlayer()) {
-		playerPos = boss.GetPlayer()();
+		playerPos_ = boss.GetPlayer()();
 	}
 	// ② playerVel
 	if (hasPrevPlayerPos_) {
-		playerVel = (playerPos - prevPlayerPos_) * (1.0f / std::max(0.0001f, dt));
+		playerVel_ = (playerPos_ - prevPlayerPos_) * (1.0f / std::max(0.0001f, dt));
 	}
-	playerVel.y = 0.0f;
-	prevPlayerPos_ = playerPos;
+	playerVel_.y = 0.0f;
+	prevPlayerPos_ = playerPos_;
 	hasPrevPlayerPos_ = true;
 
-	Vector3 pos = boss.GetWorldPosition();
+	Vector3 pos_ = boss.GetWorldPosition();
 
 	switch (state_) {
-	case State::Enter:       UpdateEnter(dt, boss, pos); break;
-	case State::Orbit:       UpdateOrbit(dt, boss, pos, playerPos); break;
-	case State::LaserWindup: UpdateLaserWindup(dt, boss, pos, playerPos); break;
-	case State::LaserFire:   UpdateLaserFire(dt, boss, pos, playerPos); break;
-	case State::LaserRecover:UpdateLaserRecover(dt, boss, pos); break;
-	case State::Recover:     UpdateRecover(dt, boss, pos); break;
+	case State::Enter:       UpdateEnter(dt, boss, pos_); break;
+	case State::Orbit:       UpdateOrbit(dt, boss, pos_, playerPos_); break;
+	case State::LaserWindup: UpdateLaserWindup(dt, boss, pos_, playerPos_); break;
+	case State::LaserFire:   UpdateLaserFire(dt, boss, pos_, playerPos_); break;
+	case State::LaserRecover:UpdateLaserRecover(dt, boss, pos_); break;
+	case State::Recover:     UpdateRecover(dt, boss, pos_); break;
 	}
 
 	// 今は突進撤廃なのでAuraは使わない（今後追加予定ならここで条件ONにする）
@@ -117,15 +117,15 @@ void BossController::Update(float dt, Enemy& boss) {
 		laserTelegraph_ = false;
 	}
 
-	ClampToArena(pos);
-	boss.SetPosition(pos);
+	ClampToArena(pos_);
+	boss.SetPosition(pos_);
 	boss.SyncTransform();
 }
 
 void BossController::ImGuiDebug(Enemy& boss) {
 #ifdef USE_IMGUI
 	ImGui::Begin("ボスコントローラ");
-	static const char* kStateName[] = {
+	static const char* kStateName_[] = {
 		"登場",
 		"旋回",
 		"レーザー予告",
@@ -135,8 +135,8 @@ void BossController::ImGuiDebug(Enemy& boss) {
 	};
 
 	int si = static_cast<int>(state_);
-	si = std::clamp(si, 0, (int)(sizeof(kStateName) / sizeof(kStateName[0])) - 1);
-	ImGui::Text("状態: %s", kStateName[si]);
+	si = std::clamp(si, 0, (int)(sizeof(kStateName_) / sizeof(kStateName_[0])) - 1);
+	ImGui::Text("状態: %s", kStateName_[si]);
 	ImGui::Text("怒り: %s", rageActive_ ? "怒りモード" : "怒ってない");
 
 	ImGui::Text("怒りゲージ: %.2f", rageGauge_);
@@ -167,34 +167,34 @@ void BossController::ImGuiDebug(Enemy& boss) {
 }
 
 void BossController::UpdateEnter(float dt, Enemy& boss, Vector3& pos) {
-	const float targetZ = orbitZ_;
-	const float speed = 18.0f;
+	const float targetZ_ = orbitZ_;
+	const float speed_ = 18.0f;
 
-	pos.z = Approach(pos.z, targetZ, speed * dt);
+	pos.z = Approach(pos.z, targetZ_, speed_ * dt);
 	pos.x = Approach(pos.x, 0.0f, 10.0f * dt);
 	pos.y = Approach(pos.y, orbitY_, 10.0f * dt);
 
-	if (std::abs(pos.z - targetZ) < 0.05f) {
+	if (std::abs(pos.z - targetZ_) < 0.05f) {
 		ChangeState(State::Orbit);
 	}
 }
 
 void BossController::UpdateOrbit(float dt, Enemy& boss, Vector3& pos, const Vector3& playerPos) {
-	float t = timer_;
-	float angle = t * orbitAngularSpeed_;
-	float ox = std::cos(angle) * orbitRadiusX_;
-	float oy = std::sin(angle * 0.9f) * orbitRadiusY_;
+	float t_ = timer_;
+	float angle_ = t_ * orbitAngularSpeed_;
+	float ox_ = std::cos(angle_) * orbitRadiusX_;
+	float oy_ = std::sin(angle_ * 0.9f) * orbitRadiusY_;
 
-	Vector3 target;
-	target.x = playerPos.x * orbitPlayerInfluence_ + ox;
-	target.y = orbitY_ + playerPos.y * 0.2f + oy;
-	target.z = orbitZ_;
+	Vector3 target_;
+	target_.x = playerPos.x * orbitPlayerInfluence_ + ox_;
+	target_.y = orbitY_ + playerPos.y * 0.2f + oy_;
+	target_.z = orbitZ_;
 
-	pos = SmoothDamp(pos, target, orbitFollow_, dt);
+	pos = SmoothDamp(pos, target_, orbitFollow_, dt);
 
 	if (timer_ >= orbitDuration_) {
 		// 旋回が終わったら必ずレーザー予告へ（突進撤廃）
-		laserAimFixed_ = playerPos + playerVel * predictLeadTime_;
+		laserAimFixed_ = playerPos + playerVel_ * predictLeadTime_;
 		laserAimFixed_.x = std::clamp(laserAimFixed_.x, arenaMin_.x, arenaMax_.x);
 		laserAimFixed_.y = std::clamp(laserAimFixed_.y, arenaMin_.y, arenaMax_.y);
 		laserAimFixed_.z = std::clamp(laserAimFixed_.z, arenaMin_.z, arenaMax_.z);
@@ -208,10 +208,10 @@ void BossController::UpdateOrbit(float dt, Enemy& boss, Vector3& pos, const Vect
 
 void BossController::UpdateRecover(float dt, Enemy& boss, Vector3& pos) {
 	// 目標：軌道(Orbit)の高さとZへ戻す（Xは今のままでもOK）
-	Vector3 target{ pos.x, orbitY_, orbitZ_ };
+	Vector3 target_{ pos.x, orbitY_, orbitZ_ };
 
 	// ふわっと戻す（Orbitより少し強めでもいい）
-	pos = SmoothDamp(pos, target, 0.18f, dt);
+	pos = SmoothDamp(pos, target_, 0.18f, dt);
 
 	// 一定時間でOrbitへ
 	if (timer_ >= recoverDuration_) {
@@ -244,12 +244,12 @@ void BossController::UpdateLaserWindup(float dt, Enemy& boss, Vector3& pos, cons
 	}
 
 	pos = laserBasePos_;
-	float t = (laserWindup_ > 0.0001f) ? (timer_ / laserWindup_) : 1.0f;
-	t = std::clamp(t, 0.0f, 1.0f);
-	float ramp = t * t;
-	float amp = 0.18f * (0.2f + 0.8f * ramp);
-	pos.x += std::sin(timer_ * 60.0f) * amp;
-	pos.y += std::sin(timer_ * 87.0f + 1.7f) * (amp * 0.55f);
+	float t_ = (laserWindup_ > 0.0001f) ? (timer_ / laserWindup_) : 1.0f;
+	t_ = std::clamp(t_, 0.0f, 1.0f);
+	float ramp_ = t_ * t_;
+	float amp_ = 0.18f * (0.2f + 0.8f * ramp_);
+	pos.x += std::sin(timer_ * 60.0f) * amp_;
+	pos.y += std::sin(timer_ * 87.0f + 1.7f) * (amp_ * 0.55f);
 
 	laserStartWS_ = laserBasePos_ + Vector3{ 0.0f, laserMuzzleYOffset_, 0.0f };
 	laserEndWS_ = laserAimFixed_;
@@ -264,18 +264,18 @@ void BossController::UpdateLaserFire(float dt, Enemy& boss, Vector3& pos, const 
 	laserTelegraph_ = false;
 	pos = laserBasePos_;
 
-	Vector3 aim = laserAimFixed_;
+	Vector3 aim_ = laserAimFixed_;
 	if (boss.GetPlayer()) {
-		Vector3 p = boss.GetPlayer()();
-		Vector3 v = playerVel;
-		Vector3 pred = p + v * predictLeadTime_;
-		pred.x = std::clamp(pred.x, arenaMin_.x, arenaMax_.x);
-		pred.y = std::clamp(pred.y, arenaMin_.y, arenaMax_.y);
-		pred.z = std::clamp(pred.z, arenaMin_.z, arenaMax_.z);
-		aim = MyMath::Vector3Lerp(aim, pred, laserTrackStrength_);
+		Vector3 p_ = boss.GetPlayer()();
+		Vector3 v_ = playerVel_;
+		Vector3 pred_ = p_ + v_ * predictLeadTime_;
+		pred_.x = std::clamp(pred_.x, arenaMin_.x, arenaMax_.x);
+		pred_.y = std::clamp(pred_.y, arenaMin_.y, arenaMax_.y);
+		pred_.z = std::clamp(pred_.z, arenaMin_.z, arenaMax_.z);
+		aim_ = MyMath::Vector3Lerp(aim_, pred_, laserTrackStrength_);
 	}
 	laserStartWS_ = laserBasePos_ + Vector3{ 0.0f, laserMuzzleYOffset_, 0.0f };
-	laserEndWS_ = aim;
+	laserEndWS_ = aim_;
 
 	if (timer_ >= laserFire_) {
 		// 100%出すためクールタイム無し

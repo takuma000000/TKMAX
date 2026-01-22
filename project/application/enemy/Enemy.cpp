@@ -11,8 +11,8 @@ void Enemy::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon
 	object_->SetModel("enemy.obj"); // モデル名は適宜変更
 
 	// カメラ設定
-	if (camera) {
-		object_->SetCamera(camera);
+	if (camera_) {
+		object_->SetCamera(camera_);
 	}
 
 	baseScale_ = object_->GetScale(); // 元のスケールを保持
@@ -23,135 +23,135 @@ void Enemy::Update(float dt) {
 
 	// 60fps基準の値をそのまま使えるようにする係数
 	// dt=1/60 のとき factor=1.0 になる
-	const float factor = dt * 60.0f;
+	const float factor_ = dt * 60.0f;
 
 	// =========================================================
 	// Data-driven：死亡リアクション / 行動 の関数テーブル
 	// （switch を排除）
 	// =========================================================
 	struct DeathCtx {
-		float dt;
-		float t; // 0..1
-		Vector3 pos;
-		Vector3 rot;
-		Vector3 scale;
+		float dt_;
+		float t_; // 0..1
+		Vector3 pos_;
+		Vector3 rot_;
+		Vector3 scale_;
 	};
 
 	struct MoveCtx {
-		float dt;
-		float factor;
-		Vector3 pos;
+		float dt_;
+		float factor_;
+		Vector3 pos_;
 	};
 
 	struct Local {
 
 		// ---------- Death reactions ----------
 		static void Death_BlowAway(Enemy* self, DeathCtx& c) {
-			float speed = 1.0f - c.t;
-			c.pos += self->deathVelocity_ * speed * c.dt;
+			float speed_ = 1.0f - c.t_;
+			c.pos_ += self->deathVelocity_ * speed_ * c.dt_;
 
-			c.rot.x += self->deathRotateSpeed_.x * c.dt;
-			c.rot.y += self->deathRotateSpeed_.y * c.dt;
-			c.rot.z += self->deathRotateSpeed_.z * c.dt;
+			c.rot_.x += self->deathRotateSpeed_.x * c.dt_;
+			c.rot_.y += self->deathRotateSpeed_.y * c.dt_;
+			c.rot_.z += self->deathRotateSpeed_.z * c.dt_;
 
-			float s = 1.0f - c.t;
-			c.scale = { self->baseScale_.x * s, self->baseScale_.y * s, self->baseScale_.z * s };
+			float s_ = 1.0f - c.t_;
+			c.scale_ = { self->baseScale_.x * s_, self->baseScale_.y * s_, self->baseScale_.z * s_ };
 		}
 
 		static void Death_RiseAbsorb(Enemy* self, DeathCtx& c) {
-			c.pos += self->deathVelocity_ * c.dt;
+			c.pos_ += self->deathVelocity_ * c.dt_;
 
-			c.rot.y += self->deathRotateSpeed_.y * c.dt;
+			c.rot_.y += self->deathRotateSpeed_.y * c.dt_;
 
-			float s = 1.0f - c.t;
-			c.scale = {
+			float s = 1.0f - c.t_;
+			c.scale_ = {
 				self->baseScale_.x * s * 0.5f,
-				self->baseScale_.y * (1.0f - c.t * 0.2f),
+				self->baseScale_.y * (1.0f - c.t_ * 0.2f),
 				self->baseScale_.z * s * 0.5f
 			};
 		}
 
 		static void Death_Collapse(Enemy* self, DeathCtx& c) {
-			c.pos += self->deathVelocity_ * c.dt;
+			c.pos_ += self->deathVelocity_ * c.dt_;
 
-			c.rot.x += self->deathRotateSpeed_.x * c.dt;
+			c.rot_.x += self->deathRotateSpeed_.x * c.dt_;
 
-			float s = 1.0f - c.t;
-			c.scale = {
+			float s_ = 1.0f - c.t_;
+			c.scale_ = {
 				self->baseScale_.x,
-				self->baseScale_.y * s * 0.2f,
+				self->baseScale_.y * s_ * 0.2f,
 				self->baseScale_.z
 			};
 		}
 
 		static void Death_BossFinal(Enemy* self, DeathCtx& c) {
-			const float launchStartT = 0.5f;
+			const float launchStartT_ = 0.5f;
 
-			if (c.t < launchStartT) {
-				float shakeAmp = 0.25f;
-				float shakeFreq = 18.0f;
+			if (c.t_ < launchStartT_) {
+				float shakeAmp_ = 0.25f;
+				float shakeFreq_ = 18.0f;
 
-				c.pos.x += sinf(self->deathTimer_ * shakeFreq) * shakeAmp;
-				c.pos.y += cosf(self->deathTimer_ * shakeFreq * 0.7f) * shakeAmp * 0.6f;
+				c.pos_.x += sinf(self->deathTimer_ * shakeFreq_) * shakeAmp_;
+				c.pos_.y += cosf(self->deathTimer_ * shakeFreq_ * 0.7f) * shakeAmp_ * 0.6f;
 
-				float pulse = 1.0f + 0.10f * sinf(self->deathTimer_ * 10.0f);
-				c.scale = {
-					self->baseScale_.x * pulse,
-					self->baseScale_.y * pulse,
-					self->baseScale_.z * pulse,
+				float pulse_ = 1.0f + 0.10f * sinf(self->deathTimer_ * 10.0f);
+				c.scale_ = {
+					self->baseScale_.x * pulse_,
+					self->baseScale_.y * pulse_,
+					self->baseScale_.z * pulse_,
 				};
 
-				TKM::ParticleManager* pm = TKM::ParticleManager::GetInstance();
+				TKM::ParticleManager* pm_ = TKM::ParticleManager::GetInstance();
 				if (std::rand() % 3 != 0) {
-					Vector3 center = self->GetWorldPosition();
-					Vector3 off = {
+					Vector3 center_ = self->GetWorldPosition();
+					Vector3 off_ = {
 						(static_cast<float>(std::rand()) / RAND_MAX - 0.5f) * self->colliderScale_.x,
 						(static_cast<float>(std::rand()) / RAND_MAX - 0.5f) * self->colliderScale_.y,
 						(static_cast<float>(std::rand()) / RAND_MAX - 0.5f) * self->colliderScale_.z
 					};
-					Vector3 emitPos = center + off * 0.5f;
-					pm->Emit("bossDeath_bomb", emitPos, 1);
+					Vector3 emitPos_ = center_ + off_ * 0.5f;
+					pm_->Emit("bossDeath_bomb", emitPos_, 1);
 				}
 
 			} else {
 
 				if (!self->bossFinalLaunchStarted_) {
 					self->bossFinalLaunchStarted_ = true;
-					self->bossFinalLaunchStartPos_ = c.pos;
+					self->bossFinalLaunchStartPos_ = c.pos_;
 
-					TKM::ParticleManager* pm = TKM::ParticleManager::GetInstance();
-					Vector3 center = self->GetWorldPosition();
-					pm->Emit("bossDeath_ring", center, 2);
-					pm->Emit("bossDeath_bomb", center, 10);
-					pm->Emit("bossDeath_smoke", center, 24);
+					TKM::ParticleManager* pm_ = TKM::ParticleManager::GetInstance();
+					Vector3 center_ = self->GetWorldPosition();
+					pm_->Emit("bossDeath_ring", center_, 2);
+					pm_->Emit("bossDeath_bomb", center_, 10);
+					pm_->Emit("bossDeath_smoke", center_, 24);
 				}
 
-				float u = (c.t - launchStartT) / (1.0f - launchStartT);
-				if (u < 0.0f) u = 0.0f;
-				if (u > 1.0f) u = 1.0f;
+				float u_ = (c.t_ - launchStartT_) / (1.0f - launchStartT_);
+				if (u_ < 0.0f) u_ = 0.0f;
+				if (u_ > 1.0f) u_ = 1.0f;
 
-				float k = u * u * u;
+				float k_ = u_ * u_ * u_;
 
-				Vector3 upDir = { 0.0f, 1.0f, 0.0f };
-				Vector3 forwardDir = { 0.0f, 0.0f, 1.0f };
+				Vector3 upDir_ = { 0.0f, 1.0f, 0.0f };
+				Vector3 forwardDir_ = { 0.0f, 0.0f, 1.0f };
 
-				float upDist = 15.0f;
-				float depthDist = 40.0f;
+				float upDist_ = 15.0f;
+				float depthDist_ = 40.0f;
 
-				c.pos = self->bossFinalLaunchStartPos_
-					+ upDir * (upDist * k)
-					+ forwardDir * (depthDist * k);
+				c.pos_ = self->bossFinalLaunchStartPos_
+					+ upDir_ * (upDist_ * k_)
+					+ forwardDir_ * (depthDist_ * k_);
 
-				c.rot.x += 2.5f * c.dt;
-				c.rot.y += 3.0f * c.dt;
-				c.rot.z += 1.5f * c.dt;
+				c.rot_.x += 2.5f * c.dt_;
+				c.rot_.y += 3.0f * c.dt_;
+				c.rot_.z += 1.5f * c.dt_;
 
-				float s = 1.0f - 0.3f * k;
-				if (s < 0.1f) s = 0.1f;
-				c.scale = {
-					self->baseScale_.x * s,
-					self->baseScale_.y * s,
-					self->baseScale_.z * s,
+				float s_ = 1.0f - 0.3f * k_;
+				if (s_ < 0.1f) s_ = 0.1f;
+				c.scale_ = {
+					self->baseScale_.x * s_,
+					self->baseScale_.y * s_,
+					self->baseScale_.z * s_,
 				};
 			}
 		}
@@ -159,137 +159,137 @@ void Enemy::Update(float dt) {
 		// ---------- Movement behaviors ----------
 		static void Move_StraightStop(Enemy* self, MoveCtx& c) {
 			if (!self->stopMove_) {
-				c.pos += self->velocity_ * c.factor;
-				if (c.pos.z <= self->stopZ_) { c.pos.z = self->stopZ_; self->stopMove_ = true; }
+				c.pos_ += self->velocity_ * c.factor_;
+				if (c.pos_.z <= self->stopZ_) { c.pos_.z = self->stopZ_; self->stopMove_ = true; }
 			}
 		}
 
 		static void Move_SineX(Enemy* self, MoveCtx& c) {
-			self->t_ += 0.05f * c.factor;
-			c.pos.z += self->velocity_.z * c.factor;
-			c.pos.x = self->startX_ + std::sinf(self->sinePhase_ + self->t_ * self->sineFreq_) * self->sineAmpX_;
-			if (c.pos.z <= self->stopZ_) { c.pos.z = self->stopZ_; }
+			self->t_ += 0.05f * c.factor_;
+			c.pos_.z += self->velocity_.z * c.factor_;
+			c.pos_.x = self->startX_ + std::sinf(self->sinePhase_ + self->t_ * self->sineFreq_) * self->sineAmpX_;
+			if (c.pos_.z <= self->stopZ_) { c.pos_.z = self->stopZ_; }
 		}
 
 		static void Move_StrafeLtoR(Enemy* self, MoveCtx& c) {
-			c.pos.z += self->velocity_.z * c.factor;
-			self->strafePosX_ += self->strafeSpeed_ * self->strafeDir_ * c.factor;
+			c.pos_.z += self->velocity_.z * c.factor_;
+			self->strafePosX_ += self->strafeSpeed_ * self->strafeDir_ * c.factor_;
 			if (self->strafePosX_ > self->strafeRight_) { self->strafePosX_ = self->strafeRight_; self->strafeDir_ = -1; }
 			if (self->strafePosX_ < self->strafeLeft_) { self->strafePosX_ = self->strafeLeft_;  self->strafeDir_ = +1; }
-			c.pos.x = self->strafePosX_;
-			if (c.pos.z <= self->stopZ_) { c.pos.z = self->stopZ_; }
+			c.pos_.x = self->strafePosX_;
+			if (c.pos_.z <= self->stopZ_) { c.pos_.z = self->stopZ_; }
 		}
 
 		static void Move_ChasePlayer(Enemy* self, MoveCtx& c) {
-			c.pos.z += self->velocity_.z * c.factor;
+			c.pos_.z += self->velocity_.z * c.factor_;
 			if (self->playerGetter_) {
-				Vector3 toP = self->playerGetter_() - c.pos;
-				Vector3 desire = { toP.x, toP.y, 0.0f };
-				float len = MyMath::Length(desire);
-				if (len > 0.001f) {
-					Vector3 dir = MyMath::Normalize(desire);
-					c.pos.x += dir.x * self->chaseSpeed_ * c.factor;
-					c.pos.y += dir.y * self->chaseSpeed_ * c.factor;
+				Vector3 toP_ = self->playerGetter_() - c.pos_;
+				Vector3 desire_ = { toP_.x, toP_.y, 0.0f };
+				float len_ = MyMath::Length(desire_);
+				if (len_ > 0.001f) {
+					Vector3 dir = MyMath::Normalize(desire_);
+					c.pos_.x += dir.x * self->chaseSpeed_ * c.factor_;
+					c.pos_.y += dir.y * self->chaseSpeed_ * c.factor_;
 				}
 			}
-			if (c.pos.z <= self->stopZ_) { c.pos.z = self->stopZ_; }
+			if (c.pos_.z <= self->stopZ_) { c.pos_.z = self->stopZ_; }
 		}
 
 		static void Move_PounceFromAbove(Enemy* self, MoveCtx& c) {
 			if (!self->pounceStarted_) { return; }
 
-			TKM::ParticleManager* pm = TKM::ParticleManager::GetInstance();
+			TKM::ParticleManager* pm_ = TKM::ParticleManager::GetInstance();
 
 			if (!self->pounceDiving_) {
-				self->pounceTime_ += c.dt;
-				float t = self->pounceTime_ / self->pounceDuration_;
-				if (t > 1.0f) t = 1.0f;
+				self->pounceTime_ += c.dt_;
+				float t_ = self->pounceTime_ / self->pounceDuration_;
+				if (t_ > 1.0f) t_ = 1.0f;
 
-				auto EaseOutQuad = [](float x) {
+				auto EaseOutQuad_ = [](float x) {
 					return 1.0f - (1.0f - x) * (1.0f - x);
 					};
-				float u = EaseOutQuad(t);
+				float u_ = EaseOutQuad_(t_);
 
-				Vector3 pos1 = MyMath::Vector3Lerp(self->pounceStart_, self->pounceApex_, u);
-				Vector3 pos2 = MyMath::Vector3Lerp(self->pounceApex_, self->pounceTarget_, u);
-				Vector3 newPos = MyMath::Vector3Lerp(pos1, pos2, u);
+				Vector3 pos1_ = MyMath::Vector3Lerp(self->pounceStart_, self->pounceApex_, u_);
+				Vector3 pos2_ = MyMath::Vector3Lerp(self->pounceApex_, self->pounceTarget_, u_);
+				Vector3 newPos_ = MyMath::Vector3Lerp(pos1_, pos2_, u_);
 
-				c.pos = newPos;
+				c.pos_ = newPos_;
 
 				{
-					Vector3 emitPos = c.pos;
-					pm->Emit("enemyPounceTrail", emitPos, 2);
-					pm->Emit("enemyPounceSpark", emitPos, 3);
+					Vector3 emitPos_ = c.pos_;
+					pm_->Emit("enemyPounceTrail", emitPos_, 2);
+					pm_->Emit("enemyPounceSpark", emitPos_, 3);
 				}
 
-				if (t >= 1.0f) {
-					Vector3 dir = self->pounceTarget_ - self->pounceStart_;
-					float len = MyMath::Length(dir);
-					if (len > 0.001f) {
-						dir = MyMath::Normalize(dir);
+				if (t_ >= 1.0f) {
+					Vector3 dir_ = self->pounceTarget_ - self->pounceStart_;
+					float len_ = MyMath::Length(dir_);
+					if (len_ > 0.001f) {
+						dir_ = MyMath::Normalize(dir_);
 					} else {
-						dir = { 0.0f, -0.1f, -1.0f };
+						dir_ = { 0.0f, -0.1f, -1.0f };
 					}
 
-					dir.y -= 0.2f;
-					dir = MyMath::Normalize(dir);
+					dir_.y -= 0.2f;
+					dir_ = MyMath::Normalize(dir_);
 
-					float diveSpeed = 0.7f;
-					self->velocity_ = dir * diveSpeed;
+					float diveSpeed_ = 0.7f;
+					self->velocity_ = dir_ * diveSpeed_;
 
 					self->pounceDiving_ = true;
 				}
 
 			} else {
 
-				c.pos += self->velocity_ * c.factor;
+				c.pos_ += self->velocity_ * c.factor_;
 
-				Vector3 emitPos = c.pos;
-				pm->Emit("enemyPounceTrail", emitPos, 2);
-				pm->Emit("enemyPounceSpark", emitPos, 2);
+				Vector3 emitPos_ = c.pos_;
+				pm_->Emit("enemyPounceTrail", emitPos_, 2);
+				pm_->Emit("enemyPounceSpark", emitPos_, 2);
 			}
 		}
 
 		static void Move_FreeRoam(Enemy* self, MoveCtx& c) {
-			auto random01 = []() {
+			auto random01_ = []() {
 				return static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
 				};
 
-			float distToTarget = MyMath::Length(self->roamTarget_ - c.pos);
-			if (!self->hasRoamTarget_ || distToTarget < 0.5f) {
+			float distToTarget_ = MyMath::Length(self->roamTarget_ - c.pos_);
+			if (!self->hasRoamTarget_ || distToTarget_ < 0.5f) {
 				self->hasRoamTarget_ = true;
 
-				Vector3 target;
-				target.x = self->roamMin_.x + (self->roamMax_.x - self->roamMin_.x) * random01();
-				target.y = self->roamMin_.y + (self->roamMax_.y - self->roamMin_.y) * random01();
-				target.z = self->roamMin_.z + (self->roamMax_.z - self->roamMin_.z) * random01();
+				Vector3 target_;
+				target_.x = self->roamMin_.x + (self->roamMax_.x - self->roamMin_.x) * random01_();
+				target_.y = self->roamMin_.y + (self->roamMax_.y - self->roamMin_.y) * random01_();
+				target_.z = self->roamMin_.z + (self->roamMax_.z - self->roamMin_.z) * random01_();
 
 				if (self->isAngry_ && self->playerGetter_) {
 					Vector3 p = self->playerGetter_();
-					target.x = (target.x * 0.4f) + (p.x * 0.6f);
-					target.x = std::max(self->roamMin_.x, std::min(self->roamMax_.x, target.x));
+					target_.x = (target_.x * 0.4f) + (p.x * 0.6f);
+					target_.x = std::max(self->roamMin_.x, std::min(self->roamMax_.x, target_.x));
 				}
 
-				self->roamTarget_ = target;
+				self->roamTarget_ = target_;
 			}
 
-			Vector3 toT = self->roamTarget_ - c.pos;
-			float len = MyMath::Length(toT);
-			if (len > 0.001f) {
-				Vector3 dir = toT / len;
-				float speed = self->isAngry_ ? self->roamSpeedAngry_ : self->roamSpeedNormal_;
-				c.pos += dir * speed * c.factor;
+			Vector3 toT_ = self->roamTarget_ - c.pos_;
+			float len_ = MyMath::Length(toT_);
+			if (len_ > 0.001f) {
+				Vector3 dir_ = toT_ / len_;
+				float speed_ = self->isAngry_ ? self->roamSpeedAngry_ : self->roamSpeedNormal_;
+				c.pos_ += dir_ * speed_ * c.factor_;
 			}
 
-			c.pos.x = std::max(self->roamMin_.x, std::min(self->roamMax_.x, c.pos.x));
-			c.pos.y = std::max(self->roamMin_.y, std::min(self->roamMax_.y, c.pos.y));
-			c.pos.z = std::max(self->roamMin_.z, std::min(self->roamMax_.z, c.pos.z));
+			c.pos_.x = std::max(self->roamMin_.x, std::min(self->roamMax_.x, c.pos_.x));
+			c.pos_.y = std::max(self->roamMin_.y, std::min(self->roamMax_.y, c.pos_.y));
+			c.pos_.z = std::max(self->roamMin_.z, std::min(self->roamMax_.z, c.pos_.z));
 		}
 	};
 
 	// Death table（enum順：BlowAway, RiseAbsorb, Collapse, BossFinal）
 	using DeathFn = void(*)(Enemy*, DeathCtx&);
-	static const DeathFn kDeathTable[] = {
+	static const DeathFn kDeathTable_[] = {
 		&Local::Death_BlowAway,
 		&Local::Death_RiseAbsorb,
 		&Local::Death_Collapse,
@@ -298,7 +298,7 @@ void Enemy::Update(float dt) {
 
 	// Move table（enum順：StraightStop, SineX, StrafeLtoR, ChasePlayer, PounceFromAbove, FreeRoam）
 	using MoveFn = void(*)(Enemy*, MoveCtx&);
-	static const MoveFn kMoveTable[] = {
+	static const MoveFn kMoveTable_[] = {
 		&Local::Move_StraightStop,
 		&Local::Move_SineX,
 		&Local::Move_StrafeLtoR,
@@ -312,63 +312,63 @@ void Enemy::Update(float dt) {
 	// =========================================================
 	if (isDying_) {
 		deathTimer_ += dt;
-		float t = std::min(deathTimer_ / deathDuration_, 1.0f);
+		float t_ = std::min(deathTimer_ / deathDuration_, 1.0f);
 
-		DeathCtx c{};
-		c.dt = dt;
-		c.t = t;
-		c.pos = object_->GetTranslate();
-		c.rot = object_->GetRotate();
-		c.scale = baseScale_;
+		DeathCtx c_{};
+		c_.dt_ = dt;
+		c_.t_ = t_;
+		c_.pos_ = object_->GetTranslate();
+		c_.rot_ = object_->GetRotate();
+		c_.scale_ = baseScale_;
 
-		const int di = static_cast<int>(deathReaction_);
-		if (0 <= di && di < static_cast<int>(std::size(kDeathTable))) {
-			kDeathTable[di](this, c);
+		const int di_ = static_cast<int>(deathReaction_);
+		if (0 <= di_ && di_ < static_cast<int>(std::size(kDeathTable_))) {
+			kDeathTable_[di_](this, c_);
 		}
 
-		object_->SetTranslate(c.pos);
-		object_->SetRotate(c.rot);
-		object_->SetScale(c.scale);
+		object_->SetTranslate(c_.pos_);
+		object_->SetRotate(c_.rot_);
+		object_->SetScale(c_.scale_);
 
 		if (deathReaction_ == EnemyDeathReaction::BossFinal) {
-			if (t < 0.7f) {
+			if (t_ < 0.7f) {
 				deathAlpha_ = 1.0f;
 			} else {
-				float u = (t - 0.7f) / 0.3f;
-				if (u > 1.0f) u = 1.0f;
-				deathAlpha_ = 1.0f - u;
+				float u_ = (t_ - 0.7f) / 0.3f;
+				if (u_ > 1.0f) u_ = 1.0f;
+				deathAlpha_ = 1.0f - u_;
 			}
 		} else {
-			deathAlpha_ = 1.0f - t;
+			deathAlpha_ = 1.0f - t_;
 		}
 
 		object_->SetColor({ 1.0f, 1.0f, 1.0f, deathAlpha_ });
 		object_->Update();
 
 		if (deathTimer_ >= deathDuration_) {
-			TKM::ParticleManager* pm = TKM::ParticleManager::GetInstance();
-			Vector3 emitPos = GetWorldPosition();
+			TKM::ParticleManager* pm_ = TKM::ParticleManager::GetInstance();
+			Vector3 emitPos_ = GetWorldPosition();
 
 			// ここもテーブル化できるけど、今回は「主要switch排除」が目的なので
 			// いったん必要最小限：deathReaction_ ごとに出すものを if でまとめる
 			// ※完全排除したいなら「Emitテーブル」も作る（言ってくれ）
 			if (deathReaction_ == EnemyDeathReaction::BlowAway) {
-				pm->Emit("enemyDeath_core", emitPos, 1);
-				pm->Emit("enemyDeath_shard", emitPos, 20);
-				pm->Emit("enemyDeath_smoke", emitPos, 4);
+				pm_->Emit("enemyDeath_core", emitPos_, 1);
+				pm_->Emit("enemyDeath_shard", emitPos_, 20);
+				pm_->Emit("enemyDeath_smoke", emitPos_, 4);
 			} else if (deathReaction_ == EnemyDeathReaction::RiseAbsorb) {
-				pm->Emit("enemyDeath_core", emitPos, 1);
-				pm->Emit("enemyDeath_shard", emitPos, 14);
-				pm->Emit("enemyDeath_smoke", emitPos, 6);
+				pm_ -> Emit("enemyDeath_core", emitPos_, 1);
+				pm_ -> Emit("enemyDeath_shard", emitPos_, 14);
+				pm_ -> Emit("enemyDeath_smoke", emitPos_, 6);
 			} else if (deathReaction_ == EnemyDeathReaction::Collapse) {
-				pm->Emit("enemyDeath_shard", emitPos, 10);
-				pm->Emit("enemyDeath_smoke", emitPos, 3);
+				pm_->Emit("enemyDeath_shard", emitPos_, 10);
+				pm_->Emit("enemyDeath_smoke", emitPos_, 3);
 			} else if (deathReaction_ == EnemyDeathReaction::BossFinal) {
 				if (!bossFinalBigBurstDone_) {
-					pm->Emit("bossClear_core", emitPos, 1);
-					pm->Emit("bossClear_ring", emitPos, 3);
-					pm->Emit("bossClear_spark", emitPos, 80);
-					pm->Emit("bossClear_debris", emitPos, 60);
+					pm_->Emit("bossClear_core", emitPos_, 1);
+					pm_->Emit("bossClear_ring", emitPos_, 3);
+					pm_->Emit("bossClear_spark", emitPos_, 80);
+					pm_->Emit("bossClear_debris", emitPos_, 60);
 				}
 			}
 
@@ -390,22 +390,22 @@ void Enemy::Update(float dt) {
 	// =========================================================
 	// 行動（Data-driven）
 	// =========================================================
-	MoveCtx m{};
-	m.dt = dt;
-	m.factor = factor;
-	m.pos = object_->GetTranslate();
+	MoveCtx m_{};
+	m_.dt_ = dt;
+	m_.factor_ = factor_;
+	m_.pos_ = object_->GetTranslate();
 
 	if (!freezeMove_) {
-		const int bi = static_cast<int>(behavior_);
-		if (0 <= bi && bi < static_cast<int>(std::size(kMoveTable))) {
-			kMoveTable[bi](this, m);
+		const int bi_ = static_cast<int>(behavior_);
+		if (0 <= bi_ && bi_ < static_cast<int>(std::size(kMoveTable_))) {
+			kMoveTable_[bi_](this, m_);
 		}
 	}
 
-	object_->SetTranslate(m.pos);
+	object_->SetTranslate(m_.pos_);
 
 	if (!isDying_) {
-		if (m.pos.z < -30.0f) {
+		if (m_.pos_.z < -30.0f) {
 			escaped_ = true;
 			isDead_ = true;
 		}
@@ -414,42 +414,42 @@ void Enemy::Update(float dt) {
 #ifdef USE_IMGUI
 	// AABB 表示（そのまま）
 	{
-		Vector3 center = GetWorldPosition();
-		Vector3 size = colliderScale_;
+		Vector3 center_ = GetWorldPosition();
+		Vector3 size_ = colliderScale_;
 
-		auto* lr = TKM::LineRenderer::GetInstance();
+		auto* lr_ = TKM::LineRenderer::GetInstance();
 
-		TKM::LineRenderer::Color normal{ 0.0f, 1.0f, 0.0f, 1.0f };
-		TKM::LineRenderer::Color hit{ 1.0f, 0.0f, 0.0f, 1.0f };
+		TKM::LineRenderer::Color normal_{ 0.0f, 1.0f, 0.0f, 1.0f };
+		TKM::LineRenderer::Color hit_{ 1.0f, 0.0f, 0.0f, 1.0f };
 
 		if (reticle_) {
-			Vector3 rayOrigin;
+			Vector3 rayOrigin_;
 			if (playerGetter_) {
-				rayOrigin = playerGetter_();
+				rayOrigin_ = playerGetter_();
 			} else {
-				rayOrigin = reticle_->GetCenterWorldPos();
+				rayOrigin_ = reticle_->GetCenterWorldPos();
 			}
 
-			Vector3 rayDir = reticle_->GetAimDirection();
-			lr->AddAABBWithRayHighlight(center, size, rayOrigin, rayDir, normal, hit);
+			Vector3 rayDir_ = reticle_->GetAimDirection();
+			lr_->AddAABBWithRayHighlight(center_, size_, rayOrigin_, rayDir_, normal_, hit_);
 		} else {
-			lr->AddAABB(center, size, normal);
+			lr_->AddAABB(center_, size_, normal_);
 		}
 	}
 #endif
 
 	// ロック脈動（そのまま）
 	if (isLocked_ && lockPulseEnabled_) {
-		pulseT_ += 0.12f * factor;
-		float s = 1.0f + 0.15f * sinf(pulseT_);
-		object_->SetScale({ baseScale_.x * s, baseScale_.y * s, baseScale_.z * s });
+		pulseT_ += 0.12f * factor_;
+		float s_ = 1.0f + 0.15f * sinf(pulseT_);
+		object_->SetScale({ baseScale_.x * s_, baseScale_.y * s_, baseScale_.z * s_ });
 	} else {
 		object_->SetScale(baseScale_);
 	}
 
 	// 射撃（そのまま）
 	if (canShoot_ && !isDying_) {
-		shootTimer_ += factor; // フレーム加算→dt換算
+		shootTimer_ += factor_; // フレーム加算→dt換算
 		if (shootTimer_ >= shootInterval_) {
 			shootTimer_ = 0.0f;
 		}
@@ -464,7 +464,7 @@ void Enemy::Draw(TKM::DirectXCommon* dxCommon) {
 }
 
 void Enemy::SetCamera(TKM::Camera* camera) {
-	this->camera = camera; // メンバ変数に保存
+	this->camera_ = camera; // メンバ変数に保存
 	if (object_) {
 		object_->SetCamera(camera); // Object3d に反映
 	}
@@ -485,24 +485,24 @@ void Enemy::ImGuiDebug() {
 
 	ImGui::Begin("Enemy");
 
-	Vector3 pos = object_->GetTranslate();
-	Vector3 rot = object_->GetRotate();
-	Vector3 scale = object_->GetScale();
+	Vector3 pos_ = object_->GetTranslate();
+	Vector3 rot_ = object_->GetRotate();
+	Vector3 scale_ = object_->GetScale();
 
-	if (ImGui::DragFloat3("位置", &pos.x, 0.01f)) {
-		object_->SetTranslate(pos);
+	if (ImGui::DragFloat3("位置", &pos_.x, 0.01f)) {
+		object_->SetTranslate(pos_);
 	}
-	if (ImGui::DragFloat3("回転", &rot.x, 0.01f)) {
-		object_->SetRotate(rot);
+	if (ImGui::DragFloat3("回転", &rot_.x, 0.01f)) {
+		object_->SetRotate(rot_);
 	}
-	if (ImGui::DragFloat3("拡縮", &scale.x, 0.01f)) {
-		SetScale(scale);   // モデルと当たり判定両方に反映される
+	if (ImGui::DragFloat3("拡縮", &scale_.x, 0.01f)) {
+		SetScale(scale_);   // モデルと当たり判定両方に反映される
 	}
 
 	// 当たり判定スケール編集
-	Vector3 col = colliderScale_;
-	if (ImGui::DragFloat3("当たり判定サイズ", &col.x, 0.01f, 0.01f, 999.0f)) {
-		SetColliderScale(col);
+	Vector3 col_ = colliderScale_;
+	if (ImGui::DragFloat3("当たり判定サイズ", &col_.x, 0.01f, 0.01f, 999.0f)) {
+		SetColliderScale(col_);
 	}
 
 	ImGui::Text("HP: %d / %d", hp_, maxHP_);
@@ -548,37 +548,37 @@ void Enemy::StartDeathReaction(const Vector3& hitDir) {
 	deathAlpha_ = 1.0f; // アルファ初期値
 
 	// 0,1,2 のどれかをランダムに選ぶ
-	int r = std::rand() % 3;
+	int r_ = std::rand() % 3;
 
 	// 共通で使うノックバック方向
-	Vector3 dir = hitDir;
-	if (MyMath::Length(dir) < 0.001f) {
-		dir = { 0.0f, 0.0f, 1.0f };
+	Vector3 dir_ = hitDir;
+	if (MyMath::Length(dir_) < 0.001f) {
+		dir_ = { 0.0f, 0.0f, 1.0f };
 	}
-	dir = MyMath::Normalize(dir);
+	dir_ = MyMath::Normalize(dir_);
 
-	auto Pick0_BlowAway = [&]() {
+	auto Pick0_BlowAway_ = [&]() {
 		deathReaction_ = EnemyDeathReaction::BlowAway;
 		deathDuration_ = 3.0f;
-		deathVelocity_ = dir * 4.0f;
+		deathVelocity_ = dir_ * 4.0f;
 		deathRotateSpeed_ = { 1.5f, 2.0f, 0.8f };
 		};
 
-	auto Pick1_RiseAbsorb = [&]() {
+	auto Pick1_RiseAbsorb_ = [&]() {
 		deathReaction_ = EnemyDeathReaction::RiseAbsorb;
 		deathDuration_ = 1.2f;
 		deathVelocity_ = { 0.0f, 3.0f, 0.0f };
 		deathRotateSpeed_ = { 0.0f, 2.0f, 0.0f };
 		};
 
-	auto Pick2_Collapse = [&]() {
+	auto Pick2_Collapse_ = [&]() {
 		deathReaction_ = EnemyDeathReaction::Collapse;
 		deathDuration_ = 0.9f;
-		deathVelocity_ = { dir.x * 1.5f, -3.0f, dir.z * 1.5f };
+		deathVelocity_ = { dir_.x * 1.5f, -3.0f, dir_.z * 1.5f };
 		deathRotateSpeed_ = { 3.0f, 0.5f, 0.0f };
 		};
 
-	if (r == 0) { Pick0_BlowAway(); } else if (r == 1) { Pick1_RiseAbsorb(); } else { Pick2_Collapse(); }
+	if (r_ == 0) { Pick0_BlowAway_(); } else if (r_ == 1) { Pick1_RiseAbsorb_(); } else { Pick2_Collapse_(); }
 }
 
 void Enemy::SyncTransform() {

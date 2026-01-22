@@ -4,18 +4,18 @@
 #include "DirectXCommon.h"
 
 namespace TKM {
-	ModelManager* ModelManager::instance = nullptr; //シングルトンインスタンスの初期化
+	ModelManager* ModelManager::instance_ = nullptr; //シングルトンインスタンスの初期化
 
 	ModelManager* ModelManager::GetInstance() {
-		if (instance == nullptr) { //インスタンスがなければ生成
-			instance = new ModelManager;
+		if (instance_ == nullptr) { //インスタンスがなければ生成
+			instance_ = new ModelManager;
 		}
-		return instance;
+		return instance_;
 	}
 
 	void ModelManager::Finalize() {
-		delete instance;
-		instance = nullptr;
+		delete instance_;
+		instance_ = nullptr;
 	}
 
 	void ModelManager::Initialize(TKM::DirectXCommon* dxCommon) {
@@ -29,22 +29,22 @@ namespace TKM {
 	void ModelManager::LoadModel(const std::string& filePath, TKM::DirectXCommon* dxCommon) {
 		dxCommon_ = dxCommon;
 		//読み込み済みモデルを検索
-		if (models.contains(filePath)) {
+		if (models_.contains(filePath)) {
 			//読み込み済みなら早期return
 			return;
 		}
 		//モデルの生成とファイル読み込み、初期化
 		std::unique_ptr<TKM::Model> model = std::make_unique<TKM::Model>();
-		model->Initialize(modelCommon, dxCommon_, "resources", filePath);
+		model->Initialize(modelCommon_, dxCommon_, "resources", filePath);
 		//モデルをmapコンテナに格納する
-		models.insert(std::make_pair(filePath, std::move(model)));
+		models_.insert(std::make_pair(filePath, std::move(model)));
 	}
 
 	TKM::Model* ModelManager::FindModel(const std::string& filePath) {
 		//読み込み済みモデルを検索
-		if (models.contains(filePath)) {
+		if (models_.contains(filePath)) {
 			//読み込みモデルを戻り値としてreturn
-			return models.at(filePath).get();
+			return models_.at(filePath).get();
 		}
 		//ファイル名一致なし
 		return nullptr;

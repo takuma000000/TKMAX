@@ -10,7 +10,7 @@ namespace TKM { class Camera; }
 namespace TKM {
 	class Object3dCommon {
 	public://メンバ関数
-		static Object3dCommon* instance;
+		static Object3dCommon* instance_;
 		//シングルトンインスタンスの取得
 		static Object3dCommon* GetInstance();
 
@@ -49,16 +49,16 @@ namespace TKM {
 		// =========================================
 	private://メンバ変数
 		DirectXCommon* dxCommon_;
-		D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
-		D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicPipelineStateDesc{};
-		D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = {};
-		Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature = nullptr;
-		Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = nullptr;
-		Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = nullptr;
-		D3D12_BLEND_DESC blendDesc{};
-		D3D12_RASTERIZER_DESC resterizerDesc{};
-		D3D12_DEPTH_STENCIL_DESC depthStencilDesc{};
-		Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
+		D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature_{};
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicPipelineStateDesc_{};
+		D3D12_INPUT_ELEMENT_DESC inputElementDescs_[3] = {};
+		Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature_ = nullptr;
+		Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob_ = nullptr;
+		Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob_ = nullptr;
+		D3D12_BLEND_DESC blendDesc_{};
+		D3D12_RASTERIZER_DESC resterizerDesc_{};
+		D3D12_DEPTH_STENCIL_DESC depthStencilDesc_{};
+		Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState_ = nullptr;
 
 		//デフォルトカメラ
 		TKM::Camera* defaultCamera_ = nullptr;

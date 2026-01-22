@@ -16,7 +16,7 @@ namespace TKM {
 namespace TKM {
 	class ModelManager {
 	private:
-		static ModelManager* instance;
+		static ModelManager* instance_;
 
 		///シングルトン-----------------------------------------------
 		//コンストラクタ、デストラクタの隠蔽
@@ -28,9 +28,9 @@ namespace TKM {
 		///---------------------------------------------------------
 
 		//モデルデータコンテナ
-		std::map<std::string, std::unique_ptr<TKM::Model>> models;
+		std::map<std::string, std::unique_ptr<TKM::Model>> models_;
 		//モデル共通部
-		TKM::ModelCommon* modelCommon = nullptr;
+		TKM::ModelCommon* modelCommon_ = nullptr;
 		TKM::DirectXCommon* dxCommon_ = nullptr;
 
 	public:

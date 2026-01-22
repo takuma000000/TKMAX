@@ -50,20 +50,20 @@ void MidBossCore::Update(float dt) {
 		deathTimer_ += fixedDt_;
 		float t = std::min(deathTimer_ / deathDuration_, 1.0f);
 
-		Vector3 pos = object_->GetTranslate();
-		Vector3 rot = object_->GetRotate();
-		Vector3 scale = baseScale_;
+		Vector3 pos_ = object_->GetTranslate();
+		Vector3 rot_ = object_->GetRotate();
+		Vector3 scale_ = baseScale_;
 
 		// シンプルに上にふわっと上がって縮む感じ
-		pos += deathVelocity_ * fixedDt_;
-		rot.y += deathRotateSpeed_.y * fixedDt_;
+		pos_ += deathVelocity_ * fixedDt_;
+		rot_.y += deathRotateSpeed_.y * fixedDt_;
 
 		float s = 1.0f - t;
-		scale = { baseScale_.x * s, baseScale_.y * s, baseScale_.z * s };
+		scale_ = { baseScale_.x * s, baseScale_.y * s, baseScale_.z * s };
 
-		object_->SetTranslate(pos);
-		object_->SetRotate(rot);
-		object_->SetScale(scale);
+		object_->SetTranslate(pos_);
+		object_->SetRotate(rot_);
+		object_->SetScale(scale_);
 
 		deathAlpha_ = 1.0f - t;
 		object_->SetColor({ 1.0f, 1.0f, 1.0f, deathAlpha_ });
@@ -72,10 +72,10 @@ void MidBossCore::Update(float dt) {
 
 		if (deathTimer_ >= deathDuration_) {
 			// 消える瞬間にエフェクト
-			TKM::ParticleManager* pm = TKM::ParticleManager::GetInstance();
-			Vector3 emitPos = GetWorldPosition();
-			pm->Emit("enemyDeath_core", emitPos, 1);
-			pm->Emit("enemyDeath_smoke", emitPos, 4);
+			TKM::ParticleManager* pm_ = TKM::ParticleManager::GetInstance();
+			Vector3 emitPos_ = GetWorldPosition();
+			pm_->Emit("enemyDeath_core", emitPos_, 1);
+			pm_->Emit("enemyDeath_smoke", emitPos_, 4);
 
 			isDead_ = true;
 		}
@@ -88,40 +88,40 @@ void MidBossCore::Update(float dt) {
 #ifdef USE_IMGUI
 	// ---- 当たり判定の可視化（Enemy と同じ箱描画）----
 	{
-		Vector3 center = GetWorldPosition();
-		Vector3 size = colliderScale_;
+		Vector3 center_ = GetWorldPosition();
+		Vector3 size_ = colliderScale_;
 
 		auto* lr = TKM::LineRenderer::GetInstance();
 
-		TKM::LineRenderer::Color normal{ 0.0f, 1.0f, 0.0f, 1.0f };
-		TKM::LineRenderer::Color hit{ 1.0f, 0.0f, 0.0f, 1.0f };
+		TKM::LineRenderer::Color normal_{ 0.0f, 1.0f, 0.0f, 1.0f };
+		TKM::LineRenderer::Color hit_{ 1.0f, 0.0f, 0.0f, 1.0f };
 
 		if (reticle_) {
-			const Vector3 rayOrigin = playerGetter_ ? playerGetter_() : reticle_->GetCenterWorldPos();
-			const Vector3 rayDir = reticle_->GetAimDirection();
-			lr->AddAABBWithRayHighlight(center, size, rayOrigin, rayDir, normal, hit);
+			const Vector3 rayOrigin_ = playerGetter_ ? playerGetter_() : reticle_->GetCenterWorldPos();
+			const Vector3 rayDir_ = reticle_->GetAimDirection();
+			lr->AddAABBWithRayHighlight(center_, size_, rayOrigin_, rayDir_, normal_, hit_);
 		} else {
-			lr->AddAABB(center, size, normal);
+			lr->AddAABB(center_, size_, normal_);
 		}
 	}
 #endif
 
 	// ============================
-// 核チャージ演出（蘇生エネルギー）
-// データドリブン版（挙動そのまま）
-// ============================
+	// 核チャージ演出（蘇生エネルギー）
+	// データドリブン版（挙動そのまま）
+	// ============================
 	{
-		TKM::ParticleManager* pm = TKM::ParticleManager::GetInstance();
-		Vector3 center = GetWorldPosition();
+		TKM::ParticleManager* pm_ = TKM::ParticleManager::GetInstance();
+		Vector3 center_ = GetWorldPosition();
 
 		struct EmitRule {
-			const char* name;   // パーティクル名
-			int emitCount;      // pm->Emit の第3引数
-			int repeat;         // 同フレームで何回 Emit するか
-			int probability;   // 1なら毎回、3なら1/3、5なら1/5…
+			const char* name_;   // パーティクル名
+			int emitCount_;      // pm->Emit の第3引数
+			int repeat_;         // 同フレームで何回 Emit するか
+			int probability_;   // 1なら毎回、3なら1/3、5なら1/5…
 		};
 
-		static const EmitRule kChargeRules[] = {
+		static const EmitRule kChargeRules_[] = {
 			// 外殻：拡大球リング（1/3）
 			{ "core_charge_shell",  1, 1, 3 },
 
@@ -135,10 +135,10 @@ void MidBossCore::Update(float dt) {
 			{ "core_charge_flash",  3, 1, 20 },
 		};
 
-		for (const auto& rule : kChargeRules) {
-			if (rule.probability <= 1 || (std::rand() % rule.probability) == 0) {
-				for (int i = 0; i < rule.repeat; ++i) {
-					pm->Emit(rule.name, center, rule.emitCount);
+		for (const auto& rule : kChargeRules_) {
+			if (rule.probability_ <= 1 || (std::rand() % rule.probability_) == 0) {
+				for (int i = 0; i < rule.repeat_; ++i) {
+					pm_->Emit(rule.name_, center_, rule.emitCount_);
 				}
 			}
 		}
@@ -156,21 +156,19 @@ void MidBossCore::ImGuiDebug() {
 
 	ImGui::Begin("蘇生コア");
 
-	Vector3 pos = object_->GetTranslate();
-	Vector3 scale = baseScale_;
-	Vector3 col = colliderScale_;
+	Vector3 pos_ = object_->GetTranslate();
+	Vector3 scale_ = baseScale_;
+	Vector3 col_ = colliderScale_;
 
-	if (ImGui::DragFloat3("位置", &pos.x, 0.01f)) {
-		object_->SetTranslate(pos);
+	if (ImGui::DragFloat3("位置", &pos_.x, 0.01f)) {
+		object_->SetTranslate(pos_);
 	}
-	if (ImGui::DragFloat3("拡縮", &scale.x, 0.01f)) {
-		SetScale(scale);
+	if (ImGui::DragFloat3("拡縮", &scale_.x, 0.01f)) {
+		SetScale(scale_);
 	}
-	if (ImGui::DragFloat3("当たり判定サイズ", &col.x, 0.01f, 0.01f, 50.0f)) {
-		SetColliderScale(col);
+	if (ImGui::DragFloat3("当たり判定サイズ", &col_.x, 0.01f, 0.01f, 50.0f)) {
+		SetColliderScale(col_);
 	}
-
-
 
 	ImGui::Text("HP: %d / %d", hp_, maxHP_);
 	ImGui::Text("状態: %s", isDead_ ? "死" : (isDying_ ? "死亡演出中" : "生"));
@@ -195,14 +193,14 @@ void MidBossCore::StartDeathReaction(const Vector3& hitDir) {
 	deathTimer_ = 0.0f;
 	deathAlpha_ = 1.0f;
 
-	Vector3 dir = hitDir;
-	if (MyMath::Length(dir) < 0.001f) {
-		dir = { 0.0f, 0.0f, 1.0f };
+	Vector3 dir_ = hitDir;
+	if (MyMath::Length(dir_) < 0.001f) {
+		dir_ = { 0.0f, 0.0f, 1.0f };
 	}
-	dir = MyMath::Normalize(dir);
+	dir_ = MyMath::Normalize(dir_);
 
 	deathDuration_ = 0.8f;
-	deathVelocity_ = dir * 2.5f + Vector3{ 0.0f, 1.2f, 0.0f };
+	deathVelocity_ = dir_ * 2.5f + Vector3{ 0.0f, 1.2f, 0.0f };
 	deathRotateSpeed_ = { 0.0f, 2.0f, 0.0f };
 }
 

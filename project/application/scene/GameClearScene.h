@@ -25,7 +25,7 @@
 class GameClearScene : public TKM::BaseScene {
 public:
 	GameClearScene(TKM::DirectXCommon* dxCommon, TKM::SrvManager* srvManager)
-		: dxCommon(dxCommon), srvManager(srvManager) {
+		: dxCommon_(dxCommon), srvManager_(srvManager) {
 	}
 	~GameClearScene() = default;
 
@@ -47,8 +47,8 @@ public:
 	void Draw() override;
 
 private:
-	TKM::DirectXCommon* dxCommon = nullptr;
-	TKM::SrvManager* srvManager = nullptr;
+	TKM::DirectXCommon* dxCommon_ = nullptr;
+	TKM::SrvManager* srvManager_ = nullptr;
 
 	// --- カメラ・ライト ---
 	std::unique_ptr<TKM::Camera> camera_;

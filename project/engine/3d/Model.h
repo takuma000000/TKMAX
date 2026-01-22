@@ -21,7 +21,7 @@ namespace TKM {
 		DirectXCommon* dxCommon_ = nullptr;
 
 		// Objファイルのデータ
-		ModelData modelData;
+		ModelData modelData_;
 
 		/// <summary>
 		/// マテリアルテンプレートファイルを読み込みます。
@@ -39,16 +39,16 @@ namespace TKM {
 		static ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename);
 
 		// 頂点リソースを作る
-		Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
+		Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource_;
 		// 頂点リソースにデータを書き込む
-		VertexData* vertexData = nullptr;
+		VertexData* vertexData_ = nullptr;
 		// 頂点バッファビューを作成する
-		D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
+		D3D12_VERTEX_BUFFER_VIEW vertexBufferView_{};
 
 		// マテリアル用のリソースを作る
-		Microsoft::WRL::ComPtr<ID3D12Resource> materialResource;
+		Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
 		// マテリアルにデータを書き込む
-		Material* materialData = nullptr;
+		Material* materialData_ = nullptr;
 
 		/// <summary>
 		/// 頂点リソースを作成します。
@@ -61,7 +61,7 @@ namespace TKM {
 		/// <param name="dxCommon"></param>
 		void MaterialResource(DirectXCommon* dxCommon);
 
-		Transform transform{ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
+		Transform transform_{ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
 
 	public://メンバ関数
 
@@ -78,9 +78,9 @@ namespace TKM {
 		Model(Model&& other) noexcept
 			: modelCommon_(other.modelCommon_),
 			dxCommon_(other.dxCommon_),
-			modelData(std::move(other.modelData)),
-			vertexResource(std::move(other.vertexResource)),
-			materialResource(std::move(other.materialResource)) {
+			modelData_(std::move(other.modelData_)),
+			vertexResource_(std::move(other.vertexResource_)),
+			materialResource_(std::move(other.materialResource_)) {
 			other.modelCommon_ = nullptr;
 			other.dxCommon_ = nullptr;
 		}
@@ -89,9 +89,9 @@ namespace TKM {
 			if (this != &other) {
 				modelCommon_ = other.modelCommon_;
 				dxCommon_ = other.dxCommon_;
-				modelData = std::move(other.modelData);
-				vertexResource = std::move(other.vertexResource);
-				materialResource = std::move(other.materialResource);
+				modelData_ = std::move(other.modelData_);
+				vertexResource_ = std::move(other.vertexResource_);
+				materialResource_ = std::move(other.materialResource_);
 				other.modelCommon_ = nullptr;
 				other.dxCommon_ = nullptr;
 			}
@@ -116,39 +116,39 @@ namespace TKM {
 		/// テクスチャパスの取得。
 		/// </summary>
 		/// <returns></returns>
-		std::string GetTexturePath() const { return modelData.material.textureFilePath; }
+		std::string GetTexturePath() const { return modelData_.material_.textureFilePath_; }
 		/// <summary>
 		/// スケールの取得。
 		/// </summary>
 		/// <returns></returns>
-		const Vector3& GetScale() const { return transform.scale; }
+		const Vector3& GetScale() const { return transform_.scale_; }
 		/// <summary>
 		/// 回転の取得。
 		/// </summary>
 		/// <returns></returns>
-		const Vector3& GetRotate() const { return transform.rotate; }
+		const Vector3& GetRotate() const { return transform_.rotate_; }
 		/// <summary>
 		/// 平行移動の取得。
 		/// </summary>
 		/// <returns></returns>
-		const Vector3& GetTranslate() const { return transform.translate; }
+		const Vector3& GetTranslate() const { return transform_.translate_; }
 		// =========================================
 		// Setter===================================
 		/// <summary>
 		/// スケールの設定。
 		/// </summary>
 		/// <param name="scale"></param>
-		void SetScale(const Vector3& scale) { this->transform.scale = scale; }
+		void SetScale(const Vector3& scale) { this->transform_.scale_ = scale; }
 		/// <summary>
 		/// 回転の設定。
 		/// </summary>
 		/// <param name="rotate"></param>
-		void SetRotate(const Vector3& rotate) { this->transform.rotate = rotate; }
+		void SetRotate(const Vector3& rotate) { this->transform_.rotate_ = rotate; }
 		/// <summary>
 		/// 平行移動の設定。
 		/// </summary>
 		/// <param name="translate"></param>
-		void SetTranslate(const Vector3& translate) { this->transform.translate = translate; }
+		void SetTranslate(const Vector3& translate) { this->transform_.translate_ = translate; }
 		// ========================================
 	};
 }

@@ -12,39 +12,39 @@ namespace TKM {
 
 		// frame（枠）
 		frame_ = std::make_unique<Sprite>();
-		frame_->Initialize(spriteCommon_, dxCommon_, desc_.frameTex);
+		frame_->Initialize(spriteCommon_, dxCommon_, desc_.frameTex_);
 		frame_->SetParentScene(parentScene_);
 		frame_->SetAnchorPoint({ 0.0f, 0.0f });
 		frame_->SetAutoAdjustTextureSize(false);
 
 		// lag（後ろ）
 		lagL_ = std::make_unique<Sprite>();
-		lagL_->Initialize(spriteCommon_, dxCommon_, desc_.fillTex);
+		lagL_->Initialize(spriteCommon_, dxCommon_, desc_.fillTex_);
 		lagL_->SetParentScene(parentScene_);
 		lagL_->SetAnchorPoint({ 1.0f, 0.0f });
-		lagL_->SetColor(desc_.lagColor);
+		lagL_->SetColor(desc_.lagColor_);
 		lagL_->SetAutoAdjustTextureSize(false);
 
 		lagR_ = std::make_unique<Sprite>();
-		lagR_->Initialize(spriteCommon_, dxCommon_, desc_.fillTex);
+		lagR_->Initialize(spriteCommon_, dxCommon_, desc_.fillTex_);
 		lagR_->SetParentScene(parentScene_);
 		lagR_->SetAnchorPoint({ 0.0f, 0.0f });
-		lagR_->SetColor(desc_.lagColor);
+		lagR_->SetColor(desc_.lagColor_);
 		lagR_->SetAutoAdjustTextureSize(false);
 
 		// fill（前）
 		fillL_ = std::make_unique<Sprite>();
-		fillL_->Initialize(spriteCommon_, dxCommon_, desc_.fillTex);
+		fillL_->Initialize(spriteCommon_, dxCommon_, desc_.fillTex_);
 		fillL_->SetParentScene(parentScene_);
 		fillL_->SetAnchorPoint({ 1.0f, 0.0f });
-		fillL_->SetColor(desc_.baseColor);
+		fillL_->SetColor(desc_.baseColor_);
 		fillL_->SetAutoAdjustTextureSize(false);
 
 		fillR_ = std::make_unique<Sprite>();
-		fillR_->Initialize(spriteCommon_, dxCommon_, desc_.fillTex);
+		fillR_->Initialize(spriteCommon_, dxCommon_, desc_.fillTex_);
 		fillR_->SetParentScene(parentScene_);
 		fillR_->SetAnchorPoint({ 0.0f, 0.0f });
-		fillR_->SetColor(desc_.baseColor);
+		fillR_->SetColor(desc_.baseColor_);
 		fillR_->SetAutoAdjustTextureSize(false);
 
 		// 初期状態
@@ -61,12 +61,12 @@ namespace TKM {
 		chips_.clear();
 		chips_.resize(kChipPool_);
 		for (auto& c : chips_) {
-			c.sp = std::make_unique<Sprite>();
-			c.sp->Initialize(spriteCommon_, dxCommon_, desc_.fillTex); // fillTex流用
-			c.sp->SetParentScene(parentScene_);
-			c.sp->SetAnchorPoint({ 0.5f, 0.5f });
-			c.sp->SetAutoAdjustTextureSize(false);
-			c.active = false;
+			c.sp_ = std::make_unique<Sprite>();
+			c.sp_->Initialize(spriteCommon_, dxCommon_, desc_.fillTex_); // fillTex流用
+			c.sp_->SetParentScene(parentScene_);
+			c.sp_->SetAnchorPoint({ 0.5f, 0.5f });
+			c.sp_->SetAutoAdjustTextureSize(false);
+			c.active_ = false;
 		}
 	}
 
@@ -86,7 +86,7 @@ namespace TKM {
 		int oldAmmo = prevAmmo_;
 		bool consumed = (ammo < oldAmmo);
 		if (consumed) {
-			shakeTimer_ = desc_.shakeTime;
+			shakeTimer_ = desc_.shakeTime_;
 			drainTimer_ = kDrainFlashSec_;
 			punchTimer_ = kPunchSec_;
 		}
@@ -96,24 +96,24 @@ namespace TKM {
 
 		// lag（後ろ）追従
 		if (lagAmmo_ > float(ammo)) {
-			lagAmmo_ = std::max(float(ammo), lagAmmo_ - desc_.lagSpeed * dt);
+			lagAmmo_ = std::max(float(ammo), lagAmmo_ - desc_.lagSpeed_ * dt);
 		} else {
 			lagAmmo_ = float(ammo);
 		}
 		float lagRate = std::clamp(lagAmmo_ / float(maxAmmo), 0.0f, 1.0f);
 
 		// サイズ計算
-		float halfW = desc_.size.x * 0.5f;
+		float halfW = desc_.size_.x * 0.5f;
 
 		float curHalf = halfW * rate;
 		float lagHalf = halfW * lagRate;
 
-		float cx = desc_.center.x;
-		float y = desc_.center.y;
+		float cx = desc_.center_.x;
+		float y = desc_.center_.y;
 
 		// 枠
 		Vector2 framePos = { cx - halfW, y };
-		frame_->SetSize({ desc_.size.x + 10.0f, desc_.size.y + 10.0f });
+		frame_->SetSize({ desc_.size_.x + 10.0f, desc_.size_.y + 10.0f });
 
 		// 破片：減った分だけ外側が砕ける（左右同時）
 		if (consumed) {
@@ -130,7 +130,7 @@ namespace TKM {
 			float k = 1.0f - t;
 			punch = 1.0f - 0.10f * (1.0f - k);
 		}
-		float h = desc_.size.y * punch;
+		float h = desc_.size_.y * punch;
 
 		lagL_->SetSize({ lagHalf, h });
 		lagR_->SetSize({ lagHalf, h });
@@ -140,8 +140,8 @@ namespace TKM {
 		// シェイク
 		Vector2 off{ 0.0f, 0.0f };
 		if (shakeTimer_ > 0.0f) {
-			off.x = RandRange_(-desc_.shakePower, desc_.shakePower);
-			off.y = RandRange_(-desc_.shakePower, desc_.shakePower);
+			off.x = RandRange_(-desc_.shakePower_, desc_.shakePower_);
+			off.y = RandRange_(-desc_.shakePower_, desc_.shakePower_);
 		}
 
 		frame_->SetPosition({ (framePos.x - 5.0f) + off.x, (framePos.y - 5.0f) + off.y });
@@ -153,17 +153,17 @@ namespace TKM {
 		lagR_->SetPosition({ cx + off.x, y + off.y });
 
 		// 色（フラッシュ）
-		Vector4 col = desc_.baseColor;
+		Vector4 col = desc_.baseColor_;
 		if (refilling) {
-			col = desc_.refillColor;
+			col = desc_.refillColor_;
 		} else if (drainTimer_ > 0.0f) {
-			col = desc_.drainColor;
+			col = desc_.drainColor_;
 		}
 		fillL_->SetColor(col);
 		fillR_->SetColor(col);
 
-		lagL_->SetColor(desc_.lagColor);
-		lagR_->SetColor(desc_.lagColor);
+		lagL_->SetColor(desc_.lagColor_);
+		lagR_->SetColor(desc_.lagColor_);
 
 		// タイマー更新
 		if (drainTimer_ > 0.0f) { drainTimer_ = std::max(0.0f, drainTimer_ - dt); }
@@ -215,67 +215,67 @@ namespace TKM {
 
 				Chip* c = nullptr;
 				for (auto& it : chips_) {
-					if (!it.active) { c = &it; break; }
+					if (!it.active_) { c = &it; break; }
 				}
 				if (!c) { return; }
 
-				c->active = true;
-				c->maxLife = kChipLife_;
-				c->life = kChipLife_;
+				c->active_ = true;
+				c->maxLife_ = kChipLife_;
+				c->life_ = kChipLife_;
 
 				float px = (side == 0) ? leftEdge : rightEdge;
 				px += RandRange_(-4.0f, 4.0f);
-				float py = y + RandRange_(-desc_.size.y * 0.35f, desc_.size.y * 0.35f);
+				float py = y + RandRange_(-desc_.size_.y * 0.35f, desc_.size_.y * 0.35f);
 
-				c->pos = { px, py };
+				c->pos_ = { px, py };
 
 				float dir = (side == 0) ? -1.0f : 1.0f;
 				float vx = dir * (kChipSpeed_ + RandRange_(-kChipSpread_, kChipSpread_));
 				float vy = RandRange_(-120.0f, 40.0f);
-				c->vel = { vx, vy };
+				c->vel_ = { vx, vy };
 
-				c->size = RandRange_(kChipSizeMin_, kChipSizeMax_);
+				c->size_ = RandRange_(kChipSizeMin_, kChipSizeMax_);
 
-				c->sp->SetSize({ c->size, c->size });
-				c->sp->SetPosition(c->pos);
+				c->sp_->SetSize({ c->size_, c->size_ });
+				c->sp_->SetPosition(c->pos_);
 
 				// 砕け色（減少色）
-				c->sp->SetColor(desc_.drainColor);
+				c->sp_->SetColor(desc_.drainColor_);
 			}
 		}
 	}
 
 	void RBGaugeUI::UpdateChips_(float dt) {
 		for (auto& c : chips_) {
-			if (!c.active) { continue; }
+			if (!c.active_) { continue; }
 
-			c.life -= dt;
-			if (c.life <= 0.0f) {
-				c.active = false;
+			c.life_ -= dt;
+			if (c.life_ <= 0.0f) {
+				c.active_ = false;
 				continue;
 			}
 
 			// 物理っぽく
-			c.vel.y += kChipGravity_ * dt;
-			c.pos.x += c.vel.x * dt;
-			c.pos.y += c.vel.y * dt;
+			c.vel_.y += kChipGravity_ * dt;
+			c.pos_.x += c.vel_.x * dt;
+			c.pos_.y += c.vel_.y * dt;
 
 			// フェード
-			float a = std::clamp(c.life / c.maxLife, 0.0f, 1.0f);
+			float a = std::clamp(c.life_ / c.maxLife_, 0.0f, 1.0f);
 
-			Vector4 col = desc_.drainColor;
+			Vector4 col = desc_.drainColor_;
 			col.w *= a;
 
-			c.sp->SetColor(col);
-			c.sp->SetPosition(c.pos);
-			c.sp->Update();
+			c.sp_->SetColor(col);
+			c.sp_->SetPosition(c.pos_);
+			c.sp_->Update();
 		}
 	}
 
 	void RBGaugeUI::DrawChips_() {
 		for (auto& c : chips_) {
-			if (!c.active) { continue; }
-			c.sp->Draw();
+			if (!c.active_) { continue; }
+			c.sp_->Draw();
 		}
 	}
 

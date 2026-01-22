@@ -93,9 +93,7 @@ private:
 	float overAlpha_ = 0.0f;    // 現アルファ
 	float overScale_ = 1.0f;    // 現スケール
 
-	static constexpr float kIrisDuration = 0.8f; // 虹彩絞り演出時間
-	static constexpr int kPerFrameFlameBudget = 40; // 1フレの炎発生上限
-	static constexpr int kPerFrameSparkBudget = 25; // 1フレの火花発生上限
+	static constexpr float kIrisDuration_ = 0.8f; // 虹彩絞り演出時間
 
 	float dt_ = 1.0f / 60.0f; // 仮のデルタタイム
 };

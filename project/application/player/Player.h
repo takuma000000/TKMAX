@@ -169,7 +169,7 @@ public:
 	/// </summary>
 	/// <param name="camera"></param>
 	void SetCamera(TKM::Camera* camera) {
-		this->camera = camera;
+		this->camera_ = camera;
 		if (object_) { object_->SetCamera(camera); }
 		if (reticle_) { reticle_->SetCamera(camera); }
 	}
@@ -272,7 +272,7 @@ private:
 	//======================================================================
 	// 参照ポインタ / 共通オブジェクト
 	//======================================================================
-	TKM::Camera* camera = nullptr;
+	TKM::Camera* camera_ = nullptr;
 	TKM::Object3dCommon* common_ = nullptr;
 	TKM::DirectXCommon* dxCommon_ = nullptr;
 	Enemy* enemy_ = nullptr;
@@ -363,8 +363,8 @@ private:
 	// 入力 & 弾共通の調整用定数
 	static constexpr int   kTriggerThreshold = 128;  // LT/RT 判定しきい値
 	float                  normalBulletSpeed_ = 10.0f; // RB/LB/RT の弾速
-	static constexpr float kJetSmokeOffsetZ = 2.0f; // 機体後ろのジェット位置Zオフセット
-	static constexpr float kHomingBulletSpeed = 0.6f; // LT弾の追尾速度
+	static constexpr float kJetSmokeOffsetZ_ = 2.0f; // 機体後ろのジェット位置Zオフセット
+	static constexpr float kHomingBulletSpeed_ = 0.6f; // LT弾の追尾速度
 	const float            dt = 1.0f / 60.0f; // 想定フレーム時間
 	//======================================================================
 	// 自機当たり判定 (AABB)

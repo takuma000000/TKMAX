@@ -5,12 +5,12 @@ void BossEnemy::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCo
 	Enemy::Initialize(common, dxCommon);
 
 	SetModel("enemy.obj");
-	SetHP(BossParam::InitHP);
+	SetHP(BossParam::InitHP_);
 
 	// baseScale_ を正しい値にするために SetScale は最初に1回だけ
-	SetScale({ BossParam::InitScale, BossParam::InitScale, BossParam::InitScale });
+	SetScale({ BossParam::InitScale_, BossParam::InitScale_, BossParam::InitScale_ });
 
-	SetColliderScale(BossParam::InitColliderScale);
+	SetColliderScale(BossParam::InitColliderScale_);
 	SetType(EnemyType::Boss);
 }
 
@@ -25,14 +25,14 @@ void BossEnemy::ImGuiDebug() {
 #ifdef USE_IMGUI
 	ImGui::Begin("ボス");
 
-	Vector3 col = GetColliderScale();
-	if (ImGui::DragFloat3("当たり判定サイズ", &col.x, 0.01f, 0.01f, 999.0f)) {
-		SetColliderScale(col);
+	Vector3 col_ = GetColliderScale();
+	if (ImGui::DragFloat3("当たり判定サイズ", &col_.x, 0.01f, 0.01f, 999.0f)) {
+		SetColliderScale(col_);
 	}
 
-	int hp = GetHP();
-	int maxHP = GetMaxHP();
-	ImGui::Text("HP : %d / %d", hp, maxHP);
+	int hp_ = GetHP();
+	int maxHP_ = GetMaxHP();
+	ImGui::Text("HP : %d / %d", hp_, maxHP_);
 
 	// isDead/isDying/isLocked は Enemy 側の Getter を使う
 	ImGui::Text("isDead : %s", IsDead() ? "true" : "false");

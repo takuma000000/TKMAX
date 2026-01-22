@@ -12,7 +12,7 @@ void PlayerBullet::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* d
 	object_ = std::make_unique<TKM::Object3d>();
 	object_->Initialize(common, dxCommon);
 	object_->SetModel("sphere.obj");
-	object_->SetScale({ kDefaultScale, kDefaultScale, kDefaultScale });
+	object_->SetScale({ kDefaultScale_, kDefaultScale_, kDefaultScale_ });
 
 	prevPos_ = object_->GetTranslate(); // 初期座標を保存
 
@@ -176,7 +176,7 @@ void PlayerBullet::Update() {
 	}
 
 	// 一定距離（Z方向）を超えたら弾を削除する
-	if (pos.z > kDespawnZ) {
+	if (pos.z > kDespawnZ_) {
 		isDead_ = true; // 弾を削除
 	}
 

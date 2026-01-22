@@ -54,7 +54,7 @@ public:
 			L.obj = std::make_unique<TKM::Object3d>();
 			L.obj->Initialize(common_, dx_);
 			L.obj->SetModel(model);
-			L.obj->SetScale(L.scale);
+			L.obj->SetScale(L.scale_);
 			if (cam_) L.obj->SetCamera(cam_);
 			};
 
@@ -155,7 +155,7 @@ public:
 		for (int i = 0; i < 4; ++i) {
 			auto& L = layers_[i];
 			if (!L.obj) continue;
-			if (!L.visible) continue;
+			if (!L.visible_) continue;
 
 			Vector3 pos;
 			switch (i) {
@@ -186,18 +186,18 @@ public:
 			L.obj->SetRotate(rot);
 
 			// 自己回転
-			L.selfAngle += L.spinSpeed * dt;
+			L.selfAngle_ += L.spinSpeed_ * dt;
 			if (selfSpinAxisY_) {
 				Vector3 r = L.obj->GetRotate();
-				r.y += L.spinSpeed * dt;
+				r.y += L.spinSpeed_ * dt;
 				L.obj->SetRotate(r);
 			} else {
 				Vector3 r = L.obj->GetRotate();
-				r.z = L.selfAngle;
+				r.z = L.selfAngle_;
 				L.obj->SetRotate(r);
 			}
 
-			L.obj->SetScale(L.scale);
+			L.obj->SetScale(L.scale_);
 			L.obj->Update();
 		}
 	}
@@ -208,7 +208,7 @@ public:
 	void Draw(TKM::DirectXCommon* dx) {
 		if (!visible_) return;
 		for (auto& L : layers_) {
-			if (L.obj && L.visible) L.obj->Draw(dx);
+			if (L.obj && L.visible_) L.obj->Draw(dx);
 		}
 	}
 
@@ -297,9 +297,9 @@ public:
 						ImGui::Text("位置: (---, ---, ---)");
 					}
 
-					ImGui::Checkbox("Visible", &L.visible);
-					ImGui::DragFloat3("Scale", &L.scale.x, 0.01f, 0.01f, 10.f);
-					ImGui::DragFloat("SpinSpeed", &L.spinSpeed, 0.01f, -20.f, 20.f);
+					ImGui::Checkbox("Visible", &L.visible_);
+					ImGui::DragFloat3("Scale", &L.scale_.x, 0.01f, 0.01f, 10.f);
+					ImGui::DragFloat("SpinSpeed", &L.spinSpeed_, 0.01f, -20.f, 20.f);
 					ImGui::TreePop();
 				}
 			}
@@ -312,10 +312,10 @@ private:
 	//--------------------------------------------------
 	struct Layer { // 上から順に引数
 		std::unique_ptr<TKM::Object3d> obj; // 3Dオブジェクト本体
-		Vector3 scale = { 1,1,1 };     // スケール
-		float   spinSpeed = 0.0f;      // 自己回転速度（ラジアン/秒）
-		float   selfAngle = 0.0f;      // 自己回転角度（ラジアン）
-		bool    visible = true;      // 表示/非表示
+		Vector3 scale_ = { 1,1,1 };     // スケール
+		float   spinSpeed_ = 0.0f;      // 自己回転速度（ラジアン/秒）
+		float   selfAngle_ = 0.0f;      // 自己回転角度（ラジアン）
+		bool    visible_ = true;      // 表示/非表示
 	};
 	//--------------------------------------------------
 	// 内部データ（共通）

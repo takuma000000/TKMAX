@@ -22,7 +22,7 @@ namespace TKM {
 			if (identifier == "map_Kd") { // ディフューズマップ
 				std::string textureFilename;
 				s >> textureFilename;
-				materialData.textureFilePath = directoryPath + "/" + textureFilename;
+				materialData.textureFilePath_ = directoryPath + "/" + textureFilename;
 			}
 		}
 		return materialData;
@@ -80,19 +80,19 @@ namespace TKM {
 					Vector3 normal = normals[elementIndices[2] - 1]; // OBJファイルのインデックスは1始まりなので-1する
 
 					VertexData vertex = { position, texcoord, normal }; // 頂点データの作成
-					modelData.vertices.push_back(vertex); // 頂点データの追加
+					modelData.vertices_.push_back(vertex); // 頂点データの追加
 					triangle[faceVertex] = vertex; // 三角形の頂点データを保存
 				}
 
 				// 面の裏表を反転させる
-				modelData.vertices.push_back(triangle[2]);
-				modelData.vertices.push_back(triangle[1]);
-				modelData.vertices.push_back(triangle[0]);
+				modelData.vertices_.push_back(triangle[2]);
+				modelData.vertices_.push_back(triangle[1]);
+				modelData.vertices_.push_back(triangle[0]);
 			} else if (identifier == "mtllib") { // マテリアルファイル
 				// マテリアルファイル名を取得して読み込む
 				std::string materialFilename;
 				s >> materialFilename;
-				modelData.material = LoadMaterialTemplateFile(directoryPath, materialFilename);
+				modelData.material_ = LoadMaterialTemplateFile(directoryPath, materialFilename);
 			}
 		}
 
@@ -102,26 +102,26 @@ namespace TKM {
 	void Model::VertexResource(DirectXCommon* dxCommon) {
 		dxCommon_ = dxCommon;
 
-		vertexResource = dxCommon_->CreateBufferResource(sizeof(VertexData) * modelData.vertices.size()); // 頂点リソースの作成
-		vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress(); // 頂点バッファビューの作成
-		vertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * modelData.vertices.size()); // 頂点バッファのサイズ
-		vertexBufferView.StrideInBytes = sizeof(VertexData); // 頂点バッファの頂点1つ分のサイズ
+		vertexResource_ = dxCommon_->CreateBufferResource(sizeof(VertexData) * modelData_.vertices_.size()); // 頂点リソースの作成
+		vertexBufferView_.BufferLocation = vertexResource_->GetGPUVirtualAddress(); // 頂点バッファビューの作成
+		vertexBufferView_.SizeInBytes = UINT(sizeof(VertexData) * modelData_.vertices_.size()); // 頂点バッファのサイズ
+		vertexBufferView_.StrideInBytes = sizeof(VertexData); // 頂点バッファの頂点1つ分のサイズ
 
-		vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData)); // 頂点リソースにデータを書き込む
-		std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size()); // 頂点データのコピー
+		vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_)); // 頂点リソースにデータを書き込む
+		std::memcpy(vertexData_, modelData_.vertices_.data(), sizeof(VertexData) * modelData_.vertices_.size()); // 頂点データのコピー
 	}
 
 	void Model::MaterialResource(DirectXCommon* dxCommon) {
 		dxCommon_ = dxCommon;
 
 		// マテリアル用のリソースを作る
-		materialResource = dxCommon->CreateBufferResource(sizeof(Material));
-		materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
+		materialResource_ = dxCommon->CreateBufferResource(sizeof(Material));
+		materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
 		// マテリアルデータの設定
-		materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-		materialData->enableLighting = true;
-		materialData->uvTransform = MyMath::MakeIdentity4x4();
-		materialData->shininess = 48.3f;
+		materialData_->color_ = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+		materialData_->enableLighting_ = true;
+		materialData_->uvTransform_ = MyMath::MakeIdentity4x4();
+		materialData_->shininess_ = 48.3f;
 	}
 
 	void Model::Initialize(ModelCommon* modelCommon, DirectXCommon* dxCommon, const std::string& directorypath, const std::string& filename) {
@@ -129,19 +129,19 @@ namespace TKM {
 		dxCommon_ = dxCommon;
 
 		// `std::move` を適用して不要なコピーを削減
-		modelData = std::move(LoadObjFile(directorypath, filename));
+		modelData_ = std::move(LoadObjFile(directorypath, filename));
 
 		VertexResource(dxCommon_); // 頂点リソースの作成
 		MaterialResource(dxCommon_); // マテリアルリソースの作成
 
-		TextureManager::GetInstance()->LoadTexture(modelData.material.textureFilePath); // テクスチャの読み込み
-		modelData.material.textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(modelData.material.textureFilePath); // テクスチャ番号の取得
+		TextureManager::GetInstance()->LoadTexture(modelData_.material_.textureFilePath_); // テクスチャの読み込み
+		modelData_.material_.textureIndex_ = TextureManager::GetInstance()->GetTextureIndexByFilePath(modelData_.material_.textureFilePath_); // テクスチャ番号の取得
 	}
 
 	void Model::Draw() {
 		if (!dxCommon_) return; // DirectXCommonが設定されていない場合は描画しない
-		dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView); // 頂点バッファの設定
-		dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress()); // マテリアルデータの設定
-		dxCommon_->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0); // 描画
+		dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_); // 頂点バッファの設定
+		dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress()); // マテリアルデータの設定
+		dxCommon_->GetCommandList()->DrawInstanced(UINT(modelData_.vertices_.size()), 1, 0, 0); // 描画
 	}
 }

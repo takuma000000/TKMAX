@@ -19,65 +19,65 @@ namespace TKM {
 
 	void Sprite::Initialize(SpriteCommon* spriteCommon, TKM::DirectXCommon* dxCommon, const std::string textureFilePath) {
 		//引数で受け取ったメンバ変数に記録する
-		this->spriteCommon = spriteCommon;
+		this->spriteCommon_ = spriteCommon;
 		dxCommon_ = dxCommon;
-		this->textureFilePath = textureFilePath;
+		this->textureFilePath_ = textureFilePath;
 
 		//VertexResourceを作る
-		vertexResource = dxCommon_->CreateBufferResource(sizeof(VertexData) * 4);
+		vertexResource_ = dxCommon_->CreateBufferResource(sizeof(VertexData) * 4);
 		//IndexResourceを作る
-		indexResource = dxCommon_->CreateBufferResource(sizeof(uint32_t) * 6);
+		indexResource_ = dxCommon_->CreateBufferResource(sizeof(uint32_t) * 6);
 		//VertexBufferViewを作成する
 		//Resourceの先頭のアドレスから使う
-		vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
+		vertexBufferView_.BufferLocation = vertexResource_->GetGPUVirtualAddress();
 		//使用するResourceのサイズは頂点4つ分のサイズ
-		vertexBufferView.SizeInBytes = sizeof(VertexData) * 4;
+		vertexBufferView_.SizeInBytes = sizeof(VertexData) * 4;
 		//1頂点あたりのサイズ
-		vertexBufferView.StrideInBytes = sizeof(VertexData);
+		vertexBufferView_.StrideInBytes = sizeof(VertexData);
 		//リソースの先頭のアドレスから使う
-		indexBufferView.BufferLocation = indexResource->GetGPUVirtualAddress();
+		indexBufferView_.BufferLocation = indexResource_->GetGPUVirtualAddress();
 		//使用するリソースのサイズはインデックス6つ分のサイズ
-		indexBufferView.SizeInBytes = sizeof(uint32_t) * 6;
+		indexBufferView_.SizeInBytes = sizeof(uint32_t) * 6;
 		//インデックスはuint32_tとする
-		indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+		indexBufferView_.Format = DXGI_FORMAT_R32_UINT;
 		//書き込むためのアドレスを取得
-		vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
+		vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
 		//書き込むためのアドレスを取得
-		indexResource->Map(0, nullptr, reinterpret_cast<void**>(&indexData));
+		indexResource_->Map(0, nullptr, reinterpret_cast<void**>(&indexData_));
 
 		//マテリアルリソースを作る
-		materialResource = dxCommon->CreateBufferResource(sizeof(Material));
+		materialResource_ = dxCommon->CreateBufferResource(sizeof(Material));
 		//書き込むためのアドレスを取得
-		materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
+		materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
 		//色は白に設定
-		materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+		materialData_->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 		//SprightはLightingしないのでfalseを設定する
-		materialData->enableLighting = false;
+		materialData_->enableLighting = false;
 		//UV変換行列は単位行列を設定する
-		materialData->uvTransform = MyMath::MakeIdentity4x4();
+		materialData_->uvTransform = MyMath::MakeIdentity4x4();
 
 		//座標変換行列リソースを作る
-		transformationMatrixResource = dxCommon->CreateBufferResource(sizeof(TransformationMatrix));
+		transformationMatrixResource_ = dxCommon->CreateBufferResource(sizeof(TransformationMatrix));
 		//書き込むためのアドレスを取得
-		transformationMatrixResource->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixData));
+		transformationMatrixResource_->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixData_));
 		//単位行列を書き込んでおく
-		transformationMatrixData->wvp = MyMath::MakeIdentity4x4();
+		transformationMatrixData_->wvp = MyMath::MakeIdentity4x4();
 		// 単位行列を書き込んでおく
-		transformationMatrixData->World = MyMath::MakeIdentity4x4();
+		transformationMatrixData_->World = MyMath::MakeIdentity4x4();
 
-		transformSprite = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} }; // スプライトの変換情報
-		cameraTransform = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f} ,{0.0f,0.0f,-10.0f} }; // カメラの変換情報
+		transformSprite_ = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} }; // スプライトの変換情報
+		cameraTransform_ = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f} ,{0.0f,0.0f,-10.0f} }; // カメラの変換情報
 
 		//単位行列を書き込んでおく
-		textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
+		textureIndex_ = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
 	}
 
 	void Sprite::Update() {
 
-		float left = 0.0f - anchorPoint.x; // アンカーポイントを考慮した左端座標
-		float right = 1.0f - anchorPoint.x; // アンカーポイントを考慮した右端座標
-		float top = 0.0f - anchorPoint.y; // アンカーポイントを考慮した上端座標
-		float bottom = 1.0f - anchorPoint.y; // アンカーポイントを考慮した下端座標
+		float left = 0.0f - anchorPoint_.x; // アンカーポイントを考慮した左端座標
+		float right = 1.0f - anchorPoint_.x; // アンカーポイントを考慮した右端座標
+		float top = 0.0f - anchorPoint_.y; // アンカーポイントを考慮した上端座標
+		float bottom = 1.0f - anchorPoint_.y; // アンカーポイントを考慮した下端座標
 
 		//左右反転
 		if (isFlipX_) { // 左右反転
@@ -90,51 +90,51 @@ namespace TKM {
 			bottom = -bottom; // 下端と上端を入れ替え
 		}
 
-		const DirectX::TexMetadata& metadata = TextureManager::GetInstance()->GetMetadata(textureFilePath); // テクスチャのメタデータを取得
-		float tex_left = textureLeftTop.x / metadata.width; // テクスチャの左端UV座標
-		float tex_right = (textureLeftTop.x + textureSize.x) / metadata.width; // テクスチャの右端UV座標
-		float tex_top = textureLeftTop.y / metadata.height; // テクスチャの上端UV座標
-		float tex_bottom = (textureLeftTop.y + textureSize.y) / metadata.height; // テクスチャの下端UV座標
+		const DirectX::TexMetadata& metadata = TextureManager::GetInstance()->GetMetadata(textureFilePath_); // テクスチャのメタデータを取得
+		float tex_left = textureLeftTop_.x / metadata.width; // テクスチャの左端UV座標
+		float tex_right = (textureLeftTop_.x + textureSize_.x) / metadata.width; // テクスチャの右端UV座標
+		float tex_top = textureLeftTop_.y / metadata.height; // テクスチャの上端UV座標
+		float tex_bottom = (textureLeftTop_.y + textureSize_.y) / metadata.height; // テクスチャの下端UV座標
 
 		//左下
-		vertexData[0].position = { left,bottom,0.0f,1.0f };
-		vertexData[0].texcoord = { tex_left,tex_bottom };
-		vertexData[0].normal = { 0.0f,0.0f,-1.0f };
+		vertexData_[0].position = { left,bottom,0.0f,1.0f };
+		vertexData_[0].texcoord = { tex_left,tex_bottom };
+		vertexData_[0].normal = { 0.0f,0.0f,-1.0f };
 		//左上
-		vertexData[1].position = { left,top,0.0f,1.0f };
-		vertexData[1].texcoord = { tex_left,tex_top };
-		vertexData[1].normal = { 0.0f,0.0f,-1.0f };
+		vertexData_[1].position = { left,top,0.0f,1.0f };
+		vertexData_[1].texcoord = { tex_left,tex_top };
+		vertexData_[1].normal = { 0.0f,0.0f,-1.0f };
 		//右下
-		vertexData[2].position = { right,bottom,0.0f,1.0f };
-		vertexData[2].texcoord = { tex_right,tex_bottom };
-		vertexData[2].normal = { 0.0f,0.0f,-1.0f };
+		vertexData_[2].position = { right,bottom,0.0f,1.0f };
+		vertexData_[2].texcoord = { tex_right,tex_bottom };
+		vertexData_[2].normal = { 0.0f,0.0f,-1.0f };
 		//右上
-		vertexData[3].position = { right,top,0.0f,1.0f };
-		vertexData[3].texcoord = { tex_right,tex_top };
-		vertexData[3].normal = { 0.0f,0.0f,-1.0f };
+		vertexData_[3].position = { right,top,0.0f,1.0f };
+		vertexData_[3].texcoord = { tex_right,tex_top };
+		vertexData_[3].normal = { 0.0f,0.0f,-1.0f };
 
 		//インデックスデータ
-		indexData[0] = 0;
-		indexData[1] = 1;
-		indexData[2] = 2;
-		indexData[3] = 1;
-		indexData[4] = 3;
-		indexData[5] = 2;
+		indexData_[0] = 0;
+		indexData_[1] = 1;
+		indexData_[2] = 2;
+		indexData_[3] = 1;
+		indexData_[4] = 3;
+		indexData_[5] = 2;
 
 		//座標変換行列の計算
-		Matrix4x4 worldMatrixSprite = MyMath::MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
+		Matrix4x4 worldMatrixSprite = MyMath::MakeAffineMatrix(transformSprite_.scale, transformSprite_.rotate, transformSprite_.translate);
 		// ビュー行列は単位行列
 		Matrix4x4 viewMatrixSprite = MyMath::MakeIdentity4x4();
 		// 射影行列は直交投影行列
-		Matrix4x4 projectionMatrixSprite = MyMath::MakeOrthographicMatrix(0.0f, 0.0f, float(WindowsAPI::kClientWidth), float(WindowsAPI::kClientHeight), 0.0f, 100.0f);
+		Matrix4x4 projectionMatrixSprite = MyMath::MakeOrthographicMatrix(0.0f, 0.0f, float(WindowsAPI::kClientWidth_), float(WindowsAPI::kClientHeight_), 0.0f, 100.0f);
 
-		transformationMatrixData->wvp = MyMath::Multiply(worldMatrixSprite, MyMath::Multiply(viewMatrixSprite, projectionMatrixSprite)); // WVP行列の計算
-		transformationMatrixData->World = worldMatrixSprite; // ワールド行列の設定
+		transformationMatrixData_->wvp = MyMath::Multiply(worldMatrixSprite, MyMath::Multiply(viewMatrixSprite, projectionMatrixSprite)); // WVP行列の計算
+		transformationMatrixData_->World = worldMatrixSprite; // ワールド行列の設定
 
 		//反映処理
-		transformSprite.translate = { position.x,position.y,0.0f };
-		transformSprite.rotate = { 0.0f,0.0f,rotation };
-		transformSprite.scale = { size.x,size.y,1.0f };
+		transformSprite_.translate = { position_.x,position_.y,0.0f };
+		transformSprite_.rotate = { 0.0f,0.0f,rotation_ };
+		transformSprite_.scale = { size_.x,size_.y,1.0f };
 
 		if (autoAdjustTextureSize_) {
 			AdjustTextureSize();
@@ -148,16 +148,16 @@ namespace TKM {
 
 		//VertexBufferViewを設定
 		//Spriteの描画。変更が必要なものだけ変更する
-		dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);//VBVを設定
+		dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);//VBVを設定
 		//TransformationMatrixCBufferの場所を設定
-		dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
+		dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource_->GetGPUVirtualAddress());
 		
 		//IndexBufferViewを設定
 		//IBVを設定
-		dxCommon_->GetCommandList()->IASetIndexBuffer(&indexBufferView);
+		dxCommon_->GetCommandList()->IASetIndexBuffer(&indexBufferView_);
 
 		//マテリアルCBufferの場所を設定
-		dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+		dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
 		//座標変換行列CBufferの場所を設定
 		Transform uvTransformSprite{
 		{1.0f,1.0f,1.0f}, // scale
@@ -168,10 +168,10 @@ namespace TKM {
 		Matrix4x4 uvTransformMatrix = MyMath::MakeScaleMatrix(uvTransformSprite.scale); // スケーリング行列を作成
 		uvTransformMatrix = MyMath::Multiply(uvTransformMatrix, MyMath::MakeRotateZMatrix(uvTransformSprite.rotate.z)); // Z回転行列を掛ける
 		uvTransformMatrix = MyMath::Multiply(uvTransformMatrix, MyMath::MakeTranslateMatrix(uvTransformSprite.translate)); // 平行移動行列を掛ける
-		materialData->uvTransform = uvTransformMatrix; // UV変換行列を更新
+		materialData_->uvTransform = uvTransformMatrix; // UV変換行列を更新
 
 		//SRVのDescriptorTableの先頭を設定
-		dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(textureFilePath));
+		dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(textureFilePath_));
 		//描画。6個のインデックスを使用し1つのインスタンスを描画。その他は当面0で良い
 		dxCommon_->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 	}
@@ -181,7 +181,7 @@ namespace TKM {
 		// ImGui ウィジェット: スプライトの座標操作
 		ImGui::Begin("Sprite");
 		// スプライトの座標を操作するスライダー
-		ImGui::SliderFloat2("Sprite Position", &position.x, 0.0f, 500.0f, "%.1f");
+		ImGui::SliderFloat2("Sprite Position", &position_.x, 0.0f, 500.0f, "%.1f");
 		ImGui::End();
 
 #endif
@@ -189,10 +189,10 @@ namespace TKM {
 
 	void Sprite::AdjustTextureSize() {
 		//テクスチャデータを取得
-		const DirectX::TexMetadata& metadata = TextureManager::GetInstance()->GetMetadata(textureFilePath);
-		textureSize.x = static_cast<float>(metadata.width); //テクスチャの幅を取得
-		textureSize.y = static_cast<float>(metadata.height); //テクスチャの高さを取得
+		const DirectX::TexMetadata& metadata = TextureManager::GetInstance()->GetMetadata(textureFilePath_);
+		textureSize_.x = static_cast<float>(metadata.width); //テクスチャの幅を取得
+		textureSize_.y = static_cast<float>(metadata.height); //テクスチャの高さを取得
 		//画像サイズをテクスチャサイズに合わせる
-		size = textureSize;
+		size_ = textureSize_;
 	}
 } //namespace TKM

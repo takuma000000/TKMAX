@@ -6,14 +6,14 @@
 #include <algorithm>
 
 namespace TKM {
-	ParticleManager* ParticleManager::instance = nullptr;
+	ParticleManager* ParticleManager::instance_ = nullptr;
 
 	ParticleManager* ParticleManager::GetInstance() {
-		if (instance == nullptr) {
-			instance = new ParticleManager();
+		if (instance_ == nullptr) {
+			instance_ = new ParticleManager();
 		}
 
-		return instance;
+		return instance_;
 	}
 
 	void ParticleManager::Initialize(TKM::DirectXCommon* dxCommon, TKM::SrvManager* srvManager, TKM::Camera* camera) {
@@ -23,9 +23,9 @@ namespace TKM {
 		camera_ = camera;
 
 		// --- 加速度フィールド初期化 ---
-		acc.acc = { 0.0f,0.0f,0.0f };
-		acc.area.min = { -1.0f,-1.00f,-1.0f };
-		acc.area.max = { 1.0f,1.0f,1.0f };
+		acc.acc_ = { 0.0f,0.0f,0.0f };
+		acc.area_.min_ = { -1.0f,-1.00f,-1.0f };
+		acc.area_.max_ = { 1.0f,1.0f,1.0f };
 
 		// --- 永続マテリアルCB作成 ---
 		materialCB_ = dxCommon_->CreateBufferResource(sizeof(Material));
@@ -49,40 +49,40 @@ namespace TKM {
 	void ParticleManager::Update(float dt) {
 		MakeBillboardMatrix(); //ビルボードマトリクス作成
 
-		for (std::unordered_map<std::string, ParticleGroup>::iterator particleGroupIterator = particleGroups.begin(); particleGroupIterator != particleGroups.end();) { //各パーティクルグループの更新
+		for (std::unordered_map<std::string, ParticleGroup>::iterator particleGroupIterator = particleGroups_.begin(); particleGroupIterator != particleGroups_.end();) { //各パーティクルグループの更新
 			//パーティクルグループのポインタを取得
 			ParticleGroup* particleGroup = &(particleGroupIterator->second);
-			particleGroupIterator->second.kNumInstance = 0;
+			particleGroupIterator->second.kNumInstance_ = 0;
 
-			for (std::list<Particle>::iterator particleIterator = particleGroup->particles.begin(); particleIterator != particleGroup->particles.end();) { //各パーティクルの更新
-				if ((*particleIterator).lifeTime <= (*particleIterator).currentTime) {//生存期間を過ぎていたら更新せず描画対象にしない
-					particleIterator = particleGroup->particles.erase(particleIterator);
+			for (std::list<Particle>::iterator particleIterator = particleGroup->particles_.begin(); particleIterator != particleGroup->particles_.end();) { //各パーティクルの更新
+				if ((*particleIterator).lifeTime_ <= (*particleIterator).currentTime_) {//生存期間を過ぎていたら更新せず描画対象にしない
+					particleIterator = particleGroup->particles_.erase(particleIterator);
 					continue;
 				}
 				//ワールド行列計算
-				Matrix4x4 scaleMatrix = MyMath::MakeScaleMatrix((*particleIterator).transform.scale);
-				Matrix4x4 translateMatrix = MyMath::MakeTranslateMatrix((*particleIterator).transform.translate);
-				Matrix4x4 rotateMatrix = MyMath::MakeRotateMatrix((*particleIterator).transform.rotate);
-				Matrix4x4 worldMatrix = scaleMatrix * rotateMatrix * billboardMatrix * translateMatrix;
+				Matrix4x4 scaleMatrix = MyMath::MakeScaleMatrix((*particleIterator).transform_.scale_);
+				Matrix4x4 translateMatrix = MyMath::MakeTranslateMatrix((*particleIterator).transform_.translate_);
+				Matrix4x4 rotateMatrix = MyMath::MakeRotateMatrix((*particleIterator).transform_.rotate_);
+				Matrix4x4 worldMatrix = scaleMatrix * rotateMatrix * billboardMatrix_ * translateMatrix;
 				Matrix4x4 cameraMatrix = MyMath::MakeAffineMatrix(camera_->GetScale(), camera_->GetRotate(), camera_->GetTranslate());
 				Matrix4x4 viewMatrix = camera_->GetViewMatrix();
 				Matrix4x4 projectionMatrix = camera_->GetProjectionMatrix();
 				Matrix4x4 worldViewProjectionMatrix =
 					MyMath::Multiply(worldMatrix, MyMath::Multiply(viewMatrix, projectionMatrix));
-				if (particleGroupIterator->second.kNumInstance < kNumMaxInstance) { //最大インスタンス数以下なら更新と描画対象にする
+				if (particleGroupIterator->second.kNumInstance_ < kNumMaxInstance_) { //最大インスタンス数以下なら更新と描画対象にする
 					//フィールドの範囲内のParticleには加速度を適用する
-					if (IsCollision(acc.area, (*particleIterator).transform.translate)) { //当たり判定
-						(*particleIterator).velocity += acc.acc * kDeltaTime;
+					if (IsCollision(acc.area_, (*particleIterator).transform_.translate_)) { //当たり判定
+						(*particleIterator).velocity_ += acc.acc_ * kDeltaTime_;
 					}
-					(*particleIterator).transform.translate += (*particleIterator).velocity * kDeltaTime; //速度を元に位置を更新
-					(*particleIterator).currentTime += kDeltaTime;//経過時間を足す
+					(*particleIterator).transform_.translate_ += (*particleIterator).velocity_ * kDeltaTime_; //速度を元に位置を更新
+					(*particleIterator).currentTime_ += kDeltaTime_;//経過時間を足す
 					//インスタンスデータ更新
-					particleGroup->instancingData[particleGroupIterator->second.kNumInstance].wvp = worldViewProjectionMatrix;
-					particleGroup->instancingData[particleGroupIterator->second.kNumInstance].World = worldMatrix;
-					particleGroup->instancingData[particleGroupIterator->second.kNumInstance].color = (*particleIterator).color;
-					float alpha = 1.0f - ((*particleIterator).currentTime / (*particleIterator).lifeTime); //アルファ値計算(0~1)
-					particleGroup->instancingData[particleGroupIterator->second.kNumInstance].color.w = alpha;
-					++particleGroupIterator->second.kNumInstance;//生きているParticleの数を1つカウントする
+					particleGroup->instancingData_[particleGroupIterator->second.kNumInstance_].wvp_ = worldViewProjectionMatrix;
+					particleGroup->instancingData_[particleGroupIterator->second.kNumInstance_].World_ = worldMatrix;
+					particleGroup->instancingData_[particleGroupIterator->second.kNumInstance_].color_ = (*particleIterator).color_;
+					float alpha = 1.0f - ((*particleIterator).currentTime_ / (*particleIterator).lifeTime_); //アルファ値計算(0~1)
+					particleGroup->instancingData_[particleGroupIterator->second.kNumInstance_].color_.w = alpha;
+					++particleGroupIterator->second.kNumInstance_;//生きているParticleの数を1つカウントする
 				}
 				++particleIterator; //次のパーティクルへ
 			}
@@ -94,51 +94,51 @@ namespace TKM {
 		auto* cmd = dxCommon_->GetCommandList(); // コマンドリスト取得
 
 		// 共通セット
-		cmd->SetGraphicsRootSignature(rootSignature.Get());
-		cmd->SetPipelineState(graphicsPipelineState.Get());
+		cmd->SetGraphicsRootSignature(rootSignature_.Get());
+		cmd->SetPipelineState(graphicsPipelineState_.Get());
 		cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 		// 頂点数取得
-		const UINT vtxCountNormal = static_cast<UINT>(modelData.vertices.size());
-		const UINT vtxCountRing = static_cast<UINT>(ringModelData.vertices.size());
-		const UINT vtxCountCylinder = static_cast<UINT>(cylinderModelData.vertices.size());
+		const UINT vtxCountNormal = static_cast<UINT>(modelData_.vertices_.size());
+		const UINT vtxCountRing = static_cast<UINT>(ringModelData_.vertices_.size());
+		const UINT vtxCountCylinder = static_cast<UINT>(cylinderModelData_.vertices_.size());
 		//const UINT vtxCountRibbon = static_cast<UINT>(ribbonModelData.vertices.size());
 
-		for (auto it = particleGroups.begin(); it != particleGroups.end(); ++it) { //各パーティクルグループの描画
+		for (auto it = particleGroups_.begin(); it != particleGroups_.end(); ++it) { //各パーティクルグループの描画
 			ParticleGroup& group = it->second;
 
 			// ① インスタンス0なら描かない
-			if (group.kNumInstance == 0) {
+			if (group.kNumInstance_ == 0) {
 				continue;
 			}
 
 			// ② モデル頂点数0も弾く（型ごと）
-			if (group.type == ParticleType::NORMAL && vtxCountNormal == 0) continue;
-			if (group.type == ParticleType::RING && vtxCountRing == 0) continue;
-			if (group.type == ParticleType::CYLINDER && vtxCountCylinder == 0) continue;
+			if (group.type_ == ParticleType::NORMAL && vtxCountNormal == 0) continue;
+			if (group.type_ == ParticleType::RING && vtxCountRing == 0) continue;
+			if (group.type_ == ParticleType::CYLINDER && vtxCountCylinder == 0) continue;
 			//if (group.type == ParticleType::RIBBON && vtxCountRibbon == 0) continue;
 
 			// ③ 永続CBに値を書くだけ（Create/Releaseしない）
 			//    ※ Initialize() で materialCB_ を UploadHeap で作って materialCPU_ を永続Map済み
-			materialCPU_->color = Vector4(1, 1, 1, 1);
-			materialCPU_->enableLighting = true;
-			materialCPU_->uvTransform = MyMath::MakeIdentity4x4();
+			materialCPU_->color_ = Vector4(1, 1, 1, 1);
+			materialCPU_->enableLighting_ = true;
+			materialCPU_->uvTransform_ = MyMath::MakeIdentity4x4();
 
 			// ④ ルートバインド
 			cmd->SetGraphicsRootConstantBufferView(0, materialCB_->GetGPUVirtualAddress());
-			cmd->SetGraphicsRootDescriptorTable(1, srvManager_->GetGPUDescriptorHandle(group.srvIndex));                     // 粒子個別のSRV（頂点/インスタンス用など）
-			cmd->SetGraphicsRootDescriptorTable(2, srvManager_->GetGPUDescriptorHandle(group.materialData.textureIndex));    // テクスチャ
+			cmd->SetGraphicsRootDescriptorTable(1, srvManager_->GetGPUDescriptorHandle(group.srvIndex_));                     // 粒子個別のSRV（頂点/インスタンス用など）
+			cmd->SetGraphicsRootDescriptorTable(2, srvManager_->GetGPUDescriptorHandle(group.materialData_.textureIndex_));    // テクスチャ
 
 			// ⑤ VB切替 & DrawInstanced
-			if (group.type == ParticleType::NORMAL) {
-				cmd->IASetVertexBuffers(0, 1, &vertexBufferView);
-				cmd->DrawInstanced(vtxCountNormal, group.kNumInstance, 0, 0);
-			} else if (group.type == ParticleType::RING) {
-				cmd->IASetVertexBuffers(0, 1, &ringVertexBufferView);
-				cmd->DrawInstanced(vtxCountRing, group.kNumInstance, 0, 0);
-			} else if (group.type == ParticleType::CYLINDER) {
-				cmd->IASetVertexBuffers(0, 1, &cylinderVertexBufferView);
-				cmd->DrawInstanced(vtxCountCylinder, group.kNumInstance, 0, 0);
+			if (group.type_ == ParticleType::NORMAL) {
+				cmd->IASetVertexBuffers(0, 1, &vertexBufferView_);
+				cmd->DrawInstanced(vtxCountNormal, group.kNumInstance_, 0, 0);
+			} else if (group.type_ == ParticleType::RING) {
+				cmd->IASetVertexBuffers(0, 1, &ringVertexBufferView_);
+				cmd->DrawInstanced(vtxCountRing, group.kNumInstance_, 0, 0);
+			} else if (group.type_ == ParticleType::CYLINDER) {
+				cmd->IASetVertexBuffers(0, 1, &cylinderVertexBufferView_);
+				cmd->DrawInstanced(vtxCountCylinder, group.kNumInstance_, 0, 0);
 			}
 		}
 	}
@@ -200,7 +200,7 @@ namespace TKM {
 
 		//グラフィックスパイプラインの設定
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicPipelineStateDesc{};
-		graphicPipelineStateDesc.pRootSignature = rootSignature.Get();
+		graphicPipelineStateDesc.pRootSignature = rootSignature_.Get();
 		graphicPipelineStateDesc.InputLayout = inputLayoutDesc;
 		graphicPipelineStateDesc.VS = { vertexShaderBlob->GetBufferPointer(),vertexShaderBlob->GetBufferSize() };
 		graphicPipelineStateDesc.PS = { pixelShaderBlob->GetBufferPointer(),pixelShaderBlob->GetBufferSize() };
@@ -215,7 +215,7 @@ namespace TKM {
 		graphicPipelineStateDesc.DepthStencilState = depthStencilDesc;
 		graphicPipelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 		//グラフィックスパイプラインの生成
-		hr = dxCommon_->GetDevice()->CreateGraphicsPipelineState(&graphicPipelineStateDesc, IID_PPV_ARGS(&graphicsPipelineState));
+		hr = dxCommon_->GetDevice()->CreateGraphicsPipelineState(&graphicPipelineStateDesc, IID_PPV_ARGS(&graphicsPipelineState_));
 		assert(SUCCEEDED(hr));
 	}
 
@@ -286,26 +286,26 @@ namespace TKM {
 		}
 
 		//バイナリを元に生成
-		rootSignature = nullptr;
-		hr = dxCommon_->GetDevice()->CreateRootSignature(0, signatureBlog->GetBufferPointer(), signatureBlog->GetBufferSize(), IID_PPV_ARGS(&rootSignature)); //生成
+		rootSignature_ = nullptr;
+		hr = dxCommon_->GetDevice()->CreateRootSignature(0, signatureBlog->GetBufferPointer(), signatureBlog->GetBufferSize(), IID_PPV_ARGS(&rootSignature_)); //生成
 		assert(SUCCEEDED(hr));
 	}
 
 	void ParticleManager::InitializeVD() {
 		//四角形の頂点データ
-		modelData.vertices.push_back({ .position = {1.0f,1.0f,0.0f,1.0f},.texcoord = {0.0f,0.0f},.normal = {0.0f,0.0f,1.0f} });
-		modelData.vertices.push_back({ .position = {-1.0f,1.0f,0.0f,1.0f},.texcoord = {1.0f,0.0f},.normal = {0.0f,0.0f,1.0f} });
-		modelData.vertices.push_back({ .position = {1.0f,-1.0f,0.0f,1.0f},.texcoord = {0.0f,1.0f},.normal = {0.0f,0.0f,1.0f} });
-		modelData.vertices.push_back({ .position = {1.0f,-1.0f,0.0f,1.0f},.texcoord = {0.0f,1.0f},.normal = {0.0f,0.0f,1.0f} });
-		modelData.vertices.push_back({ .position = {-1.0f,1.0f,0.0f,1.0f},.texcoord = {1.0f,0.0f},.normal = {0.0f,0.0f,1.0f} });
-		modelData.vertices.push_back({ .position = {-1.0f,-1.0f,0.0f,1.0f},.texcoord = {1.0f,1.0f},.normal = {0.0f,0.0f,1.0f} });
-		modelData.material.textureFilePath = "./resources/circle.png"; //テクスチャパス
+		modelData_.vertices_.push_back({ .position_ = {1.0f,1.0f,0.0f,1.0f},.texcoord_ = {0.0f,0.0f},.normal_ = {0.0f,0.0f,1.0f} });
+		modelData_.vertices_.push_back({ .position_ = {-1.0f,1.0f,0.0f,1.0f},.texcoord_ = {1.0f,0.0f},.normal_ = {0.0f,0.0f,1.0f} });
+		modelData_.vertices_.push_back({ .position_ = {1.0f,-1.0f,0.0f,1.0f},.texcoord_ = {0.0f,1.0f},.normal_ = {0.0f,0.0f,1.0f} });
+		modelData_.vertices_.push_back({ .position_ = {1.0f,-1.0f,0.0f,1.0f},.texcoord_ = {0.0f,1.0f},.normal_ = {0.0f,0.0f,1.0f} });
+		modelData_.vertices_.push_back({ .position_ = {-1.0f,1.0f,0.0f,1.0f},.texcoord_ = {1.0f,0.0f},.normal_ = {0.0f,0.0f,1.0f} });
+		modelData_.vertices_.push_back({ .position_ = {-1.0f,-1.0f,0.0f,1.0f},.texcoord_ = {1.0f,1.0f},.normal_ = {0.0f,0.0f,1.0f} });
+		modelData_.material_.textureFilePath_ = "./resources/circle.png"; //テクスチャパス
 
 		CreateRingVertices(); //リング頂点データ作成
-		ringModelData.material.textureFilePath = "./resources/gradationLine.png"; //テクスチャパス
+		ringModelData_.material_.textureFilePath_ = "./resources/gradationLine.png"; //テクスチャパス
 
 		CreateCylinderVertices(); //シリンダー頂点データ作成
-		cylinderModelData.material.textureFilePath = "./resources/gradationLine.png"; //テクスチャパス
+		cylinderModelData_.material_.textureFilePath_ = "./resources/gradationLine.png"; //テクスチャパス
 
 		// リボン（細長い板） 
 		/*CreateRibbonVertices();
@@ -314,30 +314,30 @@ namespace TKM {
 
 	void ParticleManager::CreateVR() {
 		//頂点リソースを作る
-		vertexResource = dxCommon_->CreateBufferResource(sizeof(VertexData) * modelData.vertices.size());
+		vertexResource_ = dxCommon_->CreateBufferResource(sizeof(VertexData) * modelData_.vertices_.size());
 		//リングの頂点リソースを作る
-		ringVertexResource = dxCommon_->CreateBufferResource(sizeof(VertexData) * ringModelData.vertices.size());
+		ringVertexResource_ = dxCommon_->CreateBufferResource(sizeof(VertexData) * ringModelData_.vertices_.size());
 		//cylinderの頂点リソースを作る
-		cylinderVertexResource = dxCommon_->CreateBufferResource(sizeof(VertexData) * cylinderModelData.vertices.size());
+		cylinderVertexResource_ = dxCommon_->CreateBufferResource(sizeof(VertexData) * cylinderModelData_.vertices_.size());
 		// リボン
 		//ribbonVertexResource = dxCommon_->CreateBufferResource(sizeof(VertexData) * ribbonModelData.vertices.size());
 	}
 
 	void ParticleManager::CreateVB() {
 		//頂点バッファビューを作成する
-		vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
-		vertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * modelData.vertices.size());
-		vertexBufferView.StrideInBytes = sizeof(VertexData);
+		vertexBufferView_.BufferLocation = vertexResource_->GetGPUVirtualAddress();
+		vertexBufferView_.SizeInBytes = UINT(sizeof(VertexData) * modelData_.vertices_.size());
+		vertexBufferView_.StrideInBytes = sizeof(VertexData);
 
 		//リングの頂点リソースを作成する
-		ringVertexBufferView.BufferLocation = ringVertexResource->GetGPUVirtualAddress();
-		ringVertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * ringModelData.vertices.size());
-		ringVertexBufferView.StrideInBytes = sizeof(VertexData);
+		ringVertexBufferView_.BufferLocation = ringVertexResource_->GetGPUVirtualAddress();
+		ringVertexBufferView_.SizeInBytes = UINT(sizeof(VertexData) * ringModelData_.vertices_.size());
+		ringVertexBufferView_.StrideInBytes = sizeof(VertexData);
 
 		//cylinderの頂点リソースを作成する
-		cylinderVertexBufferView.BufferLocation = cylinderVertexResource->GetGPUVirtualAddress();
-		cylinderVertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * cylinderModelData.vertices.size());
-		cylinderVertexBufferView.StrideInBytes = sizeof(VertexData);
+		cylinderVertexBufferView_.BufferLocation = cylinderVertexResource_->GetGPUVirtualAddress();
+		cylinderVertexBufferView_.SizeInBytes = UINT(sizeof(VertexData) * cylinderModelData_.vertices_.size());
+		cylinderVertexBufferView_.StrideInBytes = sizeof(VertexData);
 
 		// RIBBON
 		//ribbonVertexBufferView.BufferLocation = ribbonVertexResource->GetGPUVirtualAddress();
@@ -349,20 +349,20 @@ namespace TKM {
 		//頂点リソースにデータを書き込む
 		VertexData* vertexData = nullptr;
 		//書き込むためのアドレスを取得
-		vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
-		std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size());
+		vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
+		std::memcpy(vertexData, modelData_.vertices_.data(), sizeof(VertexData) * modelData_.vertices_.size());
 
 		//リングの頂点リソースを作成する
 		VertexData* ringVertexData = nullptr;
 		//書き込むためのアドレスを取得
-		ringVertexResource->Map(0, nullptr, reinterpret_cast<void**>(&ringVertexData));
-		std::memcpy(ringVertexData, ringModelData.vertices.data(), sizeof(VertexData) * ringModelData.vertices.size());
+		ringVertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&ringVertexData));
+		std::memcpy(ringVertexData, ringModelData_.vertices_.data(), sizeof(VertexData) * ringModelData_.vertices_.size());
 
 		//cylinderの頂点リソースを作成する
 		VertexData* cylinderVertexData = nullptr;
 		//書き込むためのアドレスを取得
-		cylinderVertexResource->Map(0, nullptr, reinterpret_cast<void**>(&cylinderVertexData));
-		std::memcpy(cylinderVertexData, cylinderModelData.vertices.data(), sizeof(VertexData) * cylinderModelData.vertices.size());
+		cylinderVertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&cylinderVertexData));
+		std::memcpy(cylinderVertexData, cylinderModelData_.vertices_.data(), sizeof(VertexData) * cylinderModelData_.vertices_.size());
 
 		// RIBBON
 		/*VertexData* ribbonVertexData = nullptr;
@@ -373,57 +373,57 @@ namespace TKM {
 
 	void ParticleManager::CreateParticleGroup(const std::string& name, const std::string& textureFilePath, ParticleType type) {
 		// すでに存在するなら何もしない（安全な再呼び出し対応）
-		if (particleGroups.find(name) != particleGroups.end()) {
+		if (particleGroups_.find(name) != particleGroups_.end()) {
 			return;
 		}
 
 		// 新規作成
 		ParticleGroup newGroup;
-		newGroup.materialData.textureFilePath = textureFilePath;
-		newGroup.type = type;
+		newGroup.materialData_.textureFilePath_ = textureFilePath;
+		newGroup.type_ = type;
 
 		// テクスチャ読み込み＆SRV取得
 		TKM::TextureManager::GetInstance()->LoadTexture(textureFilePath);
 		uint32_t srvIndex = TKM::TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
-		newGroup.materialData.textureIndex = srvIndex;
+		newGroup.materialData_.textureIndex_ = srvIndex;
 		// インスタンシング用バッファ作成
-		newGroup.kNumInstance = kNumMaxInstance;
-		size_t bufferSize = sizeof(ParticleForGPU) * newGroup.kNumInstance;
-		newGroup.instancingResource = dxCommon_->CreateBufferResource(bufferSize);
-		newGroup.instancingResource->Map(0, nullptr, reinterpret_cast<void**>(&newGroup.instancingData));
+		newGroup.kNumInstance_ = kNumMaxInstance_;
+		size_t bufferSize = sizeof(ParticleForGPU) * newGroup.kNumInstance_;
+		newGroup.instancingResource_ = dxCommon_->CreateBufferResource(bufferSize);
+		newGroup.instancingResource_->Map(0, nullptr, reinterpret_cast<void**>(&newGroup.instancingData_));
 
 		// インスタンシング用SRV作成
 		uint32_t instanceSrvIndex = srvManager_->Allocate();
-		srvManager_->CreateSRVforStructureBuffer(instanceSrvIndex, newGroup.instancingResource.Get(), newGroup.kNumInstance, sizeof(ParticleForGPU));
-		newGroup.srvIndex = instanceSrvIndex;
+		srvManager_->CreateSRVforStructureBuffer(instanceSrvIndex, newGroup.instancingResource_.Get(), newGroup.kNumInstance_, sizeof(ParticleForGPU));
+		newGroup.srvIndex_ = instanceSrvIndex;
 
-		particleGroups[name] = newGroup; // 登録
+		particleGroups_[name] = newGroup; // 登録
 	}
 
 	void ParticleManager::MakeBillboardMatrix() {
 		//カメラの向きに回転するビルボード行列を作成
 		Matrix4x4 backToFrontMatrix = MyMath::MakeRotateYMatrix(std::numbers::pi_v<float>);
 		//ビルボード行列 = カメラのワールド行列 × Z180度回転行列
-		billboardMatrix = MyMath::Multiply(backToFrontMatrix, camera_->GetWorldMatrix());
+		billboardMatrix_ = MyMath::Multiply(backToFrontMatrix, camera_->GetWorldMatrix());
 
-		billboardMatrix.m[3][0] = 0.0f; //平行移動成分はいらない
-		billboardMatrix.m[3][1] = 0.0f; //平行移動成分はいらない
-		billboardMatrix.m[3][2] = 0.0f; //平行移動成分はいらない
+		billboardMatrix_.m[3][0] = 0.0f; //平行移動成分はいらない
+		billboardMatrix_.m[3][1] = 0.0f; //平行移動成分はいらない
+		billboardMatrix_.m[3][2] = 0.0f; //平行移動成分はいらない
 
 	}
 
 	void ParticleManager::Emit(const std::string name, Vector3& pos, uint32_t count) {
-		assert(particleGroups.find(name) != particleGroups.end());
-		ParticleGroup& group = particleGroups[name]; // パーティクルグループの参照を取得
+		assert(particleGroups_.find(name) != particleGroups_.end());
+		ParticleGroup& group = particleGroups_[name]; // パーティクルグループの参照を取得
 
-		const size_t kHardCap = std::max<size_t>(group.kNumInstance, 200); // 下限200
+		const size_t kHardCap = std::max<size_t>(group.kNumInstance_, 200); // 下限200
 		for (uint32_t i = 0; i < count; ++i) {
 			// 超過してたら古い順に削除（重さ対策）
-			while (group.particles.size() >= kHardCap) {
-				group.particles.pop_front();
+			while (group.particles_.size() >= kHardCap) {
+				group.particles_.pop_front();
 			}
-			Particle newParticle = MakeNewParticle(randomEngine, name, pos);
-			group.particles.push_back(newParticle);
+			Particle newParticle = MakeNewParticle(randomEngine_, name, pos);
+			group.particles_.push_back(newParticle);
 		}
 	}
 
@@ -434,7 +434,7 @@ namespace TKM {
 		std::uniform_real_distribution<float> offXY(-0.3f, 0.3f);
 		std::uniform_real_distribution<float> offZ(-0.3f, 0.3f);
 		Vector3 offset{ offXY(rng), offXY(rng) * 0.6f, offZ(rng) };
-		p.transform.translate = center + offset;
+		p.transform_.translate_ = center + offset;
 
 		if (groupName == "irisOpen") { //── 開幕用：中心から“放出”する粒 ──
 			// ── 開幕用：中心へ“吸い込む”柔らかい粒 ──
@@ -442,18 +442,18 @@ namespace TKM {
 			Vector3 dir = MyMath::Normalize(-offset);
 			std::uniform_real_distribution<float> spd(0.06f, 0.14f);
 			float s = spd(rng);
-			p.velocity = dir * s;
+			p.velocity_ = dir * s;
 
 			// 小さめ＆短命、青白〜白
 			std::uniform_real_distribution<float> scl(0.6f, 1.2f);
 			float sc = scl(rng);
-			p.transform.scale = { sc, sc, sc };
+			p.transform_.scale_ = { sc, sc, sc };
 
 			float life = std::uniform_real_distribution<float>(0.35f, 0.65f)(rng);
-			p.lifeTime = life; p.currentTime = 0.0f;
+			p.lifeTime_ = life; p.currentTime_ = 0.0f;
 
 			float c = std::uniform_real_distribution<float>(0.85f, 1.0f)(rng);
-			p.color = { 0.85f * c, 0.90f * c, 1.00f, 1.0f };
+			p.color_ = { 0.85f * c, 0.90f * c, 1.00f, 1.0f };
 		} else if (groupName == "irisFire") { //── 開幕用：中心から“放出”する粒 ──
 			// --- 花火演出（画面全体に放射） ---
 			// 広い範囲にオフセット
@@ -466,24 +466,24 @@ namespace TKM {
 
 			// 強めの速度
 			std::uniform_real_distribution<float> spd(0.5f, 2.5f);
-			p.velocity = dir * spd(rng);
+			p.velocity_ = dir * spd(rng);
 
 			// 大小ランダム
 			std::uniform_real_distribution<float> scl(0.8f, 1.6f);
 			float sc = scl(rng);
-			p.transform.scale = { sc, sc, sc };
+			p.transform_.scale_ = { sc, sc, sc };
 
 			// 寿命長め（広く散っても見えるように）
 			std::uniform_real_distribution<float> life(0.8f, 1.5f);
-			p.lifeTime = life(rng);
-			p.currentTime = 0.0f;
+			p.lifeTime_ = life(rng);
+			p.currentTime_ = 0.0f;
 
 			// 明るくランダムカラー（花火っぽく）
 			float hue = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
 			float r = 0.9f + 0.1f * sin(hue * 6.283f);
 			float g = 0.8f + 0.2f * cos(hue * 6.283f);
 			float b = 1.0f - 0.3f * sin(hue * 3.142f);
-			p.color = { r, g, b, 1.0f };
+			p.color_ = { r, g, b, 1.0f };
 		} else if (groupName == "jetSmoke") {
 			// ─────────────────────────────
 			// Player 後ろのスピード感ジェット
@@ -512,10 +512,10 @@ namespace TKM {
 					frand(-0.10f, 0.15f),             // Y：ちょい上下
 					-0.4f                              // Z：少しだけ機体の後ろ側へ
 				};
-				p.transform.translate = center + local;
+				p.transform_.translate_ = center + local;
 
 				// ガッと後ろへ吹く
-				p.velocity = {
+				p.velocity_ = {
 					frand(-0.3f, 0.3f),
 					frand(0.0f, 0.15f),
 					frand(-80.0f, -60.0f)             // 強く −Z 方向へ
@@ -524,17 +524,17 @@ namespace TKM {
 				// 細長い炎コア
 				float len = frand(0.6f, 1.0f);
 				float thick = frand(0.18f, 0.30f);
-				p.transform.scale = { thick, len, thick };
+				p.transform_.scale_ = { thick, len, thick };
 
 				// 寿命はかなり短い（キュッと消える）
-				p.lifeTime = frand(0.18f, 0.35f);
-				p.currentTime = 0.0f;
+				p.lifeTime_ = frand(0.18f, 0.35f);
+				p.currentTime_ = 0.0f;
 
 				// 青～白寄りの噴射炎
 				Vector3 col3 = { 0.6f, 0.8f, 1.0f };
 				float hot = frand(0.9f, 1.3f);
 				col3 = col3 * hot;
-				p.color = { col3.x, col3.y, col3.z, 1.0f };
+				p.color_ = { col3.x, col3.y, col3.z, 1.0f };
 
 			} else if (kind < 0.85f) {
 				// ============================
@@ -545,10 +545,10 @@ namespace TKM {
 					frand(-0.15f, 0.25f),
 					frand(-0.8f, -0.3f)               // コアより少し後ろで発生
 				};
-				p.transform.translate = center + local;
+				p.transform_.translate_ = center + local;
 
 				// コアより遅めに後ろへ流れる
-				p.velocity = {
+				p.velocity_ = {
 					frand(-0.25f, 0.25f),
 					frand(0.03f, 0.20f),             // 少し上昇
 					frand(-45.0f, -25.0f)
@@ -556,11 +556,11 @@ namespace TKM {
 
 				// 大きめの丸煙
 				float sc = frand(0.9f, 2.0f);
-				p.transform.scale = { sc, sc, sc };
+				p.transform_.scale_ = { sc, sc, sc };
 
 				// 長めに残って尾を引く
-				p.lifeTime = frand(1.2f, 2.4f);
-				p.currentTime = 0.0f;
+				p.lifeTime_ = frand(1.2f, 2.4f);
+				p.currentTime_ = 0.0f;
 
 				// 白〜薄いグレー
 				float t = frand(0.0f, 1.0f);
@@ -571,7 +571,7 @@ namespace TKM {
 				};
 				float bright = frand(0.8f, 1.0f);
 				col3 = col3 * bright;
-				p.color = { col3.x, col3.y, col3.z, 1.0f };
+				p.color_ = { col3.x, col3.y, col3.z, 1.0f };
 
 			} else {
 				// ============================
@@ -582,10 +582,10 @@ namespace TKM {
 					frand(-0.10f, 0.10f),
 					frand(-0.5f, -0.2f)
 				};
-				p.transform.translate = center + local;
+				p.transform_.translate_ = center + local;
 
 				// 細くて速い粒
-				p.velocity = {
+				p.velocity_ = {
 					frand(-0.4f, 0.4f),
 					frand(-0.05f, 0.10f),
 					frand(-90.0f, -70.0f)
@@ -593,65 +593,65 @@ namespace TKM {
 
 				float len = frand(0.8f, 1.4f);
 				float thin = frand(0.10f, 0.18f);
-				p.transform.scale = { thin, len, thin };
+				p.transform_.scale_ = { thin, len, thin };
 
-				p.lifeTime = frand(0.20f, 0.45f);
-				p.currentTime = 0.0f;
+				p.lifeTime_ = frand(0.20f, 0.45f);
+				p.currentTime_ = 0.0f;
 
 				// 白～薄いシアンで「スピード線」っぽく
 				Vector3 col3 = { 0.8f, 0.9f, 1.0f };
 				float bright = frand(0.9f, 1.4f);
 				col3 = col3 * bright;
-				p.color = { col3.x, col3.y, col3.z, 1.0f };
+				p.color_ = { col3.x, col3.y, col3.z, 1.0f };
 			}
 		} else if (groupName == "trail_rb") {
 			// RB：青いスパーク（クールで安定）
 			std::uniform_real_distribution<float> velX(-0.03f, 0.03f);
 			std::uniform_real_distribution<float> velY(-0.03f, 0.03f);
 			std::uniform_real_distribution<float> velZ(-2.0f, -0.6f);
-			p.velocity = { velX(rng), velY(rng), velZ(rng) };
+			p.velocity_ = { velX(rng), velY(rng), velZ(rng) };
 
 			float sc = std::uniform_real_distribution<float>(0.10f, 0.22f)(rng);
-			p.transform.scale = { sc, sc, sc };
-			p.lifeTime = std::uniform_real_distribution<float>(0.20f, 0.35f)(rng);
-			p.currentTime = 0.0f;
+			p.transform_.scale_ = { sc, sc, sc };
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.20f, 0.35f)(rng);
+			p.currentTime_ = 0.0f;
 
 			// 青～水色
 			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
 			Vector3 col = { 0.2f + 0.1f * t, 0.5f + 0.3f * t, 1.0f };
-			p.color = { 0.1f, 0.3f, 1.0f, 1.0f };  // 鮮やかな青（R10%, G30%, B100%）
+			p.color_ = { 0.1f, 0.3f, 1.0f, 1.0f };  // 鮮やかな青（R10%, G30%, B100%）
 		} else if (groupName == "trail_lb") {
 			// LB：黄〜金色の尾（エネルギー感）
 			std::uniform_real_distribution<float> velX(-0.02f, 0.02f);
 			std::uniform_real_distribution<float> velY(-0.02f, 0.02f);
 			std::uniform_real_distribution<float> velZ(-2.2f, -0.8f);
-			p.velocity = { velX(rng), velY(rng), velZ(rng) };
+			p.velocity_ = { velX(rng), velY(rng), velZ(rng) };
 
 			float sc = std::uniform_real_distribution<float>(0.12f, 0.26f)(rng);
-			p.transform.scale = { sc, sc, sc };
-			p.lifeTime = std::uniform_real_distribution<float>(0.25f, 0.45f)(rng);
-			p.currentTime = 0.0f;
+			p.transform_.scale_ = { sc, sc, sc };
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.25f, 0.45f)(rng);
+			p.currentTime_ = 0.0f;
 
 			// 明るい黄～金色
 			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
 			Vector3 col = { 1.0f, 0.8f + 0.2f * t, 0.1f + 0.2f * t };
-			p.color = { 1.0f, 0.9f, 0.1f, 1.0f };  // ほぼ純黄色（R100%, G90%, B10%）
+			p.color_ = { 1.0f, 0.9f, 0.1f, 1.0f };  // ほぼ純黄色（R100%, G90%, B10%）
 		} else if (groupName == "trail_rt") {
 			// RT：赤い尾（情熱・攻撃的）
 			std::uniform_real_distribution<float> velX(-0.015f, 0.015f);
 			std::uniform_real_distribution<float> velY(-0.015f, 0.015f);
 			std::uniform_real_distribution<float> velZ(-2.8f, -1.2f);
-			p.velocity = { velX(rng), velY(rng), velZ(rng) };
+			p.velocity_ = { velX(rng), velY(rng), velZ(rng) };
 
 			float sc = std::uniform_real_distribution<float>(0.20f, 0.40f)(rng);
-			p.transform.scale = { sc, sc, sc };
-			p.lifeTime = std::uniform_real_distribution<float>(0.35f, 0.60f)(rng);
-			p.currentTime = 0.0f;
+			p.transform_.scale_ = { sc, sc, sc };
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.35f, 0.60f)(rng);
+			p.currentTime_ = 0.0f;
 
 			// 純赤～オレンジ寄り
 			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
 			Vector3 col = { 1.0f, 0.2f + 0.3f * t, 0.1f };
-			p.color = { 1.0f, 0.05f, 0.05f, 1.0f };  // 強い赤（R100%, G5%, B5%）
+			p.color_ = { 1.0f, 0.05f, 0.05f, 1.0f };  // 強い赤（R100%, G5%, B5%）
 		} else if (groupName == "trail_lt") {
 
 			// =========================================
@@ -661,7 +661,7 @@ namespace TKM {
 			// ・煙にならない
 			// =========================================
 
-			p.transform.translate = center;
+			p.transform_.translate_ = center;
 
 			auto frand = [&](float a, float b) {
 				return std::uniform_real_distribution<float>(a, b)(rng);
@@ -675,17 +675,17 @@ namespace TKM {
 			if (kind < 0.50f) {
 
 				// ほぼ静止（球として見せる）
-				p.velocity = { 0.0f, 0.0f, 0.0f };
+				p.velocity_ = { 0.0f, 0.0f, 0.0f };
 
 				// 大きな球
 				float sc = frand(2.0f, 3.5f);
-				p.transform.scale = { sc, sc, sc };
+				p.transform_.scale_ = { sc, sc, sc };
 
-				p.lifeTime = frand(0.08f, 0.14f);
-				p.currentTime = 0.0f;
+				p.lifeTime_ = frand(0.08f, 0.14f);
+				p.currentTime_ = 0.0f;
 
 				float c = frand(2.8f, 3.8f);
-				p.color = {
+				p.color_ = {
 					0.95f * c,
 					0.98f * c,
 					1.00f * c,
@@ -704,22 +704,22 @@ namespace TKM {
 					frand(-0.5f, 0.5f),
 					frand(-0.5f, 0.5f)
 				};
-				p.transform.translate = center + off;
+				p.transform_.translate_ = center + off;
 
 				Vector3 dir =
 					(MyMath::Length(off) > 0.001f) ?
 					MyMath::Normalize(off) :
 					Vector3{ 0,1,0 };
 
-				p.velocity = dir * frand(0.6f, 1.2f);
+				p.velocity_ = dir * frand(0.6f, 1.2f);
 
 				float sc = frand(1.6f, 2.8f);
-				p.transform.scale = { sc, sc, sc };
+				p.transform_.scale_ = { sc, sc, sc };
 
-				p.lifeTime = frand(0.05f, 0.09f);
-				p.currentTime = 0.0f;
+				p.lifeTime_ = frand(0.05f, 0.09f);
+				p.currentTime_ = 0.0f;
 
-				p.color = {
+				p.color_ = {
 					0.25f,
 					0.75f,
 					1.10f,
@@ -736,19 +736,19 @@ namespace TKM {
 				frand(-0.6f, 0.6f),
 				frand(-0.6f, 0.6f)
 			};
-			p.transform.translate = center + off;
+			p.transform_.translate_ = center + off;
 
 			Vector3 dir = MyMath::Normalize(off);
-			p.velocity = dir * frand(2.0f, 3.0f);
+			p.velocity_ = dir * frand(2.0f, 3.0f);
 
 			float sc = frand(0.2f, 0.4f);
-			p.transform.scale = { sc, sc, sc };
+			p.transform_.scale_ = { sc, sc, sc };
 
-			p.lifeTime = frand(0.03f, 0.06f);
-			p.currentTime = 0.0f;
+			p.lifeTime_ = frand(0.03f, 0.06f);
+			p.currentTime_ = 0.0f;
 
 			float c = frand(2.5f, 4.0f);
-			p.color = { c, c, c, 1.0f };
+			p.color_ = { c, c, c, 1.0f };
 
 		} else if (groupName == "damageSpark") { //── 故障スパーク ──
 			// 放射状に高速で飛ぶ、短命、明るくチカチカ
@@ -756,34 +756,34 @@ namespace TKM {
 			Vector3 v = { dir(rng), dir(rng) * 0.6f, dir(rng) };
 			Vector3 n = (MyMath::Length(v) > 0.001f) ? MyMath::Normalize(v) : Vector3{ 0,0,1 };
 			float spd = std::uniform_real_distribution<float>(1.2f, 2.4f)(rng);
-			p.velocity = n * spd;
+			p.velocity_ = n * spd;
 
 			float sc = std::uniform_real_distribution<float>(0.08f, 0.18f)(rng);
-			p.transform.scale = { sc, sc, sc };
+			p.transform_.scale_ = { sc, sc, sc };
 
-			p.lifeTime = std::uniform_real_distribution<float>(0.18f, 0.35f)(rng);
-			p.currentTime = 0.0f;
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.18f, 0.35f)(rng);
+			p.currentTime_ = 0.0f;
 
 			// 強い黄～白（火花）
 			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
 			float r = 1.0f;
 			float g = 0.85f + 0.15f * t;
 			float b = 0.1f + 0.2f * (1.0f - t);
-			p.color = { r, g, b, 1.0f };
+			p.color_ = { r, g, b, 1.0f };
 		} else if (groupName == "crashFlame") {
 			// 基本は上向き。横に少し拡散して“躍る”感じ
 			std::uniform_real_distribution<float> velX(-0.06f, 0.06f);
 			std::uniform_real_distribution<float> velY(1.20f, 2.40f); // ↑ ぐっと強く
 			std::uniform_real_distribution<float> velZ(-0.06f, 0.06f);
-			p.velocity = { velX(rng), velY(rng), velZ(rng) };
+			p.velocity_ = { velX(rng), velY(rng), velZ(rng) };
 
 			// 粒は大きめ（炎舌が見えるサイズ）
 			float sc = std::uniform_real_distribution<float>(0.28f, 0.55f)(rng);
-			p.transform.scale = { sc, sc, sc };
+			p.transform_.scale_ = { sc, sc, sc };
 
 			// ほんの少し長命（バースト直後の見栄えを持たせる）
-			p.lifeTime = std::uniform_real_distribution<float>(0.35f, 0.60f)(rng);
-			p.currentTime = 0.0f;
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.35f, 0.60f)(rng);
+			p.currentTime_ = 0.0f;
 
 			// “灼熱コア”～“黄炎”に振る（加算でギラッと出る）
 			// tが小さいほど赤寄りコア、tが大きいほど黄寄り
@@ -791,63 +791,63 @@ namespace TKM {
 			float r = 1.0f;
 			float g = 0.55f + 0.40f * (1.0f - t);  // 0.95..0.55
 			float b = 0.05f + 0.20f * t;           // 0.05..0.25
-			p.color = { r, g, b, 1.0f };
+			p.color_ = { r, g, b, 1.0f };
 		} else if (groupName == "fallStreak") {
 			Particle p{};
 
 			// 線を少し長く
-			p.transform.scale = { 0.10f, 2.6f, 1.0f };
-			p.transform.rotate = { 0.0f, 0.0f, 0.0f };
-			p.transform.translate = center;
+			p.transform_.scale_ = { 0.10f, 2.6f, 1.0f };
+			p.transform_.rotate_ = { 0.0f, 0.0f, 0.0f };
+			p.transform_.translate_ = center;
 
 			// ほぼ垂直にゆっくり落下（見やすさ重視）
 			float vx = ((rand() % 40) - 20) / 800.0f;     // ±0.025
 			float vz = ((rand() % 40) - 20) / 1200.0f;    // ±0.016
 			float vy = -(1.2f + (rand() % 40) / 100.0f);  // -1.2 ～ -1.6
-			p.velocity = { vx, vy, vz };
+			p.velocity_ = { vx, vy, vz };
 
 			// 深紅
-			p.color = { 1.35f, 0.10f, 0.06f, 1.0f };
+			p.color_ = { 1.35f, 0.10f, 0.06f, 1.0f };
 
 			// 画面下まで十分に保つ寿命
-			p.lifeTime = 10.0f + (rand() % 80) / 100.0f; // 10.0 ～ 10.8秒
-			p.currentTime = 0.0f;
+			p.lifeTime_ = 10.0f + (rand() % 80) / 100.0f; // 10.0 ～ 10.8秒
+			p.currentTime_ = 0.0f;
 
 			return p;
 		} else if (groupName == "fallStreakUp") {
 			Particle p{};
 
 			// 下→上に向かうストリーク
-			p.transform.scale = { 0.10f, 2.6f, 1.0f };
-			p.transform.rotate = { 0.0f, 0.0f, 0.0f };
-			p.transform.translate = center;
+			p.transform_.scale_ = { 0.10f, 2.6f, 1.0f };
+			p.transform_.rotate_ = { 0.0f, 0.0f, 0.0f };
+			p.transform_.translate_ = center;
 
 			// ゆっくり上昇（反対方向）
 			float vx = ((rand() % 40) - 20) / 800.0f;
 			float vz = ((rand() % 40) - 20) / 1200.0f;
 			float vy = (1.2f + (rand() % 40) / 100.0f);  // +1.2 ～ +1.6
-			p.velocity = { vx, vy, vz };
+			p.velocity_ = { vx, vy, vz };
 
 			// 色は上昇らしく少し淡く
-			p.color = { 1.2f, 0.25f, 0.15f, 1.0f };
+			p.color_ = { 1.2f, 0.25f, 0.15f, 1.0f };
 
 			// 寿命長め
-			p.lifeTime = 10.0f + (rand() % 80) / 100.0f;
-			p.currentTime = 0.0f;
+			p.lifeTime_ = 10.0f + (rand() % 80) / 100.0f;
+			p.currentTime_ = 0.0f;
 
 			return p;
 		} else if (groupName == "fw_launch") {
 			// 上にまっすぐ伸びる光の線
-			p.transform.scale = { 1.5f, 3.5f, 1.5f };
-			p.velocity = { 0, 18.0f + (float)(rand() % 5), 0 };
-			p.color = { 1.0f, 0.8f, 0.3f, 1.0f };
-			p.lifeTime = 0.40f;
+			p.transform_.scale_ = { 1.5f, 3.5f, 1.5f };
+			p.velocity_ = { 0, 18.0f + (float)(rand() % 5), 0 };
+			p.color_ = { 1.0f, 0.8f, 0.3f, 1.0f };
+			p.lifeTime_ = 0.40f;
 		} else if (groupName == "fw_flash") {
 			// 爆発直後のまぶしい閃光
-			p.transform.scale = { 5.0f, 5.0f, 5.0f };
-			p.velocity = { 0, 0, 0 };
-			p.color = { 1, 1, 1, 1 };
-			p.lifeTime = 0.2f;
+			p.transform_.scale_ = { 5.0f, 5.0f, 5.0f };
+			p.velocity_ = { 0, 0, 0 };
+			p.color_ = { 1, 1, 1, 1 };
+			p.lifeTime_ = 0.2f;
 		} else if (groupName == "fw_burst") {
 			// 花火本体（放射状）
 			float a1 = (float)rand() / RAND_MAX * 6.28f;
@@ -859,27 +859,27 @@ namespace TKM {
 			dir.z = std::sin(a1) * std::sin(a2);
 
 			float spd = 10.0f + ((float)rand() / RAND_MAX * 12.0f);
-			p.velocity = dir * spd;
+			p.velocity_ = dir * spd;
 
 			float sc = 1.5f + ((float)rand() / RAND_MAX * 1.2f);
-			p.transform.scale = { sc, sc, sc };
+			p.transform_.scale_ = { sc, sc, sc };
 
 			// カラフル！（鮮やか〜中間）
 			float r = 0.4f + ((float)rand() / RAND_MAX * 0.6f);
 			float g = 0.4f + ((float)rand() / RAND_MAX * 0.6f);
 			float b = 0.4f + ((float)rand() / RAND_MAX * 0.6f);
 
-			p.color = { r, g, b, 1.0f };
-			p.lifeTime = 3.0f;
+			p.color_ = { r, g, b, 1.0f };
+			p.lifeTime_ = 3.0f;
 		} else if (groupName == "airStreak") {
 			// ─────────────────────
 			// 空で飛んでるときの「風の筋」
 			// ─────────────────────
 
 			// 細長いライン（ビルボードでカメラ向きになる）
-			p.transform.scale = { 0.09f, 0.09f, 0.09f }; // 幅, 高さ, 奥行き
-			p.transform.rotate = { 0.0f, 0.0f, 0.0f };
-			p.transform.translate.z = 50.0f;
+			p.transform_.scale_ = { 0.09f, 0.09f, 0.09f }; // 幅, 高さ, 奥行き
+			p.transform_.rotate_ = { 0.0f, 0.0f, 0.0f };
+			p.transform_.translate_.z = 50.0f;
 
 			// ちょっとだけブレを入れながら手前(-Z)に流す
 			float vx = ((rand() % 40) - 20) / 200.0f; // -0.1 ～ +0.1
@@ -888,31 +888,31 @@ namespace TKM {
 			float baseSpeed = 30.0f + (rand() % 40) / 10.0f; // 12.0 ～ 16.0 くらい
 			float vz = -baseSpeed; // カメラ手前方向（-Z）へシュッと流れる
 
-			p.velocity = { vx, vy, vz };
+			p.velocity_ = { vx, vy, vz };
 
 			// ほぼ白～薄い青でうっすら
 			float c = 0.85f + (rand() % 15) / 100.0f; // 0.85 ～ 1.0
 			// 濃い砂埃の色
-			p.color = { 0.9f * c, 0.9f * c, 1.0f * c, 0.6f }; // 少し透明感あり
+			p.color_ = { 0.9f * c, 0.9f * c, 1.0f * c, 0.6f }; // 少し透明感あり
 
-			p.lifeTime = 6.0f;   // だいたい3秒くらい生きる
-			p.currentTime = 0.0f; // 初期化
+			p.lifeTime_ = 6.0f;   // だいたい3秒くらい生きる
+			p.currentTime_ = 0.0f; // 初期化
 
 		} else if (groupName == "ribbonTest") {
 
 			// リボンは横長の板を想定
 			//   X方向に長く、Y方向は少しだけ
-			p.transform.scale = { 8.0f, 1.0f, 1.0f };
+			p.transform_.scale_ = { 8.0f, 1.0f, 1.0f };
 
 			// 少しだけ上にフワっと浮く
-			p.velocity = { 0.0f, 3.0f, 0.0f };
+			p.velocity_ = { 0.0f, 3.0f, 0.0f };
 
 			// 色（薄い紫っぽく）
-			p.color = { 0.8f, 0.6f, 1.0f, 1.0f };
+			p.color_ = { 0.8f, 0.6f, 1.0f, 1.0f };
 
 			// 1秒くらい残る
-			p.lifeTime = 1.0f;
-			p.currentTime = 0.0f;
+			p.lifeTime_ = 1.0f;
+			p.currentTime_ = 0.0f;
 
 		} else if (groupName == "enemySpawn") {
 			//=========================================================
@@ -926,23 +926,23 @@ namespace TKM {
 			if (pattern < 0.25f) {
 				// ── 中央フラッシュ ──
 				// 敵のど真ん中で大きく光るだけ（ほぼ動かない）
-				p.transform.translate = center;
-				p.velocity = { 0.0f, 0.0f, 0.0f };
+				p.transform_.translate_ = center;
+				p.velocity_ = { 0.0f, 0.0f, 0.0f };
 
 				// 大きめサイズで「出現した！」感
 				float sc = std::uniform_real_distribution<float>(1.8f, 2.6f)(rng);
-				p.transform.scale = { sc, sc, sc };
+				p.transform_.scale_ = { sc, sc, sc };
 
 				// 短命だけど強く光る
-				p.lifeTime = std::uniform_real_distribution<float>(0.25f, 0.40f)(rng);
-				p.currentTime = 0.0f;
+				p.lifeTime_ = std::uniform_real_distribution<float>(0.25f, 0.40f)(rng);
+				p.currentTime_ = 0.0f;
 
 				// 白に近いシアン系（コアがピカッと光るイメージ）
 				float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
 				float rCol = 0.3f * (1.0f - t);
 				float gCol = 0.9f;
 				float bCol = 1.2f - 0.2f * t;
-				p.color = { rCol, gCol, bCol, 1.0f };
+				p.color_ = { rCol, gCol, bCol, 1.0f };
 			} else {
 				// ── 周囲に円状に広がる粒 ──
 				// ちょっと広めの半径＆Zにもバラつきを持たせる
@@ -959,7 +959,7 @@ namespace TKM {
 					zOffsetDist(rng)       // 手前/奥にも少し散らす
 				};
 
-				p.transform.translate = center + offsetLocal;
+				p.transform_.translate_ = center + offsetLocal;
 
 				// オフセット方向に外へ飛ばす
 				Vector3 dir = (MyMath::Length(offsetLocal) > 0.001f)
@@ -967,35 +967,35 @@ namespace TKM {
 					: Vector3{ 0.0f, 1.0f, 0.0f };
 
 				std::uniform_real_distribution<float> spd(1.2f, 3.2f);
-				p.velocity = dir * spd(rng);
+				p.velocity_ = dir * spd(rng);
 
 				// 粒自体も少し大きめ
 				float sc = std::uniform_real_distribution<float>(0.6f, 1.3f)(rng);
-				p.transform.scale = { sc, sc, sc };
+				p.transform_.scale_ = { sc, sc, sc };
 
 				// ちょい長めに残す
-				p.lifeTime = std::uniform_real_distribution<float>(0.60f, 1.00f)(rng);
-				p.currentTime = 0.0f;
+				p.lifeTime_ = std::uniform_real_distribution<float>(0.60f, 1.00f)(rng);
+				p.currentTime_ = 0.0f;
 
 				// 青〜シアン系で、中心フラッシュより少し落ち着いた色
 				float t2 = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
 				float rCol = 0.05f + 0.10f * (1.0f - t2);
 				float gCol = 0.80f + 0.15f * t2;
 				float bCol = 1.00f;
-				p.color = { rCol, gCol, bCol, 1.0f };
+				p.color_ = { rCol, gCol, bCol, 1.0f };
 			}
 
 		} else if (groupName == "enemyHit_flash") {
 			// 中央のまぶしいフラッシュ（一瞬だけ）＋色は毎回ちょっと変える
-			p.transform.translate = center; // 完全センター固定
+			p.transform_.translate_ = center; // 完全センター固定
 
 			// 少し大きめにして「ドンッ」と光る感じ
 			float sc = std::uniform_real_distribution<float>(1.3f, 1.8f)(rng);
-			p.transform.scale = { sc, sc, sc };
-			p.velocity = { 0.0f, 0.0f, 0.0f };
+			p.transform_.scale_ = { sc, sc, sc };
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
 
-			p.lifeTime = std::uniform_real_distribution<float>(0.07f, 0.10f)(rng);
-			p.currentTime = 0.0f;
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.07f, 0.10f)(rng);
+			p.currentTime_ = 0.0f;
 
 			// --- 白ベース＋アクセントカラーをランダム ---
 			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
@@ -1010,19 +1010,19 @@ namespace TKM {
 				// マゼンタ寄り
 				coreColor = { 1.0f, 0.75f, 1.0f };
 			}
-			p.color = { coreColor.x, coreColor.y, coreColor.z, 1.0f };
+			p.color_ = { coreColor.x, coreColor.y, coreColor.z, 1.0f };
 
 		} else if (groupName == "enemyHit_ring") {
 			// 外側に広がるショックウェーブリング（カラフル）
-			p.transform.translate = center; // ぴったり中心
+			p.transform_.translate_ = center; // ぴったり中心
 
 			// ちょっと大きめ＆強め
 			float sc = std::uniform_real_distribution<float>(1.6f, 2.3f)(rng);
-			p.transform.scale = { sc, sc, sc };
-			p.velocity = { 0.0f, 0.0f, 0.0f };
+			p.transform_.scale_ = { sc, sc, sc };
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
 
-			p.lifeTime = std::uniform_real_distribution<float>(0.22f, 0.30f)(rng);
-			p.currentTime = 0.0f;
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.22f, 0.30f)(rng);
+			p.currentTime_ = 0.0f;
 
 			// ビビッドな色を何パターンかからランダム
 			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
@@ -1040,28 +1040,28 @@ namespace TKM {
 				// ライム
 				ringColor = { 0.6f, 1.0f, 0.6f };
 			}
-			p.color = { ringColor.x, ringColor.y, ringColor.z, 1.0f };
+			p.color_ = { ringColor.x, ringColor.y, ringColor.z, 1.0f };
 
 		} else if (groupName == "enemyHit_rays") {
 			// 放射状の細長いレイ（光の筋）
-			p.transform.translate = center;
+			p.transform_.translate_ = center;
 
 			// 画面上の回転角
 			float angle = std::uniform_real_distribution<float>(0.0f, 2.0f * std::numbers::pi_v<float>)(rng);
-			p.transform.rotate = { 0.0f, 0.0f, angle };
+			p.transform_.rotate_ = { 0.0f, 0.0f, angle };
 
 			float len = std::uniform_real_distribution<float>(0.4f, 0.8f)(rng);
 			float thin = std::uniform_real_distribution<float>(0.1f, 0.18f)(rng);
-			p.transform.scale = { thin, len, 1.0f }; // ← XとYを逆転させる
+			p.transform_.scale_ = { thin, len, 1.0f }; // ← XとYを逆転させる
 
 			// 少しだけ外側に膨らむように動かす
 			Vector3 dir = { std::cos(angle), 0.0f, std::sin(angle) };
 			dir = (MyMath::Length(dir) > 0.001f) ? MyMath::Normalize(dir) : Vector3{ 1,0,0 };
 			float spd = std::uniform_real_distribution<float>(3.0f, 6.0f)(rng);
-			p.velocity = dir * spd;
+			p.velocity_ = dir * spd;
 
-			p.lifeTime = std::uniform_real_distribution<float>(0.18f, 0.26f)(rng);
-			p.currentTime = 0.0f;
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.18f, 0.26f)(rng);
+			p.currentTime_ = 0.0f;
 
 			// レイも派手色で
 			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
@@ -1075,11 +1075,11 @@ namespace TKM {
 			} else {
 				rayColor = { 0.7f, 1.0f, 0.6f };     // ライム
 			}
-			p.color = { rayColor.x, rayColor.y, rayColor.z, 1.0f };
+			p.color_ = { rayColor.x, rayColor.y, rayColor.z, 1.0f };
 
 		} else if (groupName == "enemyHit_spark") {
 			// 周りに飛び散る小さな火花（スピード＆色増し）
-			p.transform.translate = center;
+			p.transform_.translate_ = center;
 
 			// ランダム方向（XZメイン、少しだけY）
 			float a = std::uniform_real_distribution<float>(0.0f, 2.0f * std::numbers::pi_v<float>)(rng);
@@ -1088,13 +1088,13 @@ namespace TKM {
 
 			// スピード強め
 			float spd = std::uniform_real_distribution<float>(8.0f, 16.0f)(rng);
-			p.velocity = dir * spd;
+			p.velocity_ = dir * spd;
 
 			float sc = std::uniform_real_distribution<float>(0.22f, 0.40f)(rng);
-			p.transform.scale = { sc, sc, sc };
+			p.transform_.scale_ = { sc, sc, sc };
 
-			p.lifeTime = std::uniform_real_distribution<float>(0.32f, 0.52f)(rng);
-			p.currentTime = 0.0f;
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.32f, 0.52f)(rng);
+			p.currentTime_ = 0.0f;
 
 			// 暖色・寒色・マゼンタをミックス
 			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
@@ -1109,43 +1109,43 @@ namespace TKM {
 				// マゼンタ
 				spColor = { 1.0f, 0.45f, 0.9f };
 			}
-			p.color = { spColor.x, spColor.y, spColor.z, 1.0f };
+			p.color_ = { spColor.x, spColor.y, spColor.z, 1.0f };
 		} else if (groupName == "lt_nova_core") {
 			// 爆心コア：画面を埋めるくらいのまぶしいエネルギー球
-			p.transform.translate = center;
+			p.transform_.translate_ = center;
 
 			// サイズ大幅アップ（敵が完全に飲み込まれるレベル）
 			float sc = std::uniform_real_distribution<float>(4.0f, 6.0f)(rng);
-			p.transform.scale = { sc, sc, sc };
-			p.velocity = { 0.0f, 0.0f, 0.0f };
+			p.transform_.scale_ = { sc, sc, sc };
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
 
 			// 残光長め（ドーンと光が残る）
-			p.lifeTime = std::uniform_real_distribution<float>(0.45f, 0.65f)(rng);
-			p.currentTime = 0.0f;
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.45f, 0.65f)(rng);
+			p.currentTime_ = 0.0f;
 
 			// 中心は白＋黄金（太陽みたいな爆心）
-			p.color = { 1.0f, 0.96f, 0.70f, 1.0f };
+			p.color_ = { 1.0f, 0.96f, 0.70f, 1.0f };
 
 
 		} else if (groupName == "lt_nova_wave") {
 			// 球状ショックウェーブ（外側のエネルギー殻。コアよりさらに大きい）
-			p.transform.translate = center;
+			p.transform_.translate_ = center;
 
 			// 半径かなり拡大（画面を貫く衝撃波）
 			float sc = std::uniform_real_distribution<float>(5.0f, 7.5f)(rng);
-			p.transform.scale = { sc, sc, sc };
-			p.velocity = { 0.0f, 0.0f, 0.0f };
+			p.transform_.scale_ = { sc, sc, sc };
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
 
 			// コアより少し長く残して「爆風の壁」感
-			p.lifeTime = std::uniform_real_distribution<float>(0.50f, 0.80f)(rng);
-			p.currentTime = 0.0f;
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.50f, 0.80f)(rng);
+			p.currentTime_ = 0.0f;
 
 			// 内側が黄〜外側オレンジに見えるような暖色
-			p.color = { 1.0f, 0.78f, 0.32f, 1.0f };
+			p.color_ = { 1.0f, 0.78f, 0.32f, 1.0f };
 
 		} else if (groupName == "lt_nova_burst") {
 			// シンプルな光の爆発粒子
-			p.transform.translate = center;
+			p.transform_.translate_ = center;
 
 			// 飛び散り方向ランダム
 			Vector3 dir = {
@@ -1158,19 +1158,19 @@ namespace TKM {
 
 			// スピード（ランダム）
 			float spd = std::uniform_real_distribution<float>(0.3f, 1.2f)(rng);
-			p.velocity = dir * spd;
+			p.velocity_ = dir * spd;
 
 			// 大きさ（小さめの点）
 			float sc = std::uniform_real_distribution<float>(0.2f, 0.6f)(rng);
-			p.transform.scale = { sc, sc, sc };
+			p.transform_.scale_ = { sc, sc, sc };
 
 			// 色（白ベース）
-			p.color = { 1,1,1,1 };
+			p.color_ = { 1,1,1,1 };
 
-			p.lifeTime = std::uniform_real_distribution<float>(0.20f, 0.40f)(rng);
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.20f, 0.40f)(rng);
 		} else if (groupName == "lt_nova_debris") {
 			// 破片：暗い塊が高速で四方八方に飛ぶ
-			p.transform.translate = center;
+			p.transform_.translate_ = center;
 
 			// バラバラの方向に飛ばす
 			float ang1 = std::uniform_real_distribution<float>(0, 2 * std::numbers::pi_v<float>)(rng);
@@ -1184,22 +1184,22 @@ namespace TKM {
 			dir = MyMath::Normalize(dir);
 
 			float speed = std::uniform_real_distribution<float>(4.0f, 9.0f)(rng);
-			p.velocity = dir * speed;
+			p.velocity_ = dir * speed;
 
 			// 小さめの塊＋ランダム
 			float sc = std::uniform_real_distribution<float>(0.2f, 0.45f)(rng);
-			p.transform.scale = { sc, sc, sc };
+			p.transform_.scale_ = { sc, sc, sc };
 
 			// 暗い破片 → 茶色〜黒
 			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
 			float c = MyMath::Lerp(0.05f, 0.20f, t);
-			p.color = { c, c * 0.9f, c * 0.8f, 1.0f };
+			p.color_ = { c, c * 0.9f, c * 0.8f, 1.0f };
 
-			p.lifeTime = std::uniform_real_distribution<float>(0.4f, 0.8f)(rng);
-			p.currentTime = 0.0f;
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.4f, 0.8f)(rng);
+			p.currentTime_ = 0.0f;
 		} else if (groupName == "lt_nova_crack") {
 			// 亀裂：空間を裂くような細長いスパーク
-			p.transform.translate = center;
+			p.transform_.translate_ = center;
 
 			// ランダム方向へ細く長いひび
 			float ang = std::uniform_real_distribution<float>(0, 2 * std::numbers::pi_v<float>)(rng);
@@ -1207,10 +1207,10 @@ namespace TKM {
 
 			float len = std::uniform_real_distribution<float>(1.5f, 3.0f)(rng);
 			float thin = std::uniform_real_distribution<float>(0.05f, 0.12f)(rng);
-			p.transform.scale = { len, thin, 1.0f };
+			p.transform_.scale_ = { len, thin, 1.0f };
 
 			// ほぼ動かないが少しだけ散る
-			p.velocity = dir * std::uniform_real_distribution<float>(0.5f, 1.5f)(rng);
+			p.velocity_ = dir * std::uniform_real_distribution<float>(0.5f, 1.5f)(rng);
 
 			// 黒〜赤黒いひび
 			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
@@ -1219,29 +1219,29 @@ namespace TKM {
 				MyMath::Lerp(0.0f, 0.05f, t),
 				MyMath::Lerp(0.0f, 0.05f, t)
 			};
-			p.color = { col.x, col.y, col.z, 1.0f };
+			p.color_ = { col.x, col.y, col.z, 1.0f };
 
-			p.lifeTime = std::uniform_real_distribution<float>(0.35f, 0.5f)(rng);
-			p.currentTime = 0.0f;
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.35f, 0.5f)(rng);
+			p.currentTime_ = 0.0f;
 		} else if (groupName == "enemyDeath_core") {
 			// 敵が消える瞬間、中心にフッと出る小さな光
 
 			// 位置は完全にセンター
-			p.transform.translate = center;
+			p.transform_.translate_ = center;
 
 			// 少しだけ大きめだけど、そこまでド派手じゃない
 			float sc = std::uniform_real_distribution<float>(0.9f, 1.4f)(rng);
-			p.transform.scale = { sc, sc, sc };
+			p.transform_.scale_ = { sc, sc, sc };
 
 			// 動かない（その場で光って消える）
-			p.velocity = { 0.0f, 0.0f, 0.0f };
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
 
 			// 寿命はかなり短いパッと光る感じ
-			p.lifeTime = std::uniform_real_distribution<float>(0.12f, 0.20f)(rng);
-			p.currentTime = 0.0f;
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.12f, 0.20f)(rng);
+			p.currentTime_ = 0.0f;
 
 			// 少し黄味がかった白い光
-			p.color = { 1.0f, 0.96f, 0.86f, 1.0f };
+			p.color_ = { 1.0f, 0.96f, 0.86f, 1.0f };
 
 		} else if (groupName == "enemyDeath_shard") {
 			// バラバラに飛び散る光の破片
@@ -1253,7 +1253,7 @@ namespace TKM {
 				offSmall(rng),
 				offSmall(rng)
 			};
-			p.transform.translate = center + localOffset;
+			p.transform_.translate_ = center + localOffset;
 
 			// ランダム方向（やや上＋後ろに飛ぶ、ふわっと散るイメージ）
 			auto frand = [&](float a, float b) {
@@ -1271,15 +1271,15 @@ namespace TKM {
 			dir = MyMath::Normalize(dir);
 
 			float spd = frand(0.6f, 1.6f);
-			p.velocity = dir * spd;
+			p.velocity_ = dir * spd;
 
 			// 小さい光の破片
 			float sc = frand(0.25f, 0.55f);
-			p.transform.scale = { sc, sc, sc };
+			p.transform_.scale_ = { sc, sc, sc };
 
 			// ちょっとだけ残る
-			p.lifeTime = frand(0.45f, 0.85f);
-			p.currentTime = 0.0f;
+			p.lifeTime_ = frand(0.45f, 0.85f);
+			p.currentTime_ = 0.0f;
 
 			// 色は少しだけカラフル（青〜シアン〜マゼンタの中間）
 			float t = frand(0.0f, 1.0f);
@@ -1288,20 +1288,20 @@ namespace TKM {
 				0.7f + 0.2f * (1 - t),// G : 0.7〜0.9
 				1.0f                  // B : 1.0（青白い感じ）
 			};
-			p.color = { col.x, col.y, col.z, 1.0f };
+			p.color_ = { col.x, col.y, col.z, 1.0f };
 
 		} else if (groupName == "enemyDeath_smoke") {
 			// ふわっと残る煙（あまり主張しない）
 
 			// 位置はほぼセンター
-			p.transform.translate = center;
+			p.transform_.translate_ = center;
 
 			auto frand = [&](float a, float b) {
 				return std::uniform_real_distribution<float>(a, b)(rng);
 				};
 
 			// 少しだけゆっくり上昇
-			p.velocity = {
+			p.velocity_ = {
 				frand(-0.15f, 0.15f),
 				frand(0.15f, 0.35f),
 				frand(-0.15f, 0.15f)
@@ -1309,11 +1309,11 @@ namespace TKM {
 
 			// 丸くて少し大きめ
 			float sc = frand(0.9f, 1.8f);
-			p.transform.scale = { sc, sc, sc };
+			p.transform_.scale_ = { sc, sc, sc };
 
 			// わりと長めに残って、消えたあとも余韻がある
-			p.lifeTime = frand(0.9f, 1.5f);
-			p.currentTime = 0.0f;
+			p.lifeTime_ = frand(0.9f, 1.5f);
+			p.currentTime_ = 0.0f;
 
 			// 薄いグレー〜少し青み
 			Vector3 col3 = {
@@ -1321,21 +1321,21 @@ namespace TKM {
 				frand(0.72f, 0.88f),
 				frand(0.80f, 0.95f)
 			};
-			p.color = { col3.x, col3.y, col3.z, 1.0f };
+			p.color_ = { col3.x, col3.y, col3.z, 1.0f };
 		} else if (groupName == "enemyPounceTrail") {
 			// ─────────────────────────────
 			// 敵の飛び掛かり軌道：コアレール（闇マゼンタ一本軸）
 			// ─────────────────────────────
-			p.transform.translate = center;
+			p.transform_.translate_ = center;
 
 			float height = std::uniform_real_distribution<float>(1.6f, 2.4f)(rng); // 縦の長さ
 			float width = std::uniform_real_distribution<float>(0.08f, 0.14f)(rng); // 横の太さ
 			// スプライトの縦横を入れ替える
-			p.transform.scale = { width, height, 1.0f };
+			p.transform_.scale_ = { width, height, 1.0f };
 
-			p.velocity = { 0.0f, 0.0f, 0.0f };
-			p.lifeTime = std::uniform_real_distribution<float>(0.55f, 0.9f)(rng);
-			p.currentTime = 0.0f;
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.55f, 0.9f)(rng);
+			p.currentTime_ = 0.0f;
 
 			// ── ベースカラー：闇マゼンタ ──
 			// あえて 1色＋ほんの少しだけバリエーションに絞る
@@ -1358,12 +1358,12 @@ namespace TKM {
 
 			float alpha = std::uniform_real_distribution<float>(0.85f, 1.0f)(rng);
 
-			p.color = { col.x, col.y, col.z, alpha };
+			p.color_ = { col.x, col.y, col.z, alpha };
 		} else if (groupName == "enemyPounceSpark") {
 			// ─────────────────────────────
 			// 軌道上から飛び散るスパーク（血・毒・火花）
 			// ─────────────────────────────
-			p.transform.translate = center;
+			p.transform_.translate_ = center;
 
 			Vector3 dir = {
 				std::uniform_real_distribution<float>(-1.0f, 1.0f)(rng),
@@ -1376,7 +1376,7 @@ namespace TKM {
 			dir = MyMath::Normalize(dir);
 
 			float spd = std::uniform_real_distribution<float>(2.0f, 4.0f)(rng);
-			p.velocity = dir * spd;
+			p.velocity_ = dir * spd;
 
 			float baseScale = std::uniform_real_distribution<float>(0.20f, 0.35f)(rng);
 
@@ -1427,20 +1427,20 @@ namespace TKM {
 			spColor.y *= darken;
 			spColor.z *= darken;
 
-			p.transform.scale = { baseScale, baseScale, baseScale };
-			p.color = { spColor.x, spColor.y, spColor.z, alpha };
+			p.transform_.scale_ = { baseScale, baseScale, baseScale };
+			p.color_ = { spColor.x, spColor.y, spColor.z, alpha };
 
-			p.lifeTime = std::uniform_real_distribution<float>(0.20f, 0.40f)(rng);
-			p.currentTime = 0.0f;
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.20f, 0.40f)(rng);
+			p.currentTime_ = 0.0f;
 		} else if (groupName == "core_charge_shell") {
-			p.transform.translate = center;
+			p.transform_.translate_ = center;
 			float startScale = 1.6f;
-			p.transform.scale = { startScale, startScale, startScale };
-			p.velocity = { 0.0f, 0.0f, 0.0f };
+			p.transform_.scale_ = { startScale, startScale, startScale };
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
 			// 邪悪な黒紫
-			p.color = { 0.35f, 0.0f, 0.5f, 0.35f };
-			p.lifeTime = 0.45f;
-			p.currentTime = 0.0f;
+			p.color_ = { 0.35f, 0.0f, 0.5f, 0.35f };
+			p.lifeTime_ = 0.45f;
+			p.currentTime_ = 0.0f;
 		} else if (groupName == "core_charge_inward") {
 
 			std::uniform_real_distribution<float> dirDist(-1.0f, 1.0f);
@@ -1452,49 +1452,49 @@ namespace TKM {
 			float radius = std::uniform_real_distribution<float>(2.0f, 5.0f)(rng);
 			Vector3 offset = dirRand * radius;
 
-			p.transform.translate = center + offset;
+			p.transform_.translate_ = center + offset;
 
 			Vector3 dirToCenter = MyMath::Normalize(-offset);
 
 			float speed = std::uniform_real_distribution<float>(2.0f, 5.0f)(rng);
-			p.velocity = dirToCenter * speed;
+			p.velocity_ = dirToCenter * speed;
 
-			p.transform.scale = { 0.15f, 0.15f, 0.15f };
+			p.transform_.scale_ = { 0.15f, 0.15f, 0.15f };
 
 			// 怪しい血のような禍々しく濃い赤
-			p.color = { 0.8f, 0.05f, 0.1f, 0.9f };
+			p.color_ = { 0.8f, 0.05f, 0.1f, 0.9f };
 
-			p.lifeTime = 0.7f;
-			p.currentTime = 0.0f;
+			p.lifeTime_ = 0.7f;
+			p.currentTime_ = 0.0f;
 		} else if (groupName == "core_charge_ribbon") {
 
 			float height = std::uniform_real_distribution<float>(-1.2f, 1.2f)(rng);
-			p.transform.translate.y += height;
+			p.transform_.translate_.y += height;
 
 			// もっと長く・太くして視認性アップ
-			p.transform.scale = { 3.2f, 0.14f, 1.0f };
+			p.transform_.scale_ = { 3.2f, 0.14f, 1.0f };
 
 			// 明るめの邪悪紫に変更（青成分足すと光って見える）
-			p.color = { 0.85f, 0.2f, 1.0f, 0.95f };
+			p.color_ = { 0.85f, 0.2f, 1.0f, 0.95f };
 
-			p.velocity = { 0.0f, 0.0f, 0.0f };
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
 
 			// 寿命もちょい伸ばすと“渦巻き”感が出る
-			p.lifeTime = 0.55f;
+			p.lifeTime_ = 0.55f;
 		} else if (groupName == "core_charge_flash") {
 
 			float s = std::uniform_real_distribution<float>(0.25f, 0.55f)(rng);
 
 			// 完全に正面に出るように Z も s にする
-			p.transform.scale = { s, s, s };
+			p.transform_.scale_ = { s, s, s };
 
 			// 発光強めの深紅（alpha も上げる）
-			p.color = { 1.0f, 0.05f, 0.15f, 1.0f };
+			p.color_ = { 1.0f, 0.05f, 0.15f, 1.0f };
 
 			// 寿命をほんの少しだけ伸ばすと見える
-			p.lifeTime = 0.18f;
+			p.lifeTime_ = 0.18f;
 
-			p.velocity = { 0.0f, 0.0f, 0.0f };
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
 		} else if (groupName == "bossDeath_bomb") {
 			// モンストっぽい「丸い爆発」がボンボン出るやつ
 
@@ -1514,17 +1514,17 @@ namespace TKM {
 			dir = MyMath::Normalize(dir);
 
 			float radius = frand(1.5f, 5.0f);               // 中心からの距離
-			p.transform.translate = center + dir * radius;
+			p.transform_.translate_ = center + dir * radius;
 
 			// 外向きにそこそこ速く飛ぶ（画面全体に広がる感じ）
 			float speed = frand(2.5f, 6.0f);
-			p.velocity = dir * speed;
+			p.velocity_ = dir * speed;
 			// 爆発本体をかなり大きく
 			float sc = frand(3.0f, 6.0f);
-			p.transform.scale = { sc, sc, sc };
+			p.transform_.scale_ = { sc, sc, sc };
 			// 少しだけ長く見せる
-			p.lifeTime = frand(0.35f, 0.65f);
-			p.currentTime = 0.0f;
+			p.lifeTime_ = frand(0.35f, 0.65f);
+			p.currentTime_ = 0.0f;
 
 			// オレンジ〜黄色の炎色
 			Vector3 col{
@@ -1532,7 +1532,7 @@ namespace TKM {
 				frand(0.45f, 0.9f),
 				frand(0.0f, 0.25f)
 			};
-			p.color = { col.x, col.y, col.z, 1.0f };
+			p.color_ = { col.x, col.y, col.z, 1.0f };
 
 		} else if (groupName == "bossDeath_ring") {
 			// 画面を埋めるくらいの衝撃波リング
@@ -1542,20 +1542,20 @@ namespace TKM {
 				};
 
 			// 中心固定
-			p.transform.translate = center;
+			p.transform_.translate_ = center;
 
 			// 大きなリング
 			float sc = frand(6.0f, 10.0f);
-			p.transform.scale = { sc, sc, sc };
+			p.transform_.scale_ = { sc, sc, sc };
 
-			p.velocity = { 0.0f, 0.0f, 0.0f };
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
 
 			// 少し長めに残る
-			p.lifeTime = frand(0.5f, 0.9f);
-			p.currentTime = 0.0f;
+			p.lifeTime_ = frand(0.5f, 0.9f);
+			p.currentTime_ = 0.0f;
 
 			// 黄白っぽい衝撃波カラー
-			p.color = { 1.0f, 0.88f, 0.55f, 1.0f };
+			p.color_ = { 1.0f, 0.88f, 0.55f, 1.0f };
 
 		} else if (groupName == "bossDeath_smoke") {
 			// 爆発のあとの大きな煙
@@ -1577,15 +1577,15 @@ namespace TKM {
 
 			// ボスの周囲にさらに広く散らす
 			float radius = frand(6.0f, 14.0f);
-			p.transform.translate = center + dir * radius;
+			p.transform_.translate_ = center + dir * radius;
 			// 上方向にもう少し強めに流れる
 			float speed = frand(0.8f, 1.6f);
 			// 大きめの煙
 			float sc = frand(3.0f, 5.5f);
-			p.transform.scale = { sc, sc, sc };
+			p.transform_.scale_ = { sc, sc, sc };
 			// かなり長く残して「余韻」を出す
-			p.lifeTime = frand(2.0f, 3.0f);
-			p.currentTime = 0.0f;
+			p.lifeTime_ = frand(2.0f, 3.0f);
+			p.currentTime_ = 0.0f;
 
 			// 少し青みがかった白煙〜灰
 			Vector3 col3{
@@ -1593,44 +1593,44 @@ namespace TKM {
 				frand(0.72f, 0.92f),
 				frand(0.78f, 0.96f)
 			};
-			p.color = { col3.x, col3.y, col3.z, 1.0f };
+			p.color_ = { col3.x, col3.y, col3.z, 1.0f };
 		} else if (groupName == "bossClear_core") {
 			// ボス撃破後の「クリア決定打」になる爆心コア
 
-			p.transform.translate = center;
+			p.transform_.translate_ = center;
 
 			// かなりデカい光球（ボスを飲み込むレベル）
 			float sc = std::uniform_real_distribution<float>(5.0f, 8.0f)(rng);
-			p.transform.scale = { sc, sc, sc };
+			p.transform_.scale_ = { sc, sc, sc };
 
 			// 動かない・その場でドーンと光る
-			p.velocity = { 0.0f, 0.0f, 0.0f };
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
 
 			// 少し長めに残して余韻を出す
-			p.lifeTime = std::uniform_real_distribution<float>(0.6f, 0.9f)(rng);
-			p.currentTime = 0.0f;
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.6f, 0.9f)(rng);
+			p.currentTime_ = 0.0f;
 
 			// 白〜黄金色のまぶしい爆心
-			p.color = { 1.0f, 0.96f, 0.80f, 1.0f };
+			p.color_ = { 1.0f, 0.96f, 0.80f, 1.0f };
 
 		} else if (groupName == "bossClear_ring") {
 			// ボス撃破後の超デカいショックウェーブ
 
-			p.transform.translate = center;
+			p.transform_.translate_ = center;
 
 			// 半径かなり大きめ
 			float sc = std::uniform_real_distribution<float>(7.0f, 11.0f)(rng);
-			p.transform.scale = { sc, sc, sc };
+			p.transform_.scale_ = { sc, sc, sc };
 
 			// ほぼ動かない（サイズで見せる）
-			p.velocity = { 0.0f, 0.0f, 0.0f };
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
 
 			// 少し残る
-			p.lifeTime = std::uniform_real_distribution<float>(0.45f, 0.7f)(rng);
-			p.currentTime = 0.0f;
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.45f, 0.7f)(rng);
+			p.currentTime_ = 0.0f;
 
 			// 外周が少しオレンジがかった白
-			p.color = { 1.0f, 0.9f, 0.65f, 1.0f };
+			p.color_ = { 1.0f, 0.9f, 0.65f, 1.0f };
 
 		} else if (groupName == "bossClear_spark") {
 			// 爆発で四方八方に飛ぶ光の破片
@@ -1652,20 +1652,20 @@ namespace TKM {
 
 			// 少しだけ中心から離して出す
 			float radius = frand(0.5f, 4.0f);
-			p.transform.translate = center + dir * radius;
+			p.transform_.translate_ = center + dir * radius;
 
 			// かなり速く飛ばす
 			float speed = frand(8.0f, 18.0f);
-			p.velocity = dir * speed;
+			p.velocity_ = dir * speed;
 
 			// 細長い破片っぽく
 			float len = frand(0.6f, 1.4f);
 			float thin = frand(0.12f, 0.25f);
-			p.transform.scale = { len, thin, 1.0f };
+			p.transform_.scale_ = { len, thin, 1.0f };
 
 			// 短命〜中くらい
-			p.lifeTime = frand(0.25f, 0.5f);
-			p.currentTime = 0.0f;
+			p.lifeTime_ = frand(0.25f, 0.5f);
+			p.currentTime_ = 0.0f;
 
 			// 黄〜白〜オレンジ寄りの光
 			Vector3 col{
@@ -1673,7 +1673,7 @@ namespace TKM {
 				frand(0.7f, 0.95f),
 				frand(0.3f, 0.6f)
 			};
-			p.color = { col.x, col.y, col.z, 1.0f };
+			p.color_ = { col.x, col.y, col.z, 1.0f };
 
 		} else if (groupName == "bossClear_debris") {
 			// 重めに飛んでいく破片（ゲームクリア感の余韻）
@@ -1693,19 +1693,19 @@ namespace TKM {
 			dir = MyMath::Normalize(dir);
 
 			float radius = frand(1.0f, 5.0f);
-			p.transform.translate = center + dir * radius;
+			p.transform_.translate_ = center + dir * radius;
 
 			// スパークより遅め・重たい感じ
 			float speed = frand(3.0f, 8.0f);
-			p.velocity = dir * speed;
+			p.velocity_ = dir * speed;
 
 			// ゴツい破片
 			float sc = frand(0.4f, 0.9f);
-			p.transform.scale = { sc, sc, sc };
+			p.transform_.scale_ = { sc, sc, sc };
 
 			// 長めに残る
-			p.lifeTime = frand(0.7f, 1.4f);
-			p.currentTime = 0.0f;
+			p.lifeTime_ = frand(0.7f, 1.4f);
+			p.currentTime_ = 0.0f;
 
 			// 暗めのオレンジ〜焦げ茶っぽい色
 			Vector3 col{
@@ -1713,50 +1713,50 @@ namespace TKM {
 				frand(0.2f, 0.4f),
 				frand(0.05f, 0.15f)
 			};
-			p.color = { col.x, col.y, col.z, 1.0f };
+			p.color_ = { col.x, col.y, col.z, 1.0f };
 		} else if (groupName == "trail_lt_path") {
 			// 発生位置：完全に中心だけ
-			p.transform.translate = center;
+			p.transform_.translate_ = center;
 
 			// 速度なし（軌道は弾そのものが描く）
-			p.velocity = { 0.0f, 0.0f, 0.0f };
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
 
 			// ★ 完全等方スケール（横長禁止）
 			std::uniform_real_distribution<float> scl(0.08f, 0.14f);
 			float sc = scl(rng);
-			p.transform.scale = { sc, sc, sc };
+			p.transform_.scale_ = { sc, sc, sc };
 
 			// ★ 短命（線にならない）
-			p.lifeTime = std::uniform_real_distribution<float>(0.08f, 0.15f)(rng);
-			p.currentTime = 0.0f;
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.08f, 0.15f)(rng);
+			p.currentTime_ = 0.0f;
 
 			// 色：必殺技らしく白〜薄青
 			float c = std::uniform_real_distribution<float>(0.85f, 1.0f)(rng);
-			p.color = { 0.9f * c, 0.95f * c, 1.0f, 1.0f };
+			p.color_ = { 0.9f * c, 0.95f * c, 1.0f, 1.0f };
 		} else { // 上記意外
 			// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 			std::uniform_real_distribution<float> velX(-0.15f, 0.15f);
 			std::uniform_real_distribution<float> velY(0.10f, 0.30f);
-			p.velocity = { velX(rng), velY(rng), velX(rng) };
+			p.velocity_ = { velX(rng), velY(rng), velX(rng) };
 
 			float sc = std::uniform_real_distribution<float>(1.0f, 2.0f)(rng);
-			p.transform.scale = { sc, sc, sc };
+			p.transform_.scale_ = { sc, sc, sc };
 
 			float life = std::uniform_real_distribution<float>(0.6f, 1.2f)(rng);
-			p.lifeTime = life; p.currentTime = 0.0f;
+			p.lifeTime_ = life; p.currentTime_ = 0.0f;
 
 			float base = std::uniform_real_distribution<float>(0.8f, 1.0f)(rng);
-			p.color = { base, base * 0.5f, base * 0.2f, 1.0f };
+			p.color_ = { base, base * 0.5f, base * 0.2f, 1.0f };
 		}
 
-		p.transform.rotate = { 0,0,0 }; // 使ってなければ0で
+		p.transform_.rotate_ = { 0,0,0 }; // 使ってなければ0で
 		return p;
 	}
 
 	void ParticleManager::CreateRingVertices() {
-		for (uint32_t index = 0; index < kRingDivide; ++index) { // 分割数分ループ
-			float theta = index * radianPerDivide; // 現在の角度
-			float nextTheta = (index + 1) * radianPerDivide; // 次の角度
+		for (uint32_t index = 0; index < kRingDivide_; ++index) { // 分割数分ループ
+			float theta = index * radianPerDivide_; // 現在の角度
+			float nextTheta = (index + 1) * radianPerDivide_; // 次の角度
 
 			// 現在と次のサイン・コサインを計算
 			float sin = std::sin(theta);
@@ -1765,24 +1765,24 @@ namespace TKM {
 			float cosNext = std::cos(nextTheta);
 
 			// U座標を計算
-			float u = float(index) / float(kRingDivide);
-			float uNext = float(index + 1) / float(kRingDivide);
+			float u = float(index) / float(kRingDivide_);
+			float uNext = float(index + 1) / float(kRingDivide_);
 
 			// 頂点の位置を計算
-			Vector4 outerCurr = { -sin * kOuterRadius, cos * kOuterRadius, 0.0f, 1.0f };
-			Vector4 outerNext = { -sinNext * kOuterRadius, cosNext * kOuterRadius, 0.0f, 1.0f };
-			Vector4 innerCurr = { -sin * kInnerRadius, cos * kInnerRadius, 0.0f, 1.0f };
-			Vector4 innerNext = { -sinNext * kInnerRadius, cosNext * kInnerRadius, 0.0f, 1.0f };
+			Vector4 outerCurr = { -sin * kOuterRadius_, cos * kOuterRadius_, 0.0f, 1.0f };
+			Vector4 outerNext = { -sinNext * kOuterRadius_, cosNext * kOuterRadius_, 0.0f, 1.0f };
+			Vector4 innerCurr = { -sin * kInnerRadius_, cos * kInnerRadius_, 0.0f, 1.0f };
+			Vector4 innerNext = { -sinNext * kInnerRadius_, cosNext * kInnerRadius_, 0.0f, 1.0f };
 
 			// 1枚目の三角形
-			ringModelData.vertices.push_back({ outerCurr, {u, 0.0f}, {0.0f, 0.0f, 1.0f} });
-			ringModelData.vertices.push_back({ outerNext, {uNext, 0.0f}, {0.0f, 0.0f, 1.0f} });
-			ringModelData.vertices.push_back({ innerCurr, {u, 1.0f}, {0.0f, 0.0f, 1.0f} });
+			ringModelData_.vertices_.push_back({ outerCurr, {u, 0.0f}, {0.0f, 0.0f, 1.0f} });
+			ringModelData_.vertices_.push_back({ outerNext, {uNext, 0.0f}, {0.0f, 0.0f, 1.0f} });
+			ringModelData_.vertices_.push_back({ innerCurr, {u, 1.0f}, {0.0f, 0.0f, 1.0f} });
 
 			// 2枚目の三角形
-			ringModelData.vertices.push_back({ innerCurr, {u, 1.0f}, {0.0f, 0.0f, 1.0f} });
-			ringModelData.vertices.push_back({ outerNext, {uNext, 0.0f}, {0.0f, 0.0f, 1.0f} });
-			ringModelData.vertices.push_back({ innerNext, {uNext, 1.0f}, {0.0f, 0.0f, 1.0f} });
+			ringModelData_.vertices_.push_back({ innerCurr, {u, 1.0f}, {0.0f, 0.0f, 1.0f} });
+			ringModelData_.vertices_.push_back({ outerNext, {uNext, 0.0f}, {0.0f, 0.0f, 1.0f} });
+			ringModelData_.vertices_.push_back({ innerNext, {uNext, 1.0f}, {0.0f, 0.0f, 1.0f} });
 		}
 
 	}
@@ -1799,36 +1799,36 @@ namespace TKM {
 			float v0 = float(h) / kHeightDivide;
 			float v1 = float(h + 1) / kHeightDivide;
 
-			for (uint32_t i = 0; i < kRingDivide; ++i) { // 横方向の分割ループ
+			for (uint32_t i = 0; i < kRingDivide_; ++i) { // 横方向の分割ループ
 				// 現在と次の角度を計算
-				float theta0 = i * radianPerDivide;
-				float theta1 = (i + 1) * radianPerDivide;
+				float theta0 = i * radianPerDivide_;
+				float theta1 = (i + 1) * radianPerDivide_;
 				// 現在と次のサイン・コサインを計算
 				float sin0 = std::sin(theta0);
 				float cos0 = std::cos(theta0);
 				float sin1 = std::sin(theta1);
 				float cos1 = std::cos(theta1);
 				// 頂点の位置を計算
-				float x0 = cos0 * kOuterRadius;
-				float z0 = -sin0 * kOuterRadius;
-				float x1 = cos1 * kOuterRadius;
-				float z1 = -sin1 * kOuterRadius;
+				float x0 = cos0 * kOuterRadius_;
+				float z0 = -sin0 * kOuterRadius_;
+				float x1 = cos1 * kOuterRadius_;
+				float z1 = -sin1 * kOuterRadius_;
 				// U座標を計算
-				float u0 = float(i) / kRingDivide;
-				float u1 = float(i + 1) / kRingDivide;
+				float u0 = float(i) / kRingDivide_;
+				float u1 = float(i + 1) / kRingDivide_;
 				// 法線ベクトルを計算
 				Vector3 normal0 = { cos0, 0.0f, -sin0 };
 				Vector3 normal1 = { cos1, 0.0f, -sin1 };
 
 				// 1枚目の三角形
-				cylinderModelData.vertices.push_back({ {x0, y0, z0, 1.0f}, {u0, v0}, normal0 });
-				cylinderModelData.vertices.push_back({ {x1, y0, z1, 1.0f}, {u1, v0}, normal1 });
-				cylinderModelData.vertices.push_back({ {x0, y1, z0, 1.0f}, {u0, v1}, normal0 });
+				cylinderModelData_.vertices_.push_back({ {x0, y0, z0, 1.0f}, {u0, v0}, normal0 });
+				cylinderModelData_.vertices_.push_back({ {x1, y0, z1, 1.0f}, {u1, v0}, normal1 });
+				cylinderModelData_.vertices_.push_back({ {x0, y1, z0, 1.0f}, {u0, v1}, normal0 });
 
 				// 2枚目の三角形
-				cylinderModelData.vertices.push_back({ {x0, y1, z0, 1.0f}, {u0, v1}, normal0 });
-				cylinderModelData.vertices.push_back({ {x1, y0, z1, 1.0f}, {u1, v0}, normal1 });
-				cylinderModelData.vertices.push_back({ {x1, y1, z1, 1.0f}, {u1, v1}, normal1 });
+				cylinderModelData_.vertices_.push_back({ {x0, y1, z0, 1.0f}, {u0, v1}, normal0 });
+				cylinderModelData_.vertices_.push_back({ {x1, y0, z1, 1.0f}, {u1, v0}, normal1 });
+				cylinderModelData_.vertices_.push_back({ {x1, y1, z1, 1.0f}, {u1, v1}, normal1 });
 			}
 		}
 	}

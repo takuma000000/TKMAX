@@ -28,28 +28,28 @@ public:
 
 	// Boss戦設定構造体
 	struct BossBattleConfig {
-		Vector3 spawnPos;
-		Vector3 arenaMin;
-		Vector3 arenaMax;
+		Vector3 spawnPos_;
+		Vector3 arenaMin_;
+		Vector3 arenaMax_;
 
-		TKM::WaterRippleEffect::RippleDesc killRipple;
+		TKM::WaterRippleEffect::RippleDesc killRipple_;
 
-		float killSlowScale = 1.0f;
-		float killSlowDuration = 0.0f;
+		float killSlowScale_ = 1.0f;
+		float killSlowDuration_ = 0.0f;
 	};
 	// 撃破シーケンス状態構造体
 	struct KillSequenceState {
-		bool zoomStarted = false;
-		bool slowTriggered = false;
-		bool rippleTriggered = false;
+		bool zoomStarted_ = false;
+		bool slowTriggered_ = false;
+		bool rippleTriggered_ = false;
 
 		/// <summary>
 		/// リセット。
 		/// </summary>
 		void Reset() {
-			zoomStarted = false;
-			slowTriggered = false;
-			rippleTriggered = false;
+			zoomStarted_ = false;
+			slowTriggered_ = false;
+			rippleTriggered_ = false;
 		}
 	};
 
@@ -57,11 +57,11 @@ public:
 	// Laser（怒り中攻撃）情報
 	// =========================
 	struct LaserInfo {
-		bool active = false;       // 予告 or 発射中
-		bool telegraph = false;    // 予告中
-		Vector3 startWS{ 0.0f,0.0f,0.0f };
-		Vector3 endWS{ 0.0f,0.0f,0.0f };
-		float radius = 0.0f;       // 当たり判定半径
+		bool active_ = false;       // 予告 or 発射中
+		bool telegraph_ = false;    // 予告中
+		Vector3 startWS_{ 0.0f,0.0f,0.0f };
+		Vector3 endWS_{ 0.0f,0.0f,0.0f };
+		float radius_ = 0.0f;       // 当たり判定半径
 	};
 
 	/// <summary>

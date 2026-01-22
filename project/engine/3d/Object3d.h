@@ -14,51 +14,51 @@ namespace TKM {
 
 //座標変換行列データ
 struct TransformationMatrix {
-	Matrix4x4 wvp;
-	Matrix4x4 World;
-	Matrix4x4 WorldInverseTranspose;
+	Matrix4x4 wvp_;
+	Matrix4x4 World_;
+	Matrix4x4 WorldInverseTranspose_;
 };
 
 //ライト構造体
 struct DirectionalLightEX {
-	Vector4 color;
-	Vector3 direction;
-	float intensity;
+	Vector4 color_;
+	Vector3 direction_;
+	float intensity_;
 };
 
 //PointLight構造体
 struct PointLightEX {
-	Vector4 color;
-	Vector3 position;
-	float intensity;
-	float radius;
-	float decay;
-	float padding[2];
+	Vector4 color_;
+	Vector3 position_;
+	float intensity_;
+	float radius_;
+	float decay_;
+	float padding_[2];
 };
 
 //SpotLight構造体
 struct SpotLightEX {
-	Vector4 color;
-	Vector3 position;
-	float intensity;
-	Vector3 direction;
-	float distance;
-	float decay;
-	float cosAngle;
-	float cosFalloffStart;
-	float padding[2];
+	Vector4 color_;
+	Vector3 position_;
+	float intensity_;
+	Vector3 direction_;
+	float distance_;
+	float decay_;
+	float cosAngle_;
+	float cosFalloffStart_;
+	float padding_[2];
 };
 
 //カメラ構造体
 struct CameraForGPU {
-	Vector3 worldPosition;//カメラの位置
-	float padding;//16byte境界に合わせるためのパディング
+	Vector3 worldPosition_;//カメラの位置
+	float padding_;//16byte境界に合わせるためのパディング
 };
 
 // 環境マップ構造体
 struct EnvironmentEX {
-	bool useEnvironment = false; // 環境マップを使用するかどうか
-	Vector3 padding;
+	bool useEnvironment_ = false; // 環境マップを使用するかどうか
+	Vector3 padding_;
 };
 
 //=============================================================
@@ -91,32 +91,32 @@ namespace TKM {
 
 		// Getter===================================
 		/// <summary>スケール、回転、平行移動の取得。</summary>
-		const Vector3& GetScale() const { return transform.scale; }
+		const Vector3& GetScale() const { return transform_.scale_; }
 		/// <summary>回転の取得。</summary>
-		const Vector3& GetRotate() const { return transform.rotate; }
+		const Vector3& GetRotate() const { return transform_.rotate_; }
 		/// <summary>平行移動の取得。</summary>
-		const Vector3& GetTranslate() const { return transform.translate; }
+		const Vector3& GetTranslate() const { return transform_.translate_; }
 		/// <summary>アクティブオブジェクト数の取得。</summary>
 		static int GetActiveCount() { return activeCount_; }
 		/// <summary>モデルの取得。</summary>
-		Vector4 GetColor() const { return materialData ? materialData->color : Vector4{ 1,1,1,1 }; }
+		Vector4 GetColor() const { return materialData_ ? materialData_->color_ : Vector4{ 1,1,1,1 }; }
 		// =========================================
 		// Setter===================================
 		/// <summary>
 		/// スケール、回転、平行移動の設定。
 		/// </summary>
 		/// <param name="scale"></param>
-		void SetScale(const Vector3& scale) { this->transform.scale = scale; }
+		void SetScale(const Vector3& scale) { this->transform_.scale_ = scale; }
 		/// <summary>
 		/// 回転の設定。
 		/// </summary>
 		/// <param name="rotate"></param>
-		void SetRotate(const Vector3& rotate) { this->transform.rotate = rotate; }
+		void SetRotate(const Vector3& rotate) { this->transform_.rotate_ = rotate; }
 		/// <summary>
 		/// 平行移動の設定。
 		/// </summary>
 		/// <param name="translate"></param>
-		void SetTranslate(const Vector3& translate) { this->transform.translate = translate; }
+		void SetTranslate(const Vector3& translate) { this->transform_.translate_ = translate; }
 		/// <summary>
 		/// モデルの設定。
 		/// </summary>
@@ -126,7 +126,7 @@ namespace TKM {
 		/// カメラの設定。
 		/// </summary>
 		/// <param name="camera"></param>
-		void SetCamera(TKM::Camera* camera) { this->camera = camera; }
+		void SetCamera(TKM::Camera* camera) { this->camera_ = camera; }
 		/// <summary>
 		/// 親シーンの設定。
 		/// </summary>
@@ -141,7 +141,7 @@ namespace TKM {
 		/// 色の設定。
 		/// </summary>
 		/// <param name="color"></param>
-		void SetColor(const Vector4& color) { if (materialData) { materialData->color = color; } }
+		void SetColor(const Vector4& color) { if (materialData_) { materialData_->color_ = color; } }
 		/// <summary>
 		/// デバッグ用ImGui表示。
 		/// </summary>
@@ -149,13 +149,13 @@ namespace TKM {
 		void SetModel(const std::string& filePath);
 		// =========================================
 	private:
-		TKM::Object3dCommon* object3dCommon = nullptr;
+		TKM::Object3dCommon* object3dCommon_ = nullptr;
 		TKM::DirectXCommon* dxCommon_;
 		TKM::Model* model_ = nullptr;
-		TKM::Camera* camera = nullptr;
+		TKM::Camera* camera_ = nullptr;
 
 		//Objファイルのデータ
-		ModelData modelData;
+		ModelData modelData_;
 
 		/// <summary>
 		/// マテリアルテンプレートファイルを読み込みます。
@@ -173,49 +173,48 @@ namespace TKM {
 		static ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename);
 
 		//頂点リソースを作る
-		Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
+		Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource_;
 		//頂点リソースにデータを書き込む
-		VertexData* vertexData = nullptr;
+		VertexData* vertexData_ = nullptr;
 		//頂点バッファビューを作成する
-		D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
+		D3D12_VERTEX_BUFFER_VIEW vertexBufferView_{};
 
 		//マテリアル用のリソースを作る
-		Microsoft::WRL::ComPtr<ID3D12Resource> materialResource;
+		Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
 		//マテリアルにデータを書き込む
-		Material* materialData = nullptr;
+		Material* materialData_ = nullptr;
 
 		//WVP用のリソースを作る
-		Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource;
+		Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource_;
 		//データを書き込む
-		TransformationMatrix* wvpData = nullptr;
+		TransformationMatrix* wvpData_ = nullptr;
 
 		//Light用のマテリアルリソースを作る
-		Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceLight;
+		Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceLight_;
 		//データを書き込む
-		DirectionalLightEX* directionalLightData = nullptr;
+		DirectionalLightEX* directionalLightData_ = nullptr;
 
 		//PointLight用のマテリアルリソースを作る
-		Microsoft::WRL::ComPtr<ID3D12Resource> pointLightResource;
+		Microsoft::WRL::ComPtr<ID3D12Resource> pointLightResource_;
 		//データを書き込む
-		PointLightEX* pointLightData = nullptr;
+		PointLightEX* pointLightData_ = nullptr;
 
 		//SpotLight用のマテリアルリソースを作る
-		Microsoft::WRL::ComPtr<ID3D12Resource> spotLightResource;
+		Microsoft::WRL::ComPtr<ID3D12Resource> spotLightResource_;
 		//データを書き込む
-		SpotLightEX* spotLightData = nullptr;
+		SpotLightEX* spotLightData_ = nullptr;
 
 		//カメラ用のリソースを作る
-		Microsoft::WRL::ComPtr<ID3D12Resource> cameraResource;
+		Microsoft::WRL::ComPtr<ID3D12Resource> cameraResource_;
 		//データを書き込む
-		CameraForGPU* cameraData = nullptr;
+		CameraForGPU* cameraData_ = nullptr;
 
 		// 映り込み
-		Microsoft::WRL::ComPtr<ID3D12Resource> environment;
+		Microsoft::WRL::ComPtr<ID3D12Resource> environment_;
 		// 環境マップデータ
-		EnvironmentEX* environmentData = nullptr;
+		EnvironmentEX* environmentData_ = nullptr;
 		// 環境マップ...GPUハンドル
 		D3D12_GPU_DESCRIPTOR_HANDLE environmentSrvHandleGPU_;
-
 
 		/// <summary>
 		/// 頂点リソースを作成します。
@@ -258,11 +257,11 @@ namespace TKM {
 		/// <param name="dxCommon"></param>
 		void Environment(TKM::DirectXCommon* dxCommon);
 
-		Transform transform;
-		Transform cameraTransform;
+		Transform transform_;
+		Transform cameraTransform_;
 
 		//SRV切り替え
-		bool useMonsterBall = true;
+		bool useMonsterBall_ = true;
 
 		TKM::BaseScene* parentScene_ = nullptr;
 

@@ -3,15 +3,15 @@
 
 namespace BossParam {
 	// ここはとりあえず “動くこと優先” の初期値
-	constexpr int   InitHP = 80;
+	constexpr int   InitHP_ = 80;
 
-	constexpr float InitScale = 5.0f;
-	constexpr Vector3 InitColliderScale = { 12.180f, 18.210f, 11.560f };
+	constexpr float InitScale_ = 5.0f;
+	constexpr Vector3 InitColliderScale_ = { 12.180f, 18.210f, 11.560f };
 
 	// ロック中の脈動（見た目だけ）
-	constexpr float NormalScale = 5.0f;
-	constexpr float LockBlinkSpeed = 0.2f;
-	constexpr float LockBlinkAmount = 0.2f;
+	constexpr float NormalScale_ = 5.0f;
+	constexpr float LockBlinkSpeed_ = 0.2f;
+	constexpr float LockBlinkAmount_ = 0.2f;
 }
 
 //=============================================================

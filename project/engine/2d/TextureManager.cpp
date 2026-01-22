@@ -15,13 +15,13 @@ namespace TKM {
 		srvManager_ = srvManager;
 
 		//SRVの数と同数
-		textureDatas.reserve(TKM::SrvManager::kMaxSRVCount);
+		textureDatas_.reserve(TKM::SrvManager::kMaxSRVCount);
 	}
 
 	void TextureManager::LoadTexture(const std::string& filePath) {
 
 		// 既に読み込み済みならスキップ
-		if (textureDatas.contains(filePath)) {
+		if (textureDatas_.contains(filePath)) {
 			return;
 		}
 
@@ -82,41 +82,41 @@ namespace TKM {
 		TextureData textureData{};
 
 		// メタデータ取得
-		textureData.metadata = mipImages.GetMetadata();
-		textureData.resource = dxCommon_->CreateTextureResource(textureData.metadata);
-		textureData.srvIndex = srvManager_->Allocate();
-		textureData.srvHnadleCPU = srvManager_->GetCPUDescriptorHandle(textureData.srvIndex);
-		textureData.srvHnadleGPU = srvManager_->GetGPUDescriptorHandle(textureData.srvIndex);
+		textureData.metadata_ = mipImages.GetMetadata();
+		textureData.resource_ = dxCommon_->CreateTextureResource(textureData.metadata_);
+		textureData.srvIndex_ = srvManager_->Allocate();
+		textureData.srvHnadleCPU_ = srvManager_->GetCPUDescriptorHandle(textureData.srvIndex_);
+		textureData.srvHnadleGPU_ = srvManager_->GetGPUDescriptorHandle(textureData.srvIndex_);
 
 		// SRV設定
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-		srvDesc.Format = textureData.metadata.format;
+		srvDesc.Format = textureData.metadata_.format;
 		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
-		if (textureData.metadata.IsCubemap()) { // キューブマップ
+		if (textureData.metadata_.IsCubemap()) { // キューブマップ
 			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
 			srvDesc.TextureCube.MostDetailedMip = 0;
 			srvDesc.TextureCube.MipLevels = UINT_MAX;
 			srvDesc.TextureCube.ResourceMinLODClamp = 0.0f;
 		} else { // 2Dテクスチャ
 			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-			srvDesc.Texture2D.MipLevels = UINT(textureData.metadata.mipLevels);
+			srvDesc.Texture2D.MipLevels = UINT(textureData.metadata_.mipLevels);
 		}
 
 		// SRV生成
-		dxCommon_->GetDevice()->CreateShaderResourceView(textureData.resource.Get(), &srvDesc, textureData.srvHnadleCPU);
+		dxCommon_->GetDevice()->CreateShaderResourceView(textureData.resource_.Get(), &srvDesc, textureData.srvHnadleCPU_);
 		// テクスチャデータ転送
-		textureData.intermediateResource = dxCommon_->UploadTextureData(textureData.resource.Get(), mipImages);
+		textureData.intermediateResource_ = dxCommon_->UploadTextureData(textureData.resource_.Get(), mipImages);
 
 		// 登録
-		textureDatas.emplace(filePath, std::move(textureData));
+		textureDatas_.emplace(filePath, std::move(textureData));
 	}
 
 	uint32_t TextureManager::GetTextureIndexByFilePath(const std::string& filePath) {
 		//読み込み済みテクスチャを検索
-		if (textureDatas.contains(filePath)) {
+		if (textureDatas_.contains(filePath)) {
 			//読み込み済みなら要素番号を返す
-			uint32_t textureIndex = textureDatas[filePath].srvIndex;
+			uint32_t textureIndex = textureDatas_[filePath].srvIndex_;
 			return textureIndex;
 		}
 
@@ -128,8 +128,8 @@ namespace TKM {
 		//テクスチャ枚数上限チェック
 		assert(srvManager_->Available());
 
-		TextureData& textureData = textureDatas[filePath]; //テクスチャデータの参照を取得
-		return textureData.srvHnadleGPU;
+		TextureData& textureData = textureDatas_[filePath]; //テクスチャデータの参照を取得
+		return textureData.srvHnadleGPU_;
 	}
 
 	const DirectX::TexMetadata& TextureManager::GetMetadata(const std::string& filePath) {
@@ -137,8 +137,8 @@ namespace TKM {
 		assert(srvManager_->Available());
 
 		//テクスチャデータの参照を取得
-		TextureData& textureData = textureDatas[filePath];
-		return textureData.metadata;
+		TextureData& textureData = textureDatas_[filePath];
+		return textureData.metadata_;
 	}
 
 	TextureManager* TextureManager::GetInstance() {

@@ -11,39 +11,40 @@
 #include "BaseScene.h"
 #include "BossEnemy.h"
 #include "WindowsAPI.h"
+#include "MyMath.h"
 
 namespace TKM {
 
 	class BossHpBarUI {
 	public:
 		struct Desc {
-			Vector2 pos = { 60.0f, 40.0f };
-			Vector2 size = { 600.0f, 22.0f };
+			Vector2 pos_ = { 60.0f, 40.0f };
+			Vector2 size_ = { 600.0f, 22.0f };
 
-			float shakeTime = 0.18f;
-			float shakePower = 9.0f;
+			float shakeTime_ = 0.18f;
+			float shakePower_ = 9.0f;
 
-			float lagSpeed = 160.0f; // 遅延バー追従速度（大きいほどすぐ追いつく）
-			int segmentCount = 60;   // 砕けブロック数
+			float lagSpeed_ = 160.0f; // 遅延バー追従速度（大きいほどすぐ追いつく）
+			int segmentCount_ = 60;   // 砕けブロック数
 
-			float shardLife = 0.45f;
-			float shardSpeedMin = 140.0f;
-			float shardSpeedMax = 320.0f;
-			float shardRotSpeed = 10.0f;
+			float shardLife_ = 0.45f;
+			float shardSpeedMin_ = 140.0f;
+			float shardSpeedMax_ = 320.0f;
+			float shardRotSpeed_ = 10.0f;
 
 			// 追加要素：色演出
-			Vector4 baseColor = { 0.25f, 1.0f, 0.9f, 1.0f };   // 通常
-			Vector4 drainColor = { 1.0f, 0.75f, 0.15f, 1.0f };  // 減ってる最中
-			Vector4 flashColor = { 1.0f, 0.25f, 0.25f, 1.0f };  // 被弾直後
-			Vector4 lowHpColor = { 1.0f, 0.20f, 0.90f, 1.0f };  // 低HP域
-			float lowHpStartRate = 0.35f;                       // ここから低HP色へ寄せる
+			Vector4 baseColor_ = { 0.25f, 1.0f, 0.9f, 1.0f };   // 通常
+			Vector4 drainColor_ = { 1.0f, 0.75f, 0.15f, 1.0f };  // 減ってる最中
+			Vector4 flashColor_ = { 1.0f, 0.25f, 0.25f, 1.0f };  // 被弾直後
+			Vector4 lowHpColor_ = { 1.0f, 0.20f, 0.90f, 1.0f };  // 低HP域
+			float lowHpStartRate_ = 0.35f;                       // ここから低HP色へ寄せる
 
 			// 減った区間が光って消える
-			float drainGlowTime = 0.22f;
+			float drainGlowTime_ = 0.22f;
 
-			std::string frameTex = "./resources/uvChecker.png";      // 仮（差し替えOK）
-			std::string fillTex = "./resources/gradationLine.png";  // 仮（差し替えOK）
-			std::string shardTex = "./resources/damageSpark.png";    // 仮（差し替えOK）
+			std::string frameTex_ = "./resources/uvChecker.png";      // 仮（差し替えOK）
+			std::string fillTex_ = "./resources/gradationLine.png";  // 仮（差し替えOK）
+			std::string shardTex_ = "./resources/damageSpark.png";    // 仮（差し替えOK）
 		};
 
 	public:
@@ -69,18 +70,17 @@ namespace TKM {
 
 	private:
 		struct Shard {
-			std::unique_ptr<Sprite> sp;
-			Vector2 vel{};
-			float rot = 0.0f;
-			float rotVel = 0.0f;
-			float t = 0.0f;
-			float life = 0.5f;
-			bool alive = false;
+			std::unique_ptr<Sprite> sp_;
+			Vector2 vel_{};
+			float rot_ = 0.0f;
+			float rotVel_ = 0.0f;
+			float t_ = 0.0f;
+			float life_ = 0.5f;
+			bool alive_ = false;
 		};
 
 	private:
-		float Rand01_() { return float(std::rand()) / float(RAND_MAX); }
-		float RandRange_(float a, float b) { return a + (b - a) * Rand01_(); }
+		float RandRange_(float a, float b) { return a + (b - a) * MyMath::Rand01(); }
 
 		void SpawnShards_(int segBegin, int segEnd);
 

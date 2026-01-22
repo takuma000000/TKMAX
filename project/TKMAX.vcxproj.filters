@@ -164,9 +164,6 @@
     <ClCompile Include="application\enemy\MidBossCore.cpp">
       <Filter>application\enemy</Filter>
     </ClCompile>
-    <ClCompile Include="application\effect\IrisUtil.cpp">
-      <Filter>application\effect</Filter>
-    </ClCompile>
     <ClCompile Include="engine\effect\post\WaterRippleEffect.cpp">
       <Filter>engine\effect\post</Filter>
     </ClCompile>
@@ -227,7 +224,7 @@
     <ClInclude Include="engine\base\D3DResourceLeakChecker.h">
       <Filter>engine\base</Filter>
     </ClInclude>
-    <ClInclude Include="engine\effect\post\DirectXCommon.h">
+    <ClInclude Include="engine\base\DirectXCommon.h">
       <Filter>engine\base</Filter>
     </ClInclude>
     <ClInclude Include="engine\base\Framework.h">

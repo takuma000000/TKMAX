@@ -31,7 +31,7 @@
 //=============================================================
 class TitleScene : public TKM::BaseScene{
 public:
-	TitleScene(TKM::DirectXCommon* dxCommon, TKM::SrvManager* srvManager) : dxCommon(dxCommon), srvManager(srvManager) {}
+	TitleScene(TKM::DirectXCommon* dxCommon, TKM::SrvManager* srvManager) : dxCommon_(dxCommon), srvManager_(srvManager) {}
 
 	/// <summary>タイトルシーンを初期化します。</summary>
 	void Initialize() override;
@@ -43,11 +43,11 @@ public:
 	void Draw() override;
 
 private:
-	TKM::DirectXCommon* dxCommon = nullptr;
-	TKM::SrvManager* srvManager = nullptr;
+	TKM::DirectXCommon* dxCommon_ = nullptr;
+	TKM::SrvManager* srvManager_ = nullptr;
 
-	std::unique_ptr<TKM::Sprite> sprite = nullptr; // 2Dスプライト共通
-	std::unique_ptr<TKM::Camera> camera = nullptr; // カメラ
+	std::unique_ptr<TKM::Sprite> sprite_ = nullptr; // 2Dスプライト共通
+	std::unique_ptr<TKM::Camera> camera_ = nullptr; // カメラ
 
 	// 背景用の自機（ヘリ）
 	std::unique_ptr<TKM::Object3d> heli_ = nullptr;
@@ -110,15 +110,15 @@ private:
 	Ease::Tween irisTween_; // イージング関数
 
 	// アイリスのトランジション時間
-	static constexpr float kIrisDurationSec = 0.8f;
+	static constexpr float kIrisDurationSec_ = 0.8f;
 
 	// タイトル敵の数式定義（π系）
-	static constexpr float kPi = 3.14159265358979323846f;   // π
-	static constexpr float kHalfPi = kPi * 0.5f;                 // π/2
-	static constexpr float kTwoPi = kPi * 2.0f;                 // 2π
+	static constexpr float kPi_ = 3.14159265358979323846f;   // π
+	static constexpr float kHalfPi_ = kPi_ * 0.5f;                 // π/2
+	static constexpr float kTwoPi_ = kPi_ * 2.0f;                 // 2π
 
 	// 波紋エフェクト
 	std::unique_ptr<TKM::WaterRippleEffect> rippleEffect_ = nullptr;
 
-	const float dt = 1.0f / 60.0f; // 固定フレームレート用デルタタイム
+	const float dt_ = 1.0f / 60.0f; // 固定フレームレート用デルタタイム
 };

@@ -24,19 +24,19 @@ namespace TKM {
 
 		//座標変換情報
 		struct Transform {
-			Vector3 scale;
-			Vector3 rotate;
-			Vector3 translate;
+			Vector3 scale_;
+			Vector3 rotate_;
+			Vector3 translate_;
 		};
 		//軸合わせ用AABB構造体
 		struct AABB {
-			Vector3 min;//最小点
-			Vector3 max;//最大点
+			Vector3 min_;//最小点
+			Vector3 max_;//最大点
 		};
 		//加速度構造体
 		struct Acc {
-			Vector3 acc;//加速度
-			AABB area;//範囲
+			Vector3 acc_;//加速度
+			AABB area_;//範囲
 		};
 
 		/// <summary>
@@ -46,34 +46,33 @@ namespace TKM {
 		/// <param name="point"></param>
 		/// <returns></returns>
 		bool IsCollision(const AABB& aabb, const Vector3& point) {
-			return (point.x >= aabb.min.x && point.x <= aabb.max.x) &&
-				(point.y >= aabb.min.y && point.y <= aabb.max.y) &&
-				(point.z >= aabb.min.z && point.z <= aabb.max.z);
+			return (point.x >= aabb.min_.x && point.x <= aabb.max_.x) &&
+				(point.y >= aabb.min_.y && point.y <= aabb.max_.y) &&
+				(point.z >= aabb.min_.z && point.z <= aabb.max_.z);
 		}
 		//GPU用パーティクル構造体
 		struct ParticleForGPU {
-			Matrix4x4 wvp;
-			Matrix4x4 World;
-			Vector4 color;
+			Matrix4x4 wvp_;
+			Matrix4x4 World_;
+			Vector4 color_;
 		};
 		//パーティクル構造体
 		struct Particle {
-			Transform transform;
-			Vector3 velocity;
-			Vector4 color;
-
-			float lifeTime;
-			float currentTime;
+			Transform transform_;
+			Vector3 velocity_;
+			Vector4 color_;
+			float lifeTime_;
+			float currentTime_;
 		};
 		//パーティクルグループ構造体
 		struct ParticleGroup {
-			MaterialData materialData;
-			std::list<Particle> particles;
-			uint32_t srvIndex;
-			Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource;
-			uint32_t kNumInstance;
-			ParticleForGPU* instancingData;
-			ParticleType type;
+			MaterialData materialData_;
+			std::list<Particle> particles_;
+			uint32_t srvIndex_;
+			Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource_;
+			uint32_t kNumInstance_;
+			ParticleForGPU* instancingData_;
+			ParticleType type_;
 		};
 
 
@@ -146,7 +145,7 @@ namespace TKM {
 		/// <summary>パーティクルグループを取得します。</summary>
 		/// </summary>
 		/// <returns></returns>
-		std::unordered_map<std::string, ParticleGroup> GetParticleGroups() { return particleGroups; }
+		std::unordered_map<std::string, ParticleGroup> GetParticleGroups() { return particleGroups_; }
 
 		/// <summary>
 		/// <summary>新しいパーティクルを作成します。</summary>
@@ -179,7 +178,7 @@ namespace TKM {
 		// =========================================
 
 	private:
-		static ParticleManager* instance;
+		static ParticleManager* instance_;
 
 		ParticleManager() = default;
 		~ParticleManager() = default;
@@ -189,51 +188,47 @@ namespace TKM {
 		TKM::SrvManager* srvManager_ = nullptr;
 		TKM::Camera* camera_ = nullptr;
 
-		Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature = nullptr;
-		Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
+		Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature_ = nullptr;
+		Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState_ = nullptr;
 
-		ModelData modelData;
-		Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
-		D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
+		ModelData modelData_;
+		Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource_;
+		D3D12_VERTEX_BUFFER_VIEW vertexBufferView_{};
 
-		ModelData ringModelData;
-		Microsoft::WRL::ComPtr<ID3D12Resource> ringVertexResource = nullptr;
-		D3D12_VERTEX_BUFFER_VIEW ringVertexBufferView{};
+		ModelData ringModelData_;
+		Microsoft::WRL::ComPtr<ID3D12Resource> ringVertexResource_ = nullptr;
+		D3D12_VERTEX_BUFFER_VIEW ringVertexBufferView_{};
 
-		ModelData cylinderModelData;
-		Microsoft::WRL::ComPtr<ID3D12Resource> cylinderVertexResource = nullptr;
-		D3D12_VERTEX_BUFFER_VIEW cylinderVertexBufferView{};
+		ModelData cylinderModelData_;
+		Microsoft::WRL::ComPtr<ID3D12Resource> cylinderVertexResource_ = nullptr;
+		D3D12_VERTEX_BUFFER_VIEW cylinderVertexBufferView_{};
 
-		/*ModelData ribbonModelData;
-		Microsoft::WRL::ComPtr<ID3D12Resource> ribbonVertexResource = nullptr;
-		D3D12_VERTEX_BUFFER_VIEW ribbonVertexBufferView{};*/
+		std::unordered_map<std::string, ParticleGroup> particleGroups_;
 
-		std::unordered_map<std::string, ParticleGroup> particleGroups;
+		const uint32_t kNumMaxInstance_ = 512;
 
-		const uint32_t kNumMaxInstance = 512;
-
-		Matrix4x4 billboardMatrix = MyMath::MakeIdentity4x4();//単位行列
+		Matrix4x4 billboardMatrix_ = MyMath::MakeIdentity4x4();//単位行列
 
 		Acc acc;
 
 		//クライアント領域のサイズ
-		const int32_t kClientWidth = 1280;
-		const int32_t kClientHeight = 720;
+		const int32_t kClientWidth_ = 1280;
+		const int32_t kClientHeight_ = 720;
 
 		//Δtを定義
-		const float kDeltaTime = 1.0f / 60.0f;
+		const float kDeltaTime_ = 1.0f / 60.0f;
 
-		uint32_t numInstance = 0;//描画すべきインスタンス数
+		uint32_t numInstance_ = 0;//描画すべきインスタンス数
 
-		Microsoft::WRL::ComPtr<ID3D12Resource> materialResource;
+		Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
 
-		std::mt19937 randomEngine;
+		std::mt19937 randomEngine_;
 
 		//Ring
-		const uint32_t kRingDivide = 32;
-		const float kOuterRadius = 1.0f;
-		const float kInnerRadius = 0.2f;
-		const float radianPerDivide = 2.0f * std::numbers::pi_v<float> / float(kRingDivide);
+		const uint32_t kRingDivide_ = 32;
+		const float kOuterRadius_ = 1.0f;
+		const float kInnerRadius_ = 0.2f;
+		const float radianPerDivide_ = 2.0f * std::numbers::pi_v<float> / float(kRingDivide_);
 
 		Microsoft::WRL::ComPtr<ID3D12Resource> materialCB_;  // 永続CB
 		Material* materialCPU_ = nullptr;                    // マップしたポインタ

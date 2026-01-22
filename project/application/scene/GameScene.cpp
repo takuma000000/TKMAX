@@ -15,7 +15,7 @@ using namespace TKM;
 void GameScene::Initialize() {
 	// ──────────────── NULLチェック ────────────────
 	assert(this != nullptr && "this is nullptr in GameScene::Initialize");
-	assert(dxCommon != nullptr && "dxCommon is nullptr in GameScene::Initialize");
+	assert(dxCommon_ != nullptr && "dxCommon is nullptr in GameScene::Initialize");
 
 	// ──────────────── 各種初期化処理 ───────────────
 	InitializeAudio();   // サウンドのロード＆再生
@@ -30,13 +30,13 @@ void GameScene::Initialize() {
 	directionalLight_->Initialize({ 1.0f, 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 0.0f }, 1.0f);
 
 	// ──────────────── ラインレンダラーの初期化 ───────────────
-	LineRenderer::GetInstance()->Initialize(dxCommon);
+	LineRenderer::GetInstance()->Initialize(dxCommon_);
 
 	// ──────────────── パーティクルの初期化 ───────────────
-	ParticleManager::GetInstance()->Initialize(dxCommon, srvManager, camera.get());
+	ParticleManager::GetInstance()->Initialize(dxCommon_, srvManager_, camera_.get());
 	ParticleManager::GetInstance()->CreateParticleGroup("uv", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
-	particleEmitter = std::make_unique<ParticleEmitter>();
-	particleEmitter->Initialize("uv", { 0.0f,2.5f,10.0f });
+	particleEmitter_ = std::make_unique<ParticleEmitter>();
+	particleEmitter_->Initialize("uv", { 0.0f,2.5f,10.0f });
 
 	/// ===== パーティクルグループの作成 =====
 	// 開幕用：うっすら光が吸い込まれるリング
@@ -119,47 +119,47 @@ void GameScene::Initialize() {
 	ParticleManager::GetInstance()->CreateParticleGroup("boss_windup_inward", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
 	// ──────────────── スカイボックスの初期化 ───────────────
 	skybox_ = std::make_unique<Skybox>();
-	skybox_->Initialize(dxCommon, srvManager, "resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
-	skybox_->SetCamera(camera.get());
+	skybox_->Initialize(dxCommon_, srvManager_, "resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
+	skybox_->SetCamera(camera_.get());
 	// ──────────────── 敵マネージャの初期化 ───────────────
 	enemyManager_ = std::make_unique<EnemyManager>();
-	enemyManager_->Initialize(dxCommon, camera.get(), this, player_.get());
+	enemyManager_->Initialize(dxCommon_, camera_.get(), this, player_.get());
 	enemyManager_->BindEnemies(&enemies_, &defeatedEnemyCount_, &maxEnemyCount_);
 	// ──────────────── ボスマネージャの初期化 ───────────────
 	if (!bossManager_) {
 		bossManager_ = std::make_unique<BossManager>();
 	}
-	bossManager_->Initialize(dxCommon, camera.get(), this, player_.get());
+	bossManager_->Initialize(dxCommon_, camera_.get(), this, player_.get());
 	// ──────────────── 画面エフェクトの初期化 ───────────────
 	// RadialBlurEffect の生成と初期化
 	radialBlur_ = std::make_unique<TKM::RadialBlurEffect>();
-	radialBlur_->Initialize(dxCommon);
+	radialBlur_->Initialize(dxCommon_);
 	// DirectX 側に「このシーンの RadialBlurEffect」を登録
-	dxCommon->SetRadialBlurEffect(radialBlur_.get());
+	dxCommon_->SetRadialBlurEffect(radialBlur_.get());
 	if (player_) {
 		// プレイヤーから LT 発射時に通知してもらう
 		player_->SetRadialBlurEffect(radialBlur_.get());
 	}
 	// VignettingEffect の生成と初期化
 	vignetting_ = std::make_unique<TKM::VignettingEffect>();
-	vignetting_->Initialize(dxCommon);
+	vignetting_->Initialize(dxCommon_);
 	// FogEffect の生成と初期化 ＆ 常時ON
 	fog_ = std::make_unique<TKM::FogEffect>();
-	fog_->Initialize(dxCommon);
+	fog_->Initialize(dxCommon_);
 	fog_->SetActive(false);                // ゲームシーン中はずっと有効にしたい
-	dxCommon->SetFogEffect(fog_.get());   // DirectXCommon に登録
+	dxCommon_->SetFogEffect(fog_.get());   // DirectXCommon に登録
 	// AuraEffect の生成と初期化
 	aura_ = std::make_unique<TKM::AuraEffect>();
-	aura_->Initialize(dxCommon);
-	dxCommon->SetAuraEffect(aura_.get());
+	aura_->Initialize(dxCommon_);
+	dxCommon_->SetAuraEffect(aura_.get());
 	// WaterRippleEffect の生成と初期化
 	waterRipple_ = std::make_unique<TKM::WaterRippleEffect>();
-	waterRipple_->Initialize(dxCommon); // 波紋エフェクトの初期化
-	dxCommon->SetWaterRippleEffect(waterRipple_.get()); // DirectXCommon に登録
+	waterRipple_->Initialize(dxCommon_); // 波紋エフェクトの初期化
+	dxCommon_->SetWaterRippleEffect(waterRipple_.get()); // DirectXCommon に登録
 	bossManager_->SetWaterRippleEffect(waterRipple_.get()); // BossManager にも登録
 	// FogVolume3D の生成と初期化
 	fogVolume3D_ = std::make_unique<TKM::FogVolume3D>();
-	fogVolume3D_->Initialize(dxCommon);
+	fogVolume3D_->Initialize(dxCommon_);
 	// 初期パラメータ例
 	auto& d = fogVolume3D_->GetDesc();
 	d.centerWS = { 0.0f, 6.0f, 20.0f };
@@ -168,7 +168,7 @@ void GameScene::Initialize() {
 	d.density = 0.19f;  // 濃すぎなら 0.015f まで落としてOK
 	// SmokeVolume3D の生成と初期化
 	smokeVolume3D_ = std::make_unique<TKM::SmokeVolume3D>();
-	smokeVolume3D_->Initialize(dxCommon);
+	smokeVolume3D_->Initialize(dxCommon_);
 	// ──────────────── タイムスケールコントローラーの初期化 ───────────────
 	timeScale_.Initialize();
 	bossManager_->SetTimeScaleController(&timeScale_);
@@ -184,11 +184,11 @@ void GameScene::Finalize() {
 	ModelManager::GetInstance()->Finalize();
 
 	// ポストエフェクトの解除
-	if (dxCommon) {
-		dxCommon->SetRadialBlurEffect(nullptr); // RadialBlurEffect の解除
-		dxCommon->SetVignettingEffect(nullptr); // VignettingEffect の解除
-		dxCommon->SetFogEffect(nullptr); // FogEffect の解除
-		dxCommon->SetAuraEffect(nullptr); // AuraEffect の解除
+	if (dxCommon_) {
+		dxCommon_->SetRadialBlurEffect(nullptr); // RadialBlurEffect の解除
+		dxCommon_->SetVignettingEffect(nullptr); // VignettingEffect の解除
+		dxCommon_->SetFogEffect(nullptr); // FogEffect の解除
+		dxCommon_->SetAuraEffect(nullptr); // AuraEffect の解除
 	}
 }
 
@@ -198,7 +198,7 @@ void GameScene::Update() {
 	// 毎フレームの最初に、前フレームのラインをクリア
 	LineRenderer::GetInstance()->BeginFrame();
 	// フレームタイム計測
-	const float rawDt = dt; /// デフォルトデルタタイム（補間なし）
+	const float rawDt = dt_; /// デフォルトデルタタイム（補間なし）
 	timeScale_.Update(rawDt); // タイムスケールコントローラーの更新
 	const float scaledDt = rawDt * timeScale_.GetScale(); /// スローデルタタイム
 
@@ -211,7 +211,7 @@ void GameScene::Update() {
 		bool finished = UpdateClearSequence(scaledDt); // クリア演出シーケンスの更新
 		// 終了したらシーン切り替え
 		if (finished) {
-			sceneManager_->SetNextScene(new GameClearScene(dxCommon, srvManager));
+			sceneManager_->SetNextScene(new GameClearScene(dxCommon_, srvManager_));
 			return;
 		}
 		UpdatePerformanceInfo();
@@ -309,19 +309,19 @@ void GameScene::Update() {
 
 		// ゲームプレイ中だけ風エフェクト
 		if (!clearSequence_ && !gameplayLocked_) {
-			UpdateAirStreak(dt);
+			UpdateAirStreak(dt_);
 		}
 
 		if (irisOpening_) { // --- アイリスオープニング中の更新 ---
 			// 共通の経過タイム：開始時刻からの積算
-			emitOpenElapsed_ += dt;
+			emitOpenElapsed_ += dt_;
 
 			// ── リング（開始から emitOpenDelaySec_ 秒後に一度だけ） ──
 			if (emitOpenBurst_ && emitOpenElapsed_ >= emitOpenDelaySec_) {
 				emitOpenBurst_ = false;
 
 				// カメラ前方の少し奥に発生させる
-				const Matrix4x4 camW = camera->GetWorldMatrix();
+				const Matrix4x4 camW = camera_->GetWorldMatrix();
 				Vector3 camPos = { camW.m[3][0], camW.m[3][1], camW.m[3][2] };
 				Vector3 camFwd = MyMath::Normalize(Vector3{ camW.m[2][0], camW.m[2][1], camW.m[2][2] });
 				const float depth = 20.0f;
@@ -385,12 +385,12 @@ void GameScene::Update() {
 			float pitchNow = MyMath::Lerp(camPitchStart_, camPitchEnd_, t01);
 
 			// カメラの回転を適用（位置は従来のFollowでOK）
-			camera->SetRotate({ pitchNow, yawNow, 0.0f });
+			camera_->SetRotate({ pitchNow, yawNow, 0.0f });
 
 			if (camYawTween_.Finished()) {
 				camIntroActive_ = false;
 				camIntroDone_ = true;
-				camera->SetRotate({ camPitchEnd_, camYawEnd_, 0.0f }); // 念のため最終値セット
+				camera_->SetRotate({ camPitchEnd_, camYawEnd_, 0.0f }); // 念のため最終値セット
 			}
 		}
 
@@ -409,7 +409,7 @@ void GameScene::Update() {
 
 		// スライドイン
 		if (startSlideIn_) {
-			startT_ = startTween_.Update(dt);
+			startT_ = startTween_.Update(dt_);
 
 			// 発光：滑り込み中は PI を1周して明→通常へ
 			if (startGlowOn_) {
@@ -438,13 +438,13 @@ void GameScene::Update() {
 			}
 			// 到着後：静止→フェードアウト
 			if (!startFadeOut_) {
-				startHoldElapsed_ += dt;
+				startHoldElapsed_ += dt_;
 				if (startHoldElapsed_ >= startHoldSec_) {
 					startFadeOut_ = true;
 				}
 			}
 			if (startFadeOut_) {
-				startAlpha_ -= dt / startFadeSec_;
+				startAlpha_ -= dt_ / startFadeSec_;
 				if (startAlpha_ <= 0.0f) {
 					startAlpha_ = 0.0f;
 					startVisible_ = false; // 完全に消す
@@ -493,12 +493,12 @@ void GameScene::Update() {
 				playerDeathStarted_ = true;
 				playerDeathElapsed_ = 0.0f;
 			} else {
-				playerDeathElapsed_ += dt;
+				playerDeathElapsed_ += dt_;
 
 				// クルクル（FlyAway）開始から約4秒後にシーン遷移
 				if (playerDeathElapsed_ >= 4.0f && !irisClosing_) {
 					irisClosing_ = true;
-					irisCloseTween_.Reset(0.0f, irisMaxScale_, kIrisDurationSec, Ease::Type::InBack);
+					irisCloseTween_.Reset(0.0f, irisMaxScale_, kIrisDurationSec_, Ease::Type::InBack);
 				}
 			}
 		}
@@ -508,7 +508,7 @@ void GameScene::Update() {
 			irisScale_ = UpdateIrisScale(iris_.get(), irisTween_, 0.016f);
 
 			if (irisCloseTween_.Finished()) {
-				sceneManager_->SetNextScene(new GameOverScene(dxCommon, srvManager));
+				sceneManager_->SetNextScene(new GameOverScene(dxCommon_, srvManager_));
 				return;
 			}
 		}
@@ -525,7 +525,7 @@ void GameScene::Update() {
 			iris_->Update();
 
 			if (irisCloseTween_.Finished()) {
-				sceneManager_->SetNextScene(new TitleScene(dxCommon, srvManager));
+				sceneManager_->SetNextScene(new TitleScene(dxCommon_, srvManager_));
 				return;
 			}
 		}
@@ -553,22 +553,22 @@ void GameScene::Draw() {
 	// 3Dまとめ
 	Object3dCommon::GetInstance()->DrawSetCommon();
 	//for (auto& g : groundTiles_) g->Draw(dxCommon);
-	player_->Draw(dxCommon); // プレイヤーの描画
+	player_->Draw(dxCommon_); // プレイヤーの描画
 
 	if (enemyManager_) {
-		enemyManager_->Draw(dxCommon); // 敵群の描画を EnemyManager に委譲
+		enemyManager_->Draw(dxCommon_); // 敵群の描画を EnemyManager に委譲
 	}
 
 	// クリア演出中はボス関連を描かない
 	if (!clearSequence_) {
 		if (bossManager_) {
-			bossManager_->Draw(dxCommon);
+			bossManager_->Draw(dxCommon_);
 		}
 	}
 
 	// FogVolume（空間霧）
 	if (fogVolume3D_) {
-		TKM::Camera* activeCamera = (useDebugCamera_ && debugCamera_) ? (TKM::Camera*)debugCamera_.get() : camera.get();
+		TKM::Camera* activeCamera = (useDebugCamera_ && debugCamera_) ? (TKM::Camera*)debugCamera_.get() : camera_.get();
 		if (activeCamera) {
 			const Matrix4x4& camW = activeCamera->GetWorldMatrix();
 
@@ -583,7 +583,7 @@ void GameScene::Draw() {
 	}
 	// SmokeVolume（空間スモーク）
 	if (smokeVolume3D_) {
-		TKM::Camera* activeCamera = (useDebugCamera_ && debugCamera_) ? (TKM::Camera*)debugCamera_.get() : camera.get();
+		TKM::Camera* activeCamera = (useDebugCamera_ && debugCamera_) ? (TKM::Camera*)debugCamera_.get() : camera_.get();
 		if (activeCamera) {
 			const Matrix4x4& camW = activeCamera->GetWorldMatrix();
 
@@ -605,7 +605,7 @@ void GameScene::Draw() {
 	if (useDebugCamera_ && debugCamera_) {
 		vp = debugCamera_->GetViewProjectionMatrix();
 	} else {
-		vp = camera->GetViewProjectionMatrix();
+		vp = camera_->GetViewProjectionMatrix();
 	}
 	LineRenderer::GetInstance()->Draw(vp);
 #endif
@@ -638,14 +638,14 @@ void GameScene::SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float s
 
 TKM::Camera* GameScene::UpdateActiveCamera() {
 	// ──────────────── アクティブカメラの決定＆更新 ───────────────
-	TKM::Camera* activeCamera = camera.get();
+	TKM::Camera* activeCamera = camera_.get();
 	if (useDebugCamera_ && debugCamera_) {
 		// デバッグカメラを更新
 		debugCamera_->Update();
 		activeCamera = debugCamera_.get();
 	} else {
 		// 通常カメラを更新
-		camera->Update();
+		camera_->Update();
 	}
 
 	// ここで「今フレームのカメラ」を全部に渡す
@@ -716,17 +716,17 @@ void GameScene::LoadTextures() {
 // スプライトを作成し、初期化する
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeSprite() {
-	iris_ = CreateCenteredIrisSprite(dxCommon, irisMaxScale_);
+	iris_ = CreateCenteredIrisSprite(dxCommon_, irisMaxScale_);
 	irisScale_ = irisMaxScale_;
-	irisTween_.Reset(irisMaxScale_, 0.0f, kIrisDurationSec, Ease::Type::OutBack);
+	irisTween_.Reset(irisMaxScale_, 0.0f, kIrisDurationSec_, Ease::Type::OutBack);
 
 	// タイトル戻り用アイリス
 	irisCloseScale_ = 0.0f;
-	irisCloseTween_.Reset(0.0f, irisMaxScale_, kIrisDurationSec, Ease::Type::InBack);
+	irisCloseTween_.Reset(0.0f, irisMaxScale_, kIrisDurationSec_, Ease::Type::InBack);
 
 	// ゲームスタート文字
 	startSprite_ = std::make_unique<Sprite>();
-	startSprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon, "./resources/start.png");
+	startSprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, "./resources/start.png");
 	startSprite_->SetAnchorPoint({ 0.5f, 0.5f }); // 中央基準
 	startSprite_->SetPosition({ startStartPos_.x, startStartPos_.y });
 	startSprite_->SetSize({ 100, 100 }); // 画像サイズに合わせ調整
@@ -738,11 +738,11 @@ void GameScene::InitializeSprite() {
 	uiLB_ = std::make_unique<Sprite>();
 	uiRB_ = std::make_unique<Sprite>();
 
-	uiLT_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon, "./resources/LT.png");
+	uiLT_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, "./resources/LT.png");
 	uiLT_->SetAutoAdjustTextureSize(false);
-	uiLB_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon, "./resources/LB.png");
+	uiLB_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, "./resources/LB.png");
 	uiLB_->SetAutoAdjustTextureSize(false);
-	uiRB_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon, "./resources/RB.png");
+	uiRB_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, "./resources/RB.png");
 	uiRB_->SetAutoAdjustTextureSize(false);
 
 	// 右下基準（右下にピタッと寄せる）
@@ -761,8 +761,8 @@ void GameScene::InitializeSprite() {
 	uiRB_->SetColor({ 1,1,1,0.85f });
 
 	// 右下に積む（RBが一番下）
-	const float w = (float)WindowsAPI::kClientWidth;
-	const float h = (float)WindowsAPI::kClientHeight;
+	const float w = (float)WindowsAPI::kClientWidth_;
+	const float h = (float)WindowsAPI::kClientHeight_;
 	const float margin = 20.0f;
 	const float spacing = 10.0f;
 
@@ -773,22 +773,22 @@ void GameScene::InitializeSprite() {
 	// ---- RB弾ゲージ（画面下中央）----
 	rbGaugeUI_ = std::make_unique<TKM::RBGaugeUI>();
 	TKM::RBGaugeUI::Desc d{};
-	rbGaugeUI_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon, this, d);
+	rbGaugeUI_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, this, d);
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 // 必要な3Dモデルをロードする
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::LoadModels() {
-	ModelManager::GetInstance()->LoadModel("axis.obj", dxCommon);
-	ModelManager::GetInstance()->LoadModel("sphere.obj", dxCommon);
-	ModelManager::GetInstance()->LoadModel("terrain.obj", dxCommon);
-	ModelManager::GetInstance()->LoadModel("ground.obj", dxCommon);
-	ModelManager::GetInstance()->LoadModel("jett.obj", dxCommon);
-	ModelManager::GetInstance()->LoadModel("enemy.obj", dxCommon);
-	ModelManager::GetInstance()->LoadModel("reticle_big.obj", dxCommon);
-	ModelManager::GetInstance()->LoadModel("reticle_normal.obj", dxCommon);
-	ModelManager::GetInstance()->LoadModel("reticle_small.obj", dxCommon);
+	ModelManager::GetInstance()->LoadModel("axis.obj", dxCommon_);
+	ModelManager::GetInstance()->LoadModel("sphere.obj", dxCommon_);
+	ModelManager::GetInstance()->LoadModel("terrain.obj", dxCommon_);
+	ModelManager::GetInstance()->LoadModel("ground.obj", dxCommon_);
+	ModelManager::GetInstance()->LoadModel("jett.obj", dxCommon_);
+	ModelManager::GetInstance()->LoadModel("enemy.obj", dxCommon_);
+	ModelManager::GetInstance()->LoadModel("reticle_big.obj", dxCommon_);
+	ModelManager::GetInstance()->LoadModel("reticle_normal.obj", dxCommon_);
+	ModelManager::GetInstance()->LoadModel("reticle_small.obj", dxCommon_);
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -797,7 +797,7 @@ void GameScene::LoadModels() {
 void GameScene::InitializeObjects() {
 	// ──────────────── プレイヤーの初期化 ───────────────
 	player_ = std::make_unique<Player>();
-	player_->Initialize(Object3dCommon::GetInstance(), dxCommon);
+	player_->Initialize(Object3dCommon::GetInstance(), dxCommon_);
 	player_->SetPosition({ 0.0f, 0.0f, 0.0f });
 	player_->SetParentScene(this);
 	player_->SetEnemy(nullptr); // 最初はボスはいないのでnullptr
@@ -807,17 +807,17 @@ void GameScene::InitializeObjects() {
 // カメラを作成し、各オブジェクトに適用する
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeCamera() {
-	camera = std::make_unique<TKM::Camera>();
-	camera->SetRotate({ camPitchStart_, camYawStart_, 0.0f });
-	camera->SetTranslate({ 0.0f,0.0f,-30.0f });
+	camera_ = std::make_unique<TKM::Camera>();
+	camera_->SetRotate({ camPitchStart_, camYawStart_, 0.0f });
+	camera_->SetTranslate({ 0.0f,0.0f,-30.0f });
 
 	debugCamera_ = std::make_unique<DebugCamera>();
 	debugCamera_->Initialize(
-		camera->GetTranslate(),        // 開始位置
+		camera_->GetTranslate(),        // 開始位置
 		Vector3{ 0.0f, 0.0f, 0.0f }    // 初期座標
 	);
 
-	player_->SetCamera(camera.get()); // プレイヤーにカメラをセット
+	player_->SetCamera(camera_.get()); // プレイヤーにカメラをセット
 }
 
 void GameScene::ImGuiDebug() {
@@ -880,16 +880,16 @@ void GameScene::StartClearSequence() {
 	if (vignetting_) {
 		vignetting_->SetBossWave(false);      // 内部フラグをOFF
 	}
-	if (dxCommon) {
+	if (dxCommon_) {
 		// DX 側からも登録解除して、ポストエフェクトチェーンから外す
-		dxCommon->SetVignettingEffect(nullptr);
+		dxCommon_->SetVignettingEffect(nullptr);
 	}
 
 	// カメラの開始位置
-	clearCamStartPos_ = camera->GetTranslate(); // Camera に Getter あり :contentReference[oaicite:4]{index=4}
+	clearCamStartPos_ = camera_->GetTranslate(); // Camera に Getter あり :contentReference[oaicite:4]{index=4}
 
 	// プレイヤー方向に少し寄せる
-	Vector3 camPos = camera->GetTranslate();
+	Vector3 camPos = camera_->GetTranslate();
 	Vector3 playerPos = player_->GetPosition();
 
 	// Zはプレイヤーの少し手前まで寄せる（-30 → プレイヤーZ-15くらい）
@@ -928,8 +928,8 @@ bool GameScene::UpdateClearSequence(float dt) {
 
 		// カメラ位置を線形補間
 		Vector3 camPos = MyMath::Vector3Lerp(clearCamStartPos_, clearCamTargetPos_, t);
-		camera->SetTranslate(camPos);
-		camera->Update();
+		camera_->SetTranslate(camPos);
+		camera_->Update();
 
 		if (t >= 1.0f) {
 			clearPhase_ = ClearPhase::PlayerFly;
@@ -942,8 +942,8 @@ bool GameScene::UpdateClearSequence(float dt) {
 	case ClearPhase::PlayerFly:
 	{
 		// カメラは寄った位置で固定
-		camera->SetTranslate(clearCamTargetPos_);
-		camera->Update();
+		camera_->SetTranslate(clearCamTargetPos_);
+		camera_->Update();
 
 		// プレイヤーを奥(+Z想定)へ進める
 		Vector3 pos = player_->GetPosition();
@@ -973,15 +973,15 @@ bool GameScene::UpdateClearSequence(float dt) {
 			// ─────────────────────────────
 			// カメラ基準で「画面内っぽい範囲」にランダム配置
 			// ─────────────────────────────
-			const Matrix4x4 camW = camera->GetWorldMatrix();
+			const Matrix4x4 camW = camera_->GetWorldMatrix();
 			Vector3 camPos = { camW.m[3][0], camW.m[3][1], camW.m[3][2] };
 			Vector3 camFwd = MyMath::Normalize({ camW.m[2][0], camW.m[2][1], camW.m[2][2] });
 			Vector3 camRight = MyMath::Normalize({ camW.m[0][0], camW.m[0][1], camW.m[0][2] });
 			Vector3 camUp = MyMath::Normalize({ camW.m[1][0], camW.m[1][1], camW.m[1][2] });
 
 			// 画面のアスペクト比に合わせた「横：縦」の広がり
-			float aspect = static_cast<float>(WindowsAPI::kClientWidth) /
-				static_cast<float>(WindowsAPI::kClientHeight);
+			float aspect = static_cast<float>(WindowsAPI::kClientWidth_) /
+				static_cast<float>(WindowsAPI::kClientHeight_);
 			const float halfHeight = 25.0f;              // 画面の上下方向の半分くらい（調整ポイント）
 			const float halfWidth = halfHeight * aspect; // アスペクト比に合わせた横幅
 			// どれくらい「奥」に花火を出すか（カメラ前方方向）
@@ -1011,7 +1011,7 @@ bool GameScene::UpdateClearSequence(float dt) {
 
 			irisClosing_ = true;
 			irisCloseScale_ = 0.0f;
-			irisCloseTween_.Reset(0.0f, irisMaxScale_, kIrisDurationSec, Ease::Type::InBack);
+			irisCloseTween_.Reset(0.0f, irisMaxScale_, kIrisDurationSec_, Ease::Type::InBack);
 		}
 		break;
 	}
@@ -1074,7 +1074,7 @@ void GameScene::SpawnFirework(const Vector3& center) {
 	// =========================
 	{
 		Vector3 burstPos = center;
-		pm->Emit("fw_burst", burstPos, kFireworkBurstCount); // 一度に複数個出す
+		pm->Emit("fw_burst", burstPos, kFireworkBurstCount_); // 一度に複数個出す
 	}
 }
 
@@ -1090,7 +1090,7 @@ void GameScene::UpdateAirStreak(float dt) {
 		airStreakTimer_ -= emitInterval;
 
 		// カメラ基準ベクトル
-		const Matrix4x4 camW = camera->GetWorldMatrix();
+		const Matrix4x4 camW = camera_->GetWorldMatrix();
 		Vector3 camPos = { camW.m[3][0], camW.m[3][1], camW.m[3][2] };
 		Vector3 camFwd = MyMath::Normalize(Vector3{ camW.m[2][0], camW.m[2][1], camW.m[2][2] });
 		Vector3 camRight = MyMath::Normalize(Vector3{ camW.m[0][0], camW.m[0][1], camW.m[0][2] });

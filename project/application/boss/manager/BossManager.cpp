@@ -1,6 +1,7 @@
 #include "BossManager.h"
 #include "GameScene.h"
 #include <algorithm>
+#include "MyMath.h"
 
 static Vector2 WorldToUV(const Vector3& world, const Matrix4x4& vp) {
 	float clipX = world.x * vp.m[0][0] + world.y * vp.m[1][0] + world.z * vp.m[2][0] + 1.0f * vp.m[3][0];
@@ -17,26 +18,26 @@ static Vector2 WorldToUV(const Vector3& world, const Matrix4x4& vp) {
 
 namespace {
 	BossManager::BossBattleConfig MakeBossConfig() {
-		BossManager::BossBattleConfig c{};
-		c.spawnPos = { 0.0f, 0.0f, 200.0f };
+		BossManager::BossBattleConfig c_{};
+		c_.spawnPos_ = { 0.0f, 0.0f, 200.0f };
 
-		c.arenaMin = { -18.0f, 3.0f, 35.0f };
-		c.arenaMax = { 18.0f,12.0f, 70.0f };
+		c_.arenaMin_ = { -18.0f, 3.0f, 35.0f };
+		c_.arenaMax_ = { 18.0f,12.0f, 70.0f };
 
-		TKM::WaterRippleEffect::RippleDesc d{};
-		d.duration = 0.35f;
-		d.radiusMax = 1.45f;
-		d.amplitude = 0.10f;
-		d.frequency = 85.0f;
-		d.width = 10.0f;
-		c.killRipple = d;
+		TKM::WaterRippleEffect::RippleDesc d_{};
+		d_.duration = 0.35f;
+		d_.radiusMax = 1.45f;
+		d_.amplitude = 0.10f;
+		d_.frequency = 85.0f;
+		d_.width = 10.0f;
+		c_.killRipple_ = d_;
 
-		c.killSlowScale = 0.00001f;
-		c.killSlowDuration = 1.7f;
-		return c;
+		c_.killSlowScale_ = 0.00001f;
+		c_.killSlowDuration_ = 1.7f;
+		return c_;
 	}
 
-	const BossManager::BossBattleConfig kBossConfig = MakeBossConfig();
+	const BossManager::BossBattleConfig kBossConfig_ = MakeBossConfig();
 }
 
 void BossManager::Initialize(TKM::DirectXCommon* dxCommon, TKM::Camera* camera, TKM::BaseScene* parent, Player* player) {
@@ -99,11 +100,11 @@ void BossManager::StartBattle() {
 			});
 	}
 
-	boss_->SetPosition(kBossConfig.spawnPos);
+	boss_->SetPosition(kBossConfig_.spawnPos_);
 
 	// --- ボス挙動コントローラ生成 ---
 	bossController_ = std::make_unique<BossController>();
-	bossController_->Initialize(kBossConfig.arenaMin, kBossConfig.arenaMax);
+	bossController_->Initialize(kBossConfig_.arenaMin_, kBossConfig_.arenaMax_);
 
 	killSeq_.Reset();
 
@@ -127,12 +128,12 @@ void BossManager::Update(float dt) {
 		laserBeam3D_->Update(dt);
 
 		LaserInfo li = GetLaserInfo();
-		auto& d = laserBeam3D_->GetDesc();
-		d.active = li.active;
-		d.telegraph = li.telegraph;
-		d.startWS = li.startWS;
-		d.endWS = li.endWS;
-		d.radius = li.radius; // 見た目の太さ＝当たり判定半径に一致させる
+		auto& d_ = laserBeam3D_->GetDesc();
+		d_.active = li.active_;
+		d_.telegraph = li.telegraph_;
+		d_.startWS = li.startWS_;
+		d_.endWS = li.endWS_;
+		d_.radius = li.radius_; // 見た目の太さ＝当たり判定半径に一致させる
 	}
 
 	if (hpUI_ && boss_) {
@@ -143,11 +144,11 @@ void BossManager::Update(float dt) {
 	boss_->Update(dt);
 
 	// ボス撃破ズーム開始（1回だけ）
-	if (!killSeq_.zoomStarted && boss_->IsDying()) {
+	if (!killSeq_.zoomStarted_ && boss_->IsDying()) {
 		if (player_) {
 			player_->StartBossDeathCameraZoom();
 		}
-		killSeq_.zoomStarted = true;
+		killSeq_.zoomStarted_ = true;
 
 		// 波紋
 		/*if (!killSeq_.rippleTriggered && waterRipple_ && camera_) {
@@ -158,9 +159,9 @@ void BossManager::Update(float dt) {
 		}*/
 
 		// スロー
-		if (!killSeq_.slowTriggered && timeScale_) {
-			timeScale_->RequestSlow(kBossConfig.killSlowScale, kBossConfig.killSlowDuration);
-			killSeq_.slowTriggered = true;
+		if (!killSeq_.slowTriggered_ && timeScale_) {
+			timeScale_->RequestSlow(kBossConfig_.killSlowScale_, kBossConfig_.killSlowDuration_);
+			killSeq_.slowTriggered_ = true;
 		}
 	}
 
@@ -184,15 +185,15 @@ void BossManager::Draw(TKM::DirectXCommon* dxCommon) {
 
 	// --- LaserBeam 描画（空間上） ---
 	if (laserBeam3D_ && camera_) {
-		const Matrix4x4& camW = camera_->GetWorldMatrix();
+		const Matrix4x4& camW_ = camera_->GetWorldMatrix();
 
 		// ※GameSceneと同じ取り方（translationが m[3]、基底が row0/1/2 前提）
-		Vector3 right{ camW.m[0][0], camW.m[0][1], camW.m[0][2] };
-		Vector3 up{ camW.m[1][0], camW.m[1][1], camW.m[1][2] };
-		Vector3 fwd{ camW.m[2][0], camW.m[2][1], camW.m[2][2] };
+		Vector3 right_{ camW_.m[0][0], camW_.m[0][1], camW_.m[0][2] };
+		Vector3 up_{ camW_.m[1][0], camW_.m[1][1], camW_.m[1][2] };
+		Vector3 fwd_{ camW_.m[2][0], camW_.m[2][1], camW_.m[2][2] };
 
-		Matrix4x4 vp = camera_->GetViewProjectionMatrix();
-		laserBeam3D_->Draw(vp, right, up, fwd);
+		Matrix4x4 vp_ = camera_->GetViewProjectionMatrix();
+		laserBeam3D_->Draw(vp_, right_, up_, fwd_);
 	}
 }
 
@@ -207,68 +208,48 @@ void BossManager::SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float
 		return;
 	}
 
-	auto bullet = std::make_unique<BossBullet>();
-	bullet->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_, camera_, pos, dir, speed, damage, lifeFrame);
-	bossBullets_.push_back(std::move(bullet));
+	auto bullet_ = std::make_unique<BossBullet>();
+	bullet_->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_, camera_, pos, dir, speed, damage, lifeFrame);
+	bossBullets_.push_back(std::move(bullet_));
 }
 
 BossManager::LaserInfo BossManager::GetLaserInfo() const {
-	LaserInfo li{};
-	if (!bossController_) { return li; }
-	li.active = bossController_->IsLaserActive();
-	li.telegraph = bossController_->IsLaserTelegraph();
-	li.startWS = bossController_->GetLaserStartWS();
-	li.endWS = bossController_->GetLaserEndWS();
-	li.radius = bossController_->GetLaserRadius();
-	return li;
-}
-
-static float Dot3(const Vector3& a, const Vector3& b) {
-	return a.x * b.x + a.y * b.y + a.z * b.z;
-}
-
-static float LengthSq3(const Vector3& v) {
-	return Dot3(v, v);
-}
-
-static Vector3 Sub3(const Vector3& a, const Vector3& b) {
-	return { a.x - b.x, a.y - b.y, a.z - b.z };
-}
-
-static Vector3 Add3(const Vector3& a, const Vector3& b) {
-	return { a.x + b.x, a.y + b.y, a.z + b.z };
-}
-
-static Vector3 Mul3(const Vector3& a, float s) {
-	return { a.x * s, a.y * s, a.z * s };
+	LaserInfo li_{};
+	if (!bossController_) { return li_; }
+	li_.active_ = bossController_->IsLaserActive();
+	li_.telegraph_ = bossController_->IsLaserTelegraph();
+	li_.startWS_ = bossController_->GetLaserStartWS();
+	li_.endWS_ = bossController_->GetLaserEndWS();
+	li_.radius_ = bossController_->GetLaserRadius();
+	return li_;
 }
 
 bool BossManager::TestLaserHit(const LaserInfo& laser, const Vector3& sphereCenterWS, float sphereRadius) {
-	if (!laser.active) { return false; }
+	if (!laser.active_) { return false; }
 
-	const Vector3 p0 = laser.startWS;
-	const Vector3 p1 = laser.endWS;
-	const Vector3 c = sphereCenterWS;
+	const Vector3 p0_ = laser.startWS_;
+	const Vector3 p1_ = laser.endWS_;
+	const Vector3 c_ = sphereCenterWS;
 
-	Vector3 d = Sub3(p1, p0);
-	float dlen2 = LengthSq3(d);
+	Vector3 d_ = MyMath::Subtract(p1_, p0_);
+	float dlen2_ = MyMath::Dot(d_, d_);
 
-	if (dlen2 < 1e-6f) {
-		Vector3 dc = Sub3(c, p0);
-		float dist2 = LengthSq3(dc);
-		float r = laser.radius + sphereRadius;
-		return dist2 <= r * r;
+	if (dlen2_ < 1e-6f) {
+		Vector3 dc_ = MyMath::Subtract(c_, p0_);
+		float dist2_ = MyMath::Dot(dc_, dc_);
+		float r_ = laser.radius_ + sphereRadius;
+		return dist2_ <= r_ * r_;
 	}
 
-	float t = Dot3(Sub3(c, p0), d) / dlen2;
-	t = std::clamp(t, 0.0f, 1.0f);
+	float t_ = MyMath::Dot(MyMath::Subtract(c_, p0_), d_) / dlen2_;
+	t_ = std::clamp(t_, 0.0f, 1.0f);
 
-	Vector3 q = Add3(p0, Mul3(d, t));
-	Vector3 cq = Sub3(c, q);
+	Vector3 q_ = MyMath::Add(p0_, MyMath::Multiply(t_, d_));
+	Vector3 cq_ = MyMath::Subtract(c_, q_);
 
-	float dist2 = LengthSq3(cq);
-	float r = laser.radius + sphereRadius;
-	return dist2 <= r * r;
+	float dist2_ = MyMath::Dot(cq_, cq_);
+	float r_ = laser.radius_ + sphereRadius;
+	return dist2_ <= r_ * r_;
 }
 
 bool BossManager::IsBattleActive() const {
