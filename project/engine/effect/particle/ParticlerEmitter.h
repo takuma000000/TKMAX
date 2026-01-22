@@ -26,22 +26,22 @@ public:
 	/// </summary>
 	/// <param name="pos"></param>
 	void SetPosition(const Vector3& pos) {
-		emitter.transform.translate_ = pos;
+		emitter_.transform_.translate_ = pos;
 	};
 private:
 	//エミッター構造体
 	struct Emitter {
-		TKM::ParticleManager::Transform transform;
-		uint32_t count;
-		float frequency;
-		float frequencyTime;
+		TKM::ParticleManager::Transform transform_;
+		uint32_t count_;
+		float frequency_;
+		float frequencyTime_;
 	};
 
-	Emitter emitter{};
+	Emitter emitter_{};
 
-	std::string name;
-	std::unordered_map<std::string, TKM::ParticleManager::ParticleGroup> particleGroups;
+	std::string name_;
+	std::unordered_map<std::string, TKM::ParticleManager::ParticleGroup> particleGroups_;
 
 	//Δtを定義
-	const float kDeltaTime = 1.0f / 60.0f;
+	const float kDeltaTime_ = 1.0f / 60.0f;
 };
