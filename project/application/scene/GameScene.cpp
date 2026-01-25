@@ -173,6 +173,9 @@ void GameScene::Initialize() {
 	timeScale_.Initialize();
 	bossManager_->SetTimeScaleController(&timeScale_);
 	clearSlowRequested_ = false; // クリアスロー未要求状態で開始
+	// ──────────────── 花火コントローラーの初期化 ───────────────
+	fireworkController_ = std::make_unique<TKM::FireworkController>();
+	fireworkController_->Reset();
 }
 
 void GameScene::Finalize() {
@@ -760,9 +763,6 @@ bool GameScene::UpdateClearSequence(float dt) {
 		skybox_->UpdateRotation(); // skybox回転更新
 	}
 
-	// 花火用タイマー（クリア演出中だけ使うローカル static）
-	static float fireTimer = 0.0f;
-
 	bool finished = false;
 
 	switch (clearPhase_) {
@@ -779,75 +779,29 @@ bool GameScene::UpdateClearSequence(float dt) {
 		if (t >= 1.0f) {
 			clearPhase_ = ClearPhase::PlayerFly;
 			clearTimer_ = 0.0f;
-			// プレイヤー飛び始め時に花火タイマーリセット
-			fireTimer = 0.0f;
+
+			if (fireworkController_) {
+				fireworkController_->Reset();
+			}
 		}
 		break;
 	}
 	case ClearPhase::PlayerFly:
 	{
-		// カメラは寄った位置で固定
 		camera_->SetTranslate(clearCamTargetPos_);
 		camera_->Update();
 
-		// プレイヤーを奥(+Z想定)へ進める
 		Vector3 pos = player_->GetPosition();
 		pos.z += clearPlayerSpeed_ * dt;
 		player_->SetPosition(pos);
 
-		// 入力処理などは行わず、見た目用に行列だけ更新
 		player_->UpdateVisualOnly();
 
-		// ============================
-		// 花火演出（打ち上げ花火版）
-		// ============================
-		// ランダム範囲ヘルパー
-		auto randRange = [](float min, float max) {
-			return min + (max - min) * MyMath::Rand01();
-			};
-
-		// 「次の花火が上がるまでの時間」をランダムで決める用
-		static float fireInterval = randRange(0.8f, 1.6f); // 0.8〜1.6秒のどこか
-		fireTimer += dt; // 経過時間を加算
-
-		if (fireTimer >= fireInterval) { // 花火打ち上げタイミング到来
-			fireTimer = 0.0f; // タイマーリセット
-			// 次回用に、また別の間隔をランダム決定
-			fireInterval = randRange(0.8f, 1.6f);
-
-			// ─────────────────────────────
-			// カメラ基準で「画面内っぽい範囲」にランダム配置
-			// ─────────────────────────────
-			const Matrix4x4 camW = camera_->GetWorldMatrix();
-			Vector3 camPos = { camW.m[3][0], camW.m[3][1], camW.m[3][2] };
-			Vector3 camFwd = MyMath::Normalize({ camW.m[2][0], camW.m[2][1], camW.m[2][2] });
-			Vector3 camRight = MyMath::Normalize({ camW.m[0][0], camW.m[0][1], camW.m[0][2] });
-			Vector3 camUp = MyMath::Normalize({ camW.m[1][0], camW.m[1][1], camW.m[1][2] });
-
-			// 画面のアスペクト比に合わせた「横：縦」の広がり
-			float aspect = static_cast<float>(WindowsAPI::kClientWidth_) /
-				static_cast<float>(WindowsAPI::kClientHeight_);
-			const float halfHeight = 25.0f;              // 画面の上下方向の半分くらい（調整ポイント）
-			const float halfWidth = halfHeight * aspect; // アスペクト比に合わせた横幅
-			// どれくらい「奥」に花火を出すか（カメラ前方方向）
-			const float minDepth = 80.0f;   // カメラからの最小距離
-			const float maxDepth = 140.0f;  // カメラからの最大距離
-			// 一度に何発分の花火を出すか（単発）
-			const int kBurstCount = 1;
-
-			for (int i = 0; i < kBurstCount; ++i) {
-				float sx = randRange(-1.0f, 1.0f);
-				float sy = randRange(-0.8f, 0.8f);
-				float depth = randRange(minDepth, maxDepth);
-
-				// カメラ前方 depth の位置を中心に、Right/Up 方向でオフセット
-				Vector3 center = camPos + camFwd * depth + camRight * (sx * halfWidth) + camUp * (sy * halfHeight);
-
-				SpawnFirework(center);
-			}
+		// 花火はControllerへ委譲
+		if (fireworkController_) {
+			fireworkController_->Update(dt, camera_.get());
 		}
 
-		// 一定距離進んだらアイリス閉じへ
 		if (clearTimer_ >= clearPlayerFlyMinTime_ &&
 			pos.z > clearPlayerStartPos_.z + clearPlayerFlyDistance_) {
 
@@ -856,7 +810,12 @@ bool GameScene::UpdateClearSequence(float dt) {
 
 			irisClosing_ = true;
 			irisCloseScale_ = 0.0f;
-			irisCloseTween_.Reset(0.0f, intro_ ? intro_->GetIrisMaxScale() : 0.0f, kIrisDurationSec_, Ease::Type::InBack);
+			irisCloseTween_.Reset(
+				0.0f,
+				intro_ ? intro_->GetIrisMaxScale() : 0.0f,
+				kIrisDurationSec_,
+				Ease::Type::InBack
+			);
 		}
 		break;
 	}
@@ -893,33 +852,6 @@ bool GameScene::UpdateClearSequence(float dt) {
 	}
 
 	return finished;
-}
-
-void GameScene::SpawnFirework(const Vector3& center) {
-	auto pm = ParticleManager::GetInstance();
-
-	// =========================
-	// 1. 打ち上がる光の筋
-	// =========================
-	{
-		Vector3 launchPos = center;   // 非 const のコピーを作る
-		launchPos.y -= 40.0f;        // 少し下から飛ばす
-		pm->Emit("fw_launch", launchPos, 1);
-	}
-	// =========================
-	// 2. 爆発フラッシュ
-	// =========================
-	{
-		Vector3 flashPos = center;
-		pm->Emit("fw_flash", flashPos, 1);
-	}
-	// =========================
-	// 3. 花火本体（放射）
-	// =========================
-	{
-		Vector3 burstPos = center;
-		pm->Emit("fw_burst", burstPos, 60);
-	}
 }
 
 void GameScene::UpdateAirStreak(float dt) {

@@ -184,6 +184,7 @@
     <ClCompile Include="application\boss\BossHpBarUI.cpp" />
     <ClCompile Include="application\player\RBGaugeUI.cpp" />
     <ClCompile Include="application\effect\IntroSequence.cpp" />
+    <ClCompile Include="application\effect\FireworkController.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -404,6 +405,7 @@
     <ClInclude Include="application\boss\BossHpBarUI.h" />
     <ClInclude Include="application\player\RBGaugeUI.h" />
     <ClInclude Include="application\effect\IntroSequence.h" />
+    <ClInclude Include="application\effect\FireworkController.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

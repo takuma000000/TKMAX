@@ -43,6 +43,7 @@
 #include "SmokeVolume3D.h"
 #include "RBGaugeUI.h"
 #include "IntroSequence.h"
+#include "FireworkController.h"
 
 //=============================================================
 // GameSceneクラス
@@ -123,11 +124,6 @@ public:
 	/// <param name="dt"></param>
 	/// <returns></returns>
 	bool UpdateClearSequence(float dt);
-	/// <summary>
-	/// Iris（開く）演出の更新を行います。
-	/// </summary>
-	/// <param name="center"></param>
-	void SpawnFirework(const Vector3& center);
 	// Getter==================================
 	/// <summary>
 	/// カメラのポインタを取得します。
@@ -296,6 +292,8 @@ private:
 	std::unique_ptr<TKM::IntroSequence> intro_ = nullptr;
 
 	std::unique_ptr<TKM::RBGaugeUI> rbGaugeUI_;
+
+	std::unique_ptr<TKM::FireworkController> fireworkController_;
 
 	static constexpr float dt_ = 0.016f;
 };
