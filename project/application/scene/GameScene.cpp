@@ -218,6 +218,15 @@ void GameScene::Update() {
 		return;
 	}
 
+	// ゲーム開始演出（アイリス開き / カメラ回転 / start表示）
+	if (intro_) {
+		intro_->Update(dt_, camera_.get(), enemiesInitialized_, requestInitEnemies_);
+	}
+
+	// ロック状態は「Intro中 or クリア中」
+	const bool introLocked = (intro_ && intro_->IsGameplayLocked());
+	gameplayLocked_ = introLocked || clearSequence_;
+
 	// --- 敵とWaveは「ゲーム開始後」だけ動かす ---
 	if (!gameplayLocked_ && enemiesInitialized_) {
 
@@ -312,154 +321,6 @@ void GameScene::Update() {
 			UpdateAirStreak(dt_);
 		}
 
-		if (irisOpening_) { // --- アイリスオープニング中の更新 ---
-			// 共通の経過タイム：開始時刻からの積算
-			emitOpenElapsed_ += dt_;
-
-			// ── リング（開始から emitOpenDelaySec_ 秒後に一度だけ） ──
-			if (emitOpenBurst_ && emitOpenElapsed_ >= emitOpenDelaySec_) {
-				emitOpenBurst_ = false;
-
-				// カメラ前方の少し奥に発生させる
-				const Matrix4x4 camW = camera_->GetWorldMatrix();
-				Vector3 camPos = { camW.m[3][0], camW.m[3][1], camW.m[3][2] };
-				Vector3 camFwd = MyMath::Normalize(Vector3{ camW.m[2][0], camW.m[2][1], camW.m[2][2] });
-				const float depth = 20.0f;
-
-				Vector3 centerInFront = camPos + camFwd * depth;
-				centerInFront.y -= 0.1f;
-
-				// 吸い込みリングを即時発生
-				ParticleManager::GetInstance()->Emit("irisOpen", centerInFront, 60);
-
-				// 花火も同じ場所で出したいので座標を覚えておく
-				lastEmitPos_ = centerInFront;
-
-				// 旧仕様の「リング後からカウント」用は使わないためリセットだけ
-				emitFireworkPending_ = true;        // フラグは立てたまま
-				emitFireworkElapsed_ = 0.0f;        // 以後は使わない（念のため初期化）
-			}
-
-			// ── 花火（開始から emitFireworkDelaySec_ 秒後に一度だけ） ──
-			if (emitFireworkPending_ && emitOpenElapsed_ >= emitFireworkDelaySec_) {
-				emitFireworkPending_ = false;
-				// 同じ位置で出す
-				ParticleManager::GetInstance()->Emit("irisFire", lastEmitPos_, 80);
-			}
-
-			// ── アイリスの見た目更新（従来どおり） ──
-			irisScale_ = irisTween_.Update(0.016f);
-			iris_->SetSize({ irisScale_, irisScale_ });
-			iris_->Update();
-
-			if (irisShadow_) {
-				irisShadow_->SetSize({ irisScale_ * 1.02f, irisShadow_->GetSize().y });
-				irisShadow_->Update();
-			}
-
-			// ツイーン完了でオープニング終了
-			if (irisTween_.Finished()) {
-				irisOpening_ = false;
-			}
-
-			// ── カメラインロ：アイリスが終わったら一度だけ回転ツイーンを開始 ──
-			if (!irisOpening_ && !camIntroActive_ && !camIntroDone_) {
-				camIntroActive_ = true;
-				// 横向き（camYawStart_）→ 正面（camYawEnd_）へ、OutBackで camIntroDuration_ 秒
-				camYawTween_.Reset(camYawStart_, camYawEnd_, camIntroDuration_, Ease::Type::OutBack);
-			}
-		}
-
-		// ── カメラインロ：ツイーンでカメラ回転を更新 ──
-		if (camIntroActive_) {
-			// 60FPS想定の固定デルタ
-			const float delta = 0.016f;
-			// ツイーン更新で現在のヨー回転を取得
-			float yawNow = camYawTween_.Update(delta);
-
-			// 進捗0..1を安全に出す
-			float denom = std::max(0.0001f, (camYawEnd_ - camYawStart_));
-			float t01 = std::clamp((yawNow - camYawStart_) / denom, 0.0f, 1.0f);
-
-			// ピッチも少しだけ動かしたい場合（固定で良ければ start=end に）
-			float pitchNow = MyMath::Lerp(camPitchStart_, camPitchEnd_, t01);
-
-			// カメラの回転を適用（位置は従来のFollowでOK）
-			camera_->SetRotate({ pitchNow, yawNow, 0.0f });
-
-			if (camYawTween_.Finished()) {
-				camIntroActive_ = false;
-				camIntroDone_ = true;
-				camera_->SetRotate({ camPitchEnd_, camYawEnd_, 0.0f }); // 念のため最終値セット
-			}
-		}
-
-		// --- カメラアクションが終わったら、start.png を一度だけ出す ---
-		if (camIntroDone_ && !startPlayed_) {
-			startPlayed_ = true;          // 二度目以降は発火させない
-			startVisible_ = true;
-			startSlideIn_ = true;
-			startFadeOut_ = false;        // 念のためリセット
-			startHoldElapsed_ = 0.0f;
-			startAlpha_ = 1.0f;
-			startSprite_->SetColor({ 1,1,1,startAlpha_ });
-			startSprite_->SetPosition({ startStartPos_.x, startEndPos_.y });
-			startTween_.Reset(0.0f, 1.0f, startDuration_, Ease::Type::OutBack);
-		}
-
-		// スライドイン
-		if (startSlideIn_) {
-			startT_ = startTween_.Update(dt_);
-
-			// 発光：滑り込み中は PI を1周して明→通常へ
-			if (startGlowOn_) {
-				float glow = 1.0f + startGlowAmp_ * std::sin(startT_ * MyMath::GetPI());
-				startSprite_->SetColor({ glow, glow, glow, startAlpha_ });          // 発光を白成分で乗算
-			} else {
-				startSprite_->SetColor({ 1,1,1,startAlpha_ });
-			}
-
-			float x = MyMath::Lerp(startStartPos_.x, startEndPos_.x, startT_);
-			float y = startEndPos_.y;
-			startSprite_->SetPosition({ x, y });
-			startSprite_->Update();
-
-			if (startTween_.Finished()) {
-				startSlideIn_ = false;
-				startHoldElapsed_ = 0.0f; // 到着後の静止タイマー開始
-			}
-		} else if (startVisible_) {
-			// 中央での呼吸発光（だんだん弱くなる）
-			if (!startFadeOut_ && startGlowOn_) {
-				float t01 = (startHoldSec_ > 0.0f) ? std::min(startHoldElapsed_ / startHoldSec_, 1.0f) : 1.0f;
-				float decay = 1.0f - 0.7f * t01; // 経過で発光を弱める
-				float glow = 1.0f + decay * 0.20f * std::sin(startHoldElapsed_ * startGlowSpeed_);
-				startSprite_->SetColor({ glow, glow, glow, startAlpha_ });
-			}
-			// 到着後：静止→フェードアウト
-			if (!startFadeOut_) {
-				startHoldElapsed_ += dt_;
-				if (startHoldElapsed_ >= startHoldSec_) {
-					startFadeOut_ = true;
-				}
-			}
-			if (startFadeOut_) {
-				startAlpha_ -= dt_ / startFadeSec_;
-				if (startAlpha_ <= 0.0f) {
-					startAlpha_ = 0.0f;
-					startVisible_ = false; // 完全に消す
-
-					if (!enemiesInitialized_) {
-						requestInitEnemies_ = true;
-					}
-
-					gameplayLocked_ = false; // ゲームプレイ解放
-				}
-				startSprite_->SetColor({ 1,1,1,startAlpha_ });
-			}
-			startSprite_->Update();
-		}
-
 		// --- 操作ガイドUI：押してる時は赤 ---
 		Input* in = Input::GetInstance();
 
@@ -482,50 +343,40 @@ void GameScene::Update() {
 		if (uiLB_) { uiLB_->Update(); }
 		if (uiRB_) { uiRB_->Update(); }
 
-
 		// その他のオブジェクト・パーティクルの更新
 		ParticleManager::GetInstance()->Update(scaledDt);
 
 		// ─── プレイヤー死亡時のGameOver遷移 ───
+		static bool irisToTitle = false; // この場だけで使う：閉じたらどこへ行くか
+
 		if (player_ && player_->IsDead()) {
-			// 死亡フェーズが始まった瞬間にカウント開始
 			if (!playerDeathStarted_) {
 				playerDeathStarted_ = true;
 				playerDeathElapsed_ = 0.0f;
 			} else {
 				playerDeathElapsed_ += dt_;
 
-				// クルクル（FlyAway）開始から約4秒後にシーン遷移
 				if (playerDeathElapsed_ >= 4.0f && !irisClosing_) {
 					irisClosing_ = true;
-					irisCloseTween_.Reset(0.0f, irisMaxScale_, kIrisDurationSec_, Ease::Type::InBack);
+					irisToTitle = false; // ✅ GameOverへ
+					irisCloseTween_.Reset(0.0f, intro_ ? intro_->GetIrisMaxScale() : 0.0f, kIrisDurationSec_, Ease::Type::InBack);
 				}
-			}
-		}
-
-		// アイリス閉じ中は進行してGameOverへ
-		if (irisClosing_) {
-			irisScale_ = UpdateIrisScale(iris_.get(), irisTween_, 0.016f);
-
-			if (irisCloseTween_.Finished()) {
-				sceneManager_->SetNextScene(new GameOverScene(dxCommon_, srvManager_));
-				return;
 			}
 		}
 
 		// ─── Tキーでタイトルに戻る（アイリス閉じ演出つき）───
 		if (!irisClosing_ && Input::GetInstance()->TriggerKey(DIK_T)) {
 			irisClosing_ = true;
-			irisCloseTween_.Reset(0.0f, irisMaxScale_, 0.8f, Ease::Type::InBack);
+			irisToTitle = true; // ✅ Titleへ
+			irisCloseTween_.Reset(0.0f, intro_ ? intro_->GetIrisMaxScale() : 0.0f, 0.8f, Ease::Type::InBack);
 		}
 
+		// アイリス閉じ中は進行してGameOverへ
 		if (irisClosing_) {
-			irisCloseScale_ = irisCloseTween_.Update(0.016f);
-			iris_->SetSize({ irisCloseScale_, irisCloseScale_ });
-			iris_->Update();
+			UpdateIrisScale(intro_ ? intro_->GetIrisSprite() : nullptr, irisCloseTween_, 0.016f);
 
 			if (irisCloseTween_.Finished()) {
-				sceneManager_->SetNextScene(new TitleScene(dxCommon_, srvManager_));
+				sceneManager_->SetNextScene(new GameOverScene(dxCommon_, srvManager_));
 				return;
 			}
 		}
@@ -612,15 +463,9 @@ void GameScene::Draw() {
 
 	// スプライトまとめ
 	TKM::SpriteCommon::GetInstance()->DrawSetCommon();
-	// ---- 最前面の白円は Sprite パスで最後に描く ----
-	if (irisOpening_ && iris_) {
-		iris_->Draw(); // 開く
-	}
-	if (irisClosing_ && iris_) {
-		iris_->Draw(); // 閉じる
-	}
-	if (startVisible_) {
-		startSprite_->Draw(); // ゲームスタート文字
+	// IntroSequence 側で Iris / start 表示を描画する
+	if (intro_) {
+		intro_->Draw(irisClosing_);
 	}
 	// 操作ガイドUI（常時表示）
 	if (uiLT_) { uiLT_->Draw(); }
@@ -716,22 +561,14 @@ void GameScene::LoadTextures() {
 // スプライトを作成し、初期化する
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeSprite() {
-	iris_ = CreateCenteredIrisSprite(dxCommon_, irisMaxScale_);
-	irisScale_ = irisMaxScale_;
-	irisTween_.Reset(irisMaxScale_, 0.0f, kIrisDurationSec_, Ease::Type::OutBack);
 
-	// タイトル戻り用アイリス
+	// ✅ ゲーム開始演出（アイリス開き / start表示 / カメラ回転）
+	intro_ = std::make_unique<TKM::IntroSequence>();
+	intro_->Initialize(dxCommon_);
+
+	// ✅ タイトル戻り/ゲームオーバー用アイリス（IntroのIrisを使う）
 	irisCloseScale_ = 0.0f;
-	irisCloseTween_.Reset(0.0f, irisMaxScale_, kIrisDurationSec_, Ease::Type::InBack);
-
-	// ゲームスタート文字
-	startSprite_ = std::make_unique<Sprite>();
-	startSprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, "./resources/start.png");
-	startSprite_->SetAnchorPoint({ 0.5f, 0.5f }); // 中央基準
-	startSprite_->SetPosition({ startStartPos_.x, startStartPos_.y });
-	startSprite_->SetSize({ 100, 100 }); // 画像サイズに合わせ調整
-	startSprite_->SetColor({ 1,1,1,1 }); // アルファ1で開始
-	startTween_.Reset(0.0f, 1.0f, startDuration_, Ease::Type::OutBack);
+	irisCloseTween_.Reset(0.0f, intro_->GetIrisMaxScale(), kIrisDurationSec_, Ease::Type::InBack);
 
 	// ---- 操作ガイドUI（右下） ----
 	uiLT_ = std::make_unique<Sprite>();
@@ -808,16 +645,21 @@ void GameScene::InitializeObjects() {
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeCamera() {
 	camera_ = std::make_unique<TKM::Camera>();
-	camera_->SetRotate({ camPitchStart_, camYawStart_, 0.0f });
+
+	// IntroSequence に移したなら、ここは固定値でOK
+	const float camPitchStart = 0.12f;
+	const float camYawStart = -1.2f;
+
+	camera_->SetRotate({ camPitchStart, camYawStart, 0.0f });
 	camera_->SetTranslate({ 0.0f,0.0f,-30.0f });
 
 	debugCamera_ = std::make_unique<DebugCamera>();
 	debugCamera_->Initialize(
-		camera_->GetTranslate(),        // 開始位置
-		Vector3{ 0.0f, 0.0f, 0.0f }    // 初期座標
+		camera_->GetTranslate(),
+		Vector3{ 0.0f, 0.0f, 0.0f }
 	);
 
-	player_->SetCamera(camera_.get()); // プレイヤーにカメラをセット
+	player_->SetCamera(camera_.get());
 }
 
 void GameScene::ImGuiDebug() {
@@ -1014,19 +856,18 @@ bool GameScene::UpdateClearSequence(float dt) {
 
 			irisClosing_ = true;
 			irisCloseScale_ = 0.0f;
-			irisCloseTween_.Reset(0.0f, irisMaxScale_, kIrisDurationSec_, Ease::Type::InBack);
+			irisCloseTween_.Reset(0.0f, intro_ ? intro_->GetIrisMaxScale() : 0.0f, kIrisDurationSec_, Ease::Type::InBack);
 		}
 		break;
 	}
 	case ClearPhase::IrisClose: // アイリス閉じ
 	{
-		if (irisClosing_ && iris_) {
-			irisCloseScale_ = irisCloseTween_.Update(dt);
-			iris_->SetSize({ irisCloseScale_, irisCloseScale_ });
-			iris_->Update();
+		if (irisClosing_) {
+			// IntroSequence 側の Iris を使って閉じる
+			UpdateIrisScale(intro_ ? intro_->GetIrisSprite() : nullptr, irisCloseTween_, dt);
 
 			if (irisCloseTween_.Finished()) {
-				finished = true; // ここでreturnしない（下で smoke/fog 更新してから返す）
+				finished = true;
 			}
 		}
 		break;
@@ -1077,7 +918,7 @@ void GameScene::SpawnFirework(const Vector3& center) {
 	// =========================
 	{
 		Vector3 burstPos = center;
-		pm->Emit("fw_burst", burstPos, kFireworkBurstCount_); // 一度に複数個出す
+		pm->Emit("fw_burst", burstPos, 60);
 	}
 }
 

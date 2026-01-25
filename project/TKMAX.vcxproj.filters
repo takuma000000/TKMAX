@@ -183,6 +183,7 @@
     <ClCompile Include="engine\effect\post\LaserBeam3D.cpp" />
     <ClCompile Include="application\boss\BossHpBarUI.cpp" />
     <ClCompile Include="application\player\RBGaugeUI.cpp" />
+    <ClCompile Include="application\effect\IntroSequence.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -402,6 +403,7 @@
     <ClInclude Include="engine\effect\post\LaserBeam3D.h" />
     <ClInclude Include="application\boss\BossHpBarUI.h" />
     <ClInclude Include="application\player\RBGaugeUI.h" />
+    <ClInclude Include="application\effect\IntroSequence.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

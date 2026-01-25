@@ -42,6 +42,7 @@
 #include "FogVolume3D.h"
 #include "SmokeVolume3D.h"
 #include "RBGaugeUI.h"
+#include "IntroSequence.h"
 
 //=============================================================
 // GameSceneクラス
@@ -163,24 +164,8 @@ private:
 
 	std::unique_ptr<TKM::DirectionalLight> directionalLight_ = nullptr;// ディレクショナルライト
 
-	std::unique_ptr<TKM::Skybox> skybox_;// スカイボックス
-
-	// --- カメラインロ用 ---
-	bool  camIntroActive_ = false;   // いま回転中か
-	bool  camIntroDone_ = false;   // 一度やったら終了
-	Ease::Tween camYawTween_;        // ヨー回転用ツイーン(スカラー)
-	float camIntroDuration_ = 1.2f;  // かけたい時間(秒)
-
-	// 始点/終点角度（お好みで調整）
-	float camYawStart_ = -1.2f;      // 開始時に横を向かせる（-約69度）
-	float camYawEnd_ = 0.0f;       // 最終的に+Zを向く前提(=0)
-
-	// ピッチを少しだけ変化させたいなら
-	float camPitchStart_ = 0.12f;    // ほんのり俯瞰で始める
-	float camPitchEnd_ = 0.05f;    // 少しだけ水平へ
-
-	// スカイボックス回転
-	static constexpr float kSkyRotSpeedX_ = 0.002f;
+	std::unique_ptr<TKM::Skybox> skybox_; // スカイボックス
+	static constexpr float kSkyRotSpeedX_ = 0.002f; 	// スカイボックス回転
 	//======================================================================
 	// プレイヤー / 敵 / マネージャ
 	//======================================================================
@@ -212,26 +197,11 @@ private:
 	// airStreak（風エフェクト）
 	static constexpr float kAirBoxHalfWidth_ = 40.0f;
 	static constexpr float kAirBoxHalfHeight_ = 25.0f;
-	//======================================================================
-	// アイリス開き演出（ゲーム開始）
-	//======================================================================
-	std::unique_ptr<TKM::Sprite> iris_ = nullptr;
-	// Iris（開く）用
-	bool   irisOpening_ = true;
-	float  irisScale_ = 5.0f;
-	float  irisStartScale_ = 0.0f;   // 開始スケール（覆った状態）
-	float  irisEndScale_ = 0.0f;   // 最終スケール（Initializeでセット）
-	float  irisMaxScale_ = 0.0f;   // 画面対角ベース
 
-	Ease::Tween irisTween_;          // Iris用イージング
-	bool        emitOpenBurst_ = true;  // 開いた瞬間にエフェクトを出すか
-	std::unique_ptr<TKM::Sprite> irisShadow_ = nullptr; // Irisの影
-	float emitOpenDelaySec_ = 0.7f;  // 開始から何秒遅らせるか（お好み）
-	float emitOpenElapsed_ = 0.0f;  // 経過時間
-	const float dt_ = 0.016f;           // 可変なら実測のdeltaTimeを使ってOK
-
+	///
 	// アイリス演出時間
 	static constexpr float kIrisDurationSec_ = 0.8f;
+	///
 	//======================================================================
 	// アイリス閉じ演出（タイトル戻り）
 	//======================================================================
@@ -239,34 +209,6 @@ private:
 	bool        irisClosing_ = false;   // Iris閉じ中か
 	Ease::Tween irisCloseTween_;             // Iris閉じ用イージング
 	float       irisCloseScale_ = 0.0f;    // 閉じる最終スケール
-	//======================================================================
-	// 「ゲームスタート」スライドイン演出
-	//======================================================================
-	std::unique_ptr<TKM::Sprite> startSprite_;  // 「ゲームスタート」スプライト
-	float startT_ = 0.0f;         // イージング進行度(0→1)
-	bool  startSlideIn_ = false;        // スライド中フラグ
-	bool  startVisible_ = false;        // 表示も最初はしない（演出終了後に出す）
-	bool  startPlayed_ = false;        // 一度だけ出すためのフラグ
-
-	Vector2 startStartPos_ = { TKM::WindowsAPI::kClientWidth_ + 400.0f, TKM::WindowsAPI::kClientHeight_ * 0.5f }; // 右外
-	Vector2 startEndPos_ = { TKM::WindowsAPI::kClientWidth_ * 0.5f,  TKM::WindowsAPI::kClientHeight_ * 0.5f };  // 中央
-
-	Ease::Tween startTween_;        // イージング
-	float       startDuration_ = 1.0f;   // アニメ時間
-	float       startHoldSec_ = 1.0f;   // 中央で静止して見せる時間(秒)
-	float       startHoldElapsed_ = 0.0f;  // 経過
-	bool        startFadeOut_ = false;  // フェードアウト中か
-	float       startFadeSec_ = 0.6f;   // フェード時間(秒)
-	float       startAlpha_ = 1.0f;   // 現在アルファ
-
-	float startGlowAmp_ = 0.8f;   // どれだけ明るくオーバーシュートするか（0.3～0.8目安）
-	float startGlowSpeed_ = 10.0f;  // 中央到達後の“呼吸”スピード
-	bool  startGlowOn_ = true;   // ON/OFF
-
-	// 「ゲームスタート」演出
-	static constexpr float kStartSlideInSec_ = 1.0f;
-	static constexpr float kStartHoldSec_ = 1.0f;
-	static constexpr float kStartFadeSec_ = 0.6f;
 	//======================================================================
 	// プレイヤー死亡・ゲームオーバー遷移
 	//======================================================================
@@ -296,17 +238,6 @@ private:
 	// クリア演出
 	static constexpr float kPlayerFlyMinTime_ = 1.8f;
 	static constexpr float kPlayerFlyDistance_ = 80.0f;
-	//======================================================================
-	// 花火演出
-	//======================================================================
-	// 花火用
-	bool  emitFireworkPending_ = false; // 花火を出すか
-	float emitFireworkDelaySec_ = 0.7f;  // 開始から何秒遅らせるか（お好み）
-	float emitFireworkElapsed_ = 0.0f;  // 経過時間
-	Vector3 lastEmitPos_ = { 0.0f, 0.0f, 0.0f }; // 最後にエフェクトを出した位置
-
-	// 花火
-	static constexpr int kFireworkBurstCount_ = 60;
 	//======================================================================
 	// ポストエフェクト（RadialBlur）
 	//======================================================================
@@ -362,5 +293,9 @@ private:
 
 	Vector2 uiSizeDefault_ = { 260.0f, 150.0f };
 
+	std::unique_ptr<TKM::IntroSequence> intro_ = nullptr;
+
 	std::unique_ptr<TKM::RBGaugeUI> rbGaugeUI_;
+
+	static constexpr float dt_ = 0.016f;
 };
