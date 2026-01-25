@@ -65,8 +65,8 @@ namespace TKM {
 		// ** ImGui処理終了 **
 		imguiManager_->End();
 
-		viewport = dxCommon_->GetViewport();
-		scissorRect = dxCommon_->GetRect();
+		viewport_ = dxCommon_->GetViewport();
+		scissorRect_ = dxCommon_->GetRect();
 
 		//---------------------------------------------------------
 	}

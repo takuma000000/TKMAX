@@ -14,38 +14,47 @@ class AABB {
 public:
 	AABB() = default;
 	AABB(const Vector3& center, const Vector3& size)
-		: center(center), halfSize(size * 0.5f) {
+		: center_(center), halfSize_(size * 0.5f) {
 	}
 
 	/// <summary>
-	/// AABBの中心とサイズを設定する
+	/// AABBの設定
 	/// </summary>
+	/// <param name="center"></param>
+	/// <param name="size"></param>
 	void Set(const Vector3& center, const Vector3& size) {
-		this->center = center;
-		this->halfSize = size * 0.5f;
+		this->center_ = center;
+		this->halfSize_ = size * 0.5f;
 	}
 
 	/// <summary>
 	/// 点との当たり判定
 	/// </summary>
+	/// <param name="point"></param>
+	/// <returns></returns>
 	bool IsCollidingWithPoint(const Vector3& point) const {
-		return std::abs(point.x - center.x) <= halfSize.x &&
-			std::abs(point.y - center.y) <= halfSize.y &&
-			std::abs(point.z - center.z) <= halfSize.z;
+		return std::abs(point.x - center_.x) <= halfSize_.x &&
+			std::abs(point.y - center_.y) <= halfSize_.y &&
+			std::abs(point.z - center_.z) <= halfSize_.z;
 	}
 
 	/// <summary>
 	/// AABB同士の当たり判定
 	/// </summary>
+	/// <param name="other"></param>
+	/// <returns></returns>
 	bool IsCollidingWithAABB(const AABB& other) const {
-		return std::abs(center.x - other.center.x) <= (halfSize.x + other.halfSize.x) &&
-			std::abs(center.y - other.center.y) <= (halfSize.y + other.halfSize.y) &&
-			std::abs(center.z - other.center.z) <= (halfSize.z + other.halfSize.z);
+		return std::abs(center_.x - other.center_.x) <= (halfSize_.x + other.halfSize_.x) &&
+			std::abs(center_.y - other.center_.y) <= (halfSize_.y + other.halfSize_.y) &&
+			std::abs(center_.z - other.center_.z) <= (halfSize_.z + other.halfSize_.z);
 	}
 
 	/// <summary>
 	/// 線分との当たり判定
 	/// </summary>
+	/// <param name="s"></param>
+	/// <param name="e"></param>
+	/// <returns></returns>
 	bool IsIntersectSegment(const Vector3& s, const Vector3& e) const {
 		Vector3 d = e - s;
 		float tmin = 0.0f;
@@ -66,12 +75,12 @@ public:
 			};
 
 		// AABB min/max（halfSize を使う）
-		float minX = center.x - halfSize.x;
-		float maxX = center.x + halfSize.x;
-		float minY = center.y - halfSize.y;
-		float maxY = center.y + halfSize.y;
-		float minZ = center.z - halfSize.z;
-		float maxZ = center.z + halfSize.z;
+		float minX = center_.x - halfSize_.x;
+		float maxX = center_.x + halfSize_.x;
+		float minY = center_.y - halfSize_.y;
+		float maxY = center_.y + halfSize_.y;
+		float minZ = center_.z - halfSize_.z;
+		float maxZ = center_.z + halfSize_.z;
 
 		if (!update(minX, maxX, s.x, d.x)) return false;
 		if (!update(minY, maxY, s.y, d.y)) return false;
@@ -84,6 +93,6 @@ public:
 	//======================================================================
 	// AABB（軸平行境界ボックス）
 	//======================================================================
-	Vector3 center{};    // ボックスの中心座標（ワールド）
-	Vector3 halfSize{};  // ボックスの半分のサイズ（各軸方向）
+	Vector3 center_{};    // ボックスの中心座標（ワールド）
+	Vector3 halfSize_{};  // ボックスの半分のサイズ（各軸方向）
 };

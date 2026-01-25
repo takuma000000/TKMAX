@@ -52,10 +52,6 @@ namespace TKM {
 			intensity_ * currentIntensity_,
 			radius_,
 			softness_);
-
-#ifdef USE_IMGUI
-		ImGuiDebug();
-#endif
 	}
 
 	void VignettingEffect::ImGuiDebug() {

@@ -12,18 +12,22 @@ namespace TKM {
 	public:
 		virtual ~BaseEffect() = default;
 
-		/// DX 共通を渡して初期化
+		/// <summary>
+		/// ポストエフェクトの初期化
+		/// </summary>
+		/// <param name="dx"></param>
 		virtual void Initialize(TKM::DirectXCommon* dx) {
 			dxCommon_ = dx;
 		}
-
-		/// 毎フレーム更新
+		/// <summary>
+		/// ポストエフェクトの更新
+		/// </summary>
+		/// <param name="dt"></param>
 		virtual void Update(float dt) = 0;
-
-		/// フレーム末尾での描画処理（RenderTexture → Swapchain）
-		/// ※ 実際に呼ぶ場所はメインループ側
+		/// <summary>
+		/// ポストエフェクトの描画
+		/// </summary>
 		virtual void Draw() = 0;
-
 	protected:
 		TKM::DirectXCommon* dxCommon_ = nullptr;
 	};

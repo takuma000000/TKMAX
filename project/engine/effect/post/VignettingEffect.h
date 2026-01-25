@@ -12,14 +12,38 @@ namespace TKM {
 		VignettingEffect() = default;
 		~VignettingEffect() override = default;
 
+		/// <summary>
+		/// ポストエフェクトの初期化
+		/// </summary>
+		/// <param name="dx"></param>
 		void Initialize(TKM::DirectXCommon* dx) override;
+		/// <summary>
+		/// ポストエフェクトの更新
+		/// </summary>
+		/// <param name="dt"></param>
 		void Update(float dt) override;
+		/// <summary>
+		/// ポストエフェクトの描画
+		/// </summary>
 		void Draw() override {} // 今回は DX 側で DrawPostEffectToSwapchain を呼ぶので何もしない
+		/// <summary>
+		/// ImGui デバッグ表示
+		/// </summary>
+		void ImGuiDebug();
 
+		/// <summary>
+		/// ビネットの有効・無効
+		/// </summary>
+		/// <returns></returns>
 		bool IsActive() const { return active_; }
 
-		// ボス Wave 突入/終了で呼ぶ用
+		// Setter========================================
+		/// <summary>
+		/// ボス Wave 中フラグの設定
+		/// </summary>
+		/// <param name="inBoss"></param>
 		void SetBossWave(bool inBoss) { inBossWave_ = inBoss; }
+		// ==============================================
 
 	private:
 		// パラメータ
@@ -40,10 +64,5 @@ namespace TKM {
 		float radiusAnimT_ = 0.0f;   // アニメ用タイマー
 		float radiusAnimSpeed_ = 0.8f; // 揺れる速さ
 		// ===================================================
-
-		/// <summary>
-		/// ImGui デバッグ表示
-		/// </summary>
-		void ImGuiDebug();
 	};
 }

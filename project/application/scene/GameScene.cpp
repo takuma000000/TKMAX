@@ -162,10 +162,10 @@ void GameScene::Initialize() {
 	fogVolume3D_->Initialize(dxCommon_);
 	// 初期パラメータ例
 	auto& d = fogVolume3D_->GetDesc();
-	d.centerWS = { 0.0f, 6.0f, 20.0f };
-	d.halfSizeWS = { 900.0f, 220.0f, 900.0f };
-	d.sliceCount = 80;     // まずこれくらいで板感減らす
-	d.density = 0.19f;  // 濃すぎなら 0.015f まで落としてOK
+	d.centerWS_ = { 0.0f, 6.0f, 20.0f };
+	d.halfSizeWS_ = { 900.0f, 220.0f, 900.0f };
+	d.sliceCount_ = 80;     // まずこれくらいで板感減らす
+	d.density_ = 0.19f;  // 濃すぎなら 0.015f まで落としてOK
 	// SmokeVolume3D の生成と初期化
 	smokeVolume3D_ = std::make_unique<TKM::SmokeVolume3D>();
 	smokeVolume3D_->Initialize(dxCommon_);
@@ -853,6 +853,9 @@ void GameScene::ImGuiDebug() {
 	if (smokeVolume3D_) {
 		smokeVolume3D_->ImGuiDebug();
 	}
+	/*if(vignetting_) {
+		vignetting_->ImGuiDebug();
+	}*/
 	/////////////////////////////////////////////////////
 	ImGuiDebugGamepad(); // ゲームパッド入力デバッグ
 	ImGuiDebugInfo(); // パフォーマンス情報デバッグ

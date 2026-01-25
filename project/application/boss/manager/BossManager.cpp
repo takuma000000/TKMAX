@@ -25,11 +25,11 @@ namespace {
 		c_.arenaMax_ = { 18.0f,12.0f, 70.0f };
 
 		TKM::WaterRippleEffect::RippleDesc d_{};
-		d_.duration = 0.35f;
-		d_.radiusMax = 1.45f;
-		d_.amplitude = 0.10f;
-		d_.frequency = 85.0f;
-		d_.width = 10.0f;
+		d_.duration_ = 0.35f;
+		d_.radiusMax_ = 1.45f;
+		d_.amplitude_ = 0.10f;
+		d_.frequency_ = 85.0f;
+		d_.width_ = 10.0f;
 		c_.killRipple_ = d_;
 
 		c_.killSlowScale_ = 0.00001f;
@@ -58,17 +58,17 @@ void BossManager::Initialize(TKM::DirectXCommon* dxCommon, TKM::Camera* camera, 
 	// LaserBeam3D 初期化
 	laserBeam3D_ = std::make_unique<TKM::LaserBeam3D>();
 	laserBeam3D_->Initialize(dxCommon_);
-	laserBeam3D_->GetDesc().active = false;
-	laserBeam3D_->GetDesc().telegraph = false;
+	laserBeam3D_->GetDesc().active_ = false;
+	laserBeam3D_->GetDesc().telegraph_ = false;
 
 	// 初期見た目（好みで調整OK）
-	laserBeam3D_->GetDesc().color = { 0.2f, 0.85f, 1.0f };
-	laserBeam3D_->GetDesc().intensity = 3.0f;
-	laserBeam3D_->GetDesc().coreSharpness = 7.0f;
-	laserBeam3D_->GetDesc().edgeSoftness = 1.2f;
-	laserBeam3D_->GetDesc().sliceCount = 64;
-	laserBeam3D_->GetDesc().noiseScale = 1.0f;
-	laserBeam3D_->GetDesc().noiseSpeed = 1.0f;
+	laserBeam3D_->GetDesc().color_ = { 0.2f, 0.85f, 1.0f };
+	laserBeam3D_->GetDesc().intensity_ = 3.0f;
+	laserBeam3D_->GetDesc().coreSharpness_ = 7.0f;
+	laserBeam3D_->GetDesc().edgeSoftness_ = 1.2f;
+	laserBeam3D_->GetDesc().sliceCount_ = 64;
+	laserBeam3D_->GetDesc().noiseScale_ = 1.0f;
+	laserBeam3D_->GetDesc().noiseSpeed_ = 1.0f;
 
 	hpUI_ = std::make_unique<TKM::BossHpBarUI>();
 	TKM::BossHpBarUI::Desc d{};
@@ -129,11 +129,11 @@ void BossManager::Update(float dt) {
 
 		LaserInfo li = GetLaserInfo();
 		auto& d_ = laserBeam3D_->GetDesc();
-		d_.active = li.active_;
-		d_.telegraph = li.telegraph_;
-		d_.startWS = li.startWS_;
-		d_.endWS = li.endWS_;
-		d_.radius = li.radius_; // 見た目の太さ＝当たり判定半径に一致させる
+		d_.active_ = li.active_;
+		d_.telegraph_ = li.telegraph_;
+		d_.startWS_ = li.startWS_;
+		d_.endWS_ = li.endWS_;
+		d_.radius_ = li.radius_; // 見た目の太さ＝当たり判定半径に一致させる
 	}
 
 	if (hpUI_ && boss_) {

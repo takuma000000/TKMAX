@@ -8,48 +8,81 @@ namespace TKM {
 	class LaserBeam3D {
 	public:
 		struct Desc {
-			Vector3 startWS{ 0.0f, 0.0f, 0.0f };
-			Vector3 endWS{ 0.0f, 0.0f, 0.0f };
+			Vector3 startWS_{ 0.0f, 0.0f, 0.0f };
+			Vector3 endWS_{ 0.0f, 0.0f, 0.0f };
 
 			// ビームの太さ（ワールド半径）
-			float radius = 2.2f;
+			float radius_ = 2.2f;
 
 			// 見た目
-			Vector3 color{ 0.2f, 0.85f, 1.0f };
-			float intensity = 3.0f;     // 発光強さ（加算）
-			float coreSharpness = 7.0f; // 中心コアの締まり（大きいほど細く強い）
-			float edgeSoftness = 1.2f;  // 外側の落ち方
+			Vector3 color_{ 0.2f, 0.85f, 1.0f };
+			float intensity_ = 3.0f;     // 発光強さ（加算）
+			float coreSharpness_ = 7.0f; // 中心コアの締まり（大きいほど細く強い）
+			float edgeSoftness_ = 1.2f;  // 外側の落ち方
 
 			// 分割（ビーム方向に何枚置くか）
-			uint32_t sliceCount = 64;
+			uint32_t sliceCount_ = 64;
 
 			// ゆらぎ（ちらつき/波）
-			float noiseScale = 1.0f; // 1D的なノイズのスケール
-			float noiseSpeed = 1.0f; // 時間変化
+			float noiseScale_ = 1.0f; // 1D的なノイズのスケール
+			float noiseSpeed_ = 1.0f; // 時間変化
 
 			// 状態
-			bool active = false;
-			bool telegraph = false; // 予告（点滅弱めなど）
+			bool active_ = false;
+			bool telegraph_ = false; // 予告（点滅弱めなど）
 		};
 
+		/// <summary>
+		/// 初期化
+		/// </summary>
+		/// <param name="dx"></param>
 		void Initialize(DirectXCommon* dx);
+		/// <summary>
+		/// 更新
+		/// </summary>
+		/// <param name="dt"></param>
 		void Update(float dt);
-
+		/// <summary>
+		/// 描画
+		/// </summary>
+		/// <param name="viewProj"></param>
+		/// <param name="camRightWS"></param>
+		/// <param name="camUpWS"></param>
+		/// <param name="camFwdWS"></param>
 		void Draw(const Matrix4x4& viewProj,
 			const Vector3& camRightWS,
 			const Vector3& camUpWS,
 			const Vector3& camFwdWS);
-
-#ifdef USE_IMGUI
+		/// <summary>
+		/// デバッグ用ImGui表示
+		/// </summary>
 		void ImGuiDebug();
-#endif
 
-		void SetActive(bool a) { desc_.active = a; }
-		bool IsActive() const { return desc_.active; }
+		/// <summary>
+		/// アクティブか？
+		/// </summary>
+		/// <returns></returns>
+		bool IsActive() const { return desc_.active_; }
 
+		// Setter=====================================
+		/// <summary>
+		/// アクティブ設定
+		/// </summary>
+		/// <param name="a"></param>
+		void SetActive(bool a) { desc_.active_ = a; }
+		// ===========================================
+		// Getter=====================================
+		/// <summary>
+		/// 説明取得
+		/// </summary>
+		/// <returns></returns>
 		Desc& GetDesc() { return desc_; }
+		/// <summary>
+		/// 説明取得（const）
+		/// </summary>
+		/// <returns></returns>
 		const Desc& GetDesc() const { return desc_; }
-
+		// ===========================================
 	private:
 		DirectXCommon* dxCommon_ = nullptr;
 		Desc desc_{};

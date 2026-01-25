@@ -9,26 +9,62 @@ namespace TKM {
 namespace TKM {
 	class AuraVolumeRenderer {
 	public:
+		/// <summary>
+		/// オーラボリュームレンダラーを初期化します。
+		/// </summary>
+		/// <param name="dxCommon"></param>
 		void Initialize(TKM::DirectXCommon* dxCommon);
-
+		/// <summary>
+		/// オーラボリュームレンダラーを終了処理します。
+		/// </summary>
+		/// <param name="viewProj"></param>
+		/// <param name="bossCenter"></param>
+		/// <param name="collider"></param>
+		/// <param name="active"></param>
 		void Draw(
 			const Matrix4x4& viewProj,
 			const Vector3& bossCenter,
 			const Vector3& collider,
 			bool active);
-
-#ifdef USE_IMGUI
+		/// <summary>
+		/// ImGui描画。
+		/// </summary>
+		/// <param name="label"></param>
 		void DrawImGui(const char* label = "AuraVolume");
-#endif
 
-		// 調整用（必要なら後でImGuiにしてもいい）
-		void SetSliceCount(uint32_t v) { sliceCount_ = v; }
-		void SetRadiusMul(float v) { radiusMul_ = v; }
-		void SetHeightMul(float v) { heightMul_ = v; }
-		void SetIntensity(float v) { intensity_ = v; }
-
-		void SetAlwaysOn(bool v) { alwaysOn_ = v; }
+		/// <summary>
+		/// スライス数のゲッター。
+		/// </summary>
+		/// <returns></returns>
 		bool IsAlwaysOn() const { return alwaysOn_; }
+
+		// Setter===================================
+		/// <summary>
+		/// スライス数の設定。
+		/// </summary>
+		/// <param name="v"></param>
+		void SetSliceCount(uint32_t v) { sliceCount_ = v; }
+		/// <summary>
+		/// 半径倍率の設定。
+		/// </summary>
+		/// <param name="v"></param>
+		void SetRadiusMul(float v) { radiusMul_ = v; }
+		/// <summary>
+		/// 高さ倍率の設定。
+		/// </summary>
+		/// <param name="v"></param>
+		void SetHeightMul(float v) { heightMul_ = v; }
+		/// <summary>
+		/// 色の設定。
+		/// </summary>
+		/// <param name="v"></param>
+		void SetIntensity(float v) { intensity_ = v; }
+		/// <summary>
+		/// 常にONにするかどうかの設定。
+		/// </summary>
+		/// <param name="v"></param>
+		void SetAlwaysOn(bool v) { alwaysOn_ = v; }
+		// =========================================
 
 	private:
 		TKM::DirectXCommon* dxCommon_ = nullptr;

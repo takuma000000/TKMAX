@@ -6,13 +6,13 @@ namespace TKM {
 	class WaterRippleEffect : public TKM::BaseEffect {
 	public:
 		struct RippleDesc {
-			float  duration = 0.6f;        // 継続秒
-			float  radiusMax = 0.857f;     // 最大半径(UV)
-			float  amplitude = 0.1f;       // ゆがみ量
-			float  frequency = 80.0f;      // 細かさ
-			float  width = 10.0f;          // 帯の幅（大きいほどシャープ）
-			Vector3 color = { 1.0f,1.0f,1.0f };
-			float  colorIntensity = 0.0f;  // 色の強さ
+			float  duration_ = 0.6f;        // 継続秒
+			float  radiusMax_ = 0.857f;     // 最大半径(UV)
+			float  amplitude_ = 0.1f;       // ゆがみ量
+			float  frequency_ = 80.0f;      // 細かさ
+			float  width_ = 10.0f;          // 帯の幅（大きいほどシャープ）
+			Vector3 color_ = { 1.0f,1.0f,1.0f };
+			float  colorIntensity_ = 0.0f;  // 色の強さ
 		};
 
 		/// <summary>
@@ -31,6 +31,10 @@ namespace TKM {
 		/// 描画処理（何もしない）
 		/// </summary>
 		void Draw() override {}
+		/// <summary>
+		/// デバッグ用ImGui表示
+		/// </summary>
+		void ImGuiDebug();
 
 		/// <summary>
 		/// 波紋がアクティブか？
@@ -43,10 +47,6 @@ namespace TKM {
 		/// <param name="centerUV"></param>
 		/// <param name="desc"></param>
 		void Trigger(const Vector2& centerUV, const RippleDesc& desc);
-
-#ifdef USE_IMGUI
-		void ImGuiDebug();
-#endif
 
 	private:
 		bool   active_ = false; // エフェクト有効フラグ

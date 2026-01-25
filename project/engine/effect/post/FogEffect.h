@@ -5,23 +5,49 @@
 namespace TKM {
 	class FogEffect : public TKM::BaseEffect {
 	public:
+		/// <summary>
+		/// ポストエフェクトの初期化
+		/// </summary>
+		/// <param name="dx"></param>
 		void Initialize(TKM::DirectXCommon* dx) override {
 			TKM::BaseEffect::Initialize(dx);
 		}
-
+		/// <summary>
+		/// ポストエフェクトの更新
+		/// </summary>
+		/// <param name="dt"></param>
 		void Update(float dt) override;
+		/// <summary>
+		/// ポストエフェクトの描画
+		/// </summary>
 		void Draw() override {}  // 描画は DirectXCommon 側のチェーンでやる
-
-		bool IsActive() const { return active_; }
-		void SetActive(bool a) { active_ = a; }
-
-#ifdef USE_IMGUI
+		/// <summary>
+		/// ImGuiデバッグ表示
+		/// </summary>
 		void ImGuiDebug();
-#endif
+
+		/// <summary>
+		/// 霧の有効・無効
+		/// </summary>
+		/// <returns></returns>
+		bool IsActive() const { return active_; }
 
 		// Setter========================================
+		/// <summary>
+		/// 霧の基準となるワールド座標の設定
+		/// </summary>
+		/// <param name="pos"></param>
 		void SetWorldPos(const Vector3& pos) { worldPos_ = pos; }
+		/// <summary>
+		/// 霧パターンの「世界空間スケール」の設定
+		/// </summary>
+		/// <param name="s"></param>
 		void SetWorldScale(float s) { worldScale_ = s; }
+		/// <summary>
+		/// 霧の有効・無効設定
+		/// </summary>
+		/// <param name="a"></param>
+		void SetActive(bool a) { active_ = a; }
 		// ==============================================
 
 	private:

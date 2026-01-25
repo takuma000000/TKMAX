@@ -45,7 +45,7 @@ namespace TKM {
 		if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
 			float memoryUsageMB = static_cast<float>(pmc.WorkingSetSize) / (1024.0f * 1024.0f);
 			memoryHistory_[memoryHistoryIndex_] = memoryUsageMB;
-			memoryHistoryIndex_ = (memoryHistoryIndex_ + 1) % kMemoryHistorySize;
+			memoryHistoryIndex_ = (memoryHistoryIndex_ + 1) % kMemoryHistorySize_;
 		}
 #endif
 	}
@@ -77,7 +77,7 @@ namespace TKM {
 		ImGui::PlotLines(
 			"メモリ推移",
 			memoryHistory_.data(),
-			kMemoryHistorySize,
+			kMemoryHistorySize_,
 			memoryHistoryIndex_,
 			nullptr,
 			0.0f,

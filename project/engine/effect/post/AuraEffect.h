@@ -10,43 +10,154 @@ namespace TKM {
 namespace TKM {
 	class AuraEffect : public BaseEffect {
 	public:
+		/// <summary>
+		/// AuraEffect を初期化します。
+		/// </summary>
+		/// <param name="dxCommon"></param>
 		void Initialize(TKM::DirectXCommon* dxCommon);
-
+		/// <summary>
+		/// 毎フレーム更新
+		/// </summary>
+		/// <param name="dt"></param>
 		void Update(float dt) override;
+		/// <summary>
+		/// 描画処理（RenderTexture → Swapchain）
+		/// </summary>
 		void Draw() override {}
-#ifdef USE_IMGUI
+		/// <summary>
+		/// ImGui デバッグ表示
+		/// </summary>
 		void ImGuiDebug();
-#endif
+
+		/// <summary>
+		/// エフェクトが有効かどうか
+		/// </summary>
+		/// <returns></returns>
 		bool IsActive() const { return active_; }
-
-		// 外部から更新（BossManager が呼ぶ想定）
-		void SetActive(bool v) { active_ = v; }
-		void SetCenterUV(const Vector2& uv) { centerUV_ = uv; }
-		void SetScale(float s) { scale_ = s; }
-		void SetIntensity(float s) { intensity_ = s; }
-		void SetUseRing(bool v) { useRing_ = v; }
-		void SetRingRadius(float r) { ringRadius_ = r; }
-		void SetRingWidth(float w) { ringWidth_ = w; }
-		void SetColorA(const Vector3& c) { colorA_ = c; }
-		void SetColorB(const Vector3& c) { colorB_ = c; }
-		void SetMix(float m) { mix_ = m; } // 0=A, 1=B
-		void SetWorldPos(const Vector3& p) { worldPos_ = p; }
-		const Vector3& GetWorldPos() const { return worldPos_; }
-		float GetHeight() const { return height_; }
-		void SetHeight(float h) { height_ = h; }
-		void SetTopUV(const Vector2& v) { topUV_ = v; }
-		void SetBottomUV(const Vector2& v) { bottomUV_ = v; }
-		void SetAspect(float a) { aspect_ = a; }
-		void SetTaper(float v) { taper_ = v; }
-		void SetNoiseScale(float v) { noiseScale_ = v; }
-		void SetNoiseSpeed(float v) { noiseSpeed_ = v; }
-		void SetFlameStrength(float v) { flameStrength_ = v; }
-		void SetEdgePower(float v) { edgePower_ = v; }
-		void SetVerticalFade(float v) { verticalFade_ = v; }
-
-		// 毎フレーム dxCommon に送る
+		/// <summary>
+		/// GPU にパラメータを送る
+		/// </summary>
 		void PushToGpu();
 
+		// Setter===================================
+		/// <summary>
+		/// エフェクト有効フラグの設定
+		/// </summary>
+		/// <param name="v"></param>
+		void SetActive(bool v) { active_ = v; }
+		/// <summary>
+		/// 中心UVの設定
+		/// </summary>
+		/// <param name="uv"></param>
+		void SetCenterUV(const Vector2& uv) { centerUV_ = uv; }
+		/// <summary>
+		/// スケールの設定
+		/// </summary>
+		/// <param name="s"></param>
+		void SetScale(float s) { scale_ = s; }
+		/// <summary>
+		/// 明るさの設定
+		/// </summary>
+		/// <param name="s"></param>
+		void SetIntensity(float s) { intensity_ = s; }
+		/// <summary>
+		/// リングを使うかどうかの設定
+		/// </summary>
+		/// <param name="v"></param>
+		void SetUseRing(bool v) { useRing_ = v; }
+		/// <summary>
+		/// リングの半径の設定
+		/// </summary>
+		/// <param name="r"></param>
+		void SetRingRadius(float r) { ringRadius_ = r; }
+		/// <summary>
+		/// リングの幅の設定
+		/// </summary>
+		/// <param name="w"></param>
+		void SetRingWidth(float w) { ringWidth_ = w; }
+		/// <summary>
+		/// 色Aの設定
+		/// </summary>
+		/// <param name="c"></param>
+		void SetColorA(const Vector3& c) { colorA_ = c; }
+		/// <summary>
+		/// 色Bの設定
+		/// </summary>
+		/// <param name="c"></param>
+		void SetColorB(const Vector3& c) { colorB_ = c; }
+		/// <summary>
+		/// 混色の設定
+		/// </summary>
+		/// <param name="m"></param>
+		void SetMix(float m) { mix_ = m; } // 0=A, 1=B
+		/// <summary>
+		/// ワールド座標の設定
+		/// </summary>
+		/// <param name="p"></param>
+		void SetWorldPos(const Vector3& p) { worldPos_ = p; }
+		/// <summary>
+		/// 高さの設定
+		/// </summary>
+		/// <param name="h"></param>
+		void SetHeight(float h) { height_ = h; }
+		/// <summary>
+		/// 上部UVの設定
+		/// </summary>
+		/// <param name="v"></param>
+		void SetTopUV(const Vector2& v) { topUV_ = v; }
+		/// <summary>
+		/// 下部UVの設定
+		/// </summary>
+		/// <param name="v"></param>
+		void SetBottomUV(const Vector2& v) { bottomUV_ = v; }
+		/// <summary>
+		/// アスペクト比の設定
+		/// </summary>
+		/// <param name="a"></param>
+		void SetAspect(float a) { aspect_ = a; }
+		/// <summary>
+		/// テーパーの設定
+		/// </summary>
+		/// <param name="v"></param>
+		void SetTaper(float v) { taper_ = v; }
+		/// <summary>
+		/// ノイズスケールの設定
+		/// </summary>
+		/// <param name="v"></param>
+		void SetNoiseScale(float v) { noiseScale_ = v; }
+		/// <summary>
+		/// ノイズスピードの設定
+		/// </summary>
+		/// <param name="v"></param>
+		void SetNoiseSpeed(float v) { noiseSpeed_ = v; }
+		/// <summary>
+		/// 炎の強さの設定
+		/// </summary>
+		/// <param name="v"></param>
+		void SetFlameStrength(float v) { flameStrength_ = v; }
+		/// <summary>
+		/// エッジのキレの設定
+		/// </summary>
+		/// <param name="v"></param>
+		void SetEdgePower(float v) { edgePower_ = v; }
+		/// <summary>
+		/// 垂直フェードの設定
+		/// </summary>
+		/// <param name="v"></param>
+		void SetVerticalFade(float v) { verticalFade_ = v; }
+		// =========================================
+		// Getter===================================
+		/// <summary>
+		/// ワールド座標の取得
+		/// </summary>
+		/// <returns></returns>
+		const Vector3& GetWorldPos() const { return worldPos_; }
+		/// <summary>
+		/// 高さの取得
+		/// </summary>
+		/// <returns></returns>
+		float GetHeight() const { return height_; }
+		// =========================================
 	private:
 		TKM::DirectXCommon* dxCommon_ = nullptr;
 

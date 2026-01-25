@@ -34,8 +34,8 @@ namespace TKM {
 		void Draw() override;
 
 	private:
-		D3D12_VIEWPORT viewport;
-		D3D12_RECT scissorRect;
+		D3D12_VIEWPORT viewport_;
+		D3D12_RECT scissorRect_;
 
 		bool endRequest_ = false; // 終了フラグ
 		std::unique_ptr<TKM::SceneManager> sceneManager_ = nullptr; // シーンマネージャー

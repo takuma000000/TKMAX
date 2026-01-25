@@ -15,7 +15,7 @@ namespace TKM {
 		/// <param name="dxCommon"></param>
 		/// <param name="srvManager"></param>
 		SceneFactory(TKM::DirectXCommon* dxCommon, TKM::SrvManager* srvManager)
-			: dxCommon(dxCommon), srvManager(srvManager) {
+			: dxCommon_(dxCommon), srvManager_(srvManager) {
 		}
 
 		/// <summary>
@@ -26,7 +26,7 @@ namespace TKM {
 		TKM::BaseScene* CreateScene(const std::string& sceneName) override;
 
 	private:
-		TKM::DirectXCommon* dxCommon = nullptr;
-		TKM::SrvManager* srvManager = nullptr;
+		TKM::DirectXCommon* dxCommon_ = nullptr;
+		TKM::SrvManager* srvManager_ = nullptr;
 	};
 }

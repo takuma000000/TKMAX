@@ -10,18 +10,22 @@
 namespace TKM {
 	class SceneManager {
 	public:
-		//次シーン予約
-		/// <summary>次のシーンを設定します。</summary>
-		void SetNextScene(TKM::BaseScene* nextScene) {
-			nextScene_ = nextScene;
-		}
-
-		//メンバ関数
-		//シーンファクトリー
-		/// <summary>シーンファクトリーを設定します。</summary>
+		// Setter========================================
+		/// <summary>
+		/// </span class="code-inline">SceneManager</span>のDirectXCommonセット
+		/// </summary>
+		/// <param name="sceneFactory"></param>
 		void SetSceneFactory(TKM::AbstractSceneFactory* sceneFactory) {
 			sceneFactory_ = sceneFactory;
 		}
+		/// <summary>
+		/// </span class="code-inline">SceneManager</span>のコンストラクタ
+		/// </summary>
+		/// <param name="nextScene"></param>
+		void SetNextScene(TKM::BaseScene* nextScene) {
+			nextScene_ = nextScene;
+		}
+		// ==============================================
 
 	private:
 
@@ -31,7 +35,7 @@ namespace TKM {
 		//次のシーン( 次フレームから実行 )
 		TKM::BaseScene* nextScene_ = nullptr;
 
-		TKM::DirectXCommon* dxCommon = nullptr;
+		TKM::DirectXCommon* dxCommon_ = nullptr;
 
 		//シーンファクトリー
 		TKM::AbstractSceneFactory* sceneFactory_ = nullptr;

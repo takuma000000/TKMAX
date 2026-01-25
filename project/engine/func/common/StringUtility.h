@@ -7,11 +7,17 @@
 //=============================================================
 //文字コードユーティリティ
 namespace StringUtility {
-	//stringをwstringに変換する
-	/// <summary>stringをwstringに変換します。</summary>
+	/// <summary>
+	/// stringをwstringに変換します。
+	/// </summary>
+	/// <param name="str"></param>
+	/// <returns></returns>
 	std::string ConvertString(const std::wstring& str);
-	//wstringをstringに変換する
-	/// <summary>wstringをstringに変換します。</summary>
+	/// <summary>
+	/// wstringをstringに変換します。
+	/// </summary>
+	/// <param name="str"></param>
+	/// <returns></returns>
 	std::wstring ConvertString(const std::string& str);
 }
 

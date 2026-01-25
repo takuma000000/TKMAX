@@ -120,10 +120,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\enemy\EnemyWaveConfig.cpp" />
     <ClCompile Include="engine\effect\post\AuraVolumeRenderer.cpp" />
     <ClCompile Include="engine\effect\post\AuraEffect.cpp" />
-    <ClCompile Include="engine\effect\post\BaseEffect.cpp" />
     <ClCompile Include="application\boss\BossController.cpp" />
     <ClCompile Include="engine\3d\camera\DebugCamera.cpp" />
-    <ClCompile Include="engine\func\math\AABB.cpp" />
     <ClCompile Include="application\boss\BossEnemy.cpp" />
     <ClCompile Include="engine\effect\light\DirectionalLight.cpp" />
     <ClCompile Include="application\enemy\Enemy.cpp" />
@@ -168,7 +166,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\effect\post\FogEffect.cpp" />
     <ClCompile Include="engine\effect\post\LaserBeam3D.cpp" />
     <ClCompile Include="application\player\RBGaugeUI.cpp" />
-    <ClCompile Include="resources\shaders\FogVolume3D.cpp" />
+    <ClCompile Include="engine\effect\post\FogVolume3D.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="engine\3d\Model.cpp" />
     <ClCompile Include="engine\3d\ModelCommon.cpp" />

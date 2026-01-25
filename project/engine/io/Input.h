@@ -112,17 +112,17 @@ namespace TKM {
 		void SetWheel(int delta) { wheel_ = delta; }
 		// ==============================================
 	private:
-		static Input* instance;
+		static Input* instance_;
 
-		ComPtr<IDirectInputDevice8> keyboard;
-		BYTE key[256] = {};
-		BYTE keyPre[256] = {};
-		ComPtr<IDirectInput8> directInput;
-		TKM::WindowsAPI* winApp = nullptr;
+		ComPtr<IDirectInputDevice8> keyboard_;
+		BYTE key_[256] = {};
+		BYTE keyPre_[256] = {};
+		ComPtr<IDirectInput8> directInput_;
+		TKM::WindowsAPI* winApp_ = nullptr;
 
 		// XInput 用のメンバ変数
-		XINPUT_STATE controllerState = {};
-		XINPUT_STATE prevControllerState = {};
+		XINPUT_STATE controllerState_ = {};
+		XINPUT_STATE prevControllerState_ = {};
 
 		// マウスホイール量（フレーム単位でリセットされる）
 		int wheel_ = 0;

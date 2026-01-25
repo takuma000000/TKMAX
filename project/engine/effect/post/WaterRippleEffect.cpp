@@ -16,15 +16,15 @@ namespace TKM {
 				centerUV_,
 				0.0f,
 				0.0f,
-				currentDesc_.frequency,
-				currentDesc_.width,
-				currentDesc_.color,
+				currentDesc_.frequency_,
+				currentDesc_.width_,
+				currentDesc_.color_,
 				0.0f
 			);
 			return;
 		}
 
-		float dur = std::max(0.0001f, currentDesc_.duration);
+		float dur = std::max(0.0001f, currentDesc_.duration_);
 		float t = time_ / dur;
 
 		if (t >= 1.0f) {
@@ -32,17 +32,17 @@ namespace TKM {
 			t = 1.0f;
 		}
 
-		float radius = currentDesc_.radiusMax * t;
-		float amp = currentDesc_.amplitude * (1.0f - t);
+		float radius = currentDesc_.radiusMax_ * t;
+		float amp = currentDesc_.amplitude_ * (1.0f - t);
 
 		dxCommon_->SetWaterRippleParam(
 			centerUV_,
 			radius,
 			amp,
-			currentDesc_.frequency,
-			currentDesc_.width,
-			currentDesc_.color,
-			currentDesc_.colorIntensity
+			currentDesc_.frequency_,
+			currentDesc_.width_,
+			currentDesc_.color_,
+			currentDesc_.colorIntensity_
 		);
 	}
 

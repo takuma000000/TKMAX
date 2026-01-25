@@ -68,9 +68,6 @@
     <ClCompile Include="engine\func\common\StringUtility.cpp">
       <Filter>engine\func\common</Filter>
     </ClCompile>
-    <ClCompile Include="engine\func\math\AABB.cpp">
-      <Filter>engine\func\math</Filter>
-    </ClCompile>
     <ClCompile Include="engine\func\math\MyMath.cpp">
       <Filter>engine\func\math</Filter>
     </ClCompile>
@@ -176,15 +173,12 @@
     <ClCompile Include="engine\effect\post\FogEffect.cpp">
       <Filter>engine\effect\post</Filter>
     </ClCompile>
-    <ClCompile Include="engine\effect\post\BaseEffect.cpp">
-      <Filter>engine\effect\post</Filter>
-    </ClCompile>
     <ClCompile Include="engine\effect\post\AuraEffect.cpp" />
     <ClCompile Include="engine\effect\post\AuraVolumeRenderer.cpp" />
     <ClCompile Include="engine\func\common\TimeScaleController.cpp" />
     <ClCompile Include="engine\csv\CsvReader.cpp" />
     <ClCompile Include="application\enemy\EnemyWaveConfig.cpp" />
-    <ClCompile Include="resources\shaders\FogVolume3D.cpp" />
+    <ClCompile Include="engine\effect\post\FogVolume3D.cpp" />
     <ClCompile Include="engine\effect\post\SmokeVolume3D.cpp" />
     <ClCompile Include="engine\effect\post\LaserBeam3D.cpp" />
     <ClCompile Include="application\boss\BossHpBarUI.cpp" />
