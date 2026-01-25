@@ -22,6 +22,7 @@ namespace TKM {
 
 		// WindowsAPI の初期化
 		windowsAPI_ = std::make_unique<WindowsAPI>();
+		windowsAPI_->SetFramework(this);
 		windowsAPI_->Initialize();
 
 		// DirectXCommon の初期化

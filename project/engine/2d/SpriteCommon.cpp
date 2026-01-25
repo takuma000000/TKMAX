@@ -7,13 +7,9 @@
 using namespace Logger;
 
 namespace TKM {
-	SpriteCommon* SpriteCommon::instance = nullptr; //シングルトンインスタンスの初期化
-
 	SpriteCommon* SpriteCommon::GetInstance() {
-		if (instance == nullptr) { //インスタンスがなければ生成
-			instance = new SpriteCommon;
-		}
-		return instance;
+		static SpriteCommon instance;
+		return &instance;
 	}
 
 	void SpriteCommon::Initialize(DirectXCommon* dxCommon) {
@@ -23,10 +19,7 @@ namespace TKM {
 		GenerateGraficsPipeline(); //グラフィックスパイプライン生成
 	}
 
-	void SpriteCommon::Finalize() {
-		delete instance; //インスタンスの破棄
-		instance = nullptr; //ポインタをnullptrに戻す
-	}
+	void SpriteCommon::Finalize() {}
 
 	void SpriteCommon::GenerateRootSignature() {
 		descriptionRootSignature_.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT; //入力アセンブラで頂点レイアウトを使う

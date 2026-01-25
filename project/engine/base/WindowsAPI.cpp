@@ -5,94 +5,82 @@
 #include <iostream>
 #include "Framework.h"
 #include "Input.h"
-extern TKM::Framework* gFramework; // グローバルポインタでFrameworkを参照
 
 #ifdef USE_IMGUI
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 #endif
 
 namespace TKM {
-	//ウィンドウプロシージャ
 	LRESULT CALLBACK WindowsAPI::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+
+		// WM_NCCREATE で this を紐づける
+		if (msg == WM_NCCREATE) {
+			auto create = reinterpret_cast<CREATESTRUCT*>(lparam);
+			auto self = reinterpret_cast<WindowsAPI*>(create->lpCreateParams);
+			SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(self));
+		}
+
+		// this を取得（以降のメッセージで使う）
+		auto self = reinterpret_cast<WindowsAPI*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
 
 		// 先にホイール量だけ拾う（ImGuiより前）
 		if (msg == WM_MOUSEWHEEL) {
-			int delta = GET_WHEEL_DELTA_WPARAM(wparam); // 通常 ±120
-			Input::GetInstance()->SetWheel(delta / WHEEL_DELTA); // 120 → 1, -120 → -1
-			// return しないで、この後 ImGui / switch にも流す
+			int delta = GET_WHEEL_DELTA_WPARAM(wparam);
+			Input::GetInstance()->SetWheel(delta / WHEEL_DELTA);
 		}
 
 #ifdef USE_IMGUI
-		// ImGui のウィンドウ処理
 		if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) {
 			return true;
 		}
 #endif
 
-		// メッセージに応じてゲーム固有の処理を行う
 		switch (msg) {
-
-			// ウィンドウが閉じられた
 		case WM_CLOSE:
-			if (gFramework) {
-				gFramework->SetEndRequest(true); // Frameworkの終了フラグを設定
+			if (self && self->framework_) {
+				self->framework_->SetEndRequest(true);
 			}
 			DestroyWindow(hwnd);
 			return 0;
 
-			// ウィンドウが破壊された
 		case WM_DESTROY:
 			PostQuitMessage(0);
 			return 0;
 		}
 
-		// 標準のメッセージ処理を行う
 		return DefWindowProc(hwnd, msg, wparam, lparam);
 	}
 
 	void WindowsAPI::Initialize() {
-		//COMライブラリの初期化
 		CoInitializeEx(0, COINIT_MULTITHREADED);
-		//システムターマーの分解能を上げる
 		timeBeginPeriod(1);
 
 #pragma region Windowの生成
-		//ウィンドウプロシージャ
 		wc_.lpfnWndProc = WindowProc;
-		//ウィンドウクラス名( なんでも良い )
 		wc_.lpszClassName = L"CG2WindowClass";
-		//インスタンスハンドル
 		wc_.hInstance = GetModuleHandle(nullptr);
-		//カーソル
 		wc_.hCursor = LoadCursor(nullptr, IDC_ARROW);
 
-		//ウィンドウクラスを登録する
 		RegisterClass(&wc_);
 
-		//ウィンドウサイズを表す構造体にクライアント領域を入れる
 		RECT wrc = { 0,0,kClientWidth_ ,kClientHeight_ };
-
-		//クライアント領域を元に実際のサイズに wrc を変更してもらう
 		AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
 
-		//ウィンドウの生成
 		hwnd_ = CreateWindow(
-			wc_.lpszClassName,		//利用するクラス名
-			L"TKMAX",				//タイトルバーの文字( なんでも良い )
-			WS_OVERLAPPEDWINDOW,	//ウィンドウスタイル
-			CW_USEDEFAULT,			//表示X座標(Windowsに任せる)
-			CW_USEDEFAULT,			//表示Y座標(WindowsOSに任せる)
-			wrc.right - wrc.left,	//ウィンドウ横幅
-			wrc.bottom - wrc.top,	//ウィンドウ縦幅
-			nullptr,				//親ウィンドウハンドル
-			nullptr,				//メニューハンドル
-			wc_.hInstance,			//インスタンスハンドル
-			nullptr					//オプション
+			wc_.lpszClassName,
+			L"TKMAX",
+			WS_OVERLAPPEDWINDOW,
+			CW_USEDEFAULT,
+			CW_USEDEFAULT,
+			wrc.right - wrc.left,
+			wrc.bottom - wrc.top,
+			nullptr,
+			nullptr,
+			wc_.hInstance,
+			this // ★ WindowProc に this を渡す
 		);
 
-		//ウィンドウを表示する
 		ShowWindow(hwnd_, SW_SHOW);
-
 #pragma endregion
 	}
 
@@ -100,19 +88,19 @@ namespace TKM {
 	}
 
 	void WindowsAPI::Finalize() {
-		CloseWindow(hwnd_); // ウィンドウを閉じる
-		CoUninitialize(); // COMライブラリの終了
+		CloseWindow(hwnd_);
+		CoUninitialize();
 	}
 
 	bool WindowsAPI::ProcessMessage() {
 		MSG msg{};
 
-		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) { // メッセージがあるか確認
-			TranslateMessage(&msg); // 仮想キーコードを文字コードに変換
-			DispatchMessage(&msg); // ウィンドウプロシージャにメッセージを送る
+		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
 		}
 
-		if (msg.message == WM_QUIT) { // WM_QUITメッセージが来たら終了
+		if (msg.message == WM_QUIT) {
 			return true;
 		}
 

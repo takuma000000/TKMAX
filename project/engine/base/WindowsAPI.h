@@ -2,6 +2,11 @@
 #include <windows.h>
 #include <stdint.h>
 
+//前方宣言
+namespace TKM {
+	class Framework;
+}
+
 //=============================================================
 // WindowsAPIクラス
 // ウィンドウの生成・更新・終了処理を管理するクラス。
@@ -20,7 +25,14 @@ namespace TKM {
 		/// <returns></returns>
 		HINSTANCE GetHInstance() const { return wc_.hInstance; }
 
-	public://静的メンバ関数
+		// Setter========================================
+		/// <summary>
+		/// Frameworkへの参照を設定します（終了要求の通知に使用）。
+		/// </summary>
+		/// <param name="framework">所有するFramework</param>
+		void SetFramework(Framework* framework) { framework_ = framework; }
+		// ==============================================
+
 		/// <summary>
 		/// <para>ウィンドウプロシージャ</para>
 		/// </summary>
@@ -31,31 +43,33 @@ namespace TKM {
 		/// <returns></returns>
 		static LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
-	public://メンバ関数
-		//初期化
-		/// <summary>ウィンドウを初期化します。</summary>
+		/// <summary>
+		/// ウィンドウを初期化します。
+		/// </summary>
 		void Initialize();
-		//更新
-		/// <summary>ウィンドウを更新します。</summary>
+		/// <summary>
+		/// ウィンドウを更新します。
+		/// </summary>
 		void Update();
-		//終了
-		/// <summary>ウィンドウを終了します。</summary>
+		/// <summary>
+		/// ウィンドウを終了処理します。
+		/// </summary>
 		void Finalize();
 
-	public://定数
-		//クライアント領域のサイズ
+		/// <summary>
+		/// メッセージ処理を行います。
+		/// </summary>
+		/// <returns></returns>
+		bool ProcessMessage();
+
 		static const int32_t kClientWidth_ = 1280;
 		static const int32_t kClientHeight_ = 720;
 
-	public:
-		//メッセージの処理
-		/// <summary>メッセージの処理を行います。</summary>
-		bool ProcessMessage();
-
 	private:
-		//ウィンドウハンドル
 		HWND hwnd_ = nullptr;
-		//ウィンドウクラスの設定
 		WNDCLASS wc_{};
+
+		//所有Framework（終了要求通知用）
+		Framework* framework_ = nullptr;
 	};
 }

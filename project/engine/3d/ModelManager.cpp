@@ -4,19 +4,12 @@
 #include "DirectXCommon.h"
 
 namespace TKM {
-	ModelManager* ModelManager::instance_ = nullptr; //シングルトンインスタンスの初期化
-
 	ModelManager* ModelManager::GetInstance() {
-		if (instance_ == nullptr) { //インスタンスがなければ生成
-			instance_ = new ModelManager;
-		}
-		return instance_;
+		static ModelManager instance;
+		return &instance;
 	}
 
-	void ModelManager::Finalize() {
-		delete instance_;
-		instance_ = nullptr;
-	}
+	void ModelManager::Finalize() {}
 
 	void ModelManager::Initialize(TKM::DirectXCommon* dxCommon) {
 		//ポインタ...ModelCommon

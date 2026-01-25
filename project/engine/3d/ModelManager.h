@@ -16,8 +16,6 @@ namespace TKM {
 namespace TKM {
 	class ModelManager {
 	private:
-		static ModelManager* instance_;
-
 		///シングルトン-----------------------------------------------
 		//コンストラクタ、デストラクタの隠蔽
 		ModelManager() = default;

@@ -11,10 +11,6 @@ namespace TKM {
 
 	public://メンバ関数...初期化
 		/// <summary>
-		/// シングルトンインスタンス。
-		/// </summary>
-		static SpriteCommon* instance;
-		/// <summary>
 		/// シングルトンインスタンスの取得。
 		/// </summary>
 		/// <returns></returns>
@@ -68,9 +64,7 @@ namespace TKM {
 		D3D12_DEPTH_STENCIL_DESC depthStencilDesc_{};
 		Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState_ = nullptr;
 
-
-		////シングルトン-----------------------------------------------
-
+		///シングルトン-----------------------------------------------
 		//コンストラクタ、デストラクタの隠蔽
 		SpriteCommon() = default;
 		~SpriteCommon() = default;
@@ -78,7 +72,6 @@ namespace TKM {
 		SpriteCommon(SpriteCommon&) = delete;
 		//コピー代入演算子の封印
 		SpriteCommon& operator=(SpriteCommon&) = delete;
-
-		////---------------------------------------------------------
+		///---------------------------------------------------------
 	};
 } //namespace TKM

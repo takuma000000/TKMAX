@@ -1,15 +1,9 @@
 #include "MyGame.h"
 
-TKM::Framework* gFramework = nullptr; // グローバル変数でFrameworkを保持
-
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
-	gFramework = new TKM::MyGame();
-
-	gFramework->Run();
-
-	delete gFramework;
-	gFramework = nullptr;
+	TKM::MyGame game;
+	game.Run();
 
 	return 0;
 }
