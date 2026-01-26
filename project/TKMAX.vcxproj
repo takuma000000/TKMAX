@@ -65,7 +65,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\2d;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\func\common;$(ProjectDir)engine\func\math;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\effect\post;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir)engine\effect\light;$(ProjectDir)engine\audio;$(ProjectDir)engine\effect\particle;$(ProjectDir)engine\effect\line;$(ProjectDir)application\scene;$(ProjectDir)engine\imgui;$(ProjectDir)application\player;$(ProjectDir)application\enemy;$(ProjectDir)application\boss;$(ProjectDir)application\effect;$(ProjectDir)engine\csv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\2d;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\func\common;$(ProjectDir)engine\func\math;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\effect\post;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir)engine\effect\light;$(ProjectDir)engine\audio;$(ProjectDir)engine\effect\particle;$(ProjectDir)engine\effect\line;$(ProjectDir)application\scene;$(ProjectDir)engine\imgui;$(ProjectDir)application\player;$(ProjectDir)application\enemy;$(ProjectDir)application\boss;$(ProjectDir)application\effect;$(ProjectDir)engine\csv;$(ProjectDir)application\effect\controller;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -94,7 +94,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\2d;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\func\common;$(ProjectDir)engine\func\math;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\effect\post;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir)engine\effect\light;$(ProjectDir)engine\audio;$(ProjectDir)engine\effect\particle;$(ProjectDir)engine\effect\line;$(ProjectDir)application\scene;$(ProjectDir)engine\imgui;$(ProjectDir)application\player;$(ProjectDir)application\enemy;$(ProjectDir)application\boss;$(ProjectDir)application\effect;$(ProjectDir)engine\csv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\2d;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\func\common;$(ProjectDir)engine\func\math;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\effect\post;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir)engine\effect\light;$(ProjectDir)engine\audio;$(ProjectDir)engine\effect\particle;$(ProjectDir)engine\effect\line;$(ProjectDir)application\scene;$(ProjectDir)engine\imgui;$(ProjectDir)application\player;$(ProjectDir)application\enemy;$(ProjectDir)application\boss;$(ProjectDir)application\effect;$(ProjectDir)engine\csv;$(ProjectDir)application\effect\controller;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>MinSpace</Optimization>
     </ClCompile>
     <Link>
@@ -168,8 +168,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\player\RBGaugeUI.cpp" />
     <ClCompile Include="engine\effect\post\FogVolume3D.cpp" />
     <ClCompile Include="application\effect\IntroSequence.cpp" />
-    <ClCompile Include="application\effect\FireworkController.cpp" />
-    <ClCompile Include="application\effect\GameFlowController.cpp" />
+    <ClCompile Include="application\effect\controller\FireworkController.cpp" />
+    <ClCompile Include="application\effect\controller\GameFlowController.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="engine\3d\Model.cpp" />
     <ClCompile Include="engine\3d\ModelCommon.cpp" />
@@ -282,8 +282,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\effect\post\LaserBeam3D.h" />
     <ClInclude Include="application\player\RBGaugeUI.h" />
     <ClInclude Include="application\effect\IntroSequence.h" />
-    <ClInclude Include="application\effect\FireworkController.h" />
-    <ClInclude Include="application\effect\GameFlowController.h" />
+    <ClInclude Include="application\effect\controller\FireworkController.h" />
+    <ClInclude Include="application\effect\controller\GameFlowController.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
