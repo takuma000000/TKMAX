@@ -44,6 +44,7 @@
 #include "RBGaugeUI.h"
 #include "IntroSequence.h"
 #include "FireworkController.h"
+#include "GameFlowController.h"
 
 //=============================================================
 // GameSceneクラス
@@ -175,8 +176,6 @@ private:
 
 	bool requestInitEnemies_ = false; // 敵再初期化リクエスト
 
-	// ゲーム開始ロック：true の間は敵/プレイヤー/弾など一切更新しない
-	bool gameplayLocked_ = true;
 	// 敵初期化フラグ
 	bool enemiesInitialized_ = false;
 	//======================================================================
@@ -193,18 +192,6 @@ private:
 	// アイリス演出時間
 	static constexpr float kIrisDurationSec_ = 0.8f;
 	///
-	//======================================================================
-	// アイリス閉じ演出（タイトル戻り）
-	//======================================================================
-	// Iris閉じ（タイトル戻り用）
-	bool        irisClosing_ = false;   // Iris閉じ中か
-	Ease::Tween irisCloseTween_;             // Iris閉じ用イージング
-	float       irisCloseScale_ = 0.0f;    // 閉じる最終スケール
-	//======================================================================
-	// プレイヤー死亡・ゲームオーバー遷移
-	//======================================================================
-	float playerDeathElapsed_ = 0.0f;   // プレイヤー死亡からの経過時間
-	bool  playerDeathStarted_ = false;  // プレイヤー死亡処理開始フラグ
 	//======================================================================
 	// ゲームクリア演出
 	//======================================================================
@@ -253,11 +240,15 @@ private:
 	std::unique_ptr<TKM::Sprite> uiLB_;
 	std::unique_ptr<TKM::Sprite> uiRB_;
 
-	std::unique_ptr<TKM::IntroSequence> intro_ = nullptr;
-
 	std::unique_ptr<TKM::RBGaugeUI> rbGaugeUI_;
 
 	std::unique_ptr<TKM::FireworkController> fireworkController_;
 
 	static constexpr float dt_ = 0.016f;
+
+	std::unique_ptr<TKM::GameFlowController> flow_ = nullptr;
+
+	// Clear用アイリス閉じ
+	bool        clearIrisClosing_ = false;
+	Ease::Tween clearIrisCloseTween_;
 };

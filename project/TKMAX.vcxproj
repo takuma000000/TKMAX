@@ -169,6 +169,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\effect\post\FogVolume3D.cpp" />
     <ClCompile Include="application\effect\IntroSequence.cpp" />
     <ClCompile Include="application\effect\FireworkController.cpp" />
+    <ClCompile Include="application\effect\GameFlowController.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="engine\3d\Model.cpp" />
     <ClCompile Include="engine\3d\ModelCommon.cpp" />
@@ -282,6 +283,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\player\RBGaugeUI.h" />
     <ClInclude Include="application\effect\IntroSequence.h" />
     <ClInclude Include="application\effect\FireworkController.h" />
+    <ClInclude Include="application\effect\GameFlowController.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

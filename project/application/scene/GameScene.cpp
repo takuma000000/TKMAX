@@ -221,17 +221,13 @@ void GameScene::Update() {
 		return;
 	}
 
-	// ゲーム開始演出（アイリス開き / カメラ回転 / start表示）
-	if (intro_) {
-		intro_->Update(dt_, camera_.get(), enemiesInitialized_, requestInitEnemies_);
+	if (flow_) {
+		flow_->Update(dt_, camera_.get(), enemiesInitialized_, requestInitEnemies_);
 	}
-
-	// ロック状態は「Intro中 or クリア中」
-	const bool introLocked = (intro_ && intro_->IsGameplayLocked());
-	gameplayLocked_ = introLocked || clearSequence_;
+	const bool locked = (flow_ && flow_->IsGameplayLocked()) || clearSequence_;
 
 	// --- 敵とWaveは「ゲーム開始後」だけ動かす ---
-	if (!gameplayLocked_ && enemiesInitialized_) {
+	if (!locked && enemiesInitialized_) {
 
 		// 敵の更新（敵ロジックは EnemyManager に完全委譲）
 		if (enemyManager_) {
@@ -319,8 +315,7 @@ void GameScene::Update() {
 		// ライトの更新
 		directionalLight_->Update();
 
-		// ゲームプレイ中だけ風エフェクト
-		if (!clearSequence_ && !gameplayLocked_) {
+		if (!clearSequence_ && !locked) {
 			UpdateAirStreak(dt_);
 		}
 
@@ -349,36 +344,13 @@ void GameScene::Update() {
 		// その他のオブジェクト・パーティクルの更新
 		ParticleManager::GetInstance()->Update(scaledDt);
 
-		// ─── プレイヤー死亡時のGameOver遷移 ───
-		static bool irisToTitle = false; // この場だけで使う：閉じたらどこへ行くか
-
-		if (player_ && player_->IsDead()) {
-			if (!playerDeathStarted_) {
-				playerDeathStarted_ = true;
-				playerDeathElapsed_ = 0.0f;
-			} else {
-				playerDeathElapsed_ += dt_;
-
-				if (playerDeathElapsed_ >= 4.0f && !irisClosing_) {
-					irisClosing_ = true;
-					irisToTitle = false; // ✅ GameOverへ
-					irisCloseTween_.Reset(0.0f, intro_ ? intro_->GetIrisMaxScale() : 0.0f, kIrisDurationSec_, Ease::Type::InBack);
-				}
+		if (flow_) {
+			const auto req = flow_->UpdateTransitions(dt_, player_.get());
+			if (req == TKM::GameFlowController::TransitionRequest::ToTitle) {
+				sceneManager_->SetNextScene(new TitleScene(dxCommon_, srvManager_));
+				return;
 			}
-		}
-
-		// ─── Tキーでタイトルに戻る（アイリス閉じ演出つき）───
-		if (!irisClosing_ && Input::GetInstance()->TriggerKey(DIK_T)) {
-			irisClosing_ = true;
-			irisToTitle = true; // ✅ Titleへ
-			irisCloseTween_.Reset(0.0f, intro_ ? intro_->GetIrisMaxScale() : 0.0f, 0.8f, Ease::Type::InBack);
-		}
-
-		// アイリス閉じ中は進行してGameOverへ
-		if (irisClosing_) {
-			UpdateIrisScale(intro_ ? intro_->GetIrisSprite() : nullptr, irisCloseTween_, 0.016f);
-
-			if (irisCloseTween_.Finished()) {
+			if (req == TKM::GameFlowController::TransitionRequest::ToGameOver) {
 				sceneManager_->SetNextScene(new GameOverScene(dxCommon_, srvManager_));
 				return;
 			}
@@ -467,8 +439,8 @@ void GameScene::Draw() {
 	// スプライトまとめ
 	TKM::SpriteCommon::GetInstance()->DrawSetCommon();
 	// IntroSequence 側で Iris / start 表示を描画する
-	if (intro_) {
-		intro_->Draw(irisClosing_);
+	if (flow_) {
+		flow_->Draw();
 	}
 	// 操作ガイドUI（常時表示）
 	if (uiLT_) { uiLT_->Draw(); }
@@ -565,13 +537,9 @@ void GameScene::LoadTextures() {
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeSprite() {
 
-	// ✅ ゲーム開始演出（アイリス開き / start表示 / カメラ回転）
-	intro_ = std::make_unique<TKM::IntroSequence>();
-	intro_->Initialize(dxCommon_);
-
-	// ✅ タイトル戻り/ゲームオーバー用アイリス（IntroのIrisを使う）
-	irisCloseScale_ = 0.0f;
-	irisCloseTween_.Reset(0.0f, intro_->GetIrisMaxScale(), kIrisDurationSec_, Ease::Type::InBack);
+	// ──────────────── ゲームフローの初期化 ───────────────
+	flow_ = std::make_unique<TKM::GameFlowController>();
+	flow_->Initialize(dxCommon_);
 
 	// ---- 操作ガイドUI（右下） ----
 	uiLT_ = std::make_unique<Sprite>();
@@ -713,9 +681,6 @@ void GameScene::StartClearSequence() {
 	clearPhase_ = ClearPhase::CamZoom;
 	clearTimer_ = 0.0f;
 
-	// いったん通常ゲームをロックしておく
-	gameplayLocked_ = true;
-
 	// --- ボス、ボス弾、レティクルを消し、プレイヤー操作をロック ---
 	if (bossManager_) {
 		bossManager_->OnClearSequenceStart();
@@ -752,7 +717,7 @@ void GameScene::StartClearSequence() {
 	clearPlayerStartPos_ = player_->GetPosition();
 
 	// 念のためアイリス閉じ状態リセット
-	irisClosing_ = false;
+	clearIrisClosing_ = false;
 }
 
 bool GameScene::UpdateClearSequence(float dt) {
@@ -808,11 +773,10 @@ bool GameScene::UpdateClearSequence(float dt) {
 			clearPhase_ = ClearPhase::IrisClose;
 			clearTimer_ = 0.0f;
 
-			irisClosing_ = true;
-			irisCloseScale_ = 0.0f;
-			irisCloseTween_.Reset(
+			clearIrisClosing_ = true;
+			clearIrisCloseTween_.Reset(
 				0.0f,
-				intro_ ? intro_->GetIrisMaxScale() : 0.0f,
+				flow_ ? flow_->GetIrisMaxScale() : 0.0f,
 				kIrisDurationSec_,
 				Ease::Type::InBack
 			);
@@ -821,11 +785,9 @@ bool GameScene::UpdateClearSequence(float dt) {
 	}
 	case ClearPhase::IrisClose: // アイリス閉じ
 	{
-		if (irisClosing_) {
-			// IntroSequence 側の Iris を使って閉じる
-			UpdateIrisScale(intro_ ? intro_->GetIrisSprite() : nullptr, irisCloseTween_, dt);
-
-			if (irisCloseTween_.Finished()) {
+		if (clearIrisClosing_) {
+			UpdateIrisScale(flow_ ? flow_->GetIrisSprite() : nullptr, clearIrisCloseTween_, dt);
+			if (clearIrisCloseTween_.Finished()) {
 				finished = true;
 			}
 		}
