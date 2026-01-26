@@ -161,7 +161,6 @@ private:
 	std::unique_ptr<TKM::DirectionalLight> directionalLight_ = nullptr;// ディレクショナルライト
 
 	std::unique_ptr<TKM::Skybox> skybox_; // スカイボックス
-	static constexpr float kSkyRotSpeedX_ = 0.002f; 	// スカイボックス回転
 	//======================================================================
 	// プレイヤー / 敵 / マネージャ
 	//======================================================================
@@ -189,10 +188,6 @@ private:
 	// 風エフェクト用
 	void  UpdateAirStreak(float dt);
 	float airStreakTimer_ = 0.0f;
-
-	// airStreak（風エフェクト）
-	static constexpr float kAirBoxHalfWidth_ = 40.0f;
-	static constexpr float kAirBoxHalfHeight_ = 25.0f;
 
 	///
 	// アイリス演出時間
@@ -230,10 +225,6 @@ private:
 	float   clearPlayerSpeed_ = 10.0f;   // 奥に進むスピード
 	float   clearPlayerFlyMinTime_ = 1.8f;    // プレイヤーを飛ばして見せる最低時間（秒）
 	float   clearPlayerFlyDistance_ = 80.0f;   // Z方向に飛ばす距離目安
-
-	// クリア演出
-	static constexpr float kPlayerFlyMinTime_ = 1.8f;
-	static constexpr float kPlayerFlyDistance_ = 80.0f;
 	//======================================================================
 	// ポストエフェクト（RadialBlur）
 	//======================================================================
@@ -261,33 +252,6 @@ private:
 	std::unique_ptr<TKM::Sprite> uiLT_;
 	std::unique_ptr<TKM::Sprite> uiLB_;
 	std::unique_ptr<TKM::Sprite> uiRB_;
-
-	// ---- 操作ガイドUIチューニング用 ----
-	bool uiGuideTuner_ = true;
-
-	// 現在値（ゲームで使う）
-	Vector2 uiLTPos_ = { 0.0f, 0.0f };
-	Vector2 uiLBPos_ = { 0.0f, 0.0f };
-	Vector2 uiRBPos_ = { 0.0f, 0.0f };
-
-	Vector2 uiLTSize_ = { 260.0f, 150.0f };
-	Vector2 uiLBSize_ = { 260.0f, 150.0f };
-	Vector2 uiRBSize_ = { 260.0f, 150.0f };
-
-	// 押してる時だけ拡大（1.05〜1.12くらいが気持ちいい）
-	float uiPressedScale_ = 1.08f;
-
-	// 色（見やすくしたいならここも調整できる）
-	float uiIdleAlpha_ = 0.75f;
-	Vector4 uiIdleColor_ = { 1.0f, 1.0f, 1.0f, 0.75f };
-	Vector4 uiOnColor_ = { 1.0f, 0.25f, 0.25f, 1.0f };
-
-	// 初期配置を覚えとく（Reset用）
-	Vector2 uiLTPosDefault_ = { 0.0f, 0.0f };
-	Vector2 uiLBPosDefault_ = { 0.0f, 0.0f };
-	Vector2 uiRBPosDefault_ = { 0.0f, 0.0f };
-
-	Vector2 uiSizeDefault_ = { 260.0f, 150.0f };
 
 	std::unique_ptr<TKM::IntroSequence> intro_ = nullptr;
 
