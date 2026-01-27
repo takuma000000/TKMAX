@@ -280,7 +280,7 @@ public:
 	void SetType(EnemyType t) {
 		type_ = t;
 
-		// ★ ボスは Enemy 側のロック脈動を無効化（Boss側で見せ方を作る前提）
+		// ボスは Enemy 側のロック脈動を無効化（Boss側で見せ方を作る前提）
 		lockPulseEnabled_ = (type_ != EnemyType::Boss);
 
 		// 念のため：無効化した瞬間にパルス時間もリセット
@@ -448,5 +448,5 @@ private:
 	bool  freezeMove_ = false;
 
 	// Enemy.h の private: に追加
-	bool lockPulseEnabled_ = true; // ★ ロック中の脈動を有効にするか（ボスはOFFにする）
+	bool lockPulseEnabled_ = true; // ロック中の脈動を有効にするか（ボスはOFFにする）
 };

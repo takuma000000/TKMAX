@@ -1721,12 +1721,12 @@ namespace TKM {
 			// 速度なし（軌道は弾そのものが描く）
 			p.velocity_ = { 0.0f, 0.0f, 0.0f };
 
-			// ★ 完全等方スケール（横長禁止）
+			// 完全等方スケール（横長禁止）
 			std::uniform_real_distribution<float> scl(0.08f, 0.14f);
 			float sc = scl(rng);
 			p.transform_.scale_ = { sc, sc, sc };
 
-			// ★ 短命（線にならない）
+			// 短命（線にならない）
 			p.lifeTime_ = std::uniform_real_distribution<float>(0.08f, 0.15f)(rng);
 			p.currentTime_ = 0.0f;
 

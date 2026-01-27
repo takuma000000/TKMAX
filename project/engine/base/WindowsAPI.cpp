@@ -77,7 +77,7 @@ namespace TKM {
 			nullptr,
 			nullptr,
 			wc_.hInstance,
-			this // ★ WindowProc に this を渡す
+			this // WindowProc に this を渡す
 		);
 
 		ShowWindow(hwnd_, SW_SHOW);

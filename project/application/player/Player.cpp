@@ -517,7 +517,7 @@ void Player::HandleShooting() {
 				rbAmmo_ = kRbAmmoMax_;
 				rbRefilling_ = false;
 				rbEmptyTimer_ = 0.0f;
-				rbNoFireTimer_ = 0.0f; // ★満タンになったらアイドル判定もリセット
+				rbNoFireTimer_ = 0.0f; // 満タンになったらアイドル判定もリセット
 			}
 		}
 	}
@@ -607,9 +607,9 @@ void Player::RBShoot() {
 	bullet->SetEnemy(targetEnemy);
 	bullets_.push_back(std::move(bullet));
 
-	// ★ 発射成功したら消費
+	//  発射成功したら消費
 	rbAmmo_ = std::max(0, rbAmmo_ - 1);
-	// ★「撃ってない時間」リセット
+	// 「撃ってない時間」リセット
 	rbNoFireTimer_ = 0.0f;
 
 }

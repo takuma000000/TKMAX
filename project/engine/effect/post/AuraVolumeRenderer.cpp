@@ -22,7 +22,7 @@ namespace TKM {
 	{
 		if (!dxCommon_) { return; }
 
-		// ★ 強制ONなら active を無視する
+		//  強制ONなら active を無視する
 		if (!alwaysOn_ && !active) { return; }
 
 		drawCallsThisFrame_++;
@@ -54,7 +54,7 @@ namespace TKM {
 	void AuraVolumeRenderer::DrawImGui(const char* label) {
 		if (ImGui::Begin(label)) {
 
-			// ★ これが 2 以上なら「同フレームに2回呼ばれてる」= 二重描画
+			//  これが 2 以上なら「同フレームに2回呼ばれてる」= 二重描画
 			ImGui::Text("DrawCallsThisFrame: %u", drawCallsThisFrame_);
 
 			ImGui::Checkbox("Always On", &alwaysOn_);

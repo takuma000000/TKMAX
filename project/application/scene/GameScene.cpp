@@ -130,45 +130,6 @@ void GameScene::Initialize() {
 		bossManager_ = std::make_unique<BossManager>();
 	}
 	bossManager_->Initialize(dxCommon_, camera_.get(), this, player_.get());
-	// ──────────────── 画面エフェクトの初期化 ───────────────
-	// RadialBlurEffect の生成と初期化
-	radialBlur_ = std::make_unique<TKM::RadialBlurEffect>();
-	radialBlur_->Initialize(dxCommon_);
-	// DirectX 側に「このシーンの RadialBlurEffect」を登録
-	dxCommon_->SetRadialBlurEffect(radialBlur_.get());
-	if (player_) {
-		// プレイヤーから LT 発射時に通知してもらう
-		player_->SetRadialBlurEffect(radialBlur_.get());
-	}
-	// VignettingEffect の生成と初期化
-	vignetting_ = std::make_unique<TKM::VignettingEffect>();
-	vignetting_->Initialize(dxCommon_);
-	// FogEffect の生成と初期化 ＆ 常時ON
-	fog_ = std::make_unique<TKM::FogEffect>();
-	fog_->Initialize(dxCommon_);
-	fog_->SetActive(false);                // ゲームシーン中はずっと有効にしたい
-	dxCommon_->SetFogEffect(fog_.get());   // DirectXCommon に登録
-	// AuraEffect の生成と初期化
-	aura_ = std::make_unique<TKM::AuraEffect>();
-	aura_->Initialize(dxCommon_);
-	dxCommon_->SetAuraEffect(aura_.get());
-	// WaterRippleEffect の生成と初期化
-	waterRipple_ = std::make_unique<TKM::WaterRippleEffect>();
-	waterRipple_->Initialize(dxCommon_); // 波紋エフェクトの初期化
-	dxCommon_->SetWaterRippleEffect(waterRipple_.get()); // DirectXCommon に登録
-	bossManager_->SetWaterRippleEffect(waterRipple_.get()); // BossManager にも登録
-	// FogVolume3D の生成と初期化
-	fogVolume3D_ = std::make_unique<TKM::FogVolume3D>();
-	fogVolume3D_->Initialize(dxCommon_);
-	// 初期パラメータ例
-	auto& d = fogVolume3D_->GetDesc();
-	d.centerWS_ = { 0.0f, 6.0f, 20.0f };
-	d.halfSizeWS_ = { 900.0f, 220.0f, 900.0f };
-	d.sliceCount_ = 80;     // まずこれくらいで板感減らす
-	d.density_ = 0.19f;  // 濃すぎなら 0.015f まで落としてOK
-	// SmokeVolume3D の生成と初期化
-	smokeVolume3D_ = std::make_unique<TKM::SmokeVolume3D>();
-	smokeVolume3D_->Initialize(dxCommon_);
 	// ──────────────── タイムスケールコントローラーの初期化 ───────────────
 	timeScale_.Initialize();
 	bossManager_->SetTimeScaleController(&timeScale_);
@@ -176,6 +137,9 @@ void GameScene::Initialize() {
 	// ──────────────── 花火コントローラーの初期化 ───────────────
 	fireworkController_ = std::make_unique<TKM::FireworkController>();
 	fireworkController_->Reset();
+	// ──────────────── ポストエフェクトの初期化 ───────────────
+	postFx_ = std::make_unique<TKM::PostEffectController>();
+	postFx_->Initialize(dxCommon_, player_.get(), bossManager_.get());
 }
 
 void GameScene::Finalize() {
@@ -186,12 +150,8 @@ void GameScene::Finalize() {
 	// 3Dモデルマネージャーの終了
 	ModelManager::GetInstance()->Finalize();
 
-	// ポストエフェクトの解除
-	if (dxCommon_) {
-		dxCommon_->SetRadialBlurEffect(nullptr); // RadialBlurEffect の解除
-		dxCommon_->SetVignettingEffect(nullptr); // VignettingEffect の解除
-		dxCommon_->SetFogEffect(nullptr); // FogEffect の解除
-		dxCommon_->SetAuraEffect(nullptr); // AuraEffect の解除
+	if (postFx_) { // ポストエフェクトの終了
+		postFx_->Finalize();
 	}
 }
 
@@ -278,35 +238,10 @@ void GameScene::Update() {
 		if (bossManager_) {
 			bossManager_->Update(scaledDt);
 		}
-
-		// 画面エフェクトの更新=================================
-		if (radialBlur_) {
-			radialBlur_->Update(scaledDt); // ラジアルブラーの更新
+		// ポストエフェクトの更新
+		if (postFx_) {
+			postFx_->Update(scaledDt, bossManager_.get());
 		}
-		if (vignetting_) {
-			// ボス戦中かどうかを BossManager から聞いてフラグを渡す
-			bool bossWave =
-				bossManager_ &&
-				bossManager_->IsBattleActive() &&    // 戦闘中フラグ
-				!bossManager_->IsBossDead();         // すでに死んでないか
-
-			vignetting_->SetBossWave(bossWave);
-
-			vignetting_->Update(scaledDt); // ビネット更新（ボス戦中ならフェードIN、終わったらOUT）
-		}
-		if (fog_) {
-			fog_->Update(scaledDt); // フォグの更新
-		}
-		if (waterRipple_) {
-			waterRipple_->Update(scaledDt); // 波紋の更新（スローに合わせてゆっくり進む）
-		}
-		if (fogVolume3D_) {
-			fogVolume3D_->Update(scaledDt);
-		}
-		if (smokeVolume3D_) {
-			smokeVolume3D_->Update(scaledDt);
-		}
-		// ==================================================
 
 		// ライトの更新
 		directionalLight_->Update();
@@ -366,34 +301,9 @@ void GameScene::Draw() {
 		}
 	}
 
-	// FogVolume（空間霧）
-	if (fogVolume3D_) {
-		TKM::Camera* activeCamera = (useDebugCamera_ && debugCamera_) ? (TKM::Camera*)debugCamera_.get() : camera_.get();
-		if (activeCamera) {
-			const Matrix4x4& camW = activeCamera->GetWorldMatrix();
-
-			// ※あなたの行列の取り方（translationが m[3] なので、基底は row0/1/2 と仮定）
-			Vector3 right{ camW.m[0][0], camW.m[0][1], camW.m[0][2] };
-			Vector3 up{ camW.m[1][0], camW.m[1][1], camW.m[1][2] };
-			Vector3 fwd{ camW.m[2][0], camW.m[2][1], camW.m[2][2] };
-
-			Matrix4x4 vp = activeCamera->GetViewProjectionMatrix();
-			fogVolume3D_->Draw(vp, right, up, fwd);
-		}
-	}
-	// SmokeVolume（空間スモーク）
-	if (smokeVolume3D_) {
-		TKM::Camera* activeCamera = (useDebugCamera_ && debugCamera_) ? (TKM::Camera*)debugCamera_.get() : camera_.get();
-		if (activeCamera) {
-			const Matrix4x4& camW = activeCamera->GetWorldMatrix();
-
-			Vector3 right{ camW.m[0][0], camW.m[0][1], camW.m[0][2] };
-			Vector3 up{ camW.m[1][0], camW.m[1][1], camW.m[1][2] };
-			Vector3 fwd{ camW.m[2][0], camW.m[2][1], camW.m[2][2] };
-
-			Matrix4x4 vp = activeCamera->GetViewProjectionMatrix();
-			smokeVolume3D_->Draw(vp, right, up, fwd);
-		}
+	TKM::Camera* activeCamera = (useDebugCamera_ && debugCamera_) ? (TKM::Camera*)debugCamera_.get() : camera_.get();
+	if (postFx_) {
+		postFx_->DrawVolumes(activeCamera);
 	}
 
 	// パーティクル描画
@@ -457,15 +367,8 @@ TKM::Camera* GameScene::UpdateActiveCamera() {
 	// パーティクルマネージャー適用
 	ParticleManager::GetInstance()->SetCamera(activeCamera);
 
-	// フォグエフェクト用にカメラ位置をセット
-	if (fog_ && activeCamera) {
-		const Matrix4x4& camW = activeCamera->GetWorldMatrix();
-		Vector3 camPos{
-			camW.m[3][0],
-			camW.m[3][1],
-			camW.m[3][2]
-		};
-		fog_->SetWorldPos(camPos);
+	if (postFx_) {
+		postFx_->OnCameraUpdated(activeCamera);
 	}
 
 	return activeCamera; // 呼び出し元にも返す
@@ -577,7 +480,7 @@ void GameScene::ImGuiDebug() {
 		bossManager_->GetBoss()->ImGuiDebug(); // ボスのデバッグ表示
 	}
 	/////////////////////////////////////////////////////
-	//enemyManager_->ImGuiDebug(); // 敵マネージャのデバッグ表示
+	enemyManager_->ImGuiDebug(); // 敵マネージャのデバッグ表示
 	/////////////////////////////////////////////////////
 	//camera->ImGuiDebug(); // カメラのデバッグ表示
 
@@ -588,25 +491,12 @@ void GameScene::ImGuiDebug() {
 	/////////////////////////////////////////////////////
 	//skybox_->ImGuiUpdate(); // スカイボックスのデバッグ表示
 	/////////////////////////////////////////////////////
-	// Fog のデバッグ
-	/*if (fog_) {
-		fog_->ImGuiDebug();
-	}*/
-	/*if (aura_) {
-		aura_->ImGuiDebug();
-	}*/
-	/*if (fogVolume3D_) {
-		fogVolume3D_->ImGuiDebug();
-	}*/
-	if (smokeVolume3D_) {
-		smokeVolume3D_->ImGuiDebug();
+	if (postFx_) {
+		postFx_->ImGuiDebug();
 	}
-	/*if(vignetting_) {
-		vignetting_->ImGuiDebug();
-	}*/
 	/////////////////////////////////////////////////////
-	ImGuiDebugGamepad(); // ゲームパッド入力デバッグ
-	ImGuiDebugInfo(); // パフォーマンス情報デバッグ
+	//ImGuiDebugGamepad(); // ゲームパッド入力デバッグ
+	//ImGuiDebugInfo(); // パフォーマンス情報デバッグ
 	/////////////////////////////////////////////////////
 #endif
 }
@@ -623,10 +513,6 @@ void GameScene::StartClearSequence() {
 	if (player_) {
 		player_->SetControlEnabled(false); // 入力を全部無視
 		player_->SetReticleVisible(false); // レティクル非表示
-	}
-	// ビネットを強制OFF（この後の演出では使わない）
-	if (vignetting_) {
-		vignetting_->SetBossWave(false);      // 内部フラグをOFF
 	}
 	if (dxCommon_) {
 		// DX 側からも登録解除して、ポストエフェクトチェーンから外す
@@ -656,17 +542,18 @@ void GameScene::StartClearSequence() {
 }
 
 bool GameScene::UpdateClearSequence(float dt) {
+	// クリア演出の経過時間
 	clearTimer_ += dt;
 
 	// skyboxはずっと回し続ける
 	if (skybox_) {
-		skybox_->UpdateRotation(); // skybox回転更新
+		skybox_->UpdateRotation();
 	}
 
 	bool finished = false;
 
 	switch (clearPhase_) {
-	case ClearPhase::CamZoom: // カメラ寄せ
+	case ClearPhase::CamZoom:
 	{
 		// 1秒かけて寄る
 		float t = std::clamp(clearTimer_ / 1.0f, 0.0f, 1.0f);
@@ -718,7 +605,7 @@ bool GameScene::UpdateClearSequence(float dt) {
 		}
 		break;
 	}
-	case ClearPhase::IrisClose: // アイリス閉じ
+	case ClearPhase::IrisClose:
 	{
 		if (clearIrisClosing_) {
 			UpdateIrisScale(flow_ ? flow_->GetIrisSprite() : nullptr, clearIrisCloseTween_, dt);
@@ -732,20 +619,24 @@ bool GameScene::UpdateClearSequence(float dt) {
 		break;
 	}
 
-	// ここから「クリア演出中でも動かしたいもの」をまとめて更新する
-	const float rawDt = dt;
-	timeScale_.Update(rawDt);
-	const float scaledDt = rawDt * timeScale_.GetScale();
+	// ──────────────────────────────
+	// クリア演出中でも動かしたいもの
+	// ──────────────────────────────
+
+	// タイムスケール更新
+	timeScale_.Update(dt);
+	const float scaledDt = dt * timeScale_.GetScale();
 
 	// パーティクルは普通に動かす
 	ParticleManager::GetInstance()->Update(scaledDt);
 
-	// ★ クリア演出中でも Fog/Smoke は常時動かす（ここが今回の修正）
-	if (fogVolume3D_) {
-		fogVolume3D_->Update(scaledDt);
-	}
-	if (smokeVolume3D_) {
-		smokeVolume3D_->Update(scaledDt);
+	// Fog/Smoke含むポストエフェクトは PostEffectController に委譲
+	if (postFx_) {
+		postFx_->Update(scaledDt, bossManager_.get());
+
+		// fog_->SetWorldPos 相当（カメラ追従）が必要ならここで通知
+		// ※ activeCamera を使っているなら camera_ でOK（クリア演出中は camera_ 固定）
+		postFx_->OnCameraUpdated(camera_.get());
 	}
 
 	return finished;

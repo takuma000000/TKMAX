@@ -18,7 +18,6 @@
 #include "DirectionalLight.h"
 #include "ParticleManager.h"
 #include "ParticlerEmitter.h"
-#include "Vector3.h"
 #include <SkyBox.h>
 #include "GameClearScene.h"
 #include "TitleScene.h"
@@ -46,6 +45,8 @@
 #include "FireworkController.h"
 #include "GameFlowController.h"
 #include "UIController.h"
+#include "MyMath.h"
+#include "PostEffectController.h"
 
 //=============================================================
 // GameSceneクラス
@@ -214,23 +215,6 @@ private:
 	float   clearPlayerFlyMinTime_ = 1.8f;    // プレイヤーを飛ばして見せる最低時間（秒）
 	float   clearPlayerFlyDistance_ = 80.0f;   // Z方向に飛ばす距離目安
 	//======================================================================
-	// ポストエフェクト（RadialBlur）
-	//======================================================================
-	// RadialBlur エフェクト
-	std::unique_ptr<TKM::RadialBlurEffect> radialBlur_ = nullptr;
-	// Vignetting エフェクト
-	std::unique_ptr<TKM::VignettingEffect> vignetting_ = nullptr;
-	// Fog エフェクト
-	std::unique_ptr<TKM::FogEffect> fog_ = nullptr;
-	// Aura エフェクト
-	std::unique_ptr<TKM::AuraEffect> aura_ = nullptr;
-	// WaterRipple エフェクト（波紋）
-	std::unique_ptr<TKM::WaterRippleEffect> waterRipple_ = nullptr;
-	// FogVolume3D エフェクト
-	std::unique_ptr<TKM::FogVolume3D> fogVolume3D_ = nullptr;
-	// SmokeVolume3D エフェクト
-	std::unique_ptr<TKM::SmokeVolume3D> smokeVolume3D_ = nullptr;
-	//======================================================================
 	// 時間制御
 	//======================================================================
 	TKM::TimeScaleController timeScale_; // 時間制御クラス
@@ -242,6 +226,7 @@ private:
 
 	std::unique_ptr<TKM::GameFlowController> flow_ = nullptr;
 	std::unique_ptr<TKM::UIController> ui_ = nullptr;
+	std::unique_ptr<TKM::PostEffectController> postFx_ = nullptr;
 
 	// Clear用アイリス閉じ
 	bool        clearIrisClosing_ = false;

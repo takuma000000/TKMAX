@@ -187,6 +187,7 @@
     <ClCompile Include="application\effect\controller\FireworkController.cpp" />
     <ClCompile Include="application\effect\controller\GameFlowController.cpp" />
     <ClCompile Include="application\ui\UIController.cpp" />
+    <ClCompile Include="application\effect\controller\PostEffectController.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -410,6 +411,7 @@
     <ClInclude Include="application\effect\controller\FireworkController.h" />
     <ClInclude Include="application\effect\controller\GameFlowController.h" />
     <ClInclude Include="application\ui\UIController.h" />
+    <ClInclude Include="application\effect\controller\PostEffectController.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
