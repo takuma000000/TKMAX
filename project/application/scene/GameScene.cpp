@@ -171,10 +171,8 @@ void GameScene::Update() {
 	// クリア演出中なら専用処理だけ回して終わり
 	if (clearSeq_ && clearSeq_->IsActive()) {
 
-		// ゲームフローの更新
-		if (flow_) {
-			flow_->Update(dt_, camera_.get(), enemiesInitialized_, requestInitEnemies_);
-		}
+		// 重要：clearSeq中は flow_->Update を回さない
+		// （IntroSequence側の更新がIris状態を戻してしまい、閉じた直後に消える原因になる）
 
 		// クリア演出本体（スロー非依存）
 		bool finished = clearSeq_->Update(dt_);

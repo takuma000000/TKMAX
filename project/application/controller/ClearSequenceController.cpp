@@ -21,6 +21,11 @@ namespace TKM {
 		phase_ = Phase::CamZoom;
 		timer_ = 0.0f;
 
+		//  外部Iris描画は一旦OFF
+		if (flow_) {
+			flow_->SetExternalIrisDraw(false);
+		}
+
 		// --- ボス、ボス弾、レティクルを消し、プレイヤー操作をロック ---
 		if (bossManager_) {
 			bossManager_->OnClearSequenceStart();
@@ -30,7 +35,6 @@ namespace TKM {
 			player_->SetReticleVisible(false);
 		}
 
-		// ここは元コードの挙動を維持（※PostFx側で管理してるなら不要だけど、今は残す）
 		if (dxCommon_) {
 			dxCommon_->SetVignettingEffect(nullptr);
 		}
@@ -138,6 +142,11 @@ namespace TKM {
 			phase_ = Phase::IrisClose;
 			timer_ = 0.0f;
 
+			//  Irisは flow_->Draw() 側で描かれるので、外部描画ON
+			if (flow_) {
+				flow_->SetExternalIrisDraw(true);
+			}
+
 			irisClosing_ = true;
 			irisCloseTween_.Reset(
 				0.0f,
@@ -154,7 +163,9 @@ namespace TKM {
 		}
 
 		UpdateIrisScale(flow_ ? flow_->GetIrisSprite() : nullptr, irisCloseTween_, dt);
+
 		if (irisCloseTween_.Finished()) {
+			// ここで externalIrisDraw をOFFにしない（遷移まで保持）
 			finished = true;
 		}
 	}
