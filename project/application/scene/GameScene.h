@@ -47,6 +47,7 @@
 #include "UIController.h"
 #include "MyMath.h"
 #include "PostEffectController.h"
+#include "ClearSequenceController.h"
 
 //=============================================================
 // GameSceneクラス
@@ -189,36 +190,10 @@ private:
 	// 風エフェクト用
 	void  UpdateAirStreak(float dt);
 	float airStreakTimer_ = 0.0f;
-
-	///
-	// アイリス演出時間
-	static constexpr float kIrisDurationSec_ = 0.8f;
-	///
-	//======================================================================
-	// ゲームクリア演出
-	//======================================================================
-	// --- ゲームクリア演出用 ---
-	bool clearSequence_ = false; // クリア演出中か
-
-	enum class ClearPhase { None, CamZoom, PlayerFly, IrisClose }; // 演出フェーズ
-	ClearPhase clearPhase_ = ClearPhase::None; // 現在のフェーズ
-
-	float clearTimer_ = 0.0f; // フェーズ内タイマー
-
-	// カメラ寄り用
-	Vector3 clearCamStartPos_{};   // 開始位置
-	Vector3 clearCamTargetPos_{};  // 目標位置
-
-	// プレイヤー飛ばし用
-	Vector3 clearPlayerStartPos_{};    // 開始位置
-	float   clearPlayerSpeed_ = 10.0f;   // 奥に進むスピード
-	float   clearPlayerFlyMinTime_ = 1.8f;    // プレイヤーを飛ばして見せる最低時間（秒）
-	float   clearPlayerFlyDistance_ = 80.0f;   // Z方向に飛ばす距離目安
 	//======================================================================
 	// 時間制御
 	//======================================================================
 	TKM::TimeScaleController timeScale_; // 時間制御クラス
-	bool clearSlowRequested_ = false; // クリアスロー要求フラグ
 
 	std::unique_ptr<TKM::FireworkController> fireworkController_;
 
@@ -227,8 +202,5 @@ private:
 	std::unique_ptr<TKM::GameFlowController> flow_ = nullptr;
 	std::unique_ptr<TKM::UIController> ui_ = nullptr;
 	std::unique_ptr<TKM::PostEffectController> postFx_ = nullptr;
-
-	// Clear用アイリス閉じ
-	bool        clearIrisClosing_ = false;
-	Ease::Tween clearIrisCloseTween_;
+	std::unique_ptr<TKM::ClearSequenceController> clearSeq_ = nullptr;
 };

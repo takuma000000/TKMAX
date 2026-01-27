@@ -33,7 +33,15 @@ namespace TKM {
 		// 状態
 		bool IsGameplayLocked() const;
 		bool IsIrisClosing() const { return irisClosing_; }
+		bool IsExternalIrisDraw() const { return externalIrisDraw_; }
 
+		// Setter=====================================
+		/// <summary>
+		/// 外部からIris描画を制御するか？
+		/// </summary>
+		/// <param name="enable"></param>
+		void SetExternalIrisDraw(bool enable);
+		// ===========================================
 		// Getter=====================================
 		/// <summary>
 		/// Irisスプライトの取得。
@@ -65,5 +73,7 @@ namespace TKM {
 
 		// 固定dtで閉じ進行（いまの実装に合わせる）
 		static constexpr float kFixedDt_ = 0.016f;
+
+		bool externalIrisDraw_ = false;
 	};
 } // namespace TKM

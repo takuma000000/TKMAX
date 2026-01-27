@@ -2,7 +2,6 @@
 #include "GameScene.h"
 #include <limits>
 #include <algorithm>
-#include "MyMath.h"
 #include <psapi.h>
 #include <Input.h>
 
@@ -28,10 +27,8 @@ void GameScene::Initialize() {
 	// ──────────────── ライトの初期化 ───────────────
 	directionalLight_ = std::make_unique<DirectionalLight>();
 	directionalLight_->Initialize({ 1.0f, 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 0.0f }, 1.0f);
-
 	// ──────────────── ラインレンダラーの初期化 ───────────────
 	LineRenderer::GetInstance()->Initialize(dxCommon_);
-
 	// ──────────────── パーティクルの初期化 ───────────────
 	ParticleManager::GetInstance()->Initialize(dxCommon_, srvManager_, camera_.get());
 	ParticleManager::GetInstance()->CreateParticleGroup("uv", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
@@ -133,13 +130,15 @@ void GameScene::Initialize() {
 	// ──────────────── タイムスケールコントローラーの初期化 ───────────────
 	timeScale_.Initialize();
 	bossManager_->SetTimeScaleController(&timeScale_);
-	clearSlowRequested_ = false; // クリアスロー未要求状態で開始
 	// ──────────────── 花火コントローラーの初期化 ───────────────
 	fireworkController_ = std::make_unique<TKM::FireworkController>();
 	fireworkController_->Reset();
 	// ──────────────── ポストエフェクトの初期化 ───────────────
 	postFx_ = std::make_unique<TKM::PostEffectController>();
 	postFx_->Initialize(dxCommon_, player_.get(), bossManager_.get());
+	// ──────────────── ゲームフローの初期化 ───────────────
+	clearSeq_ = std::make_unique<TKM::ClearSequenceController>();
+	clearSeq_->Initialize(camera_.get(), player_.get(), bossManager_.get(), flow_.get(), dxCommon_, skybox_.get(), fireworkController_.get());
 }
 
 void GameScene::Finalize() {
@@ -170,21 +169,42 @@ void GameScene::Update() {
 	UpdateMemory();
 
 	// クリア演出中なら専用処理だけ回して終わり
-	if (clearSequence_) {
-		bool finished = UpdateClearSequence(scaledDt); // クリア演出シーケンスの更新
-		// 終了したらシーン切り替え
+	if (clearSeq_ && clearSeq_->IsActive()) {
+
+		// ゲームフローの更新
+		if (flow_) {
+			flow_->Update(dt_, camera_.get(), enemiesInitialized_, requestInitEnemies_);
+		}
+
+		// クリア演出本体（スロー非依存）
+		bool finished = clearSeq_->Update(dt_);
+
+		// クリア中でも動かしたいもの（止めない）
+		ParticleManager::GetInstance()->Update(scaledDt);
+
+		if (postFx_) {
+			postFx_->Update(scaledDt, bossManager_.get());
+			postFx_->OnCameraUpdated(camera_.get());
+		}
+
+		if (ui_) {
+			ui_->Update(scaledDt, player_.get());
+		}
+
 		if (finished) {
 			sceneManager_->SetNextScene(new GameClearScene(dxCommon_, srvManager_));
 			return;
 		}
+
 		UpdatePerformanceInfo();
 		return;
 	}
 
-	if (flow_) {
+	if (flow_) { // ゲームフローの更新
 		flow_->Update(dt_, camera_.get(), enemiesInitialized_, requestInitEnemies_);
 	}
-	const bool locked = (flow_ && flow_->IsGameplayLocked()) || clearSequence_;
+	const bool isClear = (clearSeq_ && clearSeq_->IsActive()); // クリア演出中かどうか
+	const bool locked = (flow_ && flow_->IsGameplayLocked()) || isClear; // ゲームプレイがロックされているかどうか
 
 	// --- 敵とWaveは「ゲーム開始後」だけ動かす ---
 	if (!locked && enemiesInitialized_) {
@@ -203,7 +223,7 @@ void GameScene::Update() {
 				} else {
 					// ボス撃破 → クリア演出へ
 					if (bossManager_->IsBossDead()) {
-						if (!clearSequence_) {
+						if (!isClear) {
 							StartClearSequence();
 							return;
 						}
@@ -246,7 +266,7 @@ void GameScene::Update() {
 		// ライトの更新
 		directionalLight_->Update();
 
-		if (!clearSequence_ && !locked) {
+		if (!isClear && !locked) {
 			UpdateAirStreak(dt_);
 		}
 
@@ -294,8 +314,8 @@ void GameScene::Draw() {
 		enemyManager_->Draw(dxCommon_); // 敵群の描画を EnemyManager に委譲
 	}
 
-	// クリア演出中はボス関連を描かない
-	if (!clearSequence_) {
+	const bool isClear = (clearSeq_ && clearSeq_->IsActive()); // クリア演出中かどうか
+	if (!isClear) {
 		if (bossManager_) {
 			bossManager_->Draw(dxCommon_);
 		}
@@ -502,144 +522,9 @@ void GameScene::ImGuiDebug() {
 }
 
 void GameScene::StartClearSequence() {
-	clearSequence_ = true;
-	clearPhase_ = ClearPhase::CamZoom;
-	clearTimer_ = 0.0f;
-
-	// --- ボス、ボス弾、レティクルを消し、プレイヤー操作をロック ---
-	if (bossManager_) {
-		bossManager_->OnClearSequenceStart();
+	if (clearSeq_) {
+		clearSeq_->Start();
 	}
-	if (player_) {
-		player_->SetControlEnabled(false); // 入力を全部無視
-		player_->SetReticleVisible(false); // レティクル非表示
-	}
-	if (dxCommon_) {
-		// DX 側からも登録解除して、ポストエフェクトチェーンから外す
-		dxCommon_->SetVignettingEffect(nullptr);
-	}
-
-	// カメラの開始位置
-	clearCamStartPos_ = camera_->GetTranslate(); // Camera に Getter あり :contentReference[oaicite:4]{index=4}
-
-	// プレイヤー方向に少し寄せる
-	Vector3 camPos = camera_->GetTranslate();
-	Vector3 playerPos = player_->GetPosition();
-
-	// Zはプレイヤーの少し手前まで寄せる（-30 → プレイヤーZ-15くらい）
-	float targetZ = MyMath::Lerp(camPos.z, playerPos.z - 15.0f, 1.0f);
-	clearCamTargetPos_ = {
-		camPos.x,
-		camPos.y + 2.0f, // ちょい上から見下ろす
-		targetZ
-	};
-
-	// プレイヤーのスタート位置
-	clearPlayerStartPos_ = player_->GetPosition();
-
-	// 念のためアイリス閉じ状態リセット
-	clearIrisClosing_ = false;
-}
-
-bool GameScene::UpdateClearSequence(float dt) {
-	// クリア演出の経過時間
-	clearTimer_ += dt;
-
-	// skyboxはずっと回し続ける
-	if (skybox_) {
-		skybox_->UpdateRotation();
-	}
-
-	bool finished = false;
-
-	switch (clearPhase_) {
-	case ClearPhase::CamZoom:
-	{
-		// 1秒かけて寄る
-		float t = std::clamp(clearTimer_ / 1.0f, 0.0f, 1.0f);
-
-		// カメラ位置を線形補間
-		Vector3 camPos = MyMath::Vector3Lerp(clearCamStartPos_, clearCamTargetPos_, t);
-		camera_->SetTranslate(camPos);
-		camera_->Update();
-
-		if (t >= 1.0f) {
-			clearPhase_ = ClearPhase::PlayerFly;
-			clearTimer_ = 0.0f;
-
-			if (fireworkController_) {
-				fireworkController_->Reset();
-			}
-		}
-		break;
-	}
-	case ClearPhase::PlayerFly:
-	{
-		camera_->SetTranslate(clearCamTargetPos_);
-		camera_->Update();
-
-		Vector3 pos = player_->GetPosition();
-		pos.z += clearPlayerSpeed_ * dt;
-		player_->SetPosition(pos);
-
-		player_->UpdateVisualOnly();
-
-		// 花火はControllerへ委譲
-		if (fireworkController_) {
-			fireworkController_->Update(dt, camera_.get());
-		}
-
-		if (clearTimer_ >= clearPlayerFlyMinTime_ &&
-			pos.z > clearPlayerStartPos_.z + clearPlayerFlyDistance_) {
-
-			clearPhase_ = ClearPhase::IrisClose;
-			clearTimer_ = 0.0f;
-
-			clearIrisClosing_ = true;
-			clearIrisCloseTween_.Reset(
-				0.0f,
-				flow_ ? flow_->GetIrisMaxScale() : 0.0f,
-				kIrisDurationSec_,
-				Ease::Type::InBack
-			);
-		}
-		break;
-	}
-	case ClearPhase::IrisClose:
-	{
-		if (clearIrisClosing_) {
-			UpdateIrisScale(flow_ ? flow_->GetIrisSprite() : nullptr, clearIrisCloseTween_, dt);
-			if (clearIrisCloseTween_.Finished()) {
-				finished = true;
-			}
-		}
-		break;
-	}
-	default:
-		break;
-	}
-
-	// ──────────────────────────────
-	// クリア演出中でも動かしたいもの
-	// ──────────────────────────────
-
-	// タイムスケール更新
-	timeScale_.Update(dt);
-	const float scaledDt = dt * timeScale_.GetScale();
-
-	// パーティクルは普通に動かす
-	ParticleManager::GetInstance()->Update(scaledDt);
-
-	// Fog/Smoke含むポストエフェクトは PostEffectController に委譲
-	if (postFx_) {
-		postFx_->Update(scaledDt, bossManager_.get());
-
-		// fog_->SetWorldPos 相当（カメラ追従）が必要ならここで通知
-		// ※ activeCamera を使っているなら camera_ でOK（クリア演出中は camera_ 固定）
-		postFx_->OnCameraUpdated(camera_.get());
-	}
-
-	return finished;
 }
 
 void GameScene::UpdateAirStreak(float dt) {

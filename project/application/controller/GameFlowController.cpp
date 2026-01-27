@@ -70,14 +70,18 @@ namespace TKM {
 
 	void GameFlowController::Draw() const {
 		if (intro_) {
-			// IntroSequence側が irisClosing を見て Iris/Start を描く想定
-			intro_->Draw(irisClosing_);
+			// Iris閉じ or 外部制御なら描画
+			intro_->Draw(irisClosing_ || externalIrisDraw_);
 		}
 	}
 
 	bool GameFlowController::IsGameplayLocked() const {
 		// Intro中ロック（いまの責務）
 		return gameplayLocked_;
+	}
+
+	void GameFlowController::SetExternalIrisDraw(bool enable) {
+		externalIrisDraw_ = enable;
 	}
 
 	Sprite* GameFlowController::GetIrisSprite() const {
