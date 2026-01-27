@@ -44,29 +44,40 @@ namespace TKM {
 		return true;
 	}
 
-
-	void AudioManager::PlaySound(const std::string& key) {
+	void AudioManager::PlaySound(const std::string& key, float volume, bool loop) {
 		auto it = soundMap_.find(key);
-		if (it == soundMap_.end()) { // 音声キーが存在するか確認
-			return; // 存在しない音声キー
+		if (it == soundMap_.end()) {
+			return;
 		}
 
-		SoundData& soundData = it->second; // 音声データの取得
+		SoundData& soundData = it->second;
 
-		IXAudio2SourceVoice* sourceVoice = nullptr; // ソースボイスの作成
-		HRESULT hr = xAudio2_->CreateSourceVoice(&sourceVoice, &soundData.wfex_); // ソースボイスの作成
+		IXAudio2SourceVoice* sourceVoice = nullptr;
+		HRESULT hr = xAudio2_->CreateSourceVoice(&sourceVoice, &soundData.wfex_);
 		assert(SUCCEEDED(hr));
 
-		// バッファの設定と再生
+		// 音量クランプ（0.0f～1.0f）
+		float v = volume;
+		if (v < 0.0f) { v = 0.0f; }
+		if (v > 1.0f) { v = 1.0f; }
+		hr = sourceVoice->SetVolume(v);
+		assert(SUCCEEDED(hr));
+
+		// バッファ設定
 		XAUDIO2_BUFFER buffer = {};
 		buffer.pAudioData = soundData.pBuffer_;
 		buffer.AudioBytes = soundData.bufferSize_;
-		buffer.Flags = XAUDIO2_END_OF_STREAM;
 
-		// バッファの送信
+		if (loop) {
+			buffer.LoopCount = XAUDIO2_LOOP_INFINITE; // 無限ループ
+			// LoopBegin/LoopLength を指定しないなら「先頭から全体」をループする
+		} else {
+			buffer.Flags = XAUDIO2_END_OF_STREAM; // 通常再生の終端
+		}
+
 		hr = sourceVoice->SubmitSourceBuffer(&buffer);
 		assert(SUCCEEDED(hr));
-		// 再生開始
+
 		hr = sourceVoice->Start();
 		assert(SUCCEEDED(hr));
 	}

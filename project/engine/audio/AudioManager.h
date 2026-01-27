@@ -58,7 +58,10 @@ namespace TKM {
 		/// 音声データを再生します。
 		/// </summary>
 		/// <param name="key"></param>
-		void PlaySound(const std::string& key);
+		/// <param name="volume"></param>
+		/// <param name="loop"></param>
+		void PlaySound(const std::string& key, float volume = 1.0f, bool loop = false);
+
 		/// <summary>
 		/// 音声データを解放します。
 		/// </summary>

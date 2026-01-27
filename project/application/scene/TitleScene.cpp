@@ -4,6 +4,7 @@
 #include "SceneManager.h"
 #include <algorithm>
 #include <cmath>
+#include "AudioManager.h"
 
 #ifdef USE_IMGUI
 #include "imgui.h"
@@ -14,7 +15,7 @@ using TKM::TextureManager;
 using TKM::ModelManager;
 using TKM::Sprite;
 
-void TitleScene::Initialize(){
+void TitleScene::Initialize() {
 	camera_ = std::make_unique<Camera>();
 	camera_->SetRotate({ 0.0f, 0.0f, 0.0f });
 	camera_->SetTranslate({ 0.0f, camY_, -30.0f });
@@ -96,14 +97,14 @@ void TitleScene::Initialize(){
 
 	// ---------------BGMロード・再生----------------
 	// タイトルBGMロード
-	//AudioManager::GetInstance()->LoadSound("title", "kuraran.wav");
-	// タイトルBGM再生（1回だけ）
-	//AudioManager::GetInstance()->PlaySound("title");
+	TKM::AudioManager::GetInstance()->LoadSound("title", "kuraran.wav");
+	// タイトルBGM再生
+	TKM::AudioManager::GetInstance()->PlaySound("title", 0.4f, true); // 音量少し下げめでループ
 }
 
-void TitleScene::Finalize(){}
+void TitleScene::Finalize() {}
 
-void TitleScene::Update(){
+void TitleScene::Update() {
 	ResetDrawCallCount();
 	UpdatePerformanceInfo();
 
@@ -268,7 +269,7 @@ void TitleScene::Update(){
 #endif // USE_IMGUI
 }
 
-void TitleScene::Draw(){
+void TitleScene::Draw() {
 	// 3Dは3Dでまとめて
 	TKM::Object3dCommon::GetInstance()->DrawSetCommon();
 	if (heli_) heli_->Draw(dxCommon_);
