@@ -1,49 +1,10 @@
 #pragma once
 #include "BaseScene.h"
 
-#include <memory>
-#include "AudioManager.h"
-#include "TextureManager.h"
-#include "DirectXCommon.h"
-#include "srvManager.h"
-#include "Sprite.h"
-#include "SpriteCommon.h"
-#include "Object3d.h"
-#include "camera/Camera.h"
 #include "camera/DebugCamera.h"
-#include "Object3dCommon.h"
-#include "Model.h"
-#include "ModelCommon.h"
-#include "ModelManager.h"
-#include "DirectionalLight.h"
-#include "ParticleManager.h"
-#include "ParticlerEmitter.h"
-#include <SkyBox.h>
 #include "GameClearScene.h"
 #include "TitleScene.h"
-#include "SceneManager.h"
 #include "manager/EnemyManager.h"
-#include "manager/BossManager.h"
-#include "LineRenderer.h"
-#include "RadialBlurEffect.h"
-#include "VignettingEffect.h"
-#include "FogEffect.h"
-#include "AuraEffect.h"
-#include "IrisUtil.h"
-#include "Player.h"
-#include "Enemy.h"
-#include "EnemySpawner.h"
-#include "BossEnemy.h"
-#include "BossBullet.h"
-#include <Easing.h>
-#include "TimeScaleController.h"
-#include "WaterRippleEffect.h"
-#include "FogVolume3D.h"
-#include "SmokeVolume3D.h"
-#include "RBGaugeUI.h"
-#include "IntroSequence.h"
-#include "FireworkController.h"
-#include "GameFlowController.h"
 #include "UIController.h"
 #include "MyMath.h"
 #include "PostEffectController.h"
@@ -122,12 +83,6 @@ public:
 	/// クリア演出シーケンスを開始します。
 	/// </summary>
 	void StartClearSequence();
-	/// <summary>
-	/// クリア演出シーケンスの更新を行います。
-	/// </summary>
-	/// <param name="dt"></param>
-	/// <returns></returns>
-	bool UpdateClearSequence(float dt);
 	// Getter==================================
 	/// <summary>
 	/// カメラのポインタを取得します。
