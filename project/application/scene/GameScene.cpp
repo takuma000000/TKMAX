@@ -3,140 +3,55 @@
 #include <limits>
 #include <algorithm>
 #include <psapi.h>
-#include <Input.h>
-
-#ifdef USE_IMGUI
-#include "imgui.h"
-#endif
 
 using namespace TKM;
 
 void GameScene::Initialize() {
-	// ──────────────── NULLチェック ────────────────
+	/// ──────────────── NULLチェック ────────────────
 	assert(this != nullptr && "this is nullptr in GameScene::Initialize");
 	assert(dxCommon_ != nullptr && "dxCommon is nullptr in GameScene::Initialize");
-
-	// ──────────────── 各種初期化処理 ───────────────
+	/// ──────────────── 各種初期化処理 ───────────────
 	InitializeAudio();   // サウンドのロード＆再生
 	LoadTextures();      // テクスチャのロード
 	InitializeSprite();  // スプライトの作成＆初期化
 	LoadModels();        // 3Dモデルのロード
 	InitializeObjects(); // 3Dオブジェクトの作成＆初期化
 	InitializeCamera();  // カメラの作成＆設定
-
-	// ──────────────── ライトの初期化 ───────────────
+	/// ──────────────── ライトの初期化 ───────────────
 	directionalLight_ = std::make_unique<DirectionalLight>();
 	directionalLight_->Initialize({ 1.0f, 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 0.0f }, 1.0f);
-	// ──────────────── ラインレンダラーの初期化 ───────────────
+	/// ──────────────── ラインレンダラーの初期化 ───────────────
 	LineRenderer::GetInstance()->Initialize(dxCommon_);
-	// ──────────────── パーティクルの初期化 ───────────────
+	/// ──────────────── パーティクルの初期化 ───────────────
 	ParticleManager::GetInstance()->Initialize(dxCommon_, srvManager_, camera_.get());
-	ParticleManager::GetInstance()->CreateParticleGroup("uv", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
+	// パーティクルグループの登録は ParticleGroupsCatalogクラス へ
+	ParticleGroupsCatalog::RegisterGameScene(ParticleManager::GetInstance());
+	// パーティクルエミッターの初期化
 	particleEmitter_ = std::make_unique<ParticleEmitter>();
 	particleEmitter_->Initialize("uv", { 0.0f,2.5f,10.0f });
-
-	/// ===== パーティクルグループの作成 =====
-	// 開幕用：うっすら光が吸い込まれるリング
-	ParticleManager::GetInstance()->CreateParticleGroup("irisOpen", "./resources/gradationLine.png", ParticleManager::ParticleType::RING);
-	// 花火用：放射状に飛ぶ粒（通常クアッド）
-	ParticleManager::GetInstance()->CreateParticleGroup("irisFire", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
-	// 花火用：打ち上げ＆閃光＆爆発
-	ParticleManager::GetInstance()->CreateParticleGroup("fw_launch", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
-	ParticleManager::GetInstance()->CreateParticleGroup("fw_flash", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
-	ParticleManager::GetInstance()->CreateParticleGroup("fw_burst", "./resources/firework_star.png", ParticleManager::ParticleType::NORMAL);
-	// 空気の流れ(風)エフェクト
-	ParticleManager::GetInstance()->CreateParticleGroup("airStreak", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
-	// 敵スポーン
-	ParticleManager::GetInstance()->CreateParticleGroup("enemySpawn", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
-	/// === ここから被弾エフェクト用 ===
-	// 中央の強いフラッシュ
-	ParticleManager::GetInstance()->CreateParticleGroup("enemyHit_flash", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
-	// 外側に広がるリング
-	ParticleManager::GetInstance()->CreateParticleGroup("enemyHit_ring", "./resources/gradationLine.png", ParticleManager::ParticleType::RING);
-	// 放射状のレイ（細い光の筋）
-	ParticleManager::GetInstance()->CreateParticleGroup("enemyHit_rays", "./resources/gradationLine.png", ParticleManager::ParticleType::NORMAL);
-	// 小さいスパーク
-	ParticleManager::GetInstance()->CreateParticleGroup("enemyHit_spark", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
-	/// === ここから LT弾ヒット用・さらにド派手版 ===
-	// 爆心コア（まぶしい光の玉）
-	ParticleManager::GetInstance()->CreateParticleGroup("lt_nova_core", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
-	// 球状ショックウェーブ（外側のエネルギー殻）
-	ParticleManager::GetInstance()->CreateParticleGroup("lt_nova_wave", "./resources/gradationLine.png", ParticleManager::ParticleType::RING);
-	// デブリ＆煙（暗い破片、煙っぽい粒）
-	ParticleManager::GetInstance()->CreateParticleGroup("lt_nova_debris", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
-	// 亀裂エフェクト（空間が裂けるような光の筋）
-	ParticleManager::GetInstance()->CreateParticleGroup("lt_nova_crack", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
-	// 爆発バースト（明るい爆発の粒）
-	ParticleManager::GetInstance()->CreateParticleGroup("lt_nova_burst", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
-	/// === 敵吹っ飛び死亡専用エフェクト ===
-	// 核となる小さな光の塊（中央でフッと光って消える）
-	ParticleManager::GetInstance()->CreateParticleGroup("enemyDeath_core", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
-	// 周りに飛び散る光の破片
-	ParticleManager::GetInstance()->CreateParticleGroup("enemyDeath_shard", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
-	// 残り香みたいにふわっと残る煙
-	ParticleManager::GetInstance()->CreateParticleGroup("enemyDeath_smoke", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
-	/// === ボス撃破専用エフェクト ===
-	// 揺れている最中にボンボン出る中サイズ爆発
-	ParticleManager::GetInstance()->CreateParticleGroup("bossDeath_bomb", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
-	// 最後にドカンと出るリング衝撃波
-	ParticleManager::GetInstance()->CreateParticleGroup("bossDeath_ring", "./resources/gradationLine.png", ParticleManager::ParticleType::RING);
-	// 倒れたあとしばらく残る大きめの煙
-	ParticleManager::GetInstance()->CreateParticleGroup("bossDeath_smoke", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
-	// 爆心コア（画面中央でドーンと光る玉）
-	ParticleManager::GetInstance()->CreateParticleGroup("bossClear_core", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
-	// 超デカいショックウェーブ（リング）
-	ParticleManager::GetInstance()->CreateParticleGroup("bossClear_ring", "./resources/gradationLine.png", ParticleManager::ParticleType::RING);
-	// 四方八方に飛ぶ光の破片
-	ParticleManager::GetInstance()->CreateParticleGroup("bossClear_spark", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
-	// 重めの破片・残り香みたいな煙
-	ParticleManager::GetInstance()->CreateParticleGroup("bossClear_debris", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
-	/// === 敵飛び掛かり用エフェクト群 ===
-	// 敵の飛び掛かり軌道レール
-	ParticleManager::GetInstance()->CreateParticleGroup("enemyPounceTrail", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
-	// 軌道上のスパーク
-	ParticleManager::GetInstance()->CreateParticleGroup("enemyPounceSpark", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
-	/// === 蘇生核チャージ演出 ===
-	// 外側を覆うエネルギー殻
-	ParticleManager::GetInstance()->CreateParticleGroup("core_charge_shell", "./resources/gradationLine.png", ParticleManager::ParticleType::RING);
-	// 内向きに吸い込まれる粒子
-	ParticleManager::GetInstance()->CreateParticleGroup("core_charge_inward", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
-	// リボン状のエネルギー帯
-	ParticleManager::GetInstance()->CreateParticleGroup("core_charge_ribbon", "./resources/gradationLine.png", ParticleManager::ParticleType::RING);
-	// 中心の強いフラッシュ
-	ParticleManager::GetInstance()->CreateParticleGroup("core_charge_flash", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
-	/// === LT弾のチャージエフェクト ===
-	// 外側を覆うエネルギー殻
-	ParticleManager::GetInstance()->CreateParticleGroup("trail_lt_path", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
-	/// --- Boss Windup FX（予備動作）---
-	// 外側を覆うリング状エネルギー
-	ParticleManager::GetInstance()->CreateParticleGroup("boss_windup_shell", "./resources/gradationLine.png", ParticleManager::ParticleType::RING);
-	// 火花がパチパチ飛ぶエフェクト
-	ParticleManager::GetInstance()->CreateParticleGroup("boss_windup_crackle", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
-	// 内向きに吸い込まれる粒子
-	ParticleManager::GetInstance()->CreateParticleGroup("boss_windup_inward", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
-	// ──────────────── スカイボックスの初期化 ───────────────
+	/// ──────────────── スカイボックスの初期化 ───────────────
 	skybox_ = std::make_unique<Skybox>();
 	skybox_->Initialize(dxCommon_, srvManager_, "resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
 	skybox_->SetCamera(camera_.get());
-	// ──────────────── 敵マネージャの初期化 ───────────────
+	/// ──────────────── 敵マネージャの初期化 ───────────────
 	enemyManager_ = std::make_unique<EnemyManager>();
 	enemyManager_->Initialize(dxCommon_, camera_.get(), this, player_.get());
 	enemyManager_->BindEnemies(&enemies_, &defeatedEnemyCount_, &maxEnemyCount_);
-	// ──────────────── ボスマネージャの初期化 ───────────────
+	/// ──────────────── ボスマネージャの初期化 ───────────────
 	if (!bossManager_) {
 		bossManager_ = std::make_unique<BossManager>();
 	}
 	bossManager_->Initialize(dxCommon_, camera_.get(), this, player_.get());
-	// ──────────────── タイムスケールコントローラーの初期化 ───────────────
+	/// ──────────────── タイムスケールコントローラーの初期化 ───────────────
 	timeScale_.Initialize();
 	bossManager_->SetTimeScaleController(&timeScale_);
-	// ──────────────── 花火コントローラーの初期化 ───────────────
+	/// ──────────────── 花火コントローラーの初期化 ───────────────
 	fireworkController_ = std::make_unique<TKM::FireworkController>();
 	fireworkController_->Reset();
-	// ──────────────── ポストエフェクトの初期化 ───────────────
+	/// ──────────────── ポストエフェクトの初期化 ───────────────
 	postFx_ = std::make_unique<TKM::PostEffectController>();
 	postFx_->Initialize(dxCommon_, player_.get(), bossManager_.get());
-	// ──────────────── ゲームフローの初期化 ───────────────
+	/// ──────────────── ゲームフローの初期化 ───────────────
 	clearSeq_ = std::make_unique<TKM::ClearSequenceController>();
 	clearSeq_->Initialize(camera_.get(), player_.get(), bossManager_.get(), flow_.get(), dxCommon_, skybox_.get(), fireworkController_.get());
 }
@@ -155,149 +70,28 @@ void GameScene::Finalize() {
 }
 
 void GameScene::Update() {
-	// 入力処理
-	Input::GetInstance()->Update();
-	// 毎フレームの最初に、前フレームのラインをクリア
-	LineRenderer::GetInstance()->BeginFrame();
-	// フレームタイム計測
-	const float rawDt = dt_; /// デフォルトデルタタイム（補間なし）
-	timeScale_.Update(rawDt); // タイムスケールコントローラーの更新
-	const float scaledDt = rawDt * timeScale_.GetScale(); /// スローデルタタイム
+	float rawDt = 0.0f;
+	float scaledDt = 0.0f;
 
-	// 描画コール・メモリの初期化
-	ResetDrawCallCount();
-	UpdateMemory();
+	BeginFrameUpdate(rawDt, scaledDt); // フレーム開始処理
 
 	// クリア演出中なら専用処理だけ回して終わり
-	if (clearSeq_ && clearSeq_->IsActive()) {
-
-		// 重要：clearSeq中は flow_->Update を回さない
-		// （IntroSequence側の更新がIris状態を戻してしまい、閉じた直後に消える原因になる）
-
-		// クリア演出本体（スロー非依存）
-		bool finished = clearSeq_->Update(dt_);
-
-		// クリア中でも動かしたいもの（止めない）
-		ParticleManager::GetInstance()->Update(scaledDt);
-
-		if (postFx_) {
-			postFx_->Update(scaledDt, bossManager_.get());
-			postFx_->OnCameraUpdated(camera_.get());
-		}
-
-		if (ui_) {
-			ui_->Update(scaledDt, player_.get());
-		}
-
-		if (finished) {
-			sceneManager_->SetNextScene(new GameClearScene(dxCommon_, srvManager_));
-			return;
-		}
-
-		UpdatePerformanceInfo();
+	if (UpdateDuringClear(scaledDt)) {
 		return;
 	}
 
-	if (flow_) { // ゲームフローの更新
-		flow_->Update(dt_, camera_.get(), enemiesInitialized_, requestInitEnemies_);
-	}
-	const bool isClear = (clearSeq_ && clearSeq_->IsActive()); // クリア演出中かどうか
-	const bool locked = (flow_ && flow_->IsGameplayLocked()) || isClear; // ゲームプレイがロックされているかどうか
-
-	// --- 敵とWaveは「ゲーム開始後」だけ動かす ---
-	if (!locked && enemiesInitialized_) {
-
-		// 敵の更新（敵ロジックは EnemyManager に完全委譲）
-		if (enemyManager_) {
-			enemyManager_->Update(scaledDt);
-		}
-
-		// 全てのWaveが終了していて、敵がいない → ボスへ進行 or クリア処理
-		if (enemyManager_ && enemyManager_->IsAllWavesCleared()) {
-			if (bossManager_) {
-				// まだボス戦始まっていなければ開始
-				if (!bossManager_->IsBattleActive() && !bossManager_->IsBossDead()) {
-					bossManager_->StartBattle();
-				} else {
-					// ボス撃破 → クリア演出へ
-					if (bossManager_->IsBossDead()) {
-						if (!isClear) {
-							StartClearSequence();
-							return;
-						}
-					}
-				}
-			}
-		}
-		// ロックオン対象の更新
-		if (bossManager_ && bossManager_->IsBossAlive()) {
-			player_->SetEnemy(bossManager_->GetBoss());
-		} else {
-			enemyManager_->UpdateClosestEnemy();
-		}
-	}
+	UpdateFlow();
+	UpdateEnemyAndWaveLogic(scaledDt);
 
 	// デバッグ用ImGui表示
 	ImGuiDebug();
-	// パフォーマンス情報更新
+	// パフォーマンス情報更新（※元コードはここで UpdateActiveCamera() を呼んでいる）
 	UpdateActiveCamera();
 
-	if (enemyManager_) {
-		// スカイボックスの回転更新
-		skybox_->UpdateRotation();
-		// プレイヤーの更新
-		player_->Update(scaledDt);
-
-		if (ui_) {
-			ui_->Update(scaledDt, player_.get());
-		}
-
-		// ボスマネージャの更新
-		if (bossManager_) {
-			bossManager_->Update(scaledDt);
-		}
-		// ポストエフェクトの更新
-		if (postFx_) {
-			postFx_->Update(scaledDt, bossManager_.get());
-		}
-
-		// ライトの更新
-		directionalLight_->Update();
-
-		if (!isClear && !locked) {
-			UpdateAirStreak(dt_);
-		}
-
-		// その他のオブジェクト・パーティクルの更新
-		ParticleManager::GetInstance()->Update(scaledDt);
-
-		if (flow_) {
-			const auto req = flow_->UpdateTransitions(dt_, player_.get());
-			if (req == TKM::GameFlowController::TransitionRequest::ToTitle) {
-				sceneManager_->SetNextScene(new TitleScene(dxCommon_, srvManager_));
-				return;
-			}
-			if (req == TKM::GameFlowController::TransitionRequest::ToGameOver) {
-				sceneManager_->SetNextScene(new GameOverScene(dxCommon_, srvManager_));
-				return;
-			}
-		}
-
-		// ─── キーボードのYキーでプレイヤーのHPを0にする（デバッグ用）───
-		if (Input::GetInstance()->TriggerKey(DIK_Y)) {
-			if (player_) player_->SetHP(0);
-		}
-
-		// ── 敵初期化要求が来ていたら実行 ──
-		if (requestInitEnemies_) {
-			enemyManager_->InitializeWaves();
-			enemiesInitialized_ = true;
-			requestInitEnemies_ = false;
-		}
-
-		// パフォーマンス情報・デバッグUI
-		UpdatePerformanceInfo();
-	}
+	UpdateGameplaySystems(rawDt, scaledDt); // ゲームプレイ関連システムの更新
+	UpdateTransitionsAndSceneChange(rawDt); // シーン遷移＆シーンチェンジの更新
+	HandleDebugKeysAndRequests(); // デバッグキー＆リクエスト処理
+	EndFrameUpdate(); // フレーム終了処理
 }
 
 void GameScene::Draw() {
@@ -593,4 +387,175 @@ void GameScene::UpdateAirStreak(float dt) {
 
 		ParticleManager::GetInstance()->Emit("airStreak", emitPos, 1);
 	}
+}
+
+void GameScene::BeginFrameUpdate(float& rawDt, float& scaledDt) {
+	// 入力処理
+	Input::GetInstance()->Update();
+	// 毎フレームの最初に、前フレームのラインをクリア
+	LineRenderer::GetInstance()->BeginFrame();
+	// フレームタイム計測
+	rawDt = dt_; /// デフォルトデルタタイム（補間なし）
+	timeScale_.Update(rawDt); // タイムスケールコントローラーの更新
+	scaledDt = rawDt * timeScale_.GetScale(); /// スローデルタタイム
+
+	// 描画コール・メモリの初期化
+	ResetDrawCallCount();
+	UpdateMemory();
+}
+
+bool GameScene::UpdateDuringClear(float scaledDt) {
+	if (!(clearSeq_ && clearSeq_->IsActive())) {
+		return false;
+	}
+
+	// クリア演出本体（スロー非依存）
+	bool finished = clearSeq_->Update(dt_);
+
+	// クリア中でも動かしたいもの（止めない）
+	ParticleManager::GetInstance()->Update(scaledDt);
+
+	if (postFx_) {
+		postFx_->Update(scaledDt, bossManager_.get());
+		postFx_->OnCameraUpdated(camera_.get());
+	}
+
+	if (ui_) {
+		ui_->Update(scaledDt, player_.get());
+	}
+
+	if (finished) {
+		sceneManager_->SetNextScene(new GameClearScene(dxCommon_, srvManager_));
+		return true;
+	}
+
+	UpdatePerformanceInfo();
+	return true;
+}
+
+void GameScene::UpdateFlow() {
+	if (flow_) { // ゲームフローの更新
+		flow_->Update(dt_, camera_.get(), enemiesInitialized_, requestInitEnemies_);
+	}
+}
+
+void GameScene::UpdateEnemyAndWaveLogic(float scaledDt) {
+	const bool isClear = (clearSeq_ && clearSeq_->IsActive()); // クリア演出中かどうか
+	const bool locked = (flow_ && flow_->IsGameplayLocked()) || isClear; // ゲームプレイがロックされているかどうか
+
+	// --- 敵とWaveは「ゲーム開始後」だけ動かす ---
+	if (!locked && enemiesInitialized_) {
+
+		// 敵の更新（敵ロジックは EnemyManager に完全委譲）
+		if (enemyManager_) {
+			enemyManager_->Update(scaledDt);
+		}
+
+		// 全てのWaveが終了していて、敵がいない → ボスへ進行 or クリア処理
+		if (enemyManager_ && enemyManager_->IsAllWavesCleared()) {
+			if (bossManager_) {
+				// まだボス戦始まっていなければ開始
+				if (!bossManager_->IsBattleActive() && !bossManager_->IsBossDead()) {
+					bossManager_->StartBattle();
+				} else {
+					// ボス撃破 → クリア演出へ
+					if (bossManager_->IsBossDead()) {
+						if (!isClear) {
+							StartClearSequence();
+							return;
+						}
+					}
+				}
+			}
+		}
+
+		// ロックオン対象の更新
+		if (bossManager_ && bossManager_->IsBossAlive()) {
+			player_->SetEnemy(bossManager_->GetBoss());
+		} else {
+			enemyManager_->UpdateClosestEnemy();
+		}
+	}
+}
+
+void GameScene::UpdateGameplaySystems(float dt, float scaledDt) {
+	const bool isClear = (clearSeq_ && clearSeq_->IsActive()); // クリア演出中かどうか
+	const bool locked = (flow_ && flow_->IsGameplayLocked()) || isClear; // ゲームプレイがロックされているかどうか
+
+	if (!enemyManager_) {
+		return;
+	}
+
+	// スカイボックスの回転更新
+	skybox_->UpdateRotation();
+	// プレイヤーの更新
+	player_->Update(scaledDt);
+
+	if (ui_) {
+		ui_->Update(scaledDt, player_.get());
+	}
+
+	// ボスマネージャの更新
+	if (bossManager_) {
+		bossManager_->Update(scaledDt);
+	}
+	// ポストエフェクトの更新
+	if (postFx_) {
+		postFx_->Update(scaledDt, bossManager_.get());
+	}
+
+	// ライトの更新
+	directionalLight_->Update();
+
+	if (!isClear && !locked) {
+		UpdateAirStreak(dt);
+	}
+
+	// その他のオブジェクト・パーティクルの更新
+	ParticleManager::GetInstance()->Update(scaledDt);
+}
+
+void GameScene::UpdateTransitionsAndSceneChange(float dt) {
+	if (!enemyManager_) {
+		return;
+	}
+
+	if (flow_) {
+		const auto req = flow_->UpdateTransitions(dt, player_.get());
+		if (req == TKM::GameFlowController::TransitionRequest::ToTitle) {
+			sceneManager_->SetNextScene(new TitleScene(dxCommon_, srvManager_));
+			return;
+		}
+		if (req == TKM::GameFlowController::TransitionRequest::ToGameOver) {
+			sceneManager_->SetNextScene(new GameOverScene(dxCommon_, srvManager_));
+			return;
+		}
+	}
+}
+
+void GameScene::HandleDebugKeysAndRequests() {
+	if (!enemyManager_) {
+		return;
+	}
+
+	// ─── キーボードのYキーでプレイヤーのHPを0にする（デバッグ用）───
+	if (Input::GetInstance()->TriggerKey(DIK_Y)) {
+		if (player_) player_->SetHP(0);
+	}
+
+	// ── 敵初期化要求が来ていたら実行 ──
+	if (requestInitEnemies_) {
+		enemyManager_->InitializeWaves();
+		enemiesInitialized_ = true;
+		requestInitEnemies_ = false;
+	}
+}
+
+void GameScene::EndFrameUpdate() {
+	if (!enemyManager_) {
+		return;
+	}
+
+	// パフォーマンス情報・デバッグUI
+	UpdatePerformanceInfo();
 }

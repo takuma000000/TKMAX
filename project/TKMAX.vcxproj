@@ -203,6 +203,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\effect\post\SmokeVolume3D.cpp" />
     <ClCompile Include="application\ui\UIController.cpp" />
     <ClCompile Include="application\controller\PostEffectController.cpp" />
+    <ClCompile Include="application\effect\ParticleGroupsCatalog.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\enemy\manager\EnemyManager.h" />
@@ -290,6 +291,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\controller\GameFlowController.h" />
     <ClInclude Include="application\ui\UIController.h" />
     <ClInclude Include="application\controller\PostEffectController.h" />
+    <ClInclude Include="application\effect\ParticleGroupsCatalog.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

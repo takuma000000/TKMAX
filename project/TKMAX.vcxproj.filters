@@ -189,6 +189,7 @@
     <ClCompile Include="application\ui\UIController.cpp" />
     <ClCompile Include="application\controller\PostEffectController.cpp" />
     <ClCompile Include="application\controller\ClearSequenceController.cpp" />
+    <ClCompile Include="application\effect\ParticleGroupsCatalog.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -414,6 +415,7 @@
     <ClInclude Include="application\ui\UIController.h" />
     <ClInclude Include="application\controller\PostEffectController.h" />
     <ClInclude Include="application\controller\ClearSequenceController.h" />
+    <ClInclude Include="application\effect\ParticleGroupsCatalog.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

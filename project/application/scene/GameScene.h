@@ -9,6 +9,12 @@
 #include "MyMath.h"
 #include "PostEffectController.h"
 #include "ClearSequenceController.h"
+#include "ParticleGroupsCatalog.h"
+#include "Input.h"
+
+#ifdef USE_IMGUI
+#include "imgui.h"
+#endif
 
 //=============================================================
 // GameSceneクラス
@@ -68,11 +74,11 @@ public:
 	/// <summary>
 	/// 敵弾をスポーンします。
 	/// </summary>
-	/// <param name="pos"></param>
-	/// <param name="dir"></param>
-	/// <param name="speed"></param>
-	/// <param name="damage"></param>
-	/// <param name="lifeFrame"></param>
+	/// <param name="pos">弾を生成するワールド座標位置</param>
+	/// <param name="dir">弾が進む正規化された方向ベクトル</param>
+	/// <param name="speed">弾の移動速度</param>
+	/// <param name="damage">プレイヤーに与えるダメージ量</param>
+	/// <param name="lifeFrame">弾が消滅するまでのフレーム数</param>
 	void SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float speed, int damage, int lifeFrame);
 	/// <summary>
 	/// アクティブなカメラを更新します。
@@ -107,55 +113,91 @@ private:
 	//======================================================================
 	// 基本システム
 	//======================================================================
-	TKM::DirectXCommon* dxCommon_ = nullptr;
-	TKM::SrvManager* srvManager_ = nullptr;
+	TKM::DirectXCommon* dxCommon_ = nullptr; // DirectX共通（デバイス/コマンド等）
+	TKM::SrvManager* srvManager_ = nullptr; // SRV管理
 	//======================================================================
 	// カメラ / ライト / スカイボックス
 	//======================================================================
-	std::unique_ptr<TKM::Camera> camera_ = nullptr;
-
+	std::unique_ptr<TKM::Camera> camera_ = nullptr;           // メインカメラ
 	std::unique_ptr<TKM::DebugCamera> debugCamera_ = nullptr; // デバッグカメラ
-	bool useDebugCamera_ = false;                        // デバッグカメラ使用フラグ
-
-	std::unique_ptr<TKM::DirectionalLight> directionalLight_ = nullptr;// ディレクショナルライト
-
-	std::unique_ptr<TKM::Skybox> skybox_; // スカイボックス
+	bool useDebugCamera_ = false;                              // デバッグカメラ使用フラグ
+	std::unique_ptr<TKM::DirectionalLight> directionalLight_ = nullptr; // ディレクショナルライト
+	std::unique_ptr<TKM::Skybox> skybox_ = nullptr;                      // スカイボックス
 	//======================================================================
 	// プレイヤー / 敵 / マネージャ
 	//======================================================================
-	std::unique_ptr<Player> player_ = nullptr;
-
-	std::vector<std::unique_ptr<Enemy>> enemies_;
-	int defeatedEnemyCount_ = 0;// 倒した敵の数
-	int maxEnemyCount_ = 0;// 最大敵数
-
-	std::unique_ptr<EnemyManager> enemyManager_; // 敵管理クラス
-	std::unique_ptr<BossManager>  bossManager_;  // ボス管理クラス
-
+	std::unique_ptr<Player> player_ = nullptr; // プレイヤー
+	std::vector<std::unique_ptr<Enemy>> enemies_; // 敵リスト（直持ち）
+	int defeatedEnemyCount_ = 0; // 倒した敵の数
+	int maxEnemyCount_ = 0;      // 最大敵数（管理用）
+	std::unique_ptr<EnemyManager> enemyManager_ = nullptr; // 敵管理
+	std::unique_ptr<BossManager>  bossManager_ = nullptr; // ボス管理
+	bool enemiesInitialized_ = false; // 敵初期化済みフラグ
 	bool requestInitEnemies_ = false; // 敵再初期化リクエスト
-
-	// 敵初期化フラグ
-	bool enemiesInitialized_ = false;
 	//======================================================================
 	// パーティクル / 風エフェクト
 	//======================================================================
-	//パーティクル
-	std::unique_ptr<ParticleEmitter> particleEmitter_ = nullptr;
-
-	// 風エフェクト用
-	void  UpdateAirStreak(float dt);
-	float airStreakTimer_ = 0.0f;
+	std::unique_ptr<ParticleEmitter> particleEmitter_ = nullptr; // パーティクルエミッタ（デバッグ/汎用）
+	float airStreakTimer_ = 0.0f; // 風エフェクト用タイマー
 	//======================================================================
 	// 時間制御
 	//======================================================================
-	TKM::TimeScaleController timeScale_; // 時間制御クラス
-
-	std::unique_ptr<TKM::FireworkController> fireworkController_;
-
-	static constexpr float dt_ = 0.016f;
-
-	std::unique_ptr<TKM::GameFlowController> flow_ = nullptr;
-	std::unique_ptr<TKM::UIController> ui_ = nullptr;
-	std::unique_ptr<TKM::PostEffectController> postFx_ = nullptr;
-	std::unique_ptr<TKM::ClearSequenceController> clearSeq_ = nullptr;
+	TKM::TimeScaleController timeScale_; // タイムスケール制御
+	static constexpr float dt_ = 0.016f; // 固定デルタタイム（仮）
+	//======================================================================
+	// 演出 / 画面制御（シーン内サブコントローラ）
+	//======================================================================
+	std::unique_ptr<TKM::FireworkController>      fireworkController_ = nullptr; // 花火演出
+	std::unique_ptr<TKM::GameFlowController>      flow_ = nullptr; // ゲーム開始/遷移/ロック制御
+	std::unique_ptr<TKM::UIController>            ui_ = nullptr; // UI制御
+	std::unique_ptr<TKM::PostEffectController>    postFx_ = nullptr; // ポストエフェクト制御
+	std::unique_ptr<TKM::ClearSequenceController> clearSeq_ = nullptr; // クリア演出シーケンス
+	//======================================================================
+	// 内部処理
+	//======================================================================
+	/// <summary>
+	/// 風エフェクトを更新します。
+	/// </summary>
+	/// <param name="dt"></param>
+	void UpdateAirStreak(float dt); // 風エフェクト更新
+	/// <summary>
+	/// フレーム更新の開始処理を行います。
+	/// </summary>
+	/// <param name="rawDt"></param>
+	/// <param name="scaledDt"></param>
+	void BeginFrameUpdate(float& rawDt, float& scaledDt);
+	/// <summary>
+	/// クリア中の更新処理を行います。
+	/// </summary>
+	/// <param name="scaledDt"></param>
+	/// <returns></returns>
+	bool UpdateDuringClear(float scaledDt);
+	/// <summary>
+	/// ゲームフローの更新処理を行います。
+	/// </summary>
+	void UpdateFlow();
+	/// <summary>
+	/// 敵とウェーブのロジック更新を行います。
+	/// </summary>
+	/// <param name="scaledDt"></param>
+	void UpdateEnemyAndWaveLogic(float scaledDt);
+	/// <summary>
+	/// ゲームプレイシステムの更新処理を行います。
+	/// </summary>
+	/// <param name="dt"></param>
+	/// <param name="scaledDt"></param>
+	void UpdateGameplaySystems(float dt, float scaledDt);
+	/// <summary>
+	/// トランジションとシーンチェンジの更新処理を行います。
+	/// </summary>
+	/// <param name="dt"></param>
+	void UpdateTransitionsAndSceneChange(float dt);
+	/// <summary>
+	/// デバッグキーとリクエストの処理を行います。
+	/// </summary>
+	void HandleDebugKeysAndRequests();
+	/// <summary>
+	/// フレーム更新の終了処理を行います。
+	/// </summary>
+	void EndFrameUpdate();
 };
