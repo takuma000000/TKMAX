@@ -45,6 +45,7 @@
 #include "IntroSequence.h"
 #include "FireworkController.h"
 #include "GameFlowController.h"
+#include "UIController.h"
 
 //=============================================================
 // GameSceneクラス
@@ -235,18 +236,12 @@ private:
 	TKM::TimeScaleController timeScale_; // 時間制御クラス
 	bool clearSlowRequested_ = false; // クリアスロー要求フラグ
 
-	// 操作ガイドUI
-	std::unique_ptr<TKM::Sprite> uiLT_;
-	std::unique_ptr<TKM::Sprite> uiLB_;
-	std::unique_ptr<TKM::Sprite> uiRB_;
-
-	std::unique_ptr<TKM::RBGaugeUI> rbGaugeUI_;
-
 	std::unique_ptr<TKM::FireworkController> fireworkController_;
 
 	static constexpr float dt_ = 0.016f;
 
 	std::unique_ptr<TKM::GameFlowController> flow_ = nullptr;
+	std::unique_ptr<TKM::UIController> ui_ = nullptr;
 
 	// Clear用アイリス閉じ
 	bool        clearIrisClosing_ = false;

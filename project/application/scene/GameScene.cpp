@@ -269,15 +269,11 @@ void GameScene::Update() {
 		skybox_->UpdateRotation();
 		// プレイヤーの更新
 		player_->Update(scaledDt);
-		// RB弾ゲージ更新（両サイドから中央へ減る）
-		if (rbGaugeUI_ && player_) {
-			rbGaugeUI_->Update(
-				scaledDt,
-				player_->GetRbAmmo(),
-				player_->GetRbAmmoMax(),
-				player_->IsRbRefilling()
-			);
+
+		if (ui_) {
+			ui_->Update(scaledDt, player_.get());
 		}
+
 		// ボスマネージャの更新
 		if (bossManager_) {
 			bossManager_->Update(scaledDt);
@@ -318,28 +314,6 @@ void GameScene::Update() {
 		if (!clearSequence_ && !locked) {
 			UpdateAirStreak(dt_);
 		}
-
-		// --- 操作ガイドUI：押してる時は赤 ---
-		Input* in = Input::GetInstance();
-
-		// RB / LB
-		bool rbDown = in->PushButton(XINPUT_GAMEPAD_RIGHT_SHOULDER);
-		bool lbDown = in->PushButton(XINPUT_GAMEPAD_LEFT_SHOULDER);
-
-		// LT（アナログ）
-		bool ltDown = (in->GetLeftTrigger() > 30); // 30は好みで
-
-		// 通常色 / 押下色
-		const Vector4 idle = { 1.0f, 1.0f, 1.0f, 0.75f }; // 白（薄め）
-		const Vector4 on = { 1.0f, 0.25f, 0.25f, 1.0f }; // 赤（ハッキリ）
-
-		if (uiRB_) uiRB_->SetColor(rbDown ? on : idle);
-		if (uiLB_) uiLB_->SetColor(lbDown ? on : idle);
-		if (uiLT_) uiLT_->SetColor(ltDown ? on : idle);
-
-		if (uiLT_) { uiLT_->Update(); }
-		if (uiLB_) { uiLB_->Update(); }
-		if (uiRB_) { uiRB_->Update(); }
 
 		// その他のオブジェクト・パーティクルの更新
 		ParticleManager::GetInstance()->Update(scaledDt);
@@ -442,11 +416,9 @@ void GameScene::Draw() {
 	if (flow_) {
 		flow_->Draw();
 	}
-	// 操作ガイドUI（常時表示）
-	if (uiLT_) { uiLT_->Draw(); }
-	if (uiLB_) { uiLB_->Draw(); }
-	if (uiRB_) { uiRB_->Draw(); }
-	if (rbGaugeUI_) rbGaugeUI_->Draw();
+	if (ui_) {
+		ui_->Draw();
+	}
 	if (bossManager_) { bossManager_->DrawUI(); }
 }
 
@@ -541,47 +513,10 @@ void GameScene::InitializeSprite() {
 	flow_ = std::make_unique<TKM::GameFlowController>();
 	flow_->Initialize(dxCommon_);
 
-	// ---- 操作ガイドUI（右下） ----
-	uiLT_ = std::make_unique<Sprite>();
-	uiLB_ = std::make_unique<Sprite>();
-	uiRB_ = std::make_unique<Sprite>();
-
-	uiLT_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, "./resources/LT.png");
-	uiLT_->SetAutoAdjustTextureSize(false);
-	uiLB_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, "./resources/LB.png");
-	uiLB_->SetAutoAdjustTextureSize(false);
-	uiRB_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, "./resources/RB.png");
-	uiRB_->SetAutoAdjustTextureSize(false);
-
-	// 右下基準（右下にピタッと寄せる）
-	uiLT_->SetAnchorPoint({ 1.0f, 1.0f });
-	uiLB_->SetAnchorPoint({ 1.0f, 1.0f });
-	uiRB_->SetAnchorPoint({ 1.0f, 1.0f });
-
-	// 画像でかいのでUI用に縮小（好みで調整）
-	const Vector2 uiSize = { 100, 100.0f };
-	uiLT_->SetSize(uiSize);
-	uiLB_->SetSize(uiSize);
-	uiRB_->SetSize(uiSize);
-
-	uiLT_->SetColor({ 1,1,1,0.85f });
-	uiLB_->SetColor({ 1,1,1,0.85f });
-	uiRB_->SetColor({ 1,1,1,0.85f });
-
-	// 右下に積む（RBが一番下）
+	ui_ = std::make_unique<TKM::UIController>();
 	const float w = (float)WindowsAPI::kClientWidth_;
 	const float h = (float)WindowsAPI::kClientHeight_;
-	const float margin = 20.0f;
-	const float spacing = 10.0f;
-
-	uiRB_->SetPosition({ w - margin, h - margin });
-	uiLB_->SetPosition({ w - margin, h - margin - (uiSize.y + spacing) * 1.0f });
-	uiLT_->SetPosition({ w - margin, h - margin - (uiSize.y + spacing) * 2.0f });
-
-	// ---- RB弾ゲージ（画面下中央）----
-	rbGaugeUI_ = std::make_unique<TKM::RBGaugeUI>();
-	TKM::RBGaugeUI::Desc d{};
-	rbGaugeUI_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, this, d);
+	ui_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, this, w, h);
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
