@@ -11,6 +11,7 @@
 #include "ClearSequenceController.h"
 #include "ParticleGroupsCatalog.h"
 #include "Input.h"
+#include "PauseMenuController.h"
 
 #ifdef USE_IMGUI
 #include "imgui.h"
@@ -152,6 +153,7 @@ private:
 	std::unique_ptr<TKM::UIController>            ui_ = nullptr; // UI制御
 	std::unique_ptr<TKM::PostEffectController>    postFx_ = nullptr; // ポストエフェクト制御
 	std::unique_ptr<TKM::ClearSequenceController> clearSeq_ = nullptr; // クリア演出シーケンス
+	std::unique_ptr<TKM::PauseMenuController>     pause_ = nullptr;
 	//======================================================================
 	// 内部処理
 	//======================================================================

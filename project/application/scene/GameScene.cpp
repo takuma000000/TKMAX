@@ -81,17 +81,48 @@ void GameScene::Update() {
 	}
 
 	UpdateFlow();
+
+	// Intro等でロック中はポーズを開けない（誤動作防止）
+	const bool isClear = (clearSeq_ && clearSeq_->IsActive());
+	const bool locked = (flow_ && flow_->IsGameplayLocked()) || isClear;
+	const bool allowPauseOpen = !locked;
+
+	// ──────────────── ポーズ更新（rawDtでUIだけ動かす） ───────────────
+	if (pause_) {
+		const auto cmd = pause_->Update(rawDt, allowPauseOpen);
+
+		if (cmd == TKM::PauseMenuController::Command::ReturnToTitle) {
+			if (flow_) {
+				flow_->RequestToTitleByIris(); // いつものアイリスで戻す
+			}
+		} else if (cmd == TKM::PauseMenuController::Command::Restart) {
+			sceneManager_->SetNextScene(new GameScene(dxCommon_, srvManager_));
+			return;
+		}
+
+		// ポーズ中はゲーム本体を止める。ただし「遷移（タイトル戻り等）」は回す
+		if (pause_->IsPaused()) {
+			ImGuiDebug();
+			UpdateActiveCamera();
+
+			// ポーズ中はゲーム更新をスキップ
+			UpdateTransitionsAndSceneChange(rawDt);
+
+			HandleDebugKeysAndRequests();
+			EndFrameUpdate();
+			return;
+		}
+	}
+
 	UpdateEnemyAndWaveLogic(scaledDt);
 
-	// デバッグ用ImGui表示
 	ImGuiDebug();
-	// パフォーマンス情報更新（※元コードはここで UpdateActiveCamera() を呼んでいる）
 	UpdateActiveCamera();
 
-	UpdateGameplaySystems(rawDt, scaledDt); // ゲームプレイ関連システムの更新
-	UpdateTransitionsAndSceneChange(rawDt); // シーン遷移＆シーンチェンジの更新
-	HandleDebugKeysAndRequests(); // デバッグキー＆リクエスト処理
-	EndFrameUpdate(); // フレーム終了処理
+	UpdateGameplaySystems(rawDt, scaledDt);
+	UpdateTransitionsAndSceneChange(rawDt);
+	HandleDebugKeysAndRequests();
+	EndFrameUpdate();
 }
 
 void GameScene::Draw() {
@@ -140,6 +171,9 @@ void GameScene::Draw() {
 	}
 	if (ui_) {
 		ui_->Draw();
+	}
+	if (pause_) {
+		pause_->Draw();
 	}
 	if (bossManager_) { bossManager_->DrawUI(); }
 }
@@ -216,6 +250,9 @@ void GameScene::LoadTextures() {
 	TextureManager::GetInstance()->LoadTexture("./resources/LB.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/LT.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/RB.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/resume_pause.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/restart_pause.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/title_pause.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/uvChecker.dds");
 }
 
@@ -227,11 +264,14 @@ void GameScene::InitializeSprite() {
 	// ──────────────── ゲームフローの初期化 ───────────────
 	flow_ = std::make_unique<TKM::GameFlowController>();
 	flow_->Initialize(dxCommon_);
-
+	// ──────────────── UIコントローラーの初期化 ───────────────
 	ui_ = std::make_unique<TKM::UIController>();
 	const float w = (float)WindowsAPI::kClientWidth_;
 	const float h = (float)WindowsAPI::kClientHeight_;
 	ui_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, this, w, h);
+	// ──────────────── ポーズメニュー（形だけ） ───────────────
+	pause_ = std::make_unique<TKM::PauseMenuController>();
+	pause_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, this, w, h);
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -516,16 +556,15 @@ void GameScene::UpdateGameplaySystems(float dt, float scaledDt) {
 }
 
 void GameScene::UpdateTransitionsAndSceneChange(float dt) {
-	if (!enemyManager_) {
-		return;
-	}
-
+	// 遷移は enemyManager_ の有無に依存させない（ここが原因になりやすい）
 	if (flow_) {
 		const auto req = flow_->UpdateTransitions(dt, player_.get());
+
 		if (req == TKM::GameFlowController::TransitionRequest::ToTitle) {
 			sceneManager_->SetNextScene(new TitleScene(dxCommon_, srvManager_));
 			return;
 		}
+
 		if (req == TKM::GameFlowController::TransitionRequest::ToGameOver) {
 			sceneManager_->SetNextScene(new GameOverScene(dxCommon_, srvManager_));
 			return;

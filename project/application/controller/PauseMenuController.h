@@ -1,0 +1,106 @@
+#pragma once
+#include <memory>
+#include <array>
+#include <string>
+
+#include "Sprite.h"
+#include "SpriteCommon.h"
+#include "Input.h"
+#include "MyMath.h"
+
+namespace TKM {
+	class DirectXCommon;
+	class BaseScene;
+
+	class PauseMenuController {
+	public:
+		enum class Command {
+			None,
+			Resume,
+			Restart,
+			ReturnToTitle,
+		};
+		// 設定構造体
+		struct Desc {
+			std::string curtainTex = "./resources/gradationLine.png"; // 暗幕
+			std::string panelTex = "./resources/gradationLine.png"; // パネル
+			std::array<std::string, 3> itemTex = {
+				"./resources/resume_pause.png", // Resume
+				"./resources/restart_pause.png", // Restart
+				"./resources/title_pause.png"  // ReturnToTitle
+			};
+			std::string cursorTex = "./resources/circle2.png"; // カーソル
+		};
+
+		void Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, BaseScene* parentScene, float screenW, float screenH, const Desc& desc = Desc());
+		void UpdateLayout(float screenW, float screenH);
+
+		// locked中（Intro等）はポーズを開かせない用
+		// dt は rawDt 推奨（停止中でもUIアニメだけ動かす）
+		Command Update(float dt, bool allowOpen);
+
+		void Draw();
+
+		bool IsPaused() const { return state_ != State::Closed; }
+
+	private:
+		Desc desc_{};
+
+		enum class State {
+			Closed,
+			Pausing,
+			Paused,
+			Resuming,
+		};
+
+		enum class Item {
+			Resume = 0,
+			Restart,
+			ReturnToTitle,
+			Count
+		};
+
+	private:
+		bool TriggerPadUp_();
+		bool TriggerPadDown_();
+		bool TriggerA_();
+		bool TriggerB_();
+
+		void Open_();
+		void Close_();
+		void MoveIndex_(int delta);
+
+	private:
+		SpriteCommon* spriteCommon_ = nullptr;
+		DirectXCommon* dxCommon_ = nullptr;
+		BaseScene* parentScene_ = nullptr;
+
+		float screenW_ = 0.0f;
+		float screenH_ = 0.0f;
+
+		State state_ = State::Closed;
+		int index_ = 0;
+
+		// 演出（形だけ）
+		float animT_ = 0.0f;
+		float curtainAlpha_ = 0.0f;
+
+		// 入力のエッジ検出用
+		bool prevUp_ = false;
+		bool prevDown_ = false;
+		bool prevA_ = false;
+		bool prevB_ = false;
+
+		// 仮スプライト（後でリソース差し替え）
+		std::unique_ptr<Sprite> curtain_;     // 暗幕
+		std::unique_ptr<Sprite> panel_;       // パネル
+		std::array<std::unique_ptr<Sprite>, (int)Item::Count> items_; // 項目（仮）
+		std::unique_ptr<Sprite> cursor_;      // カーソル（仮）
+
+		// レイアウト
+		Vector2 panelPos_{};
+		Vector2 panelSize_{};
+		Vector2 baseItemPos_{};
+		float itemSpacingY_ = 64.0f;
+	};
+} // namespace TKM

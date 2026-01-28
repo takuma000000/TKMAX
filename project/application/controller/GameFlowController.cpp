@@ -75,6 +75,19 @@ namespace TKM {
 		}
 	}
 
+	void GameFlowController::RequestToTitleByIris() {
+		if (irisClosing_) { return; }
+
+		irisClosing_ = true;
+		irisToTitle_ = true;
+		irisCloseTween_.Reset(
+			0.0f,
+			intro_ ? intro_->GetIrisMaxScale() : 0.0f,
+			kIrisDurationSec_,
+			Ease::Type::InBack
+		);
+	}
+
 	bool GameFlowController::IsGameplayLocked() const {
 		// Intro中ロック（いまの責務）
 		return gameplayLocked_;

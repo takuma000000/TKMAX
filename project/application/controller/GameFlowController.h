@@ -30,6 +30,11 @@ namespace TKM {
 		// 描画（IntroSequence側に描かせる）
 		void Draw() const;
 
+		/// <summary>
+		/// Iris閉じでタイトルへ戻るリクエストを出す。
+		/// </summary>
+		void RequestToTitleByIris();
+
 		// 状態
 		bool IsGameplayLocked() const;
 		bool IsIrisClosing() const { return irisClosing_; }

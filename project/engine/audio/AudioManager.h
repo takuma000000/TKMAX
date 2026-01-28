@@ -68,6 +68,11 @@ namespace TKM {
 		/// <param name="key"></param>
 		void UnloadSound(const std::string& key);
 
+		/// <summary>
+		/// シングルトンインスタンスを破棄します。
+		/// </summary>
+		static void DestroyInstance();
+
 		static AudioManager* instance;
 		//シングルトンインスタンスの取得
 		/// <summary>シングルトンインスタンスを取得します。</summary>
@@ -79,6 +84,8 @@ namespace TKM {
 
 		// 音声データの管理マップ
 		std::unordered_map<std::string, SoundData> soundMap_;
+
+		bool initialized_ = false; // 初期化済みフラグ
 
 		/// <summary>
 		///		

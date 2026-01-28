@@ -190,6 +190,7 @@
     <ClCompile Include="application\controller\PostEffectController.cpp" />
     <ClCompile Include="application\controller\ClearSequenceController.cpp" />
     <ClCompile Include="application\effect\ParticleGroupsCatalog.cpp" />
+    <ClCompile Include="application\controller\PauseMenuController.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -416,6 +417,8 @@
     <ClInclude Include="application\controller\PostEffectController.h" />
     <ClInclude Include="application\controller\ClearSequenceController.h" />
     <ClInclude Include="application\effect\ParticleGroupsCatalog.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="application\controller\PauseMenuController.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
@@ -515,5 +518,8 @@
     <FxCompile Include="resources\shaders\SmokeVolume.PS.hlsl" />
     <FxCompile Include="resources\shaders\LaserBeam.VS.hlsl" />
     <FxCompile Include="resources\shaders\LaserBeam.PS.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="TKMAX.rc" />
   </ItemGroup>
 </Project>

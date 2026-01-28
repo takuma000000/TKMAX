@@ -97,9 +97,9 @@ void TitleScene::Initialize() {
 
 	// ---------------BGMロード・再生----------------
 	// タイトルBGMロード
-	TKM::AudioManager::GetInstance()->LoadSound("title", "kuraran.wav");
+	//TKM::AudioManager::GetInstance()->LoadSound("title", "kuraran.wav");
 	// タイトルBGM再生
-	TKM::AudioManager::GetInstance()->PlaySound("title", 0.4f, true); // 音量少し下げめでループ
+	//TKM::AudioManager::GetInstance()->PlaySound("title", 0.05f, true); // 音量少し下げめでループ
 }
 
 void TitleScene::Finalize() {}

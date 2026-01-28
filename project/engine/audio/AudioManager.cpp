@@ -1,50 +1,91 @@
 #include "AudioManager.h"
 #include <cassert>
 #include <fstream>
+#include <algorithm>
 
 namespace TKM {
-	AudioManager* AudioManager::instance = nullptr; // 静的メンバ変数の初期化
+	AudioManager* AudioManager::instance = nullptr;
 
+	//============================
+	// Initialize
+	//============================
 	void AudioManager::Initialize() {
-		// XAudio2の初期化
+		if (initialized_) { return; }
+
 		HRESULT hr = XAudio2Create(&xAudio2_, 0, XAUDIO2_DEFAULT_PROCESSOR);
 		assert(SUCCEEDED(hr));
+		assert(xAudio2_);
 
-		// マスターボイスの作成
 		hr = xAudio2_->CreateMasteringVoice(&masterVoice_);
 		assert(SUCCEEDED(hr));
+
+		initialized_ = true;
 	}
 
+	//============================
+	// Finalize（※deleteは絶対しない）
+	//============================
 	void AudioManager::Finalize() {
-		for (auto& [key, soundData] : soundMap_) { // 登録されている音声データを解放
-			delete[] soundData.pBuffer_; // バッファの解放
+		// 登録されている音声データを解放
+		for (auto& [key, soundData] : soundMap_) {
+			delete[] soundData.pBuffer_;
+			soundData.pBuffer_ = nullptr;
+			soundData.bufferSize_ = 0;
 		}
-		soundMap_.clear(); // マップのクリア
+		soundMap_.clear();
 
-		if (masterVoice_) { // マスターボイスの破棄
-			masterVoice_->DestroyVoice(); // マスターボイスの破棄
-			masterVoice_ = nullptr; // ポインタをクリア
+		// マスターボイス破棄
+		if (masterVoice_) {
+			masterVoice_->DestroyVoice();
+			masterVoice_ = nullptr;
 		}
-		xAudio2_.Reset(); // XAudio2オブジェクトの解放
 
-		delete instance;
-		instance = nullptr;
+		// XAudio2解放
+		xAudio2_.Reset();
+
+		initialized_ = false;
+
+		// ★ここで delete instance; はしない！！
 	}
 
+	//============================
+	// DestroyInstance（必要ならアプリ終了時だけ呼ぶ）
+	//============================
+	void AudioManager::DestroyInstance() {
+		if (instance) {
+			instance->Finalize();
+			delete instance;
+			instance = nullptr;
+		}
+	}
+
+	//============================
+	// LoadSound
+	//============================
 	bool AudioManager::LoadSound(const std::string& key, const std::string& filename) {
-		if (soundMap_.find(key) != soundMap_.end()) { // 既にロードされているか確認
-			return false; // 既にロード済み
+		// 初期化漏れ対策
+		if (!initialized_) { Initialize(); }
+
+		if (soundMap_.find(key) != soundMap_.end()) {
+			return false;
 		}
 
-		// ファイル名に "resources/" を追加
 		std::string fullPath = "resources/" + filename;
 
-		SoundData soundData = LoadWaveFile(fullPath); // WAVファイルの読み込み
-		soundMap_[key] = soundData; // マップに登録
+		SoundData soundData = LoadWaveFile(fullPath);
+		soundMap_[key] = soundData;
 		return true;
 	}
 
+	//============================
+	// PlaySound
+	//============================
 	void AudioManager::PlaySound(const std::string& key, float volume, bool loop) {
+		// 初期化漏れ対策（ここで落ちないようにする）
+		if (!initialized_ || !xAudio2_) {
+			Initialize();
+		}
+
 		auto it = soundMap_.find(key);
 		if (it == soundMap_.end()) {
 			return;
@@ -69,10 +110,9 @@ namespace TKM {
 		buffer.AudioBytes = soundData.bufferSize_;
 
 		if (loop) {
-			buffer.LoopCount = XAUDIO2_LOOP_INFINITE; // 無限ループ
-			// LoopBegin/LoopLength を指定しないなら「先頭から全体」をループする
+			buffer.LoopCount = XAUDIO2_LOOP_INFINITE;
 		} else {
-			buffer.Flags = XAUDIO2_END_OF_STREAM; // 通常再生の終端
+			buffer.Flags = XAUDIO2_END_OF_STREAM;
 		}
 
 		hr = sourceVoice->SubmitSourceBuffer(&buffer);
@@ -82,64 +122,69 @@ namespace TKM {
 		assert(SUCCEEDED(hr));
 	}
 
+	//============================
+	// UnloadSound
+	//============================
 	void AudioManager::UnloadSound(const std::string& key) {
-		auto it = soundMap_.find(key); // 音声データを検索
-		if (it != soundMap_.end()) { // 音声キーが存在するか確認
-			delete[] it->second.pBuffer_; // バッファの解放
-			soundMap_.erase(it); // マップから削除
+		auto it = soundMap_.find(key);
+		if (it != soundMap_.end()) {
+			delete[] it->second.pBuffer_;
+			it->second.pBuffer_ = nullptr;
+			it->second.bufferSize_ = 0;
+			soundMap_.erase(it);
 		}
 	}
 
+	//============================
+	// GetInstance
+	//============================
 	AudioManager* AudioManager::GetInstance() {
-		if (instance == nullptr) { // インスタンスが存在しない場合に生成
+		if (instance == nullptr) {
 			instance = new AudioManager;
+			instance->Initialize(); // ★生成時に必ず初期化
 		}
 		return instance;
 	}
 
+	//============================
+	// LoadWaveFile
+	//============================
 	SoundData AudioManager::LoadWaveFile(const std::string& filename) {
-		// ファイルをバイナリモードで開く
 		std::ifstream file(filename, std::ios_base::binary);
 		assert(file.is_open());
 
-		// RIFFヘッダーの読み込み
 		RiffHeader riff;
 		file.read(reinterpret_cast<char*>(&riff), sizeof(riff));
 		assert(strncmp(riff.chunk_.id_, "RIFF", 4) == 0);
 		assert(strncmp(riff.type_, "WAVE", 4) == 0);
 
-		// Formatチャンクの読み込み
 		FormatChunk format = {};
 		file.read(reinterpret_cast<char*>(&format.chunk_), sizeof(ChunkHeader));
 		assert(strncmp(format.chunk_.id_, "fmt ", 4) == 0);
 		file.read(reinterpret_cast<char*>(&format.fmt_), format.chunk_.size_);
 
-		// PCM形式か確認
 		assert(format.fmt_.wFormatTag == WAVE_FORMAT_PCM);
 
-		// Dataチャンクの探索と読み込み
 		ChunkHeader data;
-		while (true) { // dataチャンクを探す
+		while (true) {
 			file.read(reinterpret_cast<char*>(&data), sizeof(data));
-			if (file.eof() || !file) { // ファイルの終端に達した、またはエラー発生
-				assert(false); // Dataチャンクが見つからなかった
+			if (file.eof() || !file) {
+				assert(false);
 			}
-			if (strncmp(data.id_, "data", 4) == 0) { // dataチャンクを発見
+			if (strncmp(data.id_, "data", 4) == 0) {
 				break;
 			}
 			file.seekg(data.size_, std::ios_base::cur);
 		}
 
-		char* pBuffer = new char[data.size_]; // 音声データ用のバッファを確保
-		file.read(pBuffer, data.size_); // 音声データの読み込み
-		file.close(); // ファイルを閉じる
+		char* pBuffer = new char[data.size_];
+		file.read(pBuffer, data.size_);
+		file.close();
 
-		// SoundData構造体にデータをセットして返す
 		SoundData soundData;
 		soundData.wfex_ = format.fmt_;
 		soundData.pBuffer_ = reinterpret_cast<BYTE*>(pBuffer);
 		soundData.bufferSize_ = data.size_;
-
 		return soundData;
 	}
 }
