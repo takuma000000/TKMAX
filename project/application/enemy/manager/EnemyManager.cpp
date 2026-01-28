@@ -24,14 +24,19 @@ void EnemyManager::Initialize(TKM::DirectXCommon* dx, TKM::Camera* camera, TKM::
 		const auto& w1_ = waveConfig_.GetWave1();
 		wave1SpawnInterval_ = w1_.spawnInterval_;
 		wave1MaxSimultaneous_ = w1_.maxSimultaneous_;
+		wave1DefeatTarget_ = w1_.defeatTarget_;
 	}
 
-	wave2WaitDuration_ = waveConfig_.GetWave2WaitDuration();
+	wave2WaitDuration_ = waveConfig_.GetWave2WaitDuration(); // Wave2開始前の待機時間
+	wave2SubWaveCount_ = waveConfig_.GetWave2SubWaveCount(); // Wave2のサブWave数
 
 	{
 		const auto& w3_ = waveConfig_.GetWave3();
 		wave3LeftPos_ = w3_.midBossLeft_;
 		wave3RightPos_ = w3_.midBossRight_;
+		wave3CoreLifetime_ = w3_.coreLifetime_;
+		wave3CoreHP_ = w3_.coreHP_;
+		wave3AngryDuration_ = w3_.angryDuration_;
 	}
 }
 
@@ -263,11 +268,11 @@ void EnemyManager::SpawnWave1Enemy() {
 		return;
 	}
 
-	// 出現位置（Xはちょっとランダム、Zは奥から）
 	const auto& w1_ = waveConfig_.GetWave1();
 	float y_ = w1_.baseY_;
 	float z_ = w1_.baseZ_;
-	float rx_ = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX); // 0〜1
+
+	float rx_ = MyMath::Rand01();
 	float x_ = w1_.randXMin_ + rx_ * (w1_.randXMax_ - w1_.randXMin_);
 
 	TKM::DirectXCommon* dxPtr_ = dx_;
@@ -276,39 +281,31 @@ void EnemyManager::SpawnWave1Enemy() {
 
 	EnemySpawner::SpawnLine(
 		*enemies_,
-		1,          // 1体だけ
+		1,
 		y_,
 		z_,
 		x_,
-		0.0f,       // xStep は未使用（1体なので）
+		0.0f,
 		dxPtr_,
 		camPtr_,
 		parentPtr_,
 		[this, x_, z_](Enemy& e) {
 
-			e.SetBehavior(EnemyBehavior::PounceFromAbove);
+			const auto& p1_ = waveConfig_.GetWave1EnemyParams();
 
-			Vector3 start_ = { x_, 20.0f, z_ }; // 高い位置から降ってくる
-			Vector3 playerPos_ = player_->GetPosition(); // プレイヤー位置取得
-			// プレイヤーの少し手前に着地するようにターゲット設定
-			Vector3 target_ = {
-				playerPos_.x,
-				playerPos_.y,
-				playerPos_.z + 3.0f
-			};
-			// 曲線の頂点（アペックス）を計算
-			Vector3 apex = {
-				(start_.x + target_.x) * 0.5f,
-				30.0f,   // 曲線の頂点の高さ
-				(start_.z + target_.z) * 0.5f
-			};
+			e.SetModel(p1_.model_);
+			e.SetBehavior(p1_.behavior_);
 
-			e.SetPosition(start_); // 開始位置にセット
-			e.SetPounceParameters(start_, apex, target_, 1.6f); // 1.6秒で移動
-			e.SetHP(1); // Wave1敵のHP設定
-			e.SetScale({ 1.0f,1.0f,1.0f }); // スケールリセット
+			Vector3 start_ = { x_, p1_.startY_, z_ };
+			Vector3 playerPos_ = player_->GetPosition();
+			Vector3 target_ = { playerPos_.x, playerPos_.y, playerPos_.z + p1_.targetForwardZ_ };
+			Vector3 apex = { (start_.x + target_.x) * 0.5f, p1_.apexY_, (start_.z + target_.z) * 0.5f };
 
-			// プレイヤー関連セットアップを共通化
+			e.SetPosition(start_);
+			e.SetPounceParameters(start_, apex, target_, p1_.pounceTime_);
+			e.SetHP(p1_.hp_);
+			e.SetScale({ 1.0f,1.0f,1.0f });
+
 			SetupEnemyForPlayer(e);
 		}
 	);
@@ -341,7 +338,7 @@ void EnemyManager::UpdateWave2(float dt) {
 	wave2Waiting_ = false;
 	wave2SubWave_++; // 次のサブWaveへ
 
-	if (wave2SubWave_ >= 3) { // サブWaveが全部終わったら次のWaveへ
+	if (wave2SubWave_ >= wave2SubWaveCount_) {
 		GoToNextWave();
 		return;
 	}
@@ -375,7 +372,6 @@ void EnemyManager::SpawnWave2_Triangle() {
 	if (!enemies_ || !dx_ || !cam_ || !parent_) return;
 
 	const auto& s_ = waveConfig_.GetWave2SubWave(0);
-
 	int idx_ = 0;
 
 	EnemySpawner::SpawnV(
@@ -387,13 +383,15 @@ void EnemyManager::SpawnWave2_Triangle() {
 		s_.triZStep_,
 		dx_, cam_, parent_,
 		[this, &idx_](Enemy& e) {
-			// ここは挙動。触らない。
-			e.SetBehavior(EnemyBehavior::SineX);
-			e.SetVelocity({ 0,0,-0.30f });
-			e.SetSineParams(4.0f, 1.4f);
-			e.SetSinePhase(0.6f * float(idx_++));
-			e.SetHP(3);
-			// プレイヤー関連セットアップを共通化
+			const auto& pt_ = waveConfig_.GetWave2TriEnemyParams();
+
+			e.SetModel(pt_.model_);
+			e.SetBehavior(pt_.behavior_);
+			e.SetVelocity(pt_.vel_);
+			e.SetSineParams(pt_.sineAmp_, pt_.sineFreq_);
+			e.SetSinePhase(pt_.phaseStep_ * float(idx_++));
+			e.SetHP(pt_.hp_);
+
 			SetupEnemyForPlayer(e);
 		}
 	);
@@ -410,12 +408,14 @@ void EnemyManager::SpawnWave2_Line() {
 		s_.lineXStart_, s_.lineXStep_,
 		dx_, cam_, parent_,
 		[this](Enemy& e) {
-			// 挙動は触らない
-			e.SetBehavior(EnemyBehavior::StraightStop);
-			e.SetVelocity({ 0,0,-0.32f });
-			e.SetStopZ(52.0f);
-			e.SetHP(2);
-			// プレイヤー関連セットアップを共通化
+			const auto& pl_ = waveConfig_.GetWave2LineEnemyParams();
+
+			e.SetModel(pl_.model_);
+			e.SetBehavior(pl_.behavior_);
+			e.SetVelocity(pl_.vel_);
+			e.SetStopZ(pl_.stopZ_);
+			e.SetHP(pl_.hp_);
+
 			SetupEnemyForPlayer(e);
 		}
 	);
@@ -436,11 +436,13 @@ void EnemyManager::SpawnWave2_FastColumn() {
 		s_.colYStep_,
 		dx_, cam_, parent_,
 		[this](Enemy& e) {
-			// 挙動は触らない
-			e.SetBehavior(EnemyBehavior::StraightStop);
-			e.SetVelocity({ -0.20f, 0.0f, -0.75f });
-			e.SetStopZ(-50.0f); // 通過するだけ
-			e.SetHP(1);
+			const auto& pc_ = waveConfig_.GetWave2ColEnemyParams();
+
+			e.SetModel(pc_.model_);
+			e.SetBehavior(pc_.behavior_);
+			e.SetVelocity(pc_.vel_);
+			e.SetStopZ(pc_.stopZ_);
+			e.SetHP(pc_.hp_);
 
 			SetupEnemyForPlayer(e);
 		}
@@ -497,14 +499,12 @@ void EnemyManager::UpdateWave3(float dt) {
 		wave3CoreTimer_ = 0.0f;
 		SpawnWave3Core();
 
-		// 残り1体の中ボスを怒りモードにする
-		const float angryDuration_ = 8.0f; // 何秒怒らせるか（あとで調整）
 		for (auto& e : *enemies_) {
 			if (!e) continue;
 			if (e->GetType() != EnemyType::Wave3MidBoss) continue;
 			if (e->IsDead() || e->IsDying()) continue;
 
-			e->SetAngry(angryDuration_);
+			e->SetAngry(wave3AngryDuration_);
 		}
 
 		wave3PrevAliveMidBossCount_ = aliveMidBossCount_;
@@ -555,12 +555,9 @@ void EnemyManager::SpawnWave3MidBossStage() {
 	if (!enemies_ || !dx_ || !cam_ || !parent_) {
 		return;
 	}
-	// いったん全消し
 	enemies_->clear();
-	// 既存の核は捨てる
 	midBossCore_.reset();
 
-	// 蘇生状態リセット
 	wave3ReviveInProgress_ = false;
 	wave3CoreTimer_ = 0.0f;
 
@@ -568,7 +565,6 @@ void EnemyManager::SpawnWave3MidBossStage() {
 	auto dxPtr_ = dx_;
 	auto parentPtr_ = parent_;
 
-	// 左右 2 体の中ボスを直線で出して、手前で停止させる
 	EnemySpawner::SpawnLine(
 		*enemies_,
 		2,
@@ -579,31 +575,24 @@ void EnemyManager::SpawnWave3MidBossStage() {
 		dxPtr_, camPtr_, parentPtr_,
 		[this](Enemy& e) {
 
-			// 中ボスの挙動設定
-			e.SetBehavior(EnemyBehavior::FreeRoam);
-			// ↓ 速度や範囲はあとでImGui化してもいい
-			e.SetFreeRoamArea(
-				{ -18.0f, 4.0f, 40.0f },   // min
-				{ 18.0f,10.0f, 62.0f },   // max ← z を 70 → 62 に手前寄せ
-				0.10f,                     // 通常速度
-				0.24f                      // 怒り時速度
-			);
+			const auto& pm_ = waveConfig_.GetWave3MidBossParams();
 
-			e.SetHP(12);
-			e.SetScale({ 1.5f,1.5f,1.5f });
+			e.SetModel(pm_.model_);
+			e.SetBehavior(pm_.behavior_);
+
+			e.SetFreeRoamArea(pm_.areaMin_, pm_.areaMax_, pm_.normalSpeed_, pm_.rageSpeed_);
+			e.SetHP(pm_.hp_);
+			e.SetScale({ pm_.scale_, pm_.scale_, pm_.scale_ });
 
 			SetupEnemyForPlayer(e);
-
 			e.SetType(EnemyType::Wave3MidBoss);
 		}
 	);
 
-	// 倒すべき中ボスは 2 体なので、ゲージ用に +2 だけ足しておく
 	if (maxEnemyCount_) {
 		*maxEnemyCount_ += 2;
 	}
 
-	// Wave3 開始時点では中ボスが 2 体生きている
 	wave3PrevAliveMidBossCount_ = 2;
 }
 
@@ -656,7 +645,6 @@ void EnemyManager::SpawnWave3ExtraMidBoss() {
 		return;
 	}
 
-	// どっちサイドの中ボスが生きているか調べる
 	bool leftAlive_ = false;
 	bool rightAlive_ = false;
 
@@ -673,18 +661,13 @@ void EnemyManager::SpawnWave3ExtraMidBoss() {
 		}
 	}
 
-	// =========================================================
-	// PDF方針：値の違いのための if/else をテーブル化
-	// state: 0=両方死, 1=左だけ生, 2=右だけ生, 3=両方生(想定外)
-	// 空いてる側に出す：左生->右 / 右生->左 / その他->左
-	// =========================================================
 	const int state_ = (leftAlive_ ? 1 : 0) | (rightAlive_ ? 2 : 0);
 
 	static const int kSpawnSide_[4] = {
-		0, // 0: 両方死 -> 左
-		1, // 1: 左だけ生 -> 右（空いてる側）
-		0, // 2: 右だけ生 -> 左（空いてる側）
-		0, // 3: 両方生(想定外) -> 左
+		0,
+		1,
+		0,
+		0,
 	};
 
 	const Vector3 kSidePos_[2] = { wave3LeftPos_, wave3RightPos_ };
@@ -705,11 +688,15 @@ void EnemyManager::SpawnWave3ExtraMidBoss() {
 		camPtr_,
 		parentPtr_,
 		[this](Enemy& e) {
-			e.SetBehavior(EnemyBehavior::StraightStop);
-			e.SetVelocity({ 0.0f, 0.0f, -0.2f });
-			e.SetStopZ(40.0f);
-			e.SetHP(12); // 初期中ボスと同じ HP
-			e.SetScale({ 1.5f,1.5f,1.5f });
+
+			const auto& px_ = waveConfig_.GetWave3ExtraMidBossParams();
+
+			e.SetModel(px_.model_);
+			e.SetBehavior(px_.behavior_);
+			e.SetVelocity(px_.vel_);
+			e.SetStopZ(px_.stopZ_);
+			e.SetHP(px_.hp_);
+			e.SetScale({ px_.scale_, px_.scale_, px_.scale_ });
 
 			SetupEnemyForPlayer(e);
 			e.SetType(EnemyType::Wave3MidBoss);

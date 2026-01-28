@@ -13,22 +13,29 @@ class BossBullet {
 public:
 
 	/// <summary>
-	/// 弾を初期化します。
-	/// </summary>
-	/// <param name="common"></param>
-	/// <param name="dx"></param>
-	/// <param name="cam"></param>
-	/// <param name="pos"></param>
-	/// <param name="dir"></param>
-	/// <param name="speed"></param>
-	/// <param name="damage"></param>
-	/// <param name="lifeFrame"></param>
-	void Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dx, TKM::Camera* cam,
-		const Vector3& pos, const Vector3& dir,
-		float speed, int damage, int lifeFrame) {
+/// 弾オブジェクトを初期化します。
+/// </summary>
+/// <param name="common">Object3d の共通管理クラス</param>
+/// <param name="dx">DirectX 共通管理クラス</param>
+/// <param name="cam">描画および判定に使用するカメラ（nullptr 可）</param>
+/// <param name="pos">弾の初期位置（ワールド座標）</param>
+/// <param name="dir">弾の進行方向（正規化ベクトル）</param>
+/// <param name="speed">弾の移動速度</param>
+/// <param name="damage">ヒット時に与えるダメージ量</param>
+/// <param name="lifeFrame">弾が消滅するまでの生存フレーム数</param>
+	void Initialize(
+		TKM::Object3dCommon* common,
+		TKM::DirectXCommon* dx,
+		TKM::Camera* cam,
+		const Vector3& pos,
+		const Vector3& dir,
+		float speed,
+		int damage,
+		int lifeFrame
+	) {
 		obj_ = std::make_unique<TKM::Object3d>();
 		obj_->Initialize(common, dx);
-		obj_->SetModel("sphere.obj");              // モデル指定
+		obj_->SetModel("sphere.obj"); // モデル指定
 		obj_->SetScale({ kDefaultScale_, kDefaultScale_, kDefaultScale_ }); // スケール
 		obj_->SetTranslate(pos);
 		if (cam) obj_->SetCamera(cam);
@@ -52,9 +59,9 @@ public:
 		if (--life_ <= 0) dead_ = true;
 	}
 	/// <summary>
-	/// 弾を描画します。
+	/// 弾オブジェクトを描画します。
 	/// </summary>
-	/// <param name="dx"></param>
+	/// <param name="dx">DirectX 共通管理クラス</param>
 	void Draw(TKM::DirectXCommon* dx) {
 		if (!dead_) obj_->Draw(dx);
 	}
@@ -84,9 +91,9 @@ public:
 	// =========================================
 	// Setter===================================
 	/// <summary>
-	/// カメラ設定。
+	/// 使用するカメラを設定します。
 	/// </summary>
-	/// <param name="cam"></param>
+	/// <param name="cam">描画に使用するカメラ</param>
 	void SetCamera(TKM::Camera* cam) {
 		if (obj_) { obj_->SetCamera(cam); }
 	}

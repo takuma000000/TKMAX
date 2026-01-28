@@ -21,25 +21,25 @@ public:
 	};
 
 	/// <summary>
-	/// 初期化
+	/// アリーナ範囲の初期化を行います。
 	/// </summary>
-	/// <param name="arenaMin"></param>
-	/// <param name="arenaMax"></param>
+	/// <param name="arenaMin">アリーナ範囲の最小座標（ワールド座標）</param>
+	/// <param name="arenaMax">アリーナ範囲の最大座標（ワールド座標）</param>
 	void Initialize(const Vector3& arenaMin, const Vector3& arenaMax);
 	/// <summary>
 	/// リセット
 	/// </summary>
 	void Reset();
 	/// <summary>
-	/// 更新
+	/// 毎フレームの更新処理を行います。
 	/// </summary>
-	/// <param name="dt"></param>
-	/// <param name="boss"></param>
+	/// <param name="dt">前フレームからの経過時間（秒）</param>
+	/// <param name="boss">更新対象となるボス敵</param>
 	void Update(float dt, Enemy& boss);
 	/// <summary>
-	/// ImGuiデバッグ表示
+	/// ImGui によるデバッグ情報を表示します。
 	/// </summary>
-	/// <param name="boss"></param>
+	/// <param name="boss">デバッグ表示および調整対象となるボス敵</param>
 	void ImGuiDebug(Enemy& boss);
 
 	/// <summary>
@@ -47,17 +47,26 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	bool IsAuraActive() const { return auraActive_; }
-	
-	// =========================
-	// Laser（怒り中攻撃）情報
-	// =========================
+	/// <summary>
+	/// レーザー予告中かどうかを取得します。
+	/// </summary>
+	/// <returns></returns>
 	bool IsLaserWindup() const { return state_ == State::LaserWindup; }
+	/// <summary>
+	/// レーザー発射中かどうかを取得します。
+	/// </summary>
+	/// <returns></returns>
 	bool IsLaserFiring() const { return state_ == State::LaserFire; }
+	/// <summary>
+	/// レーザーがアクティブかどうかを取得します。
+	/// </summary>
+	/// <returns></returns>
 	bool IsLaserActive() const { return laserActive_; }        // 予告 or 発射中
+	/// <summary>
+	/// レーザーが予告中かどうかを取得します。
+	/// </summary>
+	/// <returns></returns>
 	bool IsLaserTelegraph() const { return laserTelegraph_; }  // 予告中
-	const Vector3& GetLaserStartWS() const { return laserStartWS_; }
-	const Vector3& GetLaserEndWS() const { return laserEndWS_; }
-	float GetLaserRadius() const { return laserRadius_; }
 
 	// Getter===================================
 	/// <summary>
@@ -90,65 +99,94 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	bool GetAuraUseRing() const { return auraUseRing_; }
+	/// <summary>
+	/// レーザー開始位置（ワールド座標）を取得します。
+	/// </summary>
+	/// <returns></returns>
+	const Vector3& GetLaserStartWS() const { return laserStartWS_; }
+	/// <summary>
+	/// レーザー終了位置（ワールド座標）を取得します。
+	/// </summary>
+	/// <returns></returns>
+	const Vector3& GetLaserEndWS() const { return laserEndWS_; }
+	/// <summary>
+	/// レーザー半径を取得します。
+	/// </summary>
+	/// <returns></returns>
+	float GetLaserRadius() const { return laserRadius_; }
 	// =========================================
 private:
-	// --- state updates ---
 	/// <summary>
-	/// 侵入
+	/// 侵入状態の更新処理を行います。
 	/// </summary>
-	/// <param name="dt"></param>
-	/// <param name="boss"></param>
-	/// <param name="pos"></param>
+	/// <param name="dt">前フレームからの経過時間（秒）</param>
+	/// <param name="boss">更新対象となるボス敵</param>
+	/// <param name="pos">ボス位置（参照で更新される、ワールド座標）</param>
 	void UpdateEnter(float dt, Enemy& boss, Vector3& pos);
 	/// <summary>
-	/// 軌道回転
+	/// 軌道回転状態の更新処理を行います。
 	/// </summary>
-	/// <param name="dt"></param>
-	/// <param name="boss"></param>
-	/// <param name="pos"></param>
-	/// <param name="playerPos"></param>
+	/// <param name="dt">前フレームからの経過時間（秒）</param>
+	/// <param name="boss">更新対象となるボス敵</param>
+	/// <param name="pos">ボス位置（参照で更新される、ワールド座標）</param>
+	/// <param name="playerPos">プレイヤー位置（ワールド座標）</param>
 	void UpdateOrbit(float dt, Enemy& boss, Vector3& pos, const Vector3& playerPos);
 	/// <summary>
-	/// 回復
+	/// 回復状態の更新処理を行います。
 	/// </summary>
-	/// <param name="dt"></param>
-	/// <param name="boss"></param>
-	/// <param name="pos"></param>
+	/// <param name="dt">前フレームからの経過時間（秒）</param>
+	/// <param name="boss">更新対象となるボス敵</param>
+	/// <param name="pos">ボス位置（参照で更新される、ワールド座標）</param>
 	void UpdateRecover(float dt, Enemy& boss, Vector3& pos);
-
-	// --- Laser ---
-	void UpdateLaserWindup(float dt, Enemy& boss, Vector3& pos, const Vector3& playerPos);
-	void UpdateLaserFire(float dt, Enemy& boss, Vector3& pos, const Vector3& playerPos);
-	void UpdateLaserRecover(float dt, Enemy& boss, Vector3& pos);
-
-	// --- helpers ---
 	/// <summary>
-	/// 状態変更
+	/// レーザー溜め（予備動作）状態の更新処理を行います。
 	/// </summary>
-	/// <param name="s"></param>
+	/// <param name="dt">前フレームからの経過時間（秒）</param>
+	/// <param name="boss">更新対象となるボス敵</param>
+	/// <param name="pos">ボス位置（参照で更新される、ワールド座標）</param>
+	/// <param name="playerPos">プレイヤー位置（ワールド座標）</param>
+	void UpdateLaserWindup(float dt, Enemy& boss, Vector3& pos, const Vector3& playerPos);
+	/// <summary>
+	/// レーザー発射状態の更新処理を行います。
+	/// </summary>
+	/// <param name="dt">前フレームからの経過時間（秒）</param>
+	/// <param name="boss">更新対象となるボス敵</param>
+	/// <param name="pos">ボス位置（参照で更新される、ワールド座標）</param>
+	/// <param name="playerPos">プレイヤー位置（ワールド座標）</param>
+	void UpdateLaserFire(float dt, Enemy& boss, Vector3& pos, const Vector3& playerPos);
+	/// <summary>
+	/// レーザー後隙（回復）状態の更新処理を行います。
+	/// </summary>
+	/// <param name="dt">前フレームからの経過時間（秒）</param>
+	/// <param name="boss">更新対象となるボス敵</param>
+	/// <param name="pos">ボス位置（参照で更新される、ワールド座標）</param>
+	void UpdateLaserRecover(float dt, Enemy& boss, Vector3& pos);
+	/// <summary>
+	/// 状態を変更します。
+	/// </summary>
+	/// <param name="s">遷移先の状態</param>
 	void ChangeState(State s);
 	/// <summary>
-	/// アリーナ内に位置をクランプする
+	/// 位置をアリーナ範囲内にクランプします。
 	/// </summary>
-	/// <param name="p"></param>
+	/// <param name="p">クランプ対象の位置（参照で更新される、ワールド座標）</param>
 	void ClampToArena(Vector3& p);
-
 	/// <summary>
-	/// 値を目標に向かって近づける
+	/// 値を目標に向かって一定量だけ近づけます。
 	/// </summary>
-	/// <param name="v"></param>
-	/// <param name="target"></param>
-	/// <param name="delta"></param>
-	/// <returns></returns>
+	/// <param name="v">現在値</param>
+	/// <param name="target">目標値</param>
+	/// <param name="delta">1回の呼び出しで近づける最大量</param>
+	/// <returns>更新後の値</returns>
 	static float Approach(float v, float target, float delta);
 	/// <summary>
-	/// スムーズダンプ
+	/// 2点間を滑らかに補間します。
 	/// </summary>
-	/// <param name="from"></param>
-	/// <param name="to"></param>
-	/// <param name="factor"></param>
-	/// <param name="dt"></param>
-	/// <returns></returns>
+	/// <param name="from">開始位置</param>
+	/// <param name="to">目標位置</param>
+	/// <param name="factor">補間係数（大きいほど追従が速い）</param>
+	/// <param name="dt">前フレームからの経過時間（秒）</param>
+	/// <returns>補間後の位置</returns>
 	static Vector3 SmoothDamp(const Vector3& from, const Vector3& to, float factor, float dt);
 
 	State state_ = State::Enter;

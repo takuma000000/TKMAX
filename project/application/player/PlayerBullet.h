@@ -23,41 +23,47 @@ class PlayerBullet {
 public:
 
 	/// <summary>
-	/// プレイヤーの弾を初期化します。
+	/// プレイヤーの弾オブジェクトを初期化します。
 	/// </summary>
-	/// <param name="common"></param>
-	/// <param name="dxCommon"></param>
+	/// <param name="common">Object3d の共通管理クラス</param>
+	/// <param name="dxCommon">DirectX 共通管理クラス</param>
 	void Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon);
 	/// <summary>
-	/// プレイヤーの弾を更新します。
+	/// プレイヤーの弾の更新処理を行います。
 	/// </summary>
 	void Update();
 	/// <summary>
 	/// プレイヤーの弾を描画します。
 	/// </summary>
-	/// <param name="dxCommon"></param>
+	/// <param name="dxCommon">DirectX 共通管理クラス</param>
 	void Draw(TKM::DirectXCommon* dxCommon);
-
 	/// <summary>
-	/// デバッグ用ImGui表示。
+	/// 弾がヒットしたかどうかを取得します。
 	/// </summary>
-	/// <returns></returns>
+	/// <returns>ヒットしている場合 true、それ以外は false</returns>
 	bool IsHit() const { return isHit_; }
 	/// <summary>
-	/// 弾が死亡したかどうかを取得します。
+	/// 弾が死亡しているかどうかを取得します。
 	/// </summary>
-	/// <returns></returns>
+	/// <returns>死亡している場合 true、それ以外は false</returns>
 	bool IsDead() const { return isDead_; }
 	/// <summary>
-	/// 発射の「出方」曲線を開始します。
+	/// 発射時の出現演出としてベジェ曲線移動を開始します。
 	/// </summary>
-	/// <param name="p0"></param>
-	/// <param name="p1"></param>
-	/// <param name="p2"></param>
-	/// <param name="p3"></param>
-	/// <param name="duration"></param>
-	/// <param name="velocityAfter"></param>
-	void StartSpawnBezier(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float duration, const Vector3& velocityAfter);
+	/// <param name="p0">開始位置</param>
+	/// <param name="p1">制御点1</param>
+	/// <param name="p2">制御点2</param>
+	/// <param name="p3">終了位置</param>
+	/// <param name="duration">演出の継続時間（秒）</param>
+	/// <param name="velocityAfter">演出終了後に適用する速度</param>
+	void StartSpawnBezier(
+		const Vector3& p0,
+		const Vector3& p1,
+		const Vector3& p2,
+		const Vector3& p3,
+		float duration,
+		const Vector3& velocityAfter
+	);
 
 	// Getter===================================
 	/// <summary>
@@ -70,26 +76,26 @@ public:
 	/// <summary>
 	/// プレイヤーの位置を設定します。
 	/// </summary>
-	/// <param name="pos"></param>
+	/// <param name="pos">設定する位置（ワールド座標）</param>
 	void SetPosition(const Vector3& pos);
 	/// <summary>
 	/// 弾の速度を設定します。
 	/// </summary>
-	/// <param name="vel"></param>
+	/// <param name="vel">設定する速度ベクトル</param>
 	void SetVelocity(const Vector3& vel);
 	/// <summary>
-	/// カメラを設定します。
+	/// 使用するカメラを設定します。
 	/// </summary>
-	/// <param name="camera"></param>
+	/// <param name="camera">描画および判定に使用するカメラ</param>
 	void SetCamera(TKM::Camera* camera) {
 		if (object_) {
 			object_->SetCamera(camera);
 		}
 	}
 	/// <summary>
-	/// 弾のスケールを設定します。
+	/// 弾のトレイル（軌跡）グループを設定します。
 	/// </summary>
-	/// <param name="group"></param>
+	/// <param name="group">使用するトレイルグループ名</param>
 	void SetTrailGroup(const std::string& group) {
 		trailGroup_ = group;
 		// 位置は現在地で再初期化（生成直後や途中でもOK）
@@ -97,37 +103,38 @@ public:
 		trailEmitter_.Initialize(trailGroup_, pos);
 	}
 	/// <summary>
-	/// 弾が当たったときの処理。
+	/// 弾が当たった対象の敵を設定します。
 	/// </summary>
-	/// <param name="enemy"></param>
+	/// <param name="enemy">ヒット対象となる敵（nullptr 可）</param>
 	void SetEnemy(Enemy* enemy) { enemy_ = enemy; }
 	/// <summary>
-	/// プレイヤーを設定します。
+	/// プレイヤー参照を設定します。
 	/// </summary>
-	/// <param name="player"></param>
+	/// <param name="player">発射元となるプレイヤー</param>
 	void SetPlayer(Player* player) { player_ = player; }
 	/// <summary>
-	/// 一撃必殺フラグ設定。
+	/// 一撃必殺フラグを設定します。
 	/// </summary>
-	/// <param name="flag"></param>
+	/// <param name="flag">有効にする場合 true、それ以外は false</param>
 	void SetSpecialAttack(bool flag) { isSpecialAttack_ = flag; }
 	/// <summary>
-	/// ホーミング設定。
+	/// ホーミング機能の有効/無効と速度を設定します。
 	/// </summary>
-	/// <param name="enable"></param>
-	/// <param name="speed"></param>
+	/// <param name="enable">ホーミングを有効にする場合 true</param>
+	/// <param name="speed">ホーミング時の回頭・追従速度</param>
 	void SetHoming(bool enable, float speed) { isHoming_ = enable; homingSpeed_ = speed; }
 	/// <summary>
-	/// ホーミング遅延時間設定。
+	/// ホーミング開始までの遅延時間を設定します。
 	/// </summary>
-	/// <param name="sec"></param>
-	void  SetHomingDelay(float sec) { homingDelay_ = std::max(0.0f, sec); }
+	/// <param name="sec">遅延時間（秒）</param>
+	void SetHomingDelay(float sec) { homingDelay_ = std::max(0.0f, sec); }
 	/// <summary>
-	/// 中ボスコアを設定します。
+	/// 中ボスコア参照を設定します。
 	/// </summary>
-	/// <param name="core"></param>
+	/// <param name="core">中ボスコア（nullptr 可）</param>
 	void SetCore(MidBossCore* core) { core_ = core; }
 	// =========================================
+
 private:
 	//======================================================================
 	// 参照ポインタ / 本体

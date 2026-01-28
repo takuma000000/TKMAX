@@ -11,6 +11,7 @@ namespace TKM {
 		/// </summary>
 		/// <param name="pm">登録先となるパーティクルマネージャ</param>
 		static void RegisterGameScene(ParticleManager* pm);
+
 	};
 
 }

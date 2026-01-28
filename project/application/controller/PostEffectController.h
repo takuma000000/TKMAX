@@ -24,36 +24,38 @@ namespace TKM {
 	class PostEffectController {
 	public:
 		/// <summary>
-		/// 初期化。
+		/// ボリューム系エフェクト管理クラスを初期化します。
 		/// </summary>
-		/// <param name="dxCommon"></param>
-		/// <param name="player"></param>
-		/// <param name="bossManager"></param>
+		/// <param name="dxCommon">DirectX 共通管理クラス</param>
+		/// <param name="player">参照対象となるプレイヤー</param>
+		/// <param name="bossManager">ボス管理クラス</param>
 		void Initialize(DirectXCommon* dxCommon, Player* player, BossManager* bossManager);
 		/// <summary>
-		/// 終了処理。
+		/// 終了処理を行います。
+		/// 管理しているリソースや状態を解放します。
 		/// </summary>
 		void Finalize();
 		/// <summary>
-		/// 更新。
+		/// 毎フレームの更新処理を行います。
 		/// </summary>
-		/// <param name="dt"></param>
-		/// <param name="bossManager"></param>
+		/// <param name="dt">前フレームからの経過時間（秒）</param>
+		/// <param name="bossManager">状態参照対象となるボス管理クラス</param>
 		void Update(float dt, BossManager* bossManager);
 		/// <summary>
-		/// カメラ更新時の処理。
+		/// ボリューム系エフェクトの描画処理を行います。
 		/// </summary>
-		/// <param name="activeCamera"></param>
-		void OnCameraUpdated(TKM::Camera* activeCamera);
-		/// <summary>
-		/// ボリューム系エフェクトの描画。
-		/// </summary>
-		/// <param name="activeCamera"></param>
+		/// <param name="activeCamera">描画に使用するカメラ</param>
 		void DrawVolumes(TKM::Camera* activeCamera);
 		/// <summary>
-		/// ImGuiデバッグ表示。
+		/// ImGui によるデバッグ情報を表示します。
 		/// </summary>
 		void ImGuiDebug();
+
+		/// <summary>
+		/// カメラ更新時に呼び出される処理を行います。
+		/// </summary>
+		/// <param name="activeCamera">現在有効なカメラ</param>
+		void OnCameraUpdated(TKM::Camera* activeCamera);
 
 	private:
 		DirectXCommon* dxCommon_ = nullptr;

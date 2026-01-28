@@ -22,25 +22,33 @@ namespace TKM {
 		};
 
 		/// <summary>
-		/// 初期化。
+		/// ゲーム進行関連システムを初期化します。
 		/// </summary>
-		/// <param name="camera"></param>
-		/// <param name="player"></param>
-		/// <param name="bossManager"></param>
-		/// <param name="flow"></param>
-		/// <param name="dxCommon"></param>
-		/// <param name="skybox"></param>
-		/// <param name="fireworkController"></param>
-		void Initialize(Camera* camera, Player* player, BossManager* bossManager, GameFlowController* flow, DirectXCommon* dxCommon, Skybox* skybox, FireworkController* fireworkController);
+		/// <param name="camera">演出および描画に使用するカメラ</param>
+		/// <param name="player">制御対象となるプレイヤー</param>
+		/// <param name="bossManager">ボス管理クラス</param>
+		/// <param name="flow">ゲーム進行フロー制御クラス</param>
+		/// <param name="dxCommon">DirectX 共通管理クラス</param>
+		/// <param name="skybox">背景表示用スカイボックス</param>
+		/// <param name="fireworkController">花火演出制御クラス</param>
+		void Initialize(
+			Camera* camera,
+			Player* player,
+			BossManager* bossManager,
+			GameFlowController* flow,
+			DirectXCommon* dxCommon,
+			Skybox* skybox,
+			FireworkController* fireworkController
+		);
 		/// <summary>
-		/// 開始。
+		/// 処理を開始します。
 		/// </summary>
 		void Start();
 		/// <summary>
-		/// 更新。
+		/// 毎フレームの更新処理を行います。
 		/// </summary>
-		/// <param name="dt"></param>
-		/// <returns></returns>
+		/// <param name="dt">前フレームからの経過時間（秒）</param>
+		/// <returns>処理が完了した場合 true、それ以外は false</returns>
 		bool Update(float dt);
 		/// <summary>
 		/// アクティブか？
@@ -50,25 +58,40 @@ namespace TKM {
 
 		// Setter===================================
 		/// <summary>
-		/// プレイヤーの飛行速度設定。
+		/// プレイヤーの飛行速度を設定します。
 		/// </summary>
-		/// <param name="v"></param>
+		/// <param name="v">プレイヤーの飛行速度</param>
 		void SetPlayerSpeed(float v) { playerSpeed_ = v; }
 		/// <summary>
-		/// プレイヤーの飛行最短時間設定。
+		/// プレイヤーの最短飛行時間を設定します。
 		/// </summary>
-		/// <param name="v"></param>
+		/// <param name="v">飛行の最短継続時間（秒）</param>
 		void SetPlayerFlyMinTime(float v) { playerFlyMinTime_ = v; }
 		/// <summary>
-		/// プレイヤーの飛行距離設定。
+		/// プレイヤーの飛行距離を設定します。
 		/// </summary>
-		/// <param name="v"></param>
+		/// <param name="v">飛行距離</param>
 		void SetPlayerFlyDistance(float v) { playerFlyDistance_ = v; }
 		// =========================================
 
 	private:
+		/// <summary>
+		/// カメラズーム演出の更新処理を行います。
+		/// </summary>
+		/// <param name="dt">前フレームからの経過時間（秒）</param>
+		/// <param name="finished">演出が完了した場合 true に設定されます</param>
 		void UpdateCamZoom(float dt, bool& finished);
+		/// <summary>
+		/// プレイヤー飛行演出の更新処理を行います。
+		/// </summary>
+		/// <param name="dt">前フレームからの経過時間（秒）</param>
+		/// <param name="finished">演出が完了した場合 true に設定されます</param>
 		void UpdatePlayerFly(float dt, bool& finished);
+		/// <summary>
+		/// アイリスクローズ演出の更新処理を行います。
+		/// </summary>
+		/// <param name="dt">前フレームからの経過時間（秒）</param>
+		/// <param name="finished">演出が完了した場合 true に設定されます</param>
 		void UpdateIrisClose(float dt, bool& finished);
 
 		bool active_ = false;

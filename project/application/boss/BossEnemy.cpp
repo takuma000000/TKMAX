@@ -20,7 +20,6 @@ void BossEnemy::Update(float dt) {
 	// 位置ロック中は脈動エフェクト
 	Enemy::Update(dt);
 }
-
 void BossEnemy::ImGuiDebug() {
 #ifdef USE_IMGUI
 	ImGui::Begin("ボス");

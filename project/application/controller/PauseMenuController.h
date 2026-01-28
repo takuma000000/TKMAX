@@ -32,15 +32,48 @@ namespace TKM {
 			std::string cursorTex = "./resources/circle2.png"; // カーソル
 		};
 
-		void Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, BaseScene* parentScene, float screenW, float screenH, const Desc& desc = Desc());
-		void UpdateLayout(float screenW, float screenH);
-
-		// locked中（Intro等）はポーズを開かせない用
-		// dt は rawDt 推奨（停止中でもUIアニメだけ動かす）
+		/// <summary>
+		/// ポーズメニューを初期化します。
+		/// </summary>
+		/// <param name="spriteCommon">スプライト共通管理クラス</param>
+		/// <param name="dxCommon">DirectX 共通管理クラス</param>
+		/// <param name="parentScene">所属する親シーン</param>
+		/// <param name="screenW">画面幅（ピクセル）</param>
+		/// <param name="screenH">画面高さ（ピクセル）</param>
+		/// <param name="desc">ポーズメニュー設定情報</param>
+		void Initialize(
+			SpriteCommon* spriteCommon,
+			DirectXCommon* dxCommon,
+			BaseScene* parentScene,
+			float screenW,
+			float screenH,
+			const Desc& desc = Desc()
+		);
+		/// <summary>
+		/// ポーズメニューの更新処理を行います。
+		/// </summary>
+		/// <param name="dt">
+		/// デルタタイム（rawDt 推奨）。
+		/// ポーズ中でも UI アニメーションを進行させるため、停止スケール未適用の値を想定します。
+		/// </param>
+		/// <param name="allowOpen">ポーズメニューを開くことを許可する場合 true</param>
+		/// <returns>発行されたコマンド（何もなければ None 等）</returns>
 		Command Update(float dt, bool allowOpen);
-
+		/// <summary>
+		/// ポーズメニューを描画します。
+		/// </summary>
 		void Draw();
 
+		/// <summary>
+		/// 画面サイズ変更に応じてレイアウトを更新します。
+		/// </summary>
+		/// <param name="screenW">画面幅（ピクセル）</param>
+		/// <param name="screenH">画面高さ（ピクセル）</param>
+		void UpdateLayout(float screenW, float screenH);
+		/// <summary>
+		/// ポーズ状態かどうかを取得します。
+		/// </summary>
+		/// <returns>ポーズ中の場合 true、それ以外は false</returns>
 		bool IsPaused() const { return state_ != State::Closed; }
 
 	private:
@@ -60,17 +93,40 @@ namespace TKM {
 			Count
 		};
 
-	private:
+		/// <summary>
+		/// パッドの上入力がトリガーされたかを判定します。
+		/// </summary>
+		/// <returns>入力が発生したフレームで true、それ以外は false</returns>
 		bool TriggerPadUp_();
+		/// <summary>
+		/// パッドの下入力がトリガーされたかを判定します。
+		/// </summary>
+		/// <returns>入力が発生したフレームで true、それ以外は false</returns>
 		bool TriggerPadDown_();
+		/// <summary>
+		/// A ボタン入力がトリガーされたかを判定します。
+		/// </summary>
+		/// <returns>入力が発生したフレームで true、それ以外は false</returns>
 		bool TriggerA_();
+		/// <summary>
+		/// B ボタン入力がトリガーされたかを判定します。
+		/// </summary>
+		/// <returns>入力が発生したフレームで true、それ以外は false</returns>
 		bool TriggerB_();
-
+		/// <summary>
+		/// ポーズメニューを開きます。
+		/// </summary>
 		void Open_();
+		/// <summary>
+		/// ポーズメニューを閉じます。
+		/// </summary>
 		void Close_();
+		/// <summary>
+		/// 選択インデックスを移動します。
+		/// </summary>
+		/// <param name="delta">インデックスの増減量（正数で下、負数で上）</param>
 		void MoveIndex_(int delta);
 
-	private:
 		SpriteCommon* spriteCommon_ = nullptr;
 		DirectXCommon* dxCommon_ = nullptr;
 		BaseScene* parentScene_ = nullptr;

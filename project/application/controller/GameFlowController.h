@@ -18,33 +18,61 @@ namespace TKM {
 			ToGameOver,
 		};
 
-	public:
+		/// <summary>
+		/// イントロシーケンスを初期化します。
+		/// </summary>
+		/// <param name="dxCommon">DirectX 共通管理クラス</param>
 		void Initialize(DirectXCommon* dxCommon);
-
-		// Intro更新（敵初期化要求もここで作る）
+		/// <summary>
+		/// イントロシーケンスの更新処理を行います。
+		/// 敵初期化の要求（リクエスト）もここで生成します。
+		/// </summary>
+		/// <param name="dt">前フレームからの経過時間（秒）</param>
+		/// <param name="camera">演出および描画に使用するカメラ</param>
+		/// <param name="enemiesInitialized">敵の初期化が完了している場合 true</param>
+		/// <param name="outRequestInitEnemies">敵の初期化を要求する場合 true に設定されます</param>
 		void Update(float dt, Camera* camera, bool enemiesInitialized, bool& outRequestInitEnemies);
-
-		// 死亡 / タイトル戻り（Tキー） / アイリス閉じ進行
-		TransitionRequest UpdateTransitions(float dt, Player* player);
-
-		// 描画（IntroSequence側に描かせる）
+		/// <summary>
+		/// 描画処理を行います。
+		/// </summary>
+		/// <note>
+		/// 実際の描画呼び出しは IntroSequence 側から行われます。
+		/// </note>
 		void Draw() const;
 
 		/// <summary>
-		/// Iris閉じでタイトルへ戻るリクエストを出す。
+		/// トランジション更新処理を行います。
+		/// 死亡／タイトル戻り（Tキー）／アイリス閉じ進行を扱います。
+		/// </summary>
+		/// <param name="dt">前フレームからの経過時間（秒）</param>
+		/// <param name="player">状態参照対象となるプレイヤー</param>
+		/// <returns>遷移要求（何もなければ None 等）</returns>
+		TransitionRequest UpdateTransitions(float dt, Player* player);
+		/// <summary>
+		/// アイリスクローズによってタイトルへ戻るリクエストを出します。
 		/// </summary>
 		void RequestToTitleByIris();
-
-		// 状態
+		/// <summary>
+		/// ゲームプレイがロックされているかを取得します。
+		/// </summary>
+		/// <returns>ゲームプレイがロック中の場合 true、それ以外は false</returns>
 		bool IsGameplayLocked() const;
+		/// <summary>
+		/// アイリス閉じ中かを取得します。
+		/// </summary>
+		/// <returns>アイリス閉じ中の場合 true、それ以外は false</returns>
 		bool IsIrisClosing() const { return irisClosing_; }
+		/// <summary>
+		/// アイリス描画を外部制御しているかを取得します。
+		/// </summary>
+		/// <returns>外部制御する場合 true、それ以外は false</returns>
 		bool IsExternalIrisDraw() const { return externalIrisDraw_; }
 
 		// Setter=====================================
 		/// <summary>
-		/// 外部からIris描画を制御するか？
+		/// アイリス描画を外部から制御するかを設定します。
 		/// </summary>
-		/// <param name="enable"></param>
+		/// <param name="enable">外部制御する場合 true、それ以外は false</param>
 		void SetExternalIrisDraw(bool enable);
 		// ===========================================
 		// Getter=====================================

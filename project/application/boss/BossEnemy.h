@@ -24,11 +24,19 @@ public:
 	BossEnemy() = default;
 	~BossEnemy() = default;
 
-	// Enemy側が virtual じゃないので override は付けない
+	/// <summary>
+	/// 敵オブジェクトの初期化を行います。
+	/// </summary>
+	/// <param name="common">Object3d の共通管理クラス</param>
+	/// <param name="dxCommon">DirectX 共通管理クラス</param>
 	void Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon);
+	/// <summary>
+	/// 毎フレームの更新処理を行います。
+	/// </summary>
+	/// <param name="dt">前フレームからの経過時間（秒）</param>
 	void Update(float dt);
+	/// <summary>
+	/// ImGuiデバッグ表示。
+	/// </summary>
 	void ImGuiDebug();
-
-private:
-	float blinkT_ = 0.0f;
 };

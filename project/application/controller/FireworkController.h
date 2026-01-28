@@ -9,11 +9,19 @@
 namespace TKM {
 	class FireworkController {
 	public:
+		/// <summary>
+		/// リセットします。
+		/// </summary>
 		void Reset() {
 			timer_ = 0.0f;
 			interval_ = RandRange_(minInterval_, maxInterval_);
 		}
-
+		/// <summary>
+		/// 花火生成の更新処理を行います。
+		/// カメラのワールド行列から前方空間を求め、一定間隔で花火を生成します。
+		/// </summary>
+		/// <param name="dt">前フレームからの経過時間（秒）</param>
+		/// <param name="camera">生成範囲計算に使用するカメラ（nullptr の場合は何もしません）</param>
 		void Update(float dt, const TKM::Camera* camera) {
 			if (!camera) { return; }
 
@@ -52,16 +60,33 @@ namespace TKM {
 			}
 		}
 
-		// 好きなら外から調整できるようにしておく（今はデフォ値でOK）
+		// Setter========================================
+		/// <summary>
+		/// 1発あたりの粒数（パーティクル数）を設定します。
+		/// </summary>
+		/// <param name="count">粒数（1以上にクランプされます）</param>
 		void SetBurstCount(int count) { burstParticleCount_ = std::max(1, count); }
+		// ==============================================
 
 	private:
+		/// <summary>
+		/// 0.0〜1.0 の乱数を生成します。
+		/// </summary>
+		/// <returns>0.0〜1.0 の乱数値</returns>
 		float Rand01_() { return float(std::rand()) / float(RAND_MAX); }
+		/// <summary>
+		/// 指定した範囲内の乱数を生成します。
+		/// </summary>
+		/// <param name="a">最小値</param>
+		/// <param name="b">最大値</param>
+		/// <returns>a 以上 b 以下の乱数値</returns>
 		float RandRange_(float a, float b) { return a + (b - a) * Rand01_(); }
-
+		/// <summary>
+		/// 指定位置を中心に花火（パーティクル）を生成します。
+		/// </summary>
+		/// <param name="center">生成中心位置（ワールド座標）</param>
 		void Spawn_(const Vector3& center);
 
-	private:
 		float timer_ = 0.0f;
 		float interval_ = 1.0f;
 

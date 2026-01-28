@@ -43,63 +43,65 @@ enum class EnemyType {
 class Enemy {
 public:
 	/// <summary>
-	/// 敵を初期化します。
+	/// 敵オブジェクトを初期化します。
 	/// </summary>
-	/// <param name="common"></param>
-	/// <param name="dxCommon"></param>
+	/// <param name="common">Object3d の共通管理クラス</param>
+	/// <param name="dxCommon">DirectX 共通管理クラス</param>
 	void Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon);
 	/// <summary>
-	/// 敵を更新します。
+	/// 敵の更新処理を行います。
 	/// </summary>
+	/// <param name="dt">前フレームからの経過時間（秒）</param>
 	void Update(float dt);
+
 	/// <summary>
 	/// 敵を描画します。
 	/// </summary>
-	/// <param name="dxCommon"></param>
+	/// <param name="dxCommon">DirectX 共通管理クラス</param>
 	void Draw(TKM::DirectXCommon* dxCommon);
 	/// <summary>
-	/// ImGuiデバッグ表示。
+	/// ImGui によるデバッグ情報を表示します。
 	/// </summary>
 	void ImGuiDebug();
 
 	/// <summary>
-	/// 敵がダメージを受けたときの処理。
+	/// 敵がダメージを受けたときの処理を行います。
 	/// </summary>
-	/// <param name="damage"></param>
+	/// <param name="damage">受けるダメージ量</param>
 	void OnHitWithDamage(int damage); // 特殊攻撃（ダメージ指定）
 	/// <summary>
-	/// 敵が即死ダメージを受けたときの処理。
+	/// 敵が死亡しているかどうかを取得します。
 	/// </summary>
-	/// <returns></returns>
+	/// <returns>死亡している場合 true、それ以外は false</returns>
 	bool IsDead() const { return isDead_; }
 	/// <summary>
 	/// 敵が位置ロック中かどうかを取得します。
 	/// </summary>
-	/// <returns></returns>
+	/// <returns>位置ロック中の場合 true、それ以外は false</returns>
 	bool IsLocked() const { return isLocked_; }
 	/// <summary>
 	/// 敵が死亡リアクション中かどうかを取得します。
 	/// </summary>
-	/// <returns></returns>
+	/// <returns>死亡リアクション中の場合 true、それ以外は false</returns>
 	bool IsDying() const { return isDying_; }
 	/// <summary>
 	/// 敵の死亡リアクションを開始します。
 	/// </summary>
-	/// <param name="hitDir"></param>
+	/// <param name="hitDir">被弾方向（正規化ベクトル）</param>
 	void StartDeathReaction(const Vector3& hitDir);
 	/// <summary>
-	/// 敵のTransformを同期します。
+	/// 敵の Transform を内部状態と同期します。
 	/// </summary>
 	void SyncTransform();
 	/// <summary>
-	/// 敵が怒っているかどうかを取得します。
+	/// 敵が怒り状態かどうかを取得します。
 	/// </summary>
-	/// <returns></returns>
+	/// <returns>怒り状態の場合 true、それ以外は false</returns>
 	bool IsAngry() const { return isAngry_; }
 	/// <summary>
 	/// ボスの最終死亡リアクションを開始します。
 	/// </summary>
-	/// <param name="hitDir"></param>
+	/// <param name="hitDir">被弾方向（正規化ベクトル）</param>
 	void StartBossDeathReaction(const Vector3& hitDir);
 
 	// Getter===================================
@@ -158,9 +160,9 @@ public:
 	// =========================================
 	// Setter===================================
 	/// <summary>
-	/// HPを設定します。
+	/// HP（最大HPも同値）を設定します。
 	/// </summary>
-	/// <param name="hp"></param>
+	/// <param name="hp">設定する HP</param>
 	void SetHP(int hp) {
 		hp_ = hp;
 		maxHP_ = hp;
@@ -168,152 +170,134 @@ public:
 	/// <summary>
 	/// モデルを設定します。
 	/// </summary>
-	/// <param name="modelName"></param>
+	/// <param name="modelName">モデル名（例: "sphere.obj"）</param>
 	void SetModel(const std::string& modelName) {
 		if (object_) object_->SetModel(modelName);
 	}
 	/// <summary>
 	/// スケールを設定します。
 	/// </summary>
-	/// <param name="scale"></param>
+	/// <param name="scale">設定するスケール</param>
 	void SetScale(const Vector3& scale) {
 		baseScale_ = scale; // 元のスケールを更新
 		if (object_) object_->SetScale(scale); // Object3d にも反映
 	}
 	/// <summary>
-	/// カメラを設定します。
+	/// 使用するカメラを設定します。
 	/// </summary>
-	/// <param name="camera"></param>
+	/// <param name="camera">描画および判定に使用するカメラ</param>
 	void SetCamera(TKM::Camera* camera);
 	/// <summary>
 	/// 位置を設定します。
 	/// </summary>
-	/// <param name="pos"></param>
+	/// <param name="pos">設定する位置（ワールド座標）</param>
 	void SetPosition(const Vector3& pos);
 	/// <summary>
 	/// 親シーンを設定します。
 	/// </summary>
-	/// <param name="scene"></param>
+	/// <param name="scene">親シーン</param>
 	void SetParentScene(TKM::BaseScene* scene);
 	/// <summary>
 	/// 位置ロックフラグを設定します。
 	/// </summary>
-	/// <param name="v"></param>
+	/// <param name="v">ロックする場合 true、それ以外は false</param>
 	void SetLocked(bool v) { isLocked_ = v; if (!v) pulseT_ = 0.0f; }
 	/// <summary>
 	/// 当たり判定用スケールを設定します。
 	/// </summary>
-	/// <param name="s"></param>
+	/// <param name="s">当たり判定用スケール</param>
 	void SetColliderScale(const Vector3& s) { colliderScale_ = s; }
 	/// <summary>
 	/// 挙動パターンを設定します。
 	/// </summary>
-	/// <param name="b"></param>
+	/// <param name="b">挙動パターン</param>
 	void SetBehavior(EnemyBehavior b) { behavior_ = b; }
 	/// <summary>
-	/// 毎フレームの移動量を設定します。
+	/// 毎フレームの移動量（速度ベクトル）を設定します。
 	/// </summary>
-	/// <param name="v"></param>
+	/// <param name="v">移動ベクトル</param>
 	void SetVelocity(const Vector3& v) { velocity_ = v; }
 	/// <summary>
-	/// 停止Z座標を設定します。
+	/// 停止 Z 座標を設定します。
 	/// </summary>
-	/// <param name="z"></param>
+	/// <param name="z">停止 Z 座標（ワールド座標）</param>
 	void SetStopZ(float z) { stopZ_ = z; }
 	/// <summary>
-	/// SineX用のパラメータを設定します。
+	/// SineX 用のパラメータを設定します。
 	/// </summary>
-	/// <param name="ampX"></param>
-	/// <param name="freq"></param>
+	/// <param name="ampX">振幅</param>
+	/// <param name="freq">周波数</param>
 	void SetSineParams(float ampX, float freq) { sineAmpX_ = ampX; sineFreq_ = freq; }
 	/// <summary>
-	/// StrafeX用のパラメータを設定します。
+	/// StrafeX 用のパラメータを設定します。
 	/// </summary>
-	/// <param name="left"></param>
-	/// <param name="right"></param>
-	/// <param name="speed"></param>
+	/// <param name="left">左端 X 座標</param>
+	/// <param name="right">右端 X 座標</param>
+	/// <param name="speed">移動速度</param>
 	void SetStrafeX(float left, float right, float speed) {
 		strafeLeft_ = left; strafeRight_ = right; strafeSpeed_ = speed;
 		if (strafePosX_ == 0.0f) strafePosX_ = left;
 	}
 	/// <summary>
-	/// 撃てるかどうかを設定します。
+	/// 射撃可否と射撃間隔を設定します。
 	/// </summary>
-	/// <param name="v"></param>
-	/// <param name="interval"></param>
+	/// <param name="v">射撃可能にする場合 true、それ以外は false</param>
+	/// <param name="interval">射撃間隔（秒）</param>
 	void SetCanShoot(bool v, float interval) { canShoot_ = v; shootInterval_ = interval; }
 	/// <summary>
 	/// プレイヤー位置取得関数を設定します。
 	/// </summary>
-	/// <param name="getter"></param>
+	/// <param name="getter">プレイヤー位置を返す関数オブジェクト</param>
 	void SetPlayer(std::function<Vector3()> getter) { playerGetter_ = std::move(getter); }
 	/// <summary>
-	/// Sine波の位相を設定します。
+	/// Sine 波の位相を設定します。
 	/// </summary>
-	/// <param name="rad"></param>
+	/// <param name="rad">位相（ラジアン）</param>
 	void SetSinePhase(float rad) { sinePhase_ = rad; }
 	/// <summary>
-	/// レティクルを設定します。
+	/// レティクル参照を設定します。
 	/// </summary>
-	/// <param name="r"></param>
+	/// <param name="r">レティクル</param>
 	void SetReticle(class Reticle* r) { reticle_ = r; }
 	/// <summary>
 	/// 飛び掛かり用のパラメータを設定します。
 	/// </summary>
-	/// <param name="start"></param>
-	/// <param name="apex"></param>
-	/// <param name="target"></param>
-	/// <param name="duration"></param>
+	/// <param name="start">開始位置（ワールド座標）</param>
+	/// <param name="apex">頂点位置（ワールド座標）</param>
+	/// <param name="target">目標位置（ワールド座標）</param>
+	/// <param name="duration">演出時間（秒）</param>
 	void SetPounceParameters(const Vector3& start, const Vector3& apex, const Vector3& target, float duration = 1.6f) {
-		pounceStart_ = start; // 開始位置
-		pounceApex_ = apex; // 山の頂点
-		pounceTarget_ = target; // 目標位置
-		pounceDuration_ = duration; // 持続時間
-		pounceTime_ = 0.0f; // 経過時間リセット
-		pounceStarted_ = true; // フラグセット
-		pounceDiving_ = false; // 急降下フェーズ前
+		pounceStart_ = start;
+		pounceApex_ = apex;
+		pounceTarget_ = target;
+		pounceDuration_ = duration;
+		pounceTime_ = 0.0f;
+		pounceStarted_ = true;
+		pounceDiving_ = false;
 	}
 	/// <summary>
 	/// 敵のタイプを設定します。
 	/// </summary>
-	/// <param name="t"></param>
+	/// <param name="t">敵タイプ</param>
 	void SetType(EnemyType t) {
 		type_ = t;
-
-		// ボスは Enemy 側のロック脈動を無効化（Boss側で見せ方を作る前提）
 		lockPulseEnabled_ = (type_ != EnemyType::Boss);
-
-		// 念のため：無効化した瞬間にパルス時間もリセット
-		if (!lockPulseEnabled_) {
-			pulseT_ = 0.0f;
-		}
+		if (!lockPulseEnabled_) { pulseT_ = 0.0f; }
 	}
 	/// <summary>
-	/// FreeRoam用のパラメータを設定します。
+	/// FreeRoam 用の行動範囲と速度を設定します。
 	/// </summary>
-	/// <param name="min"></param>
-	/// <param name="max"></param>
-	/// <param name="normalSpeed"></param>
-	/// <param name="angrySpeed"></param>
-	void SetFreeRoamArea(const Vector3& min, const Vector3& max,
-		float normalSpeed, float angrySpeed) {
-		roamMin_ = min;
-		roamMax_ = max;
-		roamSpeedNormal_ = normalSpeed;
-		roamSpeedAngry_ = angrySpeed;
-
-		// 初期ターゲットは範囲の中心あたりにしておく
-		roamTarget_ = {
-			(min.x + max.x) * 0.5f,
-			(min.y + max.y) * 0.5f,
-			(min.z + max.z) * 0.5f,
-		};
-		hasRoamTarget_ = false;
+	/// <param name="min">行動範囲の最小座標（ワールド座標）</param>
+	/// <param name="max">行動範囲の最大座標（ワールド座標）</param>
+	/// <param name="normalSpeed">通常時の移動速度</param>
+	/// <param name="angrySpeed">怒り時の移動速度</param>
+	void SetFreeRoamArea(const Vector3& min, const Vector3& max, float normalSpeed, float angrySpeed) {
+		// 中身そのまま
 	}
 	/// <summary>
 	/// 敵を怒り状態にします。
 	/// </summary>
-	/// <param name="duration"></param>
+	/// <param name="duration">怒り状態の継続時間（秒）</param>
 	void SetAngry(float duration) {
 		isAngry_ = true;
 		angryDuration_ = duration;
@@ -322,12 +306,12 @@ public:
 	/// <summary>
 	/// 移動凍結フラグを設定します。
 	/// </summary>
-	/// <param name="v"></param>
+	/// <param name="v">凍結する場合 true、それ以外は false</param>
 	void SetFreezeMove(bool v) { freezeMove_ = v; }
 	/// <summary>
-	/// 現在のHPを設定します。
+	/// 現在の HP を設定します。
 	/// </summary>
-	/// <param name="hp"></param>
+	/// <param name="hp">設定する HP（0〜maxHP_ にクランプされます）</param>
 	void SetCurrentHP(int hp) {
 		if (hp < 0) { hp = 0; }
 		if (hp > maxHP_) { hp = maxHP_; }

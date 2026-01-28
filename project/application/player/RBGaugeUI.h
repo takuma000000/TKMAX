@@ -40,30 +40,30 @@ namespace TKM {
 	public:
 
 		/// <summary>
-		/// 初期化
+		/// 弾数 UI を初期化します。
 		/// </summary>
-		/// <param name="spriteCommon"></param>
-		/// <param name="dxCommon"></param>
-		/// <param name="parentScene"></param>
-		/// <param name="desc"></param>
+		/// <param name="spriteCommon">スプライト共通管理クラス</param>
+		/// <param name="dxCommon">DirectX 共通管理クラス</param>
+		/// <param name="parentScene">所属する親シーン</param>
+		/// <param name="desc">弾数 UI の設定情報</param>
 		void Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, BaseScene* parentScene, const Desc& desc);
 		/// <summary>
-		/// 更新
+		/// 弾数 UI の更新処理を行います。
 		/// </summary>
-		/// <param name="dt"></param>
-		/// <param name="ammo"></param>
-		/// <param name="maxAmmo"></param>
-		/// <param name="refilling"></param>
+		/// <param name="dt">前フレームからの経過時間（秒）</param>
+		/// <param name="ammo">現在の弾数</param>
+		/// <param name="maxAmmo">最大弾数</param>
+		/// <param name="refilling">リロード（補充）中の場合 true</param>
 		void Update(float dt, int ammo, int maxAmmo, bool refilling);
 		/// <summary>
-		/// 描画
+		/// 弾数 UI を描画します。
 		/// </summary>
 		void Draw();
 
 		/// <summary>
-		/// 可視状態の取得。
+		/// UI が表示状態かどうかを取得します。
 		/// </summary>
-		/// <returns></returns>
+		/// <returns>表示中の場合 true、それ以外は false</returns>
 		bool IsVisible() const { return visible_; }
 
 		// Getter=====================================
@@ -75,19 +75,19 @@ namespace TKM {
 		// ===========================================
 		// Setter=====================================
 		/// <summary>
-		/// 可視状態の設定。
+		/// 可視状態を設定します。
 		/// </summary>
-		/// <param name="v"></param>
+		/// <param name="v">表示する場合 true、それ以外は false</param>
 		void SetVisible(bool v) { visible_ = v; }
 		// ===========================================
 
 	private:
 		/// <summary>
-		/// a〜bの範囲でランダムな浮動小数点数を返す。
+		/// a〜b の範囲でランダムな浮動小数点数を返します。
 		/// </summary>
-		/// <param name="a"></param>
-		/// <param name="b"></param>
-		/// <returns></returns>
+		/// <param name="a">最小値</param>
+		/// <param name="b">最大値</param>
+		/// <returns>a〜b の範囲内のランダムな浮動小数点数</returns>
 		float RandRange_(float a, float b) {
 			return a + (b - a) * (static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX));
 		}
@@ -148,17 +148,17 @@ namespace TKM {
 		float prevHalfW_ = 0.0f;
 
 		/// <summary>
-		/// 破片を発生させる。
+		/// 破片を発生させます。
 		/// </summary>
-		/// <param name="cx"></param>
-		/// <param name="y"></param>
-		/// <param name="oldHalf"></param>
-		/// <param name="newHalf"></param>
+		/// <param name="cx">発生中心の X 座標（ワールド座標）</param>
+		/// <param name="y">発生位置の Y 座標（ワールド座標）</param>
+		/// <param name="oldHalf">分割前の半径（または半幅）</param>
+		/// <param name="newHalf">分割後の半径（または半幅）</param>
 		void SpawnChips_(float cx, float y, float oldHalf, float newHalf);
 		/// <summary>
-		/// 破片を更新する。
+		/// 破片の更新処理を行います。
 		/// </summary>
-		/// <param name="dt"></param>
+		/// <param name="dt">前フレームからの経過時間（秒）</param>
 		void UpdateChips_(float dt);
 		/// <summary>
 		/// 破片を描画する。

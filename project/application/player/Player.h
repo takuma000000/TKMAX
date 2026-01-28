@@ -30,19 +30,20 @@ namespace TKM {
 class Player {
 public:
 	/// <summary>
-	/// プレイヤーを初期化します。
+	/// プレイヤーオブジェクトを初期化します。
 	/// </summary>
-	/// <param name="common"></param>
-	/// <param name="dxCommon"></param>
+	/// <param name="common">Object3d の共通管理クラス</param>
+	/// <param name="dxCommon">DirectX 共通管理クラス</param>
 	void Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon);
 	/// <summary>
-	/// プレイヤーを更新します。
+	/// プレイヤーの更新処理を行います。
 	/// </summary>
+	/// <param name="dt">前フレームからの経過時間（秒）</param>
 	void Update(float dt);
 	/// <summary>
 	/// プレイヤーを描画します。
 	/// </summary>
-	/// <param name="dxCommon"></param>
+	/// <param name="dxCommon">DirectX 共通管理クラス</param>
 	void Draw(TKM::DirectXCommon* dxCommon);
 	/// <summary>
 	/// デバッグ用ImGui表示。
@@ -58,9 +59,9 @@ public:
 	/// </summary>
 	void EnableSpecialAttack() { canUseSpecial_ = true; } // 一撃必殺を使用可能にする
 	/// <summary>
-	/// 敵が破壊されたときの処理。
+	/// 敵が破壊されたときの処理を行います。
 	/// </summary>
-	/// <param name="e"></param>
+	/// <param name="e">破壊された敵オブジェクト</param>
 	void OnEnemyDestroyed(Enemy* e) {
 		if (enemy_ == e) {
 			enemy_ = nullptr;
@@ -76,9 +77,9 @@ public:
 	/// <returns></returns>
 	bool IsDead() const { return isDead_; }
 	/// <summary>
-	/// プレイヤーがダメージを受けたときの処理。
+	/// プレイヤーがダメージを受けたときの処理を行います。
 	/// </summary>
-	/// <param name="value"></param>
+	/// <param name="value">受けるダメージ量</param>
 	void Damage(int value) {
 		hp_ -= value;
 		if (hp_ < 0) hp_ = 0;
@@ -157,17 +158,18 @@ public:
 	/// <summary>
 	/// ジェットスモークの有効/無効を設定します。
 	/// </summary>
-	/// <param name="enable"></param>
+	/// <param name="enable">有効にする場合 true、それ以外は false</param>
 	void SetEnableJetSmoke(bool enable) { enableJetSmoke_ = enable; }
 	/// <summary>
-	/// プレイヤーのHPを設定します。
+	/// プレイヤーの HP を設定します。
 	/// </summary>
-	/// <param name="hp"></param>
+	/// <param name="hp">設定する HP</param>
 	void SetHP(int hp) { hp_ = hp; }
 	/// <summary>
-	/// カメラを設定します。
+	/// 使用するカメラを設定します。
+	/// プレイヤー本体およびレティクルにも同じカメラを適用します。
 	/// </summary>
-	/// <param name="camera"></param>
+	/// <param name="camera">描画および判定に使用するカメラ</param>
 	void SetCamera(TKM::Camera* camera) {
 		this->camera_ = camera;
 		if (object_) { object_->SetCamera(camera); }
@@ -176,54 +178,54 @@ public:
 	/// <summary>
 	/// プレイヤーの位置を設定します。
 	/// </summary>
-	/// <param name="pos"></param>
+	/// <param name="pos">設定する位置（ワールド座標）</param>
 	void SetPosition(const Vector3& pos);
 	/// <summary>
 	/// 親シーンを設定します。
 	/// </summary>
-	/// <param name="parentScene"></param>
+	/// <param name="parentScene">親シーン</param>
 	void SetParentScene(TKM::BaseScene* parentScene);
 	/// <summary>
 	/// ターゲット敵を設定します。
 	/// </summary>
-	/// <param name="enemy"></param>
+	/// <param name="enemy">ターゲットとなる敵（nullptr 可）</param>
 	void SetEnemy(Enemy* enemy) { enemy_ = enemy; }
 	/// <summary>
-	/// 全敵リストを設定します。
+	/// 全敵リスト参照を設定します。
 	/// </summary>
-	/// <param name="enemies"></param>
+	/// <param name="enemies">全敵リスト（外部所有）</param>
 	void SetAllEnemies(std::vector<std::unique_ptr<Enemy>>* enemies) {
 		allEnemies_ = enemies;
 	}
 	/// <summary>
 	/// カメラシェイクを開始します。
 	/// </summary>
-	/// <param name="frameCount"></param>
+	/// <param name="frameCount">シェイク継続フレーム数</param>
 	void StartCameraShake(int frameCount);
 	/// <summary>
-	/// プレイヤーの操作有効/無効を切り替えます。
+	/// プレイヤー操作の有効/無効を設定します。
 	/// </summary>
-	/// <param name="enabled"></param>
+	/// <param name="enabled">操作を有効にする場合 true、それ以外は false</param>
 	void SetControlEnabled(bool enabled) { controlEnabled_ = enabled; }
 	/// <summary>
-	/// レティクルの表示/非表示を切り替えます。
+	/// レティクルの表示/非表示を設定します。
 	/// </summary>
-	/// <param name="visible"></param>
+	/// <param name="visible">表示する場合 true、それ以外は false</param>
 	void SetReticleVisible(bool visible) { reticleVisible_ = visible; }
 	/// <summary>
-	/// ミッドボスコアを設定します。
+	/// ミッドボスコア参照を設定します。
 	/// </summary>
-	/// <param name="core"></param>
+	/// <param name="core">ミッドボスコア（nullptr 可）</param>
 	void SetMidBossCore(MidBossCore* core) { core_ = core; }
 	/// <summary>
-	/// プレイヤーのコライダースケールを設定します。
+	/// プレイヤーの当たり判定用スケールを設定します。
 	/// </summary>
-	/// <param name="s"></param>
+	/// <param name="s">当たり判定用スケール</param>
 	void SetColliderScale(const Vector3& s) { colliderScale_ = s; }
 	/// <summary>
-	/// 放射状ブラーエフェクトを設定します。
+	/// 放射状ブラーエフェクト参照を設定します。
 	/// </summary>
-	/// <param name="effect"></param>
+	/// <param name="effect">放射状ブラーエフェクト（nullptr 可）</param>
 	void SetRadialBlurEffect(TKM::RadialBlurEffect* effect) { radialBlur_ = effect; }
 	// =========================================
 
@@ -263,7 +265,7 @@ private:
 	/// <summary>
 	/// カメラの三人称視点追従処理を行います。
 	/// </summary>
-	/// <param name="dt"></param>
+	/// <param name="dt">前フレームからの経過時間（秒）</param>
 	void UpdateCameraFollowThirdPerson(float dt);
 	/// <summary>
 	/// カメラのズーム処理を行います。

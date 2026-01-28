@@ -1,6 +1,7 @@
 #include "EnemyWaveConfig.h"
 #include <cstdlib>
 #include <CsvReader.h>
+#include <algorithm>
 
 bool EnemyWaveConfig::StrEq(const std::string& a, const char* b) {
 	return a == b;
@@ -12,6 +13,21 @@ float EnemyWaveConfig::ToF(const std::string& s) {
 
 int EnemyWaveConfig::ToI(const std::string& s) {
 	return std::stoi(s);
+}
+
+static EnemyBehavior ParseBehavior(const std::string& s, EnemyBehavior fallback) {
+	if (s.empty() || s == "0") { return fallback; }
+
+	std::string t = s;
+	std::transform(t.begin(), t.end(), t.begin(),
+		[](unsigned char c) { return (char)std::tolower(c); });
+
+	if (t == "pouncefromabove") { return EnemyBehavior::PounceFromAbove; }
+	if (t == "sinex") { return EnemyBehavior::SineX; }
+	if (t == "straightstop") { return EnemyBehavior::StraightStop; }
+	if (t == "freeroam") { return EnemyBehavior::FreeRoam; }
+
+	return fallback;
 }
 
 bool EnemyWaveConfig::Load(const char* path) {
@@ -38,6 +54,7 @@ bool EnemyWaveConfig::Load(const char* path) {
 			if (StrEq(type_, "Settings")) {
 				if (StrEq(id_, "spawnInterval")) { wave1_.spawnInterval_ = ToF(get_(3)); }
 				if (StrEq(id_, "maxSimultaneous")) { wave1_.maxSimultaneous_ = ToI(get_(3)); }
+				if (StrEq(id_, "defeatTarget")) { wave1_.defeatTarget_ = ToI(get_(3)); }
 			} else if (StrEq(type_, "SpawnPos") && StrEq(id_, "base")) {
 				// Wave1,SpawnPos,base,a,b,c,...
 				wave1_.baseY_ = ToF(get_(4));
@@ -46,12 +63,24 @@ bool EnemyWaveConfig::Load(const char* path) {
 				wave1_.randXMin_ = ToF(get_(4));
 				wave1_.randXMax_ = ToF(get_(5));
 			}
+
+			if (StrEq(type_, "EnemyParams") && StrEq(id_, "default")) {
+				wave1EnemyParams_.model_ = get_(3);
+				wave1EnemyParams_.hp_ = ToI(get_(4));
+				wave1EnemyParams_.startY_ = ToF(get_(5));
+				wave1EnemyParams_.targetForwardZ_ = ToF(get_(6));
+				wave1EnemyParams_.apexY_ = ToF(get_(7));
+				wave1EnemyParams_.pounceTime_ = ToF(get_(8));
+				wave1EnemyParams_.behavior_ = ParseBehavior(get_(11), wave1EnemyParams_.behavior_);
+			}
 		}
 
 		// ---- Wave2 ----
 		if (StrEq(wave_, "Wave2")) {
 			if (StrEq(type_, "Wait") && StrEq(id_, "base")) {
 				wave2WaitDuration_ = ToF(get_(3));
+			} else if (StrEq(type_, "Settings") && StrEq(id_, "subWaveCount")) {
+				wave2SubWaveCount_ = ToI(get_(3));
 			} else if (StrEq(type_, "SubWave")) {
 				const int subId_ = ToI(id_);
 				if (subId_ < 0 || subId_ >= 3) { continue; }
@@ -84,6 +113,30 @@ bool EnemyWaveConfig::Load(const char* path) {
 					sw_.colYStep_ = ToF(get_(9));
 				}
 			}
+
+			if (StrEq(type_, "EnemyParams")) {
+				if (StrEq(id_, "Triangle")) {
+					wave2TriEnemyParams_.model_ = get_(3);
+					wave2TriEnemyParams_.hp_ = ToI(get_(4));
+					wave2TriEnemyParams_.vel_ = { ToF(get_(5)), ToF(get_(6)), ToF(get_(7)) };
+					wave2TriEnemyParams_.sineAmp_ = ToF(get_(8));
+					wave2TriEnemyParams_.sineFreq_ = ToF(get_(9));
+					wave2TriEnemyParams_.phaseStep_ = ToF(get_(10)); // 11列目
+					wave2TriEnemyParams_.behavior_ = ParseBehavior(get_(11), wave2TriEnemyParams_.behavior_);
+				} else if (StrEq(id_, "Line")) {
+					wave2LineEnemyParams_.model_ = get_(3);
+					wave2LineEnemyParams_.hp_ = ToI(get_(4));
+					wave2LineEnemyParams_.vel_ = { ToF(get_(5)), ToF(get_(6)), ToF(get_(7)) };
+					wave2LineEnemyParams_.stopZ_ = ToF(get_(8));
+					wave2LineEnemyParams_.behavior_ = ParseBehavior(get_(11), wave2LineEnemyParams_.behavior_);
+				} else if (StrEq(id_, "Column")) {
+					wave2ColEnemyParams_.model_ = get_(3);
+					wave2ColEnemyParams_.hp_ = ToI(get_(4));
+					wave2ColEnemyParams_.vel_ = { ToF(get_(5)), ToF(get_(6)), ToF(get_(7)) };
+					wave2ColEnemyParams_.stopZ_ = ToF(get_(8));
+					wave2ColEnemyParams_.behavior_ = ParseBehavior(get_(11), wave2ColEnemyParams_.behavior_);
+				}
+			}
 		}
 
 		// ---- Wave3 ----
@@ -93,11 +146,35 @@ bool EnemyWaveConfig::Load(const char* path) {
 				Vector3 p{ ToF(get_(3)), ToF(get_(4)), ToF(get_(5)) };
 				if (StrEq(id_, "left")) { wave3_.midBossLeft_ = p; }
 				if (StrEq(id_, "right")) { wave3_.midBossRight_ = p; }
+			} if (StrEq(type_, "Settings")) {
+				if (StrEq(id_, "coreLifetime")) { wave3_.coreLifetime_ = ToF(get_(3)); }
+				if (StrEq(id_, "coreHP")) { wave3_.coreHP_ = ToI(get_(3)); }
+				if (StrEq(id_, "angryDuration")) { wave3_.angryDuration_ = ToF(get_(3)); }
 			} else if (StrEq(type_, "CoreRand") && StrEq(id_, "params")) {
 				wave3_.coreXRange_ = ToF(get_(3));
 				wave3_.coreZMin_ = ToF(get_(4));
 				wave3_.coreZMax_ = ToF(get_(5));
 				wave3_.coreY_ = ToF(get_(6));
+			}
+
+			if (StrEq(type_, "EnemyParams")) {
+				if (StrEq(id_, "MidBoss")) {
+					wave3MidBossParams_.model_ = get_(3);
+					wave3MidBossParams_.hp_ = ToI(get_(4));
+					wave3MidBossParams_.areaMin_ = { ToF(get_(5)), ToF(get_(6)), ToF(get_(7)) };
+					wave3MidBossParams_.areaMax_ = { ToF(get_(8)), ToF(get_(9)), ToF(get_(10)) };
+					wave3MidBossParams_.normalSpeed_ = ToF(get_(11));
+					wave3MidBossParams_.rageSpeed_ = ToF(get_(12));
+					wave3MidBossParams_.scale_ = ToF(get_(13));
+					wave3MidBossParams_.behavior_ = ParseBehavior(get_(14), wave3MidBossParams_.behavior_);
+				} else if (StrEq(id_, "ExtraMidBoss")) {
+					wave3ExtraMidBossParams_.model_ = get_(3);
+					wave3ExtraMidBossParams_.hp_ = ToI(get_(4));
+					wave3ExtraMidBossParams_.vel_ = { ToF(get_(5)), ToF(get_(6)), ToF(get_(7)) };
+					wave3ExtraMidBossParams_.stopZ_ = ToF(get_(8));
+					wave3ExtraMidBossParams_.scale_ = ToF(get_(11));
+					wave3ExtraMidBossParams_.behavior_ = ParseBehavior(get_(12), wave3ExtraMidBossParams_.behavior_);
+				}
 			}
 		}
 	}

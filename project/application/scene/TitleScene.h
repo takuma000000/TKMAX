@@ -32,13 +32,21 @@ class TitleScene : public TKM::BaseScene{
 public:
 	TitleScene(TKM::DirectXCommon* dxCommon, TKM::SrvManager* srvManager) : dxCommon_(dxCommon), srvManager_(srvManager) {}
 
-	/// <summary>タイトルシーンを初期化します。</summary>
+	/// <summary>
+	/// タイトルシーンを初期化します。
+	/// </summary>
 	void Initialize() override;
-	/// <summary>タイトルシーンを終了します。</summary>
+	/// <summary>
+	/// タイトルシーンを終了処理します。
+	/// </summary>
 	void Finalize() override;
-	/// <summary>タイトルシーンを更新します。</summary>
+	/// <summary>
+	/// タイトルシーンを更新します。
+	/// </summary>
 	void Update() override;
-	/// <summary>タイトルシーンを描画します。</summary>
+	/// <summary>
+	/// タイトルシーンを描画します。
+	/// </summary>
 	void Draw() override;
 
 private:

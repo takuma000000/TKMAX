@@ -70,31 +70,43 @@ public:
 	LaserInfo GetLaserInfo() const;
 
 	/// <summary>
-	/// 点（球）とレーザー線分の当たり判定
+	/// レーザーと球体の当たり判定テストを行います。
 	/// </summary>
-	static bool TestLaserHit(const LaserInfo& laser, const Vector3& sphereCenterWS, float sphereRadius);
-
+	/// <param name="laser">判定対象となるレーザー情報</param>
+	/// <param name="sphereCenterWS">球体の中心座標（ワールド座標）</param>
+	/// <param name="sphereRadius">球体の半径</param>
+	/// <returns>レーザーが球体にヒットした場合 true、それ以外は false</returns>
+	static bool TestLaserHit(
+		const LaserInfo& laser,
+		const Vector3& sphereCenterWS,
+		float sphereRadius
+	);
 	/// <summary>
-	/// 初期化。
+	/// レーザー制御クラスの初期化を行います。
 	/// </summary>
-	/// <param name="dxCommon"></param>
-	/// <param name="camera"></param>
-	/// <param name="parent"></param>
-	/// <param name="player"></param>
-	void Initialize(TKM::DirectXCommon* dxCommon, TKM::Camera* camera, TKM::BaseScene* parent, Player* player);
+	/// <param name="dxCommon">DirectX共通管理クラス</param>
+	/// <param name="camera">描画および判定に使用するカメラ</param>
+	/// <param name="parent">所属する親シーン</param>
+	/// <param name="player">レーザー発射元となるプレイヤー</param>
+	void Initialize(
+		TKM::DirectXCommon* dxCommon,
+		TKM::Camera* camera,
+		TKM::BaseScene* parent,
+		Player* player
+	);
 	/// <summary>
 	/// ボス戦開始。
 	/// </summary>
 	void StartBattle();
 	/// <summary>
-	/// 更新。
+	/// 毎フレームの更新処理を行います。
 	/// </summary>
-	/// <param name="dt"></param>
+	/// <param name="dt">前フレームからの経過時間（秒）</param>
 	void Update(float dt);
 	/// <summary>
-	/// 描画。
+	/// 描画処理を行います。
 	/// </summary>
-	/// <param name="dxCommon"></param>
+	/// <param name="dxCommon">DirectX共通管理クラス</param>
 	void Draw(TKM::DirectXCommon* dxCommon);
 
 	/// <summary>
@@ -103,14 +115,20 @@ public:
 	void DrawUI();
 
 	/// <summary>
-	/// ボス弾をスポーンさせる。
+	/// ボスが使用する弾をスポーンさせます。
 	/// </summary>
-	/// <param name="pos"></param>
-	/// <param name="dir"></param>
-	/// <param name="speed"></param>
-	/// <param name="damage"></param>
-	/// <param name="lifeFrame"></param>
-	void SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float speed, int damage, int lifeFrame);
+	/// <param name="pos">弾の生成位置（ワールド座標）</param>
+	/// <param name="dir">弾の進行方向（正規化ベクトル）</param>
+	/// <param name="speed">弾の移動速度</param>
+	/// <param name="damage">ヒット時に与えるダメージ量</param>
+	/// <param name="lifeFrame">弾が消滅するまでの生存フレーム数</param>
+	void SpawnEnemyBullet(
+		const Vector3& pos,
+		const Vector3& dir,
+		float speed,
+		int damage,
+		int lifeFrame
+	);
 	/// <summary>
 	/// ボス戦がアクティブか？
 	/// </summary>
@@ -140,19 +158,19 @@ public:
 	// =========================================
 	// Setter===================================
 	/// <summary>
-	/// タイムスケールコントローラー設定。
+	/// タイムスケールコントローラーを設定します。
 	/// </summary>
-	/// <param name="t"></param>
+	/// <param name="t">使用するタイムスケールコントローラー</param>
 	void SetTimeScaleController(TKM::TimeScaleController* t) { timeScale_ = t; }
 	/// <summary>
-	/// ウォーターリップルエフェクト設定。
+	/// ウォーターリップルエフェクトを設定します。
 	/// </summary>
-	/// <param name="r"></param>
+	/// <param name="r">使用するウォーターリップルエフェクト</param>
 	void SetWaterRippleEffect(TKM::WaterRippleEffect* r) { waterRipple_ = r; }
 	/// <summary>
-	/// カメラ設定。
+	/// 使用するカメラを設定します。
 	/// </summary>
-	/// <param name="camera"></param>
+	/// <param name="camera">描画および判定に使用するカメラ</param>
 	void SetCamera(TKM::Camera* camera) {
 		camera_ = camera;
 		if (boss_) { boss_->SetCamera(camera_); }

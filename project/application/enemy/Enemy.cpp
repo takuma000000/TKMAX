@@ -8,7 +8,6 @@
 void Enemy::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon) {
 	object_ = std::make_unique<TKM::Object3d>(); // Object3d のインスタンスを生成
 	object_->Initialize(common, dxCommon); // 初期化
-	object_->SetModel("enemy.obj"); // モデル名は適宜変更
 
 	// カメラ設定
 	if (camera_) {

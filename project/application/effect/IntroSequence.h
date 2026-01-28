@@ -19,38 +19,39 @@ namespace TKM {
 		~IntroSequence() = default;
 
 		/// <summary>
-		/// 初期化
+		/// イントロ表示関連の初期化を行います。
 		/// </summary>
-		/// <param name="dxCommon"></param>
+		/// <param name="dxCommon">DirectX 共通管理クラス</param>
 		void Initialize(DirectXCommon* dxCommon);
 		/// <summary>
-		/// 更新
+		/// イントロ表示の更新処理を行います。
+		/// 敵初期化の要求生成もここで行います。
 		/// </summary>
-		/// <param name="dt"></param>
-		/// <param name="camera"></param>
-		/// <param name="enemiesInitialized"></param>
-		/// <param name="outRequestInitEnemies"></param>
+		/// <param name="dt">前フレームからの経過時間（秒）</param>
+		/// <param name="camera">演出および描画に使用するカメラ</param>
+		/// <param name="enemiesInitialized">敵の初期化が完了している場合 true</param>
+		/// <param name="outRequestInitEnemies">敵初期化を要求する場合 true に設定されます</param>
 		void Update(float dt, Camera* camera, bool enemiesInitialized, bool& outRequestInitEnemies);
 		/// <summary>
-		/// 描画
+		/// イントロ表示の描画処理を行います。
 		/// </summary>
-		/// <param name="irisClosing"></param>
+		/// <param name="irisClosing">アイリス閉じ中の場合 true</param>
 		void Draw(bool irisClosing) const;
 
 		/// <summary>
-		/// ゲームプレイがロックされているか？
+		/// ゲームプレイがロックされているかを取得します。
 		/// </summary>
-		/// <returns></returns>
+		/// <returns>ゲームプレイがロック中の場合 true、それ以外は false</returns>
 		bool IsGameplayLocked() const { return gameplayLocked_; }
 		/// <summary>
-		/// Irisが開いているか？
+		/// アイリスが開いている状態かを取得します。
 		/// </summary>
-		/// <returns></returns>
+		/// <returns>アイリス開き中の場合 true、それ以外は false</returns>
 		bool IsIrisOpening()   const { return irisOpening_; }
 		/// <summary>
-		/// 「ゲームスタート」表示が見えているか？
+		/// 「ゲームスタート」表示が可視状態かを取得します。
 		/// </summary>
-		/// <returns></returns>
+		/// <returns>表示中の場合 true、それ以外は false</returns>
 		bool IsStartVisible()  const { return startVisible_; }
 
 		// Getter=====================================

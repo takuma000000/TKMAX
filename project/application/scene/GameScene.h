@@ -160,19 +160,19 @@ private:
 	/// <summary>
 	/// 風エフェクトを更新します。
 	/// </summary>
-	/// <param name="dt"></param>
+	/// <param name="dt">前フレームからの経過時間（秒）</param>
 	void UpdateAirStreak(float dt); // 風エフェクト更新
 	/// <summary>
 	/// フレーム更新の開始処理を行います。
 	/// </summary>
-	/// <param name="rawDt"></param>
-	/// <param name="scaledDt"></param>
+	/// <param name="rawDt">生のデルタタイム（補間・スケール未適用、秒）</param>
+	/// <param name="scaledDt">タイムスケール適用後のデルタタイム（参照で更新される、秒）</param>
 	void BeginFrameUpdate(float& rawDt, float& scaledDt);
 	/// <summary>
-	/// クリア中の更新処理を行います。
+	/// クリア演出中の更新処理を行います。
 	/// </summary>
-	/// <param name="scaledDt"></param>
-	/// <returns></returns>
+	/// <param name="scaledDt">タイムスケール適用後のデルタタイム（秒）</param>
+	/// <returns>クリア演出が終了した場合 true、それ以外は false</returns>
 	bool UpdateDuringClear(float scaledDt);
 	/// <summary>
 	/// ゲームフローの更新処理を行います。
@@ -181,18 +181,18 @@ private:
 	/// <summary>
 	/// 敵とウェーブのロジック更新を行います。
 	/// </summary>
-	/// <param name="scaledDt"></param>
+	/// <param name="scaledDt">タイムスケール適用後のデルタタイム（秒）</param>
 	void UpdateEnemyAndWaveLogic(float scaledDt);
 	/// <summary>
 	/// ゲームプレイシステムの更新処理を行います。
 	/// </summary>
-	/// <param name="dt"></param>
-	/// <param name="scaledDt"></param>
+	/// <param name="dt">生のデルタタイム（タイムスケール未適用、秒）</param>
+	/// <param name="scaledDt">タイムスケール適用後のデルタタイム（秒）</param>
 	void UpdateGameplaySystems(float dt, float scaledDt);
 	/// <summary>
 	/// トランジションとシーンチェンジの更新処理を行います。
 	/// </summary>
-	/// <param name="dt"></param>
+	/// <param name="dt">前フレームからの経過時間（秒）</param>
 	void UpdateTransitionsAndSceneChange(float dt);
 	/// <summary>
 	/// デバッグキーとリクエストの処理を行います。

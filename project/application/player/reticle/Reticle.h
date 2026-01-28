@@ -30,14 +30,14 @@ public:
 	~Reticle() = default;
 
 	/// <summary>
-	/// レティクルの一層分
+	/// レティクルの一層分を初期化します。
 	/// </summary>
-	/// <param name="common"></param>
-	/// <param name="dx"></param>
-	/// <param name="modelBig"></param>
-	/// <param name="modelMid"></param>
-	/// <param name="modelSmall"></param>
-	/// <param name="modelFar"></param>
+	/// <param name="common">Object3d の共通管理クラス</param>
+	/// <param name="dx">DirectX 共通管理クラス</param>
+	/// <param name="modelBig">近距離用のレティクルモデル</param>
+	/// <param name="modelMid">中距離用のレティクルモデル</param>
+	/// <param name="modelSmall">遠距離用のレティクルモデル</param>
+	/// <param name="modelFar">最遠距離用のレティクルモデル（small の流用）</param>
 	void Initialize(
 		TKM::Object3dCommon* common,
 		TKM::DirectXCommon* dx,
@@ -45,8 +45,7 @@ public:
 		const char* modelMid = "reticle_normal.obj",
 		const char* modelSmall = "reticle_small.obj",
 		const char* modelFar = "reticle_small.obj" // 4枚目は small 流用
-	)
-	{
+	) {
 		common_ = common;
 		dx_ = dx;
 
@@ -64,9 +63,9 @@ public:
 		initLayer(layers_[3], modelFar);   // 一番奥
 	}
 	/// <summary>
-	/// 毎フレーム更新
+	/// 毎フレームの更新処理を行います。
 	/// </summary>
-	/// <param name="dt"></param>
+	/// <param name="dt">前フレームからの経過時間（秒）</param>
 	void Update(float dt) {
 		if (!visible_ || !getPos_ || !getYaw_) return;
 
@@ -202,9 +201,9 @@ public:
 		}
 	}
 	/// <summary>
-	/// 描画
+	/// レティクルを描画します。
 	/// </summary>
-	/// <param name="dx"></param>
+	/// <param name="dx">DirectX 共通管理クラス</param>
 	void Draw(TKM::DirectXCommon* dx) {
 		if (!visible_) return;
 		for (auto& L : layers_) {
@@ -213,14 +212,14 @@ public:
 	}
 
 	/// <summary>
-	/// 所有者情報のバインド
+	/// 所有者（追従対象）の情報をバインドします。
 	/// </summary>
-	/// <param name="getWorldPos"></param>
-	/// <param name="getYawRad"></param>
+	/// <param name="getWorldPos">所有者のワールド位置を取得する関数</param>
+	/// <param name="getYawRad">所有者のヨー角（ラジアン）を取得する関数</param>
 	void BindOwner(
 		std::function<Vector3(void)> getWorldPos,
-		std::function<float(void)>   getYawRad)
-	{
+		std::function<float(void)>   getYawRad
+	) {
 		getPos_ = std::move(getWorldPos);
 		getYaw_ = std::move(getYawRad);
 	}
@@ -247,9 +246,10 @@ public:
 	// ==============================================
 	// Setter========================================
 	/// <summary>
-	/// カメラ設定
+	/// 使用するカメラを設定します。
+	/// レティクルの全レイヤーに同じカメラを適用します。
 	/// </summary>
-	/// <param name="cam"></param>
+	/// <param name="cam">描画に使用するカメラ</param>
 	void SetCamera(TKM::Camera* cam) {
 		cam_ = cam;
 		for (auto& L : layers_) {

@@ -14,7 +14,6 @@
 #include "MyMath.h"
 
 namespace TKM {
-
 	class BossHpBarUI {
 	public:
 		struct Desc {
@@ -47,8 +46,39 @@ namespace TKM {
 			std::string shardTex_ = "./resources/damageSpark.png";    // 仮（差し替えOK）
 		};
 
-	public:
+		/// <summary>
+		/// ボスHPバーUIを初期化します。
+		/// </summary>
+		/// <param name="spriteCommon">スプライト共通管理クラス</param>
+		/// <param name="dxCommon">DirectX 共通管理クラス</param>
+		/// <param name="parentScene">所属する親シーン</param>
+		/// <param name="desc">UIの設定（テクスチャ、色、サイズなど）</param>
 		void Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, BaseScene* parentScene, const Desc& desc);
+		/// <summary>
+		/// ボスHPバーUIを更新します。
+		/// BossManager::Update() から呼び出されます。
+		/// </summary>
+		/// <param name="dt">前フレームからの経過時間（秒）</param>
+		/// <param name="boss">HP参照対象となるボス（nullptr の場合は更新しません）</param>
+		void Update(float dt, BossEnemy* boss);
+		/// <summary>
+		/// ボスHPバーUIを描画します。
+		/// GameScene の Sprite パスから呼び出されます。
+		/// </summary>
+		void Draw();
+
+		// Getter=====================================
+		/// <summary>
+		/// </summary>設定情報の取得。
+		/// </summary>
+		/// <returns></returns>
+		Desc& GetDesc() { return desc_; }
+		// ===========================================
+		// Settet=====================================
+		/// <summary>
+		/// UIの表示/非表示を設定します。
+		/// </summary>
+		/// <param name="v">表示する場合 true、非表示の場合 false</param>
 		void SetVisible(bool v) {
 			visible_ = v;
 			// ボス戦開始などで再表示したとき、HP同期を取り直す
@@ -60,13 +90,7 @@ namespace TKM {
 				hitPulse_ = 0.0f;
 			}
 		}
-
-		// BossManager::Update() から呼ぶ
-		void Update(float dt, BossEnemy* boss);
-		// GameSceneのSpriteパスから呼ぶ
-		void Draw();
-
-		Desc& GetDesc() { return desc_; }
+		// ===========================================
 
 	private:
 		struct Shard {
@@ -79,11 +103,30 @@ namespace TKM {
 			bool alive_ = false;
 		};
 
-	private:
-		float RandRange_(float a, float b) { return a + (b - a) * MyMath::Rand01(); }
+		/// <summary>
+		/// 指定した範囲内の乱数を生成します。
+		/// </summary>
+		/// <param name="a">最小値</param>
+		/// <param name="b">最大値</param>
+		/// <returns>a 以上 b 以下の乱数値</returns>
+		float RandRange_(float a, float b) {
+			return a + (b - a) * MyMath::Rand01();
+		}
 
+		/// <summary>
+		/// 破片（シャード）を指定セグメント範囲で生成します。
+		/// </summary>
+		/// <param name="segBegin">生成開始セグメント番号</param>
+		/// <param name="segEnd">生成終了セグメント番号</param>
 		void SpawnShards_(int segBegin, int segEnd);
 
+		/// <summary>
+		/// 2つの色を線形補間します。
+		/// </summary>
+		/// <param name="a">開始色</param>
+		/// <param name="b">終了色</param>
+		/// <param name="t">補間係数（0.0〜1.0）</param>
+		/// <returns>補間後の色</returns>
 		static Vector4 LerpColor_(const Vector4& a, const Vector4& b, float t) {
 			t = std::clamp(t, 0.0f, 1.0f);
 			return {
@@ -94,7 +137,6 @@ namespace TKM {
 			};
 		}
 
-	private:
 		SpriteCommon* spriteCommon_ = nullptr;
 		DirectXCommon* dxCommon_ = nullptr;
 		BaseScene* parentScene_ = nullptr;
@@ -128,5 +170,4 @@ namespace TKM {
 		// 破片
 		std::vector<Shard> shards_;
 	};
-
 } // namespace TKM

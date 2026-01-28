@@ -20,20 +20,20 @@ public:
 	~MidBossCore() = default;
 
 	/// <summary>
-	/// 敵を初期化します。
+	/// 敵オブジェクトを初期化します。
 	/// </summary>
-	/// <param name="common"></param>
-	/// <param name="dxCommon"></param>
+	/// <param name="common">Object3d の共通管理クラス</param>
+	/// <param name="dxCommon">DirectX 共通管理クラス</param>
 	void Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon);
 	/// <summary>
-	/// 敵を更新します。
+	/// 敵の更新処理を行います。
 	/// </summary>
-	/// <param name="dt"></param>
+	/// <param name="dt">前フレームからの経過時間（秒）</param>
 	void Update(float dt);
 	/// <summary>
 	/// 敵を描画します。
 	/// </summary>
-	/// <param name="dxCommon"></param>
+	/// <param name="dxCommon">DirectX 共通管理クラス</param>
 	void Draw(TKM::DirectXCommon* dxCommon);
 
 	/// <summary>
@@ -52,14 +52,14 @@ public:
 	bool IsDying() const { return isDying_; }
 
 	/// <summary>
-	/// 特殊攻撃でダメージを指定して当たったときの処理。
+	/// 特殊攻撃によってダメージを受けたときの処理を行います。
 	/// </summary>
-	/// <param name="damage"></param>
+	/// <param name="damage">受けるダメージ量</param>
 	void OnHitWithDamage(int damage);
 	/// <summary>
 	/// 敵の死亡リアクションを開始します。
 	/// </summary>
-	/// <param name="hitDir"></param>
+	/// <param name="hitDir">被弾方向（正規化ベクトル）</param>
 	void StartDeathReaction(const Vector3& hitDir);
 	/// <summary>
 	/// モデルの変換情報を同期します。

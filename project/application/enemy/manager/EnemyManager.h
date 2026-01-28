@@ -29,81 +29,75 @@ public:
 	enum class WavePhase { W1, W2, W3, Done };
 
 	/// <summary>
-	/// 敵全体の初期化
+	/// 敵全体の初期化を行います。
 	/// </summary>
-	/// <param name="dx"></param>
-	/// <param name="camera"></param>
-	/// <param name="parent"></param>
-	/// <param name="player"></param>
+	/// <param name="dx">DirectX 共通管理クラス</param>
+	/// <param name="camera">描画および判定に使用するカメラ</param>
+	/// <param name="parent">所属する親シーン</param>
+	/// <param name="player">参照対象となるプレイヤー</param>
 	void Initialize(TKM::DirectXCommon* dx, TKM::Camera* camera, TKM::BaseScene* parent, Player* player);
-
 	/// <summary>
-	/// 敵全体の更新
+	/// 敵全体の更新処理を行います。
 	/// </summary>
-	/// <param name="dt"></param>
+	/// <param name="dt">前フレームからの経過時間（秒）</param>
 	void Update(float dt);
-
 	/// <summary>
-	/// 敵全体の描画
+	/// 敵全体の描画処理を行います。
 	/// </summary>
-	/// <param name="dx"></param>
+	/// <param name="dx">DirectX 共通管理クラス</param>
 	void Draw(TKM::DirectXCommon* dx);
 
 	/// <summary>
-	/// デバッグ用ImGui表示
+	/// ImGui によるデバッグ情報を表示します。
 	/// </summary>
 	void ImGuiDebug();
 
 	/// <summary>
-	/// 敵リストをバインドします
+	/// 外部で管理している敵リストとカウント情報をバインドします。
 	/// </summary>
-	/// <param name="enemies"></param>
-	/// <param name="defeatedEnemyCount"></param>
-	/// <param name="maxEnemyCount"></param>
-	void BindEnemies(std::vector<std::unique_ptr<Enemy>>* enemies,
+	/// <param name="enemies">敵リスト（外部所有）</param>
+	/// <param name="defeatedEnemyCount">撃破数カウンタ（外部所有）</param>
+	/// <param name="maxEnemyCount">最大敵数カウンタ（外部所有）</param>
+	void BindEnemies(
+		std::vector<std::unique_ptr<Enemy>>* enemies,
 		int* defeatedEnemyCount,
-		int* maxEnemyCount);
-
+		int* maxEnemyCount
+	);
 	/// <summary>
-	/// プレイヤーに最も近い敵を更新します
+	/// プレイヤーに最も近い敵情報を更新します。
 	/// </summary>
 	void UpdateClosestEnemy();
-
 	/// <summary>
-	/// Wave 初期化（GameScene::InitializeWaves 相当）
+	/// Wave を初期化します（GameScene::InitializeWaves 相当）。
 	/// </summary>
 	void InitializeWaves();
-
 	/// <summary>
-	/// 現在の wavePhase_ に応じて敵をスポーンします（GameScene::SpawnCurrentWave 相当）
+	/// 現在の wavePhase_ に応じて敵をスポーンします（GameScene::SpawnCurrentWave 相当）。
 	/// </summary>
 	void SpawnCurrentWave();
-
 	/// <summary>
-	/// wavePhase_ を進めます（GameScene::GoToNextWave 相当）
+	/// wavePhase_ を次へ進めます（GameScene::GoToNextWave 相当）。
 	/// </summary>
 	void GoToNextWave();
-
 	/// <summary>
-	/// 生存している敵が存在するかどうかを判定して返します。
+	/// 生存している敵が存在するかどうかを取得します。
 	/// </summary>
-	/// <returns>生存している敵が1体以上いる場合は true、そうでない場合は false を返します。</returns>
+	/// <returns>生存している敵が1体以上いる場合 true、それ以外は false</returns>
 	bool HasAliveEnemies() const { return enemies_ && !enemies_->empty(); }
-
 	/// <summary>
-	/// 全Waveクリア済みかどうかを取得します
+	/// 全 Wave が完了しているかどうかを取得します。
 	/// </summary>
-	/// <returns></returns>
-	bool IsAllWavesCleared() const { return (wavePhase_ == WavePhase::Done) && (!enemies_ || enemies_->empty()); }
-
+	/// <returns>全 Wave 完了の場合 true、それ以外は false</returns>
+	bool IsAllWavesCleared() const {
+		return (wavePhase_ == WavePhase::Done) && (!enemies_ || enemies_->empty());
+	}
 	/// <summary>
-	/// 全Waveクリア済みかどうかを取得します
+	/// Wave が完了状態（Done）かどうかを取得します。
 	/// </summary>
-	/// <returns></returns>
+	/// <returns>Wave が Done の場合 true、それ以外は false</returns>
 	bool IsWaveDone() const { return wavePhase_ == WavePhase::Done; }
-
 	/// <summary>
-	/// デバッグ用：即座にボスWave（Done）へスキップします
+	/// デバッグ用：即座にボス Wave（Done）へスキップします。
 	/// </summary>
 	void SkipToBossWave();
 
@@ -121,16 +115,17 @@ public:
 	// ================================================================================
 	// Setter==========================================================================
 	/// <summary>
-	/// カメラを設定します
+	/// 使用するカメラを設定します。
+	/// 敵およびミッドボス核にも同じカメラを適用します。
 	/// </summary>
-	/// <param name="camera"></param>
+	/// <param name="camera">描画および判定に使用するカメラ</param>
 	void SetCamera(TKM::Camera* camera) {
 		cam_ = camera;
 		for (auto& e : *enemies_) { // 敵全員にカメラをセット
-			if (e) e->SetCamera(cam_); // 敵にもカメラをセット
+			if (e) e->SetCamera(cam_);
 		}
 		if (midBossCore_) { // 蘇生核にもカメラをセット
-			midBossCore_->SetCamera(cam_); // 蘇生核にもカメラをセット
+			midBossCore_->SetCamera(cam_);
 		}
 	}
 	// ================================================================================
@@ -149,9 +144,9 @@ public:
 	void SpawnWave2_FastColumn();
 private:
 	/// <summary>
-	/// 敵をプレイヤー向けにセットアップします
+	/// 敵をプレイヤーを対象とした挙動用にセットアップします。
 	/// </summary>
-	/// <param name="e"></param>
+	/// <param name="e">セットアップ対象となる敵</param>
 	void SetupEnemyForPlayer(Enemy& e);
 
 	//======================================================================
@@ -180,9 +175,9 @@ private:
 	int   wave1MaxSimultaneous_ = 2;    // 同時に存在してよい敵の数
 	int   wave1DefeatTarget_ = 5;    // このWaveで「倒すべき敵の数」
 	/// <summary>
-	/// Wave1の更新
+	/// Wave1 の更新処理を行います。
 	/// </summary>
-	/// <param name="dt"></param>
+	/// <param name="dt">前フレームからの経過時間（秒）</param>
 	void UpdateWave1(float dt);
 	/// <summary>
 	/// Wave1の敵を1体スポーンします
@@ -196,14 +191,16 @@ private:
 	float wave2WaitTimer_ = 0.0f;   // 待機タイマー
 	float wave2WaitDuration_ = 1.5f;   // 好きな秒数にできる
 	bool  wave2Waiting_ = false;  // 待機中フラグ
+	int   wave2SubWaveCount_ = 3; // サブウェーブ数
 	/// <summary>
-	/// Wave2の更新
+	/// Wave2 の更新処理を行います。
 	/// </summary>
+	/// <param name="dt">前フレームからの経過時間（秒）</param>
 	void UpdateWave2(float dt);
 	/// <summary>
-	/// Wave2のサブウェーブをスポーンします
+	/// Wave2 のサブウェーブをスポーンします。
 	/// </summary>
-	/// <param name="id"></param>
+	/// <param name="id">スポーンするサブウェーブの識別子</param>
 	void SpawnWave2SubWave(int id);
 	//======================================================================
 	// Wave3（中ボスステージ） 関連
@@ -215,13 +212,14 @@ private:
 	float wave3CoreLifetime_ = 5.0f;  // 核が生きていれば蘇生成立（秒）
 	int   wave3CoreHP_ = 5;     // 核のHP（あとで調整用）
 	int   wave3PrevAliveMidBossCount_ = 0; // 前フレームの生存中中ボス数
+	float wave3AngryDuration_ = 8.0f; // 中ボス怒り時間
 	// 中ボスの定位置（左右 2 体）※必要ならあとで ImGui 化
 	Vector3 wave3LeftPos_ = { -12.0f, 6.0f, 80.0f };
 	Vector3 wave3RightPos_ = { 12.0f, 6.0f, 80.0f };
 	/// <summary>
-	/// Wave3の更新
+	/// Wave3 の更新処理を行います。
 	/// </summary>
-	/// <param name="dt"></param>
+	/// <param name="dt">前フレームからの経過時間（秒）</param>
 	void UpdateWave3(float dt);
 	/// <summary>
 	/// Wave3の中ボスステージ用の中ボスをスポーンします
@@ -241,8 +239,6 @@ private:
 	// デバッグ系フラグ
 	//======================================================================
 	bool freezeEnemies_ = false; // デバッグ用：敵移動停止フラグ
-
-
 
 	using SpawnFn = void (EnemyManager::*)();
 	using UpdateFn = void (EnemyManager::*)(float);
@@ -266,7 +262,6 @@ private:
 	/// Wave3の開始
 	/// </summary>
 	void BeginWave3();
-
 	// =====================================================================
 	// 敵ウェーブ設定データ
 	// =====================================================================
