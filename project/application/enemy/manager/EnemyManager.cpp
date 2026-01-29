@@ -3,6 +3,10 @@
 #include "MyMath.h"
 #include "manager/BossManager.h"
 
+#ifdef USE_IMGUI
+#include "imgui.h"
+#endif
+
 const EnemyManager::WaveOps EnemyManager::kWaveOps_[4] = {
 	/* W1  */ { &EnemyManager::BeginWave1, &EnemyManager::UpdateWave1 },
 	/* W2  */ { &EnemyManager::BeginWave2, &EnemyManager::UpdateWave2 },

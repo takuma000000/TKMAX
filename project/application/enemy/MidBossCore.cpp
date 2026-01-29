@@ -3,6 +3,10 @@
 #include "ModelManager.h"
 #include <algorithm>
 
+#ifdef USE_IMGUI
+#include "imgui.h"
+#endif
+
 void MidBossCore::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon) {
 	object_ = std::make_unique<TKM::Object3d>();
 	object_->Initialize(common, dxCommon);

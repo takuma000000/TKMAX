@@ -1,6 +1,10 @@
 #include "PostEffectController.h"
 #include "MyMath.h"
 
+#ifdef USE_IMGUI
+#include "imgui.h"
+#endif
+
 namespace TKM {
 	void PostEffectController::Initialize(DirectXCommon* dxCommon, Player* player, BossManager* bossManager) {
 		dxCommon_ = dxCommon;

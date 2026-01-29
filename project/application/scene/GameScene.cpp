@@ -4,6 +4,10 @@
 #include <algorithm>
 #include <psapi.h>
 
+#ifdef USE_IMGUI
+#include "imgui.h"
+#endif
+
 using namespace TKM;
 
 void GameScene::Initialize() {

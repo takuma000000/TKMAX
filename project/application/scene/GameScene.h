@@ -13,10 +13,6 @@
 #include "Input.h"
 #include "PauseMenuController.h"
 
-#ifdef USE_IMGUI
-#include "imgui.h"
-#endif
-
 //=============================================================
 // GameSceneクラス
 // ゲーム本編を管理するシーンクラス。

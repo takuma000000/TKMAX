@@ -14,10 +14,6 @@
 #include "reticle/Reticle.h"
 #include "LineRenderer.h"
 
-#ifdef USE_IMGUI
-#include "imgui.h"
-#endif
-
 class MidBossCore;
 namespace TKM {
 	class RadialBlurEffect;

@@ -4,6 +4,10 @@
 #include <limits>
 #include "RadialBlurEffect.h"
 
+#ifdef USE_IMGUI
+#include "imgui.h"
+#endif
+
 void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon) {
 	common_ = common; // Object3d共通
 	dxCommon_ = dxCommon; // DirectX共通

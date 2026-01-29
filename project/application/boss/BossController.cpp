@@ -1,6 +1,10 @@
 #include "BossController.h"
 #include <cmath>
 
+#ifdef USE_IMGUI
+#include "imgui.h"
+#endif
+
 void BossController::Initialize(const Vector3& arenaMin, const Vector3& arenaMax) {
 	arenaMin_ = arenaMin;
 	arenaMax_ = arenaMax;

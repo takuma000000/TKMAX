@@ -2,7 +2,6 @@
 #include "ParticleManager.h"
 
 namespace TKM {
-
 	class ParticleGroupsCatalog {
 	public:
 
@@ -13,5 +12,4 @@ namespace TKM {
 		static void RegisterGameScene(ParticleManager* pm);
 
 	};
-
 }

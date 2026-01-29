@@ -16,10 +16,6 @@
 #include "camera/Camera.h"
 #include "MyMath.h"
 
-#ifdef USE_IMGUI
-#include "imgui.h"
-#endif
-
 namespace TKM {
 	class PostEffectController {
 	public:

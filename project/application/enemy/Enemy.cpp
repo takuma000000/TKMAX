@@ -5,6 +5,10 @@
 #include <cstdlib> 
 #include <AABB.h>
 
+#ifdef USE_IMGUI
+#include "imgui.h"
+#endif
+
 void Enemy::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon) {
 	object_ = std::make_unique<TKM::Object3d>(); // Object3d のインスタンスを生成
 	object_->Initialize(common, dxCommon); // 初期化

@@ -12,10 +12,6 @@
 #include "MidBossCore.h"
 #include "EnemyWaveConfig.h"
 
-#ifdef USE_IMGUI
-#include "imgui.h"
-#endif
-
 // =============================================================
 // EnemyManagerクラス
 // 敵全体の管理を行うクラス。

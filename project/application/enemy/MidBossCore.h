@@ -10,10 +10,6 @@
 #include "MyMath.h"
 #include "reticle/Reticle.h"
 
-#ifdef USE_IMGUI
-#include "imgui.h"
-#endif
-
 class MidBossCore {
 public:
 	MidBossCore() = default;

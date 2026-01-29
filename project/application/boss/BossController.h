@@ -5,10 +5,6 @@
 #include "MyMath.h"
 #include "AuraVolumeRenderer.h"
 
-#ifdef USE_IMGUI
-#include "imgui.h"
-#endif
-
 // =============================================================
 // BossControllerクラス
 // ボス敵の行動制御を行うクラス。
