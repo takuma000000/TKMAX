@@ -176,11 +176,6 @@ void EnemyManager::GoToNextWave() {
 }
 
 void EnemyManager::SkipToBossWave() {
-	// 敵リストがバインドされていなければ何もしない
-	if (!&enemies_) {
-		return;
-	}
-
 	// いま居るザコ敵は全部消す
 	enemies_.clear();
 
