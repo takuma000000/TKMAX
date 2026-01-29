@@ -58,6 +58,9 @@ void GameScene::Initialize() {
 	/// ──────────────── ゲームフローの初期化 ───────────────
 	clearSeq_ = std::make_unique<TKM::ClearSequenceController>();
 	clearSeq_->Initialize(camera_.get(), player_.get(), bossManager_.get(), flow_.get(), dxCommon_, skybox_.get(), fireworkController_.get());
+	if (flow_) {
+		flow_->BindClearSequence(clearSeq_.get());
+	}
 }
 
 void GameScene::Finalize() {
@@ -79,27 +82,14 @@ void GameScene::Update() {
 
 	BeginFrameUpdate(rawDt, scaledDt); // フレーム開始処理
 
-	// クリア演出更新
-	if (flow_ && flow_->UpdateClear(rawDt, scaledDt,
-		clearSeq_.get(),
-		postFx_.get(),
-		ui_.get(),
-		bossManager_.get(),
-		camera_.get(),
-		player_.get())) {
-
-		// Clear完了でToGameClearが返るので、ここでシーン遷移も処理する
-		UpdateTransitionsAndSceneChange(rawDt);
-
-		// クリア中でもパフォ情報は更新（元の挙動と同じ）
-		UpdatePerformanceInfo();
-		return;
+	if (flow_ && flow_->UpdateClear(rawDt, scaledDt, postFx_.get(), ui_.get(), bossManager_.get(), camera_.get(), player_.get())) { // クリアシーケンス更新
+		return; // クリアシーケンス中は他の更新をスキップ
 	}
 
-	UpdateFlow();
+	UpdateFlow(); // ゲーム進行フロー更新
 
 	// Intro等でロック中はポーズを開けない（誤動作防止）
-	const bool isClear = (clearSeq_ && clearSeq_->IsActive());
+	const bool isClear = (flow_ && flow_->IsInClear());
 	const bool locked = (flow_ && flow_->IsGameplayLocked()) || isClear;
 	const bool allowPauseOpen = !locked;
 
@@ -160,7 +150,7 @@ void GameScene::Draw() {
 		enemyManager_->Draw(dxCommon_); // 敵群の描画を EnemyManager に委譲
 	}
 
-	const bool isClear = (clearSeq_ && clearSeq_->IsActive()); // クリア演出中かどうか
+	const bool isClear = (flow_ && flow_->IsInClear()); // クリアシーケンス中か？
 	if (!isClear) {
 		if (bossManager_) {
 			bossManager_->Draw(dxCommon_);
@@ -377,15 +367,14 @@ void GameScene::ImGuiDebug() {
 }
 
 void GameScene::UpdateAirStreak(float dt) {
-	if (!player_) { return; }
-
+	if (!player_) { return; } // プレイヤーがいないなら何もしない
+	// プレイヤーの速度を取得
 	airStreakTimer_ += dt;
-
 	// どれくらいの密度で出すか（小さいほど密度↑）
 	const float emitInterval = 0.02f; // 0.02秒ごと ≒ 1秒あたり50個
 
-	while (airStreakTimer_ >= emitInterval) {
-		airStreakTimer_ -= emitInterval;
+	while (airStreakTimer_ >= emitInterval) { // 一定時間経過したら出す
+		airStreakTimer_ -= emitInterval; // タイマーリセット
 
 		// カメラ基準ベクトル
 		const Matrix4x4 camW = camera_->GetWorldMatrix();
@@ -393,9 +382,8 @@ void GameScene::UpdateAirStreak(float dt) {
 		Vector3 camFwd = MyMath::Normalize(Vector3{ camW.m[2][0], camW.m[2][1], camW.m[2][2] });
 		Vector3 camRight = MyMath::Normalize(Vector3{ camW.m[0][0], camW.m[0][1], camW.m[0][2] });
 		Vector3 camUp = MyMath::Normalize(Vector3{ camW.m[1][0], camW.m[1][1], camW.m[1][2] });
-
+		// 乱数生成ラムダ
 		auto rand01 = []() { return MyMath::Rand01(); };
-
 		// ─────────────────────────────
 		// カメラ前方の「巨大な箱」の中に出す
 		// ─────────────────────────────
@@ -411,13 +399,13 @@ void GameScene::UpdateAirStreak(float dt) {
 		float offsetX = 0.0f;
 		float offsetY = 0.0f;
 
-		for (int tries = 0; tries < 4; ++tries) {
-			float u = rand01() * 2.0f - 1.0f; // -1～+1
+		for (int tries = 0; tries < 4; ++tries) { // 最大4回までリトライ
+			// -1～+1 の乱数を生成
+			float u = rand01() * 2.0f - 1.0f;
 			float v = rand01() * 2.0f - 1.0f;
-
+			// スケールして箱内の座標に変換
 			float x = u * boxHalfWidth;
 			float y = v * boxHalfHeight;
-
 			// 中心付近を少しだけ避ける
 			if (x * x + y * y < centerHoleRadius * centerHoleRadius) {
 				// たまになら良いので、25%くらいの確率で許可
@@ -425,7 +413,7 @@ void GameScene::UpdateAirStreak(float dt) {
 					continue; // 取り直し
 				}
 			}
-
+			// 成功したらループ脱出
 			offsetX = x;
 			offsetY = y;
 			break;
@@ -441,8 +429,7 @@ void GameScene::UpdateAirStreak(float dt) {
 			+ camFwd * depth
 			+ camRight * offsetX
 			+ camUp * offsetY;
-
-		ParticleManager::GetInstance()->Emit("airStreak", emitPos, 1);
+		ParticleManager::GetInstance()->Emit("airStreak", emitPos, 1); // airStreakパーティクルを1個出す
 	}
 }
 
@@ -468,7 +455,7 @@ void GameScene::UpdateFlow() {
 }
 
 void GameScene::UpdateEnemyAndWaveLogic(float scaledDt) {
-	const bool isClear = (clearSeq_ && clearSeq_->IsActive()); // クリア演出中かどうか
+	const bool isClear = (flow_ && flow_->IsInClear()); // クリア演出中かどうか
 	const bool locked = (flow_ && flow_->IsGameplayLocked()) || isClear; // ゲームプレイがロックされているかどうか
 
 	// --- 敵とWaveは「ゲーム開始後」だけ動かす ---
@@ -488,9 +475,9 @@ void GameScene::UpdateEnemyAndWaveLogic(float scaledDt) {
 				} else {
 					// ボス撃破 → クリア演出へ
 					if (bossManager_->IsBossDead()) {
-						if (!isClear) {
-							if (flow_) {
-								flow_->RequestStartClear(clearSeq_.get());
+						if (!isClear) { // まだクリア演出始まっていなければ開始
+							if (flow_) { // ゲームフローコントローラー経由でクリアシーケンス開始
+								flow_->RequestStartClear(); // クリアシーケンス開始リクエスト
 							}
 							return;
 						}
@@ -509,7 +496,7 @@ void GameScene::UpdateEnemyAndWaveLogic(float scaledDt) {
 }
 
 void GameScene::UpdateGameplaySystems(float dt, float scaledDt) {
-	const bool isClear = (clearSeq_ && clearSeq_->IsActive()); // クリア演出中かどうか
+	const bool isClear = (flow_ && flow_->IsInClear()); // クリア演出中かどうか
 	const bool locked = (flow_ && flow_->IsGameplayLocked()) || isClear; // ゲームプレイがロックされているかどうか
 
 	if (!enemyManager_) {
@@ -550,18 +537,18 @@ void GameScene::UpdateTransitionsAndSceneChange(float dt) {
 	if (flow_) {
 		const auto req = flow_->UpdateTransitions(dt, player_.get());
 
-		if (req == TKM::GameFlowController::TransitionRequest::ToTitle) {
-			sceneManager_->SetNextScene(new TitleScene(dxCommon_, srvManager_));
+		if (req == TKM::GameFlowController::TransitionRequest::ToTitle) { // タイトル戻りリクエスト
+			sceneManager_->SetNextScene(new TitleScene(dxCommon_, srvManager_)); // タイトルシーンをセット
 			return;
 		}
 
-		if (req == TKM::GameFlowController::TransitionRequest::ToGameOver) {
-			sceneManager_->SetNextScene(new GameOverScene(dxCommon_, srvManager_));
+		if (req == TKM::GameFlowController::TransitionRequest::ToGameOver) { // ゲームオーバーリクエスト
+			sceneManager_->SetNextScene(new GameOverScene(dxCommon_, srvManager_)); // ゲームオーバーシーンをセット
 			return;
 		}
 
-		if (req == TKM::GameFlowController::TransitionRequest::ToGameClear) {
-			sceneManager_->SetNextScene(new GameClearScene(dxCommon_, srvManager_));
+		if (req == TKM::GameFlowController::TransitionRequest::ToGameClear) { // ゲームクリアリクエスト
+			sceneManager_->SetNextScene(new GameClearScene(dxCommon_, srvManager_)); // ゲームクリアシーンをセット
 			return;
 		}
 	}
@@ -569,7 +556,7 @@ void GameScene::UpdateTransitionsAndSceneChange(float dt) {
 
 void GameScene::HandleDebugKeysAndRequests() {
 	if (!enemyManager_) {
-		return;
+		return; // 敵マネージャがないなら何もしない
 	}
 
 	// ─── キーボードのYキーでプレイヤーのHPを0にする（デバッグ用）───
@@ -587,7 +574,7 @@ void GameScene::HandleDebugKeysAndRequests() {
 
 void GameScene::EndFrameUpdate() {
 	if (!enemyManager_) {
-		return;
+		return; // 敵マネージャがないなら何もしない
 	}
 
 	// パフォーマンス情報・デバッグUI

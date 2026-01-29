@@ -101,44 +101,48 @@ namespace TKM {
 		);
 	}
 
-	bool GameFlowController::UpdateClear(float rawDt, float scaledDt, ClearSequenceController* clearSeq, PostEffectController* postFx, UIController* ui, BossManager* bossManager, Camera* camera, Player* player) {
-		if (!clearSeq || !clearSeq->IsActive()) {
+	void GameFlowController::BindClearSequence(ClearSequenceController* clearSeq) {
+		clearSeq_ = clearSeq; // クリアシーケンスコントローラをバインド
+	}
+
+	bool GameFlowController::IsInClear() const {
+		return (clearSeq_ && clearSeq_->IsActive()); // クリアシーケンスがアクティブか？
+	}
+
+	bool GameFlowController::UpdateClear(float rawDt, float scaledDt, PostEffectController* postFx, UIController* ui, BossManager* bossManager, Camera* camera, Player* player) {
+		if (!clearSeq_ || !clearSeq_->IsActive()) {
 			return false; // クリア中じゃない
 		}
 
 		// クリア演出本体（スロー非依存）
-		const bool finished = clearSeq->Update(rawDt);
+		const bool finished = clearSeq_->Update(rawDt);
 
 		// クリア中でも動かしたいもの（止めない）
 		ParticleManager::GetInstance()->Update(scaledDt);
 
-		if (postFx) {
-			postFx->Update(scaledDt, bossManager);
-			if (camera) {
-				postFx->OnCameraUpdated(camera);
+		if (postFx) { // ポストエフェクト更新
+			postFx->Update(scaledDt, bossManager); // ボスマネージャ参照
+			if (camera) { // カメラ更新通知
+				postFx->OnCameraUpdated(camera); // カメラ更新通知
 			}
 		}
-
-		if (ui) {
-			ui->Update(scaledDt, player);
+		if (ui) { // UI更新
+			ui->Update(scaledDt, player); // プレイヤー参照
 		}
-
-		// 完了したら「遷移要求」を溜める（GameScene側でSetNextSceneする）
-		if (finished) {
-			pendingRequest_ = TransitionRequest::ToGameClear;
+		if (finished) { // クリアシーケンス完了
+			pendingRequest_ = TransitionRequest::ToGameClear; // 遷移要求セット
 		}
 
 		return true; // クリア中なので “処理済み”
 	}
 
-	void GameFlowController::RequestStartClear(ClearSequenceController* clearSeq) {
-		if (!clearSeq) { return; }
-		clearSeq->Start();
+	void GameFlowController::RequestStartClear() {
+		if (!clearSeq_) { return; } // バインドされていない
+		clearSeq_->Start(); // クリアシーケンス開始
 	}
 
 	bool GameFlowController::IsGameplayLocked() const {
-		// Intro中ロック（いまの責務）
-		return gameplayLocked_;
+		return gameplayLocked_ || IsInClear(); // クリア中もロック
 	}
 
 	void GameFlowController::SetExternalIrisDraw(bool enable) {

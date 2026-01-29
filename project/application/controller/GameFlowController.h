@@ -61,13 +61,11 @@ namespace TKM {
 		/// アイリスクローズによってタイトルへ戻るリクエストを出します。
 		/// </summary>
 		void RequestToTitleByIris();
-
 		/// <summary>
 		/// クリアシーケンスの更新処理を行います。
 		/// </summary>
 		/// <param name="rawDt">前フレームからの経過時間（未スケール、秒）</param>
 		/// <param name="scaledDt">タイムスケール適用後の経過時間（秒）</param>
-		/// <param name="clearSeq">クリアシーケンスコントローラ</param>
 		/// <param name="postFx">ポストエフェクトコントローラ</param>
 		/// <param name="ui">UI コントローラ</param>
 		/// <param name="bossManager">ボスマネージャ</param>
@@ -77,7 +75,6 @@ namespace TKM {
 		bool UpdateClear(
 			float rawDt,
 			float scaledDt,
-			ClearSequenceController* clearSeq,
 			PostEffectController* postFx,
 			UIController* ui,
 			BossManager* bossManager,
@@ -87,8 +84,12 @@ namespace TKM {
 		/// <summary>
 		/// クリアシーケンス開始のリクエストを出します。
 		/// </summary>
+		void RequestStartClear();
+		/// <summary>
+		/// クリアシーケンスコントローラをバインドします。
+		/// </summary>
 		/// <param name="clearSeq">クリアシーケンスコントローラ</param>
-		void RequestStartClear(ClearSequenceController* clearSeq);
+		void BindClearSequence(ClearSequenceController* clearSeq);
 		/// <summary>
 		/// ゲームプレイがロックされているかを取得します。
 		/// </summary>
@@ -104,7 +105,11 @@ namespace TKM {
 		/// </summary>
 		/// <returns>外部制御する場合 true、それ以外は false</returns>
 		bool IsExternalIrisDraw() const { return externalIrisDraw_; }
-
+		/// <summary>
+		/// アイリスが開いている状態かを取得します。
+		/// </summary>
+		/// <returns></returns>
+		bool IsInClear() const;
 		// Setter=====================================
 		/// <summary>
 		/// アイリス描画を外部から制御するかを設定します。
@@ -147,5 +152,7 @@ namespace TKM {
 		bool externalIrisDraw_ = false; // アイリス描画を外部制御するか
 
 		TransitionRequest pendingRequest_ = TransitionRequest::None; // 保留中の遷移要求
+
+		ClearSequenceController* clearSeq_ = nullptr; // 参照先クリアシーケンスコントローラ
 	};
 } // namespace TKM

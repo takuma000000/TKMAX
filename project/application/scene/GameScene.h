@@ -12,7 +12,6 @@
 #include "ParticleGroupsCatalog.h"
 #include "Input.h"
 #include "PauseMenuController.h"
-#include "manager/BossManager.h"
 
 //=============================================================
 // GameSceneクラス
