@@ -19,25 +19,24 @@ static Vector2 WorldToUV(const Vector3& world, const Matrix4x4& vp) {
 
 namespace { // 無名名前空間
 	BossManager::BossBattleConfig MakeBossConfig() {
-		BossManager::BossBattleConfig c_{};
-		c_.spawnPos_ = { 0.0f, 0.0f, 200.0f };
-
-		c_.arenaMin_ = { -18.0f, 3.0f, 35.0f };
-		c_.arenaMax_ = { 18.0f,12.0f, 70.0f };
-
-		TKM::WaterRippleEffect::RippleDesc d_{};
-		d_.duration_ = 0.35f;
-		d_.radiusMax_ = 1.45f;
-		d_.amplitude_ = 0.10f;
-		d_.frequency_ = 85.0f;
-		d_.width_ = 10.0f;
-		c_.killRipple_ = d_;
-
-		c_.killSlowScale_ = 0.00001f;
-		c_.killSlowDuration_ = 1.7f;
+		// ボス戦設定生成
+		BossManager::BossBattleConfig c_{}; // 設定構造体
+		c_.spawnPos_ = { 0.0f, 0.0f, 200.0f }; // スポーン位置
+		c_.arenaMin_ = { -18.0f, 3.0f, 35.0f }; // アリーナ最小座標
+		c_.arenaMax_ = { 18.0f,12.0f, 70.0f }; // アリーナ最大座標
+		// 撃破時波紋エフェクト設定
+		TKM::WaterRippleEffect::RippleDesc d_{}; // 波紋設定構造体
+		d_.duration_ = 0.35f; // 継続秒
+		d_.radiusMax_ = 1.45f; // 最大半径(UV)
+		d_.amplitude_ = 0.10f; // ゆがみ量
+		d_.frequency_ = 85.0f; // 細かさ
+		d_.width_ = 10.0f; // 帯の幅（大きいほどシャープ）
+		c_.killRipple_ = d_; // 波紋設定代入
+		c_.killSlowScale_ = 0.00001f; // 撃破時スローモーション倍率
+		c_.killSlowDuration_ = 1.7f; // 撃破時スローモーション継続秒
 		return c_;
 	}
-
+	// 定数ボス戦設定
 	const BossManager::BossBattleConfig kBossConfig_ = MakeBossConfig();
 }
 
@@ -73,9 +72,9 @@ void BossManager::Initialize(TKM::DirectXCommon* dxCommon, TKM::Camera* camera, 
 
 	// HPバーUI初期化
 	hpUI_ = std::make_unique<TKM::BossHpBarUI>();
-	TKM::BossHpBarUI::Desc d{};
+	TKM::BossHpBarUI::Desc d{}; // デフォルト設定
 	hpUI_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, parentScene_, d);
-	hpUI_->SetVisible(false);
+	hpUI_->SetVisible(false); // 非表示開始
 }
 
 void BossManager::StartBattle() {
@@ -89,16 +88,16 @@ void BossManager::StartBattle() {
 	// --- ボス本体生成 ---
 	bossBattle_ = true; // ボス戦開始フラグセット
 	bossP2BgmPlayed_ = false; // P2BGM再生フラグリセット
-	
+
 	// ボス生成
 	boss_ = std::make_unique<BossEnemy>();
 	boss_->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_);
 	boss_->SetCamera(camera_);
-	boss_->SetParentScene(parentScene_);
+	boss_->SetParentScene(parentScene_); // 親シーンセット
 
 	// プレイヤー位置取得ラムダ
 	if (player_) {
-		boss_->SetPlayer([this]() {
+		boss_->SetPlayer([this]() { // ラムダ式でプレイヤー位置取得
 			return player_->GetPosition();
 			});
 	}
@@ -117,41 +116,42 @@ void BossManager::StartBattle() {
 }
 
 void BossManager::Update(float dt) {
-	if (!bossBattle_ || !boss_) {
-		UpdateBossBullets();
+	if (!bossBattle_ || !boss_) { // ボス戦未開始またはボス不在
+		UpdateBossBullets(); // ボス弾更新のみ行う
 		return;
 	}
 
 	if (bossController_) {
-		bossController_->Update(dt, *boss_);
+		bossController_->Update(dt, *boss_); // ボス挙動コントローラ更新
 	}
 
 	// --- LaserBeam 更新＆BossControllerのレーザー情報を反映 ---
-	if (laserBeam3D_) {
-		laserBeam3D_->Update(dt);
-
+	if (laserBeam3D_) { // LaserBeam3D 更新
+		laserBeam3D_->Update(dt); // 更新
+		// BossController からレーザー情報取得＆反映
 		LaserInfo li = GetLaserInfo();
+		// 描画用LaserBeam3Dに情報セット
 		auto& d_ = laserBeam3D_->GetDesc();
-		d_.active_ = li.active_;
-		d_.telegraph_ = li.telegraph_;
-		d_.startWS_ = li.startWS_;
-		d_.endWS_ = li.endWS_;
+		d_.active_ = li.active_; // 発射中/予告中フラグ
+		d_.telegraph_ = li.telegraph_; // 予告中フラグ
+		d_.startWS_ = li.startWS_; // 開始座標
+		d_.endWS_ = li.endWS_; // 終了座標
 		d_.radius_ = li.radius_; // 見た目の太さ＝当たり判定半径に一致させる
 	}
-
-	if (hpUI_ && boss_) {
-		hpUI_->Update(dt, boss_.get());
+	// HPバーUI更新
+	if (hpUI_ && boss_) { // HPバーUI更新
+		hpUI_->Update(dt, boss_.get()); // ボスのHP情報を反映
 	}
 
 	// ボス本体更新
 	boss_->Update(dt);
 
 	// ボス撃破ズーム開始（1回だけ）
-	if (!killSeq_.zoomStarted_ && boss_->IsDying()) {
-		if (player_) {
-			player_->StartBossDeathCameraZoom();
+	if (!killSeq_.zoomStarted_ && boss_->IsDying()) { // ボス撃破リアクション開始時
+		if (player_) { // プレイヤー存在確認
+			player_->StartBossDeathCameraZoom(); // 撃破ズーム開始
 		}
-		killSeq_.zoomStarted_ = true;
+		killSeq_.zoomStarted_ = true; // フラグセット
 
 		// 波紋
 		/*if (!killSeq_.rippleTriggered && waterRipple_ && camera_) {
@@ -162,130 +162,129 @@ void BossManager::Update(float dt) {
 		}*/
 
 		// スロー
-		if (!killSeq_.slowTriggered_ && timeScale_) {
-			timeScale_->RequestSlow(kBossConfig_.killSlowScale_, kBossConfig_.killSlowDuration_);
-			killSeq_.slowTriggered_ = true;
+		if (!killSeq_.slowTriggered_ && timeScale_) { // タイムスケールコントローラ存在確認
+			timeScale_->RequestSlow(kBossConfig_.killSlowScale_, kBossConfig_.killSlowDuration_); // スロー要求
+			killSeq_.slowTriggered_ = true; // フラグセット
 		}
 	}
-
+	// ボス弾更新
 	UpdateBossBullets();
 
-#ifdef USE_IMGUI
 	if (bossController_ && boss_) {
-		bossController_->ImGuiDebug(*boss_);
+		bossController_->ImGuiDebug(*boss_); // デバッグ表示
 	}
-#endif
 }
 
 void BossManager::Draw(TKM::DirectXCommon* dxCommon) {
-	if (!bossBattle_ || !boss_) { return; }
+	if (!bossBattle_ || !boss_) { return; } // ボス戦未開始またはボス不在
 
-	boss_->Draw(dxCommon);
+	boss_->Draw(dxCommon); // ボス本体描画
 
-	for (auto& b : bossBullets_) {
-		b->Draw(dxCommon);
+	for (auto& b : bossBullets_) { // ボス弾描画
+		b->Draw(dxCommon); // 描画
 	}
 
 	// --- LaserBeam 描画（空間上） ---
-	if (laserBeam3D_ && camera_) {
-		const Matrix4x4& camW_ = camera_->GetWorldMatrix();
+	if (laserBeam3D_ && camera_) { // LaserBeam3D 描画
+		const Matrix4x4& camW_ = camera_->GetWorldMatrix(); // カメラワールド行列取得
 
-		// ※GameSceneと同じ取り方（translationが m[3]、基底が row0/1/2 前提）
-		Vector3 right_{ camW_.m[0][0], camW_.m[0][1], camW_.m[0][2] };
-		Vector3 up_{ camW_.m[1][0], camW_.m[1][1], camW_.m[1][2] };
-		Vector3 fwd_{ camW_.m[2][0], camW_.m[2][1], camW_.m[2][2] };
-
+		// カメラの向きベクトル抽出
+		Vector3 right_{ camW_.m[0][0], camW_.m[0][1], camW_.m[0][2] }; // 右方向 ベクトル
+		Vector3 up_{ camW_.m[1][0], camW_.m[1][1], camW_.m[1][2] }; // 上方向 ベクトル
+		Vector3 fwd_{ camW_.m[2][0], camW_.m[2][1], camW_.m[2][2] }; // 前方向 ベクトル
+		// ビュープロジェクション行列取得
 		Matrix4x4 vp_ = camera_->GetViewProjectionMatrix();
-		laserBeam3D_->Draw(vp_, right_, up_, fwd_);
+		laserBeam3D_->Draw(vp_, right_, up_, fwd_); // 描画
 	}
 }
 
 void BossManager::DrawUI() {
-	if (hpUI_ && bossBattle_ && boss_ && !boss_->IsDead()) {
-		hpUI_->Draw();
+	if (hpUI_ && bossBattle_ && boss_ && !boss_->IsDead()) { // HPバーUI描画
+		hpUI_->Draw(); // 描画
 	}
 }
 
 void BossManager::SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float speed, int damage, int lifeFrame) {
-	if (!dxCommon_ || !camera_) {
+	if (!dxCommon_ || !camera_) { // 安全確認
 		return;
 	}
 
-	auto bullet_ = std::make_unique<BossBullet>();
-	bullet_->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_, camera_, pos, dir, speed, damage, lifeFrame);
-	bossBullets_.push_back(std::move(bullet_));
+	auto bullet_ = std::make_unique<BossBullet>(); // 弾オブジェクト生成
+	bullet_->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_, camera_, pos, dir, speed, damage, lifeFrame); // 初期化
+	bossBullets_.push_back(std::move(bullet_)); // リストに追加
 }
 
 BossManager::LaserInfo BossManager::GetLaserInfo() const {
+	// BossController からレーザー情報取得
 	LaserInfo li_{};
-	if (!bossController_) { return li_; }
-	li_.active_ = bossController_->IsLaserActive();
-	li_.telegraph_ = bossController_->IsLaserTelegraph();
-	li_.startWS_ = bossController_->GetLaserStartWS();
-	li_.endWS_ = bossController_->GetLaserEndWS();
-	li_.radius_ = bossController_->GetLaserRadius();
+	if (!bossController_) { return li_; } // 安全確認
+	li_.active_ = bossController_->IsLaserActive(); // 発射中/予告中フラグ
+	li_.telegraph_ = bossController_->IsLaserTelegraph(); // 予告中フラグ
+	li_.startWS_ = bossController_->GetLaserStartWS(); // 開始座標
+	li_.endWS_ = bossController_->GetLaserEndWS(); // 終了座標
+	li_.radius_ = bossController_->GetLaserRadius(); // 当たり判定半径
 	return li_;
 }
 
 bool BossManager::TestLaserHit(const LaserInfo& laser, const Vector3& sphereCenterWS, float sphereRadius) {
-	if (!laser.active_) { return false; }
-
-	const Vector3 p0_ = laser.startWS_;
-	const Vector3 p1_ = laser.endWS_;
-	const Vector3 c_ = sphereCenterWS;
-
+	if (!laser.active_) { return false; } // レーザー非アクティブ時は当たらない
+	// レーザー（カプセル）と球体の当たり判定テスト
+	const Vector3 p0_ = laser.startWS_; // レーザー開始点
+	const Vector3 p1_ = laser.endWS_; // レーザー終了点
+	const Vector3 c_ = sphereCenterWS; // 球体中心座標
+	// レーザー線分ベクトル
 	Vector3 d_ = MyMath::Subtract(p1_, p0_);
 	float dlen2_ = MyMath::Dot(d_, d_);
 
-	if (dlen2_ < 1e-6f) {
-		Vector3 dc_ = MyMath::Subtract(c_, p0_);
-		float dist2_ = MyMath::Dot(dc_, dc_);
-		float r_ = laser.radius_ + sphereRadius;
-		return dist2_ <= r_ * r_;
+	if (dlen2_ < 1e-6f) { // レーザーがほぼ点の場合
+		Vector3 dc_ = MyMath::Subtract(c_, p0_); // 球体中心からレーザー点へのベクトル
+		float dist2_ = MyMath::Dot(dc_, dc_); // 距離の二乗
+		float r_ = laser.radius_ + sphereRadius; // 合計半径
+		return dist2_ <= r_ * r_; // 当たっているか？
 	}
-
+	// レーザー線分上の最近接点を求める
 	float t_ = MyMath::Dot(MyMath::Subtract(c_, p0_), d_) / dlen2_;
 	t_ = std::clamp(t_, 0.0f, 1.0f);
-
+	// 最近接点座標
 	Vector3 q_ = MyMath::Add(p0_, MyMath::Multiply(t_, d_));
 	Vector3 cq_ = MyMath::Subtract(c_, q_);
-
+	// 距離の二乗を計算して当たり判定
 	float dist2_ = MyMath::Dot(cq_, cq_);
 	float r_ = laser.radius_ + sphereRadius;
 	return dist2_ <= r_ * r_;
 }
 
 bool BossManager::IsBattleActive() const {
-	return bossBattle_ && boss_ != nullptr && !boss_->IsDead();
+	return bossBattle_ && boss_ != nullptr && !boss_->IsDead(); // ボス戦中かつボス生存中
 }
 
 bool BossManager::IsBossAlive() const {
-	return boss_ && !boss_->IsDead();
+	return boss_ && !boss_->IsDead(); // ボス存在かつ生存中
 }
 
 bool BossManager::IsBossDead() const {
-	return boss_ && boss_->IsDead();
+	return boss_ && boss_->IsDead(); // ボス存在かつ死亡中
 
-	if (hpUI_ && boss_ && boss_->IsDead()) {
-		hpUI_->SetVisible(false);
+	if (hpUI_ && boss_ && boss_->IsDead()) { // ボス死亡時HPバーUI非表示
+		hpUI_->SetVisible(false); // 非表示
 	}
 }
 
 void BossManager::OnClearSequenceStart() {
-	bossBattle_ = false;
-	bossBullets_.clear();
-	boss_.reset();
-	bossController_.reset();
-	bossP2BgmPlayed_ = false;
+	bossBattle_ = false; // ボス戦終了フラグセット
+	bossBullets_.clear(); // ボス弾リストクリアa
+	boss_.reset(); // ボスオブジェクト破棄
+	bossController_.reset(); // ボス挙動コントローラ破棄
+	bossP2BgmPlayed_ = false; // P2BGM再生フラグリセット
 }
 
 void BossManager::UpdateBossBullets() {
-	for (auto it = bossBullets_.begin(); it != bossBullets_.end();) {
-		(*it)->Update();
-		if ((*it)->IsDead()) {
-			it = bossBullets_.erase(it);
+	for (auto it = bossBullets_.begin(); it != bossBullets_.end();) { // ボス弾更新ループ
+		(*it)->Update(); // 更新
+		if ((*it)->IsDead()) { // 死亡していたらリストから削除
+			it = bossBullets_.erase(it); // 削除＆イテレータ更新
 		} else {
-			++it;
+			++it; // イテレータ進行
 		}
 	}
 }
