@@ -224,8 +224,8 @@ TKM::Camera* GameScene::UpdateActiveCamera() {
 	// パーティクルマネージャー適用
 	ParticleManager::GetInstance()->SetCamera(activeCamera);
 
-	if (postFx_) {
-		postFx_->OnCameraUpdated(activeCamera);
+	if (postFx_) { // ポストエフェクト適用
+		postFx_->OnCameraUpdated(activeCamera); // カメラ更新通知
 	}
 
 	return activeCamera; // 呼び出し元にも返す
