@@ -79,8 +79,20 @@ void GameScene::Update() {
 
 	BeginFrameUpdate(rawDt, scaledDt); // フレーム開始処理
 
-	// クリア演出中なら専用処理だけ回して終わり
-	if (UpdateDuringClear(scaledDt)) {
+	// クリア演出更新
+	if (flow_ && flow_->UpdateClear(rawDt, scaledDt,
+		clearSeq_.get(),
+		postFx_.get(),
+		ui_.get(),
+		bossManager_.get(),
+		camera_.get(),
+		player_.get())) {
+
+		// Clear完了でToGameClearが返るので、ここでシーン遷移も処理する
+		UpdateTransitionsAndSceneChange(rawDt);
+
+		// クリア中でもパフォ情報は更新（元の挙動と同じ）
+		UpdatePerformanceInfo();
 		return;
 	}
 
@@ -364,12 +376,6 @@ void GameScene::ImGuiDebug() {
 #endif
 }
 
-void GameScene::StartClearSequence() {
-	if (clearSeq_) {
-		clearSeq_->Start();
-	}
-}
-
 void GameScene::UpdateAirStreak(float dt) {
 	if (!player_) { return; }
 
@@ -455,35 +461,6 @@ void GameScene::BeginFrameUpdate(float& rawDt, float& scaledDt) {
 	UpdateMemory();
 }
 
-bool GameScene::UpdateDuringClear(float scaledDt) {
-	if (!(clearSeq_ && clearSeq_->IsActive())) {
-		return false;
-	}
-
-	// クリア演出本体（スロー非依存）
-	bool finished = clearSeq_->Update(dt_);
-
-	// クリア中でも動かしたいもの（止めない）
-	ParticleManager::GetInstance()->Update(scaledDt);
-
-	if (postFx_) {
-		postFx_->Update(scaledDt, bossManager_.get());
-		postFx_->OnCameraUpdated(camera_.get());
-	}
-
-	if (ui_) {
-		ui_->Update(scaledDt, player_.get());
-	}
-
-	if (finished) {
-		sceneManager_->SetNextScene(new GameClearScene(dxCommon_, srvManager_));
-		return true;
-	}
-
-	UpdatePerformanceInfo();
-	return true;
-}
-
 void GameScene::UpdateFlow() {
 	if (flow_) { // ゲームフローの更新
 		flow_->Update(dt_, camera_.get(), enemiesInitialized_, requestInitEnemies_);
@@ -512,7 +489,9 @@ void GameScene::UpdateEnemyAndWaveLogic(float scaledDt) {
 					// ボス撃破 → クリア演出へ
 					if (bossManager_->IsBossDead()) {
 						if (!isClear) {
-							StartClearSequence();
+							if (flow_) {
+								flow_->RequestStartClear(clearSeq_.get());
+							}
 							return;
 						}
 					}
@@ -578,6 +557,11 @@ void GameScene::UpdateTransitionsAndSceneChange(float dt) {
 
 		if (req == TKM::GameFlowController::TransitionRequest::ToGameOver) {
 			sceneManager_->SetNextScene(new GameOverScene(dxCommon_, srvManager_));
+			return;
+		}
+
+		if (req == TKM::GameFlowController::TransitionRequest::ToGameClear) {
+			sceneManager_->SetNextScene(new GameClearScene(dxCommon_, srvManager_));
 			return;
 		}
 	}

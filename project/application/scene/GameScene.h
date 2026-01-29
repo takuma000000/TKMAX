@@ -12,6 +12,7 @@
 #include "ParticleGroupsCatalog.h"
 #include "Input.h"
 #include "PauseMenuController.h"
+#include "manager/BossManager.h"
 
 //=============================================================
 // GameSceneクラス
@@ -82,10 +83,6 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	TKM::Camera* UpdateActiveCamera();
-	/// <summary>
-	/// クリア演出シーケンスを開始します。
-	/// </summary>
-	void StartClearSequence();
 	// Getter==================================
 	/// <summary>
 	/// カメラのポインタを取得します。
@@ -164,12 +161,6 @@ private:
 	/// <param name="rawDt">生のデルタタイム（補間・スケール未適用、秒）</param>
 	/// <param name="scaledDt">タイムスケール適用後のデルタタイム（参照で更新される、秒）</param>
 	void BeginFrameUpdate(float& rawDt, float& scaledDt);
-	/// <summary>
-	/// クリア演出中の更新処理を行います。
-	/// </summary>
-	/// <param name="scaledDt">タイムスケール適用後のデルタタイム（秒）</param>
-	/// <returns>クリア演出が終了した場合 true、それ以外は false</returns>
-	bool UpdateDuringClear(float scaledDt);
 	/// <summary>
 	/// ゲームフローの更新処理を行います。
 	/// </summary>

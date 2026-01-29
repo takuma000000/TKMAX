@@ -1,4 +1,9 @@
 #include "GameFlowController.h"
+#include "ClearSequenceController.h"
+#include "PostEffectController.h"
+#include "UIController.h"
+#include "manager/BossManager.h"
+#include "ParticleManager.h"
 
 namespace TKM {
 	void GameFlowController::Initialize(DirectXCommon* dxCommon) {
@@ -23,6 +28,13 @@ namespace TKM {
 	}
 
 	GameFlowController::TransitionRequest GameFlowController::UpdateTransitions(float dt, Player* player) {
+		// ─── 保留中の遷移要求があれば優先して返す ───
+		if (pendingRequest_ != TransitionRequest::None) { // 保留中の遷移要求あり
+			const auto req = pendingRequest_; // 退避
+			pendingRequest_ = TransitionRequest::None; // 保留解除
+			return req; // 要求返す
+		}
+
 		// ─── プレイヤー死亡 → GameOver ───
 		if (player && player->IsDead()) {
 			if (!playerDeathStarted_) { // 初回
@@ -87,6 +99,41 @@ namespace TKM {
 			kIrisDurationSec_,
 			Ease::Type::InBack
 		);
+	}
+
+	bool GameFlowController::UpdateClear(float rawDt, float scaledDt, ClearSequenceController* clearSeq, PostEffectController* postFx, UIController* ui, BossManager* bossManager, Camera* camera, Player* player) {
+		if (!clearSeq || !clearSeq->IsActive()) {
+			return false; // クリア中じゃない
+		}
+
+		// クリア演出本体（スロー非依存）
+		const bool finished = clearSeq->Update(rawDt);
+
+		// クリア中でも動かしたいもの（止めない）
+		ParticleManager::GetInstance()->Update(scaledDt);
+
+		if (postFx) {
+			postFx->Update(scaledDt, bossManager);
+			if (camera) {
+				postFx->OnCameraUpdated(camera);
+			}
+		}
+
+		if (ui) {
+			ui->Update(scaledDt, player);
+		}
+
+		// 完了したら「遷移要求」を溜める（GameScene側でSetNextSceneする）
+		if (finished) {
+			pendingRequest_ = TransitionRequest::ToGameClear;
+		}
+
+		return true; // クリア中なので “処理済み”
+	}
+
+	void GameFlowController::RequestStartClear(ClearSequenceController* clearSeq) {
+		if (!clearSeq) { return; }
+		clearSeq->Start();
 	}
 
 	bool GameFlowController::IsGameplayLocked() const {

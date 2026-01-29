@@ -9,13 +9,22 @@
 #include "Sprite.h"
 #include "camera/Camera.h"
 
+class BossManager;
+
 namespace TKM {
+
+	class ClearSequenceController;
+	class PostEffectController;
+	class UIController;
+
 	class GameFlowController {
+
 	public:
 		enum class TransitionRequest {
-			None,
-			ToTitle,
-			ToGameOver,
+			None, // 何もなし
+			ToTitle, // タイトルへ戻る
+			ToGameOver, // ゲームオーバーへ
+			ToGameClear, // ゲームクリアへ
 		};
 
 		/// <summary>
@@ -52,6 +61,34 @@ namespace TKM {
 		/// アイリスクローズによってタイトルへ戻るリクエストを出します。
 		/// </summary>
 		void RequestToTitleByIris();
+
+		/// <summary>
+		/// クリアシーケンスの更新処理を行います。
+		/// </summary>
+		/// <param name="rawDt">前フレームからの経過時間（未スケール、秒）</param>
+		/// <param name="scaledDt">タイムスケール適用後の経過時間（秒）</param>
+		/// <param name="clearSeq">クリアシーケンスコントローラ</param>
+		/// <param name="postFx">ポストエフェクトコントローラ</param>
+		/// <param name="ui">UI コントローラ</param>
+		/// <param name="bossManager">ボスマネージャ</param>
+		/// <param name="camera">使用中のカメラ</param>
+		/// <param name="player">プレイヤー</param>
+		/// <returns>クリアシーケンスが完了した場合 true、それ以外は false</returns>
+		bool UpdateClear(
+			float rawDt,
+			float scaledDt,
+			ClearSequenceController* clearSeq,
+			PostEffectController* postFx,
+			UIController* ui,
+			BossManager* bossManager,
+			Camera* camera,
+			Player* player
+		);
+		/// <summary>
+		/// クリアシーケンス開始のリクエストを出します。
+		/// </summary>
+		/// <param name="clearSeq">クリアシーケンスコントローラ</param>
+		void RequestStartClear(ClearSequenceController* clearSeq);
 		/// <summary>
 		/// ゲームプレイがロックされているかを取得します。
 		/// </summary>
@@ -107,6 +144,8 @@ namespace TKM {
 		// 固定dtで閉じ進行（いまの実装に合わせる）
 		static constexpr float kFixedDt_ = 0.016f;
 
-		bool externalIrisDraw_ = false;
+		bool externalIrisDraw_ = false; // アイリス描画を外部制御するか
+
+		TransitionRequest pendingRequest_ = TransitionRequest::None; // 保留中の遷移要求
 	};
 } // namespace TKM
