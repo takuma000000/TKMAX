@@ -3,6 +3,7 @@
 #include <algorithm>
 #include "MyMath.h"
 
+// ワールド座標をスクリーンUV座標に変換する
 static Vector2 WorldToUV(const Vector3& world, const Matrix4x4& vp) {
 	float clipX = world.x * vp.m[0][0] + world.y * vp.m[1][0] + world.z * vp.m[2][0] + 1.0f * vp.m[3][0];
 	float clipY = world.x * vp.m[0][1] + world.y * vp.m[1][1] + world.z * vp.m[2][1] + 1.0f * vp.m[3][1];
@@ -16,7 +17,7 @@ static Vector2 WorldToUV(const Vector3& world, const Matrix4x4& vp) {
 	return { ndcX * 0.5f + 0.5f, -ndcY * 0.5f + 0.5f };
 }
 
-namespace {
+namespace { // 無名名前空間
 	BossManager::BossBattleConfig MakeBossConfig() {
 		BossManager::BossBattleConfig c_{};
 		c_.spawnPos_ = { 0.0f, 0.0f, 200.0f };
@@ -46,10 +47,10 @@ void BossManager::Initialize(TKM::DirectXCommon* dxCommon, TKM::Camera* camera, 
 	parentScene_ = parent;
 	player_ = player;
 
-	bossBattle_ = false;
-	bossP2BgmPlayed_ = false;
-	boss_.reset();
-	bossBullets_.clear();
+	bossBattle_ = false; // ボス戦開始フラグ
+	bossP2BgmPlayed_ = false; // ボスP2BGM再生フラグ
+	boss_.reset(); // ボスオブジェクト
+	bossBullets_.clear(); // ボス弾リスト
 
 	// オーラボリュームレンダラー初期化
 	auraVolume_ = std::make_unique<TKM::AuraVolumeRenderer>();
@@ -58,18 +59,19 @@ void BossManager::Initialize(TKM::DirectXCommon* dxCommon, TKM::Camera* camera, 
 	// LaserBeam3D 初期化
 	laserBeam3D_ = std::make_unique<TKM::LaserBeam3D>();
 	laserBeam3D_->Initialize(dxCommon_);
-	laserBeam3D_->GetDesc().active_ = false;
-	laserBeam3D_->GetDesc().telegraph_ = false;
+	laserBeam3D_->GetDesc().active_ = false; // 非アクティブ開始
+	laserBeam3D_->GetDesc().telegraph_ = false; // 予告モード開始
 
 	// 初期見た目（好みで調整OK）
-	laserBeam3D_->GetDesc().color_ = { 0.2f, 0.85f, 1.0f };
-	laserBeam3D_->GetDesc().intensity_ = 3.0f;
-	laserBeam3D_->GetDesc().coreSharpness_ = 7.0f;
-	laserBeam3D_->GetDesc().edgeSoftness_ = 1.2f;
-	laserBeam3D_->GetDesc().sliceCount_ = 64;
-	laserBeam3D_->GetDesc().noiseScale_ = 1.0f;
-	laserBeam3D_->GetDesc().noiseSpeed_ = 1.0f;
+	laserBeam3D_->GetDesc().color_ = { 0.2f, 0.85f, 1.0f }; // 色
+	laserBeam3D_->GetDesc().intensity_ = 3.0f; // 明るさ
+	laserBeam3D_->GetDesc().coreSharpness_ = 7.0f; // コアのシャープネス
+	laserBeam3D_->GetDesc().edgeSoftness_ = 1.2f; // エッジの柔らかさ
+	laserBeam3D_->GetDesc().sliceCount_ = 64; // スライス数
+	laserBeam3D_->GetDesc().noiseScale_ = 1.0f; // ノイズの細かさ
+	laserBeam3D_->GetDesc().noiseSpeed_ = 1.0f; // ノイズの速さ
 
+	// HPバーUI初期化
 	hpUI_ = std::make_unique<TKM::BossHpBarUI>();
 	TKM::BossHpBarUI::Desc d{};
 	hpUI_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, parentScene_, d);
@@ -77,17 +79,18 @@ void BossManager::Initialize(TKM::DirectXCommon* dxCommon, TKM::Camera* camera, 
 }
 
 void BossManager::StartBattle() {
-	if (bossBattle_) {
+	if (bossBattle_) { // すでにボス戦中
+		return;
+	}
+	if (!dxCommon_ || !camera_ || !parentScene_) { // 安全確認
 		return;
 	}
 
-	if (!dxCommon_ || !camera_ || !parentScene_) {
-		return;
-	}
-
-	bossBattle_ = true;
-	bossP2BgmPlayed_ = false;
-
+	// --- ボス本体生成 ---
+	bossBattle_ = true; // ボス戦開始フラグセット
+	bossP2BgmPlayed_ = false; // P2BGM再生フラグリセット
+	
+	// ボス生成
 	boss_ = std::make_unique<BossEnemy>();
 	boss_->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_);
 	boss_->SetCamera(camera_);
@@ -99,17 +102,17 @@ void BossManager::StartBattle() {
 			return player_->GetPosition();
 			});
 	}
-
+	// ボス初期位置セット
 	boss_->SetPosition(kBossConfig_.spawnPos_);
 
 	// --- ボス挙動コントローラ生成 ---
 	bossController_ = std::make_unique<BossController>();
 	bossController_->Initialize(kBossConfig_.arenaMin_, kBossConfig_.arenaMax_);
 
-	killSeq_.Reset();
+	killSeq_.Reset(); // 撃破シーケンス状態リセット
 
-	if (hpUI_) {
-		hpUI_->SetVisible(true);
+	if (hpUI_) { // HPバーUI表示
+		hpUI_->SetVisible(true); // 表示ON
 	}
 }
 
