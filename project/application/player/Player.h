@@ -66,9 +66,9 @@ public:
 		if (enemy_ == e) {
 			enemy_ = nullptr;
 		}
-		for (auto& b : bullets_) {
-			if (!b) continue;
-			if (b->GetEnemy() == e) { b->SetEnemy(nullptr); }
+		for (auto& b : bullets_) { // 弾が追従している敵も解除する
+			if (!b) continue; // 安全確認
+			if (b->GetEnemy() == e) { b->SetEnemy(nullptr); } // 敵解除
 		}
 	}
 	/// <summary>

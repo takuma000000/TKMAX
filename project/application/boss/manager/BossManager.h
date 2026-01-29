@@ -82,7 +82,7 @@ public:
 		float sphereRadius
 	);
 	/// <summary>
-	/// レーザー制御クラスの初期化を行います。
+	/// 初期化処理を行います。
 	/// </summary>
 	/// <param name="dxCommon">DirectX共通管理クラス</param>
 	/// <param name="camera">描画および判定に使用するカメラ</param>

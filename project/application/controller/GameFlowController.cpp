@@ -25,16 +25,16 @@ namespace TKM {
 	GameFlowController::TransitionRequest GameFlowController::UpdateTransitions(float dt, Player* player) {
 		// ─── プレイヤー死亡 → GameOver ───
 		if (player && player->IsDead()) {
-			if (!playerDeathStarted_) {
-				playerDeathStarted_ = true;
-				playerDeathElapsed_ = 0.0f;
+			if (!playerDeathStarted_) { // 初回
+				playerDeathStarted_ = true; // フラグ立て
+				playerDeathElapsed_ = 0.0f; // 経過時間リセット
 			} else {
-				playerDeathElapsed_ += kFixedDt_;
+				playerDeathElapsed_ += kFixedDt_; // 経過時間加算
 
-				if (playerDeathElapsed_ >= 4.0f && !irisClosing_) {
-					irisClosing_ = true;
+				if (playerDeathElapsed_ >= 4.0f && !irisClosing_) { // 4秒経過したらアイリス閉じ開始
+					irisClosing_ = true; // アイリス閉じ開始
 					irisToTitle_ = false; // GameOverへ
-					irisCloseTween_.Reset(
+					irisCloseTween_.Reset( // Tweenリセット
 						0.0f,
 						intro_ ? intro_->GetIrisMaxScale() : 0.0f,
 						kIrisDurationSec_,
@@ -46,7 +46,7 @@ namespace TKM {
 
 		// ─── Tキーでタイトルへ（アイリス閉じ）───
 		if (!irisClosing_ && Input::GetInstance()->TriggerKey(DIK_T)) {
-			irisClosing_ = true;
+			irisClosing_ = true; // アイリス閉じ開始
 			irisToTitle_ = true; // Titleへ
 			irisCloseTween_.Reset(
 				0.0f,
@@ -58,14 +58,14 @@ namespace TKM {
 
 		// ─── アイリス閉じ進行 ───
 		if (irisClosing_) {
-			UpdateIrisScale(intro_ ? intro_->GetIrisSprite() : nullptr, irisCloseTween_, kFixedDt_);
+			UpdateIrisScale(intro_ ? intro_->GetIrisSprite() : nullptr, irisCloseTween_, kFixedDt_); // アイリススケール更新
 
-			if (irisCloseTween_.Finished()) {
+			if (irisCloseTween_.Finished()) { // 閉じ完了
 				return irisToTitle_ ? TransitionRequest::ToTitle : TransitionRequest::ToGameOver;
 			}
 		}
 
-		return TransitionRequest::None;
+		return TransitionRequest::None; // 遷移なし
 	}
 
 	void GameFlowController::Draw() const {
@@ -77,7 +77,8 @@ namespace TKM {
 
 	void GameFlowController::RequestToTitleByIris() {
 		if (irisClosing_) { return; }
-
+		
+		// アイリス閉じ開始
 		irisClosing_ = true;
 		irisToTitle_ = true;
 		irisCloseTween_.Reset(

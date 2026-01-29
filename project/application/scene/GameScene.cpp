@@ -70,8 +70,8 @@ void GameScene::Finalize() {
 }
 
 void GameScene::Update() {
-	float rawDt = 0.0f;
-	float scaledDt = 0.0f;
+	float rawDt = 0.0f; // 生のデルタタイム（ポーズ中も進む）
+	float scaledDt = 0.0f; // スケール済みデルタタイム（ポーズ中は0）
 
 	BeginFrameUpdate(rawDt, scaledDt); // フレーム開始処理
 
@@ -92,36 +92,43 @@ void GameScene::Update() {
 		const auto cmd = pause_->Update(rawDt, allowPauseOpen);
 
 		if (cmd == TKM::PauseMenuController::Command::ReturnToTitle) {
-			if (flow_) {
+			if (flow_) { // タイトル戻りリクエスト
 				flow_->RequestToTitleByIris(); // いつものアイリスで戻す
 			}
-		} else if (cmd == TKM::PauseMenuController::Command::Restart) {
-			sceneManager_->SetNextScene(new GameScene(dxCommon_, srvManager_));
+		} else if (cmd == TKM::PauseMenuController::Command::Restart) { // リスタート
+			sceneManager_->SetNextScene(new GameScene(dxCommon_, srvManager_)); // 新しいゲームシーンをセット
 			return;
 		}
 
 		// ポーズ中はゲーム本体を止める。ただし「遷移（タイトル戻り等）」は回す
-		if (pause_->IsPaused()) {
+		if (pause_->IsPaused()) { // ポーズ中
 			ImGuiDebug();
+			// アクティブカメラの更新
 			UpdateActiveCamera();
-
 			// ポーズ中はゲーム更新をスキップ
 			UpdateTransitionsAndSceneChange(rawDt);
-
+			// デバッグキー＆リクエスト処理
 			HandleDebugKeysAndRequests();
+			// フレーム終了処理
 			EndFrameUpdate();
 			return;
 		}
 	}
 
+	// ──────────────── ゲーム本体更新（scaledDtで動かす） ───────────────
+	// タイムスケールコントローラー更新
 	UpdateEnemyAndWaveLogic(scaledDt);
-
+	// デバッグ表示更新
 	ImGuiDebug();
+	// アクティブカメラの更新
 	UpdateActiveCamera();
-
+	// ゲームプレイシステムの更新
 	UpdateGameplaySystems(rawDt, scaledDt);
+	// シーン遷移＆タイトル戻り等の更新
 	UpdateTransitionsAndSceneChange(rawDt);
+	// デバッグキー＆リクエスト処理
 	HandleDebugKeysAndRequests();
+	// フレーム終了処理
 	EndFrameUpdate();
 }
 

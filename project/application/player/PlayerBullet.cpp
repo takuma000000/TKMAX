@@ -71,16 +71,19 @@ void PlayerBullet::Update() {
 	// =========================================
 	// 敵が存在するなら当たり判定チェック
 	// =========================================
-	if (enemy_ && !enemy_->IsDead()) {
+	if (enemy_ && !enemy_->IsDead()) { // 敵が存在していて生きているなら
+		// 敵の位置と当たり判定用スケールを取得
 		Vector3 enemyPos = enemy_->GetWorldPosition();
 		Vector3 enemySize = enemy_->GetColliderScale();
-
+		// 当たり判定チェック
 		bool hit = CheckSweptHitAABB(enemyPos, enemySize);
 
-		if (hit) {
+		if (hit) { // 当たった！
+			// 当たりフラグを立てて弾を消す
 			isHit_ = true;
 			isDead_ = true;
 
+			// エフェクト発生
 			TKM::ParticleManager* pm = TKM::ParticleManager::GetInstance();
 			Vector3 hitPos = bulletPos;
 

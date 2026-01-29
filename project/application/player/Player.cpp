@@ -129,7 +129,6 @@ void Player::Update(float dt) {
 	object_->Update(); // プレイヤー本体更新
 }
 
-
 void Player::ImGuiDebug() {
 #ifdef USE_IMGUI
 	if (!object_) return;
