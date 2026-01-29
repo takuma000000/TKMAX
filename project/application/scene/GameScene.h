@@ -120,9 +120,6 @@ private:
 	// プレイヤー / 敵 / マネージャ
 	//======================================================================
 	std::unique_ptr<Player> player_ = nullptr; // プレイヤー
-	std::vector<std::unique_ptr<Enemy>> enemies_; // 敵リスト（直持ち）
-	int defeatedEnemyCount_ = 0; // 倒した敵の数
-	int maxEnemyCount_ = 0;      // 最大敵数（管理用）
 	std::unique_ptr<EnemyManager> enemyManager_ = nullptr; // 敵管理
 	std::unique_ptr<BossManager>  bossManager_ = nullptr; // ボス管理
 	bool enemiesInitialized_ = false; // 敵初期化済みフラグ

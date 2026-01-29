@@ -40,7 +40,6 @@ void GameScene::Initialize() {
 	/// ──────────────── 敵マネージャの初期化 ───────────────
 	enemyManager_ = std::make_unique<EnemyManager>();
 	enemyManager_->Initialize(dxCommon_, camera_.get(), this, player_.get());
-	enemyManager_->BindEnemies(&enemies_, &defeatedEnemyCount_, &maxEnemyCount_);
 	/// ──────────────── ボスマネージャの初期化 ───────────────
 	if (!bossManager_) {
 		bossManager_ = std::make_unique<BossManager>();
@@ -153,13 +152,13 @@ void GameScene::Draw() {
 	const bool isClear = (flow_ && flow_->IsInClear()); // クリアシーケンス中か？
 	if (!isClear) {
 		if (bossManager_) {
-			bossManager_->Draw(dxCommon_);
+			bossManager_->Draw(dxCommon_); // ボスマネージャの描画
 		}
 	}
 
 	TKM::Camera* activeCamera = (useDebugCamera_ && debugCamera_) ? (TKM::Camera*)debugCamera_.get() : camera_.get();
 	if (postFx_) {
-		postFx_->DrawVolumes(activeCamera);
+		postFx_->DrawVolumes(activeCamera); // ポストエフェクトのボリューム系エフェクト描画
 	}
 
 	// パーティクル描画
@@ -178,22 +177,21 @@ void GameScene::Draw() {
 
 	// スプライトまとめ
 	TKM::SpriteCommon::GetInstance()->DrawSetCommon();
-	// IntroSequence 側で Iris / start 表示を描画する
 	if (flow_) {
-		flow_->Draw();
+		flow_->Draw(); // ゲームフローの描画
 	}
 	if (ui_) {
-		ui_->Draw();
+		ui_->Draw(); // UIの描画
 	}
 	if (pause_) {
-		pause_->Draw();
+		pause_->Draw(); // ポーズメニューの描画
 	}
-	if (bossManager_) { bossManager_->DrawUI(); }
+	if (bossManager_) { bossManager_->DrawUI(); } // ボスUIの描画
 }
 
 void GameScene::SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float speed, int damage, int lifeFrame) {
 	if (bossManager_) {
-		bossManager_->SpawnEnemyBullet(pos, dir, speed, damage, lifeFrame);
+		bossManager_->SpawnEnemyBullet(pos, dir, speed, damage, lifeFrame); // ボスマネージャに委譲
 	}
 }
 
@@ -201,8 +199,7 @@ TKM::Camera* GameScene::UpdateActiveCamera() {
 	// ──────────────── アクティブカメラの決定＆更新 ───────────────
 	TKM::Camera* activeCamera = camera_.get();
 	if (useDebugCamera_ && debugCamera_) {
-		// デバッグカメラを更新
-		debugCamera_->Update();
+		debugCamera_->Update();	// デバッグカメラを更新
 		activeCamera = debugCamera_.get();
 	} else {
 		// 通常カメラを更新

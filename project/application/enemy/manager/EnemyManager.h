@@ -42,23 +42,11 @@ public:
 	/// </summary>
 	/// <param name="dx">DirectX 共通管理クラス</param>
 	void Draw(TKM::DirectXCommon* dx);
-
 	/// <summary>
 	/// ImGui によるデバッグ情報を表示します。
 	/// </summary>
 	void ImGuiDebug();
 
-	/// <summary>
-	/// 外部で管理している敵リストとカウント情報をバインドします。
-	/// </summary>
-	/// <param name="enemies">敵リスト（外部所有）</param>
-	/// <param name="defeatedEnemyCount">撃破数カウンタ（外部所有）</param>
-	/// <param name="maxEnemyCount">最大敵数カウンタ（外部所有）</param>
-	void BindEnemies(
-		std::vector<std::unique_ptr<Enemy>>* enemies,
-		int* defeatedEnemyCount,
-		int* maxEnemyCount
-	);
 	/// <summary>
 	/// プレイヤーに最も近い敵情報を更新します。
 	/// </summary>
@@ -76,16 +64,20 @@ public:
 	/// </summary>
 	void GoToNextWave();
 	/// <summary>
-	/// 生存している敵が存在するかどうかを取得します。
+	/// 生存している敵が存在するかどうかを判定します。
 	/// </summary>
-	/// <returns>生存している敵が1体以上いる場合 true、それ以外は false</returns>
-	bool HasAliveEnemies() const { return enemies_ && !enemies_->empty(); }
+	/// <returns>生存している敵が1体以上いる場合は true、それ以外は false</returns>
+	bool HasAliveEnemies() const { return !enemies_.empty(); }
 	/// <summary>
-	/// 全 Wave が完了しているかどうかを取得します。
+	/// デバッグ用：即座にボス Wave（Done）へスキップします。
 	/// </summary>
-	/// <returns>全 Wave 完了の場合 true、それ以外は false</returns>
+	void SkipToBossWave();
+	/// <summary>
+	/// 全ての Wave がクリアされているかどうかを取得します。
+	/// </summary>
+	/// <returns></returns>
 	bool IsAllWavesCleared() const {
-		return (wavePhase_ == WavePhase::Done) && (!enemies_ || enemies_->empty());
+		return (wavePhase_ == WavePhase::Done) && enemies_.empty();
 	}
 	/// <summary>
 	/// Wave が完了状態（Done）かどうかを取得します。
@@ -93,21 +85,31 @@ public:
 	/// <returns>Wave が Done の場合 true、それ以外は false</returns>
 	bool IsWaveDone() const { return wavePhase_ == WavePhase::Done; }
 	/// <summary>
-	/// デバッグ用：即座にボス Wave（Done）へスキップします。
-	/// </summary>
-	void SkipToBossWave();
-
-	// Getter==========================================================================
-	/// <summary>
-	/// 敵リストを取得します
+	/// Wave が初期化されているかどうかを取得します。
 	/// </summary>
 	/// <returns></returns>
-	const std::vector<std::unique_ptr<Enemy>>& GetEnemies() const { return *enemies_; }
+	bool IsWavesInitialized() const { return initializedWaves_; }
+	// Getter==========================================================================
 	/// <summary>
 	/// 現在の WavePhase を取得します
 	/// </summary>
 	/// <returns></returns>
 	WavePhase GetWavePhase() const { return wavePhase_; }
+	/// <summary>
+	/// 撃破した敵の数を取得します
+	/// </summary>
+	/// <returns></returns>
+	int GetDefeatedEnemyCount() const { return defeatedEnemyCount_; }
+	/// <summary>
+	/// 最大敵数を取得します
+	/// </summary>
+	/// <returns></returns>
+	int GetMaxEnemyCount() const { return maxEnemyCount_; }
+	/// <summary>
+	/// 敵リストを取得します
+	/// </summary>
+	/// <returns></returns>
+	const std::vector<std::unique_ptr<Enemy>>& GetEnemies() const { return enemies_; }
 	// ================================================================================
 	// Setter==========================================================================
 	/// <summary>
@@ -117,7 +119,7 @@ public:
 	/// <param name="camera">描画および判定に使用するカメラ</param>
 	void SetCamera(TKM::Camera* camera) {
 		cam_ = camera;
-		for (auto& e : *enemies_) { // 敵全員にカメラをセット
+		for (auto& e : enemies_) {
 			if (e) e->SetCamera(cam_);
 		}
 		if (midBossCore_) { // 蘇生核にもカメラをセット
@@ -152,11 +154,6 @@ private:
 	TKM::Camera* cam_ = nullptr;
 	TKM::BaseScene* parent_ = nullptr;
 	Player* player_ = nullptr;
-
-	// GameScene 側の実体を「参照」するだけ
-	std::vector<std::unique_ptr<Enemy>>* enemies_ = nullptr;
-	int* defeatedEnemyCount_ = nullptr;
-	int* maxEnemyCount_ = nullptr;
 
 	// Wave 状態は EnemyManager が持つようにする
 	WavePhase wavePhase_ = WavePhase::W1;
@@ -263,4 +260,11 @@ private:
 	// =====================================================================
 	EnemyWaveConfig waveConfig_{}; // 敵ウェーブ設定データ
 	bool waveConfigLoaded_ = false; // 敵ウェーブ設定データが読み込まれたかどうか
+	// =====================================================================
+	// 敵リスト（直持ち版、BindEnemies 未使用時用）
+	// =====================================================================
+	std::vector<std::unique_ptr<Enemy>> enemies_; // 敵リスト（直持ち版）
+	int defeatedEnemyCount_ = 0; // 撃破数カウンタ
+	int maxEnemyCount_ = 0; // 最大敵数カウンタ
+	bool initializedWaves_ = false; // Wave 初期化済みフラグ
 };
