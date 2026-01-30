@@ -45,6 +45,12 @@ namespace TKM {
 		/// <param name="screenH">画面高さ（ピクセル）</param>
 		void UpdateLayout(float screenW, float screenH);
 
+		/// <summary>
+		/// HUD 全体の透明度を設定します（1.0=通常, 0.0=非表示）。
+		/// </summary>
+		/// <param name="a">HUD透明度</param>
+		void SetHudAlpha(float a);
+
 	private:
 		SpriteCommon* spriteCommon_ = nullptr;
 		DirectXCommon* dxCommon_ = nullptr;
@@ -53,6 +59,15 @@ namespace TKM {
 		std::unique_ptr<Sprite> uiLT_;
 		std::unique_ptr<Sprite> uiLB_;
 		std::unique_ptr<Sprite> uiRB_;
-		std::unique_ptr<RBGaugeUI> rbGaugeUI_;
+
+		std::unique_ptr<TKM::RBGaugeUI> rbGaugeUI_;
+
+		// HUD透明度（ポーズ中はここを下げる）
+		float hudAlpha_ = 1.0f;
+
+		// 現在の見た目色（Draw側で hudAlpha_ を掛け直すために保持）
+		Vector4 colLT_{ 1.0f,1.0f,1.0f,1.0f };
+		Vector4 colLB_{ 1.0f,1.0f,1.0f,1.0f };
+		Vector4 colRB_{ 1.0f,1.0f,1.0f,1.0f };
 	};
 }

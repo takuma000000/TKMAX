@@ -1,10 +1,21 @@
 #include "UIController.h"
+#include <algorithm>
 
 namespace TKM {
+
+	void UIController::SetHudAlpha(float a) {
+		hudAlpha_ = std::max(0.0f, std::min(a, 1.0f));
+	}
+
 	void UIController::Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, BaseScene* parentScene, float screenW, float screenH) {
 		spriteCommon_ = spriteCommon;
 		dxCommon_ = dxCommon;
 		parentScene_ = parentScene;
+
+		hudAlpha_ = 1.0f;
+		colLT_ = { 1.0f,1.0f,1.0f,1.0f };
+		colLB_ = { 1.0f,1.0f,1.0f,1.0f };
+		colRB_ = { 1.0f,1.0f,1.0f,1.0f };
 
 		uiLT_ = std::make_unique<Sprite>();
 		uiLB_ = std::make_unique<Sprite>();
@@ -66,19 +77,31 @@ namespace TKM {
 		const Vector4 idle = { 1.0f, 1.0f, 1.0f, 0.75f };
 		const Vector4 on = { 1.0f, 0.25f, 0.25f, 1.0f };
 
-		if (uiRB_) uiRB_->SetColor(rbDown ? on : idle);
-		if (uiLB_) uiLB_->SetColor(lbDown ? on : idle);
-		if (uiLT_) uiLT_->SetColor(ltDown ? on : idle);
+		// ★見た目色は保持しておく（Draw側で hudAlpha_ を掛ける）
+		colRB_ = (rbDown ? on : idle);
+		colLB_ = (lbDown ? on : idle);
+		colLT_ = (ltDown ? on : idle);
 
+		// ここではUpdateだけしておく（色はDrawで毎フレーム確定させる）
 		if (uiLT_) uiLT_->Update();
 		if (uiLB_) uiLB_->Update();
 		if (uiRB_) uiRB_->Update();
 	}
 
 	void UIController::Draw() {
-		if (uiLT_) uiLT_->Draw();
-		if (uiLB_) uiLB_->Draw();
-		if (uiRB_) uiRB_->Draw();
+		// HUDのαを掛けた色を毎フレーム確定
+		auto mulAlpha = [&](const Vector4& c) {
+			Vector4 o = c;
+			o.w *= hudAlpha_;
+			return o;
+			};
+
+		if (uiLT_) { uiLT_->SetColor(mulAlpha(colLT_)); uiLT_->Draw(); }
+		if (uiLB_) { uiLB_->SetColor(mulAlpha(colLB_)); uiLB_->Draw(); }
+		if (uiRB_) { uiRB_->SetColor(mulAlpha(colRB_)); uiRB_->Draw(); }
+
+		// RBGaugeUIは外部からαを掛けるAPIが無い前提で、そのまま描画
+		// （もしここも薄くしたいなら、RBGaugeUI側に SetGlobalAlpha を足すのが綺麗）
 		if (rbGaugeUI_) rbGaugeUI_->Draw();
 	}
 }

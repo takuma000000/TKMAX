@@ -137,11 +137,13 @@ namespace TKM {
 		State state_ = State::Closed;
 		int index_ = 0;
 
-		// 演出（形だけ）
-		float animT_ = 0.0f;
-		float curtainAlpha_ = 0.0f;
+		// 演出
+		float fadeT_ = 0.0f;        // 0→1（Pausing/Resuming の進行）
+		float pulseTime_ = 0.0f;    // 選択中の脈動用（フェードとは分離）
+		float curtainAlpha_ = 0.0f; // 暗幕のアルファ
 
 		// 入力のエッジ検出用
+		bool prevStart_ = false;
 		bool prevUp_ = false;
 		bool prevDown_ = false;
 		bool prevA_ = false;

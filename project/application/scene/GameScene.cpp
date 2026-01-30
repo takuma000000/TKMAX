@@ -94,7 +94,11 @@ void GameScene::Update() {
 
 	// ──────────────── ポーズ更新（rawDtでUIだけ動かす） ───────────────
 	if (pause_) {
-		const auto cmd = pause_->Update(rawDt, allowPauseOpen);
+		const auto cmd = pause_->Update(rawDt, allowPauseOpen); // ポーズメニュー更新
+		if (ui_) { // HUD透明度調整
+			const float hudAlpha = pause_->IsPaused() ? 0.25f : 1.0f; // ポーズ中は半透明に
+			ui_->SetHudAlpha(hudAlpha); // HUD透明度セット
+		}
 
 		if (cmd == TKM::PauseMenuController::Command::ReturnToTitle) {
 			if (flow_) { // タイトル戻りリクエスト

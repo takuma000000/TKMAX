@@ -1,5 +1,6 @@
 #define NOMINMAX
 #include "PauseMenuController.h"
+#include "TextureManager.h"
 #include <algorithm>
 #include <cmath>
 
@@ -14,8 +15,15 @@ namespace TKM {
 
 		state_ = State::Closed;
 		index_ = 0;
-		animT_ = 0.0f;
+		fadeT_ = 0.0f;
+		pulseTime_ = 0.0f;
 		curtainAlpha_ = 0.0f;
+
+		prevStart_ = false;
+		prevUp_ = false;
+		prevDown_ = false;
+		prevA_ = false;
+		prevB_ = false;
 
 		// 暗幕
 		curtain_ = std::make_unique<Sprite>();
@@ -122,13 +130,14 @@ namespace TKM {
 
 	void PauseMenuController::Open_() {
 		state_ = State::Pausing;
-		animT_ = 0.0f;
+		fadeT_ = 0.0f;
+		pulseTime_ = 0.0f;
 		index_ = 0;
 	}
 
 	void PauseMenuController::Close_() {
 		state_ = State::Resuming;
-		animT_ = 0.0f;
+		fadeT_ = 0.0f;
 	}
 
 	void PauseMenuController::MoveIndex_(int delta) {
@@ -137,12 +146,23 @@ namespace TKM {
 	}
 
 	PauseMenuController::Command PauseMenuController::Update(float dt, bool allowOpen) {
-		// Startで開く
+		// Startで開く（static は使わず、インスタンスのメンバでエッジ検出）
 		Input* in = Input::GetInstance();
 		bool startNow = in->PushButton(XINPUT_GAMEPAD_START);
-		static bool prevStart = false;
-		bool trigStart = (startNow && !prevStart);
-		prevStart = startNow;
+		bool trigStart = (startNow && !prevStart_);
+		prevStart_ = startNow;
+
+		auto clamp01 = [](float v) {
+			return std::max(0.0f, std::min(v, 1.0f));
+			};
+		auto smoothStep01 = [&](float t) {
+			t = clamp01(t);
+			return t * t * (3.0f - 2.0f * t); // SmoothStep
+			};
+
+		constexpr float kTargetCurtainAlpha = 0.55f;
+		constexpr float kOpenSpeed = 8.0f;
+		constexpr float kCloseSpeed = 10.0f;
 
 		if (state_ == State::Closed) {
 			if (allowOpen && trigStart) {
@@ -151,22 +171,26 @@ namespace TKM {
 			return Command::None;
 		}
 
-		// フェード
+		// フェード（収束 Lerp ではなく、0→1 の進行で「キレ」を出す）
 		if (state_ == State::Pausing) {
-			animT_ = std::min(animT_ + dt * 6.0f, 1.0f);
-			curtainAlpha_ = MyMath::Lerp(curtainAlpha_, 0.55f, 0.25f);
-			if (animT_ >= 1.0f) {
+			fadeT_ = clamp01(fadeT_ + dt * kOpenSpeed);
+			float e = smoothStep01(fadeT_);
+			curtainAlpha_ = kTargetCurtainAlpha * e;
+			if (fadeT_ >= 1.0f) {
 				state_ = State::Paused;
+				curtainAlpha_ = kTargetCurtainAlpha;
 			}
 		} else if (state_ == State::Resuming) {
-			animT_ = std::min(animT_ + dt * 6.0f, 1.0f);
-			curtainAlpha_ = MyMath::Lerp(curtainAlpha_, 0.0f, 0.25f);
-			if (animT_ >= 1.0f) {
+			fadeT_ = clamp01(fadeT_ + dt * kCloseSpeed);
+			float e = smoothStep01(fadeT_);
+			curtainAlpha_ = kTargetCurtainAlpha * (1.0f - e);
+			if (fadeT_ >= 1.0f) {
 				state_ = State::Closed;
+				curtainAlpha_ = 0.0f;
+				return Command::None;
 			}
-			return Command::None;
 		} else {
-			curtainAlpha_ = MyMath::Lerp(curtainAlpha_, 0.55f, 0.2f);
+			curtainAlpha_ = kTargetCurtainAlpha;
 		}
 
 		// 操作
@@ -195,40 +219,91 @@ namespace TKM {
 			}
 		}
 
-		// 見た目更新（選択が分かる：カーソル + 拡大 + 右ズレ）
-		animT_ += dt;
+		// 見た目更新（開く瞬間の気持ちよさ：下からスッ + ちょいポン + 項目は順番に出す）
+		pulseTime_ += dt;
 
+		// UI の出現率（0:非表示 ～ 1:表示）
+		float uiOpen = 0.0f;
+		if (state_ == State::Pausing) {
+			uiOpen = smoothStep01(fadeT_);
+		} else if (state_ == State::Paused) {
+			uiOpen = 1.0f;
+		} else if (state_ == State::Resuming) {
+			uiOpen = 1.0f - smoothStep01(fadeT_);
+		}
+
+		// 暗幕
 		if (curtain_) {
 			curtain_->SetColor({ 0.0f, 0.0f, 0.0f, curtainAlpha_ });
 			curtain_->Update();
 		}
+
+		// パネル：下からスッ + 少しポン（サイズで表現）
 		if (panel_) {
+			const float t = smoothStep01(uiOpen);
+			const float slideY = (1.0f - t) * 18.0f;
+
+			// 0.92 -> 1.02 -> 1.00 くらいの小さなポン（やりすぎない）
+			const float pi = 3.14159265f;
+			float pop = std::sin(t * pi);                  // 0->1->0
+			float scale = 0.92f + 0.08f * t + 0.02f * pop; // 0.92 -> 1.02 -> 1.00 付近
+
+			Vector2 baseSize = panelSize_;
+			Vector2 newSize = { baseSize.x * scale, baseSize.y * scale };
+
+			// 中心固定（アンカー0,0なので位置を補正）
+			Vector2 baseCenter = { panelPos_.x + baseSize.x * 0.5f, panelPos_.y + baseSize.y * 0.5f };
+			Vector2 newPos = { baseCenter.x - newSize.x * 0.5f, baseCenter.y - newSize.y * 0.5f + slideY };
+
+			panel_->SetPosition(newPos);
+			panel_->SetSize(newSize);
+			panel_->SetColor({ 0.08f, 0.08f, 0.10f, 0.75f * t });
 			panel_->Update();
 		}
 
-		float pulse = 1.0f + 0.06f * std::sin(animT_ * 6.0f);
+		// 選択の脈動（開き中は控えめ、開き切ったら通常）
+		float pulseBlend = (uiOpen >= 0.95f) ? 1.0f : uiOpen;
+		float pulse = 1.0f + (0.06f * pulseBlend) * std::sin(pulseTime_ * 6.0f);
 
+		// 項目：順番にフェードイン + 少し下からスッ
 		for (int i = 0; i < (int)Item::Count; ++i) {
 			if (!items_[i]) { continue; }
 
+			// スタッガー（上から順に少し遅れて出る）
+			const float delay = 0.08f * (float)i;
+			float itemT = clamp01((uiOpen - delay) / 0.70f);
+			itemT = smoothStep01(itemT);
+
 			bool selected = (i == index_);
 
-			Vector2 itemPos = { baseItemPos_.x + (selected ? 12.0f : 0.0f), baseItemPos_.y + itemSpacingY_ * (float)i };
+			Vector2 basePos = { baseItemPos_.x + (selected ? 12.0f : 0.0f), baseItemPos_.y + itemSpacingY_ * (float)i };
+			Vector2 itemPos = { basePos.x, basePos.y + (1.0f - itemT) * 10.0f };
 			items_[i]->SetPosition(itemPos);
 
 			Vector4 col = selected ? Vector4{ 1.0f, 1.0f, 1.0f, 0.92f } : Vector4{ 1.0f, 1.0f, 1.0f, 0.62f };
+			col.w *= itemT;
 			items_[i]->SetColor(col);
 
-			Vector2 size = selected ? Vector2{ 240.0f * pulse, 48.0f * pulse } : Vector2{ 220.0f, 44.0f };
+			Vector2 baseSize = selected ? Vector2{ 240.0f, 48.0f } : Vector2{ 220.0f, 44.0f };
+			Vector2 size = selected ? Vector2{ baseSize.x * pulse, baseSize.y * pulse } : baseSize;
+			// 出現中は少しだけ小さめ（ポン）にして完成感
+			float s = 0.96f + 0.04f * itemT;
+			size = { size.x * s, size.y * s };
 			items_[i]->SetSize(size);
 
 			items_[i]->Update();
 		}
 
+		// カーソル：選択項目の出現率に追従してフェード
 		if (cursor_) {
-			Vector2 pos = { baseItemPos_.x - 42.0f, baseItemPos_.y + itemSpacingY_ * (float)index_ + 8.0f };
+			const float delay = 0.08f * (float)index_;
+			float itemT = clamp01((uiOpen - delay) / 0.70f);
+			itemT = smoothStep01(itemT);
+
+			Vector2 pos = { baseItemPos_.x - 42.0f, baseItemPos_.y + itemSpacingY_ * (float)index_ + 8.0f + (1.0f - itemT) * 10.0f };
 			cursor_->SetPosition(pos);
 			cursor_->SetSize({ 28.0f, 28.0f });
+			cursor_->SetColor({ 1.0f, 1.0f, 1.0f, 0.9f * itemT });
 			cursor_->Update();
 		}
 
