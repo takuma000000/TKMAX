@@ -111,6 +111,7 @@ void GameScene::Update() {
 
 		// ポーズ中はゲーム本体を止める。ただし「遷移（タイトル戻り等）」は回す
 		if (pause_->IsPaused()) { // ポーズ中
+			// デバッグ表示更新
 			ImGuiDebug();
 			// アクティブカメラの更新
 			UpdateActiveCamera();
