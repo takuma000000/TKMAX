@@ -42,18 +42,11 @@ public:
 	/// <param name="boss">デバッグ表示および調整対象となるボス敵</param>
 	void ImGuiDebug(Enemy& boss);
 
-	/// <summary>
-	/// 通常時ミサイルの発射要求を取り出します（取り出すと要求は消費されます）。
-	/// </summary>
-	/// <param name="outPos">発射位置</param>
-	/// <param name="outDir">発射方向（正規化）</param>
-	/// <param name="outSpeed">速度</param>
-	/// <param name="outDamage">ダメージ</param>
-	/// <param name="outLifeFrame">寿命フレーム</param>
 	bool ConsumeMissileFireRequest(
 		Vector3& outPos,
-		Vector3& outDir,
+		Vector3& outTarget,
 		float& outSpeed,
+		float& outCurveHeight,
 		int& outDamage,
 		int& outLifeFrame
 	);
@@ -293,8 +286,18 @@ private:
 	bool missileFireReq_ = false; // 発射要求フラグ
 	Vector3 missilePos_{ 0.0f, 0.0f, 0.0f }; // 発射位置
 	Vector3 missileDir_{ 0.0f, 0.0f, 1.0f }; // 発射方向
-	float missileSpeed_ = 22.0f; // 速度
+	float missileSpeed_ = 70.0f; // 速度
 	int missileDamage_ = 1; // ダメージ
 	int missileLifeFrame_ = 180; // 寿命フレーム
 	float missileMuzzleYOffset_ = 1.0f; // 発射位置Yオフセット（ボス中心＋）
+
+	Vector3 missileTarget_{ 0.0f,0.0f,0.0f }; // 発射時点のplayer座標（到達点）
+	float missileCurveHeight_ = 2.5f;         // 曲線の山なり高さ
+
+	// --- Missile burst (3連射) ---
+	int burstLeft_ = 0; // 残り連射数
+	float burstInterval_ = 0.5f; // 何秒おきに撃つか（0.08〜0.18あたり好み）
+	float burstTimer_ = 0.0f; // 連射タイマー
+	Vector3 burstTargetSnap_{}; // 発射時点のplayer座標を固定
+	bool burstTargetValid_ = false; // 固定座標が有効かどうか
 };

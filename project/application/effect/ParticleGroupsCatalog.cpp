@@ -97,5 +97,25 @@ namespace TKM {
 		pm->CreateParticleGroup("boss_windup_crackle", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
 		// 内向きに吸い込まれる粒子
 		pm->CreateParticleGroup("boss_windup_inward", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
+
+		/// === Boss Evil Bullet（邪悪弾 ===
+		// コア：強い光（中心の発光）
+		pm->CreateParticleGroup("bossEvil_core", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
+		// モアモア：黒紫の煙
+		pm->CreateParticleGroup("bossEvil_smoke", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
+		// スパーク：バチバチの欠片
+		pm->CreateParticleGroup("bossEvil_spark", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
+		// オーラ輪：うっすらリング（邪悪な気配）
+		pm->CreateParticleGroup("bossEvil_ring", "./resources/gradationLine.png", ParticleManager::ParticleType::RING);
+		// 軌道トレイル：尾を引く粒
+		pm->CreateParticleGroup("bossEvil_trail", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
+		// ボディ：メインの球体部分
+		pm->CreateParticleGroup("bossEvil_glow", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
+		// ボディ：メインの球体部分
+		pm->CreateParticleGroup("bossEvil_body", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
+		// コロナ：外側の光輪
+		pm->CreateParticleGroup("bossEvil_corona", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
+		// 軌道トレイル：尾を引く粒
+		pm->CreateParticleGroup("bossEvil_trail", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
 	}
 }

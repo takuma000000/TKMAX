@@ -127,13 +127,28 @@ void BossManager::Update(float dt) {
 	// --- Missile（通常時攻撃） ---
 	{
 		Vector3 mPos_{}; // 発射位置
-		Vector3 mDir_{}; // 発射方向（正規化ベクトル）
-		float mSpeed_ = 0.0f; // 速度
-		int mDmg_ = 0; // ダメージ
-		int mLife_ = 0; // 寿命フレーム
-		// ミサイル発射要求チェック＆取得
-		if (bossController_->ConsumeMissileFireRequest(mPos_, mDir_, mSpeed_, mDmg_, mLife_)) { // ミサイル発射要求あり
-			SpawnEnemyBullet(mPos_, mDir_, mSpeed_ * dt, mDmg_, mLife_); // ミサイルスポーン
+		Vector3 mTarget_{};
+		float mSpeed_ = 0.0f;
+		float mCurveH_ = 0.0f;
+		int mDmg_ = 0;
+		int mLife_ = 0;
+
+		if (bossController_->ConsumeMissileFireRequest(mPos_, mTarget_, mSpeed_, mCurveH_, mDmg_, mLife_)) {
+			// BossBulletは「speedが1フレ移動量」なので dt掛けた値を渡す（君が既にやってるやつ）
+			const float spPerFrame_ = mSpeed_ * dt;
+
+			auto bullet_ = std::make_unique<BossBullet>();
+
+			// dirはInitializeのために一応入れる（曲線モードでは使われない）
+			Vector3 dir_{ mTarget_.x - mPos_.x, mTarget_.y - mPos_.y, mTarget_.z - mPos_.z };
+			dir_ = MyMath::SafeNormalize(dir_, { 0.0f, 0.0f, 1.0f });
+
+			bullet_->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_, camera_, mPos_, dir_, spPerFrame_, mDmg_, mLife_);
+			// 曲線設定（好みで調整OK）
+			bullet_->SetCurveYaw(0.05f); // 1フレームあたりの曲がる角度（ラジアン）
+			bullet_->EnableCurveToTarget(mPos_, mTarget_, mCurveH_, spPerFrame_); // 曲線で終点へ
+
+			bossBullets_.push_back(std::move(bullet_));
 		}
 	}
 	// --- LaserBeam 更新＆BossControllerのレーザー情報を反映 ---

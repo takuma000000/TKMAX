@@ -877,7 +877,7 @@ namespace TKM {
 			// ─────────────────────
 
 			// 細長いライン（ビルボードでカメラ向きになる）
-			p.transform_.scale_ = { 0.09f, 0.09f, 0.09f }; // 幅, 高さ, 奥行き
+			p.transform_.scale_ = { 0.2f, 0.2f, 0.2f }; // 幅, 高さ, 奥行き
 			p.transform_.rotate_ = { 0.0f, 0.0f, 0.0f };
 			p.transform_.translate_.z = 50.0f;
 
@@ -1733,6 +1733,107 @@ namespace TKM {
 			// 色：必殺技らしく白〜薄青
 			float c = std::uniform_real_distribution<float>(0.85f, 1.0f)(rng);
 			p.color_ = { 0.9f * c, 0.95f * c, 1.0f, 1.0f };
+		} else if (groupName == "bossEvil_core") {
+			// 中心の強い発光コア（短命でパッと）
+			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
+
+			p.transform_.translate_ = center;
+
+			float sc = frand(0.45f, 0.85f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			// ほぼ動かない（揺れ程度）
+			p.velocity_ = { frand(-0.15f, 0.15f), frand(-0.10f, 0.10f), frand(-0.15f, 0.15f) };
+
+			p.lifeTime_ = frand(0.12f, 0.22f);
+			p.currentTime_ = 0.0f;
+
+			// 紫～シアンの邪悪発光
+			float t = frand(0.0f, 1.0f);
+			p.color_ = { 0.25f + 0.20f * t, 0.85f + 0.10f * t, 1.0f, 1.0f };
+
+		} else if (groupName == "bossEvil_smoke") {
+			// モアモア煙：黒紫～濃い青、ゆっくり漂う、寿命長め
+			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
+
+			std::uniform_real_distribution<float> off(-0.35f, 0.35f);
+			Vector3 offset = { off(rng), off(rng) * 0.7f, off(rng) };
+			p.transform_.translate_ = center + offset;
+
+			// 漂い（上＋後ろ＋少し散らす）
+			p.velocity_ = { frand(-0.35f, 0.35f), frand(0.05f, 0.25f), frand(-0.35f, 0.35f) };
+
+			float sc = frand(0.9f, 1.8f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.70f, 1.40f);
+			p.currentTime_ = 0.0f;
+
+			// 黒紫（アルファはinstancing側でフェードするので1固定でOK）
+			float k = frand(0.0f, 1.0f);
+			p.color_ = { 0.10f + 0.06f * k, 0.10f + 0.10f * k, 0.18f + 0.22f * k, 1.0f };
+
+		} else if (groupName == "bossEvil_spark") {
+			// バチバチ欠片：細長く、外へ弾ける
+			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
+
+			// ランダム方向（球状）
+			Vector3 v = { frand(-1.0f, 1.0f), frand(-0.4f, 1.0f), frand(-1.0f, 1.0f) };
+			v = MyMath::SafeNormalize(v, { 0.0f, 1.0f, 0.0f });
+
+			p.transform_.translate_ = center;
+
+			float sp = frand(6.0f, 16.0f);
+			p.velocity_ = v * sp;
+
+			// 細長い
+			float len = frand(0.35f, 0.85f);
+			float thin = frand(0.08f, 0.16f);
+			p.transform_.scale_ = { thin, len, thin };
+
+			p.lifeTime_ = frand(0.18f, 0.35f);
+			p.currentTime_ = 0.0f;
+
+			// 紫～シアン寄り
+			float t = frand(0.0f, 1.0f);
+			p.color_ = { 0.35f + 0.15f * t, 0.65f + 0.25f * t, 1.0f, 1.0f };
+
+		} else if (groupName == "bossEvil_ring") {
+			// うっすらリング：広がる気配（速度は小さめ）
+			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
+
+			p.transform_.translate_ = center;
+
+			float sc = frand(0.60f, 1.10f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			// ほぼ静止
+			p.velocity_ = { frand(-0.05f, 0.05f), frand(-0.02f, 0.08f), frand(-0.05f, 0.05f) };
+
+			p.lifeTime_ = frand(0.22f, 0.45f);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { 0.10f, 0.75f, 1.0f, 0.9f };
+
+		} else if (groupName == "bossEvil_trail") {
+			// 軌道トレイル：尾を引く粒（短命、流れる）
+			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
+
+			std::uniform_real_distribution<float> off(-0.18f, 0.18f);
+			p.transform_.translate_ = center + Vector3{ off(rng), off(rng) * 0.6f, off(rng) };
+
+			// ちょい後ろに流れる（方向は弾側で「出す位置を連続」させるので、ここは弱くてOK）
+			p.velocity_ = { frand(-0.20f, 0.20f), frand(-0.05f, 0.10f), frand(-0.20f, 0.20f) };
+
+			float sc = frand(0.18f, 0.38f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.15f, 0.28f);
+			p.currentTime_ = 0.0f;
+
+			// 暗めの紫シアン
+			float t = frand(0.0f, 1.0f);
+			p.color_ = { 0.12f + 0.10f * t, 0.35f + 0.25f * t, 0.55f + 0.35f * t, 1.0f };
 		} else { // 上記意外
 			// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 			std::uniform_real_distribution<float> velX(-0.15f, 0.15f);

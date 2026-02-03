@@ -120,6 +120,32 @@ void BossController::Update(float dt, Enemy& boss) {
 		laserTelegraph_ = false; // レーザー予告無効化
 	}
 
+	// ============================================================
+	// Missile Burst Execute（毎フレーム）
+	// ============================================================
+	if (burstLeft_ > 0) {
+		burstTimer_ -= dt;
+		if (burstTimer_ <= 0.0f) {
+			// 発射位置（その瞬間のボス位置）
+			Vector3 muzzlePos_ = boss.GetWorldPosition();
+			muzzlePos_.y += missileMuzzleYOffset_;
+			missilePos_ = muzzlePos_;
+
+			// ★ここが重要：毎発、撃つ瞬間の player 座標を取り直す
+			if (boss.GetPlayer()) {
+				missileTarget_ = boss.GetPlayer()();
+			} else {
+				missileTarget_ = playerPos_;
+			}
+
+			missileFireReq_ = true;
+
+			// 次弾へ
+			burstLeft_--;
+			burstTimer_ = burstInterval_;
+		}
+	}
+
 	ClampToArena(pos_); // アリーナ内に位置制限
 	boss.SetPosition(pos_); // 位置設定
 	boss.SyncTransform(); // Transform同期
@@ -169,13 +195,14 @@ void BossController::ImGuiDebug(Enemy& boss) {
 #endif
 }
 
-bool BossController::ConsumeMissileFireRequest(Vector3& outPos, Vector3& outDir, float& outSpeed, int& outDamage, int& outLifeFrame) {
-	if (!missileFireReq_) { return false; } // 発射要求無し
-	missileFireReq_ = false; // 発射要求消費
-	// 出力
+bool BossController::ConsumeMissileFireRequest(Vector3& outPos, Vector3& outTarget, float& outSpeed, float& outCurveHeight, int& outDamage, int& outLifeFrame) {
+	if (!missileFireReq_) { return false; } // リクエスト無し
+	missileFireReq_ = false; // リクエスト消費
+	// 出力セット
 	outPos = missilePos_; // 発射位置
-	outDir = missileDir_; // 発射方向
+	outTarget = missileTarget_; // 目標位置
 	outSpeed = missileSpeed_; // 速度
+	outCurveHeight = missileCurveHeight_; // 曲線高さ
 	outDamage = missileDamage_; // ダメージ
 	outLifeFrame = missileLifeFrame_; // 寿命フレーム
 	return true;
@@ -217,17 +244,22 @@ void BossController::UpdateOrbit(float dt, Enemy& boss, Vector3& pos, const Vect
 		// 怒り中：レーザー
 		// -----------------------------
 		if (!rageActive_) {
-			// 撃った瞬間の playerPos を狙う（予測なし）
 			Vector3 muzzlePos_ = pos;
 			muzzlePos_.y += missileMuzzleYOffset_;
 
-			Vector3 toPlayer_ = MyMath::Subtract(playerPos, muzzlePos_);
-			Vector3 dir_ = MyMath::SafeNormalize(toPlayer_, { 0.0f, 0.0f, 1.0f });
+			// --- 3連射開始 ---
+			burstLeft_ = 3;
+			burstTimer_ = 0.0f;          // すぐ1発目
+			burstTargetValid_ = false;
 
-			missilePos_ = muzzlePos_;
-			missileDir_ = dir_;
-			missileFireReq_ = true;
-
+			if (boss.GetPlayer()) {
+				burstTargetSnap_ = boss.GetPlayer()(); // 発射開始時点のplayer座標を固定
+				burstTargetValid_ = true;
+			} else {
+				burstTargetSnap_ = playerPos;
+				burstTargetValid_ = true;
+			}
+			// ミサイル発射音
 			ChangeState(State::Recover);
 			return;
 		}
