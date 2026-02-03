@@ -212,6 +212,23 @@ void Player::RemoveEnemyIfDead() {
 	}
 }
 
+void Player::OnEnemyDestroyed(Enemy* e) {
+	if (enemy_ == e) {
+		enemy_ = nullptr;
+	}
+	for (auto& b : bullets_) { // 弾が追従している敵も解除する
+		if (!b) continue; // 安全確認
+		if (b->GetEnemy() == e) { b->SetEnemy(nullptr); } // 敵解除
+	}
+}
+
+void Player::Damage(int value) {
+	hp_ -= value;
+	if (hp_ < 0) hp_ = 0;
+	// 被弾したので当たり判定ボックスをしばらく赤くする
+	hitFlashTimer_ = 0.15f; // 0.15秒くらい
+}
+
 void Player::Death() {
 	// ---- HPが0になったら「故障スパーク → 撃墜」二段階 ----
 	if (hp_ <= 0) {
@@ -391,6 +408,12 @@ void Player::Draw(TKM::DirectXCommon* dxCommon) {
 	//for (auto& bullet : bullets_) {
 	//	bullet->Draw(dxCommon); // 弾描画
 	//}
+}
+
+void Player::SetCamera(TKM::Camera* camera) {
+	this->camera_ = camera;
+	if (object_) { object_->SetCamera(camera); }
+	if (reticle_) { reticle_->SetCamera(camera); }
 }
 
 void Player::SetPosition(const Vector3& pos) {

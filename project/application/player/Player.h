@@ -58,15 +58,7 @@ public:
 	/// 敵が破壊されたときの処理を行います。
 	/// </summary>
 	/// <param name="e">破壊された敵オブジェクト</param>
-	void OnEnemyDestroyed(Enemy* e) {
-		if (enemy_ == e) {
-			enemy_ = nullptr;
-		}
-		for (auto& b : bullets_) { // 弾が追従している敵も解除する
-			if (!b) continue; // 安全確認
-			if (b->GetEnemy() == e) { b->SetEnemy(nullptr); } // 敵解除
-		}
-	}
+	void OnEnemyDestroyed(Enemy* e);
 	/// <summary>
 	/// プレイヤーが即死ダメージを受けたときの処理。
 	/// </summary>
@@ -76,12 +68,7 @@ public:
 	/// プレイヤーがダメージを受けたときの処理を行います。
 	/// </summary>
 	/// <param name="value">受けるダメージ量</param>
-	void Damage(int value) {
-		hp_ -= value;
-		if (hp_ < 0) hp_ = 0;
-		// 被弾したので当たり判定ボックスをしばらく赤くする
-		hitFlashTimer_ = 0.15f; // 0.15秒くらい
-	}
+	void Damage(int value);
 	/// <summary>
 	/// プレイヤーが撃墜されたときの処理。
 	/// </summary>
@@ -166,11 +153,7 @@ public:
 	/// プレイヤー本体およびレティクルにも同じカメラを適用します。
 	/// </summary>
 	/// <param name="camera">描画および判定に使用するカメラ</param>
-	void SetCamera(TKM::Camera* camera) {
-		this->camera_ = camera;
-		if (object_) { object_->SetCamera(camera); }
-		if (reticle_) { reticle_->SetCamera(camera); }
-	}
+	void SetCamera(TKM::Camera* camera);
 	/// <summary>
 	/// プレイヤーの位置を設定します。
 	/// </summary>
