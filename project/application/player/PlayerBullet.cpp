@@ -93,6 +93,7 @@ void PlayerBullet::Update() {
 
 			// ▼ エフェクト（元のまま）
 			if (isLTBullet) {
+				damage = 50;
 				pm->Emit("lt_nova_core", hitPos, 1);
 				pm->Emit("lt_nova_wave", hitPos, 3);
 				pm->Emit("lt_nova_burst", hitPos, 40);
@@ -146,6 +147,7 @@ void PlayerBullet::Update() {
 			bool willDie = (core_ && core_->GetHP() <= damage);
 
 			if (isLTBullet) {
+				damage = 10;
 				pm->Emit("lt_nova_core", hitPos, 1);
 				pm->Emit("lt_nova_wave", hitPos, 3);
 				pm->Emit("lt_nova_burst", hitPos, 40);

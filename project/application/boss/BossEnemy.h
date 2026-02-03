@@ -3,7 +3,7 @@
 
 namespace BossParam {
 	// ここはとりあえず “動くこと優先” の初期値
-	constexpr int   InitHP_ = 80;
+	constexpr int   InitHP_ = 1000;
 
 	constexpr float InitScale_ = 5.0f;
 	constexpr Vector3 InitColliderScale_ = { 12.180f, 18.210f, 11.560f };

@@ -126,8 +126,20 @@ namespace TKM {
 			hitPulse_ = 0.12f;
 			drainGlowTimer_ = desc_.drainGlowTime_;
 
-			int oldSeg_ = int((float(lastHp_) / float(maxHp_)) * desc_.segmentCount_);
-			int newSeg_ = int((float(hp_) / float(maxHp_)) * desc_.segmentCount_);
+			float oldRate_ = float(lastHp_) / float(maxHp_);
+			float newRate_ = float(hp_) / float(maxHp_);
+
+			int oldSeg_ = int(std::ceil(oldRate_ * desc_.segmentCount_));
+			int newSeg_ = int(std::floor(newRate_ * desc_.segmentCount_));
+
+			oldSeg_ = std::clamp(oldSeg_, 0, desc_.segmentCount_);
+			newSeg_ = std::clamp(newSeg_, 0, desc_.segmentCount_);
+
+			// ダメージがあるのに差分0なら最低1セグ砕く
+			if (hp_ < lastHp_ && oldSeg_ <= newSeg_) {
+				oldSeg_ = std::min(desc_.segmentCount_, newSeg_ + 1);
+			}
+			// 破片生成
 			SpawnShards_(newSeg_, oldSeg_);
 
 			lastHp_ = hp_;
@@ -151,9 +163,11 @@ namespace TKM {
 		float w_ = desc_.size_.x * rate_;
 		fill_->SetSize({ w_, desc_.size_.y * pulse_ });
 
-		// 遅延バー：あとから追従
+		// lagSpeed_ を「px/秒」として使う
+		const float hpPerPixel_ = float(maxHp_) / std::max(1.0f, desc_.size_.x);
+		const float lagHpStep_ = desc_.lagSpeed_ * dt * hpPerPixel_;
 		if (lagHp_ > float(hp_)) {
-			lagHp_ = std::max(float(hp_), lagHp_ - desc_.lagSpeed_ * dt);
+			lagHp_ = std::max(float(hp_), lagHp_ - lagHpStep_);
 		} else {
 			lagHp_ = float(hp_);
 		}

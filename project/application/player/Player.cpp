@@ -786,7 +786,6 @@ void Player::LTShoot() {
 		// ホーミング設定
 		bullet->SetHomingDelay(0.12f); // ベジェ完了から追尾開始までの遅延時間
 
-
 		bullets_.push_back(std::move(bullet));
 
 		// 見せ場用の軽いズーム＆シェイク
