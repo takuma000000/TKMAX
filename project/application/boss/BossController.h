@@ -43,6 +43,22 @@ public:
 	void ImGuiDebug(Enemy& boss);
 
 	/// <summary>
+	/// 通常時ミサイルの発射要求を取り出します（取り出すと要求は消費されます）。
+	/// </summary>
+	/// <param name="outPos">発射位置</param>
+	/// <param name="outDir">発射方向（正規化）</param>
+	/// <param name="outSpeed">速度</param>
+	/// <param name="outDamage">ダメージ</param>
+	/// <param name="outLifeFrame">寿命フレーム</param>
+	bool ConsumeMissileFireRequest(
+		Vector3& outPos,
+		Vector3& outDir,
+		float& outSpeed,
+		int& outDamage,
+		int& outLifeFrame
+	);
+
+	/// <summary>
 	/// 怒りモードを設定する
 	/// </summary>
 	/// <returns></returns>
@@ -270,4 +286,15 @@ private:
 
 	// auraVolume_
 	TKM::AuraVolumeRenderer* auraVolume_ = nullptr;
+
+	// =============================================================
+	// Missile（通常時攻撃）
+	// =============================================================
+	bool missileFireReq_ = false; // 発射要求フラグ
+	Vector3 missilePos_{ 0.0f, 0.0f, 0.0f }; // 発射位置
+	Vector3 missileDir_{ 0.0f, 0.0f, 1.0f }; // 発射方向
+	float missileSpeed_ = 22.0f; // 速度
+	int missileDamage_ = 1; // ダメージ
+	int missileLifeFrame_ = 180; // 寿命フレーム
+	float missileMuzzleYOffset_ = 1.0f; // 発射位置Yオフセット（ボス中心＋）
 };

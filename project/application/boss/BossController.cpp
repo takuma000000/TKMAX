@@ -169,6 +169,18 @@ void BossController::ImGuiDebug(Enemy& boss) {
 #endif
 }
 
+bool BossController::ConsumeMissileFireRequest(Vector3& outPos, Vector3& outDir, float& outSpeed, int& outDamage, int& outLifeFrame) {
+	if (!missileFireReq_) { return false; } // 発射要求無し
+	missileFireReq_ = false; // 発射要求消費
+	// 出力
+	outPos = missilePos_; // 発射位置
+	outDir = missileDir_; // 発射方向
+	outSpeed = missileSpeed_; // 速度
+	outDamage = missileDamage_; // ダメージ
+	outLifeFrame = missileLifeFrame_; // 寿命フレーム
+	return true;
+}
+
 void BossController::UpdateEnter(float dt, Enemy& boss, Vector3& pos) {
 	const float targetZ_ = orbitZ_; // 目標Z座標
 	const float speed_ = 18.0f; // 侵入速度
@@ -198,22 +210,35 @@ void BossController::UpdateOrbit(float dt, Enemy& boss, Vector3& pos, const Vect
 	// ふわっと移動
 	pos = SmoothDamp(pos, target_, orbitFollow_, dt);
 
-	// 一定時間で次の行動へ
-	if (timer_ >= orbitDuration_) { // 時間到達
-		// 怒りモードじゃないならレーザーに行かない
+	// 攻撃移行判定
+	if (timer_ >= orbitDuration_) {
+		// -----------------------------
+		// 通常時：ミサイル
+		// 怒り中：レーザー
+		// -----------------------------
 		if (!rageActive_) {
+			// 撃った瞬間の playerPos を狙う（予測なし）
+			Vector3 muzzlePos_ = pos;
+			muzzlePos_.y += missileMuzzleYOffset_;
+
+			Vector3 toPlayer_ = MyMath::Subtract(playerPos, muzzlePos_);
+			Vector3 dir_ = MyMath::SafeNormalize(toPlayer_, { 0.0f, 0.0f, 1.0f });
+
+			missilePos_ = muzzlePos_;
+			missileDir_ = dir_;
+			missileFireReq_ = true;
+
 			ChangeState(State::Recover);
 			return;
 		}
+		// 怒りモード時のみレーザーへ
+		laserAimFixed_ = playerPos + playerVel_ * predictLeadTime_; // 予測込みで狙い位置計算
+		laserAimFixed_.x = std::clamp(laserAimFixed_.x, arenaMin_.x, arenaMax_.x); // x
+		laserAimFixed_.y = std::clamp(laserAimFixed_.y, arenaMin_.y, arenaMax_.y); // y
+		laserAimFixed_.z = std::clamp(laserAimFixed_.z, arenaMin_.z, arenaMax_.z); // z
 
-		// ★怒りモード時のみレーザーへ
-		laserAimFixed_ = playerPos + playerVel_ * predictLeadTime_;
-		laserAimFixed_.x = std::clamp(laserAimFixed_.x, arenaMin_.x, arenaMax_.x);
-		laserAimFixed_.y = std::clamp(laserAimFixed_.y, arenaMin_.y, arenaMax_.y);
-		laserAimFixed_.z = std::clamp(laserAimFixed_.z, arenaMin_.z, arenaMax_.z);
-
-		laserBasePos_ = pos;
-		ChangeState(State::LaserWindup);
+		laserBasePos_ = pos; // 基準位置保存
+		ChangeState(State::LaserWindup); // レーザー予告へ
 		return;
 	}
 }

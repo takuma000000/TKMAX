@@ -124,7 +124,18 @@ void BossManager::Update(float dt) {
 	if (bossController_) {
 		bossController_->Update(dt, *boss_); // ボス挙動コントローラ更新
 	}
-
+	// --- Missile（通常時攻撃） ---
+	{
+		Vector3 mPos_{}; // 発射位置
+		Vector3 mDir_{}; // 発射方向（正規化ベクトル）
+		float mSpeed_ = 0.0f; // 速度
+		int mDmg_ = 0; // ダメージ
+		int mLife_ = 0; // 寿命フレーム
+		// ミサイル発射要求チェック＆取得
+		if (bossController_->ConsumeMissileFireRequest(mPos_, mDir_, mSpeed_, mDmg_, mLife_)) { // ミサイル発射要求あり
+			SpawnEnemyBullet(mPos_, mDir_, mSpeed_, mDmg_, mLife_); // ミサイルスポーン
+		}
+	}
 	// --- LaserBeam 更新＆BossControllerのレーザー情報を反映 ---
 	if (laserBeam3D_) { // LaserBeam3D 更新
 		laserBeam3D_->Update(dt); // 更新
@@ -196,6 +207,8 @@ void BossManager::Draw(TKM::DirectXCommon* dxCommon) {
 		Matrix4x4 vp_ = camera_->GetViewProjectionMatrix();
 		laserBeam3D_->Draw(vp_, right_, up_, fwd_); // 描画
 	}
+
+	DrawUI(); // UI描画
 }
 
 void BossManager::DrawUI() {

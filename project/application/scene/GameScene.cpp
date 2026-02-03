@@ -191,7 +191,6 @@ void GameScene::Draw() {
 	if (pause_) {
 		pause_->Draw(); // ポーズメニューの描画
 	}
-	if (bossManager_) { bossManager_->DrawUI(); } // ボスUIの描画
 }
 
 void GameScene::SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float speed, int damage, int lifeFrame) {
