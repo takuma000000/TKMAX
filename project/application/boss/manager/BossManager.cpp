@@ -133,7 +133,7 @@ void BossManager::Update(float dt) {
 		int mLife_ = 0; // 寿命フレーム
 		// ミサイル発射要求チェック＆取得
 		if (bossController_->ConsumeMissileFireRequest(mPos_, mDir_, mSpeed_, mDmg_, mLife_)) { // ミサイル発射要求あり
-			SpawnEnemyBullet(mPos_, mDir_, mSpeed_, mDmg_, mLife_); // ミサイルスポーン
+			SpawnEnemyBullet(mPos_, mDir_, mSpeed_ * dt, mDmg_, mLife_); // ミサイルスポーン
 		}
 	}
 	// --- LaserBeam 更新＆BossControllerのレーザー情報を反映 ---
