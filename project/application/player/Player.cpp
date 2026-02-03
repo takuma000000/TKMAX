@@ -164,7 +164,7 @@ void Player::ImGuiDebug() {
 	ImGui::Separator(); // 区切り線
 	ImGui::Text("HP: %d", hp_);// 1
 	ImGui::SameLine();// 1 と 2 を同じ行に配置
-	if (ImGui::Button("HPリセット")) { hp_ = 1; } // 2
+	if (ImGui::Button("HPリセット")) { hp_ = 5; } // 2
 	ImGui::SeparatorText("カメラシェイク");
 	ImGui::SliderFloat("強度のベース", &shakeBaseStrength_, 0.0f, 5.0f); // ベースとなるカメラシェイク強度
 	ImGui::SliderFloat("ズーム強調", &shakeZoomBoost_, 0.0f, 15.0f); // ズーム時の追加倍率
