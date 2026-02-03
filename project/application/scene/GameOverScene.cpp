@@ -9,7 +9,7 @@
 
 using namespace TKM;
 
-void GameOverScene::Initialize(){
+void GameOverScene::Initialize() {
 	ModelManager::GetInstance()->LoadModel("jett.obj", dxCommon_);
 	TextureManager::GetInstance()->LoadTexture("./resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
 	TextureManager::GetInstance()->LoadTexture("./resources/over.png");
@@ -97,9 +97,9 @@ void GameOverScene::Initialize(){
 	overActive_ = true; // アニメ進行フラグON
 }
 
-void GameOverScene::Finalize(){}
+void GameOverScene::Finalize() {}
 
-void GameOverScene::Update(){
+void GameOverScene::Update() {
 	Input::GetInstance()->Update();
 
 	if (player_) { player_->Update(dt_); }
@@ -116,7 +116,7 @@ void GameOverScene::Update(){
 	}
 
 	// ─── Tキーでタイトルへ戻る（アイリス閉じ：InBack/0.8s） ───
-	if (!irisClosing_ && Input::GetInstance()->TriggerKey(DIK_T)) {
+	if (!irisClosing_ && Input::GetInstance()->TriggerKey(DIK_T) || TKM::Input::GetInstance()->TriggerButton(XINPUT_GAMEPAD_A)) {
 		irisClosing_ = true;
 		irisCloseTween_.Reset(0.0f, irisMaxScale_, kIrisDuration_, Ease::Type::InBack);
 	}
@@ -338,7 +338,7 @@ void GameOverScene::Update(){
 	}
 }
 
-void GameOverScene::Draw(){
+void GameOverScene::Draw() {
 	// 3D
 	Object3dCommon::GetInstance()->DrawSetCommon();
 	if (player_) { player_->Draw(dxCommon_); }

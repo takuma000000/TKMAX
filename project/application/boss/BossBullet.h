@@ -5,6 +5,7 @@
 #include "camera/Camera.h"
 #include "MyMath.h"
 #include "ParticleManager.h"
+#include "LineRenderer.h"
 
 //=============================================================
 // BossBulletクラス
@@ -81,6 +82,21 @@ public:
 		// まず位置更新（どのモードでもここを通る）
 		obj_->SetTranslate(newPos_);
 		obj_->Update();
+
+#ifdef USE_IMGUI
+		// ───────── ボス弾当たり判定ワイヤーボックス描画 ─────────
+		{
+			Vector3 center_ = obj_->GetTranslate();
+			const float r_ = Radius(); // 簡易半径（kDefaultScale_）
+			Vector3 size_{ r_ * 2.0f, r_ * 2.0f, r_ * 2.0f };
+
+			auto* lr_ = TKM::LineRenderer::GetInstance();
+			if (lr_) {
+				TKM::LineRenderer::Color col_{ 1.0f, 0.8f, 0.2f, 1.0f }; // 黄っぽい
+				lr_->AddAABB(center_, size_, col_);
+			}
+		}
+#endif
 
 		// ==========================
 		// Particle FX（ここに置けば発射時から必ず出る）
@@ -212,6 +228,10 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	bool IsDead() const { return dead_; }
+	/// <summary>
+	/// 弾を強制的に死亡状態にします。
+	/// </summary>
+	void Kill() { dead_ = true; }
 	/// <summary>
 	/// ダメージ値を返します。
 	/// </summary>

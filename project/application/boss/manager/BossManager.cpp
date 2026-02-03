@@ -38,6 +38,36 @@ namespace { // 無名名前空間
 	}
 	// 定数ボス戦設定
 	const BossManager::BossBattleConfig kBossConfig_ = MakeBossConfig();
+
+	static float ClampFloat(float v, float mn, float mx) {
+		if (v < mn) return mn;
+		if (v > mx) return mx;
+		return v;
+	}
+
+	// AABB(center,size) vs Sphere(center,radius)
+	static bool TestAABBSphere(const Vector3& aabbCenter, const Vector3& aabbSize, const Vector3& sphereCenter, float sphereRadius) {
+		const float hx = aabbSize.x * 0.5f;
+		const float hy = aabbSize.y * 0.5f;
+		const float hz = aabbSize.z * 0.5f;
+
+		const float minX = aabbCenter.x - hx;
+		const float maxX = aabbCenter.x + hx;
+		const float minY = aabbCenter.y - hy;
+		const float maxY = aabbCenter.y + hy;
+		const float minZ = aabbCenter.z - hz;
+		const float maxZ = aabbCenter.z + hz;
+
+		const float cx = ClampFloat(sphereCenter.x, minX, maxX);
+		const float cy = ClampFloat(sphereCenter.y, minY, maxY);
+		const float cz = ClampFloat(sphereCenter.z, minZ, maxZ);
+
+		const float dx = sphereCenter.x - cx;
+		const float dy = sphereCenter.y - cy;
+		const float dz = sphereCenter.z - cz;
+
+		return (dx * dx + dy * dy + dz * dz) <= (sphereRadius * sphereRadius);
+	}
 }
 
 void BossManager::Initialize(TKM::DirectXCommon* dxCommon, TKM::Camera* camera, TKM::BaseScene* parent, Player* player) {
@@ -206,9 +236,9 @@ void BossManager::Draw(TKM::DirectXCommon* dxCommon) {
 
 	boss_->Draw(dxCommon); // ボス本体描画
 
-	for (auto& b : bossBullets_) { // ボス弾描画
-		b->Draw(dxCommon); // 描画
-	}
+	//for (auto& b : bossBullets_) { // ボス弾描画
+	//	b->Draw(dxCommon); // 描画
+	//}
 
 	// --- LaserBeam 描画（空間上） ---
 	if (laserBeam3D_ && camera_) { // LaserBeam3D 描画
@@ -306,11 +336,27 @@ void BossManager::OnClearSequenceStart() {
 
 void BossManager::UpdateBossBullets() {
 	for (auto it = bossBullets_.begin(); it != bossBullets_.end();) { // ボス弾更新ループ
-		(*it)->Update(); // 更新
-		if ((*it)->IsDead()) { // 死亡していたらリストから削除
-			it = bossBullets_.erase(it); // 削除＆イテレータ更新
+		BossBullet* b_ = it->get();
+
+		b_->Update(); // 更新（位置が動くので先に更新）
+
+		// ───────── Player × BossBullet 当たり判定 ─────────
+		if (player_ && !player_->IsDead() && !b_->IsDead()) {
+			const Vector3 pCenter_ = player_->GetPosition();
+			const Vector3 pSize_ = player_->GetColliderScale(); // Player.cpp のワイヤーと同じサイズ
+			const Vector3 sCenter_ = b_->GetPos();
+			const float   sR_ = b_->Radius();
+
+			if (TestAABBSphere(pCenter_, pSize_, sCenter_, sR_)) {
+				player_->Damage(b_->Damage()); // 被弾（HP減る＆赤フラッシュ）
+				b_->Kill();                    // 弾消滅
+			}
+		}
+
+		if (b_->IsDead()) { // 死亡していたらリストから削除
+			it = bossBullets_.erase(it);
 		} else {
-			++it; // イテレータ進行
+			++it;
 		}
 	}
 }

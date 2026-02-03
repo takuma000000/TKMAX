@@ -78,12 +78,13 @@ void BossController::Update(float dt, Enemy& boss) {
 		}
 	}
 	rageGauge_ = std::clamp(rageGauge_, 0.0f, 1.5f); // ゲージクランプ
-	// 怒りモード判定
-	if (!rageActive_) { // 怒りモードでなければ発動判定
-		if (rageGauge_ >= rageOnThreshold_) { rageActive_ = true; } // 発動
-	} else {
-		if (rageGauge_ <= rageOffThreshold_) { rageActive_ = false; } // 解除
-	}
+	//// 怒りモード判定
+	//if (!rageActive_) { // 怒りモードでなければ発動判定
+	//	if (rageGauge_ >= rageOnThreshold_) { rageActive_ = true; } // 発動
+	//} else {
+	//	if (rageGauge_ <= rageOffThreshold_) { rageActive_ = false; } // 解除
+	//}
+	rageActive_ = false;
 
 	// プレイヤー位置・速度更新
 	if (boss.GetPlayer()) { // プレイヤー位置取得関数があるなら

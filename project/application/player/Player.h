@@ -107,6 +107,22 @@ public:
 	/// <returns></returns>
 	int GetHP() const { return hp_; }
 	/// <summary>
+	/// プレイヤーの最大HPを取得します。
+	/// </summary>
+	/// <returns></returns>
+	int GetMaxHP() const { return maxHp_; }
+	/// <summary>
+	/// プレイヤーのHP割合(0.0f〜1.0f)を取得します。
+	/// </summary>
+	/// <returns></returns>
+	float GetHPRate() const {
+		if (maxHp_ <= 0) { return 0.0f; }
+		float r = (float)hp_ / (float)maxHp_;
+		if (r < 0.0f) r = 0.0f;
+		if (r > 1.0f) r = 1.0f;
+		return r;
+	}
+	/// <summary>
 	/// レティクルを取得します。
 	/// </summary>
 	/// <returns></returns>
@@ -118,11 +134,6 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	const Vector3& GetRotation() const { return object_->GetRotate(); }
-	/// <summary>
-	/// プレイヤーの回転を設定します。
-	/// </summary>
-	/// <param name="r"></param>
-	void SetRotation(const Vector3& r) { object_->SetRotate(r); }
 	/// <summary>
 	/// プレイヤーのコライダースケールを取得します。
 	/// </summary>
@@ -206,6 +217,11 @@ public:
 	/// </summary>
 	/// <param name="effect">放射状ブラーエフェクト（nullptr 可）</param>
 	void SetRadialBlurEffect(TKM::RadialBlurEffect* effect) { radialBlur_ = effect; }
+	/// <summary>
+	/// プレイヤーの回転を設定します。
+	/// </summary>
+	/// <param name="r"></param>
+	void SetRotation(const Vector3& r) { object_->SetRotate(r); }
 	// =========================================
 
 	enum class DeathPhase { None, FaultSparks, FlyAway }; // 撃墜演出フェーズ
@@ -293,7 +309,8 @@ private:
 	//======================================================================
 	// プレイヤー状態 / 制御フラグ
 	//======================================================================
-	int  hp_ = 5; // 初期HP
+	int  maxHp_ = 5; // 最大HP
+	int  hp_ = 5;    // 初期HP
 
 	bool canUseSpecial_ = false; // 一撃必殺が使用可能かどうか
 	bool controlEnabled_ = true;  // trueなら通常操作、falseなら入力系を全部無視

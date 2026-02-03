@@ -42,11 +42,49 @@ namespace TKM {
 		uiLB_->SetColor(idle);
 		uiRB_->SetColor(idle);
 
-		UpdateLayout(screenW, screenH);
-
+		// 先に弾UIを作る（Layoutで位置をいじりたいので）
 		rbGaugeUI_ = std::make_unique<TKM::RBGaugeUI>();
 		TKM::RBGaugeUI::Desc d{};
 		rbGaugeUI_->Initialize(spriteCommon_, dxCommon_, parentScene_, d);
+
+		// --- HPバー ---
+		hpFrame_ = std::make_unique<Sprite>();
+		hpFill_ = std::make_unique<Sprite>();
+
+		// ここは仮パス（後で好きな画像に差し替えOK）
+		const std::string hpFrameTex = "./resources/uvChecker.png";
+		const std::string hpFillTex = "./resources/circle.png";
+
+		hpFrame_->Initialize(spriteCommon_, dxCommon_, hpFrameTex);
+		hpFill_->Initialize(spriteCommon_, dxCommon_, hpFillTex);
+
+		// サイズは自前で指定するので autoAdjust は切る。
+		// ただし textureSize_ がデフォルト64のままだとUVがバグるので、metadataから正しい切り出しサイズを入れる。
+		hpFrame_->SetAutoAdjustTextureSize(false);
+		hpFill_->SetAutoAdjustTextureSize(false);
+
+		{
+			const auto& metaF = TextureManager::GetInstance()->GetMetadata(hpFrameTex);
+			hpFrame_->SetTextureLeftTop({ 0.0f, 0.0f });
+			hpFrame_->SetTextureSize({ (float)metaF.width, (float)metaF.height });
+
+			const auto& metaFi = TextureManager::GetInstance()->GetMetadata(hpFillTex);
+			hpFill_->SetTextureLeftTop({ 0.0f, 0.0f });
+			hpFill_->SetTextureSize({ (float)metaFi.width, (float)metaFi.height });
+		}
+
+		// 中央基準で置く（ゲージ枠に入れやすい）
+		hpFrame_->SetAnchorPoint({ 0.5f, 0.5f });
+		hpFill_->SetAnchorPoint({ 0.5f, 0.5f });
+
+		hpFrame_->SetSize(hpSize_);
+		hpFill_->SetSize(hpSize_);
+
+		colHPFrame_ = { 1.0f, 1.0f, 1.0f, 0.90f };
+		colHPFill_ = { 0.25f, 1.0f, 0.35f, 0.90f }; // とりあえず緑（嫌なら変えてOK）
+
+		// 最後にレイアウト確定（ここで弾UIとHPの位置を決める）
+		UpdateLayout(screenW, screenH);
 	}
 
 	void UIController::UpdateLayout(float screenW, float screenH) {
@@ -57,6 +95,18 @@ namespace TKM {
 		if (uiRB_) uiRB_->SetPosition({ screenW - margin, screenH - margin });
 		if (uiLB_) uiLB_->SetPosition({ screenW - margin, screenH - margin - (uiSize.y + spacing) * 1.0f });
 		if (uiLT_) uiLT_->SetPosition({ screenW - margin, screenH - margin - (uiSize.y + spacing) * 2.0f });
+
+		// --- 弾UIを少し上に上げる ---
+		if (rbGaugeUI_) {
+			auto& desc = rbGaugeUI_->GetDesc();
+			desc.center_ = { screenW * 0.5f, screenH - 60.0f - ammoUiRaiseY_ };
+		}
+
+		// --- HPバーは“元の弾UIの場所”に置く（その枠にHPを入れる） ---
+		hpCenter_ = { screenW * 0.5f, screenH - 60.0f };
+
+		if (hpFrame_) hpFrame_->SetPosition(hpCenter_);
+		if (hpFill_)  hpFill_->SetPosition(hpCenter_);
 	}
 
 	void UIController::Update(float dt, Player* player) {
@@ -77,7 +127,7 @@ namespace TKM {
 		const Vector4 idle = { 1.0f, 1.0f, 1.0f, 0.75f };
 		const Vector4 on = { 1.0f, 0.25f, 0.25f, 1.0f };
 
-		// ★見た目色は保持しておく（Draw側で hudAlpha_ を掛ける）
+		// 見た目色は保持しておく（Draw側で hudAlpha_ を掛ける）
 		colRB_ = (rbDown ? on : idle);
 		colLB_ = (lbDown ? on : idle);
 		colLT_ = (ltDown ? on : idle);
@@ -86,6 +136,16 @@ namespace TKM {
 		if (uiLT_) uiLT_->Update();
 		if (uiLB_) uiLB_->Update();
 		if (uiRB_) uiRB_->Update();
+
+		// --- HPバー更新 ---
+		if (player && hpFill_) {
+			const float rate = player->GetHPRate();
+			Vector2 s = hpSize_;
+			s.x *= rate;
+			hpFill_->SetSize(s);
+		}
+		if (hpFrame_) hpFrame_->Update();
+		if (hpFill_)  hpFill_->Update();
 	}
 
 	void UIController::Draw() {
@@ -96,6 +156,8 @@ namespace TKM {
 			return o;
 			};
 
+		if (hpFrame_) { hpFrame_->SetColor(mulAlpha(colHPFrame_)); hpFrame_->Draw(); }
+		if (hpFill_) { hpFill_->SetColor(mulAlpha(colHPFill_));  hpFill_->Draw(); }
 		if (uiLT_) { uiLT_->SetColor(mulAlpha(colLT_)); uiLT_->Draw(); }
 		if (uiLB_) { uiLB_->SetColor(mulAlpha(colLB_)); uiLB_->Draw(); }
 		if (uiRB_) { uiRB_->SetColor(mulAlpha(colRB_)); uiRB_->Draw(); }

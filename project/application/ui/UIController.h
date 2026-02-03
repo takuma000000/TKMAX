@@ -69,5 +69,15 @@ namespace TKM {
 		Vector4 colLT_{ 1.0f,1.0f,1.0f,1.0f };
 		Vector4 colLB_{ 1.0f,1.0f,1.0f,1.0f };
 		Vector4 colRB_{ 1.0f,1.0f,1.0f,1.0f };
+
+		// --- HPバー ---
+		std::unique_ptr<Sprite> hpFrame_;
+		std::unique_ptr<Sprite> hpFill_;
+		Vector4 colHPFrame_{ 1.0f,1.0f,1.0f,1.0f };
+		Vector4 colHPFill_{ 1.0f,1.0f,1.0f,1.0f };
+
+		Vector2 hpCenter_{};
+		Vector2 hpSize_{ 520.0f, 18.0f }; // RBGaugeUIと同じ幅にして「その枠」に入れる
+		float   ammoUiRaiseY_ = 60.0f;    // 弾UIを上に上げる量（好みで調整）
 	};
 }
