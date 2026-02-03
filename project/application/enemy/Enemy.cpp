@@ -360,9 +360,9 @@ void Enemy::Update(float dt) {
 				pm_->Emit("enemyDeath_shard", emitPos_, 20);
 				pm_->Emit("enemyDeath_smoke", emitPos_, 4);
 			} else if (deathReaction_ == EnemyDeathReaction::RiseAbsorb) {
-				pm_ -> Emit("enemyDeath_core", emitPos_, 1);
-				pm_ -> Emit("enemyDeath_shard", emitPos_, 14);
-				pm_ -> Emit("enemyDeath_smoke", emitPos_, 6);
+				pm_->Emit("enemyDeath_core", emitPos_, 1);
+				pm_->Emit("enemyDeath_shard", emitPos_, 14);
+				pm_->Emit("enemyDeath_smoke", emitPos_, 6);
 			} else if (deathReaction_ == EnemyDeathReaction::Collapse) {
 				pm_->Emit("enemyDeath_shard", emitPos_, 10);
 				pm_->Emit("enemyDeath_smoke", emitPos_, 3);

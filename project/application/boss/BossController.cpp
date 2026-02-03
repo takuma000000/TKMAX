@@ -188,23 +188,31 @@ void BossController::UpdateOrbit(float dt, Enemy& boss, Vector3& pos, const Vect
 	float angle_ = t_ * orbitAngularSpeed_;
 	float ox_ = std::cos(angle_) * orbitRadiusX_;
 	float oy_ = std::sin(angle_ * 0.9f) * orbitRadiusY_;
+
 	// 目標位置計算
 	Vector3 target_;
 	target_.x = playerPos.x * orbitPlayerInfluence_ + ox_;
 	target_.y = orbitY_ + playerPos.y * 0.2f + oy_;
 	target_.z = orbitZ_;
+
 	// ふわっと移動
 	pos = SmoothDamp(pos, target_, orbitFollow_, dt);
-	// 一定時間でレーザー予告へ
+
+	// 一定時間で次の行動へ
 	if (timer_ >= orbitDuration_) { // 時間到達
-		// 旋回が終わったら必ずレーザー予告へ（突進撤廃）
+		// 怒りモードじゃないならレーザーに行かない
+		if (!rageActive_) {
+			ChangeState(State::Recover);
+			return;
+		}
+
+		// ★怒りモード時のみレーザーへ
 		laserAimFixed_ = playerPos + playerVel_ * predictLeadTime_;
 		laserAimFixed_.x = std::clamp(laserAimFixed_.x, arenaMin_.x, arenaMax_.x);
 		laserAimFixed_.y = std::clamp(laserAimFixed_.y, arenaMin_.y, arenaMax_.y);
 		laserAimFixed_.z = std::clamp(laserAimFixed_.z, arenaMin_.z, arenaMax_.z);
-		// 基準位置保存
+
 		laserBasePos_ = pos;
-		// 状態変更
 		ChangeState(State::LaserWindup);
 		return;
 	}
@@ -238,6 +246,13 @@ void BossController::UpdateLaserRecover(float dt, Enemy& boss, Vector3& pos) {
 // Laser（怒り中のみ）
 // ============================
 void BossController::UpdateLaserWindup(float dt, Enemy& boss, Vector3& pos, const Vector3& playerPos) {
+	if (!rageActive_) { // 怒りモード解除されたら中断
+		laserActive_ = false;
+		laserTelegraph_ = false;
+		ChangeState(State::Recover);
+		return;
+	}
+	
 	if (timer_ <= dt) { // 初回のみ
 		laserActive_ = true; // レーザー有効化
 		laserTelegraph_ = true; // レーザー予告有効化
@@ -265,6 +280,13 @@ void BossController::UpdateLaserWindup(float dt, Enemy& boss, Vector3& pos, cons
 }
 
 void BossController::UpdateLaserFire(float dt, Enemy& boss, Vector3& pos, const Vector3& playerPos) {
+	if (!rageActive_) {
+		laserActive_ = false;
+		laserTelegraph_ = false;
+		ChangeState(State::Recover);
+		return;
+	}
+	
 	laserActive_ = true; // レーザー有効化
 	laserTelegraph_ = false; // レーザー予告無効化
 	pos = laserBasePos_; // 基準位置に固定
