@@ -207,8 +207,6 @@ void BossManager::Draw(TKM::DirectXCommon* dxCommon) {
 		Matrix4x4 vp_ = camera_->GetViewProjectionMatrix();
 		laserBeam3D_->Draw(vp_, right_, up_, fwd_); // 描画
 	}
-
-	DrawUI(); // UI描画
 }
 
 void BossManager::DrawUI() {

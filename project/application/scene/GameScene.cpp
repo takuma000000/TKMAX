@@ -179,18 +179,12 @@ void GameScene::Draw() {
 	}
 	LineRenderer::GetInstance()->Draw(vp);
 #endif
-
 	// スプライトまとめ
 	TKM::SpriteCommon::GetInstance()->DrawSetCommon();
-	if (flow_) {
-		flow_->Draw(); // ゲームフローの描画
-	}
-	if (ui_) {
-		ui_->Draw(); // UIの描画
-	}
-	if (pause_) {
-		pause_->Draw(); // ポーズメニューの描画
-	}
+	if (flow_) { flow_->Draw(); } // ゲームフローの描画
+	if (ui_) { ui_->Draw(); } // UIの描画
+	if (pause_) { pause_->Draw(); } // ポーズメニューの描画
+	if (bossManager_) { bossManager_->DrawUI(); } // ボスのUI描画
 }
 
 void GameScene::SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float speed, int damage, int lifeFrame) {
