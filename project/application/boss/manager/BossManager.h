@@ -28,28 +28,28 @@ public:
 
 	// Boss戦設定構造体
 	struct BossBattleConfig {
-		Vector3 spawnPos_;
-		Vector3 arenaMin_;
-		Vector3 arenaMax_;
+		Vector3 spawnPos_; // ボス出現位置（ワールド座標）
+		Vector3 arenaMin_; // アリーナ最小座標（ワールド座標）
+		Vector3 arenaMax_; // アリーナ最大座標（ワールド座標）
 
-		TKM::WaterRippleEffect::RippleDesc killRipple_;
+		TKM::WaterRippleEffect::RippleDesc killRipple_; // 撃破時波紋エフェクト設定
 
-		float killSlowScale_ = 1.0f;
-		float killSlowDuration_ = 0.0f;
+		float killSlowScale_ = 1.0f; // 撃破時スローモーション倍率
+		float killSlowDuration_ = 0.0f; // 撃破時スローモーション継続時間（秒）
 	};
 	// 撃破シーケンス状態構造体
 	struct KillSequenceState {
-		bool zoomStarted_ = false;
-		bool slowTriggered_ = false;
-		bool rippleTriggered_ = false;
+		bool zoomStarted_ = false; // ズーム開始フラグ
+		bool slowTriggered_ = false; // スローモーション発動済みフラグ
+		bool rippleTriggered_ = false; // スローモーション/波紋エフェクト発動済みフラグ
 
 		/// <summary>
 		/// リセット。
 		/// </summary>
 		void Reset() {
-			zoomStarted_ = false;
-			slowTriggered_ = false;
-			rippleTriggered_ = false;
+			zoomStarted_ = false; // ズーム開始フラグ
+			slowTriggered_ = false; // スローモーション発動済みフラグ
+			rippleTriggered_ = false; // スローモーション/波紋エフェクト発動済みフラグ
 		}
 	};
 
@@ -59,8 +59,8 @@ public:
 	struct LaserInfo {
 		bool active_ = false;       // 予告 or 発射中
 		bool telegraph_ = false;    // 予告中
-		Vector3 startWS_{ 0.0f,0.0f,0.0f };
-		Vector3 endWS_{ 0.0f,0.0f,0.0f };
+		Vector3 startWS_{ 0.0f,0.0f,0.0f }; // レーザー開始位置（ワールド座標）
+		Vector3 endWS_{ 0.0f,0.0f,0.0f }; // レーザー終了位置（ワールド座標）
 		float radius_ = 0.0f;       // 当たり判定半径
 	};
 
@@ -108,7 +108,6 @@ public:
 	/// </summary>
 	/// <param name="dxCommon">DirectX共通管理クラス</param>
 	void Draw(TKM::DirectXCommon* dxCommon);
-
 	/// <summary>
 	/// UI描画。
 	/// </summary>
@@ -179,6 +178,7 @@ public:
 	// =========================================
 
 private:
+	// メンバ変数
 	TKM::DirectXCommon* dxCommon_ = nullptr;
 	TKM::Camera* camera_ = nullptr;
 	TKM::BaseScene* parentScene_ = nullptr;
