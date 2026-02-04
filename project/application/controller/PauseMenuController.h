@@ -15,10 +15,10 @@ namespace TKM {
 	class PauseMenuController {
 	public:
 		enum class Command {
-			None,
-			Resume,
-			Restart,
-			ReturnToTitle,
+			None, // なし
+			Resume, // 再開
+			Restart, // はじめから
+			ReturnToTitle, // タイトルへ戻る
 		};
 		// 設定構造体
 		struct Desc {
@@ -79,18 +79,19 @@ namespace TKM {
 	private:
 		Desc desc_{};
 
+		// 状態
 		enum class State {
-			Closed,
-			Pausing,
-			Paused,
-			Resuming,
+			Closed, // 閉じている
+			Pausing, // 開いている途中
+			Paused, // 開いている
+			Resuming, // 閉じている途中
 		};
-
+		// メニュー項目
 		enum class Item {
-			Resume = 0,
-			Restart,
-			ReturnToTitle,
-			Count
+			Resume = 0, // 再開
+			Restart, // はじめから
+			ReturnToTitle, // タイトルへ戻る
+			Count // 項目数
 		};
 
 		/// <summary>
@@ -127,38 +128,49 @@ namespace TKM {
 		/// <param name="delta">インデックスの増減量（正数で下、負数で上）</param>
 		void MoveIndex_(int delta);
 
+		//==============================
+		// 参照
+		//==============================
 		SpriteCommon* spriteCommon_ = nullptr;
 		DirectXCommon* dxCommon_ = nullptr;
 		BaseScene* parentScene_ = nullptr;
-
-		float screenW_ = 0.0f;
-		float screenH_ = 0.0f;
-
-		State state_ = State::Closed;
-		int index_ = 0;
-
+		//==============================
+		// 画面情報
+		//==============================
+		float screenW_ = 0.0f; // 画面幅
+		float screenH_ = 0.0f; // 画面高さ
+		//==============================
+		// 状態
+		//==============================
+		State state_ = State::Closed; // 現在の状態
+		int index_ = 0; // 選択中の項目インデックス
+		//==============================
 		// 演出
+		//==============================
 		float fadeT_ = 0.0f;        // 0→1（Pausing/Resuming の進行）
 		float pulseTime_ = 0.0f;    // 選択中の脈動用（フェードとは分離）
 		float curtainAlpha_ = 0.0f; // 暗幕のアルファ
-
+		//==============================
 		// 入力のエッジ検出用
-		bool prevStart_ = false;
-		bool prevUp_ = false;
-		bool prevDown_ = false;
-		bool prevA_ = false;
-		bool prevB_ = false;
-
+		//==============================
+		bool prevStart_ = false; // スタートボタン
+		bool prevUp_ = false; // 上ボタン
+		bool prevDown_ = false; // 下ボタン
+		bool prevA_ = false; // Aボタン
+		bool prevB_ = false; // Bボタン
+		//==============================
 		// 仮スプライト（後でリソース差し替え）
+		//==============================
 		std::unique_ptr<Sprite> curtain_;     // 暗幕
 		std::unique_ptr<Sprite> panel_;       // パネル
 		std::array<std::unique_ptr<Sprite>, (int)Item::Count> items_; // 項目（仮）
 		std::unique_ptr<Sprite> cursor_;      // カーソル（仮）
-
+		//==============================
 		// レイアウト
-		Vector2 panelPos_{};
-		Vector2 panelSize_{};
-		Vector2 baseItemPos_{};
-		float itemSpacingY_ = 64.0f;
+		//==============================
+		Vector2 panelPos_{}; // パネル位置
+		Vector2 panelSize_{}; // パネルサイズ
+		Vector2 baseItemPos_{}; // 項目基準位置
+		float itemSpacingY_ = 64.0f; // 項目間隔
 	};
 } // namespace TKM
