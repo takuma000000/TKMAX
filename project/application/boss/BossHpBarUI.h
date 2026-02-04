@@ -96,13 +96,13 @@ namespace TKM {
 
 	private:
 		struct Shard {
-			std::unique_ptr<Sprite> sp_;
-			Vector2 vel_{};
-			float rot_ = 0.0f;
-			float rotVel_ = 0.0f;
-			float t_ = 0.0f;
-			float life_ = 0.5f;
-			bool alive_ = false;
+			std::unique_ptr<Sprite> sp_; // 破片スプライト
+			Vector2 vel_{}; // 速度
+			float rot_ = 0.0f; // 回転角
+			float rotVel_ = 0.0f; // 回転速度
+			float t_ = 0.0f; // 経過時間
+			float life_ = 0.5f; // 寿命
+			bool alive_ = false; // 生存フラグ
 		};
 
 		/// <summary>
@@ -114,14 +114,12 @@ namespace TKM {
 		float RandRange_(float a, float b) {
 			return a + (b - a) * MyMath::Rand01();
 		}
-
 		/// <summary>
 		/// 破片（シャード）を指定セグメント範囲で生成します。
 		/// </summary>
 		/// <param name="segBegin">生成開始セグメント番号</param>
 		/// <param name="segEnd">生成終了セグメント番号</param>
 		void SpawnShards_(int segBegin, int segEnd);
-
 		/// <summary>
 		/// 2つの色を線形補間します。
 		/// </summary>
@@ -139,37 +137,48 @@ namespace TKM {
 			};
 		}
 
+		//==============================
+		// 参照
+		//==============================
 		SpriteCommon* spriteCommon_ = nullptr;
 		DirectXCommon* dxCommon_ = nullptr;
 		BaseScene* parentScene_ = nullptr;
-
-		Desc desc_{};
-		bool visible_ = true;
-
+		//==============================
+		// 設定 / 表示
+		//==============================
+		Desc desc_{}; // 設定情報
+		bool visible_ = true; // 表示フラグ
+		//==============================
 		// HP管理
-		int maxHp_ = 1;
-		int hp_ = 1;
-		int lastHp_ = 0;
-		bool initialized_ = false;
-
+		//==============================
+		int maxHp_ = 1; // 最大HP
+		int hp_ = 1; // 現在HP
+		int lastHp_ = 0; // 前フレームのHP
+		bool initialized_ = false; // 初期化済みフラグ
+		//==============================
 		// 遅延バー
-		float lagHp_ = 0.0f;
-
+		//==============================
+		float lagHp_ = 0.0f; // 遅延バーHP
+		//==============================
 		// 揺れ
-		float shakeTimer_ = 0.0f;
-
+		//==============================
+		float shakeTimer_ = 0.0f; // 画面揺れタイマー
+		//==============================
 		// 追加要素：ヒットパルス＆時間
-		float hitPulse_ = 0.0f;
-		float drainGlowTimer_ = 0.0f;
-		float time_ = 0.0f;
-
+		//==============================
+		float hitPulse_ = 0.0f; // 被弾パルス
+		float drainGlowTimer_ = 0.0f; // 減った区間の残像タイマー
+		float time_ = 0.0f; // 経過時間
+		//==============================
 		// スプライト
+		//==============================
 		std::unique_ptr<Sprite> frame_;     // フレーム
 		std::unique_ptr<Sprite> fill_;      // 本体バー
 		std::unique_ptr<Sprite> lagFill_;   // 遅れて減るバー
 		std::unique_ptr<Sprite> drainGlow_; // 減った区間の残像
-
+		//==============================
 		// 破片
-		std::vector<Shard> shards_;
+		//==============================
+		std::vector<Shard> shards_; // 破片群
 	};
 } // namespace TKM
