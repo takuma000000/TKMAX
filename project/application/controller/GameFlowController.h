@@ -130,29 +130,39 @@ namespace TKM {
 		float GetIrisMaxScale() const;
 		// ===========================================
 	private:
+		//==============================
 		// Intro
-		std::unique_ptr<IntroSequence> intro_ = nullptr;
-
+		//==============================
+		std::unique_ptr<IntroSequence> intro_ = nullptr; // イントロシーケンス
+		//==============================
 		// Lock
-		bool gameplayLocked_ = true;
-
-		// Iris close
-		static constexpr float kIrisDurationSec_ = 0.8f;
-		bool        irisClosing_ = false;
-		Ease::Tween irisCloseTween_;
-		bool        irisToTitle_ = false;
-
-		// Death → transition
-		bool  playerDeathStarted_ = false;
-		float playerDeathElapsed_ = 0.0f;
-
-		// 固定dtで閉じ進行（いまの実装に合わせる）
-		static constexpr float kFixedDt_ = 0.016f;
-
-		bool externalIrisDraw_ = false; // アイリス描画を外部制御するか
-
+		//==============================
+		bool gameplayLocked_ = true; // ゲームプレイロック中フラグ
+		//==============================
+		// 遷移状態
+		//==============================
 		TransitionRequest pendingRequest_ = TransitionRequest::None; // 保留中の遷移要求
-
+		//==============================
+		// Iris close
+		//==============================
+		static constexpr float kIrisDurationSec_ = 0.8f; // アイリスクローズ時間（秒）
+		bool        irisClosing_ = false; // アイリスクローズ中フラグ
+		Ease::Tween irisCloseTween_; // アイリスクローズ用イージング
+		bool        irisToTitle_ = false; // タイトルへ戻るためのアイリスクローズか
+		//==============================
+		// Death → transition
+		//==============================
+		bool  playerDeathStarted_ = false; // プレイヤー死亡処理開始フラグ
+		float playerDeathElapsed_ = 0.0f; // プレイヤー死亡処理経過時間
+		//==============================
+		// 内部制御
+		//==============================
+		// 固定dtで閉じ進行（いまの実装に合わせる）
+		static constexpr float kFixedDt_ = 0.016f; // 固定デルタタイム（秒）
+		bool externalIrisDraw_ = false; // アイリス描画を外部制御するか
+		//==============================
+		// 参照先
+		//==============================
 		ClearSequenceController* clearSeq_ = nullptr; // 参照先クリアシーケンスコントローラ
 	};
 } // namespace TKM
