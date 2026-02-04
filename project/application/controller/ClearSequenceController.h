@@ -94,11 +94,15 @@ namespace TKM {
 		/// <param name="finished">演出が完了した場合 true に設定されます</param>
 		void UpdateIrisClose(float dt, bool& finished);
 
-		bool active_ = false;
-		Phase phase_ = Phase::None;
-		float timer_ = 0.0f;
-
+		//==============================
+		// 状態
+		//==============================
+		bool active_ = false; // アクティブフラグ
+		Phase phase_ = Phase::None; // 現在フェーズ
+		float timer_ = 0.0f; // フェーズ経過時間
+		//==============================
 		// 参照先
+		//==============================
 		Camera* camera_ = nullptr;
 		Player* player_ = nullptr;
 		BossManager* bossManager_ = nullptr;
@@ -106,19 +110,20 @@ namespace TKM {
 		DirectXCommon* dxCommon_ = nullptr;
 		Skybox* skybox_ = nullptr;
 		FireworkController* fireworkController_ = nullptr;
-
+		//==============================
 		// カメラ・プレイヤー
-		Vector3 camStartPos_{};
-		Vector3 camTargetPos_{};
-		Vector3 playerStartPos_{};
-
-		float playerSpeed_ = 10.0f;
-		float playerFlyMinTime_ = 1.8f;
-		float playerFlyDistance_ = 80.0f;
-
+		//==============================
+		Vector3 camStartPos_{}; // カメラ開始位置
+		Vector3 camTargetPos_{}; // カメラ目標位置
+		Vector3 playerStartPos_{}; // プレイヤー開始位置
+		float playerSpeed_ = 10.0f; // プレイヤー飛行速度
+		float playerFlyMinTime_ = 1.8f; // プレイヤー飛行最短時間
+		float playerFlyDistance_ = 80.0f; // プレイヤー飛行距離
+		//==============================
 		// Iris
-		static constexpr float kIrisDurationSec_ = 0.8f;
-		bool irisClosing_ = false;
-		Ease::Tween irisCloseTween_;
+		//==============================
+		static constexpr float kIrisDurationSec_ = 0.8f; // アイリスクローズ演出時間
+		bool irisClosing_ = false; // アイリスクローズ中フラグ
+		Ease::Tween irisCloseTween_; // アイリスクローズ用イージング
 	};
 }

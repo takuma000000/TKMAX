@@ -122,75 +122,61 @@ void BossController::Update(float dt, Enemy& boss) {
 	}
 
 	// ============================================================
-// Missile Burst Execute（毎フレーム）
-// 仕様：
-//   burstTimer_が0 → まず溜め開始（missileCharging_）
-//   溜め中は予兆パーティクルを出す
-//   溜め完了で発射要求を立てる
-// ============================================================
+	// Missile Burst Execute（毎フレーム）
+	// 仕様：バースト開始時に1回だけ溜め → その後3発を一定間隔で撃つ
+	// ============================================================
+	if (burstLeft_ > 0) { // バースト中
 
-// 1) 溜め中の更新
-	if (missileCharging_) {
-		// 溜め位置は毎フレ「今のボス位置（マズル）」に追従
-		Vector3 chargePos_ = boss.GetWorldPosition();
-		chargePos_.y += missileMuzzleYOffset_;
-		missilePos_ = chargePos_;
+		// 発射口位置は毎回更新（ボスが動いても自然）
+		Vector3 muzzlePos_ = boss.GetWorldPosition();
+		muzzlePos_.y += missileMuzzleYOffset_;
+		missilePos_ = muzzlePos_;
 
-		auto* pm_ = TKM::ParticleManager::GetInstance();
-		if (pm_) {
-			Vector3 p_ = chargePos_;
+		// ターゲットはバースト開始時点で固定されたものを使う
+		Vector3 target_ = burstTargetValid_ ? burstTargetSnap_ : playerPos_;
+		missileTarget_ = target_;
 
-			float t = 1.0f - (missileChargeTimer_ / missileChargeTime_); // 0→1
-			t = std::clamp(t, 0.0f, 1.0f);
+		// 1) まだチャージが終わってないなら、溜め演出だけやる（毎弾じゃない！）
+		if (!burstCharged_) {
+			auto* pm_ = TKM::ParticleManager::GetInstance();
+			if (pm_) {
+				Vector3 p_ = muzzlePos_;
 
-			int inwardCount_ = 2 + (int)(t * 7); // 2→9
-			int crackleCount_ = 1 + (int)(t * 3); // 1→4
+				float t = 1.0f - (missileChargeTimer_ / missileChargeTime_); // 0→1
+				t = std::clamp(t, 0.0f, 1.0f);
 
-			pm_->Emit("boss_windup_inward", p_, inwardCount_);
-			pm_->Emit("boss_windup_crackle", p_, crackleCount_);
+				int inwardCount_ = 2 + (int)(t * 7); // 2→9
+				int crackleCount_ = 1 + (int)(t * 3); // 1→4
+				pm_->Emit("boss_windup_inward", p_, inwardCount_);
+				pm_->Emit("boss_windup_crackle", p_, crackleCount_);
 
-			// リングは間引きつつ、後半は頻度UP
-			int step_ = (t < 0.55f) ? 4 : 2;
-			if ((missileChargeFrame_ % step_) == 0) {
-				pm_->Emit("boss_windup_shell", p_, 1);
+				int step_ = (t < 0.55f) ? 4 : 2;
+				if ((missileChargeFrame_ % step_) == 0) {
+					pm_->Emit("boss_windup_shell", p_, 1);
+				}
+			}
+			++missileChargeFrame_;
+
+			missileChargeTimer_ -= dt;
+			if (missileChargeTimer_ <= 0.0f) {
+				// チャージ完了
+				burstCharged_ = true;
+				missileCharging_ = false;
+
+				// ここで1発目を即発射（チャージ1回→3発の1発目）
+				missileFireReq_ = true;
+				burstLeft_--;
+				burstTimer_ = burstInterval_;
 			}
 		}
-		++missileChargeFrame_;
-
-		missileChargeTimer_ -= dt;
-		if (missileChargeTimer_ <= 0.0f) {
-			// 溜め完了 → 発射要求
-			Vector3 muzzlePos_ = boss.GetWorldPosition();
-			muzzlePos_.y += missileMuzzleYOffset_;
-			missilePos_ = muzzlePos_;
-
-			// 撃つ瞬間の player 座標に向かう（君の仕様を維持）
-			if (boss.GetPlayer()) {
-				missileTarget_ = boss.GetPlayer()();
-			} else {
-				missileTarget_ = playerPos_;
+		// 2) チャージ済みなら、これまで通り一定間隔で撃つ
+		else {
+			burstTimer_ -= dt;
+			if (burstTimer_ <= 0.0f) {
+				missileFireReq_ = true;
+				burstLeft_--;
+				burstTimer_ = burstInterval_;
 			}
-
-			missileFireReq_ = true;
-
-			// 次弾へ
-			burstLeft_--;
-			burstTimer_ = burstInterval_;
-
-			// 溜め終了
-			missileCharging_ = false;
-			missileChargeTimer_ = 0.0f;
-		}
-	}
-
-	// 2) 連射スケジューラ（溜め中は進めない）
-	if (burstLeft_ > 0 && !missileCharging_) {
-		burstTimer_ -= dt;
-		if (burstTimer_ <= 0.0f) {
-			// 溜め開始
-			missileCharging_ = true;
-			missileChargeTimer_ = missileChargeTime_;
-			missileChargeFrame_ = 0;
 		}
 	}
 
@@ -295,10 +281,14 @@ void BossController::UpdateOrbit(float dt, Enemy& boss, Vector3& pos, const Vect
 			Vector3 muzzlePos_ = pos;
 			muzzlePos_.y += missileMuzzleYOffset_;
 
-			// --- 3連射開始 ---
-			burstLeft_ = 3;
-			burstTimer_ = 0.0f;          // すぐ1発目
-			burstTargetValid_ = false;
+			// --- 3連射開始（1回だけ溜めてから撃つ）---
+			burstLeft_ = 3; // 3発セット
+			burstTimer_ = 0.0f;          // チャージ完了後、すぐ1発目に使う
+			burstTargetValid_ = false; // ターゲット未固定
+			burstCharged_ = false;       // このバーストはまだチャージしてない
+			missileCharging_ = true;     // バースト開始時にだけチャージ開始
+			missileChargeTimer_ = missileChargeTime_; // チャージ時間セット
+			missileChargeFrame_ = 0; // フレームカウンタ初期化
 
 			if (boss.GetPlayer()) {
 				burstTargetSnap_ = boss.GetPlayer()(); // 発射開始時点のplayer座標を固定
