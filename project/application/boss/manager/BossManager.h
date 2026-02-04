@@ -178,32 +178,43 @@ public:
 	// =========================================
 
 private:
-	// メンバ変数
+	//==============================
+	// 外部参照（システム系）
+	//==============================
 	TKM::DirectXCommon* dxCommon_ = nullptr;
 	TKM::Camera* camera_ = nullptr;
 	TKM::BaseScene* parentScene_ = nullptr;
 	Player* player_ = nullptr;
-
-	bool bossBattle_ = false;                     // ボス戦フラグ
-	bool bossP2BgmPlayed_ = false;                // P2BGMを1回だけ再生したか
-
-	std::unique_ptr<BossEnemy> boss_;             // ボス本体
-	std::vector<std::unique_ptr<BossBullet>> bossBullets_; // ボス弾リスト
-	std::unique_ptr<BossController> bossController_; // ボスコントローラー
-	std::unique_ptr<TKM::AuraVolumeRenderer> auraVolume_; // オーラボリュームレンダラー
-	std::unique_ptr<TKM::LaserBeam3D> laserBeam3D_; // レーザー描画
-
 	// タイムスケールコントローラー参照
 	TKM::TimeScaleController* timeScale_ = nullptr;
 	// ウォーターリップルエフェクト参照
 	TKM::WaterRippleEffect* waterRipple_ = nullptr;
-
+	//==============================
+	// 状態フラグ
+	//==============================
+	bool bossBattle_ = false;                     // ボス戦フラグ
+	bool bossP2BgmPlayed_ = false;                // P2BGMを1回だけ再生したか
+	KillSequenceState killSeq_; // 撃破シーケンス状態
+	//==============================
+	// ボス本体・制御
+	//==============================
+	std::unique_ptr<BossEnemy> boss_;             // ボス本体
+	std::unique_ptr<BossController> bossController_; // ボスコントローラー
+	std::vector<std::unique_ptr<BossBullet>> bossBullets_; // ボス弾リスト
+	//==============================
+	// 描画・演出系
+	//==============================
+	std::unique_ptr<TKM::AuraVolumeRenderer> auraVolume_; // オーラボリュームレンダラー
+	std::unique_ptr<TKM::LaserBeam3D> laserBeam3D_; // レーザー描画
+	//==============================
+	// UI
+	//==============================
+	std::unique_ptr<TKM::BossHpBarUI> hpUI_; // ボスHPバーUI
+	//==============================
+	// 内部処理
+	//==============================
 	/// <summary>
 	/// ボス弾を更新します。
 	/// </summary>
 	void UpdateBossBullets();
-
-	KillSequenceState killSeq_; // 撃破シーケンス状態
-
-	std::unique_ptr<TKM::BossHpBarUI> hpUI_; // ボスHPバーUI
 };
