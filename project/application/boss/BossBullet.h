@@ -288,15 +288,15 @@ private:
 	// ======================================================================
 	// 曲線移動用
 	// ======================================================================
-	float curveYawRad_ = 0.0f; // 毎フレームのY回転量（ラジアン）
-	bool useCurve_ = false; // 曲線移動有効フラグ
+	bool   useCurve_ = false; // 曲線移動有効フラグ
+	float  curveYawRad_ = 0.0f; // 毎フレームのY回転量（ラジアン）
+	int    curveTotalFrames_ = 0; // 曲線到達までの総フレーム数
+	int    curveFrame_ = 0; // 現在の曲線フレーム数
+	int    postCurveLifeFrames_ = 45; // 曲線到達後の生存フレーム数
 	Vector3 curveStart_{ 0.0f,0.0f,0.0f }; // 曲線開始位置
 	Vector3 curveEnd_{ 0.0f,0.0f,0.0f }; // 曲線終了位置
 	Vector3 curveMid_{ 0.0f,0.0f,0.0f }; // 曲線中間位置
 	Vector3 curveCtrl_{ 0.0f,0.0f,0.0f }; // 曲線制御点位置
-	int curveTotalFrames_ = 0; // 曲線到達までの総フレーム数
-	int curveFrame_ = 0; // 現在の曲線フレーム数
 	Vector3 velocity_{ 0.0f, 0.0f, 0.0f }; // 曲線移動時の速度ベクトル
-	int postCurveLifeFrames_ = 45; // 曲線到達後の生存フレーム数
 	int fxFrame_ = 0; // 通常弾エフェクト用フレームカウンタ
 };
