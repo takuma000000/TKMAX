@@ -369,13 +369,23 @@ void BossManager::UpdateBossBullets() {
 		// ───────── Player × BossBullet 当たり判定 ─────────
 		if (player_ && !player_->IsDead() && !b_->IsDead()) {
 			const Vector3 pCenter_ = player_->GetPosition();
-			const Vector3 pSize_ = player_->GetColliderScale(); // Player.cpp のワイヤーと同じサイズ
-			const Vector3 sCenter_ = b_->GetPos();
-			const float   sR_ = b_->Radius();
+			const Vector3 pSize_ = player_->GetColliderScale();
 
-			if (TestAABBSphere(pCenter_, pSize_, sCenter_, sR_)) {
-				player_->Damage(b_->Damage()); // 被弾（HP減る＆赤フラッシュ）
-				b_->Kill();                    // 弾消滅
+			if (b_->GetFxType() == BossBullet::FxType::SlashWave) {
+				// 斬撃だけ：X字セグメントAABB
+				if (b_->HitTestSlashX(pCenter_, pSize_)) {
+					player_->Damage(b_->Damage());
+					b_->Kill(); // 1回当たったら消す（多段ヒット事故防止）
+				}
+			} else {
+				// ミサイル等：従来どおり AABB×Sphere
+				const Vector3 sCenter_ = b_->GetPos();
+				const float   sR_ = b_->Radius();
+
+				if (TestAABBSphere(pCenter_, pSize_, sCenter_, sR_)) {
+					player_->Damage(b_->Damage());
+					b_->Kill();
+				}
 			}
 		}
 

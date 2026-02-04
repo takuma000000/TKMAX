@@ -57,8 +57,11 @@ public:
 	/// </summary>
 	void Update() {
 		if (dead_) return;
-
+		// フレームカウント
+		++ageFrame_;
+		// 寿命チェック
 		Vector3 newPos_{};
+		// 曲線移動用フラグ
 		bool reachedCurveEnd_ = false;
 
 		if (useCurve_) {
@@ -99,6 +102,55 @@ public:
 			if (lr_) {
 				TKM::LineRenderer::Color col_{ 1.0f, 0.8f, 0.2f, 1.0f }; // 黄っぽい
 				lr_->AddAABB(center_, size_, col_);
+			}
+			// ───────── SlashWave の X字判定ワイヤー表示 ─────────
+			if (fxType_ == FxType::SlashWave) {
+				auto Cross_ = [](const Vector3& a, const Vector3& b) {
+					return Vector3{
+						a.y * b.z - a.z * b.y,
+						a.z * b.x - a.x * b.z,
+						a.x * b.y - a.y * b.x
+					};
+					};
+
+				Vector3 pos_ = obj_->GetTranslate();
+				Vector3 fwd_ = MyMath::SafeNormalize(dir_, { 0.0f, 0.0f, 1.0f });
+
+				Vector3 upA_{ 0.0f, 1.0f, 0.0f };
+				if (std::fabs(fwd_.y) > 0.90f) { upA_ = { 0.0f, 0.0f, 1.0f }; }
+
+				Vector3 right_ = MyMath::SafeNormalize(Cross_(upA_, fwd_), { 1.0f, 0.0f, 0.0f });
+				Vector3 up_ = MyMath::SafeNormalize(Cross_(fwd_, right_), { 0.0f, 1.0f, 0.0f });
+
+				const float halfLen_ = 14.0f;
+				const float back_ = 8.0f;
+				const int   seg_ = 24;
+				const Vector3 segSize_{ 4.0f, 3.0f, 4.0f };
+
+				Vector3 base_ = pos_ - fwd_ * back_;
+
+				const float c = 0.70710678f;
+				const float s = 0.70710678f;
+				Vector3 diag1_ = right_ * c + up_ * s;
+				Vector3 diag2_ = right_ * c - up_ * s;
+
+				auto* lr_ = TKM::LineRenderer::GetInstance();
+				if (lr_) {
+					TKM::LineRenderer::Color colA_{ 1.0f, 0.2f, 0.2f, 1.0f }; // 赤
+					TKM::LineRenderer::Color colB_{ 0.2f, 0.9f, 1.0f, 1.0f }; // 水色
+
+					for (int i = 0; i < seg_; ++i) {
+						float t = (seg_ <= 1) ? 0.0f : (float)i / (float)(seg_ - 1);
+						float u = (t * 2.0f - 1.0f);
+						float along = u * halfLen_;
+
+						Vector3 p1 = base_ + diag1_ * along;
+						Vector3 p2 = base_ + diag2_ * along;
+
+						lr_->AddAABB(p1, segSize_, colA_);
+						lr_->AddAABB(p2, segSize_, colB_);
+					}
+				}
 			}
 		}
 #endif
@@ -309,6 +361,69 @@ public:
 			life_ = curveTotalFrames_; // 最低でも到達までは生かす
 		}
 	}
+	
+	/// <summary>
+	/// 斬撃エフェクトの当たり判定を行います。
+	/// </summary>
+	/// <param name="targetCenter"></param>
+	/// <param name="targetSize"></param>
+	/// <returns></returns>
+	bool HitTestSlashX(const Vector3& targetCenter, const Vector3& targetSize) const {
+		if (dead_) return false;
+		if (fxType_ != FxType::SlashWave) return false;
+
+		AABB targetAABB(targetCenter, targetSize);
+
+		// ---- X字の形（FXと同じ作り）----
+		auto Cross_ = [](const Vector3& a, const Vector3& b) {
+			return Vector3{
+				a.y * b.z - a.z * b.y,
+				a.z * b.x - a.x * b.z,
+				a.x * b.y - a.y * b.x
+			};
+			};
+
+		Vector3 pos_ = obj_ ? obj_->GetTranslate() : Vector3{};
+		Vector3 fwd_ = MyMath::SafeNormalize(dir_, { 0.0f, 0.0f, 1.0f });
+
+		Vector3 upA_{ 0.0f, 1.0f, 0.0f };
+		if (std::fabs(fwd_.y) > 0.90f) { upA_ = { 0.0f, 0.0f, 1.0f }; }
+
+		Vector3 right_ = MyMath::SafeNormalize(Cross_(upA_, fwd_), { 1.0f, 0.0f, 0.0f });
+		Vector3 up_ = MyMath::SafeNormalize(Cross_(fwd_, right_), { 0.0f, 1.0f, 0.0f });
+
+		// FXで使ってる値と合わせる（見た目＝判定）
+		const float halfLen_ = 14.0f;
+		const float back_ = 8.0f;
+		const int   seg_ = 24; // 点密度
+
+		Vector3 base_ = pos_ - fwd_ * back_;
+
+		const float c = 0.70710678f; // cos45
+		const float s = 0.70710678f; // sin45
+		Vector3 diag1_ = right_ * c + up_ * s;
+		Vector3 diag2_ = right_ * c - up_ * s;
+
+		const Vector3 segSize_{ 4.0f, 3.0f, 4.0f }; // セグメント当たりのAABBサイズ
+
+		for (int i = 0; i < seg_; ++i) {
+			float t = (seg_ <= 1) ? 0.0f : (float)i / (float)(seg_ - 1);
+			float u = (t * 2.0f - 1.0f);   // -1..+1
+			float along = u * halfLen_;
+
+			// 2本分（X字）
+			Vector3 p1 = base_ + diag1_ * along;
+			Vector3 p2 = base_ + diag2_ * along;
+
+			AABB segA(p1, segSize_);
+			if (segA.IsCollidingWithAABB(targetAABB)) { return true; }
+
+			AABB segB(p2, segSize_);
+			if (segB.IsCollidingWithAABB(targetAABB)) { return true; }
+		}
+		return false;
+	}
+
 
 	/// <summary>
 	/// この弾が死亡しているかを返します。
@@ -336,6 +451,11 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	const Vector3& GetPos() const { return obj_->GetTranslate(); }
+	/// <summary>
+	/// 弾のエフェクトタイプを返します。
+	/// </summary>
+	/// <returns></returns>
+	FxType GetFxType() const { return fxType_; }
 	// =========================================
 	// Setter===================================
 	/// <summary>
@@ -406,4 +526,6 @@ private:
 	Vector3 velocity_{ 0.0f, 0.0f, 0.0f }; // 曲線移動時の速度ベクトル
 	int fxFrame_ = 0; // 通常弾エフェクト用フレームカウンタ
 	FxType fxType_ = FxType::MissileEvil; // エフェクトタイプ
+	int ageFrame_ = 0; // 経過フレーム数
+	static constexpr int kSlashHitActiveFrames_ = 18; // 斬撃の判定が生きるフレーム
 };
