@@ -42,11 +42,37 @@ public:
 	/// <param name="boss">デバッグ表示および調整対象となるボス敵</param>
 	void ImGuiDebug(Enemy& boss);
 
+	/// <summary>
+	/// ミサイル発射リクエストを取得して消費します。
+	/// </summary>
+	/// <param name="outPos">ミサイルの発射位置（ワールド座標）</param>
+	/// <param name="outTarget">ミサイルのターゲット位置（ワールド座標）</param>
+	/// <param name="outSpeed">ミサイルの移動速度</param>
+	/// <param name="outCurveHeight">曲線移動時の高さオフセット</param>
+	/// <param name="outDamage">ミサイルのダメージ量</param>
+	/// <param name="outLifeFrame">ミサイルの生存フレーム数</param>
+	/// <returns>発射リクエストが存在した場合 true、それ以外は false</returns>
 	bool ConsumeMissileFireRequest(
 		Vector3& outPos,
 		Vector3& outTarget,
 		float& outSpeed,
 		float& outCurveHeight,
+		int& outDamage,
+		int& outLifeFrame
+	);
+	/// <summary>
+	/// スラッシュ攻撃発射リクエストを取得して消費します。
+	/// </summary>
+	/// <param name="outPos">スラッシュの発射位置（ワールド座標）</param>
+	/// <param name="outTarget">スラッシュのターゲット位置（ワールド座標）</param>
+	/// <param name="outSpeed">スラッシュの移動速度</param>
+	/// <param name="outDamage">スラッシュのダメージ量</param>
+	/// <param name="outLifeFrame">スラッシュの生存フレーム数</param>
+	/// <returns>発射リクエストが存在した場合 true、それ以外は false</returns>
+	bool ConsumeSlashFireRequest(
+		Vector3& outPos,
+		Vector3& outTarget,
+		float& outSpeed,
 		int& outDamage,
 		int& outLifeFrame
 	);
