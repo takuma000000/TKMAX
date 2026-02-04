@@ -2,16 +2,12 @@
 #include "Enemy.h"
 
 namespace BossParam {
-	// ここはとりあえず “動くこと優先” の初期値
-	constexpr int   InitHP_ = 1000;
-
-	constexpr float InitScale_ = 5.0f;
-	constexpr Vector3 InitColliderScale_ = { 12.180f, 18.210f, 11.560f };
-
-	// ロック中の脈動（見た目だけ）
-	constexpr float NormalScale_ = 5.0f;
-	constexpr float LockBlinkSpeed_ = 0.2f;
-	constexpr float LockBlinkAmount_ = 0.2f;
+	constexpr int   InitHP_ = 1000; // 初期HP
+	constexpr float InitScale_ = 5.0f; // 初期スケール
+	constexpr Vector3 InitColliderScale_ = { 12.180f, 18.210f, 11.560f }; // 当たり判定スケール
+	constexpr float NormalScale_ = 5.0f; // 通常スケール
+	constexpr float LockBlinkSpeed_ = 0.2f; // 点滅速度
+	constexpr float LockBlinkAmount_ = 0.2f; // 点滅幅
 }
 
 //=============================================================

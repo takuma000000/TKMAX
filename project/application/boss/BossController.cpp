@@ -122,17 +122,49 @@ void BossController::Update(float dt, Enemy& boss) {
 	}
 
 	// ============================================================
-	// Missile Burst Execute（毎フレーム）
-	// ============================================================
-	if (burstLeft_ > 0) {
-		burstTimer_ -= dt;
-		if (burstTimer_ <= 0.0f) {
-			// 発射位置（その瞬間のボス位置）
+// Missile Burst Execute（毎フレーム）
+// 仕様：
+//   burstTimer_が0 → まず溜め開始（missileCharging_）
+//   溜め中は予兆パーティクルを出す
+//   溜め完了で発射要求を立てる
+// ============================================================
+
+// 1) 溜め中の更新
+	if (missileCharging_) {
+		// 溜め位置は毎フレ「今のボス位置（マズル）」に追従
+		Vector3 chargePos_ = boss.GetWorldPosition();
+		chargePos_.y += missileMuzzleYOffset_;
+		missilePos_ = chargePos_;
+
+		auto* pm_ = TKM::ParticleManager::GetInstance();
+		if (pm_) {
+			Vector3 p_ = chargePos_;
+
+			float t = 1.0f - (missileChargeTimer_ / missileChargeTime_); // 0→1
+			t = std::clamp(t, 0.0f, 1.0f);
+
+			int inwardCount_ = 2 + (int)(t * 7); // 2→9
+			int crackleCount_ = 1 + (int)(t * 3); // 1→4
+
+			pm_->Emit("boss_windup_inward", p_, inwardCount_);
+			pm_->Emit("boss_windup_crackle", p_, crackleCount_);
+
+			// リングは間引きつつ、後半は頻度UP
+			int step_ = (t < 0.55f) ? 4 : 2;
+			if ((missileChargeFrame_ % step_) == 0) {
+				pm_->Emit("boss_windup_shell", p_, 1);
+			}
+		}
+		++missileChargeFrame_;
+
+		missileChargeTimer_ -= dt;
+		if (missileChargeTimer_ <= 0.0f) {
+			// 溜め完了 → 発射要求
 			Vector3 muzzlePos_ = boss.GetWorldPosition();
 			muzzlePos_.y += missileMuzzleYOffset_;
 			missilePos_ = muzzlePos_;
 
-			// 毎発、撃つ瞬間の player 座標を取り直す
+			// 撃つ瞬間の player 座標に向かう（君の仕様を維持）
 			if (boss.GetPlayer()) {
 				missileTarget_ = boss.GetPlayer()();
 			} else {
@@ -144,6 +176,21 @@ void BossController::Update(float dt, Enemy& boss) {
 			// 次弾へ
 			burstLeft_--;
 			burstTimer_ = burstInterval_;
+
+			// 溜め終了
+			missileCharging_ = false;
+			missileChargeTimer_ = 0.0f;
+		}
+	}
+
+	// 2) 連射スケジューラ（溜め中は進めない）
+	if (burstLeft_ > 0 && !missileCharging_) {
+		burstTimer_ -= dt;
+		if (burstTimer_ <= 0.0f) {
+			// 溜め開始
+			missileCharging_ = true;
+			missileChargeTimer_ = missileChargeTime_;
+			missileChargeFrame_ = 0;
 		}
 	}
 
@@ -310,7 +357,7 @@ void BossController::UpdateLaserWindup(float dt, Enemy& boss, Vector3& pos, cons
 		ChangeState(State::Recover);
 		return;
 	}
-	
+
 	if (timer_ <= dt) { // 初回のみ
 		laserActive_ = true; // レーザー有効化
 		laserTelegraph_ = true; // レーザー予告有効化
@@ -344,7 +391,7 @@ void BossController::UpdateLaserFire(float dt, Enemy& boss, Vector3& pos, const 
 		ChangeState(State::Recover);
 		return;
 	}
-	
+
 	laserActive_ = true; // レーザー有効化
 	laserTelegraph_ = false; // レーザー予告無効化
 	pos = laserBasePos_; // 基準位置に固定

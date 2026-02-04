@@ -1834,6 +1834,65 @@ namespace TKM {
 			// 暗めの紫シアン
 			float t = frand(0.0f, 1.0f);
 			p.color_ = { 0.12f + 0.10f * t, 0.35f + 0.25f * t, 0.55f + 0.35f * t, 1.0f };
+		} else if (groupName == "boss_windup_inward") {
+			// 外→内へ吸い込まれる粒（溜め感の主成分）
+			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
+
+			std::uniform_real_distribution<float> off(-1.8f, 1.8f);
+			Vector3 o = { off(rng), off(rng) * 0.4f, off(rng) };
+			p.transform_.translate_ = center + o;
+
+			Vector3 dir = MyMath::Normalize(-o); // 中心へ
+			float spd = frand(0.55f, 1.05f);
+			p.velocity_ = dir * spd;
+
+			float sc = frand(6.0f, 14.0f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.22f, 0.40f);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { frand(0.90f, 1.00f), frand(0.20f, 0.45f), frand(0.90f, 1.00f), 1.0f };
+
+		} else if (groupName == "boss_windup_crackle") {
+			// バチバチ（短命スパーク）
+			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
+
+			std::uniform_real_distribution<float> off(-0.55f, 0.55f);
+			Vector3 o = { off(rng), off(rng) * 0.3f, off(rng) };
+			p.transform_.translate_ = center + o;
+
+			// ランダムに散る
+			Vector3 dir = MyMath::Normalize(o);
+			float spd = frand(0.40f, 1.10f);
+			p.velocity_ = dir * spd;
+
+			float sc = frand(4.0f, 10.0f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.10f, 0.20f);
+			p.currentTime_ = 0.0f;
+
+			// 白〜紫寄り
+			float t = frand(0.0f, 1.0f);
+			p.color_ = { 1.0f, 0.55f - 0.25f * t, 1.0f, 1.0f };
+
+		} else if (groupName == "boss_windup_shell") {
+			// 外周リング（パルス）
+			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
+
+			p.transform_.translate_ = center;
+
+			float sc = frand(14.0f, 26.0f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			// ゆっくり拡張（リングなのでXYよりXZのイメージだけど簡略化でOK）
+			p.velocity_ = { 0.0f, frand(0.02f, 0.06f), 0.0f };
+
+			p.lifeTime_ = frand(0.18f, 0.28f);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { frand(0.95f, 1.0f), frand(0.15f, 0.35f), frand(0.95f, 1.0f), 1.0f };
 		} else { // 上記意外
 			// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 			std::uniform_real_distribution<float> velX(-0.15f, 0.15f);

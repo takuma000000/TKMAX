@@ -21,18 +21,16 @@ namespace TKM {
 	class BossHpBarUI {
 	public:
 		struct Desc {
-			Vector2 pos_ = { 60.0f, 40.0f };
-			Vector2 size_ = { 600.0f, 22.0f };
-
-			float shakeTime_ = 0.18f;
-			float shakePower_ = 9.0f;
+			Vector2 pos_ = { 60.0f, 40.0f }; // 画面上の表示位置（左上基準）
+			Vector2 size_ = { 600.0f, 22.0f }; // HPバーのサイズ
+			float shakeTime_ = 0.18f; // 画面震え時間
+			float shakePower_ = 9.0f; // 画面震え強さ
 
 			float lagSpeed_ = 160.0f; // 遅延バー追従速度（大きいほどすぐ追いつく）
 			int segmentCount_ = 60;   // 砕けブロック数
-
-			float shardLife_ = 0.45f;
-			float shardSpeedMin_ = 140.0f;
-			float shardSpeedMax_ = 320.0f;
+			float shardLife_ = 0.45f; // 砕けブロック寿命
+			float shardSpeedMin_ = 140.0f; // 砕けブロック速度最小値
+			float shardSpeedMax_ = 320.0f; // 砕けブロック速度最大値
 			float shardRotSpeed_ = 10.0f;
 
 			// 追加要素：色演出

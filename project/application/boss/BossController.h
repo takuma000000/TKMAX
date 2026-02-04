@@ -304,4 +304,9 @@ private:
 	float burstTimer_ = 0.0f; // 連射タイマー
 	Vector3 burstTargetSnap_{}; // 発射時点のplayer座標を固定
 	bool burstTargetValid_ = false; // 固定座標が有効かどうか
+	// --- Missile charge（予備動作）---
+	bool missileCharging_ = false;     // 溜め中か
+	float missileChargeTime_ = 0.40f;  // 溜め時間（秒）
+	float missileChargeTimer_ = 0.0f;  // 溜め残り
+	int missileChargeFrame_ = 0;       // 間引き用
 };
