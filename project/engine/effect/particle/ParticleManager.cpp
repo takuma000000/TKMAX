@@ -1893,6 +1893,191 @@ namespace TKM {
 			p.currentTime_ = 0.0f;
 
 			p.color_ = { frand(0.95f, 1.0f), frand(0.15f, 0.35f), frand(0.95f, 1.0f), 1.0f };
+		} else if (groupName == "boss_slash_windup_line") {
+			// 刃が形成される線エネルギー（前方に伸びる感じ）
+			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
+
+			// 生成位置：中心近くで細長くバラける
+			std::uniform_real_distribution<float> ox(-0.55f, 0.55f);
+			std::uniform_real_distribution<float> oy(-0.20f, 0.20f);
+			std::uniform_real_distribution<float> oz(-0.35f, 0.35f);
+			Vector3 o = { ox(rng), oy(rng), oz(rng) };
+			p.transform_.translate_ = center + o;
+
+			// ちょい前方へ流す（※向きはBossController側で center を“前に出す”とよりそれっぽい）
+			p.velocity_ = { frand(-0.05f, 0.05f), frand(-0.03f, 0.06f), frand(0.65f, 1.35f) };
+
+			// 細長い筋（gradationLine を想定）
+			float scX = frand(0.25f, 0.55f);
+			float scY = frand(0.25f, 0.55f);
+			float scZ = frand(3.5f, 7.5f);
+			p.transform_.scale_ = { scX, scY, scZ };
+
+			p.lifeTime_ = frand(0.18f, 0.32f);
+			p.currentTime_ = 0.0f;
+
+			// 邪悪：深紅〜黒紫（ミサイルの綺麗紫と差別化）
+			p.color_ = { frand(0.85f, 1.0f), frand(0.00f, 0.08f), frand(0.15f, 0.50f), 1.0f };
+		} else if (groupName == "boss_slash_windup_spark") {
+			// バチバチ：邪悪スパーク（短命）
+			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
+
+			std::uniform_real_distribution<float> off(-0.45f, 0.45f);
+			Vector3 o = { off(rng), off(rng) * 0.25f, off(rng) };
+			p.transform_.translate_ = center + o;
+
+			// 外へ散る
+			Vector3 dir = MyMath::Normalize(o);
+			float spd = frand(0.55f, 1.55f);
+			p.velocity_ = dir * spd;
+
+			float sc = frand(0.40f, 1.05f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.08f, 0.15f);
+			p.currentTime_ = 0.0f;
+
+			// 8割：紅紫 / 2割：毒っぽい緑（邪悪感UP、不要なら消してOK）
+			float r = frand(0.0f, 1.0f);
+			if (r < 0.80f) {
+				p.color_ = { 1.0f, frand(0.03f, 0.12f), frand(0.25f, 0.75f), 1.0f };
+			} else {
+				p.color_ = { frand(0.15f, 0.35f), 1.0f, frand(0.10f, 0.25f), 1.0f };
+			}
+		} else if (groupName == "boss_slash_windup_arc") {
+			// 弧の輪郭（リングで一瞬だけ出す）
+			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
+
+			p.transform_.translate_ = center;
+
+			// 弧を大きめに（RINGなのでスケール大きめでも破綻しにくい）
+			float sc = frand(10.0f, 16.0f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			// ほぼ静止（輪郭なので）
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+
+			p.lifeTime_ = frand(0.12f, 0.20f);
+			p.currentTime_ = 0.0f;
+
+			// 血の結界っぽい色
+			p.color_ = { frand(0.90f, 1.0f), frand(0.00f, 0.06f), frand(0.10f, 0.28f), 1.0f };
+		} else if (groupName == "bossSlash_cut") {
+			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
+
+			// 位置：中心（ブレはほぼ無しでOK。形はBossBulletが作る）
+			std::uniform_real_distribution<float> off(-0.25f, 0.25f);
+			p.transform_.translate_ = center + Vector3{ off(rng), off(rng) * 0.25f, off(rng) };
+
+			// 静止（弧は“配置”で作る）
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+
+			// 小粒→発光ブレード（桁を上げる）
+			float thick_ = frand(6.0f, 10.0f);     // 太さ
+			float len_ = frand(55.0f, 90.0f);    // 長さ（ここが斬撃感の核）
+			p.transform_.scale_ = { thick_, thick_, len_ };
+
+			// 寿命も長めにして“面”を作る
+			p.lifeTime_ = frand(0.22f, 0.38f);
+			p.currentTime_ = 0.0f;
+
+			// 画像寄せ：中心＝黄〜橙、外＝ピンク紫（2系統で擬似グラデ）
+			float r = frand(0.0f, 1.0f);
+			if (r < 0.70f) {
+				// 芯：黄〜橙
+				p.color_ = { 1.0f, frand(0.55f, 0.90f), frand(0.02f, 0.20f), 0.95f };
+			} else {
+				// 縁：ピンク紫
+				p.color_ = { 1.0f, frand(0.08f, 0.22f), frand(0.60f, 0.95f), 0.80f };
+			}
+		} else if (groupName == "bossSlash_spark") {
+			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
+
+			std::uniform_real_distribution<float> off(-0.25f, 0.25f);
+			Vector3 o = { off(rng), off(rng) * 0.25f, off(rng) };
+			p.transform_.translate_ = center + o;
+
+			Vector3 dir = MyMath::SafeNormalize(o, { 0.0f, 1.0f, 0.0f });
+			float spd = frand(4.0f, 10.0f);
+			p.velocity_ = dir * spd;
+
+			float sc = frand(0.20f, 0.55f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.08f, 0.16f);
+			p.currentTime_ = 0.0f;
+
+			// 赤〜橙の火花
+			p.color_ = { 1.0f, frand(0.25f, 0.65f), frand(0.05f, 0.18f), 1.0f };
+		} else if (groupName == "bossSlash_arc") {
+			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
+
+			p.transform_.translate_ = center;
+
+			float sc = frand(22.0f, 34.0f);  // 桁上げ
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+
+			p.lifeTime_ = frand(0.14f, 0.22f);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { 1.0f, frand(0.10f, 0.25f), frand(0.55f, 0.90f), 0.35f }; // 薄く縁取り
+		} else if (groupName == "bossSlash_main") {
+			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
+
+			// 位置はBossBullet側で形を作るので、ここではブレ最小
+			std::uniform_real_distribution<float> off(-0.10f, 0.10f);
+			p.transform_.translate_ = center + Vector3{ off(rng), off(rng) * 0.25f, off(rng) };
+
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+
+			// ★芯：細く長い（GIFの白線）
+			float thick = frand(1.2f, 2.0f);
+			float len = frand(18.0f, 28.0f);
+			p.transform_.scale_ = { thick, thick, len };
+
+			p.lifeTime_ = frand(0.16f, 0.24f);
+			p.currentTime_ = 0.0f;
+
+			// 白〜薄黄
+			p.color_ = { 1.0f, frand(0.92f, 1.0f), frand(0.75f, 0.92f), 1.0f };
+		} else if (groupName == "bossSlash_glow") {
+			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
+
+			std::uniform_real_distribution<float> off(-0.18f, 0.18f);
+			p.transform_.translate_ = center + Vector3{ off(rng), off(rng) * 0.25f, off(rng) };
+
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+
+			// ★発光：太め＆長め（黄色帯）
+			float thick = frand(2.8f, 4.8f);
+			float len = frand(22.0f, 36.0f);
+			p.transform_.scale_ = { thick, thick, len };
+
+			p.lifeTime_ = frand(0.14f, 0.20f);
+			p.currentTime_ = 0.0f;
+
+			// 黄〜橙（alpha薄め）
+			p.color_ = { 1.0f, frand(0.65f, 0.90f), frand(0.05f, 0.20f), 0.70f };
+		} else if (groupName == "bossSlash_tail") {
+			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
+
+			std::uniform_real_distribution<float> off(-0.25f, 0.25f);
+			p.transform_.translate_ = center + Vector3{ off(rng), off(rng) * 0.20f, off(rng) };
+
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+
+			// ★残り：さらに太く、少し長い（暗赤のスミア）
+			float thick = frand(4.0f, 7.0f);
+			float len = frand(26.0f, 46.0f);
+			p.transform_.scale_ = { thick, thick, len };
+
+			p.lifeTime_ = frand(0.20f, 0.32f);
+			p.currentTime_ = 0.0f;
+
+			// 暗赤（alpha薄）
+			p.color_ = { frand(0.25f, 0.45f), frand(0.02f, 0.06f), frand(0.02f, 0.05f), 0.35f };
 		} else { // 上記意外
 			// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 			std::uniform_real_distribution<float> velX(-0.15f, 0.15f);

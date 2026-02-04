@@ -154,7 +154,7 @@ void BossManager::Update(float dt) {
 	if (bossController_) {
 		bossController_->Update(dt, *boss_); // ボス挙動コントローラ更新
 	}
-	// --- Missile（通常時攻撃） ---
+	// --- Missile（通常時攻撃その1） ---
 	{
 		Vector3 mPos_{}; // 発射位置
 		Vector3 mTarget_{};
@@ -177,6 +177,32 @@ void BossManager::Update(float dt) {
 			// 曲線設定（好みで調整OK）
 			bullet_->SetCurveYaw(0.05f); // 1フレームあたりの曲がる角度（ラジアン）
 			bullet_->EnableCurveToTarget(mPos_, mTarget_, mCurveH_, spPerFrame_); // 曲線で終点へ
+
+			bossBullets_.push_back(std::move(bullet_));
+		}
+	}
+	// --- SlashWave（通常時攻撃その2） ---
+	{
+		Vector3 sPos_{};
+		Vector3 sTarget_{};
+		float sSpeed_ = 0.0f;
+		int sDmg_ = 0;
+		int sLife_ = 0;
+
+		if (bossController_->ConsumeSlashFireRequest(sPos_, sTarget_, sSpeed_, sDmg_, sLife_)) {
+			const float spPerFrame_ = sSpeed_ * dt;
+
+			auto bullet_ = std::make_unique<BossBullet>();
+
+			Vector3 dir_{ sTarget_.x - sPos_.x, sTarget_.y - sPos_.y, sTarget_.z - sPos_.z };
+			dir_ = MyMath::SafeNormalize(dir_, { 0.0f, 0.0f, 1.0f });
+
+			bullet_->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_, camera_, sPos_, dir_, spPerFrame_, sDmg_, sLife_);
+
+			// スラッシュ用モデル＆スケール設定
+			bullet_->SetModel("sphere.obj");
+			bullet_->SetScale({ 3.8f, 0.7f, 1.2f });
+			bullet_->SetFxType(BossBullet::FxType::SlashWave); // エフェクト種別設定
 
 			bossBullets_.push_back(std::move(bullet_));
 		}

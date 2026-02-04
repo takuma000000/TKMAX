@@ -1,26 +1,23 @@
 #include "ParticleGroupsCatalog.h"
 
 namespace TKM {
-	void ParticleGroupsCatalog::RegisterGameScene(ParticleManager* pm) {
+	void ParticleGroupsCatalog::RegisterScene(ParticleManager* pm) {
 		if (!pm) { return; }
 
-		// 共通
+		/// === 共通 ===
 		pm->CreateParticleGroup("uv", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
 
-		/// ===== パーティクルグループの作成 =====
+		/// === パーティクルグループの作成 ===
 		// 開幕用：うっすら光が吸い込まれるリング
 		pm->CreateParticleGroup("irisOpen", "./resources/gradationLine.png", ParticleManager::ParticleType::RING);
 		// 花火用：放射状に飛ぶ粒（通常クアッド）
 		pm->CreateParticleGroup("irisFire", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
-
 		// 花火用：打ち上げ＆閃光＆爆発
 		pm->CreateParticleGroup("fw_launch", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
 		pm->CreateParticleGroup("fw_flash", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
 		pm->CreateParticleGroup("fw_burst", "./resources/firework_star.png", ParticleManager::ParticleType::NORMAL);
-
 		// 空気の流れ(風)エフェクト
 		pm->CreateParticleGroup("airStreak", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
-
 		// 敵スポーン
 		pm->CreateParticleGroup("enemySpawn", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
 
@@ -61,7 +58,6 @@ namespace TKM {
 		pm->CreateParticleGroup("bossDeath_ring", "./resources/gradationLine.png", ParticleManager::ParticleType::RING);
 		// 倒れたあとしばらく残る大きめの煙
 		pm->CreateParticleGroup("bossDeath_smoke", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
-
 		// 爆心コア（画面中央でドーンと光る玉）
 		pm->CreateParticleGroup("bossClear_core", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
 		// 超デカいショックウェーブ（リング）
@@ -88,9 +84,10 @@ namespace TKM {
 		pm->CreateParticleGroup("core_charge_flash", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
 
 		/// === LT弾のチャージエフェクト ===
+		// 軌道ライン
 		pm->CreateParticleGroup("trail_lt_path", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
 
-		/// --- Boss Windup FX（予備動作）---
+		/// === Boss Windup FX（予備動作）===
 		// 外側を覆うリング状エネルギー
 		pm->CreateParticleGroup("boss_windup_shell", "./resources/gradationLine.png", ParticleManager::ParticleType::RING);
 		// 火花がパチパチ飛ぶエフェクト
@@ -98,7 +95,15 @@ namespace TKM {
 		// 内向きに吸い込まれる粒子
 		pm->CreateParticleGroup("boss_windup_inward", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
 
-		/// === Boss Evil Bullet（邪悪弾 ===
+		/// === Boss Slash Windup FX（斬撃の予備動作) ===
+		// 斬撃の軌道ライン
+		pm->CreateParticleGroup("boss_slash_windup_line", "./resources/gradationLine.png", ParticleManager::ParticleType::NORMAL);
+		// 火花の欠片
+		pm->CreateParticleGroup("boss_slash_windup_spark", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
+		// 斬撃のアーク状エネルギー
+		pm->CreateParticleGroup("boss_slash_windup_arc", "./resources/gradationLine.png", ParticleManager::ParticleType::RING);
+
+		/// === Boss Evil Bullet（邪悪弾) ===
 		// コア：強い光（中心の発光）
 		pm->CreateParticleGroup("bossEvil_core", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
 		// モアモア：黒紫の煙
@@ -117,5 +122,21 @@ namespace TKM {
 		pm->CreateParticleGroup("bossEvil_corona", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
 		// 軌道トレイル：尾を引く粒
 		pm->CreateParticleGroup("bossEvil_trail", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
+
+		/// === Boss Slash Trail（斬撃の軌道）===
+		// 切れ味のあるストリーク（毎フレ）
+		pm->CreateParticleGroup("bossSlash_cut", "./resources/gradationLine.png", ParticleManager::ParticleType::NORMAL);
+		// 火花（間引き）
+		pm->CreateParticleGroup("bossSlash_spark", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
+		// 斬撃の弧（たまに）
+		pm->CreateParticleGroup("bossSlash_arc", "./resources/gradationLine.png", ParticleManager::ParticleType::RING);
+
+		/// === Boss Slash Trail (3レイヤー) ===
+		// 斬撃のメイン
+		pm->CreateParticleGroup("bossSlash_main", "./resources/gradationLine.png", ParticleManager::ParticleType::NORMAL);
+		// 斬撃のグロー
+		pm->CreateParticleGroup("bossSlash_glow", "./resources/firework_star.png", ParticleManager::ParticleType::NORMAL);
+		// 斬撃の尾っぽ
+		pm->CreateParticleGroup("bossSlash_tail", "./resources/firework_star.png", ParticleManager::ParticleType::NORMAL);
 	}
 }

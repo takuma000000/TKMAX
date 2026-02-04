@@ -29,7 +29,7 @@ void GameScene::Initialize() {
 	/// ──────────────── パーティクルの初期化 ───────────────
 	ParticleManager::GetInstance()->Initialize(dxCommon_, srvManager_, camera_.get());
 	// パーティクルグループの登録は ParticleGroupsCatalogクラス へ
-	ParticleGroupsCatalog::RegisterGameScene(ParticleManager::GetInstance());
+	ParticleGroupsCatalog::RegisterScene(ParticleManager::GetInstance());
 	// パーティクルエミッターの初期化
 	particleEmitter_ = std::make_unique<ParticleEmitter>();
 	particleEmitter_->Initialize("uv", { 0.0f,2.5f,10.0f });

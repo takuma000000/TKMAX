@@ -9,7 +9,7 @@ namespace TKM {
 		/// ゲームシーン用のパーティクルグループを登録します。
 		/// </summary>
 		/// <param name="pm">登録先となるパーティクルマネージャ</param>
-		static void RegisterGameScene(ParticleManager* pm);
+		static void RegisterScene(ParticleManager* pm);
 
 	};
 }

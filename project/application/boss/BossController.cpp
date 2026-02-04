@@ -179,6 +179,49 @@ void BossController::Update(float dt, Enemy& boss) {
 			}
 		}
 	}
+	// ============================================
+	// Slash Charge / Fire Execute（毎フレーム）
+	// ============================================
+	if (slashCooldownT_ > 0.0f) { // クールタイム
+		slashCooldownT_ = std::max(0.0f, slashCooldownT_ - dt); // 減少
+	}
+	// チャージ中
+	if (slashCharging_) {
+		// 溜め位置（ボス位置＋少し前）
+		Vector3 p_ = boss.GetWorldPosition(); // ボス位置取得
+		p_.y += missileMuzzleYOffset_; // 既存のYオフセットを流用
+		slashPos_ = p_; // 発射位置設定
+
+		// 狙い：発射時点のプレイヤー座標（ミサイルと同じ思想）
+		if (boss.GetPlayer()) {
+			slashTarget_ = boss.GetPlayer()();
+		} else {
+			slashTarget_ = playerPos_;
+		}
+
+		// スラッシュ用の溜めパーティクル（別グループ）
+		if (auto* pm_ = TKM::ParticleManager::GetInstance()) {
+			float t = 1.0f - (slashChargeTimer_ / slashChargeTime_); // 0→1
+			t = std::clamp(t, 0.0f, 1.0f); // クランプ
+			// “刃が形成される”感じ：線状 + 火花
+			int line_ = 2 + (int)(t * 8);    // 2→10
+			int spark_ = 1 + (int)(t * 4);   // 1→5
+			pm_->Emit("boss_slash_windup_line", p_, line_);
+			pm_->Emit("boss_slash_windup_spark", p_, spark_);
+			// 輪郭（弧）をたまに出す
+			if ((slashChargeFrame_ % 3) == 0) {
+				pm_->Emit("boss_slash_windup_arc", p_, 1);
+			}
+		}
+		++slashChargeFrame_; // フレームカウンタ増加
+		slashChargeTimer_ -= dt; // 溜め時間減少
+		if (slashChargeTimer_ <= 0.0f) { // slashChargeTimer_が0以下になったら
+			// 溜め完了→発射
+			slashCharging_ = false; // 溜め終了
+			slashFireReq_ = true; // 発射リクエスト
+			slashCooldownT_ = slashCooldown_; // クールタイムセット
+		}
+	}
 
 	ClampToArena(pos_); // アリーナ内に位置制限
 	boss.SetPosition(pos_); // 位置設定
@@ -242,6 +285,18 @@ bool BossController::ConsumeMissileFireRequest(Vector3& outPos, Vector3& outTarg
 	return true;
 }
 
+bool BossController::ConsumeSlashFireRequest(Vector3& outPos, Vector3& outTarget, float& outSpeed, int& outDamage, int& outLifeFrame) {
+	if (!slashFireReq_) { return false; } // リクエスト無し
+	slashFireReq_ = false; // リクエスト消費
+	// 出力セット
+	outPos = slashPos_; // 発射位置
+	outTarget = slashTarget_; // 目標位置
+	outSpeed = slashSpeed_; // 速度
+	outDamage = slashDamage_; // ダメージ
+	outLifeFrame = slashLifeFrame_; // 寿命フレーム
+	return true;
+}
+
 void BossController::UpdateEnter(float dt, Enemy& boss, Vector3& pos) {
 	const float targetZ_ = orbitZ_; // 目標Z座標
 	const float speed_ = 18.0f; // 侵入速度
@@ -274,21 +329,60 @@ void BossController::UpdateOrbit(float dt, Enemy& boss, Vector3& pos, const Vect
 	// 攻撃移行判定
 	if (timer_ >= orbitDuration_) {
 		// -----------------------------
-		// 通常時：ミサイル
+		// 通常時：ミサイル or スラッシュ
 		// 怒り中：レーザー
 		// -----------------------------
 		if (!rageActive_) {
+
+			// ===== 攻撃抽選（通常時）=====
+			// スラッシュはクールタイムがある想定（無いなら canSlash_ は常に true でOK）
+			const bool canSlash_ = (slashCooldownT_ <= 0.0f);
+
+			// 0.0〜1.0
+			std::uniform_real_distribution<float> u01(0.0f, 1.0f);
+
+			// スラッシュ割合（好みで調整）
+			const float slashRate_ = canSlash_ ? 0.45f : 0.0f;
+			const bool doSlash_ = (u01(rng_) < slashRate_);
+
 			Vector3 muzzlePos_ = pos;
 			muzzlePos_.y += missileMuzzleYOffset_;
 
+			if (doSlash_) {
+				// -----------------------------
+				// 通常時：スラッシュ（溜め→発射）
+				// -----------------------------
+				slashCharging_ = true;
+				slashChargeTimer_ = slashChargeTime_;
+				slashChargeFrame_ = 0;
+
+				// 発射時点のplayer座標を固定（ミサイルと同じ思想）
+				if (boss.GetPlayer()) {
+					slashTargetSnap_ = boss.GetPlayer()();
+					slashTargetValid_ = true;
+				} else {
+					slashTargetSnap_ = playerPos;
+					slashTargetValid_ = true;
+				}
+
+				// クールタイム開始（溜め開始時点でも、発射後でもどっちでもOK）
+				slashCooldownT_ = slashCooldown_;
+
+				ChangeState(State::Recover);
+				return;
+			}
+
+			// -----------------------------
+			// 通常時：ミサイル（1回溜め→3連射）
+			// -----------------------------
 			// --- 3連射開始（1回だけ溜めてから撃つ）---
-			burstLeft_ = 3; // 3発セット
+			burstLeft_ = 3;              // 3発セット
 			burstTimer_ = 0.0f;          // チャージ完了後、すぐ1発目に使う
-			burstTargetValid_ = false; // ターゲット未固定
+			burstTargetValid_ = false;   // ターゲット未固定
 			burstCharged_ = false;       // このバーストはまだチャージしてない
 			missileCharging_ = true;     // バースト開始時にだけチャージ開始
-			missileChargeTimer_ = missileChargeTime_; // チャージ時間セット
-			missileChargeFrame_ = 0; // フレームカウンタ初期化
+			missileChargeTimer_ = missileChargeTime_;
+			missileChargeFrame_ = 0;
 
 			if (boss.GetPlayer()) {
 				burstTargetSnap_ = boss.GetPlayer()(); // 発射開始時点のplayer座標を固定
@@ -297,18 +391,21 @@ void BossController::UpdateOrbit(float dt, Enemy& boss, Vector3& pos, const Vect
 				burstTargetSnap_ = playerPos;
 				burstTargetValid_ = true;
 			}
-			// ミサイル発射音
+
 			ChangeState(State::Recover);
 			return;
 		}
-		// 怒りモード時のみレーザーへ
-		laserAimFixed_ = playerPos + playerVel_ * predictLeadTime_; // 予測込みで狙い位置計算
-		laserAimFixed_.x = std::clamp(laserAimFixed_.x, arenaMin_.x, arenaMax_.x); // x
-		laserAimFixed_.y = std::clamp(laserAimFixed_.y, arenaMin_.y, arenaMax_.y); // y
-		laserAimFixed_.z = std::clamp(laserAimFixed_.z, arenaMin_.z, arenaMax_.z); // z
 
-		laserBasePos_ = pos; // 基準位置保存
-		ChangeState(State::LaserWindup); // レーザー予告へ
+		// -----------------------------
+		// 怒りモード時のみレーザーへ（ここはそのまま）
+		// -----------------------------
+		laserAimFixed_ = playerPos + playerVel_ * predictLeadTime_;
+		laserAimFixed_.x = std::clamp(laserAimFixed_.x, arenaMin_.x, arenaMax_.x);
+		laserAimFixed_.y = std::clamp(laserAimFixed_.y, arenaMin_.y, arenaMax_.y);
+		laserAimFixed_.z = std::clamp(laserAimFixed_.z, arenaMin_.z, arenaMax_.z);
+
+		laserBasePos_ = pos;
+		ChangeState(State::LaserWindup);
 		return;
 	}
 }

@@ -313,7 +313,7 @@ private:
 	// auraVolume_
 	TKM::AuraVolumeRenderer* auraVolume_ = nullptr; // オーラボリュームレンダラー
 	//==============================
-	// Missile（通常時攻撃）
+	// Missile（通常時攻撃その1）
 	//==============================
 	bool missileFireReq_ = false; // 発射要求フラグ
 	Vector3 missilePos_{ 0.0f, 0.0f, 0.0f }; // 発射位置
@@ -336,4 +336,24 @@ private:
 	float missileChargeTime_ = 1.0f;  // 溜め時間（秒）
 	float missileChargeTimer_ = 0.0f;  // 溜め残り
 	int missileChargeFrame_ = 0;       // 間引き用
+	//==============================
+	// SlashWave（通常時攻撃その2）
+	//==============================
+	bool slashFireReq_ = false; // 発射要求フラグ
+	Vector3 slashPos_{ 0.0f,0.0f,0.0f }; // 発射位置
+	Vector3 slashTarget_{ 0.0f,0.0f,0.0f }; // 発射時点のplayer座標（到達点）
+	float slashSpeed_ = 95.0f;     // ミサイルより速め推奨
+	int slashDamage_ = 2; // ダメージ
+	int slashLifeFrame_ = 90; // 寿命フレーム
+	// 予備動作（スラッシュ用：ミサイルとは別）
+	bool slashCharging_ = false; // 溜め中か
+	float slashChargeTime_ = 0.55f; // 溜め時間（秒）
+	float slashChargeTimer_ = 0.0f; // 溜め残り
+	int slashChargeFrame_ = 0; // 間引き用
+	// クールタイム（連発防止）
+	float slashCooldown_ = 2.0f; // 何秒間隔で撃てるか
+	float slashCooldownT_ = 0.0f; // クールタイム残り
+	// スラッシュ：発射時点のターゲット固定
+	Vector3 slashTargetSnap_{ 0.0f, 0.0f, 0.0f }; // 発射時点のplayer座標を固定
+	bool slashTargetValid_ = false; // 固定座標が有効かどうか
 };

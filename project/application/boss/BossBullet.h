@@ -13,6 +13,11 @@
 //=============================================================
 class BossBullet {
 public:
+	// 弾のデフォルトスケール
+	enum class FxType {
+		MissileEvil, // ミサイル（bossEvil_*）
+		SlashWave,   // 斬撃（bossSlash_*）
+	};
 
 	/// <summary>
 	/// 弾オブジェクトを初期化します。
@@ -99,25 +104,107 @@ public:
 #endif
 
 		// ==========================
-		// Particle FX（ここに置けば発射時から必ず出る）
+		// Particle FX（弾種で分岐）
 		// ==========================
 		{
 			auto* pm_ = TKM::ParticleManager::GetInstance();
 			if (pm_) {
 				Vector3 fxPos_ = newPos_;
 
-				pm_->Emit("bossEvil_core", fxPos_, 1);
+				if (fxType_ == FxType::MissileEvil) {
+					// === ミサイル（今のまま）===
+					pm_->Emit("bossEvil_core", fxPos_, 1);
 
-				if ((fxFrame_ % 2) == 0) {
-					pm_->Emit("bossEvil_smoke", fxPos_, 2);
+					if ((fxFrame_ % 2) == 0) { pm_->Emit("bossEvil_smoke", fxPos_, 2); }
+					if ((fxFrame_ % 4) == 0) { pm_->Emit("bossEvil_spark", fxPos_, 2); }
+					if ((fxFrame_ % 6) == 0) { pm_->Emit("bossEvil_ring", fxPos_, 1); }
+
+					pm_->Emit("bossEvil_trail", fxPos_, 2);
+
+				} else {
+					// === 斬撃（X字スラッシュ：2本を交差させる）===
+					auto Cross_ = [](const Vector3& a, const Vector3& b) {
+						return Vector3{
+							a.y * b.z - a.z * b.y,
+							a.z * b.x - a.x * b.z,
+							a.x * b.y - a.y * b.x
+						};
+						};
+
+					Vector3 fwd_ = MyMath::SafeNormalize(dir_, { 0.0f, 0.0f, 1.0f });
+
+					// fwd と平行だと right が死ぬので、up を状況で切り替える
+					Vector3 upA_{ 0.0f, 1.0f, 0.0f };
+					if (std::fabs(fwd_.y) > 0.90f) { upA_ = { 0.0f, 0.0f, 1.0f }; }
+
+					Vector3 right_ = MyMath::SafeNormalize(Cross_(upA_, fwd_), { 1.0f, 0.0f, 0.0f });
+					Vector3 up_ = MyMath::SafeNormalize(Cross_(fwd_, right_), { 0.0f, 1.0f, 0.0f });
+
+					// ---- Xスラッシュの“サイズ” ----
+					const float halfLen_ = 14.0f;  // X の腕の長さ
+					const float halfWide_ = 3.0f;   // 太さ方向（見た目の幅）
+					const int   seg_ = 22;     // 点密度（チマチマなら増やす）
+					const float back_ = 8.0f;   // 中心を少し後ろにして“残光”っぽく
+
+					Vector3 base_ = fxPos_ - fwd_ * back_;
+
+					// 45度回転した2軸（Xを作るための斜め軸）
+					const float c = 0.70710678f; // cos45
+					const float s = 0.70710678f; // sin45
+					Vector3 diag1_ = right_ * c + up_ * s;   // 右上方向
+					Vector3 diag2_ = right_ * c - up_ * s;   // 右下方向
+
+					// 2本の斬撃線を、中心で交差させて描く
+					for (int i = 0; i < seg_; ++i) {
+						float t = (seg_ <= 1) ? 0.0f : (float)i / (float)(seg_ - 1);
+						float u = (t * 2.0f - 1.0f);         // -1..+1
+						float along = u * halfLen_;
+
+						// 線に“幅”を付ける（面っぽくする）
+						float w = (1.0f - std::fabs(u)) * halfWide_; // 中央が太く、端が細い
+
+						// 1本目（diag1）
+						Vector3 p1 = base_ + diag1_ * along + diag2_ * w * 0.35f;
+						Vector3 p2 = base_ + diag1_ * along - diag2_ * w * 0.35f;
+
+						// 2本目（diag2）
+						Vector3 q1 = base_ + diag2_ * along + diag1_ * w * 0.35f;
+						Vector3 q2 = base_ + diag2_ * along - diag1_ * w * 0.35f;
+
+						// Emitは Vector3& なので必ず変数で渡す
+						Vector3 a1 = p1, a2 = p2, b1 = q1, b2 = q2;
+
+						pm_->Emit("bossSlash_main", a1, 1);
+						pm_->Emit("bossSlash_main", a2, 1);
+						pm_->Emit("bossSlash_main", b1, 1);
+						pm_->Emit("bossSlash_main", b2, 1);
+
+						// 発光/残りは間引き（重い＋変にデカく見えるのを防ぐ）
+						if ((i % 2) == 0) {
+							Vector3 g1 = p1, g2 = q1;
+							pm_->Emit("bossSlash_glow", g1, 1);
+							pm_->Emit("bossSlash_glow", g2, 1);
+						}
+						if ((i % 3) == 0) {
+							Vector3 t1 = p2, t2 = q2;
+							pm_->Emit("bossSlash_tail", t1, 1);
+							pm_->Emit("bossSlash_tail", t2, 1);
+						}
+					}
+
+					// 火花：Xの4端点だけ（変な位置に散らない）
+					if ((fxFrame_ % 3) == 0) {
+						Vector3 tipA = base_ + diag1_ * halfLen_;
+						Vector3 tipB = base_ - diag1_ * halfLen_;
+						Vector3 tipC = base_ + diag2_ * halfLen_;
+						Vector3 tipD = base_ - diag2_ * halfLen_;
+
+						Vector3 s1 = tipA; pm_->Emit("bossSlash_spark", s1, 1);
+						Vector3 s2 = tipB; pm_->Emit("bossSlash_spark", s2, 1);
+						Vector3 s3 = tipC; pm_->Emit("bossSlash_spark", s3, 1);
+						Vector3 s4 = tipD; pm_->Emit("bossSlash_spark", s4, 1);
+					}
 				}
-				if ((fxFrame_ % 4) == 0) {
-					pm_->Emit("bossEvil_spark", fxPos_, 2);
-				}
-				if ((fxFrame_ % 6) == 0) {
-					pm_->Emit("bossEvil_ring", fxPos_, 1);
-				}
-				pm_->Emit("bossEvil_trail", fxPos_, 2);
 			}
 			++fxFrame_;
 		}
@@ -263,6 +350,25 @@ public:
 	/// </summary>
 	/// <param name="yawRadPerFrame">1フレームあたりのヨー回転量（ラジアン）</param>
 	void SetCurveYaw(float yawRadPerFrame) { curveYawRad_ = yawRadPerFrame; }
+	/// <summary>
+	/// モデルを設定します。
+	/// </summary>
+	/// <param name="model">使用するモデルファイル名</param>
+	void SetModel(const std::string& model) {
+		if (obj_) { obj_->SetModel(model); }
+	}
+	/// <summary>
+	/// スケールを設定します。
+	/// </summary>
+	/// <param name="s">設定するスケール値</param>
+	void SetScale(const Vector3& s) {
+		if (obj_) { obj_->SetScale(s); }
+	}
+	/// <summary>
+	/// エフェクトタイプを設定します。
+	/// </summary>
+	/// <param name="t"></param>
+	void SetFxType(FxType t) { fxType_ = t; }
 	// =========================================
 private:
 	//======================================================================
@@ -299,4 +405,5 @@ private:
 	Vector3 curveCtrl_{ 0.0f,0.0f,0.0f }; // 曲線制御点位置
 	Vector3 velocity_{ 0.0f, 0.0f, 0.0f }; // 曲線移動時の速度ベクトル
 	int fxFrame_ = 0; // 通常弾エフェクト用フレームカウンタ
+	FxType fxType_ = FxType::MissileEvil; // エフェクトタイプ
 };
