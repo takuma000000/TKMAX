@@ -44,8 +44,6 @@ namespace TKM {
 		xAudio2_.Reset();
 
 		initialized_ = false;
-
-		// ★ここで delete instance; はしない！！
 	}
 
 	//============================
@@ -141,7 +139,7 @@ namespace TKM {
 	AudioManager* AudioManager::GetInstance() {
 		if (instance == nullptr) {
 			instance = new AudioManager;
-			instance->Initialize(); // ★生成時に必ず初期化
+			instance->Initialize(); // 生成時に必ず初期化
 		}
 		return instance;
 	}

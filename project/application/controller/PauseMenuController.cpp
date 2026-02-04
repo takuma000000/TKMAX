@@ -214,7 +214,7 @@ namespace TKM {
 				}
 				if (index_ == (int)Item::ReturnToTitle) {
 					Close_();
-					return Command::ReturnToTitle; // ★長押し無しで即確定
+					return Command::ReturnToTitle; // 長押し無しで即確定
 				}
 			}
 		}

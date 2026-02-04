@@ -132,7 +132,7 @@ void BossController::Update(float dt, Enemy& boss) {
 			muzzlePos_.y += missileMuzzleYOffset_;
 			missilePos_ = muzzlePos_;
 
-			// ★ここが重要：毎発、撃つ瞬間の player 座標を取り直す
+			// 毎発、撃つ瞬間の player 座標を取り直す
 			if (boss.GetPlayer()) {
 				missileTarget_ = boss.GetPlayer()();
 			} else {
