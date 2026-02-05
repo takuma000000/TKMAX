@@ -137,7 +137,12 @@ public:
 	/// 親シーンを取得します。
 	/// </summary>
 	/// <returns></returns>
-	TKM::BaseScene* GetParentScene() const { return parentScene_; }
+	TKM::BaseScene* GetParentScene() { return parentScene_; }
+	/// <summary>
+	/// 親シーンを取得します。(const版)
+	/// </summary>
+	/// <returns></returns>
+	const TKM::BaseScene* GetParentScene() const { return parentScene_; }
 	/// <summary>
 	/// 敵が撃破されたかどうかを取得します。
 	/// </summary>
