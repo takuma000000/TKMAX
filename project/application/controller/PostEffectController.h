@@ -70,5 +70,9 @@ namespace TKM {
 		//==============================
 		std::unique_ptr<TKM::FogVolume3D> fogVolume3D_ = nullptr; // 立体霧
 		std::unique_ptr<TKM::SmokeVolume3D> smokeVolume3D_ = nullptr; // 立体煙
+		// ==============================
+		// ImGui 用表示切替
+		// ==============================
+		bool showSmoke_ = true; // ImGui用：煙ボリュームの表示ON/OFF
 	};
 }

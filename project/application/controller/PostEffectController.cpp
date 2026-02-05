@@ -141,10 +141,9 @@ namespace TKM {
 
 	void PostEffectController::ImGuiDebug() {
 #ifdef USE_IMGUI
-		static bool showSmoke = true;
 		if (ImGui::Begin("ポストエフェクト")) {
-			ImGui::Checkbox("煙ボリュームを表示", &showSmoke);
-			if (showSmoke) {
+			ImGui::Checkbox("煙ボリュームを表示", &showSmoke_);
+			if (showSmoke_) {
 				if (smokeVolume3D_) {
 					// SmokeVolume3D 側の ImGui はすでに日本語で実装済み
 					smokeVolume3D_->ImGuiDebug();
