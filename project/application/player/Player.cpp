@@ -166,6 +166,12 @@ void Player::ImGuiDebug() {
 
 	//---------------- プレイヤー本体 ----------------
 	ImGui::Begin("プレイヤー");
+
+
+	ImGui::Text("直前に当たった攻撃ID: %d", lastHitAttackId_);
+	ImGui::Text("同一攻撃ダメージ無効時間: %.2f", sameAttackLockT_);
+
+
 	if (ImGui::DragFloat3("位置", &pos.x, 0.01f)) {
 		object_->SetTranslate(pos);
 	}
@@ -177,7 +183,7 @@ void Player::ImGuiDebug() {
 	}
 	ImGui::Separator(); // 区切り線
 	// 当たり判定サイズ
-	Vector3 col =	;
+	Vector3 col = colliderScale_;
 	if (ImGui::DragFloat3("当たり判定サイズ(自機)", &col.x, 0.01f, 0.01f, 50.0f)) {
 		colliderScale_ = col;
 	}

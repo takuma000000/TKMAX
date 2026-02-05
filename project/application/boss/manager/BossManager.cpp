@@ -212,7 +212,7 @@ void BossManager::Update(float dt) {
 			Vector3 dir_{ sTarget_.x - sPos_.x, sTarget_.y - sPos_.y, sTarget_.z - sPos_.z };
 			dir_ = MyMath::SafeNormalize(dir_, { 0.0f, 0.0f, 1.0f });
 
-			bullet_->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_, camera_, sPos_, dir_, spPerFrame_, sDmg_, sLife_);
+			bullet_->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_, camera_, sPos_, dir_, spPerFrame_, 1, sLife_);
 			bullet_->SetModel("sphere.obj");
 			bullet_->SetScale({ 3.8f, 0.7f, 1.2f });
 			bullet_->SetFxType(BossBullet::FxType::SlashWave);
