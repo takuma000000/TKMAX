@@ -132,7 +132,6 @@ namespace TKM {
 		if (fogVolume3D_) {
 			fogVolume3D_->Draw(vp, right, up, fwd);
 		}
-
 		// SmokeVolume（空間スモーク）
 		if (smokeVolume3D_) {
 			smokeVolume3D_->Draw(vp, right, up, fwd);

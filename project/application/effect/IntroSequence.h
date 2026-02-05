@@ -59,7 +59,12 @@ namespace TKM {
 		/// Irisスプライトの取得。
 		/// </summary>
 		/// <returns></returns>
-		Sprite* GetIrisSprite() const { return iris_.get(); }
+		Sprite* GetIrisSprite() { return iris_.get(); }
+		/// <summary>
+		/// Irisスプライトの取得。
+		/// </summary>
+		/// <returns></returns>
+		const Sprite* GetIrisSprite() const { return iris_.get(); }
 		/// <summary>
 		/// Iris最大スケールの取得。
 		/// </summary>
