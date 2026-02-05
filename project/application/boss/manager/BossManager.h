@@ -153,7 +153,12 @@ public:
 	/// ボス本体を取得。
 	/// </summary>
 	/// <returns></returns>
-	BossEnemy* GetBoss() const { return boss_.get(); }
+	BossEnemy* GetBoss() { return boss_.get(); }
+	/// <summary>
+	/// ボス本体を取得（const版）。
+	/// </summary>
+	/// <returns></returns>
+	const BossEnemy* GetBoss() const { return boss_.get(); }
 	// =========================================
 	// Setter===================================
 	/// <summary>
@@ -217,4 +222,10 @@ private:
 	/// ボス弾を更新します。
 	/// </summary>
 	void UpdateBossBullets();
+	//==============================
+	// Slash hit anti-multi（encapsulated）
+	//==============================
+	int slashAttackId_ = 0; // スラッシュ攻撃IDカウンタ
+	int currentSlashId_ = -1; // 現在処理中のスラッシュ攻撃ID
+	float slashIdHoldT_ = 0.0f; // 現在のスラッシュ攻撃IDの保持時間
 };

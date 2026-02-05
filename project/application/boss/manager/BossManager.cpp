@@ -3,11 +3,6 @@
 #include <algorithm>
 #include "MyMath.h"
 
-// 静的メンバ変数定義
-static int gSlashAttackId_ = 0;
-static int gCurrentSlashId_ = -1;
-static float gSlashIdHoldT_ = 0.0f;
-
 // ワールド座標をスクリーンUV座標に変換する
 static Vector2 WorldToUV(const Vector3& world, const Matrix4x4& vp) {
 	float clipX = world.x * vp.m[0][0] + world.y * vp.m[1][0] + world.z * vp.m[2][0] + 1.0f * vp.m[3][0];
@@ -86,6 +81,10 @@ void BossManager::Initialize(TKM::DirectXCommon* dxCommon, TKM::Camera* camera, 
 	boss_.reset(); // ボスオブジェクト
 	bossBullets_.clear(); // ボス弾リスト
 
+	slashAttackId_ = 0; // スラッシュ攻撃ID初期化
+	currentSlashId_ = -1; // 現在のスラッシュ攻撃ID初期化
+	slashIdHoldT_ = 0.0f; // スラッシュ攻撃IDホールド時間初期化
+
 	// オーラボリュームレンダラー初期化
 	auraVolume_ = std::make_unique<TKM::AuraVolumeRenderer>();
 	auraVolume_->Initialize(dxCommon_);
@@ -156,9 +155,9 @@ void BossManager::Update(float dt) {
 		return;
 	}
 
-	if (gSlashIdHoldT_ > 0.0f) {
-		gSlashIdHoldT_ -= dt;
-		if (gSlashIdHoldT_ < 0.0f) { gSlashIdHoldT_ = 0.0f; }
+	if (slashIdHoldT_ > 0.0f) {
+		slashIdHoldT_ -= dt;
+		if (slashIdHoldT_ < 0.0f) { slashIdHoldT_ = 0.0f; }
 	}
 
 	if (bossController_) {
@@ -202,10 +201,10 @@ void BossManager::Update(float dt) {
 		if (bossController_->ConsumeSlashFireRequest(sPos_, sTarget_, sSpeed_, sDmg_, sLife_)) {
 			const float spPerFrame_ = sSpeed_ * dt;
 
-			if (gSlashIdHoldT_ <= 0.0f) {
-				gCurrentSlashId_ = ++gSlashAttackId_; // ★このタイミングで「今回の斬撃ID」を確定
+			if (slashIdHoldT_ <= 0.0f) {
+				currentSlashId_ = ++slashAttackId_; // ★このタイミングで「今回の斬撃ID」を確定
 			}
-			gSlashIdHoldT_ = 0.5f; // 斬撃の長さに合わせて(0.2〜0.5くらい)
+			slashIdHoldT_ = 0.5f; // 斬撃の長さに合わせて(0.2〜0.5くらい)
 
 			auto bullet_ = std::make_unique<BossBullet>();
 
@@ -217,7 +216,7 @@ void BossManager::Update(float dt) {
 			bullet_->SetScale({ 3.8f, 0.7f, 1.2f });
 			bullet_->SetFxType(BossBullet::FxType::SlashWave);
 
-			bullet_->SetAttackId(gCurrentSlashId_); // ★斬撃IDセット
+			bullet_->SetAttackId(currentSlashId_); // ★斬撃IDセット
 
 			bossBullets_.push_back(std::move(bullet_));
 		}

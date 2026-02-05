@@ -74,7 +74,7 @@ namespace TKM {
 		/// </summary>設定情報の取得。
 		/// </summary>
 		/// <returns></returns>
-		Desc& GetDesc() { return desc_; }
+		const Desc& GetDesc() const { return desc_; }
 		// ===========================================
 		// Settet=====================================
 		/// <summary>
@@ -93,7 +93,6 @@ namespace TKM {
 			}
 		}
 		// ===========================================
-
 	private:
 		struct Shard {
 			std::unique_ptr<Sprite> sp_; // 破片スプライト
