@@ -3,7 +3,7 @@
 #include <vector>
 #include "DirectXCommon.h"
 #include "camera/Camera.h"
-#include "Vector3.h"
+#include "MyMath.h"
 #include "Object3dCommon.h"
 #include "AudioManager.h"
 #include "BossEnemy.h"

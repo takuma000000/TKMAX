@@ -86,6 +86,14 @@ public:
 	/// RB弾が回復中かどうか。
 	/// </summary>
 	bool IsRbRefilling() const { return rbRefilling_; }
+	/// <summary>
+	/// 攻撃ID付きでダメージを受ける処理を行います。
+	/// 同一攻撃IDによる重複ダメージは無効化されます。
+	/// </summary>
+	/// <param name="damage">与えるダメージ量</param>
+	/// <param name="attackId">攻撃を識別するID</param>
+	/// <returns>ダメージが適用された場合 true、それ以外は false</returns>
+	bool TryDamageFromAttack(int damage, int attackId);
 	// Getter===================================
 	/// <summary>
 	/// プレイヤーの弾リストを取得します。
@@ -370,13 +378,13 @@ private:
 	// --- 自機当たり判定(AABB) ---
 	Vector3 colliderScale_ = { 2.0f, 2.0f, 6.0f }; // 当たり判定用スケール
 	float   hitFlashTimer_ = 0.0f;                 // 被弾フラッシュ用タイマー
-
-	/// 
-	bool bossDeathBlurActive_ = false;
-	float bossDeathBlurT_ = 0.0f;
-	const float bossDeathBlurDuration_ = 1.5f; // ブラー強めの時間
-
-	///
+	// --- 無敵 & 点滅 ---
+	bool  isInvincible_ = false;   // 無敵中か
+	float invincibleT_ = 0.0f;     // 無敵経過秒
+	float blinkT_ = 0.0f;          // 点滅用タイマー
+	bool  invincibleVisible_ = true; // 点滅表示フラグ
+	static constexpr float kInvincibleSec_ = 2.0f;     // 無敵時間
+	static constexpr float kBlinkInterval_ = 0.08f;    // 点滅間隔（秒）
 	//====================
 	// RB弾（弾数制限）
 	//====================
@@ -389,4 +397,9 @@ private:
 	float rbRefillValue_ = 0.0f;     // 回復中の弾数（floatで滑らかに）
 	bool  rbRefilling_ = false;      // 回復中フラグ
 	float rbNoFireTimer_ = 0.0f; // 最後にRBを撃ってからの経過秒数
+
+
+
+	int   lastHitAttackId_ = -1; // 最後に当たった攻撃ID
+	float sameAttackLockT_ = 0.0f; // 同じ攻撃IDで連続ヒットしないようにするためのタイマー
 };

@@ -12,7 +12,6 @@
 #include "WaterRippleEffect.h"
 #include "FogVolume3D.h"
 #include "SmokeVolume3D.h"
-
 #include "camera/Camera.h"
 #include "MyMath.h"
 
@@ -54,15 +53,22 @@ namespace TKM {
 		void OnCameraUpdated(TKM::Camera* activeCamera);
 
 	private:
+		//==============================
+		// 参照
+		//==============================
 		DirectXCommon* dxCommon_ = nullptr;
-
-		std::unique_ptr<TKM::RadialBlurEffect> radialBlur_ = nullptr;
-		std::unique_ptr<TKM::VignettingEffect> vignetting_ = nullptr;
-		std::unique_ptr<TKM::FogEffect> fog_ = nullptr;
-		std::unique_ptr<TKM::AuraEffect> aura_ = nullptr;
-		std::unique_ptr<TKM::WaterRippleEffect> waterRipple_ = nullptr;
-
-		std::unique_ptr<TKM::FogVolume3D> fogVolume3D_ = nullptr;
-		std::unique_ptr<TKM::SmokeVolume3D> smokeVolume3D_ = nullptr;
+		//==============================
+		// Post Effect（2D / Screen Space）
+		//==============================
+		std::unique_ptr<TKM::RadialBlurEffect> radialBlur_ = nullptr; // 放射ブラー
+		std::unique_ptr<TKM::VignettingEffect> vignetting_ = nullptr; // ビネット
+		std::unique_ptr<TKM::FogEffect> fog_ = nullptr; // 画面霧
+		std::unique_ptr<TKM::AuraEffect> aura_ = nullptr; // オーラ
+		std::unique_ptr<TKM::WaterRippleEffect> waterRipple_ = nullptr; // 水面波紋
+		//==============================
+		// Volume Effect（3D / World Space）
+		//==============================
+		std::unique_ptr<TKM::FogVolume3D> fogVolume3D_ = nullptr; // 立体霧
+		std::unique_ptr<TKM::SmokeVolume3D> smokeVolume3D_ = nullptr; // 立体煙
 	};
 }

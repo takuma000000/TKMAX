@@ -3,6 +3,11 @@
 #include <algorithm>
 #include "MyMath.h"
 
+// 静的メンバ変数定義
+static int gSlashAttackId_ = 0;
+static int gCurrentSlashId_ = -1;
+static float gSlashIdHoldT_ = 0.0f;
+
 // ワールド座標をスクリーンUV座標に変換する
 static Vector2 WorldToUV(const Vector3& world, const Matrix4x4& vp) {
 	float clipX = world.x * vp.m[0][0] + world.y * vp.m[1][0] + world.z * vp.m[2][0] + 1.0f * vp.m[3][0];
@@ -151,6 +156,11 @@ void BossManager::Update(float dt) {
 		return;
 	}
 
+	if (gSlashIdHoldT_ > 0.0f) {
+		gSlashIdHoldT_ -= dt;
+		if (gSlashIdHoldT_ < 0.0f) { gSlashIdHoldT_ = 0.0f; }
+	}
+
 	if (bossController_) {
 		bossController_->Update(dt, *boss_); // ボス挙動コントローラ更新
 	}
@@ -192,17 +202,22 @@ void BossManager::Update(float dt) {
 		if (bossController_->ConsumeSlashFireRequest(sPos_, sTarget_, sSpeed_, sDmg_, sLife_)) {
 			const float spPerFrame_ = sSpeed_ * dt;
 
+			if (gSlashIdHoldT_ <= 0.0f) {
+				gCurrentSlashId_ = ++gSlashAttackId_; // ★このタイミングで「今回の斬撃ID」を確定
+			}
+			gSlashIdHoldT_ = 0.5f; // 斬撃の長さに合わせて(0.2〜0.5くらい)
+
 			auto bullet_ = std::make_unique<BossBullet>();
 
 			Vector3 dir_{ sTarget_.x - sPos_.x, sTarget_.y - sPos_.y, sTarget_.z - sPos_.z };
 			dir_ = MyMath::SafeNormalize(dir_, { 0.0f, 0.0f, 1.0f });
 
 			bullet_->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_, camera_, sPos_, dir_, spPerFrame_, sDmg_, sLife_);
-
-			// スラッシュ用モデル＆スケール設定
 			bullet_->SetModel("sphere.obj");
 			bullet_->SetScale({ 3.8f, 0.7f, 1.2f });
-			bullet_->SetFxType(BossBullet::FxType::SlashWave); // エフェクト種別設定
+			bullet_->SetFxType(BossBullet::FxType::SlashWave);
+
+			bullet_->SetAttackId(gCurrentSlashId_); // ★斬撃IDセット
 
 			bossBullets_.push_back(std::move(bullet_));
 		}
@@ -372,10 +387,13 @@ void BossManager::UpdateBossBullets() {
 			const Vector3 pSize_ = player_->GetColliderScale();
 
 			if (b_->GetFxType() == BossBullet::FxType::SlashWave) {
-				// 斬撃だけ：X字セグメントAABB
 				if (b_->HitTestSlashX(pCenter_, pSize_)) {
-					player_->Damage(b_->Damage());
-					b_->Kill(); // 1回当たったら消す（多段ヒット事故防止）
+
+					// ダメージは1回だけ（通らないなら減らない）
+					player_->TryDamageFromAttack(b_->Damage(), b_->GetAttackId());
+
+					// でも弾は当たった瞬間に必ず消す
+					b_->Kill();
 				}
 			} else {
 				// ミサイル等：従来どおり AABB×Sphere

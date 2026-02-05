@@ -56,12 +56,35 @@ void Player::Update(float dt) {
 		return;
 	}
 
+	// --- 無敵時間 更新（操作無効でも進める）---
+	if (isInvincible_) {
+		invincibleT_ += dt;
+		blinkT_ += dt;
+
+		if (blinkT_ >= kBlinkInterval_) {
+			blinkT_ = 0.0f;
+			invincibleVisible_ = !invincibleVisible_;
+		}
+
+		if (invincibleT_ >= kInvincibleSec_) {
+			isInvincible_ = false;
+			invincibleT_ = 0.0f;
+			blinkT_ = 0.0f;
+			invincibleVisible_ = true; // 最後は必ず表示
+		}
+	}
+
 	// 被弾フラッシュ用タイマー更新
 	if (hitFlashTimer_ > 0.0f) {
 		hitFlashTimer_ -= dt;
 		if (hitFlashTimer_ < 0.0f) {
 			hitFlashTimer_ = 0.0f;
 		}
+	}
+
+	if (sameAttackLockT_ > 0.0f) { // 同一攻撃IDロックタイマー更新
+		sameAttackLockT_ -= dt;
+		if (sameAttackLockT_ < 0.0f) { sameAttackLockT_ = 0.0f; }
 	}
 
 	if (reticle_) reticle_->Update(dt);
@@ -154,7 +177,7 @@ void Player::ImGuiDebug() {
 	}
 	ImGui::Separator(); // 区切り線
 	// 当たり判定サイズ
-	Vector3 col = colliderScale_;
+	Vector3 col =	;
 	if (ImGui::DragFloat3("当たり判定サイズ(自機)", &col.x, 0.01f, 0.01f, 50.0f)) {
 		colliderScale_ = col;
 	}
@@ -223,10 +246,22 @@ void Player::OnEnemyDestroyed(Enemy* e) {
 }
 
 void Player::Damage(int value) {
+
+	if (isInvincible_) { // 無敵中はダメージ無効
+		return;
+	}
+
 	hp_ -= value;
 	if (hp_ < 0) hp_ = 0;
+
 	// 被弾したので当たり判定ボックスをしばらく赤くする
 	hitFlashTimer_ = 0.15f; // 0.15秒くらい
+
+	// --- 無敵開始（2秒）---
+	isInvincible_ = true;
+	invincibleT_ = 0.0f;
+	blinkT_ = 0.0f;
+	invincibleVisible_ = true;
 }
 
 void Player::Death() {
@@ -397,8 +432,32 @@ void Player::StartBossDeathCameraZoom() {
 	}
 }
 
+bool Player::TryDamageFromAttack(int damage, int attackId) {
+	if (isInvincible_) {
+		return false;
+	}
+
+	// lock中で同じ攻撃IDなら無視
+	if (sameAttackLockT_ > 0.0f && attackId == lastHitAttackId_) {
+		return false;
+	}
+
+	// 通す
+	Damage(damage);
+	lastHitAttackId_ = attackId;
+	sameAttackLockT_ = 0.20f; // 0.2秒くらい（好みで）
+	return true;
+}
+
 void Player::Draw(TKM::DirectXCommon* dxCommon) {
-	object_->Draw(dxCommon); // プレイヤー本体描画
+
+	// --- 無敵点滅：見えないタイミングは自機だけ描画しない ---
+	if (isInvincible_ && !invincibleVisible_) {
+		// レティクルは出したいならここではreturnしない
+		// 自機だけスキップしたいので object_ だけ描かない
+	} else {
+		object_->Draw(dxCommon); // プレイヤー本体描画
+	}
 
 	// クリア演出中などで隠したいときはフラグでOFF
 	if (reticle_ && reticleVisible_) {

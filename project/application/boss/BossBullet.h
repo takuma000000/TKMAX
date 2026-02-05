@@ -456,6 +456,11 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	FxType GetFxType() const { return fxType_; }
+	/// <summary>
+	/// 斬撃の攻撃IDを返します。
+	/// </summary>
+	/// <returns></returns>
+	int GetAttackId() const { return attackId_; }
 	// =========================================
 	// Setter===================================
 	/// <summary>
@@ -489,6 +494,11 @@ public:
 	/// </summary>
 	/// <param name="t"></param>
 	void SetFxType(FxType t) { fxType_ = t; }
+	/// <summary>
+	/// 斬撃の攻撃IDを設定します。
+	/// </summary>
+	/// <param name="id">設定する攻撃ID</param>
+	void SetAttackId(int id) { attackId_ = id; }
 	// =========================================
 private:
 	//======================================================================
@@ -528,4 +538,5 @@ private:
 	FxType fxType_ = FxType::MissileEvil; // エフェクトタイプ
 	int ageFrame_ = 0; // 経過フレーム数
 	static constexpr int kSlashHitActiveFrames_ = 18; // 斬撃の判定が生きるフレーム
+	int attackId_ = 0; // 斬撃の攻撃ID（連続ヒット防止用）
 };
