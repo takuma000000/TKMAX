@@ -250,11 +250,10 @@ void GameOverScene::Update() {
 		overAlpha_ = overAlphaTween_.Update(dt);
 		overScale_ = overScaleTween_.Update(dt);
 
-		static float glowTimer = 0.0f;
-		glowTimer += dt;
+		overGlowTimer_ += dt;
 
 		// ── 鼓動テンポやや速め（3.8f）：心臓のようにドクドク動く
-		float s = 0.5f + 0.5f * std::sin(glowTimer * 3.8f);
+		float s = 0.5f + 0.5f * std::sin(overGlowTimer_ * 3.8f);
 		float t01 = std::pow(s, 2.3f); // 明るい瞬間を鋭く（呼吸というより脈）
 
 		// 深紅補間：ワインレッド→血の赤（R強ブースト、G少量、Bほぼ0）
@@ -286,9 +285,8 @@ void GameOverScene::Update() {
 
 	// === 画面上から下へ降るストリーク（流星風） ===
 	{
-		static int frameToggle = 0;
-		frameToggle ^= 1;                  // 1フレームおきに生成（密度を下げる）
-		if (frameToggle) { /* 今フレは生成しない */ } else {
+		fallFrameToggle_ ^= 1;                  // 1フレームおきに生成（密度を下げる）
+		if (fallFrameToggle_) { /* 今フレは生成しない */ } else {
 			const int kSpawnPerFrame = 7;  // 12 → 7 に減らす（間隔を空ける）
 
 			const Matrix4x4 camW = camera_->GetWorldMatrix();
@@ -313,9 +311,8 @@ void GameOverScene::Update() {
 
 	// === 画面下から上へ昇るストリーク（逆流するような演出） ===
 	{
-		static int frameToggleUp = 0;
-		frameToggleUp ^= 1; // 上下で交互に発生させる
-		if (frameToggleUp) { /* 今フレームは生成しない */ } else {
+		riseFrameToggle_ ^= 1; // 上下で交互に発生させる
+		if (riseFrameToggle_) { /* 今フレームは生成しない */ } else {
 			const int kSpawnPerFrameUp = 5; // 数は少なめで控えめに
 
 			const Matrix4x4 camW = camera_->GetWorldMatrix();

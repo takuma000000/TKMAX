@@ -68,10 +68,10 @@ namespace TKM {
 
 		// Getter=====================================
 		/// <summary>
-		/// 設定の取得。
+		/// 弾数 UI の設定情報を取得します。
 		/// </summary>
 		/// <returns></returns>
-		Desc& GetDesc() { return desc_; }
+		const Desc& GetDesc() const { return desc_; }
 		// ===========================================
 		// Setter=====================================
 		/// <summary>
@@ -79,6 +79,11 @@ namespace TKM {
 		/// </summary>
 		/// <param name="v">表示する場合 true、それ以外は false</param>
 		void SetVisible(bool v) { visible_ = v; }
+		/// <summary>
+		/// 設定情報を設定します。
+		/// </summary>
+		/// <param name="desc">設定する情報</param>
+		void SetDesc(const Desc& desc) { desc_ = desc; }
 		// ===========================================
 
 	private:

@@ -67,10 +67,15 @@ public:
 
 	// Getter===================================
 	/// <summary>
-	/// 弾が追従している敵を取得します。
+	/// 弾の位置を取得します。（ワールド座標）
 	/// </summary>
 	/// <returns></returns>
-	Enemy* GetEnemy() const { return enemy_; }
+	Enemy* GetEnemy() { return enemy_; }
+	/// <summary>
+	/// 弾の位置を取得します。（ワールド座標）(const版)
+	/// </summary>
+	/// <returns></returns>
+	const Enemy* GetEnemy() const { return enemy_; }
 	// =========================================
 	// Setter===================================
 	/// <summary>

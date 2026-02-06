@@ -134,9 +134,12 @@ public:
 	/// レティクルを取得します。
 	/// </summary>
 	/// <returns></returns>
-	Reticle* GetReticle() const {
-		return reticle_.get();
-	}
+	Reticle* GetReticle() { return reticle_.get(); }
+	/// <summary>
+	/// レティクルを取得します。(const版)
+	/// </summary>
+	/// <returns></returns>
+	const Reticle* GetReticle() const { return reticle_.get(); }
 	/// <summary>
 	/// プレイヤーの回転を取得します。
 	/// </summary>

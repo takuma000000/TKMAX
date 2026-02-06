@@ -96,4 +96,9 @@ private:
 	static constexpr float kIrisDuration_ = 0.8f; // 虹彩絞り演出時間
 
 	float dt_ = 1.0f / 60.0f; // 仮のデルタタイム
+
+	// --- 演出用（Update内 static を排除してカプセル化） ---
+	float overGlowTimer_ = 0.0f;
+	int fallFrameToggle_ = 0;
+	int riseFrameToggle_ = 0;
 };

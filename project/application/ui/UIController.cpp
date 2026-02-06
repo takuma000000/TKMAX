@@ -98,8 +98,9 @@ namespace TKM {
 
 		// --- 弾UIを少し上に上げる ---
 		if (rbGaugeUI_) {
-			auto& desc = rbGaugeUI_->GetDesc();
+			auto desc = rbGaugeUI_->GetDesc(); // コピーを取得
 			desc.center_ = { screenW * 0.5f, screenH - 60.0f - ammoUiRaiseY_ };
+			rbGaugeUI_->SetDesc(desc);         // まとめて反映
 		}
 
 		// --- HPバーは“元の弾UIの場所”に置く（その枠にHPを入れる） ---
