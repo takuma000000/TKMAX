@@ -66,17 +66,17 @@ namespace TKM {
 
 		// Setter=====================================
 		/// <summary>
-		/// アクティブ設定
+		/// アクティブ状態を設定します。
 		/// </summary>
-		/// <param name="a"></param>
+		/// <param name="a">有効にする場合 true、無効にする場合 false</param>
 		void SetActive(bool a) { desc_.active_ = a; }
+		/// <summary>
+		/// 設定情報を設定します。
+		/// </summary>
+		/// <param name="desc">設定する FogVolume3D のパラメータ</param>
+		void SetDesc(const Desc& desc) { desc_ = desc; }
 		// ===========================================
 		// Getter=====================================
-		/// <summary>
-		/// 説明取得
-		/// </summary>
-		/// <returns></returns>
-		Desc& GetDesc() { return desc_; }
 		/// <summary>
 		/// 説明取得（const）
 		/// </summary>

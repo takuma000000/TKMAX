@@ -72,13 +72,13 @@ namespace TKM {
 		/// </summary>
 		/// <param name="a"></param>
 		void SetActive(bool a) { active_ = a; }
+		/// <summary>
+		/// 設定情報設定
+		/// </summary>
+		/// <param name="desc">設定するパラメータ</param>
+		void SetDesc(const Desc& desc) { desc_ = desc; }
 		// =============================================
 		// Getter=======================================
-		/// <summary>
-		/// 設定取得
-		/// </summary>
-		/// <returns></returns>
-		Desc& GetDesc() { return desc_; }
 		/// <summary>
 		/// 設定取得（const版）
 		/// </summary>

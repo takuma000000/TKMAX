@@ -46,11 +46,12 @@ namespace TKM {
 		fogVolume3D_ = std::make_unique<TKM::FogVolume3D>();
 		fogVolume3D_->Initialize(dxCommon_);
 		{
-			auto& d = fogVolume3D_->GetDesc();
-			d.centerWS_ = { 0.0f, 6.0f, 20.0f };
-			d.halfSizeWS_ = { 900.0f, 220.0f, 900.0f };
-			d.sliceCount_ = 80;
-			d.density_ = 0.19f;
+			auto d = fogVolume3D_->GetDesc();   // コピーで受ける
+			d.centerWS_ = { 0.0f, 6.0f, 20.0f }; // 中心位置
+			d.halfSizeWS_ = { 900.0f, 220.0f, 900.0f }; // 半サイズ
+			d.sliceCount_ = 80; // スライス数
+			d.density_ = 0.19f; // 密度
+			fogVolume3D_->SetDesc(d);           // まとめて反映
 		}
 
 		// SmokeVolume3D

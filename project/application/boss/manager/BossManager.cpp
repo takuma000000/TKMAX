@@ -92,17 +92,22 @@ void BossManager::Initialize(TKM::DirectXCommon* dxCommon, TKM::Camera* camera, 
 	// LaserBeam3D 初期化
 	laserBeam3D_ = std::make_unique<TKM::LaserBeam3D>();
 	laserBeam3D_->Initialize(dxCommon_);
-	laserBeam3D_->GetDesc().active_ = false; // 非アクティブ開始
-	laserBeam3D_->GetDesc().telegraph_ = false; // 予告モード開始
+	{
+		auto d = laserBeam3D_->GetDesc(); // コピー
+		// 非アクティブ開始
+		d.active_ = false; // 非アクティブ
+		d.telegraph_ = false; // 予告なし
+		// 初期見た目（好みで調整OK）
+		d.color_ = { 0.2f, 0.85f, 1.0f };   // 色
+		d.intensity_ = 3.0f;               // 明るさ
+		d.coreSharpness_ = 7.0f;           // コアのシャープネス
+		d.edgeSoftness_ = 1.2f;            // エッジの柔らかさ
+		d.sliceCount_ = 64;                // スライス数
+		d.noiseScale_ = 1.0f;              // ノイズの細かさ
+		d.noiseSpeed_ = 1.0f;              // ノイズの速さ
 
-	// 初期見た目（好みで調整OK）
-	laserBeam3D_->GetDesc().color_ = { 0.2f, 0.85f, 1.0f }; // 色
-	laserBeam3D_->GetDesc().intensity_ = 3.0f; // 明るさ
-	laserBeam3D_->GetDesc().coreSharpness_ = 7.0f; // コアのシャープネス
-	laserBeam3D_->GetDesc().edgeSoftness_ = 1.2f; // エッジの柔らかさ
-	laserBeam3D_->GetDesc().sliceCount_ = 64; // スライス数
-	laserBeam3D_->GetDesc().noiseScale_ = 1.0f; // ノイズの細かさ
-	laserBeam3D_->GetDesc().noiseSpeed_ = 1.0f; // ノイズの速さ
+		laserBeam3D_->SetDesc(d);          // 反映
+	}
 
 	// HPバーUI初期化
 	hpUI_ = std::make_unique<TKM::BossHpBarUI>();
@@ -222,17 +227,18 @@ void BossManager::Update(float dt) {
 		}
 	}
 	// --- LaserBeam 更新＆BossControllerのレーザー情報を反映 ---
-	if (laserBeam3D_) { // LaserBeam3D 更新
-		laserBeam3D_->Update(dt); // 更新
+	if (laserBeam3D_) {
+		laserBeam3D_->Update(dt);
 		// BossController からレーザー情報取得＆反映
 		LaserInfo li = GetLaserInfo();
-		// 描画用LaserBeam3Dに情報セット
-		auto& d_ = laserBeam3D_->GetDesc();
-		d_.active_ = li.active_; // 発射中/予告中フラグ
-		d_.telegraph_ = li.telegraph_; // 予告中フラグ
-		d_.startWS_ = li.startWS_; // 開始座標
-		d_.endWS_ = li.endWS_; // 終了座標
-		d_.radius_ = li.radius_; // 見た目の太さ＝当たり判定半径に一致させる
+		// 描画用LaserBeam3Dに情報セット（コピー→反映）
+		auto d = laserBeam3D_->GetDesc(); // コピーで受ける
+		d.active_ = li.active_; // 発射中/予告中フラグ
+		d.telegraph_ = li.telegraph_; // 予告中フラグ
+		d.startWS_ = li.startWS_; // 開始座標
+		d.endWS_ = li.endWS_; // 終了座標
+		d.radius_ = li.radius_; // 当たり判定半径
+		laserBeam3D_->SetDesc(d);         // まとめて反映
 	}
 	// HPバーUI更新
 	if (hpUI_ && boss_) { // HPバーUI更新
