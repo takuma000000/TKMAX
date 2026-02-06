@@ -18,8 +18,8 @@ namespace TKM {
 
 		Input() = default;
 		~Input() = default;
-		Input(Input&) = delete;
-		Input& operator=(Input&) = delete;
+		Input(const Input&) = delete;
+		Input& operator=(const Input&) = delete;
 
 		/// <summary>
 		/// オブジェクトやモジュールの初期化を行う。
