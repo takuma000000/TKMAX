@@ -48,7 +48,12 @@ namespace TKM {
 		/// DirectXCommonの取得。
 		/// </summary>
 		/// <returns></returns>
-		DirectXCommon* GetDxCommon() const { return dxCommon_; }
+		DirectXCommon* GetDxCommon() { return dxCommon_; }
+		/// <summary>
+		/// DirectXCommonの取得（const版）。
+		/// </summary>
+		/// <returns></returns>
+		const DirectXCommon* GetDxCommon() const { return dxCommon_; }
 		// ===========================================
 
 	private:
