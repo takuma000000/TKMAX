@@ -10,7 +10,6 @@ namespace TKM { class Camera; }
 namespace TKM {
 	class Object3dCommon {
 	public://メンバ関数
-		static Object3dCommon* instance_;
 		//シングルトンインスタンスの取得
 		static Object3dCommon* GetInstance();
 
@@ -33,7 +32,12 @@ namespace TKM {
 		/// DirectXCommonのゲッター。
 		/// </summary>
 		/// <returns></returns>
-		DirectXCommon* GetDxCommon() const { return dxCommon_; }
+		DirectXCommon* GetDxCommon() { return dxCommon_; }
+		/// <summary>
+		/// DirectXCommonのゲッター（const版）。
+		/// </summary>
+		/// <returns></returns>
+		const DirectXCommon* GetDxCommon() const { return dxCommon_; }
 		/// <summary>
 		/// デフォルトカメラのゲッター。
 		/// </summary>
@@ -80,6 +84,8 @@ namespace TKM {
 		Object3dCommon(Object3dCommon&) = delete;
 		//コピー代入演算子の封印
 		Object3dCommon& operator=(Object3dCommon&) = delete;
+		// シングルトンインスタンス
+		static Object3dCommon* instance_;
 		///---------------------------------------------------------
 	};
 }
