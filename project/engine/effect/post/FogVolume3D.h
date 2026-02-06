@@ -65,9 +65,9 @@ namespace TKM {
 
 		// Setter===================================
 		/// <summary>
-		/// FogVolume3Dのアクティブ設定。
+		/// FogVolume3D のアクティブ状態を設定します。
 		/// </summary>
-		/// <param name="a"></param>
+		/// <param name="a">有効にする場合 true、無効にする場合 false</param>
 		void SetActive(bool a) { active_ = a; }
 		// =========================================
 		// Getter===================================

@@ -159,8 +159,6 @@ namespace TKM {
 		float GetHeight() const { return height_; }
 		// =========================================
 	private:
-		TKM::DirectXCommon* dxCommon_ = nullptr;
-
 		float time_ = 0.0f;
 
 		Vector2 centerUV_{ 0.5f, 0.5f };

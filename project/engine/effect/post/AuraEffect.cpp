@@ -3,7 +3,7 @@
 
 namespace TKM {
 	void AuraEffect::Initialize(TKM::DirectXCommon* dxCommon) {
-		dxCommon_ = dxCommon;
+		BaseEffect::Initialize(dxCommon);
 		active_ = false;
 
 		auraVolumeRenderer_.Initialize(dxCommon_); // AuraVolumeRenderer の初期化
