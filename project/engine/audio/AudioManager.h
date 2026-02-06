@@ -73,7 +73,6 @@ namespace TKM {
 		/// </summary>
 		static void DestroyInstance();
 
-		static AudioManager* instance;
 		//シングルトンインスタンスの取得
 		/// <summary>シングルトンインスタンスを取得します。</summary>
 		static AudioManager* GetInstance();
@@ -95,7 +94,6 @@ namespace TKM {
 		SoundData LoadWaveFile(const std::string& filename);
 
 		////シングルトン-----------------------------------------------
-
 		//コンストラクタ、デストラクタの隠蔽
 		AudioManager() = default;
 		~AudioManager() = default;
@@ -103,7 +101,8 @@ namespace TKM {
 		AudioManager(AudioManager&) = delete;
 		//コピー代入演算子の封印
 		AudioManager& operator=(AudioManager&) = delete;
-
+		// インスタンス
+		static AudioManager* instance;
 		////---------------------------------------------------------
 	};
 }
