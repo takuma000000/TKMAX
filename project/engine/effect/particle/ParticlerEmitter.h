@@ -40,7 +40,6 @@ private:
 	Emitter emitter_{};
 
 	std::string name_;
-	std::unordered_map<std::string, TKM::ParticleManager::ParticleGroup> particleGroups_;
 
 	//Δtを定義
 	const float kDeltaTime_ = 1.0f / 60.0f;

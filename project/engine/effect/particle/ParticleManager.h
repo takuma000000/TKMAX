@@ -38,18 +38,6 @@ namespace TKM {
 			Vector3 acc_;//加速度
 			AABB area_;//範囲
 		};
-
-		/// <summary>
-		/// <summary>AABBと点の当たり判定を行います。</summary>
-		/// </summary>
-		/// <param name="aabb"></param>
-		/// <param name="point"></param>
-		/// <returns></returns>
-		bool IsCollision(const AABB& aabb, const Vector3& point) {
-			return (point.x >= aabb.min_.x && point.x <= aabb.max_.x) &&
-				(point.y >= aabb.min_.y && point.y <= aabb.max_.y) &&
-				(point.z >= aabb.min_.z && point.z <= aabb.max_.z);
-		}
 		//GPU用パーティクル構造体
 		struct ParticleForGPU {
 			Matrix4x4 wvp_;
@@ -232,5 +220,17 @@ namespace TKM {
 
 		Microsoft::WRL::ComPtr<ID3D12Resource> materialCB_;  // 永続CB
 		Material* materialCPU_ = nullptr;                    // マップしたポインタ
+
+		/// <summary>
+		/// <summary>AABBと点の当たり判定を行います。</summary>
+		/// </summary>
+		/// <param name="aabb"></param>
+		/// <param name="point"></param>
+		/// <returns></returns>
+		bool IsCollision(const AABB& aabb, const Vector3& point) {
+			return (point.x >= aabb.min_.x && point.x <= aabb.max_.x) &&
+				(point.y >= aabb.min_.y && point.y <= aabb.max_.y) &&
+				(point.z >= aabb.min_.z && point.z <= aabb.max_.z);
+		}
 	};
 }
