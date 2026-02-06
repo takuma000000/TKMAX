@@ -22,7 +22,12 @@ namespace TKM {
 		/// DirectXCommonのゲッター
 		/// </summary>
 		/// <returns></returns>
-		DirectXCommon* GetDxCommon() const { return dxCommon_; }
+		DirectXCommon* GetDxCommon() { return dxCommon_; }
+		/// <summary>
+		/// DirectXCommonのゲッター（const版）
+		/// </summary>
+		/// <returns></returns>
+		const DirectXCommon* GetDxCommon() const { return dxCommon_; }
 		// =========================================
 
 	};
