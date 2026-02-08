@@ -237,7 +237,6 @@ void GameClearScene::Draw() {
 	if (clearSprite_) {
 		clearSprite_->Draw();
 	}
-
 	// アイリスは一番手前
 	if ((irisOpening_ || irisClosing_) && iris_) {
 		iris_->Draw();
