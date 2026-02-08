@@ -22,8 +22,8 @@ public:
 	struct Desc {
 		std::string panelTex = "./resources/gradationLine.png";
 		std::array<std::string, 2> itemTex = {
-			"./resources/uvChecker.png", // はじめる
-			"./resources/uvChecker.png",  // とじる
+			"./resources/start_title.png", // はじめる
+			"./resources/end_title.png",  // とじる
 		};
 		std::string cursorTex = "./resources/circle2.png";
 	};

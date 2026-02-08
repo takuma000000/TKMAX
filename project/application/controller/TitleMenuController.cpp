@@ -12,12 +12,21 @@ void TitleMenuController::Initialize(TKM::SpriteCommon* spriteCommon, TKM::Direc
 
 	panel_ = std::make_unique<TKM::Sprite>();
 	panel_->Initialize(spriteCommon_, dxCommon_, desc_.panelTex);
-
 	panel_->SetAutoAdjustTextureSize(false);
+
 	for (int i = 0; i < (int)Item::Count; ++i) {
 		items_[i] = std::make_unique<TKM::Sprite>();
 		items_[i]->Initialize(spriteCommon_, dxCommon_, desc_.itemTex[i]);
 		items_[i]->SetAutoAdjustTextureSize(false);
+		items_[i]->SetAnchorPoint({ 0.0f, 0.0f });
+		// テクスチャサイズ設定
+		{
+			const auto& md = TKM::TextureManager::GetInstance()->GetMetadata(desc_.itemTex[i]);
+			items_[i]->SetTextureLeftTop({ 0.0f, 0.0f });
+			items_[i]->SetTextureSize({ (float)md.width, (float)md.height });
+		}
+
+		items_[i]->SetColor({ 1.0f, 1.0f, 1.0f, 0.65f });
 	}
 
 	cursor_ = std::make_unique<TKM::Sprite>();
