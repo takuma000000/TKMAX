@@ -67,6 +67,11 @@ namespace TKM {
 	void Framework::Update() {
 		//シーンマネージャーの更新
 		sceneManager_->Update();
+
+		// シーン側から「アプリ終了要求」が来たら、Frameworkの終了フラグを立てる
+		if (sceneManager_ && sceneManager_->IsQuitRequested()) {
+			endRequest_ = true;
+		}
 	}
 
 	void Framework::Draw() {

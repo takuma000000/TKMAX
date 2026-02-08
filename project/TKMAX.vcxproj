@@ -205,6 +205,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\controller\PostEffectController.cpp" />
     <ClCompile Include="application\effect\ParticleGroupsCatalog.cpp" />
     <ClCompile Include="application\controller\PauseMenuController.cpp" />
+    <ClCompile Include="application\controller\TitleMenuController.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\enemy\manager\EnemyManager.h" />
@@ -295,6 +296,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\effect\ParticleGroupsCatalog.h" />
     <ClInclude Include="application\controller\PauseMenuController.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="application\controller\TitleMenuController.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

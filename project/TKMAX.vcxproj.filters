@@ -191,6 +191,7 @@
     <ClCompile Include="application\controller\ClearSequenceController.cpp" />
     <ClCompile Include="application\effect\ParticleGroupsCatalog.cpp" />
     <ClCompile Include="application\controller\PauseMenuController.cpp" />
+    <ClCompile Include="application\controller\TitleMenuController.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -419,6 +420,7 @@
     <ClInclude Include="application\effect\ParticleGroupsCatalog.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="application\controller\PauseMenuController.h" />
+    <ClInclude Include="application\controller\TitleMenuController.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

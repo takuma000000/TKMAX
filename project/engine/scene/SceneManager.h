@@ -40,6 +40,8 @@ namespace TKM {
 		//シーンファクトリー
 		TKM::AbstractSceneFactory* sceneFactory_ = nullptr;
 
+		bool quitRequested_ = false; // アプリ終了要求フラグ
+
 	public://メンバ関数
 		/// <summary>
 		/// </span class="code-inline">SceneManager</span>のコンストラクタ
@@ -49,11 +51,18 @@ namespace TKM {
 		/// </span class="code-inline">SceneManager</span>の描画
 		/// </summary>
 		void Draw();
-
-		//デストラクタ
 		///<summary>
 		/// </span class="code-inline">SceneManager</span>のデストラクタ
 		/// </summary>
 		~SceneManager();
+
+		/// <summary>
+		/// アプリ終了を要求します
+		/// </summary>
+		void RequestQuit() { quitRequested_ = true; }
+		/// <summary>
+		/// 終了要求が出ているか
+		/// </summary>
+		bool IsQuitRequested() const { return quitRequested_; }
 	};
 }

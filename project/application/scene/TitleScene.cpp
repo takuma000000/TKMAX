@@ -3,6 +3,7 @@
 #include "Input.h"
 #include "SceneManager.h"
 #include <algorithm>
+#include <Windows.h>
 #include <cmath>
 #include "AudioManager.h"
 
@@ -22,8 +23,10 @@ void TitleScene::Initialize() {
 
 	// ------------ テクスチャ読み込み -----------using TKM::Camera;---
 	TextureManager::GetInstance()->LoadTexture("./resources/circle.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/gradationLine.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/circle2.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/title_kuraran.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/uvChecker.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/rostock_laage_airport_4k.dds");
 	//--------------------------------------------
 	// ------------ モデル読み込み --------------
@@ -100,6 +103,16 @@ void TitleScene::Initialize() {
 	//TKM::AudioManager::GetInstance()->LoadSound("title", "kuraran.wav");
 	// タイトルBGM再生
 	//TKM::AudioManager::GetInstance()->PlaySound("title", 0.05f, true); // 音量少し下げめでループ
+
+	// タイトルメニューコントローラ初期化
+	titleMenu_ = std::make_unique<TitleMenuController>();
+	titleMenu_->Initialize(
+		TKM::SpriteCommon::GetInstance(),
+		dxCommon_,
+		this,
+		1280.0f,
+		720.0f
+	);
 }
 
 void TitleScene::Finalize() {}
@@ -197,26 +210,26 @@ void TitleScene::Update() {
 		rippleEffect_->Update(dt_);
 	}
 
-	// SPACE / A でアイリス（閉）開始＋波紋
-	if (!irisClosing_ && (TKM::Input::GetInstance()->TriggerKey(DIK_SPACE) ||
-		TKM::Input::GetInstance()->TriggerButton(XINPUT_GAMEPAD_A))) {
-
-		irisClosing_ = true;
-
-		// 画面中心から波紋。UV(0.5, 0.5)
-		if (rippleEffect_) {
-			TKM::WaterRippleEffect::RippleDesc d{};
-			d.duration_ = 1.0f;
-
-			// タイトル用（今のタイトル目線値があるならここに入れる）
-			d.radiusMax_ = 0.857f;
-			d.amplitude_ = 0.1f;
-			d.frequency_ = 80.0f;
-			d.width_ = 10.0f;
-			d.color_ = { 1.0f, 1.0f, 1.0f };
-			d.colorIntensity_ = 0.0f;
-			/// 中心から波紋を発生
-			rippleEffect_->Trigger({ 0.5f, 0.5f }, d); // 中心から波紋
+	if (!irisClosing_ && titleMenu_) {
+		const auto cmd = titleMenu_->Update(dt_);
+		if (cmd == TitleMenuController::Command::Start) {
+			irisClosing_ = true;
+			// 波紋は今のままTriggerでOK
+			if (rippleEffect_) {
+				TKM::WaterRippleEffect::RippleDesc d{};
+				d.duration_ = 1.0f;
+				d.radiusMax_ = 0.857f;
+				d.amplitude_ = 0.1f;
+				d.frequency_ = 80.0f;
+				d.width_ = 10.0f;
+				d.color_ = { 1.0f, 1.0f, 1.0f };
+				d.colorIntensity_ = 0.0f;
+				rippleEffect_->Trigger({ 0.5f, 0.5f }, d);
+			}
+		} else if (cmd == TitleMenuController::Command::Exit) {
+			sceneManager_->RequestQuit(); // ゲーム終了リクエスト
+			PostQuitMessage(0); // 即時終了でも良い場合
+			return;
 		}
 	}
 
@@ -280,6 +293,7 @@ void TitleScene::Draw() {
 	TKM::SpriteCommon::GetInstance()->DrawSetCommon();
 	if (sprite_) sprite_->Draw();     // タイトル画像
 	if (iris_)  iris_->Draw();      // 白円(アイリス)
+	if (titleMenu_) titleMenu_->Draw();
 
 	TKM::ParticleManager::GetInstance()->Draw();
 }

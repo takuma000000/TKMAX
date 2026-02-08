@@ -2,35 +2,28 @@
 
 namespace TKM {
 	void SceneManager::Update() {
-		//TODO : シーン切り替え機構
-		//次のシーンが予約されていたら
+		if (quitRequested_) { return; } // アプリ終了要求がある場合は更新しない
+
+		// 次シーン切り替え
 		if (nextScene_) {
-			//今のシーンを解放
-			if (scene_) {
-				scene_->Finalize();
-				delete scene_;
+			if (scene_) { // 現在のシーンが存在する場合のみ終了処理
+				scene_->Finalize(); //	現在のシーンの終了処理
+				delete scene_; // 現在のシーンの解放
 			}
-			//次のシーンを実行中にする
-			scene_ = nextScene_;
-			//次のシーンを予約から解除
-			nextScene_ = nullptr;
-			//シーンマネージャーを設定
-			scene_->SetSceneManager(this);
-			//次のシーンを初期化
-			scene_->Initialize();
+			scene_ = nextScene_; // シーンを切り替え
+			nextScene_ = nullptr; // 次シーンポインタをクリア
+			scene_->SetSceneManager(this); // シーンマネージャーをセット
+			scene_->Initialize(); // 新しいシーンの初期化
 		}
 
-		//実行中シーンを更新
-		if (scene_) {
-			scene_->Update();
-		} else {
-			// Handle the error or initialize scene_
+		if (scene_) { // シーンが存在する場合のみ更新
+			scene_->Update(); // シーンの更新
 		}
 	}
 
 	void SceneManager::Draw() {
-		//実行中シーンを描画
-		scene_->Draw();
+		if (quitRequested_) { return; } // アプリ終了要求がある場合は描画しない
+		if (scene_) { scene_->Draw(); } // シーンが存在する場合のみ描画
 	}
 
 	SceneManager::~SceneManager() {
