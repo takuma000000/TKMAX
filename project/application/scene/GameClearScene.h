@@ -16,6 +16,7 @@
 #include "TextureManager.h"
 #include <Easing.h>
 #include "IrisUtil.h"
+#include "GameClearMenuController.h"
 
 //=============================================================
 // GameClearSceneクラス
@@ -83,4 +84,13 @@ private:
 
 	Ease::Tween irisOpenTween_;    // 開き用（OutBack, 0.8s）
 	Ease::Tween irisCloseTween_;   // 閉じ用（InBack, 0.8s）
+
+	std::unique_ptr<GameClearMenuController> clearMenu_;
+
+	enum class NextAction { // 次のアクション
+		None, // 何もしない
+		Restart, // リスタート
+		ReturnToTitle // タイトルへ戻る
+	};
+	NextAction nextAction_ = NextAction::None; // 次のアクション
 };

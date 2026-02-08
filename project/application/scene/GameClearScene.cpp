@@ -20,6 +20,9 @@ void GameClearScene::Initialize() {
 	TextureManager::GetInstance()->LoadTexture("./resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
 	TextureManager::GetInstance()->LoadTexture("./resources/clear.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/circle2.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/restart_pause.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/title_pause.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/gradationLine.png");
 
 	// ─────────────────────
 	// カメラ
@@ -88,6 +91,16 @@ void GameClearScene::Initialize() {
 	);
 	irisOpening_ = true;
 	irisClosing_ = false;
+
+	// ─────────────────────
+	clearMenu_ = std::make_unique<GameClearMenuController>();
+	clearMenu_->Initialize(
+		TKM::SpriteCommon::GetInstance(),
+		dxCommon_,
+		this,
+		WindowsAPI::kClientWidth_,
+		WindowsAPI::kClientHeight_
+	);
 }
 
 void GameClearScene::Finalize() {
@@ -108,16 +121,31 @@ void GameClearScene::Update() {
 	}
 
 	// ─────────────────────
-	// Aボタンでタイトルへ戻る（アイリス閉じ：InBack/0.8s）
+	// クリアメニュー（リスタート/タイトル）
 	// ─────────────────────
-	if (!irisClosing_ && Input::GetInstance()->TriggerButton(XINPUT_GAMEPAD_A)) {
-		irisClosing_ = true;
-		irisCloseTween_.Reset(/*start*/ 0.0f, /*end*/ irisMaxScale_, /*sec*/ 0.8f, Ease::Type::InBack);
+	if (!irisClosing_ && !irisOpening_ && clearMenu_) {
+		const auto cmd = clearMenu_->Update(dt_);
+
+		if (cmd == GameClearMenuController::Command::Restart) {
+			nextAction_ = NextAction::Restart;
+			irisClosing_ = true;
+			irisCloseTween_.Reset(/*start*/ 0.0f, /*end*/ irisMaxScale_, /*sec*/ 0.8f, Ease::Type::InBack);
+		} else if (cmd == GameClearMenuController::Command::ReturnToTitle) {
+			nextAction_ = NextAction::ReturnToTitle;
+			irisClosing_ = true;
+			irisCloseTween_.Reset(/*start*/ 0.0f, /*end*/ irisMaxScale_, /*sec*/ 0.8f, Ease::Type::InBack);
+		}
 	}
 
 	if (irisClosing_) {
 		irisScale_ = UpdateIrisScale(iris_.get(), irisCloseTween_, dt_);
 		if (irisCloseTween_.Finished()) {
+
+			if (nextAction_ == NextAction::Restart) {
+				sceneManager_->SetNextScene(new GameScene(dxCommon_, srvManager_));
+				return;
+			}
+			// デフォルトはタイトル
 			sceneManager_->SetNextScene(new TitleScene(dxCommon_, srvManager_));
 			return;
 		}
@@ -213,5 +241,8 @@ void GameClearScene::Draw() {
 	// アイリスは一番手前
 	if ((irisOpening_ || irisClosing_) && iris_) {
 		iris_->Draw();
+	}
+	if (clearMenu_) {
+		clearMenu_->Draw();
 	}
 }
