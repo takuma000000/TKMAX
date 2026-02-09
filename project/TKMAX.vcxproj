@@ -65,7 +65,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\2d;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\func\common;$(ProjectDir)engine\func\math;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\effect\post;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir)engine\effect\light;$(ProjectDir)engine\audio;$(ProjectDir)engine\effect\particle;$(ProjectDir)engine\effect\line;$(ProjectDir)application\scene;$(ProjectDir)engine\imgui;$(ProjectDir)application\player;$(ProjectDir)application\enemy;$(ProjectDir)application\boss;$(ProjectDir)application\effect;$(ProjectDir)engine\csv;$(ProjectDir)application\controller;$(ProjectDir)application\ui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\2d;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\func\common;$(ProjectDir)engine\func\math;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\effect\post;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir)engine\effect\light;$(ProjectDir)engine\audio;$(ProjectDir)engine\effect\particle;$(ProjectDir)engine\effect\line;$(ProjectDir)application\scene;$(ProjectDir)engine\imgui;$(ProjectDir)application\player;$(ProjectDir)application\enemy;$(ProjectDir)application\boss;$(ProjectDir)application\effect;$(ProjectDir)engine\csv;$(ProjectDir)application\controller;$(ProjectDir)application\ui;$(ProjectDir)application\effect\controller;$(ProjectDir)application\scene\controller;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -94,7 +94,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\2d;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\func\common;$(ProjectDir)engine\func\math;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\effect\post;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir)engine\effect\light;$(ProjectDir)engine\audio;$(ProjectDir)engine\effect\particle;$(ProjectDir)engine\effect\line;$(ProjectDir)application\scene;$(ProjectDir)engine\imgui;$(ProjectDir)application\player;$(ProjectDir)application\enemy;$(ProjectDir)application\boss;$(ProjectDir)application\effect;$(ProjectDir)engine\csv;$(ProjectDir)application\controller;$(ProjectDir)application\ui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\2d;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\func\common;$(ProjectDir)engine\func\math;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\effect\post;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir)engine\effect\light;$(ProjectDir)engine\audio;$(ProjectDir)engine\effect\particle;$(ProjectDir)engine\effect\line;$(ProjectDir)application\scene;$(ProjectDir)engine\imgui;$(ProjectDir)application\player;$(ProjectDir)application\enemy;$(ProjectDir)application\boss;$(ProjectDir)application\effect;$(ProjectDir)engine\csv;$(ProjectDir)application\controller;$(ProjectDir)application\ui;$(ProjectDir)application\effect\controller;$(ProjectDir)application\scene\controller;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>MinSpace</Optimization>
     </ClCompile>
     <Link>
@@ -116,7 +116,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\enemy\manager\EnemyManager.cpp" />
     <ClCompile Include="application\boss\manager\BossManager.cpp" />
     <ClCompile Include="application\boss\BossHpBarUI.cpp" />
-    <ClCompile Include="application\controller\ClearSequenceController.cpp" />
+    <ClCompile Include="application\scene\controller\ClearSequenceController.cpp" />
     <ClCompile Include="engine\csv\CsvReader.cpp" />
     <ClCompile Include="application\enemy\EnemyWaveConfig.cpp" />
     <ClCompile Include="engine\effect\post\AuraVolumeRenderer.cpp" />
@@ -169,9 +169,9 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\player\RBGaugeUI.cpp" />
     <ClCompile Include="engine\effect\post\FogVolume3D.cpp" />
     <ClCompile Include="application\effect\IntroSequence.cpp" />
-    <ClCompile Include="application\controller\FireworkController.cpp" />
-    <ClCompile Include="application\controller\GameFlowController.cpp" />
-    <ClCompile Include="application\controller\GameResultMenuController.cpp" />
+    <ClCompile Include="application\effect\controller\FireworkController.cpp" />
+    <ClCompile Include="application\scene\controller\GameFlowController.cpp" />
+    <ClCompile Include="application\scene\controller\GameResultMenuController.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="engine\3d\Model.cpp" />
     <ClCompile Include="engine\3d\ModelCommon.cpp" />
@@ -203,16 +203,16 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\func\common\TimeScaleController.cpp" />
     <ClCompile Include="engine\effect\post\SmokeVolume3D.cpp" />
     <ClCompile Include="application\ui\UIController.cpp" />
-    <ClCompile Include="application\controller\PostEffectController.cpp" />
+    <ClCompile Include="application\effect\controller\PostEffectController.cpp" />
     <ClCompile Include="application\effect\ParticleGroupsCatalog.cpp" />
-    <ClCompile Include="application\controller\PauseMenuController.cpp" />
-    <ClCompile Include="application\controller\TitleMenuController.cpp" />
+    <ClCompile Include="application\scene\controller\PauseMenuController.cpp" />
+    <ClCompile Include="application\scene\controller\TitleMenuController.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\enemy\manager\EnemyManager.h" />
     <ClInclude Include="application\boss\manager\BossManager.h" />
     <ClInclude Include="application\boss\BossHpBarUI.h" />
-    <ClInclude Include="application\controller\ClearSequenceController.h" />
+    <ClInclude Include="application\scene\controller\ClearSequenceController.h" />
     <ClInclude Include="engine\csv\CsvReader.h" />
     <ClInclude Include="application\enemy\EnemyWaveConfig.h" />
     <ClInclude Include="engine\effect\post\AuraVolumeRenderer.h" />
@@ -290,15 +290,15 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\effect\post\LaserBeam3D.h" />
     <ClInclude Include="application\player\RBGaugeUI.h" />
     <ClInclude Include="application\effect\IntroSequence.h" />
-    <ClInclude Include="application\controller\FireworkController.h" />
-    <ClInclude Include="application\controller\GameFlowController.h" />
+    <ClInclude Include="application\effect\controller\FireworkController.h" />
+    <ClInclude Include="application\scene\controller\GameFlowController.h" />
     <ClInclude Include="application\ui\UIController.h" />
-    <ClInclude Include="application\controller\PostEffectController.h" />
+    <ClInclude Include="application\effect\controller\PostEffectController.h" />
     <ClInclude Include="application\effect\ParticleGroupsCatalog.h" />
-    <ClInclude Include="application\controller\PauseMenuController.h" />
-    <ClInclude Include="application\controller\GameResultMenuController.h" />
+    <ClInclude Include="application\scene\controller\PauseMenuController.h" />
+    <ClInclude Include="application\scene\controller\GameResultMenuController.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="application\controller\TitleMenuController.h" />
+    <ClInclude Include="application\scene\controller\TitleMenuController.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
