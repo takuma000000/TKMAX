@@ -391,8 +391,8 @@ private:
 	//====================
 	// RB弾（弾数制限）
 	//====================
-	static constexpr int kRbAmmoMax_ = 500;
-	int rbAmmo_;
+	static constexpr int kRbAmmoMax_ = 500; // RB弾の最大数
+	int rbAmmo_; // 現在のRB弾数
 	bool debugUnlimitedRB_ = false; // デバッグで無限
 	static constexpr float kRbEmptyWaitSec_ = 3.0f;   // 0になってから回復開始まで待つ秒数
 	static constexpr float kRbRefillSec_ = 0.60f;  // 回復にかける秒数（短いほど「一気に増える」）
@@ -400,7 +400,24 @@ private:
 	float rbRefillValue_ = 0.0f;     // 回復中の弾数（floatで滑らかに）
 	bool  rbRefilling_ = false;      // 回復中フラグ
 	float rbNoFireTimer_ = 0.0f; // 最後にRBを撃ってからの経過秒数
-
+	//======================================================================
+	// 振動（Rumble）
+	//======================================================================
+	float rumbleT_ = 0.0f; // 振動タイマー
+	WORD  rumbleLeft_ = 0; // 左モーター強度
+	WORD  rumbleRight_ = 0; // 右モーター強度
+	/// <summary>
+	/// 振動開始。
+	/// </summary>
+	/// <param name="sec">振動継続時間（秒）</param>
+	/// <param name="leftMotor">左モーター強度（0〜65535）</param>
+	/// <param name="rightMotor">右モーター強度（0〜65535）</param>
+	void StartRumble(float sec, WORD leftMotor, WORD rightMotor);
+	/// <summary>
+	/// 振動更新。
+	/// </summary>
+	/// <param name="dt">前フレームからの経過時間（秒）</param>
+	void UpdateRumble(float dt);
 
 
 	int   lastHitAttackId_ = -1; // 最後に当たった攻撃ID

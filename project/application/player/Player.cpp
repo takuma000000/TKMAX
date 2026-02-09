@@ -51,6 +51,8 @@ void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommo
 }
 
 void Player::Update(float dt) {
+	UpdateRumble(dt); // コントローラー振動更新
+
 	if (!controlEnabled_) {
 		HandleFollowCamera(); // カメラ演出は動かす
 		return;
@@ -563,8 +565,8 @@ void Player::HandleFollowCamera() {
 
 void Player::HandleShooting() {
 	//====================
-// RB弾 リチャージ更新（0回復 + アイドル回復）
-//====================
+	// RB弾 リチャージ更新（0回復 + アイドル回復）
+	//====================
 	{
 		// 「撃ってない時間」を進める（回復中は進めなくてOK）
 		if (!rbRefilling_) {
@@ -856,6 +858,9 @@ void Player::LTShoot() {
 		// 見せ場用の軽いズーム＆シェイク
 		ZoomCamera();
 		StartCameraShake(10);
+
+		// LT弾 発射の瞬間だけ軽く振動（0～65535）
+		StartRumble(0.12f, 42000, 42000);
 	}
 	ltHeld_ = (input->GetLeftTrigger() > kTriggerThreshold);
 }
@@ -964,4 +969,25 @@ void Player::ZoomCamera() {
 	// ここに来るのは「OUT（戻り）中」→ 現在値から再びINへ
 	ltZoomTween_.Reset(camZoom_, kInTarget, kInTime, Ease::Type::OutCubic);
 	ltZoomHold_ = kHoldUnit; // 再度短くホールド
+}
+
+void Player::StartRumble(float sec, WORD leftMotor, WORD rightMotor) {
+	// 既に鳴ってる場合は「強い方」「長い方」を優先（重なっても破綻しにくい）
+	rumbleT_ = std::max(rumbleT_, sec);
+	rumbleLeft_ = std::max(rumbleLeft_, leftMotor);
+	rumbleRight_ = std::max(rumbleRight_, rightMotor);
+
+	TKM::Input::GetInstance()->SetVibration(rumbleLeft_, rumbleRight_);
+}
+
+void Player::UpdateRumble(float dt) {
+	if (rumbleT_ <= 0.0f) { return; }
+
+	rumbleT_ -= dt;
+	if (rumbleT_ <= 0.0f) {
+		rumbleT_ = 0.0f;
+		rumbleLeft_ = 0;
+		rumbleRight_ = 0;
+		TKM::Input::GetInstance()->SetVibration(0, 0); // 停止
+	}
 }
