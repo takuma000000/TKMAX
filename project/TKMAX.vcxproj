@@ -171,7 +171,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\effect\IntroSequence.cpp" />
     <ClCompile Include="application\controller\FireworkController.cpp" />
     <ClCompile Include="application\controller\GameFlowController.cpp" />
-    <ClCompile Include="application\controller\GameClearMenuController.cpp" />
+    <ClCompile Include="application\controller\GameResultMenuController.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="engine\3d\Model.cpp" />
     <ClCompile Include="engine\3d\ModelCommon.cpp" />
@@ -296,7 +296,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\controller\PostEffectController.h" />
     <ClInclude Include="application\effect\ParticleGroupsCatalog.h" />
     <ClInclude Include="application\controller\PauseMenuController.h" />
-    <ClInclude Include="application\controller\GameClearMenuController.h" />
+    <ClInclude Include="application\controller\GameResultMenuController.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="application\controller\TitleMenuController.h" />
   </ItemGroup>

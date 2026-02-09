@@ -6,6 +6,7 @@
 #include "Object3dCommon.h"
 #include "TitleScene.h"
 #include <SkyBox.h>
+#include "GameScene.h"
 
 using namespace TKM;
 
@@ -95,6 +96,15 @@ void GameOverScene::Initialize() {
 	overScaleTween_.Reset(0.8f, 1.0f, 0.7f, Ease::Type::OutBack);
 
 	overActive_ = true; // アニメ進行フラグON
+
+	overMenu_ = std::make_unique<GameResultMenuController>();
+	overMenu_->Initialize(
+		TKM::SpriteCommon::GetInstance(),
+		dxCommon_,
+		this,
+		WindowsAPI::kClientWidth_,
+		WindowsAPI::kClientHeight_
+	);
 }
 
 void GameOverScene::Finalize() {}
@@ -115,17 +125,31 @@ void GameOverScene::Update() {
 		}
 	}
 
-	// ─── Tキーでタイトルへ戻る（アイリス閉じ：InBack/0.8s） ───
-	if (!irisClosing_ && Input::GetInstance()->TriggerKey(DIK_T) || TKM::Input::GetInstance()->TriggerButton(XINPUT_GAMEPAD_A)) {
-		irisClosing_ = true;
-		irisCloseTween_.Reset(0.0f, irisMaxScale_, kIrisDuration_, Ease::Type::InBack);
+	if (!irisClosing_ && !irisOpening_ && overMenu_) {
+		const auto cmd = overMenu_->Update(dt_);
+
+		if (cmd == GameResultMenuController::Command::Restart) {
+			nextAction_ = NextAction::Restart;
+			irisClosing_ = true;
+			irisCloseTween_.Reset(0.0f, irisMaxScale_, kIrisDuration_, Ease::Type::InBack);
+		} else if (cmd == GameResultMenuController::Command::ReturnToTitle) {
+			nextAction_ = NextAction::ReturnToTitle;
+			irisClosing_ = true;
+			irisCloseTween_.Reset(0.0f, irisMaxScale_, kIrisDuration_, Ease::Type::InBack);
+		}
 	}
 
 	if (irisClosing_) {
-		float s = UpdateIrisScale(iris_.get(), irisCloseTween_, dt_);
+		UpdateIrisScale(iris_.get(), irisCloseTween_, dt_);
 
 		if (irisCloseTween_.Finished()) {
 			irisClosing_ = false;
+
+			if (nextAction_ == NextAction::Restart) {
+				sceneManager_->SetNextScene(new GameScene(dxCommon_, srvManager_));
+				return;
+			}
+
 			sceneManager_->SetNextScene(new TitleScene(dxCommon_, srvManager_));
 			return;
 		}
@@ -352,4 +376,5 @@ void GameOverScene::Draw() {
 	if (overSprite_) {
 		overSprite_->Draw();
 	}
+	if (overMenu_) { overMenu_->Draw(); }
 }

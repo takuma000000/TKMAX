@@ -8,7 +8,7 @@
 #include "Input.h"
 #include "MyMath.h"
 
-class GameClearMenuController {
+class GameResultMenuController {
 public:
 	enum class Command {
 		None,

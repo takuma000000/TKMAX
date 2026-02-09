@@ -16,6 +16,7 @@
 #include "ParticleManager.h"
 #include <Easing.h>
 #include "IrisUtil.h"
+#include "GameResultMenuController.h"
 
 //=============================================================
 // GameOverScene
@@ -101,4 +102,9 @@ private:
 	float overGlowTimer_ = 0.0f;
 	int fallFrameToggle_ = 0;
 	int riseFrameToggle_ = 0;
+
+	// --- ゲームオーバーメニュー ---
+	std::unique_ptr<GameResultMenuController> overMenu_;
+	enum class NextAction { None, Restart, ReturnToTitle };
+	NextAction nextAction_ = NextAction::None;
 };

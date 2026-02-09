@@ -93,7 +93,7 @@ void GameClearScene::Initialize() {
 	irisClosing_ = false;
 
 	// ─────────────────────
-	clearMenu_ = std::make_unique<GameClearMenuController>();
+	clearMenu_ = std::make_unique<GameResultMenuController>();
 	clearMenu_->Initialize(
 		TKM::SpriteCommon::GetInstance(),
 		dxCommon_,
@@ -126,11 +126,11 @@ void GameClearScene::Update() {
 	if (!irisClosing_ && !irisOpening_ && clearMenu_) {
 		const auto cmd = clearMenu_->Update(dt_);
 
-		if (cmd == GameClearMenuController::Command::Restart) {
+		if (cmd == GameResultMenuController::Command::Restart) {
 			nextAction_ = NextAction::Restart;
 			irisClosing_ = true;
 			irisCloseTween_.Reset(/*start*/ 0.0f, /*end*/ irisMaxScale_, /*sec*/ 0.8f, Ease::Type::InBack);
-		} else if (cmd == GameClearMenuController::Command::ReturnToTitle) {
+		} else if (cmd == GameResultMenuController::Command::ReturnToTitle) {
 			nextAction_ = NextAction::ReturnToTitle;
 			irisClosing_ = true;
 			irisCloseTween_.Reset(/*start*/ 0.0f, /*end*/ irisMaxScale_, /*sec*/ 0.8f, Ease::Type::InBack);

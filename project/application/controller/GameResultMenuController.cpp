@@ -1,15 +1,15 @@
-#include "GameClearMenuController.h"
+#include "GameResultMenuController.h"
 #include "DirectXCommon.h"
 #include "BaseScene.h"
 #include "TextureManager.h"
 
-float GameClearMenuController::Clamp01_(float v) {
+float GameResultMenuController::Clamp01_(float v) {
 	if (v < 0.0f) return 0.0f;
 	if (v > 1.0f) return 1.0f;
 	return v;
 }
 
-void GameClearMenuController::Initialize(
+void GameResultMenuController::Initialize(
 	TKM::SpriteCommon* spriteCommon,
 	TKM::DirectXCommon* dxCommon,
 	TKM::BaseScene* parentScene,
@@ -63,7 +63,7 @@ void GameClearMenuController::Initialize(
 	UpdateLayout(screenW_, screenH_);
 }
 
-GameClearMenuController::Command GameClearMenuController::Update(float dt) {
+GameResultMenuController::Command GameResultMenuController::Update(float dt) {
 	if (TriggerPadUp_()) {
 		MoveIndex_(-1);
 	}
@@ -127,7 +127,7 @@ GameClearMenuController::Command GameClearMenuController::Update(float dt) {
 	return Command::None;
 }
 
-void GameClearMenuController::Draw() {
+void GameResultMenuController::Draw() {
 	if (panel_) panel_->Draw();
 	for (int i = 0; i < (int)Item::Count; ++i) {
 		if (items_[i]) items_[i]->Draw();
@@ -135,7 +135,7 @@ void GameClearMenuController::Draw() {
 	if (cursor_) cursor_->Draw();
 }
 
-void GameClearMenuController::UpdateLayout(float screenW, float screenH) {
+void GameResultMenuController::UpdateLayout(float screenW, float screenH) {
 	screenW_ = screenW;
 	screenH_ = screenH;
 
@@ -148,7 +148,7 @@ void GameClearMenuController::UpdateLayout(float screenW, float screenH) {
 	itemSpacingY_ = 64.0f;
 }
 
-bool GameClearMenuController::TriggerPadUp_() {
+bool GameResultMenuController::TriggerPadUp_() {
 	auto* in = TKM::Input::GetInstance();
 	const bool cur = in->TriggerKey(DIK_UP) || in->TriggerButton(XINPUT_GAMEPAD_DPAD_UP);
 	const bool trig = (cur && !prevUp_);
@@ -156,7 +156,7 @@ bool GameClearMenuController::TriggerPadUp_() {
 	return trig;
 }
 
-bool GameClearMenuController::TriggerPadDown_() {
+bool GameResultMenuController::TriggerPadDown_() {
 	auto* in = TKM::Input::GetInstance();
 	const bool cur = in->TriggerKey(DIK_DOWN) || in->TriggerButton(XINPUT_GAMEPAD_DPAD_DOWN);
 	const bool trig = (cur && !prevDown_);
@@ -164,7 +164,7 @@ bool GameClearMenuController::TriggerPadDown_() {
 	return trig;
 }
 
-bool GameClearMenuController::TriggerA_() {
+bool GameResultMenuController::TriggerA_() {
 	auto* in = TKM::Input::GetInstance();
 	const bool cur = in->TriggerKey(DIK_SPACE) || in->TriggerKey(DIK_RETURN) || in->TriggerButton(XINPUT_GAMEPAD_A);
 	const bool trig = (cur && !prevA_);
@@ -172,7 +172,7 @@ bool GameClearMenuController::TriggerA_() {
 	return trig;
 }
 
-void GameClearMenuController::MoveIndex_(int delta) {
+void GameResultMenuController::MoveIndex_(int delta) {
 	const int count = (int)Item::Count;
 	index_ = (index_ + delta + count) % count;
 }
