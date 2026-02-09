@@ -406,6 +406,11 @@ private:
 	float rumbleT_ = 0.0f; // 振動タイマー
 	WORD  rumbleLeft_ = 0; // 左モーター強度
 	WORD  rumbleRight_ = 0; // 右モーター強度
+	float rumble2DelayT_ = 0.0f; // 2回目振動までの遅延タイマー
+	float rumble2Sec_ = 0.0f; // 2回目振動継続時間
+	WORD  rumble2Left_ = 0; // 左モーター強度
+	WORD  rumble2Right_ = 0; // 右モーター強度
+	bool  rumble2Pending_ = false; // 2回目振動保留フラグ
 	/// <summary>
 	/// 振動開始。
 	/// </summary>

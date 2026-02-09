@@ -255,15 +255,25 @@ void Player::OnEnemyDestroyed(Enemy* e) {
 
 void Player::Damage(int value) {
 
-	if (isInvincible_) { // 無敵中はダメージ無効
-		return;
-	}
+	if (isInvincible_) { return; }
 
 	hp_ -= value;
 	if (hp_ < 0) hp_ = 0;
 
+	// ==========================
+	// 被弾Rumble（発射と違う感触）
+	// 1段目: 左強めで「ドン」
+	// 2段目: 少し遅らせて右で「ビリ」
+	// ==========================
+	StartRumble(0.10f, 52000, 18000);  // ドン（重い）
+	rumble2Pending_ = true;
+	rumble2DelayT_ = 0.07f;            // ちょい遅らせる
+	rumble2Sec_ = 0.08f;
+	rumble2Left_ = 0;
+	rumble2Right_ = 42000;             // ビリ（細かい）
+
 	// 被弾したので当たり判定ボックスをしばらく赤くする
-	hitFlashTimer_ = 0.15f; // 0.15秒くらい
+	hitFlashTimer_ = 0.15f;
 
 	// --- 無敵開始（2秒）---
 	isInvincible_ = true;
@@ -852,7 +862,7 @@ void Player::LTShoot() {
 		bullet->StartSpawnBezier(p0, p1, p2, p3, bezTime, vAfter);
 		// ホーミング設定
 		bullet->SetHomingDelay(0.12f); // ベジェ完了から追尾開始までの遅延時間
-
+		// 発射
 		bullets_.push_back(std::move(bullet));
 
 		// 見せ場用の軽いズーム＆シェイク
@@ -981,13 +991,23 @@ void Player::StartRumble(float sec, WORD leftMotor, WORD rightMotor) {
 }
 
 void Player::UpdateRumble(float dt) {
-	if (rumbleT_ <= 0.0f) { return; }
+	// 2段目（追い振動）を時間になったら発火
+	if (rumble2Pending_) {
+		rumble2DelayT_ -= dt;
+		if (rumble2DelayT_ <= 0.0f) {
+			rumble2Pending_ = false;
+			StartRumble(rumble2Sec_, rumble2Left_, rumble2Right_);
+		}
+	}
 
+	if (rumbleT_ <= 0.0f) { return; } // 鳴ってない
+
+	// 継続時間を減らす
 	rumbleT_ -= dt;
 	if (rumbleT_ <= 0.0f) {
 		rumbleT_ = 0.0f;
 		rumbleLeft_ = 0;
 		rumbleRight_ = 0;
-		TKM::Input::GetInstance()->SetVibration(0, 0); // 停止
+		TKM::Input::GetInstance()->SetVibration(0, 0);
 	}
 }
