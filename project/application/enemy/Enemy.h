@@ -318,12 +318,28 @@ public:
 		if (hp > maxHP_) { hp = maxHP_; }
 		hp_ = hp;
 	}
+	/// <summary>
+	/// 触手モデルを設定します。
+	/// </summary>
+	/// <param name="modelName">モデル名（例: "tentacle.obj"）</param>
+	void SetTentacleModel(const std::string& modelName);
+	/// <summary>
+	/// 触手のローカル変換を設定します。
+	/// </summary>
+	/// <param name="pos">位置（ローカル座標）</param>
+	/// <param name="rot">回転（ローカル座標、オイラー角）</param>
+	/// <param name="scale">スケール（ローカル座標）</param>
+	void SetTentacleLocal(const Vector3& pos, const Vector3& rot, const Vector3& scale);
 	// =========================================
 private:
 	//--------------------------------------------------------------
 	//  Enemy 内部データ（基本）
 	//--------------------------------------------------------------
-	std::unique_ptr<TKM::Object3d> object_;
+	std::unique_ptr<TKM::Object3d> object_; // 敵の3Dオブジェクト(傘)
+	std::unique_ptr<TKM::Object3d> tentacle_ = nullptr; // 触手オブジェクト
+	Vector3 tentacleLocalPos_{ 0.0f, 0.0f, 0.0f };        /// 触手の取り付け位置（調整用）
+	Vector3 tentacleLocalRot_{ 0.0f, 0.0f, 0.0f };
+	Vector3 tentacleLocalScale_{ 1.0f, 1.0f, 1.0f };
 	TKM::Camera* camera_ = nullptr;
 	TKM::BaseScene* parentScene_ = nullptr;
 	Reticle* reticle_ = nullptr;

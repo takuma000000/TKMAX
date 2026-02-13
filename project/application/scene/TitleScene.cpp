@@ -34,6 +34,7 @@ void TitleScene::Initialize() {
 	// ------------ モデル読み込み --------------
 	ModelManager::GetInstance()->LoadModel("jett.obj", dxCommon_);
 	ModelManager::GetInstance()->LoadModel("jerryfish.obj", dxCommon_);
+	ModelManager::GetInstance()->LoadModel("tentacle.obj", dxCommon_);
 	//-----------------------------------------
 
 	heli_ = std::make_unique<TKM::Object3d>();
@@ -77,17 +78,34 @@ void TitleScene::Initialize() {
 		kIrisDurationSec_,         // 所要時間
 		Ease::Type::InBack        // ちょっと勢いつけて開く感じ
 	);
-
-	// タイトル敵を1体だけ置く
+	// タイトル敵を1体だけ置く（傘＋触手）
 	titleEnemies_.clear();
+	titleTentacles_.clear();
 	{
-		auto e = std::make_unique<TKM::Object3d>();
-		e->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_);
-		e->SetModel("jerryfish.obj");
-		e->SetCamera(camera_.get());
-		e->SetScale({ enemyScale_, enemyScale_, enemyScale_ });
-		e->SetTranslate({ enemyRadius_, enemyBaseY_, 0.0f }); // 右前方あたり
-		titleEnemies_.push_back(std::move(e));
+		// 傘
+		auto body = std::make_unique<TKM::Object3d>();
+		body->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_);
+		body->SetModel("jerryfish.obj");
+		body->SetCamera(camera_.get());
+		body->SetScale({ enemyScale_, enemyScale_, enemyScale_ });
+		body->SetTranslate({ enemyRadius_, enemyBaseY_, 0.0f }); // 右前方あたり
+
+		// 触手
+		auto tent = std::make_unique<TKM::Object3d>();
+		tent->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_);
+		tent->SetModel("tentacle.obj");
+		tent->SetCamera(camera_.get());
+
+		// 親子付け：触手を傘の子にする
+		tent->SetParent(body.get());
+
+		// 触手は「傘からの相対位置（ローカル）」だけ決める
+		tent->SetTranslate({ 0.0f, 0.0f, 0.0f }); // ここで上下調整
+		tent->SetRotate({ 0.0f, 0.0f, 0.0f });
+		tent->SetScale({ 1.0f, 1.0f, 1.0f });     // 触手単体の倍率（必要なら調整）
+
+		titleEnemies_.push_back(std::move(body));
+		titleTentacles_.push_back(std::move(tent));
 	}
 
 	//---------------パーティクル----------------
@@ -202,6 +220,9 @@ void TitleScene::Update() {
 		e->SetRotate({ 0.0f, yaw, 0.0f });
 		e->SetScale({ enemyScale_, enemyScale_, enemyScale_ });
 		e->Update();
+		if (!titleTentacles_.empty()) {
+			titleTentacles_.front()->Update();
+		}
 	}
 
 	dirLight_->Update(); // 平行光源更新
@@ -288,7 +309,8 @@ void TitleScene::Draw() {
 	// 3Dは3Dでまとめて
 	TKM::Object3dCommon::GetInstance()->DrawSetCommon();
 	if (heli_) heli_->Draw(dxCommon_);
-	for (auto& e : titleEnemies_) e->Draw(dxCommon_);
+	for (auto& t : titleTentacles_) t->Draw(dxCommon_); // 触手
+	for (auto& e : titleEnemies_) e->Draw(dxCommon_);   // 傘
 	if (skybox_) skybox_->Draw();
 
 	// ---- ここで Sprite パイプラインに戻す ----

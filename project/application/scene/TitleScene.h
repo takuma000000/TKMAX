@@ -131,4 +131,6 @@ private:
 	const float dt_ = 1.0f / 60.0f; // 固定フレームレート用デルタタイム
 
 	std::unique_ptr<TitleMenuController> titleMenu_ = nullptr; // タイトルメニューコントローラー
+
+	std::vector<std::unique_ptr<TKM::Object3d>> titleTentacles_;
 };

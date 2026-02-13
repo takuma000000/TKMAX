@@ -89,6 +89,11 @@ namespace TKM {
 		/// <param name="dxCommon"></param>
 		void Draw(TKM::DirectXCommon* dxCommon);
 
+		/// <summary>
+		/// 親オブジェクトのクリア。
+		/// </summary>
+		void ClearParent() { parent_ = nullptr; }
+
 		// Getter===================================
 		/// <summary>スケール、回転、平行移動の取得。</summary>
 		const Vector3& GetScale() const { return transform_.scale_; }
@@ -100,10 +105,15 @@ namespace TKM {
 		static int GetActiveCount() { return activeCount_; }
 		/// <summary>モデルの取得。</summary>
 		Vector4 GetColor() const { return materialData_ ? materialData_->color_ : Vector4{ 1,1,1,1 }; }
+		/// <summary>
+		/// ワールド行列の取得。
+		/// </summary>
+		/// <returns></returns>
+		const Matrix4x4& GetWorldMatrix() const { return worldMatrix_; }
 		// =========================================
 		// Setter===================================
 		/// <summary>
-		/// スケール、回転、平行移動の設定。
+		/// スケール設定。
 		/// </summary>
 		/// <param name="scale"></param>
 		void SetScale(const Vector3& scale) { this->transform_.scale_ = scale; }
@@ -147,6 +157,11 @@ namespace TKM {
 		/// </summary>
 		/// <param name="filePath"></param>
 		void SetModel(const std::string& filePath);
+		/// <summary>
+		/// 親オブジェクトの設定。
+		/// </summary>
+		/// <param name="parent"></param>
+		void SetParent(const TKM::Object3d* parent) { parent_ = parent; }
 		// =========================================
 	private:
 		TKM::Object3dCommon* object3dCommon_ = nullptr;
@@ -266,5 +281,9 @@ namespace TKM {
 		TKM::BaseScene* parentScene_ = nullptr;
 
 		inline static int activeCount_ = 0; // 静的メンバ変数
+
+		// 親オブジェクトへのポインタ
+		const TKM::Object3d* parent_ = nullptr;
+		Matrix4x4 worldMatrix_{}; // ワールド行列
 	};
 }

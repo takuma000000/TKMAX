@@ -10,16 +10,29 @@
 #endif
 
 void Enemy::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon) {
-	object_ = std::make_unique<TKM::Object3d>(); // Object3d のインスタンスを生成
-	object_->Initialize(common, dxCommon); // 初期化
+	object_ = std::make_unique<TKM::Object3d>();
+	object_->Initialize(common, dxCommon);
 
-	// カメラ設定
+	// 触手
+	tentacle_ = std::make_unique<TKM::Object3d>();
+	tentacle_->Initialize(common, dxCommon);
+
+	// カメラ設定（既存に合わせる）
 	if (camera_) {
 		object_->SetCamera(camera_);
+		tentacle_->SetCamera(camera_);
 	}
 
-	baseScale_ = object_->GetScale(); // 元のスケールを保持
-	startX_ = object_->GetTranslate().x; // サイン波の基準用
+	// 親子付け：触手を傘の子にする
+	tentacle_->SetParent(object_.get());
+
+	// 触手のローカル（傘からの相対）初期値
+	tentacle_->SetTranslate(tentacleLocalPos_);
+	tentacle_->SetRotate(tentacleLocalRot_);
+	tentacle_->SetScale(tentacleLocalScale_);
+
+	baseScale_ = object_->GetScale();
+	startX_ = object_->GetTranslate().x;
 }
 
 void Enemy::Update(float dt) {
@@ -459,24 +472,47 @@ void Enemy::Update(float dt) {
 	}
 
 	object_->Update();
+
+	// 触手も同じアルファで更新
+	tentacle_->SetColor({ 1.0f, 1.0f, 1.0f, deathAlpha_ });
+
+	// --- テンタクル回転（Y軸くるくる） ---
+	tentacleLocalRot_.y += 0.1f * factor_; // 回転速度調整
+	// 取り付け位置を毎フレ反映したいなら（調整中なら便利）
+	tentacle_->SetTranslate(tentacleLocalPos_);
+	tentacle_->SetRotate(tentacleLocalRot_);
+	tentacle_->SetScale(tentacleLocalScale_);
+
+	tentacle_->Update();
 }
 
 void Enemy::Draw(TKM::DirectXCommon* dxCommon) {
 	if (!object_) return;
-	object_->Draw(dxCommon); // Object3d の描画
+	object_->Draw(dxCommon); // 傘
+	if (!tentacle_) return;
+	tentacle_->Draw(dxCommon); // 触手
 }
 
 void Enemy::SetCamera(TKM::Camera* camera) {
-	this->camera_ = camera; // メンバ変数に保存
-	if (object_) {
-		object_->SetCamera(camera); // Object3d に反映
-	}
+	camera_ = camera;
+	if (object_) { object_->SetCamera(camera); }
+	if (tentacle_) { tentacle_->SetCamera(camera); }
 }
 void Enemy::SetPosition(const Vector3& pos) {
-	object_->SetTranslate(pos); // 位置設定
+	if (object_) { object_->SetTranslate(pos); }
 }
 void Enemy::SetParentScene(TKM::BaseScene* scene) {
-	parentScene_ = scene; // メンバ変数に保存
+	parentScene_ = scene;
+	if (object_) { object_->SetParentScene(scene); }
+	if (tentacle_) { tentacle_->SetParentScene(scene); }
+}
+void Enemy::SetTentacleModel(const std::string& modelName) {
+	if (tentacle_) tentacle_->SetModel(modelName); // モデル設定
+}
+void Enemy::SetTentacleLocal(const Vector3& pos, const Vector3& rot, const Vector3& scale) {
+	tentacleLocalPos_ = pos; // ローカル位置設定
+	tentacleLocalRot_ = rot; // ローカル回転設定
+	tentacleLocalScale_ = scale; // ローカルスケール設定
 }
 Vector3 Enemy::GetWorldPosition() const {
 	return object_->GetTranslate(); // ワールド位置を返す
@@ -586,7 +622,9 @@ void Enemy::StartDeathReaction(const Vector3& hitDir) {
 
 void Enemy::SyncTransform() {
 	if (!object_) return;
+	if (!tentacle_) return;
 	object_->Update();  // 行列と定数バッファだけ更新
+	tentacle_->Update(); // 行列と定数バッファだけ更新
 }
 
 void Enemy::StartBossDeathReaction(const Vector3& hitDir) {

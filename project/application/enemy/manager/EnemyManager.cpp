@@ -267,6 +267,11 @@ void EnemyManager::SpawnWave1Enemy() {
 			e.SetModel(p1_.model_);
 			e.SetBehavior(p1_.behavior_);
 
+			if (p1_.model_ == "jerryfish.obj") {
+				e.SetTentacleModel("tentacle.obj");
+				e.SetTentacleLocal({ 0.0f, 0.0f, 0.0f }, { 0.0f,0.0f,0.0f }, { 1.0f,1.0f,1.0f });
+			}
+
 			Vector3 start_ = { x_, p1_.startY_, z_ };
 			Vector3 playerPos_ = player_->GetPosition();
 			Vector3 target_ = { playerPos_.x, playerPos_.y, playerPos_.z + p1_.targetForwardZ_ };
@@ -357,6 +362,10 @@ void EnemyManager::SpawnWave2_Triangle() {
 			const auto& pt_ = waveConfig_.GetWave2TriEnemyParams();
 
 			e.SetModel(pt_.model_);
+			if (pt_.model_ == "jerryfish.obj") {
+				e.SetTentacleModel("tentacle.obj");
+				e.SetTentacleLocal({ 0.0f, 0.0f, 0.0f }, { 0.0f,0.0f,0.0f }, { 1.0f,1.0f,1.0f });
+			}
 			e.SetBehavior(pt_.behavior_);
 			e.SetVelocity(pt_.vel_);
 			e.SetSineParams(pt_.sineAmp_, pt_.sineFreq_);
@@ -382,6 +391,10 @@ void EnemyManager::SpawnWave2_Line() {
 			const auto& pl_ = waveConfig_.GetWave2LineEnemyParams();
 
 			e.SetModel(pl_.model_);
+			if (pl_.model_ == "jerryfish.obj") {
+				e.SetTentacleModel("tentacle.obj");
+				e.SetTentacleLocal({ 0.0f, 0.0f, 0.0f }, { 0.0f,0.0f,0.0f }, { 1.0f,1.0f,1.0f });
+			}
 			e.SetBehavior(pl_.behavior_);
 			e.SetVelocity(pl_.vel_);
 			e.SetStopZ(pl_.stopZ_);
@@ -410,6 +423,10 @@ void EnemyManager::SpawnWave2_FastColumn() {
 			const auto& pc_ = waveConfig_.GetWave2ColEnemyParams();
 
 			e.SetModel(pc_.model_);
+			if (pc_.model_ == "jerryfish.obj") {
+				e.SetTentacleModel("tentacle.obj");
+				e.SetTentacleLocal({ 0.0f, 0.0f, 0.0f }, { 0.0f,0.0f,0.0f }, { 1.0f,1.0f,1.0f });
+			}
 			e.SetBehavior(pc_.behavior_);
 			e.SetVelocity(pc_.vel_);
 			e.SetStopZ(pc_.stopZ_);
@@ -549,6 +566,10 @@ void EnemyManager::SpawnWave3MidBossStage() {
 			const auto& pm_ = waveConfig_.GetWave3MidBossParams();
 
 			e.SetModel(pm_.model_);
+			if (pm_.model_ == "jerryfish.obj") {
+				e.SetTentacleModel("tentacle.obj");
+				e.SetTentacleLocal({ 0.0f, 0.0f, 0.0f }, { 0.0f,0.0f,0.0f }, { 1.0f,1.0f,1.0f });
+			}
 			e.SetBehavior(pm_.behavior_);
 
 			e.SetFreeRoamArea(pm_.areaMin_, pm_.areaMax_, pm_.normalSpeed_, pm_.rageSpeed_);
@@ -663,6 +684,10 @@ void EnemyManager::SpawnWave3ExtraMidBoss() {
 			const auto& px_ = waveConfig_.GetWave3ExtraMidBossParams();
 
 			e.SetModel(px_.model_);
+			if (px_.model_ == "jerryfish.obj") {
+				e.SetTentacleModel("tentacle.obj");
+				e.SetTentacleLocal({ 0.0f, 0.0f, 0.0f }, { 0.0f,0.0f,0.0f }, { 1.0f,1.0f,1.0f });
+			}
 			e.SetBehavior(px_.behavior_);
 			e.SetVelocity(px_.vel_);
 			e.SetStopZ(px_.stopZ_);

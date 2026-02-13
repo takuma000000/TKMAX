@@ -64,87 +64,30 @@ namespace TKM {
 	}
 
 	void Object3d::Update() {
-		// TransformからWorldMatrixを作る
-		Matrix4x4 worldMatrix = MyMath::MakeAffineMatrix(transform_.scale_, transform_.rotate_, transform_.translate_);
+		// ローカル行列
+		Matrix4x4 localMatrix = MyMath::MakeAffineMatrix(transform_.scale_, transform_.rotate_, transform_.translate_);
+
+		// 親が居るなら「ローカル * 親ワールド」でワールド化
+		Matrix4x4 worldMatrix = localMatrix;
+		if (parent_) {
+			worldMatrix = MyMath::Multiply(localMatrix, parent_->GetWorldMatrix());
+		}
+		worldMatrix_ = worldMatrix;
+
 		// ワールドビュー射影行列を計算
 		Matrix4x4 worldViewProjectionMatrix;
 
-		if (camera_) { // カメラが設定されている場合
-			const Matrix4x4& viewProjectionMatrix = camera_->GetViewProjectionMatrix(); // カメラのビュー射影行列を取得
-			worldViewProjectionMatrix = MyMath::Multiply(worldMatrix, viewProjectionMatrix); // ワールド行列とビュー射影行列を掛け合わせる
-		} else { // カメラが設定されていない場合
-			worldViewProjectionMatrix = worldMatrix; // ワールド行列のみを使用
+		if (camera_) {
+			const Matrix4x4& viewProjectionMatrix = camera_->GetViewProjectionMatrix();
+			worldViewProjectionMatrix = MyMath::Multiply(worldMatrix, viewProjectionMatrix);
+		} else {
+			worldViewProjectionMatrix = worldMatrix;
 		}
 
-		wvpData_->wvp_ = worldViewProjectionMatrix; // ワールドビュー射影行列をセット
-		wvpData_->World_ = worldMatrix; // ワールド行列をセット
-		wvpData_->WorldInverseTranspose_ = MyMath::Inverse4x4(worldMatrix); // ワールド行列の逆行列をセット
-
-#ifdef USE_IMGUI
-
-		// ---- ImGui のライト設定 ----
-		ImGui::Begin("Light Settings");
-
-		// Directional Light
-		if (ImGui::ColorEdit3("Directional Light Color", &directionalLightData_->color_.x)) {
-			// 変更があったら適用
-		}
-		if (ImGui::DragFloat3("Directional Light Direction", &directionalLightData_->direction_.x, 0.01f, -1.0f, 1.0f)) {
-			// ライトの方向を更新
-		}
-		if (ImGui::DragFloat("Directional Light Intensity", &directionalLightData_->intensity_, 0.01f, 0.0f, 10.0f)) {
-			// 強度を更新
-		}
-
-		ImGui::Separator(); // UIを区切る
-
-		// Point Light
-		if (ImGui::ColorEdit3("Point Light Color", &pointLightData_->color_.x)) {
-			// 変更があったら適用
-		}
-		if (ImGui::DragFloat3("Point Light Position", &pointLightData_->position_.x, 0.1f, -50.0f, 50.0f)) {
-			// 位置を更新
-		}
-		if (ImGui::DragFloat("Point Light Intensity", &pointLightData_->intensity_, 0.01f, 0.0f, 10.0f)) {
-			// 強度を更新
-		}
-		if (ImGui::DragFloat("Point Light Radius", &pointLightData_->radius_, 0.01f, 0.0f, 100.0f)) {
-			// 半径を更新
-		}
-		if (ImGui::DragFloat("Point Light Decay", &pointLightData_->decay_, 0.01f, 0.0f, 10.0f)) {
-			// 減衰率を更新
-		}
-		//Spot Light
-		if (ImGui::ColorEdit3("Spot Light Color", &spotLightData_->color_.x)) {
-			// 変更があったら適用
-		}
-		if (ImGui::DragFloat3("Spot Light Position", &spotLightData_->position_.x, 0.1f, -50.0f, 50.0f)) {
-			// 位置を更新
-		}
-		if (ImGui::DragFloat("Spot Light Intensity", &spotLightData_->intensity_, 0.01f, 0.0f, 10.0f)) {
-			// 強度を更新
-		}
-		if (ImGui::DragFloat3("Spot Light Direction", &spotLightData_->direction_.x, 0.01f, -1.0f, 1.0f)) {
-			// ライトの方向を更新
-		}
-		if (ImGui::DragFloat("Spot Light Distance", &spotLightData_->distance_, 0.01f, 0.0f, 100.0f)) {
-			// 距離を更新
-		}
-		if (ImGui::DragFloat("Spot Light Decay", &spotLightData_->decay_, 0.01f, 0.0f, 10.0f)) {
-			// 減衰率を更新
-		}
-		if (ImGui::DragFloat("Spot Light CosAngle", &spotLightData_->cosAngle_, 0.01f, 0.0f, 1.0f)) {
-			// 角度を更新
-		}
-		if (ImGui::DragFloat("Spot Light CosFalloff", &spotLightData_->cosFalloffStart_, 0.01f, 0.0f, 1.0f)) {
-			// 角度を更新
-		}
-
-		ImGui::End();
-
-#endif // USE_IMGUI
+		wvpData_->wvp_ = worldViewProjectionMatrix;
+		wvpData_->World_ = worldMatrix;
+		wvpData_->WorldInverseTranspose_ = MyMath::Inverse4x4(worldMatrix);
 	}
-
 
 	void Object3d::Draw(TKM::DirectXCommon* dxCommon) {
 		if (parentScene_) { // 親シーンが設定されている場合

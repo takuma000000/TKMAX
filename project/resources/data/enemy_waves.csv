@@ -24,21 +24,21 @@ Wave3,CoreRand,params,18.0,35.0,75.0,6.0,0,0
 # a=model, b=hp, c.. = params (patternごとに解釈)
 # 最後に behavior を追加（文字列）
 
-Wave1,EnemyParams,default,enemy.obj,1,20.0,3.0,30.0,1.6,0,0,PounceFromAbove
+Wave1,EnemyParams,default,jerryfish.obj,1,20.0,3.0,30.0,1.6,0,0,PounceFromAbove
 # c=startY, d=targetForwardZ, e=apexY, f=pounceTime
 
-Wave2,EnemyParams,Triangle,enemy.obj,3,0.0,0.0,-0.30,4.0,1.4,0.6,SineX
+Wave2,EnemyParams,Triangle,jerryfish.obj,3,0.0,0.0,-0.30,4.0,1.4,0.6,SineX
 # c=velX, d=velY, e=velZ, f=sineAmp, g=sineFreq, h=phaseStep
 
-Wave2,EnemyParams,Line,enemy.obj,2,0.0,0.0,-0.32,52.0,0,0,StraightStop
+Wave2,EnemyParams,Line,jerryfish.obj,2,0.0,0.0,-0.32,52.0,0,0,StraightStop
 # c=velX, d=velY, e=velZ, f=stopZ
 
-Wave2,EnemyParams,Column,enemy.obj,1,-0.20,0.0,-0.75,-50.0,0,0,StraightStop
+Wave2,EnemyParams,Column,jerryfish.obj,1,-0.20,0.0,-0.75,-50.0,0,0,StraightStop
 # c=velX, d=velY, e=velZ, f=stopZ
 
-Wave3,EnemyParams,MidBoss,enemy.obj,12,-18.0,4.0,40.0,18.0,10.0,62.0,0.10,0.24,1.5,FreeRoam
+Wave3,EnemyParams,MidBoss,jerryfish.obj,12,-18.0,4.0,40.0,18.0,10.0,62.0,0.10,0.24,1.5,FreeRoam
 # c..h=min(x,y,z), i..k=max(x,y,z), l=normalSpeed, m=rageSpeed, n=scale(均一)
 
-Wave3,EnemyParams,ExtraMidBoss,enemy.obj,12,0.0,0.0,-0.2,40.0,0,0,1.5,StraightStop
+Wave3,EnemyParams,ExtraMidBoss,jerryfish.obj,12,0.0,0.0,-0.2,40.0,0,0,1.5,StraightStop
 # c=velX, d=velY, e=velZ, f=stopZ, n=scale(均一)
 
