@@ -136,7 +136,7 @@ private:
 public:
 	// Enemy Params ==========================================
 	struct Wave1EnemyParams {
-		std::string model_ = "enemy.obj";
+		std::string model_ = "jerryfish.obj";
 		int hp_ = 1;
 		float startY_ = 20.0f;
 		float targetForwardZ_ = 3.0f;
@@ -146,7 +146,7 @@ public:
 	};
 
 	struct Wave2EnemyParamsTriangle {
-		std::string model_ = "enemy.obj";
+		std::string model_ = "jerryfish.obj";
 		int hp_ = 3;
 		Vector3 vel_ = { 0.0f, 0.0f, -0.30f };
 		float sineAmp_ = 4.0f;
@@ -156,7 +156,7 @@ public:
 	};
 
 	struct Wave2EnemyParamsLine {
-		std::string model_ = "enemy.obj";
+		std::string model_ = "jerryfish.obj";
 		int hp_ = 2;
 		Vector3 vel_ = { 0.0f, 0.0f, -0.32f };
 		float stopZ_ = 52.0f;
@@ -164,7 +164,7 @@ public:
 	};
 
 	struct Wave2EnemyParamsColumn {
-		std::string model_ = "enemy.obj";
+		std::string model_ = "jerryfish.obj";
 		int hp_ = 1;
 		Vector3 vel_ = { -0.20f, 0.0f, -0.75f };
 		float stopZ_ = -50.0f;
@@ -172,7 +172,7 @@ public:
 	};
 
 	struct Wave3MidBossParams {
-		std::string model_ = "enemy.obj";
+		std::string model_ = "jerryfish.obj";
 		int hp_ = 12;
 		Vector3 areaMin_ = { -18.0f, 4.0f, 40.0f };
 		Vector3 areaMax_ = { 18.0f, 10.0f, 62.0f };
@@ -183,7 +183,7 @@ public:
 	};
 
 	struct Wave3ExtraMidBossParams {
-		std::string model_ = "enemy.obj";
+		std::string model_ = "jerryfish.obj";
 		int hp_ = 12;
 		Vector3 vel_ = { 0.0f, 0.0f, -0.2f };
 		float stopZ_ = 40.0f;

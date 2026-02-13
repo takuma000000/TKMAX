@@ -33,7 +33,7 @@ void TitleScene::Initialize() {
 	//--------------------------------------------
 	// ------------ モデル読み込み --------------
 	ModelManager::GetInstance()->LoadModel("jett.obj", dxCommon_);
-	ModelManager::GetInstance()->LoadModel("enemy.obj", dxCommon_);
+	ModelManager::GetInstance()->LoadModel("jerryfish.obj", dxCommon_);
 	//-----------------------------------------
 
 	heli_ = std::make_unique<TKM::Object3d>();
@@ -83,7 +83,7 @@ void TitleScene::Initialize() {
 	{
 		auto e = std::make_unique<TKM::Object3d>();
 		e->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_);
-		e->SetModel("enemy.obj");
+		e->SetModel("jerryfish.obj");
 		e->SetCamera(camera_.get());
 		e->SetScale({ enemyScale_, enemyScale_, enemyScale_ });
 		e->SetTranslate({ enemyRadius_, enemyBaseY_, 0.0f }); // 右前方あたり
