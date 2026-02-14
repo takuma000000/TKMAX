@@ -34,6 +34,10 @@ namespace TKM {
 		std::vector<Vector4> positions;
 		std::vector<Vector3> normals;
 		std::vector<Vector2> texcoords;
+		// マテリアルマップ
+		MaterialMap mtlMap;
+		std::string currentMtl = "";
+		int32_t currentSubmesh = -1;
 
 		// ファイルを開く
 		std::ifstream file(directoryPath + "/" + filename);
@@ -61,42 +65,103 @@ namespace TKM {
 				normal.x *= -1;
 				normals.push_back(normal);
 			} else if (identifier == "f") { // 面
-				VertexData triangle[3];
-				for (int32_t faceVertex = 0; faceVertex < 3; ++faceVertex) { // 三角形の3頂点
-					// 頂点定義をスラッシュで分割して格納
+				// サブメッシュがまだ作られてないなら作る
+				if (modelData.submeshes_.empty()) {
+					SubMeshData sm{};
+					sm.startVertex_ = (uint32_t)modelData.vertices_.size();
+					sm.vertexCount_ = 0;
+					modelData.submeshes_.push_back(sm);
+					currentSubmesh = 0;
+				}
+
+				VertexData triangle[3]{};
+
+				for (int32_t faceVertex = 0; faceVertex < 3; ++faceVertex) {
 					std::string vertexDefinition;
 					s >> vertexDefinition;
 					std::istringstream v(vertexDefinition);
-					uint32_t elementIndices[3];
 
-					for (int32_t element = 0; element < 3; ++element) { // 頂点の要素（頂点座標、テクスチャ座標、法線ベクトル）
+					uint32_t elementIndices[3]{};
+					for (int32_t element = 0; element < 3; ++element) {
 						std::string index;
 						std::getline(v, index, '/');
 						elementIndices[element] = std::stoi(index);
 					}
 
-					Vector4 position = positions[elementIndices[0] - 1]; // OBJファイルのインデックスは1始まりなので-1する
-					Vector2 texcoord = texcoords[elementIndices[1] - 1]; // OBJファイルのインデックスは1始まりなので-1する
-					Vector3 normal = normals[elementIndices[2] - 1]; // OBJファイルのインデックスは1始まりなので-1する
+					Vector4 position = positions[elementIndices[0] - 1];
+					Vector2 texcoord = texcoords[elementIndices[1] - 1];
+					Vector3 normal = normals[elementIndices[2] - 1];
 
-					VertexData vertex = { position, texcoord, normal }; // 頂点データの作成
-					modelData.vertices_.push_back(vertex); // 頂点データの追加
-					triangle[faceVertex] = vertex; // 三角形の頂点データを保存
+					VertexData vertex = { position, texcoord, normal };
+					triangle[faceVertex] = vertex;
 				}
 
-				// 面の裏表を反転させる
+				// 面の裏表を反転（必要な順だけ push）
 				modelData.vertices_.push_back(triangle[2]);
 				modelData.vertices_.push_back(triangle[1]);
 				modelData.vertices_.push_back(triangle[0]);
+
+				modelData.submeshes_[currentSubmesh].vertexCount_ += 3;
 			} else if (identifier == "mtllib") { // マテリアルファイル
 				// マテリアルファイル名を取得して読み込む
 				std::string materialFilename;
 				s >> materialFilename;
-				modelData.material_ = LoadMaterialTemplateFile(directoryPath, materialFilename);
+				mtlMap = LoadMaterialTemplateFileMulti(directoryPath, materialFilename);
+			} else if (identifier == "usemtl") {
+				std::string mtlName;
+				s >> mtlName;
+				currentMtl = mtlName;
+
+				// サブメッシュをまだ作ってないなら作る
+				// まず同名があるか探す（なければ新規）
+				currentSubmesh = -1;
+				for (int i = 0; i < (int)modelData.submeshes_.size(); ++i) {
+					if (modelData.submeshes_[i].material_.textureFilePath_ == mtlMap[currentMtl].textureFilePath_) {
+						currentSubmesh = i;
+						break;
+					}
+				}
+				if (currentSubmesh == -1) {
+					SubMeshData sm{};
+					sm.startVertex_ = (uint32_t)modelData.vertices_.size();
+					sm.vertexCount_ = 0;
+					if (mtlMap.contains(currentMtl)) {
+						sm.material_ = mtlMap[currentMtl];
+					}
+					modelData.submeshes_.push_back(sm);
+					currentSubmesh = (int)modelData.submeshes_.size() - 1;
+				}
 			}
 		}
 
 		return std::move(modelData);
+	}
+
+	Model::MaterialMap Model::LoadMaterialTemplateFileMulti(const std::string& directoryPath, const std::string& filename) {
+		MaterialMap out;
+		std::ifstream file(directoryPath + "/" + filename);
+		assert(file.is_open());
+
+		std::string line;
+		std::string currentMtl;
+
+		while (std::getline(file, line)) {
+			std::istringstream s(line);
+			std::string id;
+			s >> id;
+
+			if (id == "newmtl") {
+				s >> currentMtl;
+				out[currentMtl] = MaterialData{};
+			} else if (id == "map_Kd") {
+				std::string tex;
+				s >> tex;
+				if (!currentMtl.empty()) {
+					out[currentMtl].textureFilePath_ = directoryPath + "/" + tex;
+				}
+			}
+		}
+		return out;
 	}
 
 	void Model::VertexResource(DirectXCommon* dxCommon) {
@@ -128,20 +193,55 @@ namespace TKM {
 		modelCommon_ = modelCommon;
 		dxCommon_ = dxCommon;
 
-		// `std::move` を適用して不要なコピーを削減
 		modelData_ = std::move(LoadObjFile(directorypath, filename));
 
-		VertexResource(dxCommon_); // 頂点リソースの作成
-		MaterialResource(dxCommon_); // マテリアルリソースの作成
+		VertexResource(dxCommon_);
+		MaterialResource(dxCommon_);
 
-		TextureManager::GetInstance()->LoadTexture(modelData_.material_.textureFilePath_); // テクスチャの読み込み
-		modelData_.material_.textureIndex_ = TextureManager::GetInstance()->GetTextureIndexByFilePath(modelData_.material_.textureFilePath_); // テクスチャ番号の取得
+		// マルチ対応：submeshes_ があるなら全部ロード
+		if (!modelData_.submeshes_.empty()) {
+			// 互換用：先頭を material_ にも入れておく
+			modelData_.material_ = modelData_.submeshes_.front().material_;
+
+			for (auto& sm : modelData_.submeshes_) {
+				if (!sm.material_.textureFilePath_.empty()) {
+					TextureManager::GetInstance()->LoadTexture(sm.material_.textureFilePath_);
+					sm.material_.textureIndex_ =
+						TextureManager::GetInstance()->GetTextureIndexByFilePath(sm.material_.textureFilePath_);
+				}
+			}
+		} else {
+			// 従来
+			TextureManager::GetInstance()->LoadTexture(modelData_.material_.textureFilePath_);
+			modelData_.material_.textureIndex_ =
+				TextureManager::GetInstance()->GetTextureIndexByFilePath(modelData_.material_.textureFilePath_);
+		}
 	}
 
 	void Model::Draw() {
-		if (!dxCommon_) return; // DirectXCommonが設定されていない場合は描画しない
-		dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_); // 頂点バッファの設定
-		dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress()); // マテリアルデータの設定
-		dxCommon_->GetCommandList()->DrawInstanced(UINT(modelData_.vertices_.size()), 1, 0, 0); // 描画
+		if (!dxCommon_) return;
+
+		dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);
+
+		// ★マルチマテリアル
+		if (modelData_.submeshes_.size() > 1) {
+			for (auto& sm : modelData_.submeshes_) {
+				// テクスチャ（RootTable #2）をここで差し替える
+				if (!sm.material_.textureFilePath_.empty()) {
+					dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(
+						2,
+						TextureManager::GetInstance()->GetSrvHandleGPU(sm.material_.textureFilePath_)
+					);
+				}
+
+				dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
+				dxCommon_->GetCommandList()->DrawInstanced(sm.vertexCount_, 1, sm.startVertex_, 0);
+			}
+			return;
+		}
+
+		// 単一
+		dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
+		dxCommon_->GetCommandList()->DrawInstanced(UINT(modelData_.vertices_.size()), 1, 0, 0);
 	}
 }

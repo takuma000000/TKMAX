@@ -4,7 +4,7 @@
 void BossEnemy::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon) {
 	Enemy::Initialize(common, dxCommon);
 
-	SetModel("enemy.obj");
+	SetModel("jerryfish_boss.obj");
 	SetHP(BossParam::InitHP_);
 
 	// baseScale_ を正しい値にするために SetScale は最初に1回だけ

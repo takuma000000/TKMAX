@@ -116,7 +116,12 @@ namespace TKM {
 
 		// ここで model_ のテクスチャを適用する
 		if (model_) {
-			dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(model_->GetTexturePath()));
+			if (!model_->IsMultiMaterial()) {
+				dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(
+					2,
+					TextureManager::GetInstance()->GetSrvHandleGPU(model_->GetTexturePath())
+				);
+			}
 			model_->Draw();
 		}
 	}

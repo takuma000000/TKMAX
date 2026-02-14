@@ -5,6 +5,7 @@
 #include <vector>
 #include "ModelTypes.h"
 #include <wrl.h>
+#include <unordered_map>
 
 namespace TKM {
 	class ModelCommon;
@@ -50,6 +51,15 @@ namespace TKM {
 		// マテリアルにデータを書き込む
 		Material* materialData_ = nullptr;
 
+		using MaterialMap = std::unordered_map<std::string, MaterialData>; // マテリアル名とマテリアルデータのマップ
+
+		/// <summary>
+		/// マテリアルテンプレートファイルを読み込みます（マルチマテリアル対応版）。
+		/// </summary>
+		/// <param name="directoryPath"></param>
+		/// <param name="filename"></param>
+		/// <returns></returns>
+		static MaterialMap LoadMaterialTemplateFileMulti(const std::string& directoryPath, const std::string& filename);
 		/// <summary>
 		/// 頂点リソースを作成します。
 		/// </summary>
@@ -110,6 +120,12 @@ namespace TKM {
 		/// モデルを描画します。
 		/// </summary>
 		void Draw();
+
+		/// <summary>
+		/// マルチマテリアルかどうかを返します。
+		/// </summary>
+		/// <returns></returns>
+		bool IsMultiMaterial() const { return modelData_.submeshes_.size() > 1; }
 
 		// Getter===================================
 		/// <summary>

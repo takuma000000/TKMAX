@@ -24,10 +24,21 @@ struct MaterialData {
 	uint32_t textureIndex_ = 0;
 };
 
+// サブメッシュ（マテリアルごとの頂点範囲）
+struct SubMeshData {
+	uint32_t startVertex_ = 0;
+	uint32_t vertexCount_ = 0;
+	MaterialData material_;
+};
+
 // モデルデータ
 struct ModelData {
+	// 座標変換情報
 	std::vector<VertexData> vertices_;
+	// 互換のため残す（単一マテリアル用、または先頭マテリアル）
 	MaterialData material_;
+	// マルチマテリアル用
+	std::vector<SubMeshData> submeshes_;
 };
 
 // マテリアル（GPU に送る用）
