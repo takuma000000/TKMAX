@@ -295,6 +295,7 @@ void GameScene::LoadModels() {
 	ModelManager::GetInstance()->LoadModel("jerryfish.obj", dxCommon_);
 	ModelManager::GetInstance()->LoadModel("jerryfish_boss.obj", dxCommon_);
 	ModelManager::GetInstance()->LoadModel("tentacle.obj", dxCommon_);
+	ModelManager::GetInstance()->LoadModel("tentacle_boss.obj", dxCommon_);
 	ModelManager::GetInstance()->LoadModel("reticle_big.obj", dxCommon_);
 	ModelManager::GetInstance()->LoadModel("reticle_normal.obj", dxCommon_);
 	ModelManager::GetInstance()->LoadModel("reticle_small.obj", dxCommon_);

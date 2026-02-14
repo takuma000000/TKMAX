@@ -102,6 +102,12 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	bool IsLaserTelegraph() const { return laserTelegraph_; }  // 予告中
+	/// <summary>
+	/// いずれかの攻撃をチャージ中か？（触手演出用）
+	/// </summary>
+	bool IsAnyCharging() const {
+		return missileCharging_ || slashCharging_ || laserTelegraph_ || (state_ == State::LaserWindup);
+	}
 
 	// Getter===================================
 	/// <summary>
@@ -149,6 +155,25 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	float GetLaserRadius() const { return laserRadius_; }
+	/// <summary>
+	/// チャージの進行度(0..1)（触手揺れ強度用）
+	/// </summary>
+	float GetCharge01() const {
+		float v = 0.0f;
+		if (missileCharging_ && missileChargeTime_ > 0.0001f) {
+			float t = 1.0f - (missileChargeTimer_ / missileChargeTime_);
+			v = std::max(v, std::clamp(t, 0.0f, 1.0f));
+		}
+		if (slashCharging_ && slashChargeTime_ > 0.0001f) {
+			float t = 1.0f - (slashChargeTimer_ / slashChargeTime_);
+			v = std::max(v, std::clamp(t, 0.0f, 1.0f));
+		}
+		// レーザー予告は強めに
+		if (laserTelegraph_ || state_ == State::LaserWindup) {
+			v = std::max(v, 1.0f);
+		}
+		return v;
+	}
 	// =========================================
 private:
 	/// <summary>

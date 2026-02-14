@@ -168,6 +168,12 @@ void BossManager::Update(float dt) {
 	if (bossController_) {
 		bossController_->Update(dt, *boss_); // ボス挙動コントローラ更新
 	}
+	if (boss_ && bossController_) { // ボス触手チャージ演出更新
+		boss_->SetTentacleCharge(
+			bossController_->IsAnyCharging(), // いずれかの攻撃をチャージ中か？
+			bossController_->GetCharge01() // チャージ量0-1
+		);
+	}
 	// --- Missile（通常時攻撃その1） ---
 	{
 		Vector3 mPos_{}; // 発射位置

@@ -477,7 +477,11 @@ void Enemy::Update(float dt) {
 	tentacle_->SetColor({ 1.0f, 1.0f, 1.0f, deathAlpha_ });
 
 	// --- テンタクル回転（Y軸くるくる） ---
-	tentacleLocalRot_.y += 0.1f * factor_; // 回転速度調整
+	// ※ボスは回転させない
+	if (type_ != EnemyType::Boss) {
+		tentacleLocalRot_.y += 0.1f * factor_; // 回転速度調整
+	}
+
 	// 取り付け位置を毎フレ反映したいなら（調整中なら便利）
 	tentacle_->SetTranslate(tentacleLocalPos_);
 	tentacle_->SetRotate(tentacleLocalRot_);

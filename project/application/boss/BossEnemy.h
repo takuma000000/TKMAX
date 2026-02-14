@@ -4,7 +4,7 @@
 namespace BossParam {
 	constexpr int   InitHP_ = 1000; // 初期HP
 	constexpr float InitScale_ = 5.0f; // 初期スケール
-	constexpr Vector3 InitColliderScale_ = { 12.180f, 18.210f, 11.560f }; // 当たり判定スケール
+	constexpr Vector3 InitColliderScale_ = { 12.180f, 26.210f, 11.560f }; // 当たり判定スケール
 	constexpr float NormalScale_ = 5.0f; // 通常スケール
 	constexpr float LockBlinkSpeed_ = 0.2f; // 点滅速度
 	constexpr float LockBlinkAmount_ = 0.2f; // 点滅幅
@@ -35,4 +35,26 @@ public:
 	/// ImGuiデバッグ表示。
 	/// </summary>
 	void ImGuiDebug();
+
+	// Setter===================================
+	/// <summary>
+	/// 触手のモデルとローカル座標を設定します。
+	/// </summary>
+	/// <param name="model">モデルファイル名</param>
+	/// <param name="localPos">ローカル位置</param>
+	void SetTentacleCharge(bool active, float charge01) {
+		tentacleChargeActive_ = active;
+		tentacleCharge01_ = charge01;
+	}
+	// =========================================
+
+private:
+	// 触手関連
+	bool  tentacleChargeActive_ = false;
+	float tentacleCharge01_ = 0.0f;
+	float tentacleWiggleT_ = 0.0f;
+	// ベース（チャージしてない時のローカル）
+	Vector3 tentacleBasePos_{ 0.0f, 0.0f, 0.0f };
+	Vector3 tentacleBaseRot_{ 0.0f, 0.0f, 0.0f };
+	Vector3 tentacleBaseScale_{ 1.0f, 1.0f, 1.0f };
 };
