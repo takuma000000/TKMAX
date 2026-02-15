@@ -4,7 +4,7 @@
 namespace BossParam {
 	constexpr int   InitHP_ = 1000; // 初期HP
 	constexpr float InitScale_ = 5.0f; // 初期スケール
-	constexpr Vector3 InitColliderScale_ = { 12.180f, 26.210f, 11.560f }; // 当たり判定スケール
+	constexpr Vector3 InitColliderScale_ = { 12.180f, 26.970f, 11.560f }; // 当たり判定スケール
 	constexpr float NormalScale_ = 5.0f; // 通常スケール
 	constexpr float LockBlinkSpeed_ = 0.2f; // 点滅速度
 	constexpr float LockBlinkAmount_ = 0.2f; // 点滅幅
