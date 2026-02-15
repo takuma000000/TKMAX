@@ -390,6 +390,22 @@ void Enemy::Update(float dt) {
 
 			isDead_ = true;
 		}
+
+		// 死亡中も触手を更新して、親の動きに追従させる
+		if (tentacle_) {
+			tentacle_->SetColor({ 1.0f, 1.0f, 1.0f, deathAlpha_ });
+
+			if (type_ != EnemyType::Boss) {
+				tentacleLocalRot_.y += 0.1f * factor_;
+			}
+
+			tentacle_->SetTranslate(tentacleLocalPos_);
+			tentacle_->SetRotate(tentacleLocalRot_);
+			tentacle_->SetScale(tentacleLocalScale_);
+
+			tentacle_->Update();
+		}
+
 		return;
 	}
 

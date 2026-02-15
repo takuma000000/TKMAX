@@ -143,7 +143,7 @@ void GameScene::Update() {
 }
 
 void GameScene::Draw() {
-	//if (skybox_) skybox_->Draw(); // スカイボックスの描画
+	if (skybox_) skybox_->Draw(); // スカイボックスの描画
 
 	// 3Dまとめ
 	Object3dCommon::GetInstance()->DrawSetCommon();
