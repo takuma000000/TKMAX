@@ -94,6 +94,7 @@ void Player::Update(float dt) {
 	HandleGamePadMove(); // ゲームパッドのスティック入力で移動
 	HandleFollowCamera(); // カメラの追従処理
 	RemoveEnemyIfDead(); // 敵が死んでたら参照をクリア
+	HandleDodge(dt); // 回避処理
 
 	// RTホールド中はターゲットをロック表示（切り替わり時は前の敵を解除）
 	{
@@ -507,6 +508,7 @@ void Player::StartCameraShake(int frameCount) {
 
 void Player::HandleGamePadMove() {
 	if (!object_) return;
+	if (isDodging_) return;
 
 	Vector3 pos = object_->GetTranslate();
 	Vector3 newPos = pos;
@@ -1009,5 +1011,87 @@ void Player::UpdateRumble(float dt) {
 		rumbleLeft_ = 0;
 		rumbleRight_ = 0;
 		TKM::Input::GetInstance()->SetVibration(0, 0);
+	}
+}
+
+void Player::StartDodge() {
+	if (!object_) return;
+	if (isDodging_) return;
+
+	auto* in = TKM::Input::GetInstance();
+
+	// スティック方向（左スティック）
+	float rx = static_cast<float>(in->GetLeftStickX());
+	float ry = static_cast<float>(in->GetLeftStickY());
+
+	// デッドゾーン（Reticleと同じノリ）
+	const float dz = 6000.0f;
+	if (std::fabs(rx) < dz) rx = 0.0f;
+	if (std::fabs(ry) < dz) ry = 0.0f;
+
+	const float norm = 32767.0f;
+	rx /= norm;
+	ry /= norm;
+
+	// カメラRight/Up基準でワールド方向へ
+	Vector3 camRight = { 1,0,0 };
+	Vector3 camUp = { 0,1,0 };
+	if (camera_) {
+		const auto& W = camera_->GetWorldMatrix();
+		camRight = MyMath::Normalize({ W.m[0][0], W.m[0][1], W.m[0][2] });
+		camUp = MyMath::Normalize({ W.m[1][0], W.m[1][1], W.m[1][2] });
+	}
+
+	Vector3 dir = camRight * rx + camUp * ry;
+	dir.z = 0.0f;
+
+	if (MyMath::Length(dir) < 0.001f) {
+		return; // 方向入力なしなら回避しない（好みで前方向にしてもOK）
+	}
+	dir = MyMath::Normalize(dir);
+
+	isDodging_ = true;
+	dodgeT_ = 0.0f;
+	dodgeStartPos_ = object_->GetTranslate();
+	dodgeDir_ = dir; // 入力方向
+}
+
+void Player::HandleDodge(float dt) {
+	auto* in = TKM::Input::GetInstance();
+
+	// X押した瞬間に開始
+	if (!isDodging_ && in->PushButton(XINPUT_GAMEPAD_X)) {
+		StartDodge();
+	}
+
+	if (!isDodging_) return;
+
+	dodgeT_ += dt;
+	float u = dodgeT_ / std::max(0.001f, dodgeDuration_);
+	if (u > 1.0f) u = 1.0f;
+
+	// Ease Out（スッと出てスッと止まる）
+	float s = 1.0f - std::pow(1.0f - u, 3.0f);
+
+	// 位置
+	Vector3 pos = dodgeStartPos_ + dodgeDir_ * (dodgeDistance_ * s);
+	pos.x = std::clamp(pos.x, moveMin_.x, moveMax_.x);
+	pos.y = std::clamp(pos.y, moveMin_.y, moveMax_.y);
+	pos.z = 0.0f;
+	object_->SetTranslate(pos);
+
+	// 見た目：1回転（Z回転）
+	Vector3 rot = object_->GetRotate();
+	rot.z = bankAngle_ + (MyMath::GetPI() * 2.0f) * u;
+	object_->SetRotate(rot);
+
+	// 終了
+	if (u >= 1.0f) {
+		isDodging_ = false;
+
+		// 回転を戻して通常のバンクに復帰
+		Vector3 r = object_->GetRotate();
+		r.z = bankAngle_;
+		object_->SetRotate(r);
 	}
 }

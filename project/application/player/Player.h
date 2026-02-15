@@ -253,6 +253,15 @@ private:
 	/// </summary>
 	void HandleShooting();
 	/// <summary>
+	/// 回避行動の処理を行います。
+	/// </summary>
+	/// <param name="dt">前フレームからの経過時間（秒）</param>
+	void HandleDodge(float dt);
+	/// <summary>
+	/// 回避行動を開始します。
+	/// </summary>
+	void StartDodge();
+	/// <summary>
 	/// RB弾を更新します。
 	/// </summary>
 	void RBShoot();
@@ -423,6 +432,17 @@ private:
 	/// </summary>
 	/// <param name="dt">前フレームからの経過時間（秒）</param>
 	void UpdateRumble(float dt);
+	// ======================================================================
+	// 回避行動
+	// ======================================================================
+	bool  isDodging_ = false; // 回避行動中かどうか
+	float dodgeT_ = 0.0f; // 回避行動の経過時間
+	float dodgeDuration_ = 0.22f; // 回避時間（短いほどキビキビ）
+	float dodgeDistance_ = 14.0f; // 回避距離（好みで）
+	Vector3 dodgeStartPos_ = { 0,0,0 }; // 回避開始位置
+	Vector3 dodgeDir_ = { 0,0,0 }; // 回避方向（正規化済み）
+
+
 
 
 	int   lastHitAttackId_ = -1; // 最後に当たった攻撃ID
