@@ -99,14 +99,18 @@ namespace TKM {
 		// 右側UI（LB / RB）
 		std::unique_ptr<Sprite> uiLB_;
 		std::unique_ptr<Sprite> uiRB_;
+		std::unique_ptr<Sprite> uiX_;
 		std::string lbTex_;
 		std::string rbTex_;
+		std::string xTex_;
 
 		Vector2 lbTexSize_{};
 		Vector2 rbTexSize_{};
+		Vector2 xTexSize_{};
 
 		Vector2 lbDrawSize_{};
 		Vector2 rbDrawSize_{};
+		Vector2 xDrawSize_{};
 
 		// 数値で調整するパラメータ
 		float rightUiScale_ = 0.20f; // これを変えるだけで大きさ変わる
@@ -119,6 +123,7 @@ namespace TKM {
 		// 色（押下で変える）
 		Vector4 colLB_{ 1.0f,1.0f,1.0f,1.0f };
 		Vector4 colRB_{ 1.0f,1.0f,1.0f,1.0f };
+		Vector4 colX_{ 1.0f,1.0f,1.0f,1.0f };
 
 		// 他UI（既存）
 		std::unique_ptr<TKM::RBGaugeUI> rbGaugeUI_;
@@ -136,10 +141,12 @@ namespace TKM {
 		// 個別：スケール
 		float lbScale_ = 0.065f;
 		float rbScale_ = 0.114f;
+		float xScale_ = 0.066f;
 
 		// オフセット（右下基準からのズラし）
 		Vector2 lbOffset_{ 0.0f, 0.0f };
 		Vector2 rbOffset_{ 0.0f, 0.0f };
+		Vector2 xOffset_{ 0.0f, 0.0f };
 
 		// 個別：色（押下色を後でいじるなら）
 		Vector4 idleCol_{ 1.0f, 1.0f, 1.0f, 0.75f };

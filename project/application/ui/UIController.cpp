@@ -58,9 +58,11 @@ namespace TKM {
 	void UIController::ApplyRightUiSizes_() {
 		lbDrawSize_ = { lbTexSize_.x * lbScale_, lbTexSize_.y * lbScale_ };
 		rbDrawSize_ = { rbTexSize_.x * rbScale_, rbTexSize_.y * rbScale_ };
+		xDrawSize_ = { xTexSize_.x * xScale_, xTexSize_.y * xScale_ };
 
 		if (uiLB_) uiLB_->SetSize(lbDrawSize_);
 		if (uiRB_) uiRB_->SetSize(rbDrawSize_);
+		if (uiX_) uiX_->SetSize(xDrawSize_);
 	}
 
 	void UIController::ApplyRightUiPositions_() {
@@ -77,11 +79,14 @@ namespace TKM {
 		lbPos.x += lbOffset_.x;
 		lbPos.y += lbOffset_.y;
 
-		// LT（LBの上に積む）
-		Vector2 ltPos{ baseX, baseY - (rbDrawSize_.y + rightUiSpacing_) - (lbDrawSize_.y + rightUiSpacing_) };
+		// X（LBの上に積む）
+		Vector2 xPos{ baseX, baseY - (rbDrawSize_.y + rightUiSpacing_) - (lbDrawSize_.y + rightUiSpacing_) };
+		xPos.x += xOffset_.x;
+		xPos.y += xOffset_.y;
 
 		if (uiRB_) uiRB_->SetPosition(rbPos);
 		if (uiLB_) uiLB_->SetPosition(lbPos);
+		if (uiX_) uiX_->SetPosition(xPos);
 	}
 
 	void UIController::Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, BaseScene* parentScene, float screenW, float screenH) {
@@ -99,13 +104,16 @@ namespace TKM {
 
 		colLB_ = { 1,1,1,1 };
 		colRB_ = { 1,1,1,1 };
+		colX_ = { 1,1,1,1 };
 
 		// 右側UI（差し替えたい画像パスはここだけ）
 		lbTex_ = "./resources/LB_ui.png";
 		rbTex_ = "./resources/RB_ui.png";
+		xTex_ = "./resources/X_ui.png";
 
 		uiLB_ = CreateSprite_(lbTex_, { 1.0f, 1.0f }, &lbTexSize_);
 		uiRB_ = CreateSprite_(rbTex_, { 1.0f, 1.0f }, &rbTexSize_);
+		uiX_ = CreateSprite_(xTex_, { 1.0f, 1.0f }, &xTexSize_);
 
 		ApplyRightUiSizes_();
 		ApplyRightUiPositions_();
@@ -175,13 +183,15 @@ namespace TKM {
 		Input* in = Input::GetInstance();
 		const bool rbDown = in->PushButton(XINPUT_GAMEPAD_RIGHT_SHOULDER);
 		const bool lbDown = in->PushButton(XINPUT_GAMEPAD_LEFT_SHOULDER);
-		const bool ltDown = (in->GetLeftTrigger() > 30);
+		const bool xDown = in->PushButton(XINPUT_GAMEPAD_X);
 
 		colRB_ = rbDown ? onCol_ : idleCol_;
 		colLB_ = lbDown ? onCol_ : idleCol_;
+		colX_ = xDown ? onCol_ : idleCol_;
 
 		if (uiLB_) uiLB_->Update();
 		if (uiRB_) uiRB_->Update();
+		if (uiX_) uiX_->Update();
 
 		if (player && hpFill_) {
 			float rate = player->GetHPRate();
@@ -210,6 +220,7 @@ namespace TKM {
 
 		if (uiLB_) { uiLB_->SetColor(mulAlpha(colLB_)); uiLB_->Draw(); }
 		if (uiRB_) { uiRB_->SetColor(mulAlpha(colRB_)); uiRB_->Draw(); }
+		if (uiX_) { uiX_->SetColor(mulAlpha(colX_)); uiX_->Draw(); }
 
 		if (rbGaugeUI_) rbGaugeUI_->Draw();
 	}
@@ -241,6 +252,13 @@ namespace TKM {
 		if (ImGui::TreeNode("LB")) {
 			changed |= ImGui::DragFloat("Scale##lb", &lbScale_, 0.001f, 0.01f, 2.0f);
 			changed |= ImGui::DragFloat2("Offset##lb", &lbOffset_.x, 0.5f, -500.0f, 500.0f);
+			ImGui::TreePop();
+		}
+
+		// X
+		if (ImGui::TreeNode("X")) {
+			changed |= ImGui::DragFloat("Scale##x", &xScale_, 0.001f, 0.01f, 2.0f);
+			changed |= ImGui::DragFloat2("Offset##x", &xOffset_.x, 0.5f, -500.0f, 500.0f);
 			ImGui::TreePop();
 		}
 
