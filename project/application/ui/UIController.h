@@ -152,5 +152,27 @@ namespace TKM {
 		Vector4 idleCol_{ 1.0f, 1.0f, 1.0f, 0.75f };
 		Vector4 onCol_{ 1.0f, 0.25f, 0.25f, 1.0f };
 
+		// シェイク（押下中だけ位置を小刻みにズラす）
+		float shakeAmpPx_ = 3.0f;     // 揺れ幅（ピクセル）
+		float shakeFreq_ = 45.0f;     // 更新頻度っぽいやつ（大きいほど細かく震える）
+
+		// 押下継続時間（ボタンごと）
+		float shakeT_RB_ = 0.0f;
+		float shakeT_LB_ = 0.0f;
+		float shakeT_X_ = 0.0f;
+
+		// 基準座標（ApplyRightUiPositions_で決めた位置を保持）
+		Vector2 basePosRB_{};
+		Vector2 basePosLB_{};
+		Vector2 basePosX_{};
+
+		/// <summary>
+		/// 押下中はスプライトの位置を小刻みにズラしてシェイクさせる処理。tは押下継続時間で、これを元に揺れのオフセットを計算します。
+		/// </summary>
+		/// <param name="sp">揺らす対象のスプライト</param>
+		/// <param name="basePos">揺らす前の基準位置</param>
+		/// <param name="down">そのボタンが押されているかどうか</param>
+		/// <param name="t">押下継続時間。これを元に揺れのオフセットを計算します。</param>
+		void ApplyShake_(Sprite* sp, const Vector2& basePos, bool down, float& t);
 	};
 }

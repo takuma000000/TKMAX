@@ -84,9 +84,36 @@ namespace TKM {
 		xPos.x += xOffset_.x;
 		xPos.y += xOffset_.y;
 
-		if (uiRB_) uiRB_->SetPosition(rbPos);
-		if (uiLB_) uiLB_->SetPosition(lbPos);
-		if (uiX_) uiX_->SetPosition(xPos);
+		// 基準座標を保存（ここがないとシェイク戻し先が分からない）
+		basePosRB_ = rbPos;
+		basePosLB_ = lbPos;
+		basePosX_ = xPos;
+
+		// ひとまず基準位置で配置
+		if (uiRB_) uiRB_->SetPosition(basePosRB_);
+		if (uiLB_) uiLB_->SetPosition(basePosLB_);
+		if (uiX_)  uiX_->SetPosition(basePosX_);
+	}
+
+	void UIController::ApplyShake_(Sprite* sp, const Vector2& basePos, bool down, float& t) {
+		if (!sp) { return; }
+
+		if (!down) {
+			t = 0.0f;
+			sp->SetPosition(basePos);
+			return;
+		}
+
+		// 持続時間0.5秒のシンプルな揺れアニメーション
+		float r1 = MyMath::Rand01() * 2.0f - 1.0f; // -1..1
+		float r2 = MyMath::Rand01() * 2.0f - 1.0f;
+
+		// 揺れ幅をほんの少し変動させて“震え感”を強める
+		float amp = shakeAmpPx_;
+		float sx = r1 * amp;
+		float sy = r2 * amp;
+
+		sp->SetPosition({ basePos.x + sx, basePos.y + sy });
 	}
 
 	void UIController::Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, BaseScene* parentScene, float screenW, float screenH) {
@@ -99,8 +126,8 @@ namespace TKM {
 
 		hudAlpha_ = 1.0f;
 
-		idleCol_ = { 1,1,1,0.75f };
-		onCol_ = { 1,0.25f,0.25f,1.0f };
+		idleCol_ = { 1,1,1,1.0f }; // 押されてないときは通常の色
+		onCol_ = { 1,0.25f,0.25f,1.0f }; // 押されたときは赤みが強くなるように
 
 		colLB_ = { 1,1,1,1 };
 		colRB_ = { 1,1,1,1 };
@@ -189,9 +216,14 @@ namespace TKM {
 		colLB_ = lbDown ? onCol_ : idleCol_;
 		colX_ = xDown ? onCol_ : idleCol_;
 
+		// UIの更新はここで行う。シェイクもここで行う（押されてるフレームだけシェイクさせるため）。
 		if (uiLB_) uiLB_->Update();
 		if (uiRB_) uiRB_->Update();
 		if (uiX_) uiX_->Update();
+		// シェイクは押されてるフレームだけ適用して、離されたら即座に元の位置に戻す
+		if (uiRB_) ApplyShake_(uiRB_.get(), basePosRB_, rbDown, shakeT_RB_); // 押されたフレームだけシェイクさせる
+		if (uiLB_) ApplyShake_(uiLB_.get(), basePosLB_, lbDown, shakeT_LB_); // 押されたフレームだけシェイクさせる
+		if (uiX_)  ApplyShake_(uiX_.get(), basePosX_, xDown, shakeT_X_); // 押されたフレームだけシェイクさせる
 
 		if (player && hpFill_) {
 			float rate = player->GetHPRate();
