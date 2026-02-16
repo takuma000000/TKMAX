@@ -1067,26 +1067,37 @@ void Player::HandleDodge(float dt) {
 	if (!isDodging_) return;
 
 	dodgeT_ += dt;
-	float u = dodgeT_ / std::max(0.001f, dodgeDuration_);
-	if (u > 1.0f) u = 1.0f;
 
-	// Ease Out（スッと出てスッと止まる）
-	float s = 1.0f - std::pow(1.0f - u, 3.0f);
+	// 進行（移動/回転）
+	// ※もし Player.h が dodgeMoveDuration_ になってるなら、ここだけ名前を合わせてね
+	float uMove = dodgeT_ / std::max(0.001f, dodgeDuration_);
+	if (uMove > 1.0f) uMove = 1.0f;
 
-	// 位置
-	Vector3 pos = dodgeStartPos_ + dodgeDir_ * (dodgeDistance_ * s);
-	pos.x = std::clamp(pos.x, moveMin_.x, moveMax_.x);
-	pos.y = std::clamp(pos.y, moveMin_.y, moveMax_.y);
-	pos.z = 0.0f;
-	object_->SetTranslate(pos);
+	float uSpin = dodgeT_ / std::max(0.001f, dodgeSpinDuration_);
+	if (uSpin > 1.0f) uSpin = 1.0f;
 
-	// 見た目：1回転（Z回転）
-	Vector3 rot = object_->GetRotate();
-	rot.z = bankAngle_ + (MyMath::GetPI() * 2.0f) * u;
-	object_->SetRotate(rot);
+	// EaseInOutSine（移動も回転も丁寧になる）
+	float eMove = 0.5f - 0.5f * std::cos(MyMath::GetPI() * uMove);
+	float eSpin = 0.5f - 0.5f * std::cos(MyMath::GetPI() * uSpin);
 
-	// 終了
-	if (u >= 1.0f) {
+	// 位置：毎フレーム更新（これで「移動し終わってから回転」にならない）
+	{
+		Vector3 pos = dodgeStartPos_ + dodgeDir_ * (dodgeDistance_ * eMove);
+		pos.x = std::clamp(pos.x, moveMin_.x, moveMax_.x);
+		pos.y = std::clamp(pos.y, moveMin_.y, moveMax_.y);
+		pos.z = 0.0f;
+		object_->SetTranslate(pos);
+	}
+
+	// 回転：毎フレーム更新（丁寧に1回転）
+	{
+		Vector3 rot = object_->GetRotate();
+		rot.z = bankAngle_ + (MyMath::GetPI() * 2.0f) * dodgeSpinTurns_ * eSpin;
+		object_->SetRotate(rot);
+	}
+
+	// 終了：移動と回転の両方が終わってから
+	if (uMove >= 1.0f && uSpin >= 1.0f) {
 		isDodging_ = false;
 
 		// 回転を戻して通常のバンクに復帰

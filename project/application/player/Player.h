@@ -437,11 +437,12 @@ private:
 	// ======================================================================
 	bool  isDodging_ = false; // 回避行動中かどうか
 	float dodgeT_ = 0.0f; // 回避行動の経過時間
-	float dodgeDuration_ = 0.22f; // 回避時間（短いほどキビキビ）
-	float dodgeDistance_ = 14.0f; // 回避距離（好みで）
+	float dodgeDuration_ = 0.35f; // 回避行動の継続時間
+	float dodgeDistance_ = 14.0f; // 回避行動の移動距離
+	float dodgeSpinDuration_ = 0.42f; // 回避行動のスピン（回転）継続時間
+	float dodgeSpinTurns_ = 1.0f; // 回避行動のスピン回転数（例: 1.0なら1回転）
 	Vector3 dodgeStartPos_ = { 0,0,0 }; // 回避開始位置
 	Vector3 dodgeDir_ = { 0,0,0 }; // 回避方向（正規化済み）
-
 
 
 
