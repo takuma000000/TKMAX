@@ -223,23 +223,64 @@ namespace TKM {
 		const bool rbDown = in->PushButton(XINPUT_GAMEPAD_RIGHT_SHOULDER);
 		const bool lbDown = in->PushButton(XINPUT_GAMEPAD_LEFT_SHOULDER);
 		const bool xDown = in->PushButton(XINPUT_GAMEPAD_X);
-		const bool lsDown = in->PushButton(XINPUT_GAMEPAD_LEFT_THUMB);
 
+		// ---- 左スティック入力（倒し量で判定）----
+		const SHORT rawX = in->GetLeftStickX();
+		const SHORT rawY = in->GetLeftStickY();
+
+		auto normAxis = [&](SHORT v)->float {
+			// -32768 対策（負側だけ分母が違う）
+			float f = (v >= 0) ? (float)v / 32767.0f : (float)v / 32768.0f;
+			if (f < -1.0f) f = -1.0f;
+			if (f > 1.0f) f = 1.0f;
+			return f;
+			};
+
+		auto applyDeadzone = [&](float a)->float {
+			float absA = (a < 0.0f) ? -a : a;
+			if (absA <= lsDeadzone_) {
+				return 0.0f;
+			}
+			// 0..1 に再マッピング
+			float t = (absA - lsDeadzone_) / (1.0f - lsDeadzone_);
+			return (a < 0.0f) ? -t : t;
+			};
+
+		float lsX = applyDeadzone(normAxis(rawX));
+		float lsY = applyDeadzone(normAxis(rawY));
+
+		// 「動かしてる間ずっと赤」判定
+		const bool lsMoving = (lsX != 0.0f) || (lsY != 0.0f);
+
+		// ---- 色 ----
 		colRB_ = rbDown ? onCol_ : idleCol_;
 		colLB_ = lbDown ? onCol_ : idleCol_;
 		colX_ = xDown ? onCol_ : idleCol_;
-		colLS_ = lsDown ? onCol_ : idleCol_;
+		colLS_ = lsMoving ? onCol_ : idleCol_;
 
-		// UIの更新はここで行う。シェイクもここで行う（押されてるフレームだけシェイクさせるため）。
+		// ---- UI Update ----
 		if (uiLB_) uiLB_->Update();
 		if (uiRB_) uiRB_->Update();
-		if (uiX_) uiX_->Update();
+		if (uiX_)  uiX_->Update();
 		if (uiLS_) uiLS_->Update();
-		// シェイクは押されてるフレームだけ適用して、離されたら即座に元の位置に戻す
-		if (uiRB_) ApplyShake_(uiRB_.get(), basePosRB_, rbDown, shakeT_RB_); // 押されたフレームだけシェイクさせる
-		if (uiLB_) ApplyShake_(uiLB_.get(), basePosLB_, lbDown, shakeT_LB_); // 押されたフレームだけシェイクさせる
-		if (uiX_)  ApplyShake_(uiX_.get(), basePosX_, xDown, shakeT_X_); // 押されたフレームだけシェイクさせる
 
+		// ---- 押下中シェイク（必要な分だけ）----
+		if (uiRB_) ApplyShake_(uiRB_.get(), basePosRB_, rbDown, shakeT_RB_);
+		if (uiLB_) ApplyShake_(uiLB_.get(), basePosLB_, lbDown, shakeT_LB_);
+		if (uiX_)  ApplyShake_(uiX_.get(), basePosX_, xDown, shakeT_X_);
+		// LSは「倒し」で動くのでシェイク無し（入れたければここで ApplyShake_ してOK）
+
+		// ---- LS：倒し方向に同期して動かす ----
+		if (uiLS_) {
+			// 画面Yは下が+なので、スティック上方向(+)はYをマイナスへ
+			Vector2 ofs{
+				lsX * lsMoveRangePx_,
+				-lsY * lsMoveRangePx_
+			};
+			uiLS_->SetPosition({ basePosLS_.x + ofs.x, basePosLS_.y + ofs.y });
+		}
+
+		// ---- HP ----
 		if (player && hpFill_) {
 			float rate = player->GetHPRate();
 			if (rate < 0.0f) rate = 0.0f;
@@ -249,10 +290,11 @@ namespace TKM {
 			s.x *= rate;
 			hpFill_->SetSize(s);
 		}
+
 		if (hpFrame_) hpFrame_->Update();
 		if (hpFill_)  hpFill_->Update();
 
-		DrawImGui(); // デバッグ用のImGui表示
+		DrawImGui();
 	}
 
 	void UIController::Draw() {
@@ -284,47 +326,49 @@ namespace TKM {
 
 		ImGui::Text("右側UI：個別調整");
 
-		changed |= ImGui::DragFloat("Margin(px)", &rightUiMargin_, 0.5f, 0.0f, 300.0f);
-		changed |= ImGui::DragFloat("Spacing(px)", &rightUiSpacing_, 0.5f, 0.0f, 200.0f);
+		changed |= ImGui::DragFloat("右下余白(px)", &rightUiMargin_, 0.5f, 0.0f, 300.0f);
+		changed |= ImGui::DragFloat("縦間隔(px)", &rightUiSpacing_, 0.5f, 0.0f, 200.0f);
 
 		ImGui::Separator();
 
 		// RB
-		if (ImGui::TreeNode("RB")) {
-			changed |= ImGui::DragFloat("Scale##rb", &rbScale_, 0.001f, 0.01f, 2.0f);
-			changed |= ImGui::DragFloat2("Offset##rb", &rbOffset_.x, 0.5f, -500.0f, 500.0f);
+		if (ImGui::TreeNode("RB（右バンパー）")) {
+			changed |= ImGui::DragFloat("サイズ##rb", &rbScale_, 0.001f, 0.01f, 2.0f);
+			changed |= ImGui::DragFloat2("位置オフセット##rb", &rbOffset_.x, 0.5f, -500.0f, 500.0f);
 			ImGui::TreePop();
 		}
 
 		// LB
-		if (ImGui::TreeNode("LB")) {
-			changed |= ImGui::DragFloat("Scale##lb", &lbScale_, 0.001f, 0.01f, 2.0f);
-			changed |= ImGui::DragFloat2("Offset##lb", &lbOffset_.x, 0.5f, -500.0f, 500.0f);
+		if (ImGui::TreeNode("LB（左バンパー）")) {
+			changed |= ImGui::DragFloat("サイズ##lb", &lbScale_, 0.001f, 0.01f, 2.0f);
+			changed |= ImGui::DragFloat2("位置オフセット##lb", &lbOffset_.x, 0.5f, -500.0f, 500.0f);
 			ImGui::TreePop();
 		}
 
 		// X
-		if (ImGui::TreeNode("X")) {
-			changed |= ImGui::DragFloat("Scale##x", &xScale_, 0.001f, 0.01f, 2.0f);
-			changed |= ImGui::DragFloat2("Offset##x", &xOffset_.x, 0.5f, -500.0f, 500.0f);
+		if (ImGui::TreeNode("Xボタン")) {
+			changed |= ImGui::DragFloat("サイズ##x", &xScale_, 0.001f, 0.01f, 2.0f);
+			changed |= ImGui::DragFloat2("位置オフセット##x", &xOffset_.x, 0.5f, -500.0f, 500.0f);
 			ImGui::TreePop();
 		}
 
 		// LS
-		if (ImGui::TreeNode("LS")) {
-			changed |= ImGui::DragFloat("Scale##ls", &lsScale_, 0.001f, 0.01f, 2.0f);
-			changed |= ImGui::DragFloat2("Offset##ls", &lsOffset_.x, 0.5f, -500.0f, 500.0f);
+		if (ImGui::TreeNode("左スティック（LS）")) {
+			changed |= ImGui::DragFloat("サイズ##ls", &lsScale_, 0.001f, 0.01f, 2.0f);
+			changed |= ImGui::DragFloat2("位置オフセット##ls", &lsOffset_.x, 0.5f, -500.0f, 500.0f);
+			changed |= ImGui::DragFloat("移動量(px)##ls", &lsMoveRangePx_, 0.1f, 0.0f, 50.0f);
+			changed |= ImGui::DragFloat("デッドゾーン##ls", &lsDeadzone_, 0.01f, 0.0f, 0.95f);
 			ImGui::TreePop();
 		}
 
 		ImGui::Separator();
-		if (ImGui::TreeNode("Colors")) {
-			changed |= ImGui::ColorEdit4("Idle", &idleCol_.x);
-			changed |= ImGui::ColorEdit4("On", &onCol_.x);
+		if (ImGui::TreeNode("色設定")) {
+			changed |= ImGui::ColorEdit4("通常色", &idleCol_.x);
+			changed |= ImGui::ColorEdit4("押下色", &onCol_.x);
 			ImGui::TreePop();
 		}
 
-		if (ImGui::Button("Reset")) {
+		if (ImGui::Button("リセット")) {
 			rightUiMargin_ = 20.0f;
 			rightUiSpacing_ = 10.0f;
 

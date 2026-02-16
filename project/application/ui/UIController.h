@@ -174,6 +174,11 @@ namespace TKM {
 		Vector2 basePosX_{};
 		Vector2 basePosLS_{};
 
+		// LSの倒し方向で動く量（ピクセル）
+		float lsMoveRangePx_ = 10.0f;
+		// LSのデッドゾーン（0.0f〜1.0f）
+		float lsDeadzone_ = 0.20f;
+
 		/// <summary>
 		/// 押下中はスプライトの位置を小刻みにズラしてシェイクさせる処理。tは押下継続時間で、これを元に揺れのオフセットを計算します。
 		/// </summary>
