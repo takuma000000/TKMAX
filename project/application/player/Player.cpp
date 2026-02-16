@@ -766,38 +766,10 @@ void Player::RTShoot() {
 
 void Player::LBShoot() {
 	TKM::Input* input = TKM::Input::GetInstance();
-	// ▼ LB：全敵必中弾
-	if (input->TriggerButton(XINPUT_GAMEPAD_LEFT_SHOULDER) && allEnemies_) {
-		for (auto& enemy : *allEnemies_) { // 全敵ループ
-			if (enemy->IsDead()) continue;
-			// 敵ごとに弾を生成
-			auto bullet = std::make_unique<PlayerBullet>();
-			bullet->Initialize(common_, dxCommon_);
 
-			Vector3 startPos = object_->GetTranslate(); // 発射位置
-			Vector3 enemyPos = enemy->GetWorldPosition(); // 敵位置
-			Vector3 dir = MyMath::Normalize(enemyPos - startPos); // 方向計算
-
-			// 弾設定
-			bullet->SetPosition(startPos); // 弾位置設定
-			bullet->SetVelocity(dir * normalBulletSpeed_); // 速度設定
-			bullet->SetCamera(camera_); // カメラ設定
-			bullet->SetEnemy(enemy.get()); // 敵設定
-			bullet->SetPlayer(this); // プレイヤー設定
-
-			bullet->SetCore(core_);
-
-			// LB専用の軌跡
-			bullet->SetTrailGroup("trail_lb");
-
-			bullets_.push_back(std::move(bullet)); // 弾リストに追加
-		}
-	}
-}
-
-void Player::LTShoot() {
-	TKM::Input* input = TKM::Input::GetInstance();
-	if ((input->GetLeftTrigger() > kTriggerThreshold) && !ltHeld_) {
+	// ▼ LB：ホーミング弾（元LT）
+	// ※「1押し1発」のため、ltHeld_をそのまま流用（名前は気にしなくてOK）
+	if (input->TriggerButton(XINPUT_GAMEPAD_LEFT_SHOULDER) && !ltHeld_) {
 		auto bullet = std::make_unique<PlayerBullet>();
 		bullet->Initialize(common_, dxCommon_);
 
@@ -808,7 +780,7 @@ void Player::LTShoot() {
 		bullet->SetHoming(true, kHomingBulletSpeed_); // ベジェ終了後に効く追尾速度
 		bullet->SetCamera(camera_);
 		bullet->SetPlayer(this);
-		bullet->SetTrailGroup("trail_lt");
+		bullet->SetTrailGroup("trail_lt"); // 見た目もLBに寄せるなら "trail_lb" にしてOK
 
 		// ここでラジアルブラー発火
 		if (radialBlur_) {
@@ -840,41 +812,68 @@ void Player::LTShoot() {
 		}
 
 		// --- 大きな弧のパラメータ（距離で自動スケール） ---
-		float reach = std::clamp(distToEnemy * 1.10f, 18.0f, 48.0f); // Z前進量（合流点まで）
-		float sweep = std::clamp(distToEnemy * 1.00f, 18.0f, 40.0f); // 横張り（画面外へ）
-		float lift = std::clamp(distToEnemy * 0.60f, 8.0f, 22.0f); // 上げ量（上にもはみ出す）
-		float bezTime = std::clamp(distToEnemy * 0.16f, 1.2f, 3.5f); // ベジェ飛行時間
+		float reach = std::clamp(distToEnemy * 1.10f, 18.0f, 48.0f);
+		float sweep = std::clamp(distToEnemy * 1.00f, 18.0f, 40.0f);
+		float lift = std::clamp(distToEnemy * 0.60f, 8.0f, 22.0f);
+		float bezTime = std::clamp(distToEnemy * 0.16f, 1.2f, 3.5f);
 
-		// 制御点：P0(開始) → P1(強く外へ) → P2(外を保ちつつ敵方向へ) → P3(敵手前で合流)
 		Vector3 enemyPos = (enemy_ && !enemy_->IsDead())
 			? enemy_->GetWorldPosition()
-			: p0 + toEnemyDir * reach; // 保険で前方
-		// P3 を「敵位置」にする（敵に向かって弧のまま当たる）
+			: p0 + toEnemyDir * reach;
+
 		Vector3 p3 = enemyPos;
-		// P1, P2 は今まで通りだけど、終点がp3に変わったので弧が自然に敵に吸い込まれる
 		Vector3 p1 = p0 + right * (side * sweep)
 			+ Vector3{ 0.0f, lift * 0.7f, 0.0f }
 		+ toEnemyDir * (reach * 0.25f);
 		Vector3 p2 = p3 - right * (side * sweep * 0.85f)
 			+ Vector3{ 0.0f, lift, 0.0f };
 
-		// ベジェ後は軽く前へ押し出してからホーミング
 		Vector3 vAfter = toEnemyDir * 0.40f; // 前方速度
-		// ベジェ弾道開始
 		bullet->StartSpawnBezier(p0, p1, p2, p3, bezTime, vAfter);
-		// ホーミング設定
-		bullet->SetHomingDelay(0.12f); // ベジェ完了から追尾開始までの遅延時間
-		// 発射
+		bullet->SetHomingDelay(0.12f);
+
 		bullets_.push_back(std::move(bullet));
 
-		// 見せ場用の軽いズーム＆シェイク
 		ZoomCamera();
 		StartCameraShake(10);
 
-		// LT弾 発射の瞬間だけ軽く振動（0～65535）
+		// 発射の瞬間だけ軽く振動
 		StartRumble(0.12f, 42000, 42000);
 	}
-	ltHeld_ = (input->GetLeftTrigger() > kTriggerThreshold);
+
+	// 押しっぱなし防止ラッチ（名前ltHeld_のまま流用）
+	ltHeld_ = input->TriggerButton(XINPUT_GAMEPAD_LEFT_SHOULDER);
+}
+
+void Player::LTShoot() {
+	TKM::Input* input = TKM::Input::GetInstance();
+
+	// ▼ LT：全敵必中弾（元LB）
+	if ((input->GetLeftTrigger() > kTriggerThreshold) && allEnemies_) {
+		for (auto& enemy : *allEnemies_) {
+			if (enemy->IsDead()) continue;
+
+			auto bullet = std::make_unique<PlayerBullet>();
+			bullet->Initialize(common_, dxCommon_);
+
+			Vector3 startPos = object_->GetTranslate();
+			Vector3 enemyPos = enemy->GetWorldPosition();
+			Vector3 dir = MyMath::Normalize(enemyPos - startPos);
+
+			bullet->SetPosition(startPos);
+			bullet->SetVelocity(dir * normalBulletSpeed_);
+			bullet->SetCamera(camera_);
+			bullet->SetEnemy(enemy.get());
+			bullet->SetPlayer(this);
+
+			bullet->SetCore(core_);
+
+			// LT側に移したので trail も合わせたいなら "trail_lt" にしてOK
+			bullet->SetTrailGroup("trail_lb");
+
+			bullets_.push_back(std::move(bullet));
+		}
+	}
 }
 
 void Player::UpdateCameraFollowThirdPerson(float dt) {
