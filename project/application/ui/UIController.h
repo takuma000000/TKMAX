@@ -101,20 +101,24 @@ namespace TKM {
 		std::unique_ptr<Sprite> uiRB_;
 		std::unique_ptr<Sprite> uiX_;
 		std::unique_ptr<Sprite> uiLS_;
+		std::unique_ptr<Sprite> uiRBGaugeIcon_;
 		std::string lbTex_;
 		std::string rbTex_;
 		std::string xTex_;
 		std::string lsTex_;
+		std::string rbGaugeIconTex_;
 
 		Vector2 lbTexSize_{};
 		Vector2 rbTexSize_{};
 		Vector2 xTexSize_{};
 		Vector2 lsTexSize_{};
+		Vector2 rbGaugeIconTexSize_{};
 
 		Vector2 lbDrawSize_{};
 		Vector2 rbDrawSize_{};
 		Vector2 xDrawSize_{};
 		Vector2 lsDrawSize_{};
+		Vector2 rbGaugeIconDrawSize_{};
 
 		// 数値で調整するパラメータ
 		float rightUiScale_ = 0.20f; // これを変えるだけで大きさ変わる
@@ -129,8 +133,9 @@ namespace TKM {
 		Vector4 colRB_{ 1.0f,1.0f,1.0f,1.0f };
 		Vector4 colX_{ 1.0f,1.0f,1.0f,1.0f };
 		Vector4 colLS_{ 1.0f,1.0f,1.0f,1.0f };
+		Vector4 colRBGaugeIcon_{ 1.0f,1.0f,1.0f,1.0f };
 
-		// 他UI（既存）
+		// 他UI
 		std::unique_ptr<TKM::RBGaugeUI> rbGaugeUI_;
 
 		std::unique_ptr<Sprite> hpFrame_;
@@ -148,12 +153,14 @@ namespace TKM {
 		float rbScale_ = 0.114f;
 		float xScale_ = 0.066f;
 		float lsScale_ = 0.064f;
+		float rbGaugeIconScale_ = 0.084f;
 
 		// オフセット（右下基準からのズラし）
 		Vector2 lbOffset_{ 0.0f, 0.0f };
 		Vector2 rbOffset_{ 0.0f, 0.0f };
 		Vector2 xOffset_{ 0.0f, 0.0f };
 		Vector2 lsOffset_{ 1.0f, -37.5f };
+		Vector2 rbGaugeIconOffset_{ -890.50f, 307.0f };
 
 		// 個別：色（押下色を後でいじるなら）
 		Vector4 idleCol_{ 1.0f, 1.0f, 1.0f, 0.75f };
@@ -167,12 +174,14 @@ namespace TKM {
 		float shakeT_RB_ = 0.0f;
 		float shakeT_LB_ = 0.0f;
 		float shakeT_X_ = 0.0f;
+		float shakeT_RBGaugeIcon_ = 0.0f;
 
 		// 基準座標（ApplyRightUiPositions_で決めた位置を保持）
 		Vector2 basePosRB_{};
 		Vector2 basePosLB_{};
 		Vector2 basePosX_{};
 		Vector2 basePosLS_{};
+		Vector2 basePosRBGaugeIcon_{};
 
 		// LSの倒し方向で動く量（ピクセル）
 		float lsMoveRangePx_ = 10.0f;

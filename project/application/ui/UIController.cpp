@@ -60,11 +60,13 @@ namespace TKM {
 		rbDrawSize_ = { rbTexSize_.x * rbScale_, rbTexSize_.y * rbScale_ };
 		xDrawSize_ = { xTexSize_.x * xScale_, xTexSize_.y * xScale_ };
 		lsDrawSize_ = { lsTexSize_.x * lsScale_, lsTexSize_.y * lsScale_ };
+		rbGaugeIconDrawSize_ = { rbGaugeIconTexSize_.x * rbGaugeIconScale_, rbGaugeIconTexSize_.y * rbGaugeIconScale_ };
 
 		if (uiLB_) uiLB_->SetSize(lbDrawSize_);
 		if (uiRB_) uiRB_->SetSize(rbDrawSize_);
 		if (uiX_) uiX_->SetSize(xDrawSize_);
 		if (uiLS_) uiLS_->SetSize(lsDrawSize_);
+		if (uiRBGaugeIcon_) uiRBGaugeIcon_->SetSize(rbGaugeIconDrawSize_);
 	}
 
 	void UIController::ApplyRightUiPositions_() {
@@ -91,17 +93,24 @@ namespace TKM {
 		lsPos.x += lsOffset_.x;
 		lsPos.y += lsOffset_.y;
 
+		// RBゲージアイコン（画面下に配置）
+		Vector2 rbGaugeIconPos{ baseX, baseY - (rbDrawSize_.y + rightUiSpacing_) - (lbDrawSize_.y + rightUiSpacing_) - (xDrawSize_.y + rightUiSpacing_) - (lsDrawSize_.y + rightUiSpacing_) };
+		rbGaugeIconPos.x += rbGaugeIconOffset_.x;
+		rbGaugeIconPos.y += rbGaugeIconOffset_.y;
+
 		// 基準座標を保存（ここがないとシェイク戻し先が分からない）
 		basePosRB_ = rbPos;
 		basePosLB_ = lbPos;
 		basePosX_ = xPos;
 		basePosLS_ = lsPos;
+		basePosRBGaugeIcon_ = rbGaugeIconPos;
 
 		// ひとまず基準位置で配置
 		if (uiRB_) uiRB_->SetPosition(basePosRB_);
 		if (uiLB_) uiLB_->SetPosition(basePosLB_);
 		if (uiX_)  uiX_->SetPosition(basePosX_);
 		if (uiLS_) uiLS_->SetPosition(basePosLS_);
+		if (uiRBGaugeIcon_) uiRBGaugeIcon_->SetPosition(rbGaugeIconPos);
 	}
 
 	void UIController::ApplyShake_(Sprite* sp, const Vector2& basePos, bool down, float& t) {
@@ -142,17 +151,20 @@ namespace TKM {
 		colRB_ = { 1,1,1,1 };
 		colX_ = { 1,1,1,1 };
 		colLS_ = { 1,1,1,1 };
+		colRBGaugeIcon_ = { 1,1,1,1 };
 
 		// 右側UI（差し替えたい画像パスはここだけ）
 		lbTex_ = "./resources/LB_ui.png";
 		rbTex_ = "./resources/RB_ui.png";
 		xTex_ = "./resources/X_ui.png";
 		lsTex_ = "./resources/LS_ui.png";
+		rbGaugeIconTex_ = "./resources/RB_gauge_ui.png";
 
 		uiLB_ = CreateSprite_(lbTex_, { 1.0f, 1.0f }, &lbTexSize_);
 		uiRB_ = CreateSprite_(rbTex_, { 1.0f, 1.0f }, &rbTexSize_);
 		uiX_ = CreateSprite_(xTex_, { 1.0f, 1.0f }, &xTexSize_);
 		uiLS_ = CreateSprite_(lsTex_, { 1.0f, 1.0f }, &lsTexSize_);
+		uiRBGaugeIcon_ = CreateSprite_(rbGaugeIconTex_, { 1.0f, 1.0f }, &rbGaugeIconTexSize_);
 
 		ApplyRightUiSizes_();
 		ApplyRightUiPositions_();
@@ -268,11 +280,13 @@ namespace TKM {
 		if (uiRB_) uiRB_->Update();
 		if (uiX_)  uiX_->Update();
 		if (uiLS_) uiLS_->Update();
+		if (uiRBGaugeIcon_) uiRBGaugeIcon_->Update();
 
 		// ---- 押下中シェイク（必要な分だけ）----
 		if (uiRB_) ApplyShake_(uiRB_.get(), basePosRB_, rbDown, shakeT_RB_);
 		if (uiLB_) ApplyShake_(uiLB_.get(), basePosLB_, lbDown, shakeT_LB_);
 		if (uiX_)  ApplyShake_(uiX_.get(), basePosX_, xDown, shakeT_X_);
+		if(uiRBGaugeIcon_) ApplyShake_(uiRBGaugeIcon_.get(), basePosRBGaugeIcon_, rbDown, shakeT_RBGaugeIcon_);
 
 		// ---- LS：倒し方向に同期して動かす ----
 		if (uiLS_) {
@@ -315,6 +329,7 @@ namespace TKM {
 		if (uiRB_) { uiRB_->SetColor(mulAlpha(colRB_)); uiRB_->Draw(); }
 		if (uiX_) { uiX_->SetColor(mulAlpha(colX_)); uiX_->Draw(); }
 		if (uiLS_) { uiLS_->SetColor(mulAlpha(colLS_)); uiLS_->Draw(); }
+		if (uiRBGaugeIcon_) { uiRBGaugeIcon_->SetColor(mulAlpha(colRBGaugeIcon_)); uiRBGaugeIcon_->Draw(); }
 
 		if (rbGaugeUI_) rbGaugeUI_->Draw();
 	}
@@ -362,6 +377,13 @@ namespace TKM {
 			changed |= ImGui::DragFloat2("位置オフセット##ls", &lsOffset_.x, 0.5f, -500.0f, 500.0f);
 			changed |= ImGui::DragFloat("移動量(px)##ls", &lsMoveRangePx_, 0.1f, 0.0f, 50.0f);
 			changed |= ImGui::DragFloat("デッドゾーン##ls", &lsDeadzone_, 0.01f, 0.0f, 0.95f);
+			ImGui::TreePop();
+		}
+
+		// RBゲージアイコン
+		if (ImGui::TreeNode("RBゲージアイコン")) {
+			changed |= ImGui::DragFloat("サイズ##rbGaugeIcon", &rbGaugeIconScale_, 0.001f, 0.01f, 2.0f);
+			changed |= ImGui::DragFloat2("位置オフセット##rbGaugeIcon", &rbGaugeIconOffset_.x, 0.5f, -1500.0f, 500.0f);
 			ImGui::TreePop();
 		}
 
