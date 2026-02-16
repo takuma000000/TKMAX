@@ -255,9 +255,6 @@ void GameScene::LoadTextures() {
 	TextureManager::GetInstance()->LoadTexture("./resources/reticle.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/damageSpark.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/firework_star.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/LB.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/LT.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/RB.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/RB_ui.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/LB_ui.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/X_ui.png");
@@ -267,7 +264,7 @@ void GameScene::LoadTextures() {
 	TextureManager::GetInstance()->LoadTexture("./resources/title_pause.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/gauge_fill_grad.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/gauge_frame_glass.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/RB_gage_ui.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/RB_gauge_ui.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/gauge_shard.jpeg");
 	TextureManager::GetInstance()->LoadTexture("./resources/blue.jpg");
 	TextureManager::GetInstance()->LoadTexture("./resources/gray.jpg");
