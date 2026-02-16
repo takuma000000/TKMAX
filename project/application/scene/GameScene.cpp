@@ -270,6 +270,8 @@ void GameScene::LoadTextures() {
 	TextureManager::GetInstance()->LoadTexture("./resources/gauge_shard.jpeg");
 	TextureManager::GetInstance()->LoadTexture("./resources/blue.jpg");
 	TextureManager::GetInstance()->LoadTexture("./resources/gray.jpg");
+	TextureManager::GetInstance()->LoadTexture("./resources/player_hp.jpg");
+	TextureManager::GetInstance()->LoadTexture("./resources/player_hp_frame.jpg");
 	TextureManager::GetInstance()->LoadTexture("./resources/uvChecker.dds");
 }
 

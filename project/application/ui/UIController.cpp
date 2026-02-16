@@ -166,8 +166,8 @@ namespace TKM {
 		hpFrame_ = std::make_unique<Sprite>();
 		hpFill_ = std::make_unique<Sprite>();
 
-		const std::string hpFrameTex = "./resources/uvChecker.png";
-		const std::string hpFillTex = "./resources/circle.png";
+		const std::string hpFrameTex = "./resources/player_hp_frame.jpg";
+		const std::string hpFillTex = "./resources/player_hp.jpg";
 
 		hpFrame_->Initialize(spriteCommon_, dxCommon_, hpFrameTex);
 		hpFill_->Initialize(spriteCommon_, dxCommon_, hpFillTex);
