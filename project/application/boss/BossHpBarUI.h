@@ -43,9 +43,9 @@ namespace TKM {
 			// 減った区間が光って消える
 			float drainGlowTime_ = 0.22f;
 
-			std::string frameTex_ = "./resources/uvChecker.png";      // 仮（差し替えOK）
-			std::string fillTex_ = "./resources/gradationLine.png";  // 仮（差し替えOK）
-			std::string shardTex_ = "./resources/damageSpark.png";    // 仮（差し替えOK）
+			std::string frameTex_ = "./resources/gauge_frame_glass.png";
+			std::string fillTex_ = "./resources/gauge_fill_grad.png";
+			std::string shardTex_ = "./resources/gauge_shard.jpeg";
 		};
 
 		/// <summary>

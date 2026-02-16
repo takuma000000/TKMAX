@@ -265,6 +265,9 @@ void GameScene::LoadTextures() {
 	TextureManager::GetInstance()->LoadTexture("./resources/resume_pause.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/restart_pause.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/title_pause.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/gauge_fill_grad.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/gauge_frame_glass.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/gauge_shard.jpeg");
 	TextureManager::GetInstance()->LoadTexture("./resources/uvChecker.dds");
 }
 

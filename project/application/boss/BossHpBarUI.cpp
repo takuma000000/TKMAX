@@ -13,12 +13,11 @@ namespace TKM {
 		frame_ = std::make_unique<Sprite>();
 		frame_->Initialize(spriteCommon_, dxCommon_, desc_.frameTex_);
 		frame_->SetParentScene(parentScene_);
-		frame_->SetAutoAdjustTextureSize(false); // 枠も自前制御（"そのままサイズ"事故防止）
+		frame_->SetAutoAdjustTextureSize(false); // 枠も自前制御
 		frame_->SetAnchorPoint({ 0.0f, 0.0f });
 		frame_->SetPosition(desc_.pos_);
 		frame_->SetSize({ desc_.size_.x + 10.0f, desc_.size_.y + 10.0f });
-		// uvCheckerはデバッグ用の当て布なので薄く
-		frame_->SetColor({ 1.0f, 1.0f, 1.0f, 0.18f });
+		frame_->SetColor({ 1.0f, 1.0f, 1.0f, 0.5f });
 
 		// 遅延バー（後ろ）
 		lagFill_ = std::make_unique<Sprite>();
