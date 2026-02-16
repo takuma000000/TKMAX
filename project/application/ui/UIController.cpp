@@ -1,10 +1,87 @@
 #include "UIController.h"
+#include "TextureManager.h"
 #include <algorithm>
+#ifdef USE_IMGUI
+#include "imgui.h"
+#endif
 
 namespace TKM {
 
+	static float Clamp01_(float a) {
+		if (a < 0.0f) return 0.0f;
+		if (a > 1.0f) return 1.0f;
+		return a;
+	}
+
 	void UIController::SetHudAlpha(float a) {
-		hudAlpha_ = std::max(0.0f, std::min(a, 1.0f));
+		hudAlpha_ = Clamp01_(a);
+	}
+
+	void UIController::SetRightUiScale(float s) {
+		if (s < 0.001f) s = 0.001f;
+		rightUiScale_ = s;
+		ApplyRightUiSizes_();
+		ApplyRightUiPositions_();
+	}
+
+	void UIController::SetRightUiMargin(float px) {
+		rightUiMargin_ = px;
+		ApplyRightUiPositions_();
+	}
+
+	void UIController::SetRightUiSpacing(float px) {
+		rightUiSpacing_ = px;
+		ApplyRightUiPositions_();
+	}
+
+	std::unique_ptr<Sprite> UIController::CreateSprite_(const std::string& texPath, const Vector2& anchor, Vector2* outTexSize) {
+		auto sp = std::make_unique<Sprite>();
+		sp->Initialize(spriteCommon_, dxCommon_, texPath);
+
+		// サイズはこっちで数値管理したいので、自動調整はOFF
+		sp->SetAutoAdjustTextureSize(false);
+
+		// テクスチャ切り出しは「画像そのまま」
+		const auto& m = TextureManager::GetInstance()->GetMetadata(texPath);
+		const Vector2 texSize{ (float)m.width, (float)m.height };
+		sp->SetTextureLeftTop({ 0.0f, 0.0f });
+		sp->SetTextureSize(texSize);
+
+		sp->SetAnchorPoint(anchor);
+
+		if (outTexSize) {
+			*outTexSize = texSize;
+		}
+		return sp;
+	}
+
+	void UIController::ApplyRightUiSizes_() {
+		lbDrawSize_ = { lbTexSize_.x * lbScale_, lbTexSize_.y * lbScale_ };
+		rbDrawSize_ = { rbTexSize_.x * rbScale_, rbTexSize_.y * rbScale_ };
+
+		if (uiLB_) uiLB_->SetSize(lbDrawSize_);
+		if (uiRB_) uiRB_->SetSize(rbDrawSize_);
+	}
+
+	void UIController::ApplyRightUiPositions_() {
+		const float baseX = screenW_ - rightUiMargin_;
+		const float baseY = screenH_ - rightUiMargin_;
+
+		// RB
+		Vector2 rbPos{ baseX, baseY };
+		rbPos.x += rbOffset_.x;
+		rbPos.y += rbOffset_.y;
+
+		// LB（RBの上に積む）
+		Vector2 lbPos{ baseX, baseY - (rbDrawSize_.y + rightUiSpacing_) };
+		lbPos.x += lbOffset_.x;
+		lbPos.y += lbOffset_.y;
+
+		// LT（LBの上に積む）
+		Vector2 ltPos{ baseX, baseY - (rbDrawSize_.y + rightUiSpacing_) - (lbDrawSize_.y + rightUiSpacing_) };
+
+		if (uiRB_) uiRB_->SetPosition(rbPos);
+		if (uiLB_) uiLB_->SetPosition(lbPos);
 	}
 
 	void UIController::Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, BaseScene* parentScene, float screenW, float screenH) {
@@ -12,73 +89,42 @@ namespace TKM {
 		dxCommon_ = dxCommon;
 		parentScene_ = parentScene;
 
+		screenW_ = screenW;
+		screenH_ = screenH;
+
 		hudAlpha_ = 1.0f;
-		colLT_ = { 1.0f,1.0f,1.0f,1.0f };
-		colLB_ = { 1.0f,1.0f,1.0f,1.0f };
-		colRB_ = { 1.0f,1.0f,1.0f,1.0f };
 
-		uiLT_ = std::make_unique<Sprite>();
-		uiLB_ = std::make_unique<Sprite>();
-		uiRB_ = std::make_unique<Sprite>();
-		// テクスチャパスを変数化
-		const std::string ltTex = "./resources/LT.png";
-		const std::string lbTex = "./resources/LB_ui.png";
-		const std::string rbTex = "./resources/RB_ui.png";
+		idleCol_ = { 1,1,1,0.75f };
+		onCol_ = { 1,0.25f,0.25f,1.0f };
 
-		uiLT_->Initialize(spriteCommon_, dxCommon_, ltTex);
-		uiLT_->SetAutoAdjustTextureSize(false);
-		uiLB_->Initialize(spriteCommon_, dxCommon_, lbTex);
-		uiLB_->SetAutoAdjustTextureSize(false);
-		uiRB_->Initialize(spriteCommon_, dxCommon_, rbTex);
-		uiRB_->SetAutoAdjustTextureSize(false);
-		{
-			const auto& m = TextureManager::GetInstance()->GetMetadata(ltTex);
-			uiLT_->SetTextureLeftTop({ 0.0f, 0.0f });
-			uiLT_->SetTextureSize({ (float)m.width, (float)m.height });
-		}
-		{
-			const auto& m = TextureManager::GetInstance()->GetMetadata(lbTex);
-			uiLB_->SetTextureLeftTop({ 0.0f, 0.0f });
-			uiLB_->SetTextureSize({ (float)m.width, (float)m.height });
-		}
-		{
-			const auto& m = TextureManager::GetInstance()->GetMetadata(rbTex);
-			uiRB_->SetTextureLeftTop({ 0.0f, 0.0f });
-			uiRB_->SetTextureSize({ (float)m.width, (float)m.height }); // ここはテクスチャサイズに合わせる
-		}
+		colLB_ = { 1,1,1,1 };
+		colRB_ = { 1,1,1,1 };
 
-		uiLT_->SetAnchorPoint({ 1.0f, 1.0f });
-		uiLB_->SetAnchorPoint({ 1.0f, 1.0f });
-		uiRB_->SetAnchorPoint({ 1.0f, 1.0f });
+		// 右側UI（差し替えたい画像パスはここだけ）
+		lbTex_ = "./resources/LB_ui.png";
+		rbTex_ = "./resources/RB_ui.png";
 
-		const Vector2 uiSize = { 100.0f, 100.0f };
-		uiLT_->SetSize(uiSize);
-		uiLB_->SetSize(uiSize);
-		uiRB_->SetSize(uiSize);
+		uiLB_ = CreateSprite_(lbTex_, { 1.0f, 1.0f }, &lbTexSize_);
+		uiRB_ = CreateSprite_(rbTex_, { 1.0f, 1.0f }, &rbTexSize_);
 
-		const Vector4 idle = { 1.0f, 1.0f, 1.0f, 0.85f };
-		uiLT_->SetColor(idle);
-		uiLB_->SetColor(idle);
-		uiRB_->SetColor(idle);
+		ApplyRightUiSizes_();
+		ApplyRightUiPositions_();
 
-		// 先に弾UIを作る（Layoutで位置をいじりたいので）
+		// 弾UI
 		rbGaugeUI_ = std::make_unique<TKM::RBGaugeUI>();
 		TKM::RBGaugeUI::Desc d{};
 		rbGaugeUI_->Initialize(spriteCommon_, dxCommon_, parentScene_, d);
 
-		// --- HPバー ---
+		// HPバー
 		hpFrame_ = std::make_unique<Sprite>();
 		hpFill_ = std::make_unique<Sprite>();
 
-		// ここは仮パス（後で好きな画像に差し替えOK）
 		const std::string hpFrameTex = "./resources/uvChecker.png";
 		const std::string hpFillTex = "./resources/circle.png";
 
 		hpFrame_->Initialize(spriteCommon_, dxCommon_, hpFrameTex);
 		hpFill_->Initialize(spriteCommon_, dxCommon_, hpFillTex);
 
-		// サイズは自前で指定するので autoAdjust は切る。
-		// ただし textureSize_ がデフォルト64のままだとUVがバグるので、metadataから正しい切り出しサイズを入れる。
 		hpFrame_->SetAutoAdjustTextureSize(false);
 		hpFill_->SetAutoAdjustTextureSize(false);
 
@@ -92,7 +138,6 @@ namespace TKM {
 			hpFill_->SetTextureSize({ (float)metaFi.width, (float)metaFi.height });
 		}
 
-		// 中央基準で置く（ゲージ枠に入れやすい）
 		hpFrame_->SetAnchorPoint({ 0.5f, 0.5f });
 		hpFill_->SetAnchorPoint({ 0.5f, 0.5f });
 
@@ -100,76 +145,60 @@ namespace TKM {
 		hpFill_->SetSize(hpSize_);
 
 		colHPFrame_ = { 1.0f, 1.0f, 1.0f, 0.90f };
-		colHPFill_ = { 0.25f, 1.0f, 0.35f, 0.90f }; // とりあえず緑（嫌なら変えてOK）
+		colHPFill_ = { 0.25f, 1.0f, 0.35f, 0.90f };
 
-		// 最後にレイアウト確定（ここで弾UIとHPの位置を決める）
 		UpdateLayout(screenW, screenH);
 	}
 
 	void UIController::UpdateLayout(float screenW, float screenH) {
-		const float margin = 20.0f;
-		const float spacing = 10.0f;
-		const Vector2 uiSize = { 100.0f, 100.0f };
+		screenW_ = screenW;
+		screenH_ = screenH;
 
-		if (uiRB_) uiRB_->SetPosition({ screenW - margin, screenH - margin });
-		if (uiLB_) uiLB_->SetPosition({ screenW - margin, screenH - margin - (uiSize.y + spacing) * 1.0f });
-		if (uiLT_) uiLT_->SetPosition({ screenW - margin, screenH - margin - (uiSize.y + spacing) * 2.0f });
+		ApplyRightUiPositions_();
 
-		// --- 弾UIを少し上に上げる ---
 		if (rbGaugeUI_) {
-			auto desc = rbGaugeUI_->GetDesc(); // コピーを取得
-			desc.center_ = { screenW * 0.5f, screenH - 60.0f - ammoUiRaiseY_ };
-			rbGaugeUI_->SetDesc(desc);         // まとめて反映
+			auto desc = rbGaugeUI_->GetDesc();
+			desc.center_ = { screenW_ * 0.5f, screenH_ - 60.0f - ammoUiRaiseY_ };
+			rbGaugeUI_->SetDesc(desc);
 		}
 
-		// --- HPバーは“元の弾UIの場所”に置く（その枠にHPを入れる） ---
-		hpCenter_ = { screenW * 0.5f, screenH - 60.0f };
-
+		hpCenter_ = { screenW_ * 0.5f, screenH_ - 60.0f };
 		if (hpFrame_) hpFrame_->SetPosition(hpCenter_);
 		if (hpFill_)  hpFill_->SetPosition(hpCenter_);
 	}
 
 	void UIController::Update(float dt, Player* player) {
 		if (rbGaugeUI_ && player) {
-			rbGaugeUI_->Update(
-				dt,
-				player->GetRbAmmo(),
-				player->GetRbAmmoMax(),
-				player->IsRbRefilling()
-			);
+			rbGaugeUI_->Update(dt, player->GetRbAmmo(), player->GetRbAmmoMax(), player->IsRbRefilling());
 		}
 
 		Input* in = Input::GetInstance();
-		bool rbDown = in->PushButton(XINPUT_GAMEPAD_RIGHT_SHOULDER);
-		bool lbDown = in->PushButton(XINPUT_GAMEPAD_LEFT_SHOULDER);
-		bool ltDown = (in->GetLeftTrigger() > 30);
+		const bool rbDown = in->PushButton(XINPUT_GAMEPAD_RIGHT_SHOULDER);
+		const bool lbDown = in->PushButton(XINPUT_GAMEPAD_LEFT_SHOULDER);
+		const bool ltDown = (in->GetLeftTrigger() > 30);
 
-		const Vector4 idle = { 1.0f, 1.0f, 1.0f, 0.75f };
-		const Vector4 on = { 1.0f, 0.25f, 0.25f, 1.0f };
+		colRB_ = rbDown ? onCol_ : idleCol_;
+		colLB_ = lbDown ? onCol_ : idleCol_;
 
-		// 見た目色は保持しておく（Draw側で hudAlpha_ を掛ける）
-		colRB_ = (rbDown ? on : idle);
-		colLB_ = (lbDown ? on : idle);
-		colLT_ = (ltDown ? on : idle);
-
-		// ここではUpdateだけしておく（色はDrawで毎フレーム確定させる）
-		if (uiLT_) uiLT_->Update();
 		if (uiLB_) uiLB_->Update();
 		if (uiRB_) uiRB_->Update();
 
-		// --- HPバー更新 ---
 		if (player && hpFill_) {
-			const float rate = player->GetHPRate();
+			float rate = player->GetHPRate();
+			if (rate < 0.0f) rate = 0.0f;
+			if (rate > 1.0f) rate = 1.0f;
+
 			Vector2 s = hpSize_;
 			s.x *= rate;
 			hpFill_->SetSize(s);
 		}
 		if (hpFrame_) hpFrame_->Update();
 		if (hpFill_)  hpFill_->Update();
+
+		DrawImGui(); // デバッグ用のImGui表示
 	}
 
 	void UIController::Draw() {
-		// HUDのαを掛けた色を毎フレーム確定
 		auto mulAlpha = [&](const Vector4& c) {
 			Vector4 o = c;
 			o.w *= hudAlpha_;
@@ -178,12 +207,66 @@ namespace TKM {
 
 		if (hpFrame_) { hpFrame_->SetColor(mulAlpha(colHPFrame_)); hpFrame_->Draw(); }
 		if (hpFill_) { hpFill_->SetColor(mulAlpha(colHPFill_));  hpFill_->Draw(); }
-		if (uiLT_) { uiLT_->SetColor(mulAlpha(colLT_)); uiLT_->Draw(); }
+
 		if (uiLB_) { uiLB_->SetColor(mulAlpha(colLB_)); uiLB_->Draw(); }
 		if (uiRB_) { uiRB_->SetColor(mulAlpha(colRB_)); uiRB_->Draw(); }
 
-		// RBGaugeUIは外部からαを掛けるAPIが無い前提で、そのまま描画
-		// （もしここも薄くしたいなら、RBGaugeUI側に SetGlobalAlpha を足すのが綺麗）
 		if (rbGaugeUI_) rbGaugeUI_->Draw();
 	}
-}
+
+#ifdef USE_IMGUI
+	void TKM::UIController::DrawImGui() {
+		if (!ImGui::Begin("UIController")) {
+			ImGui::End();
+			return;
+		}
+
+		bool changed = false;
+
+		ImGui::Text("右側UI：個別調整");
+
+		changed |= ImGui::DragFloat("Margin(px)", &rightUiMargin_, 0.5f, 0.0f, 300.0f);
+		changed |= ImGui::DragFloat("Spacing(px)", &rightUiSpacing_, 0.5f, 0.0f, 200.0f);
+
+		ImGui::Separator();
+
+		// RB
+		if (ImGui::TreeNode("RB")) {
+			changed |= ImGui::DragFloat("Scale##rb", &rbScale_, 0.001f, 0.01f, 2.0f);
+			changed |= ImGui::DragFloat2("Offset##rb", &rbOffset_.x, 0.5f, -500.0f, 500.0f);
+			ImGui::TreePop();
+		}
+
+		// LB
+		if (ImGui::TreeNode("LB")) {
+			changed |= ImGui::DragFloat("Scale##lb", &lbScale_, 0.001f, 0.01f, 2.0f);
+			changed |= ImGui::DragFloat2("Offset##lb", &lbOffset_.x, 0.5f, -500.0f, 500.0f);
+			ImGui::TreePop();
+		}
+
+		ImGui::Separator();
+		if (ImGui::TreeNode("Colors")) {
+			changed |= ImGui::ColorEdit4("Idle", &idleCol_.x);
+			changed |= ImGui::ColorEdit4("On", &onCol_.x);
+			ImGui::TreePop();
+		}
+
+		if (ImGui::Button("Reset")) {
+			rightUiMargin_ = 20.0f;
+			rightUiSpacing_ = 10.0f;
+
+			idleCol_ = { 1,1,1,0.75f };
+			onCol_ = { 1,0.25f,0.25f,1.0f };
+
+			changed = true;
+		}
+
+		if (changed) {
+			ApplyRightUiSizes_();
+			ApplyRightUiPositions_();
+		}
+
+		ImGui::End();
+	}
+#endif
+} // namespace TKM
