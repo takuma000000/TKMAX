@@ -100,17 +100,21 @@ namespace TKM {
 		std::unique_ptr<Sprite> uiLB_;
 		std::unique_ptr<Sprite> uiRB_;
 		std::unique_ptr<Sprite> uiX_;
+		std::unique_ptr<Sprite> uiLS_;
 		std::string lbTex_;
 		std::string rbTex_;
 		std::string xTex_;
+		std::string lsTex_;
 
 		Vector2 lbTexSize_{};
 		Vector2 rbTexSize_{};
 		Vector2 xTexSize_{};
+		Vector2 lsTexSize_{};
 
 		Vector2 lbDrawSize_{};
 		Vector2 rbDrawSize_{};
 		Vector2 xDrawSize_{};
+		Vector2 lsDrawSize_{};
 
 		// 数値で調整するパラメータ
 		float rightUiScale_ = 0.20f; // これを変えるだけで大きさ変わる
@@ -124,6 +128,7 @@ namespace TKM {
 		Vector4 colLB_{ 1.0f,1.0f,1.0f,1.0f };
 		Vector4 colRB_{ 1.0f,1.0f,1.0f,1.0f };
 		Vector4 colX_{ 1.0f,1.0f,1.0f,1.0f };
+		Vector4 colLS_{ 1.0f,1.0f,1.0f,1.0f };
 
 		// 他UI（既存）
 		std::unique_ptr<TKM::RBGaugeUI> rbGaugeUI_;
@@ -142,11 +147,13 @@ namespace TKM {
 		float lbScale_ = 0.065f;
 		float rbScale_ = 0.114f;
 		float xScale_ = 0.066f;
+		float lsScale_ = 0.064f;
 
 		// オフセット（右下基準からのズラし）
 		Vector2 lbOffset_{ 0.0f, 0.0f };
 		Vector2 rbOffset_{ 0.0f, 0.0f };
 		Vector2 xOffset_{ 0.0f, 0.0f };
+		Vector2 lsOffset_{ 1.0f, -37.5f };
 
 		// 個別：色（押下色を後でいじるなら）
 		Vector4 idleCol_{ 1.0f, 1.0f, 1.0f, 0.75f };
@@ -165,6 +172,7 @@ namespace TKM {
 		Vector2 basePosRB_{};
 		Vector2 basePosLB_{};
 		Vector2 basePosX_{};
+		Vector2 basePosLS_{};
 
 		/// <summary>
 		/// 押下中はスプライトの位置を小刻みにズラしてシェイクさせる処理。tは押下継続時間で、これを元に揺れのオフセットを計算します。

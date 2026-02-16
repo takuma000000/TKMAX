@@ -59,10 +59,12 @@ namespace TKM {
 		lbDrawSize_ = { lbTexSize_.x * lbScale_, lbTexSize_.y * lbScale_ };
 		rbDrawSize_ = { rbTexSize_.x * rbScale_, rbTexSize_.y * rbScale_ };
 		xDrawSize_ = { xTexSize_.x * xScale_, xTexSize_.y * xScale_ };
+		lsDrawSize_ = { lsTexSize_.x * lsScale_, lsTexSize_.y * lsScale_ };
 
 		if (uiLB_) uiLB_->SetSize(lbDrawSize_);
 		if (uiRB_) uiRB_->SetSize(rbDrawSize_);
 		if (uiX_) uiX_->SetSize(xDrawSize_);
+		if (uiLS_) uiLS_->SetSize(lsDrawSize_);
 	}
 
 	void UIController::ApplyRightUiPositions_() {
@@ -84,15 +86,22 @@ namespace TKM {
 		xPos.x += xOffset_.x;
 		xPos.y += xOffset_.y;
 
+		// LS（Xの上に積む）
+		Vector2 lsPos{ baseX, baseY - (rbDrawSize_.y + rightUiSpacing_) - (lbDrawSize_.y + rightUiSpacing_) - (xDrawSize_.y + rightUiSpacing_) };
+		lsPos.x += lsOffset_.x;
+		lsPos.y += lsOffset_.y;
+
 		// 基準座標を保存（ここがないとシェイク戻し先が分からない）
 		basePosRB_ = rbPos;
 		basePosLB_ = lbPos;
 		basePosX_ = xPos;
+		basePosLS_ = lsPos;
 
 		// ひとまず基準位置で配置
 		if (uiRB_) uiRB_->SetPosition(basePosRB_);
 		if (uiLB_) uiLB_->SetPosition(basePosLB_);
 		if (uiX_)  uiX_->SetPosition(basePosX_);
+		if (uiLS_) uiLS_->SetPosition(basePosLS_);
 	}
 
 	void UIController::ApplyShake_(Sprite* sp, const Vector2& basePos, bool down, float& t) {
@@ -132,15 +141,18 @@ namespace TKM {
 		colLB_ = { 1,1,1,1 };
 		colRB_ = { 1,1,1,1 };
 		colX_ = { 1,1,1,1 };
+		colLS_ = { 1,1,1,1 };
 
 		// 右側UI（差し替えたい画像パスはここだけ）
 		lbTex_ = "./resources/LB_ui.png";
 		rbTex_ = "./resources/RB_ui.png";
 		xTex_ = "./resources/X_ui.png";
+		lsTex_ = "./resources/LS_ui.png";
 
 		uiLB_ = CreateSprite_(lbTex_, { 1.0f, 1.0f }, &lbTexSize_);
 		uiRB_ = CreateSprite_(rbTex_, { 1.0f, 1.0f }, &rbTexSize_);
 		uiX_ = CreateSprite_(xTex_, { 1.0f, 1.0f }, &xTexSize_);
+		uiLS_ = CreateSprite_(lsTex_, { 1.0f, 1.0f }, &lsTexSize_);
 
 		ApplyRightUiSizes_();
 		ApplyRightUiPositions_();
@@ -211,15 +223,18 @@ namespace TKM {
 		const bool rbDown = in->PushButton(XINPUT_GAMEPAD_RIGHT_SHOULDER);
 		const bool lbDown = in->PushButton(XINPUT_GAMEPAD_LEFT_SHOULDER);
 		const bool xDown = in->PushButton(XINPUT_GAMEPAD_X);
+		const bool lsDown = in->PushButton(XINPUT_GAMEPAD_LEFT_THUMB);
 
 		colRB_ = rbDown ? onCol_ : idleCol_;
 		colLB_ = lbDown ? onCol_ : idleCol_;
 		colX_ = xDown ? onCol_ : idleCol_;
+		colLS_ = lsDown ? onCol_ : idleCol_;
 
 		// UIの更新はここで行う。シェイクもここで行う（押されてるフレームだけシェイクさせるため）。
 		if (uiLB_) uiLB_->Update();
 		if (uiRB_) uiRB_->Update();
 		if (uiX_) uiX_->Update();
+		if (uiLS_) uiLS_->Update();
 		// シェイクは押されてるフレームだけ適用して、離されたら即座に元の位置に戻す
 		if (uiRB_) ApplyShake_(uiRB_.get(), basePosRB_, rbDown, shakeT_RB_); // 押されたフレームだけシェイクさせる
 		if (uiLB_) ApplyShake_(uiLB_.get(), basePosLB_, lbDown, shakeT_LB_); // 押されたフレームだけシェイクさせる
@@ -253,6 +268,7 @@ namespace TKM {
 		if (uiLB_) { uiLB_->SetColor(mulAlpha(colLB_)); uiLB_->Draw(); }
 		if (uiRB_) { uiRB_->SetColor(mulAlpha(colRB_)); uiRB_->Draw(); }
 		if (uiX_) { uiX_->SetColor(mulAlpha(colX_)); uiX_->Draw(); }
+		if (uiLS_) { uiLS_->SetColor(mulAlpha(colLS_)); uiLS_->Draw(); }
 
 		if (rbGaugeUI_) rbGaugeUI_->Draw();
 	}
@@ -291,6 +307,13 @@ namespace TKM {
 		if (ImGui::TreeNode("X")) {
 			changed |= ImGui::DragFloat("Scale##x", &xScale_, 0.001f, 0.01f, 2.0f);
 			changed |= ImGui::DragFloat2("Offset##x", &xOffset_.x, 0.5f, -500.0f, 500.0f);
+			ImGui::TreePop();
+		}
+
+		// LS
+		if (ImGui::TreeNode("LS")) {
+			changed |= ImGui::DragFloat("Scale##ls", &lsScale_, 0.001f, 0.01f, 2.0f);
+			changed |= ImGui::DragFloat2("Offset##ls", &lsOffset_.x, 0.5f, -500.0f, 500.0f);
 			ImGui::TreePop();
 		}
 
