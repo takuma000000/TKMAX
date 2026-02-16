@@ -238,6 +238,7 @@ void PlayerBullet::UpdateSpawnBezier() {
 	}
 
 	if (isHoming_ && homingDelay_ <= 0.0f && enemy_ && !enemy_->IsDead()) {
+		if (!enemy_) return;
 		Vector3 enemyPos = enemy_->GetWorldPosition();
 		Vector3 dir = enemyPos - pos;
 		float len = MyMath::Length(dir);
