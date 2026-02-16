@@ -27,12 +27,12 @@ namespace TKM {
 			float lagSpeed_ = 900.0f; // 大きいほど速く追従（弾なので速めが気持ちいい）
 
 			// テクスチャ
-			std::string frameTex_ = "./resources/circle.png";      // 仮（差し替えOK）
-			std::string fillTex_ = "./resources/gradationLine.png";  // 仮（差し替えOK）
+			std::string frameTex_ = "./resources/gray.jpg";
+			std::string fillTex_ = "./resources/blue.jpg";
 
 			// 色（単純回避用）
-			Vector4 baseColor_ = { 0.25f, 0.95f, 1.0f, 1.0f };   // 通常
-			Vector4 drainColor_ = { 1.0f, 0.75f, 0.15f, 1.0f };   // 減ってる最中（撃った直後）
+			Vector4 baseColor_ = { 1.0f, 1.0f, 1.0f, 0.3f };   // 通常
+			Vector4 drainColor_ = { 0.25f, 0.95f, 1.0f, 1.0f };   // 減ってる最中（撃った直後）
 			Vector4 refillColor_ = { 0.55f, 1.0f, 0.55f, 1.0f };   // 回復中
 			Vector4 lagColor_ = { 0.65f, 0.65f, 0.65f, 1.0f };  // 遅延バー
 		};

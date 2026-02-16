@@ -535,7 +535,10 @@ void Enemy::SetTentacleLocal(const Vector3& pos, const Vector3& rot, const Vecto
 	tentacleLocalScale_ = scale; // ローカルスケール設定
 }
 Vector3 Enemy::GetWorldPosition() const {
-	return object_->GetTranslate(); // ワールド位置を返す
+	if (!object_) {
+		return { 0.0f, 0.0f, 0.0f };
+	}
+	return object_->GetTranslate();
 }
 
 void Enemy::ImGuiDebug() {
