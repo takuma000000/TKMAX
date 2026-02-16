@@ -127,6 +127,9 @@ void EnemyManager::UpdateClosestEnemy() {
 void EnemyManager::InitializeWaves() {
 	if (!player_) { return; }
 
+	NotifyPlayerBeforeClearEnemies_(); // プレイヤーに敵全削除を通知（ロックオン解除などのため）
+	enemies_.clear();
+
 	enemies_.clear();
 
 	defeatedEnemyCount_ = 0;
@@ -152,6 +155,7 @@ void EnemyManager::InitializeWaves() {
 void EnemyManager::SpawnCurrentWave() {
 	if (!dx_ || !cam_ || !parent_) { return; }
 
+	NotifyPlayerBeforeClearEnemies_();
 	enemies_.clear();
 
 	const auto ops_ = kWaveOps_[static_cast<int>(wavePhase_)];
@@ -177,6 +181,7 @@ void EnemyManager::GoToNextWave() {
 
 void EnemyManager::SkipToBossWave() {
 	// いま居るザコ敵は全部消す
+	NotifyPlayerBeforeClearEnemies_();
 	enemies_.clear();
 
 	// 撃破数・最大数もリセット（ゲージを空にしておく）
@@ -199,6 +204,16 @@ void EnemyManager::SetupEnemyForPlayer(Enemy& e) {
 	e.SetPlayer([this]() { return player_->GetPosition(); });
 }
 
+void EnemyManager::NotifyPlayerBeforeClearEnemies_() {
+	if (!player_) {
+		return;
+	}
+	for(auto & e : enemies_) {
+		if (!e) { continue; }
+		player_->OnEnemyDestroyed(e.get());
+	}
+}
+
 void EnemyManager::UpdateWave1(float dt) {
 	if (!&enemies_ || !dx_ || !cam_ || !parent_) {
 		return;
@@ -207,6 +222,7 @@ void EnemyManager::UpdateWave1(float dt) {
 	// Wave1の目標撃破数に達したら次のWaveへ
 	if (defeatedEnemyCount_ && defeatedEnemyCount_ >= wave1DefeatTarget_) {
 		// Wave2に移るときWave1の残敵が邪魔なら消す（混ざるの防止）
+		NotifyPlayerBeforeClearEnemies_();
 		enemies_.clear();
 		// 次のWaveへ
 		GoToNextWave();
@@ -333,6 +349,7 @@ namespace {
 
 void EnemyManager::SpawnWave2SubWave(int id) {
 	if (!&enemies_ || !dx_ || !cam_ || !parent_) { return; }
+	NotifyPlayerBeforeClearEnemies_();
 	enemies_.clear(); // 念のためクリア
 
 	const int count_ = static_cast<int>(std::size(kWave2SubWaveTable_));
@@ -543,6 +560,7 @@ void EnemyManager::SpawnWave3MidBossStage() {
 	if (!&enemies_ || !dx_ || !cam_ || !parent_) {
 		return;
 	}
+	NotifyPlayerBeforeClearEnemies_();
 	enemies_.clear();
 	midBossCore_.reset();
 

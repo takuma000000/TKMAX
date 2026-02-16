@@ -85,30 +85,6 @@ void BossManager::Initialize(TKM::DirectXCommon* dxCommon, TKM::Camera* camera, 
 	currentSlashId_ = -1; // 現在のスラッシュ攻撃ID初期化
 	slashIdHoldT_ = 0.0f; // スラッシュ攻撃IDホールド時間初期化
 
-	// オーラボリュームレンダラー初期化
-	auraVolume_ = std::make_unique<TKM::AuraVolumeRenderer>();
-	auraVolume_->Initialize(dxCommon_);
-
-	// LaserBeam3D 初期化
-	laserBeam3D_ = std::make_unique<TKM::LaserBeam3D>();
-	laserBeam3D_->Initialize(dxCommon_);
-	{
-		auto d = laserBeam3D_->GetDesc(); // コピー
-		// 非アクティブ開始
-		d.active_ = false; // 非アクティブ
-		d.telegraph_ = false; // 予告なし
-		// 初期見た目（好みで調整OK）
-		d.color_ = { 0.2f, 0.85f, 1.0f };   // 色
-		d.intensity_ = 3.0f;               // 明るさ
-		d.coreSharpness_ = 7.0f;           // コアのシャープネス
-		d.edgeSoftness_ = 1.2f;            // エッジの柔らかさ
-		d.sliceCount_ = 64;                // スライス数
-		d.noiseScale_ = 1.0f;              // ノイズの細かさ
-		d.noiseSpeed_ = 1.0f;              // ノイズの速さ
-
-		laserBeam3D_->SetDesc(d);          // 反映
-	}
-
 	// HPバーUI初期化
 	hpUI_ = std::make_unique<TKM::BossHpBarUI>();
 	TKM::BossHpBarUI::Desc d{}; // デフォルト設定
@@ -232,20 +208,6 @@ void BossManager::Update(float dt) {
 			bossBullets_.push_back(std::move(bullet_));
 		}
 	}
-	// --- LaserBeam 更新＆BossControllerのレーザー情報を反映 ---
-	if (laserBeam3D_) {
-		laserBeam3D_->Update(dt);
-		// BossController からレーザー情報取得＆反映
-		LaserInfo li = GetLaserInfo();
-		// 描画用LaserBeam3Dに情報セット（コピー→反映）
-		auto d = laserBeam3D_->GetDesc(); // コピーで受ける
-		d.active_ = li.active_; // 発射中/予告中フラグ
-		d.telegraph_ = li.telegraph_; // 予告中フラグ
-		d.startWS_ = li.startWS_; // 開始座標
-		d.endWS_ = li.endWS_; // 終了座標
-		d.radius_ = li.radius_; // 当たり判定半径
-		laserBeam3D_->SetDesc(d);         // まとめて反映
-	}
 	// HPバーUI更新
 	if (hpUI_ && boss_) { // HPバーUI更新
 		hpUI_->Update(dt, boss_.get()); // ボスのHP情報を反映
@@ -291,19 +253,6 @@ void BossManager::Draw(TKM::DirectXCommon* dxCommon) {
 	//for (auto& b : bossBullets_) { // ボス弾描画
 	//	b->Draw(dxCommon); // 描画
 	//}
-
-	// --- LaserBeam 描画（空間上） ---
-	if (laserBeam3D_ && camera_) { // LaserBeam3D 描画
-		const Matrix4x4& camW_ = camera_->GetWorldMatrix(); // カメラワールド行列取得
-
-		// カメラの向きベクトル抽出
-		Vector3 right_{ camW_.m[0][0], camW_.m[0][1], camW_.m[0][2] }; // 右方向 ベクトル
-		Vector3 up_{ camW_.m[1][0], camW_.m[1][1], camW_.m[1][2] }; // 上方向 ベクトル
-		Vector3 fwd_{ camW_.m[2][0], camW_.m[2][1], camW_.m[2][2] }; // 前方向 ベクトル
-		// ビュープロジェクション行列取得
-		Matrix4x4 vp_ = camera_->GetViewProjectionMatrix();
-		laserBeam3D_->Draw(vp_, right_, up_, fwd_); // 描画
-	}
 }
 
 void BossManager::DrawUI() {
@@ -320,46 +269,6 @@ void BossManager::SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float
 	auto bullet_ = std::make_unique<BossBullet>(); // 弾オブジェクト生成
 	bullet_->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_, camera_, pos, dir, speed, damage, lifeFrame); // 初期化
 	bossBullets_.push_back(std::move(bullet_)); // リストに追加
-}
-
-BossManager::LaserInfo BossManager::GetLaserInfo() const {
-	// BossController からレーザー情報取得
-	LaserInfo li_{};
-	if (!bossController_) { return li_; } // 安全確認
-	li_.active_ = bossController_->IsLaserActive(); // 発射中/予告中フラグ
-	li_.telegraph_ = bossController_->IsLaserTelegraph(); // 予告中フラグ
-	li_.startWS_ = bossController_->GetLaserStartWS(); // 開始座標
-	li_.endWS_ = bossController_->GetLaserEndWS(); // 終了座標
-	li_.radius_ = bossController_->GetLaserRadius(); // 当たり判定半径
-	return li_;
-}
-
-bool BossManager::TestLaserHit(const LaserInfo& laser, const Vector3& sphereCenterWS, float sphereRadius) {
-	if (!laser.active_) { return false; } // レーザー非アクティブ時は当たらない
-	// レーザー（カプセル）と球体の当たり判定テスト
-	const Vector3 p0_ = laser.startWS_; // レーザー開始点
-	const Vector3 p1_ = laser.endWS_; // レーザー終了点
-	const Vector3 c_ = sphereCenterWS; // 球体中心座標
-	// レーザー線分ベクトル
-	Vector3 d_ = MyMath::Subtract(p1_, p0_);
-	float dlen2_ = MyMath::Dot(d_, d_);
-
-	if (dlen2_ < 1e-6f) { // レーザーがほぼ点の場合
-		Vector3 dc_ = MyMath::Subtract(c_, p0_); // 球体中心からレーザー点へのベクトル
-		float dist2_ = MyMath::Dot(dc_, dc_); // 距離の二乗
-		float r_ = laser.radius_ + sphereRadius; // 合計半径
-		return dist2_ <= r_ * r_; // 当たっているか？
-	}
-	// レーザー線分上の最近接点を求める
-	float t_ = MyMath::Dot(MyMath::Subtract(c_, p0_), d_) / dlen2_;
-	t_ = std::clamp(t_, 0.0f, 1.0f);
-	// 最近接点座標
-	Vector3 q_ = MyMath::Add(p0_, MyMath::Multiply(t_, d_));
-	Vector3 cq_ = MyMath::Subtract(c_, q_);
-	// 距離の二乗を計算して当たり判定
-	float dist2_ = MyMath::Dot(cq_, cq_);
-	float r_ = laser.radius_ + sphereRadius;
-	return dist2_ <= r_ * r_;
 }
 
 bool BossManager::IsBattleActive() const {

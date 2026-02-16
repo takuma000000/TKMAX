@@ -11,10 +11,8 @@
 #include "Player.h"
 #include "BaseScene.h"
 #include "BossController.h"
-#include "AuraVolumeRenderer.h"
 #include "TimeScaleController.h"
 #include "WaterRippleEffect.h"
-#include "LaserBeam3D.h"
 #include "BossHpBarUI.h"
 
 //=============================================================
@@ -53,34 +51,6 @@ public:
 		}
 	};
 
-	// =========================
-	// Laser（怒り中攻撃）情報
-	// =========================
-	struct LaserInfo {
-		bool active_ = false;       // 予告 or 発射中
-		bool telegraph_ = false;    // 予告中
-		Vector3 startWS_{ 0.0f,0.0f,0.0f }; // レーザー開始位置（ワールド座標）
-		Vector3 endWS_{ 0.0f,0.0f,0.0f }; // レーザー終了位置（ワールド座標）
-		float radius_ = 0.0f;       // 当たり判定半径
-	};
-
-	/// <summary>
-	/// 現在のレーザー情報を取得（描画/当たり判定用）
-	/// </summary>
-	LaserInfo GetLaserInfo() const;
-
-	/// <summary>
-	/// レーザーと球体の当たり判定テストを行います。
-	/// </summary>
-	/// <param name="laser">判定対象となるレーザー情報</param>
-	/// <param name="sphereCenterWS">球体の中心座標（ワールド座標）</param>
-	/// <param name="sphereRadius">球体の半径</param>
-	/// <returns>レーザーが球体にヒットした場合 true、それ以外は false</returns>
-	static bool TestLaserHit(
-		const LaserInfo& laser,
-		const Vector3& sphereCenterWS,
-		float sphereRadius
-	);
 	/// <summary>
 	/// 初期化処理を行います。
 	/// </summary>
@@ -206,11 +176,6 @@ private:
 	std::unique_ptr<BossEnemy> boss_;             // ボス本体
 	std::unique_ptr<BossController> bossController_; // ボスコントローラー
 	std::vector<std::unique_ptr<BossBullet>> bossBullets_; // ボス弾リスト
-	//==============================
-	// 描画・演出系
-	//==============================
-	std::unique_ptr<TKM::AuraVolumeRenderer> auraVolume_; // オーラボリュームレンダラー
-	std::unique_ptr<TKM::LaserBeam3D> laserBeam3D_; // レーザー描画
 	//==============================
 	// UI
 	//==============================

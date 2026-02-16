@@ -146,6 +146,10 @@ private:
 	/// </summary>
 	/// <param name="e">セットアップ対象となる敵</param>
 	void SetupEnemyForPlayer(Enemy& e);
+	/// <summary>
+	/// プレイヤーに対して、これから敵が全滅することを通知します。
+	/// </summary>
+	void NotifyPlayerBeforeClearEnemies_();
 
 	//======================================================================
 	// 基本参照・共通情報
