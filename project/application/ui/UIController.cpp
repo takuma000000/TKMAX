@@ -20,13 +20,32 @@ namespace TKM {
 		uiLT_ = std::make_unique<Sprite>();
 		uiLB_ = std::make_unique<Sprite>();
 		uiRB_ = std::make_unique<Sprite>();
+		// テクスチャパスを変数化
+		const std::string ltTex = "./resources/LT.png";
+		const std::string lbTex = "./resources/LB_ui.png";
+		const std::string rbTex = "./resources/RB_ui.png";
 
-		uiLT_->Initialize(spriteCommon_, dxCommon_, "./resources/LT.png");
+		uiLT_->Initialize(spriteCommon_, dxCommon_, ltTex);
 		uiLT_->SetAutoAdjustTextureSize(false);
-		uiLB_->Initialize(spriteCommon_, dxCommon_, "./resources/LB.png");
+		uiLB_->Initialize(spriteCommon_, dxCommon_, lbTex);
 		uiLB_->SetAutoAdjustTextureSize(false);
-		uiRB_->Initialize(spriteCommon_, dxCommon_, "./resources/RB.png");
+		uiRB_->Initialize(spriteCommon_, dxCommon_, rbTex);
 		uiRB_->SetAutoAdjustTextureSize(false);
+		{
+			const auto& m = TextureManager::GetInstance()->GetMetadata(ltTex);
+			uiLT_->SetTextureLeftTop({ 0.0f, 0.0f });
+			uiLT_->SetTextureSize({ (float)m.width, (float)m.height });
+		}
+		{
+			const auto& m = TextureManager::GetInstance()->GetMetadata(lbTex);
+			uiLB_->SetTextureLeftTop({ 0.0f, 0.0f });
+			uiLB_->SetTextureSize({ (float)m.width, (float)m.height });
+		}
+		{
+			const auto& m = TextureManager::GetInstance()->GetMetadata(rbTex);
+			uiRB_->SetTextureLeftTop({ 0.0f, 0.0f });
+			uiRB_->SetTextureSize({ (float)m.width, (float)m.height }); // ここはテクスチャサイズに合わせる
+		}
 
 		uiLT_->SetAnchorPoint({ 1.0f, 1.0f });
 		uiLB_->SetAnchorPoint({ 1.0f, 1.0f });

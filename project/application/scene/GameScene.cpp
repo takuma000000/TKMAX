@@ -258,6 +258,8 @@ void GameScene::LoadTextures() {
 	TextureManager::GetInstance()->LoadTexture("./resources/LB.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/LT.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/RB.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/RB_ui.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/LB_ui.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/resume_pause.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/restart_pause.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/title_pause.png");

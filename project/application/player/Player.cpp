@@ -626,7 +626,7 @@ void Player::HandleShooting() {
 			}
 		}
 	}
-
+	
 	RBShoot(); // RB弾処理
 	RTShoot(); // RT弾処理
 	LBShoot(); // LB弾処理
