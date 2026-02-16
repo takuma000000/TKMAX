@@ -267,6 +267,7 @@ void GameScene::LoadTextures() {
 	TextureManager::GetInstance()->LoadTexture("./resources/title_pause.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/gauge_fill_grad.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/gauge_frame_glass.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/RB_gage_ui.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/gauge_shard.jpeg");
 	TextureManager::GetInstance()->LoadTexture("./resources/blue.jpg");
 	TextureManager::GetInstance()->LoadTexture("./resources/gray.jpg");

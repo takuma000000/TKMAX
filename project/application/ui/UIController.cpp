@@ -207,8 +207,13 @@ namespace TKM {
 			auto desc = rbGaugeUI_->GetDesc();
 			desc.center_ = { screenW_ * 0.5f, screenH_ - 60.0f - ammoUiRaiseY_ };
 			rbGaugeUI_->SetDesc(desc);
-		}
 
+			// RBのサイズにHPバーを合わせる
+			hpSize_ = desc.size_; // fill基準サイズ（520x18など）
+			// サイズを合わせる（fillはレートで伸縮するので、基準サイズを合わせる）
+			if (hpFill_)  hpFill_->SetSize(hpSize_);
+			if (hpFrame_) hpFrame_->SetSize({ hpSize_.x + 10.0f, hpSize_.y + 10.0f }); // RB枠と同じ
+		}
 		hpCenter_ = { screenW_ * 0.5f, screenH_ - 60.0f };
 		if (hpFrame_) hpFrame_->SetPosition(hpCenter_);
 		if (hpFill_)  hpFill_->SetPosition(hpCenter_);
