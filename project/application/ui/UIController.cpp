@@ -268,7 +268,6 @@ namespace TKM {
 		if (uiRB_) ApplyShake_(uiRB_.get(), basePosRB_, rbDown, shakeT_RB_);
 		if (uiLB_) ApplyShake_(uiLB_.get(), basePosLB_, lbDown, shakeT_LB_);
 		if (uiX_)  ApplyShake_(uiX_.get(), basePosX_, xDown, shakeT_X_);
-		// LSは「倒し」で動くのでシェイク無し（入れたければここで ApplyShake_ してOK）
 
 		// ---- LS：倒し方向に同期して動かす ----
 		if (uiLS_) {
