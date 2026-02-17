@@ -398,6 +398,11 @@ private:
 	bool  invincibleVisible_ = true; // 点滅表示フラグ
 	static constexpr float kInvincibleSec_ = 2.0f;     // 無敵時間
 	static constexpr float kBlinkInterval_ = 0.08f;    // 点滅間隔（秒）
+	//======================================================================
+	// 被弾管理（同一攻撃IDの連続ヒット防止）
+	//======================================================================
+	int   lastHitAttackId_ = -1;     // 最後に当たった攻撃ID
+	float sameAttackLockT_ = 0.0f;   // 同一攻撃IDロック残り時間（秒）
 	//====================
 	// RB弾（弾数制限）
 	//====================
@@ -457,9 +462,4 @@ private:
 	float  flipperFlapAmp_ = 0.1f;       // 振り幅（ラジアン）
 	float  flipperFlapHz_ = 1.0f;         // 周波数（1秒あたり何往復）
 	float  flipperYawSwayAmp_ = 0.12f;    // ついでの横揺れ（ラジアン）
-
-
-
-	int   lastHitAttackId_ = -1; // 最後に当たった攻撃ID
-	float sameAttackLockT_ = 0.0f; // 同じ攻撃IDで連続ヒットしないようにするためのタイマー
 };

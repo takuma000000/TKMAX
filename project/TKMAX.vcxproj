@@ -113,6 +113,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="application\boss\BossBullet.cpp" />
     <ClCompile Include="application\enemy\manager\EnemyManager.cpp" />
     <ClCompile Include="application\boss\manager\BossManager.cpp" />
     <ClCompile Include="application\boss\BossHpBarUI.cpp" />

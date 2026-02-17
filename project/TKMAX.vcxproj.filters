@@ -193,6 +193,7 @@
     <ClCompile Include="application\scene\controller\PauseMenuController.cpp" />
     <ClCompile Include="application\scene\controller\TitleMenuController.cpp" />
     <ClCompile Include="application\scene\controller\GameResultMenuController.cpp" />
+    <ClCompile Include="application\boss\BossBullet.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
