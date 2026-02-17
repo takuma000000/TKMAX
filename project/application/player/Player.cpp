@@ -15,8 +15,8 @@ void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommo
 	// 3Dオブジェクト作成
 	object_ = std::make_unique<TKM::Object3d>();
 	object_->Initialize(common_, dxCommon_);
-	object_->SetModel("jett.obj");
-	object_->SetEnvironment("./resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
+	object_->SetModel("turtle.obj");
+	//object_->SetEnvironment("./resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
 
 	reticle_ = std::make_unique<Reticle>();
 	reticle_->Initialize(common_, dxCommon_, "reticle_big.obj"); // モデル指定可

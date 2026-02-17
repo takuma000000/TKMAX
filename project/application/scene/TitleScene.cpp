@@ -32,14 +32,15 @@ void TitleScene::Initialize() {
 	TextureManager::GetInstance()->LoadTexture("./resources/rostock_laage_airport_4k.dds");
 	//--------------------------------------------
 	// ------------ モデル読み込み --------------
-	ModelManager::GetInstance()->LoadModel("jett.obj", dxCommon_);
+	ModelManager::GetInstance()->LoadModel("turtle.obj", dxCommon_);
+	ModelManager::GetInstance()->LoadModel("turtle_flipper.obj", dxCommon_);
 	ModelManager::GetInstance()->LoadModel("jerryfish.obj", dxCommon_);
 	ModelManager::GetInstance()->LoadModel("tentacle.obj", dxCommon_);
 	//-----------------------------------------
 
 	heli_ = std::make_unique<TKM::Object3d>();
 	heli_->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_);
-	heli_->SetModel("jett.obj");
+	heli_->SetModel("turtle.obj");
 	heli_->SetCamera(camera_.get());
 	heli_->SetScale({ scale_, scale_, scale_ });
 	heli_->SetTranslate({ 0.0f, baseY_, 0.0f });

@@ -299,7 +299,8 @@ void GameScene::LoadModels() {
 	ModelManager::GetInstance()->LoadModel("sphere.obj", dxCommon_);
 	ModelManager::GetInstance()->LoadModel("terrain.obj", dxCommon_);
 	ModelManager::GetInstance()->LoadModel("ground.obj", dxCommon_);
-	ModelManager::GetInstance()->LoadModel("jett.obj", dxCommon_);
+	ModelManager::GetInstance()->LoadModel("turtle.obj", dxCommon_);
+	ModelManager::GetInstance()->LoadModel("turtle_flipper.obj", dxCommon_);
 	ModelManager::GetInstance()->LoadModel("enemy.obj", dxCommon_);
 	ModelManager::GetInstance()->LoadModel("jerryfish.obj", dxCommon_);
 	ModelManager::GetInstance()->LoadModel("jerryfish_boss.obj", dxCommon_);

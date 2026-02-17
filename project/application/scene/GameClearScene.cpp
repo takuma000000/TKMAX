@@ -16,7 +16,8 @@ void GameClearScene::Initialize() {
 	// ─────────────────────
 	// モデル・テクスチャ読み込み
 	// ─────────────────────
-	ModelManager::GetInstance()->LoadModel("jett.obj", dxCommon_);
+	ModelManager::GetInstance()->LoadModel("turtle.obj", dxCommon_);
+	ModelManager::GetInstance()->LoadModel("turtle_flipper.obj", dxCommon_);
 	TextureManager::GetInstance()->LoadTexture("./resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
 	TextureManager::GetInstance()->LoadTexture("./resources/clear.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/circle2.png");

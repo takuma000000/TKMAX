@@ -388,7 +388,7 @@ private:
 	// 自機当たり判定 (AABB)
 	//======================================================================
 	// --- 自機当たり判定(AABB) ---
-	Vector3 colliderScale_ = { 2.0f, 2.0f, 6.0f }; // 当たり判定用スケール
+	Vector3 colliderScale_ = { 3.13f, 1.88f, 6.0f }; // 当たり判定用スケール
 	float   hitFlashTimer_ = 0.0f;                 // 被弾フラッシュ用タイマー
 	// --- 無敵 & 点滅 ---
 	bool  isInvincible_ = false;   // 無敵中か
