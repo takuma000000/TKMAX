@@ -16,11 +16,16 @@ void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommo
 	object_ = std::make_unique<TKM::Object3d>();
 	object_->Initialize(common_, dxCommon_);
 	object_->SetModel("turtle.obj");
-	//object_->SetEnvironment("./resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
+
+	// ヒレ（4枚入り）
+	flipper_ = std::make_unique<TKM::Object3d>();
+	flipper_->Initialize(common_, dxCommon_);
+	flipper_->SetModel("turtle_flipper.obj");
+	// 親子付け
+	flipper_->SetParent(object_.get());
 
 	reticle_ = std::make_unique<Reticle>();
 	reticle_->Initialize(common_, dxCommon_, "reticle_big.obj"); // モデル指定可
-	if (camera_) reticle_->SetCamera(camera_);
 	// Player から位置とヨー角(radians)を渡す（循環依存を避けるためコールバック）
 	reticle_->BindOwner(
 		[this]() { return object_->GetTranslate(); },
@@ -157,6 +162,7 @@ void Player::Update(float dt) {
 
 	TKM::ParticleManager::GetInstance()->Update(dt); // パーティクルマネージャー更新
 	object_->Update(); // プレイヤー本体更新
+	flipper_->Update(); // ヒレ更新
 }
 
 void Player::ImGuiDebug() {
@@ -173,7 +179,6 @@ void Player::ImGuiDebug() {
 
 	ImGui::Text("直前に当たった攻撃ID: %d", lastHitAttackId_);
 	ImGui::Text("同一攻撃ダメージ無効時間: %.2f", sameAttackLockT_);
-
 
 	if (ImGui::DragFloat3("位置", &pos.x, 0.01f)) {
 		object_->SetTranslate(pos);
@@ -472,12 +477,11 @@ void Player::Draw(TKM::DirectXCommon* dxCommon) {
 
 	// --- 無敵点滅：見えないタイミングは自機だけ描画しない ---
 	if (isInvincible_ && !invincibleVisible_) {
-		// レティクルは出したいならここではreturnしない
-		// 自機だけスキップしたいので object_ だけ描かない
+		// 自機（胴体＋ヒレ）を両方スキップ
 	} else {
-		object_->Draw(dxCommon); // プレイヤー本体描画
+		object_->Draw(dxCommon);
+		if (flipper_) flipper_->Draw(dxCommon);
 	}
-
 	// クリア演出中などで隠したいときはフラグでOFF
 	if (reticle_ && reticleVisible_) {
 		reticle_->Draw(dxCommon);
@@ -492,6 +496,7 @@ void Player::SetCamera(TKM::Camera* camera) {
 	this->camera_ = camera;
 	if (object_) { object_->SetCamera(camera); }
 	if (reticle_) { reticle_->SetCamera(camera); }
+	if (flipper_) { flipper_->SetCamera(camera); }
 }
 
 void Player::SetPosition(const Vector3& pos) {
@@ -626,7 +631,7 @@ void Player::HandleShooting() {
 			}
 		}
 	}
-	
+
 	RBShoot(); // RB弾処理
 	RTShoot(); // RT弾処理
 	LBShoot(); // LB弾処理

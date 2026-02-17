@@ -297,7 +297,8 @@ private:
 	TKM::RadialBlurEffect* radialBlur_ = nullptr;
 
 	TKM::BaseScene* parentScene_ = nullptr;
-	std::unique_ptr<TKM::Object3d> object_;
+	std::unique_ptr<TKM::Object3d> object_; // プレイヤー本体の3Dオブジェクト
+	std::unique_ptr<TKM::Object3d> flipper_; // プレイヤーの左右フリップ用オブジェクト
 	std::list<std::unique_ptr<PlayerBullet>> bullets_;
 	std::vector<std::unique_ptr<Enemy>>* allEnemies_ = nullptr;
 

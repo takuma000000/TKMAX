@@ -58,7 +58,7 @@ void GameScene::Initialize() {
 	clearSeq_ = std::make_unique<TKM::ClearSequenceController>();
 	clearSeq_->Initialize(camera_.get(), player_.get(), bossManager_.get(), flow_.get(), dxCommon_, skybox_.get(), fireworkController_.get());
 	if (flow_) {
-		flow_->BindClearSequence(clearSeq_.get());
+		flow_->BindClearSequence(clearSeq_.get()); // ゲームフローにクリアシーケンスをバインド
 	}
 }
 
