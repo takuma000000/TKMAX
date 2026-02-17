@@ -94,6 +94,12 @@ public:
 	/// <param name="attackId">攻撃を識別するID</param>
 	/// <returns>ダメージが適用された場合 true、それ以外は false</returns>
 	bool TryDamageFromAttack(int damage, int attackId);
+	/// <summary>
+	/// カメラシェイクを開始します。
+	/// </summary>
+	/// <param name="frameCount">シェイク継続フレーム数</param>
+	void StartCameraShake(int frameCount);
+
 	// Getter===================================
 	/// <summary>
 	/// プレイヤーの弾リストを取得します。
@@ -198,11 +204,6 @@ public:
 	void SetAllEnemies(std::vector<std::unique_ptr<Enemy>>* enemies) {
 		allEnemies_ = enemies;
 	}
-	/// <summary>
-	/// カメラシェイクを開始します。
-	/// </summary>
-	/// <param name="frameCount">シェイク継続フレーム数</param>
-	void StartCameraShake(int frameCount);
 	/// <summary>
 	/// プレイヤー操作の有効/無効を設定します。
 	/// </summary>
