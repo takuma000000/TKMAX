@@ -486,123 +486,92 @@ namespace TKM {
 			p.color_ = { r, g, b, 1.0f };
 		} else if (groupName == "jetSmoke") {
 			// ─────────────────────────────
-			// Player 後ろのスピード感ジェット
-			//  コア炎 + もくもく煙 + スピードスパーク
+			// jetSmoke v3：クララン推進痕（煙じゃない）
+			//  - 濁り(INK) : 暗いインク雲（低α）
+			//  - リボン(RIBBON) : ヌメリの筋（細長い帯）
+			//  ※ 白禁止 / 自機を隠さない（中心空け＆後方発生）
 			// ─────────────────────────────
 
-			// center は Player のケツあたり。共通オフセットは一旦無視して自前で決める
-			float kind = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
-
-			// ランダムヘルパー
 			auto frand = [&rng](float a, float b) {
 				return std::uniform_real_distribution<float>(a, b)(rng);
 				};
 
-			// 角度ランダム（円周上オフセット用）
+			float kind = frand(0.0f, 1.0f);
+
 			float ang = frand(0.0f, 2.0f * std::numbers::pi_v<float>);
-			float radCore = frand(0.0f, 0.25f);  // コア用の半径
-			float radSmoke = frand(0.15f, 0.60f); // 煙用の半径
+			float c = std::cos(ang);
+			float s = std::sin(ang);
 
-			if (kind < 0.25f) {
+			// 自機の輪郭上に出さない：ドーナツ＋さらに後ろ
+			float r = frand(0.25f, 0.60f);
+
+			Vector3 localPos = {
+				c * r,
+				s * r * 0.40f + frand(-0.02f, 0.08f),
+				frand(-1.20f, -0.85f)   // かなり後ろ
+			};
+			p.transform_.translate_ = center + localPos;
+
+			// 接線方向（渦）＋少し上へ
+			Vector3 swirl = { -s, c * 0.40f, 0.0f };
+
+			// “煙”みたいに速く飛ばさない（濁りは遅い）
+			Vector3 baseV = {};
+			baseV += swirl * frand(0.4f, 1.8f);
+			baseV.x += frand(-0.14f, 0.14f);
+			baseV.y += frand(0.10f, 0.30f);
+			baseV.z += frand(-14.0f, -8.0f);
+
+			if (kind < 0.55f) {
 				// ============================
-				// ① コア炎：細くて明るいジェット
+				// ① INK：暗い濁り雲（“煙”を捨てる）
 				// ============================
-				Vector3 local = {
-					std::cos(ang) * radCore * 0.4f,   // X：あまり広げない
-					frand(-0.10f, 0.15f),             // Y：ちょい上下
-					-0.4f                              // Z：少しだけ機体の後ろ側へ
-				};
-				p.transform_.translate_ = center + local;
-
-				// ガッと後ろへ吹く
-				p.velocity_ = {
-					frand(-0.3f, 0.3f),
-					frand(0.0f, 0.15f),
-					frand(-80.0f, -60.0f)             // 強く −Z 方向へ
-				};
-
-				// 細長い炎コア
-				float len = frand(0.6f, 1.0f);
-				float thick = frand(0.18f, 0.30f);
-				p.transform_.scale_ = { thick, len, thick };
-
-				// 寿命はかなり短い（キュッと消える）
-				p.lifeTime_ = frand(0.18f, 0.35f);
-				p.currentTime_ = 0.0f;
-
-				// 青～白寄りの噴射炎
-				Vector3 col3 = { 0.6f, 0.8f, 1.0f };
-				float hot = frand(0.9f, 1.3f);
-				col3 = col3 * hot;
-				p.color_ = { col3.x, col3.y, col3.z, 1.0f };
-
-			} else if (kind < 0.85f) {
-				// ============================
-				// ② メインのもくもく白煙
-				// ============================
-				Vector3 local = {
-					std::cos(ang) * radSmoke,
-					frand(-0.15f, 0.25f),
-					frand(-0.8f, -0.3f)               // コアより少し後ろで発生
-				};
-				p.transform_.translate_ = center + local;
-
-				// コアより遅めに後ろへ流れる
-				p.velocity_ = {
-					frand(-0.25f, 0.25f),
-					frand(0.03f, 0.20f),             // 少し上昇
-					frand(-45.0f, -25.0f)
-				};
-
-				// 大きめの丸煙
-				float sc = frand(0.9f, 2.0f);
+				float sc = frand(0.35f, 0.85f);
 				p.transform_.scale_ = { sc, sc, sc };
 
-				// 長めに残って尾を引く
-				p.lifeTime_ = frand(1.2f, 2.4f);
+				Vector3 v = baseV;
+				// 濁りはさらに遅い
+				v.z += frand(2.0f, 5.0f);
+				p.velocity_ = v;
+
+				p.lifeTime_ = frand(0.80f, 1.60f);
 				p.currentTime_ = 0.0f;
 
-				// 白〜薄いグレー
+				// 暗い青紫インク（背景が白でも沈まない）
 				float t = frand(0.0f, 1.0f);
-				Vector3 col3 = {
-					0.82f + 0.05f * t,
-					0.84f + 0.04f * t,
-					0.86f + 0.02f * t
-				};
-				float bright = frand(0.8f, 1.0f);
-				col3 = col3 * bright;
-				p.color_ = { col3.x, col3.y, col3.z, 1.0f };
+				float rCol = 0.18f + 0.06f * t;
+				float gCol = 0.22f + 0.08f * t;
+				float bCol = 0.30f + 0.18f * t;
+
+				// 低α（自機を殺さない）
+				float a = frand(0.08f, 0.16f);
+				p.color_ = { rCol, gCol, bCol, a };
 
 			} else {
 				// ============================
-				// ③ スピードスパーク：速さの“線”
+				// ② RIBBON：ヌメリの筋（ありきたり回避の主役）
 				// ============================
-				Vector3 local = {
-					std::cos(ang) * radSmoke * 0.8f,
-					frand(-0.10f, 0.10f),
-					frand(-0.5f, -0.2f)
-				};
-				p.transform_.translate_ = center + local;
+				// “帯”にする：薄く・長く
+				float thin = frand(0.06f, 0.14f);
+				float len = frand(0.70f, 1.60f);
+				p.transform_.scale_ = { thin, thin, len }; // ※エンジン側の見え方に合わせて xyz 入れ替えOK
 
-				// 細くて速い粒
-				p.velocity_ = {
-					frand(-0.4f, 0.4f),
-					frand(-0.05f, 0.10f),
-					frand(-90.0f, -70.0f)
-				};
+				Vector3 v = baseV;
+				// 帯は少しだけ速く後ろへ
+				v.z += frand(-10.0f, -6.0f);
+				p.velocity_ = v;
 
-				float len = frand(0.8f, 1.4f);
-				float thin = frand(0.10f, 0.18f);
-				p.transform_.scale_ = { thin, len, thin };
-
-				p.lifeTime_ = frand(0.20f, 0.45f);
+				p.lifeTime_ = frand(0.18f, 0.42f);
 				p.currentTime_ = 0.0f;
 
-				// 白～薄いシアンで「スピード線」っぽく
-				Vector3 col3 = { 0.8f, 0.9f, 1.0f };
-				float bright = frand(0.9f, 1.4f);
-				col3 = col3 * bright;
-				p.color_ = { col3.x, col3.y, col3.z, 1.0f };
+				// 生体っぽい紫〜ピンク（でも白にしない）
+				float t = frand(0.0f, 1.0f);
+				float rCol = 0.45f + 0.25f * t;
+				float gCol = 0.30f + 0.10f * t;
+				float bCol = 0.60f + 0.30f * t;
+
+				float a = frand(0.10f, 0.22f);
+				p.color_ = { rCol, gCol, bCol, a };
 			}
 		} else if (groupName == "trail_rb") {
 			// RB：青いスパーク（クールで安定）
