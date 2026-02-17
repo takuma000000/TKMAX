@@ -444,6 +444,19 @@ private:
 	float dodgeSpinTurns_ = 1.0f; // 回避行動のスピン回転数（例: 1.0なら1回転）
 	Vector3 dodgeStartPos_ = { 0,0,0 }; // 回避開始位置
 	Vector3 dodgeDir_ = { 0,0,0 }; // 回避方向（正規化済み）
+	//======================================================================
+	// ひれパタパタ（常時アニメ）
+	//======================================================================
+	/// <summary>
+	/// ひれのパタパタアニメーションを更新します。
+	/// </summary>
+	/// <param name="dt">前フレームからの経過時間（秒）</param>
+	void UpdateFlipperAnim_(float dt);
+	float  flipperAnimT_ = 0.0f;          // アニメ時間
+	Vector3 flipperBaseRot_ = { 0,0,0 };  // ひれの基準回転（ローカル）
+	float  flipperFlapAmp_ = 0.1f;       // 振り幅（ラジアン）
+	float  flipperFlapHz_ = 1.0f;         // 周波数（1秒あたり何往復）
+	float  flipperYawSwayAmp_ = 0.12f;    // ついでの横揺れ（ラジアン）
 
 
 

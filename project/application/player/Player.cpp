@@ -23,6 +23,8 @@ void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommo
 	flipper_->SetModel("turtle_flipper.obj");
 	// 親子付け
 	flipper_->SetParent(object_.get());
+	flipperBaseRot_ = flipper_->GetRotate(); // ヒレの回転の基準値を保存
+	flipperAnimT_ = 0.0f; // ヒレのアニメーション用タイマー
 
 	reticle_ = std::make_unique<Reticle>();
 	reticle_->Initialize(common_, dxCommon_, "reticle_big.obj"); // モデル指定可
@@ -159,6 +161,8 @@ void Player::Update(float dt) {
 		jetEmitter_.SetPosition(jetPos);
 		jetEmitter_.Update();
 	}
+
+	UpdateFlipperAnim_(dt); // ヒレのアニメーション更新
 
 	TKM::ParticleManager::GetInstance()->Update(dt); // パーティクルマネージャー更新
 	object_->Update(); // プレイヤー本体更新
@@ -1016,6 +1020,31 @@ void Player::UpdateRumble(float dt) {
 		rumbleRight_ = 0;
 		TKM::Input::GetInstance()->SetVibration(0, 0);
 	}
+}
+
+void Player::UpdateFlipperAnim_(float dt) {
+	if (!flipper_) { return; }
+
+	flipperAnimT_ += dt;
+
+	// サイン波（-1..+1）
+	float w = 2.0f * MyMath::GetPI() * flipperFlapHz_;
+	float s = std::sinf(flipperAnimT_ * w);
+
+	// パタパタ（上下フラップ）
+	float flap = s * flipperFlapAmp_;
+
+	// ちょい横揺れ（左右の水かき感）
+	float sway = std::sinf(flipperAnimT_ * (w * 0.55f) + 1.2f) * flipperYawSwayAmp_;
+
+	Vector3 r = flipperBaseRot_;
+
+	// どの軸で曲げるかはモデル向き次第
+	// まずは X をフラップ、Y を揺れにしてみる（合わなければ X<->Z を入れ替え）
+	r.x += flap;
+	r.y += sway;
+
+	flipper_->SetRotate(r);
 }
 
 void Player::StartDodge() {
