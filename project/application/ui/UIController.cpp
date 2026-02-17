@@ -1,6 +1,7 @@
 #include "UIController.h"
 #include "TextureManager.h"
 #include <algorithm>
+
 #ifdef USE_IMGUI
 #include "imgui.h"
 #endif
@@ -286,7 +287,7 @@ namespace TKM {
 		if (uiRB_) ApplyShake_(uiRB_.get(), basePosRB_, rbDown, shakeT_RB_);
 		if (uiLB_) ApplyShake_(uiLB_.get(), basePosLB_, lbDown, shakeT_LB_);
 		if (uiX_)  ApplyShake_(uiX_.get(), basePosX_, xDown, shakeT_X_);
-		if(uiRBGaugeIcon_) ApplyShake_(uiRBGaugeIcon_.get(), basePosRBGaugeIcon_, rbDown, shakeT_RBGaugeIcon_);
+		if (uiRBGaugeIcon_) ApplyShake_(uiRBGaugeIcon_.get(), basePosRBGaugeIcon_, rbDown, shakeT_RBGaugeIcon_);
 
 		// ---- LS：倒し方向に同期して動かす ----
 		if (uiLS_) {
@@ -334,8 +335,8 @@ namespace TKM {
 		if (rbGaugeUI_) rbGaugeUI_->Draw();
 	}
 
-#ifdef USE_IMGUI
 	void TKM::UIController::DrawImGui() {
+#ifdef USE_IMGUI
 		if (!ImGui::Begin("UIController")) {
 			ImGui::End();
 			return;
@@ -410,6 +411,6 @@ namespace TKM {
 		}
 
 		ImGui::End();
-	}
 #endif
+	}
 } // namespace TKM
