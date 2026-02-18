@@ -20,7 +20,7 @@ public:
 	};
 
 	struct Desc {
-		std::string panelTex = "./resources/gradationLine.png";
+		std::string panelTex = "./resources/istockphoto-1310563576-612x612.jpg";
 		std::array<std::string, 2> itemTex = {
 			"./resources/start_title.png", // はじめる
 			"./resources/end_title.png",  // とじる

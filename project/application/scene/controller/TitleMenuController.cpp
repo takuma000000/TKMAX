@@ -51,9 +51,9 @@ TitleMenuController::Command TitleMenuController::Update(float dt) {
 	pulseTime_ += dt;
 	float pulse = 1.0f + 0.06f * std::sin(pulseTime_ * 6.0f);
 
-	// パネル（必要なら薄く）
+	// パネル
 	if (panel_) {
-		panel_->SetColor({ 0.08f, 0.08f, 0.10f, 0.75f });
+		panel_->SetColor({ 1.0f, 1.0f, 1.0f, 0.3f }); // 色指定
 		panel_->Update();
 	}
 
@@ -123,7 +123,6 @@ void TitleMenuController::UpdateLayout(float screenW, float screenH) {
 	if (panel_) {
 		panel_->SetPosition(panelPos_);
 		panel_->SetSize(panelSize_);
-		panel_->SetColor({ 1,1,1,0.6f });
 	}
 
 	for (int i = 0; i < (int)Item::Count; ++i) {

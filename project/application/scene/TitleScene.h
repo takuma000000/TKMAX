@@ -57,8 +57,8 @@ private:
 	std::unique_ptr<TKM::Sprite> sprite_ = nullptr; // 2Dスプライト共通
 	std::unique_ptr<TKM::Camera> camera_ = nullptr; // カメラ
 
-	// 背景用の自機（ヘリ）
-	std::unique_ptr<TKM::Object3d> heli_ = nullptr;
+	// タイトル用プレイヤー（見た目だけ）
+	std::unique_ptr<Player> titlePlayer_ = nullptr;
 
 	// 旋回タイマー
 	float t_ = 0.0f;

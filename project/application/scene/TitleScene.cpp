@@ -29,6 +29,7 @@ void TitleScene::Initialize() {
 	TextureManager::GetInstance()->LoadTexture("./resources/uvChecker.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/start_title.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/end_title.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/istockphoto-1310563576-612x612.jpg");
 	TextureManager::GetInstance()->LoadTexture("./resources/rostock_laage_airport_4k.dds");
 	//--------------------------------------------
 	// ------------ モデル読み込み --------------
@@ -37,13 +38,23 @@ void TitleScene::Initialize() {
 	ModelManager::GetInstance()->LoadModel("jerryfish.obj", dxCommon_);
 	ModelManager::GetInstance()->LoadModel("tentacle.obj", dxCommon_);
 	//-----------------------------------------
+	//---------------パーティクル----------------
+	TKM::ParticleManager::GetInstance()->Initialize(dxCommon_, srvManager_, camera_.get());
+	//-----------------------------------------
 
-	heli_ = std::make_unique<TKM::Object3d>();
-	heli_->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_);
-	heli_->SetModel("turtle.obj");
-	heli_->SetCamera(camera_.get());
-	heli_->SetScale({ scale_, scale_, scale_ });
-	heli_->SetTranslate({ 0.0f, baseY_, 0.0f });
+	titlePlayer_ = std::make_unique<Player>();
+	titlePlayer_->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_);
+	titlePlayer_->SetCamera(camera_.get());
+	titlePlayer_->SetParentScene(this);
+
+	// タイトルでは操作させない（入力・弾など止まる）
+	titlePlayer_->SetControlEnabled(false);
+	// レティクルいらないなら消す
+	titlePlayer_->SetReticleVisible(false);
+
+	// 初期配置（今 heli_ に入れてたのと同じ）
+	titlePlayer_->SetPosition({ 0.0f, baseY_, 0.0f });
+	titlePlayer_->SetRotation({ 0.0f, 0.0f, 0.0f });
 
 	sprite_ = std::make_unique<Sprite>();
 	sprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, "./resources/title_kuraran.png");
@@ -109,10 +120,6 @@ void TitleScene::Initialize() {
 		titleTentacles_.push_back(std::move(tent));
 	}
 
-	//---------------パーティクル----------------
-	TKM::ParticleManager::GetInstance()->Initialize(dxCommon_, srvManager_, camera_.get());
-	//-----------------------------------------
-
 	// ---------------水面波紋エフェクト----------------
 	rippleEffect_ = std::make_unique<TKM::WaterRippleEffect>();
 	rippleEffect_->Initialize(dxCommon_);
@@ -158,10 +165,13 @@ void TitleScene::Update() {
 	float dirZ = std::cos(t_);
 	float yaw = std::atan2(dirX, dirZ) + yawOffset_;
 
-	heli_->SetTranslate(pos);
-	heli_->SetRotate({ 0.0f, yaw, 0.0f });
-	heli_->SetScale({ scale_, scale_, scale_ });
-	heli_->Update();
+	if (titlePlayer_) {
+		titlePlayer_->SetPosition(pos);
+		titlePlayer_->SetRotation({ 0.0f, yaw, 0.0f });
+
+		// 入力なしで見た目だけ更新（flipper も更新される）
+		titlePlayer_->UpdateVisualOnly(dt_);
+	}
 
 	enemyTime_ += 0.01f * std::max(0.0f, enemySpeed_);
 
@@ -284,24 +294,24 @@ void TitleScene::Update() {
 
 #ifdef USE_IMGUI
 
-	// === ImGui ===
-	ImGui::Begin("Title Heli (Background)");
-	// position
-	ImGui::Text("Heli Position: (%.2f, %.2f, %.2f)", heli_->GetTranslate().x, heli_->GetTranslate().y, heli_->GetTranslate().z);
-	ImGui::SliderFloat("Radius", &radius_, 0.0f, 30.0f);
-	ImGui::SliderFloat("BaseY", &baseY_, -5.0f, 10.0f);
-	ImGui::SliderFloat("Bob Amp", &bobAmp_, 0.0f, 5.0f);
-	ImGui::SliderFloat("Speed", &speed_, 0.0f, 5.0f);
-	ImGui::SliderFloat("Yaw Offset", &yawOffset_, -3.14f, 3.14f);
-	ImGui::SliderFloat("Scale", &scale_, 0.1f, 5.0f);
-	ImGui::Separator();
-	ImGui::SliderFloat("Cam Dist", &camDist_, 2.0f, 60.0f);
-	ImGui::SliderFloat("Cam Y", &camY_, -5.0f, 20.0f);
-	if (ImGui::Button("Apply Camera")) {
-		camera_->SetTranslate({ 0.0f, camY_, -camDist_ });
-		camera_->Update();
-	}
-	ImGui::End();
+	//// === ImGui ===
+	//ImGui::Begin("Title Heli (Background)");
+	//// position
+	/*ImGui::Text("Heli Position: (%.2f, %.2f, %.2f)", heli_->GetTranslate().x, heli_->GetTranslate().y, heli_->GetTranslate().z);
+	//ImGui::SliderFloat("Radius", &radius_, 0.0f, 30.0f);
+	//ImGui::SliderFloat("BaseY", &baseY_, -5.0f, 10.0f);
+	//ImGui::SliderFloat("Bob Amp", &bobAmp_, 0.0f, 5.0f);
+	//ImGui::SliderFloat("Speed", &speed_, 0.0f, 5.0f);
+	//ImGui::SliderFloat("Yaw Offset", &yawOffset_, -3.14f, 3.14f);
+	//ImGui::SliderFloat("Scale", &scale_, 0.1f, 5.0f);
+	//ImGui::Separator();
+	//ImGui::SliderFloat("Cam Dist", &camDist_, 2.0f, 60.0f);
+	//ImGui::SliderFloat("Cam Y", &camY_, -5.0f, 20.0f);
+	//if (ImGui::Button("Apply Camera")) {
+	//	camera_->SetTranslate({ 0.0f, camY_, -camDist_ });
+	//	camera_->Update();
+	}*/
+	//ImGui::End();
 
 #endif // USE_IMGUI
 }
@@ -309,7 +319,7 @@ void TitleScene::Update() {
 void TitleScene::Draw() {
 	// 3Dは3Dでまとめて
 	TKM::Object3dCommon::GetInstance()->DrawSetCommon();
-	if (heli_) heli_->Draw(dxCommon_);
+	if (titlePlayer_) titlePlayer_->Draw(dxCommon_);
 	for (auto& t : titleTentacles_) t->Draw(dxCommon_); // 触手
 	for (auto& e : titleEnemies_) e->Draw(dxCommon_);   // 傘
 	if (skybox_) skybox_->Draw();

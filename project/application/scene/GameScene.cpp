@@ -252,7 +252,6 @@ void GameScene::LoadTextures() {
 	TextureManager::GetInstance()->LoadTexture("./resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
 	TextureManager::GetInstance()->LoadTexture("./resources/Ground.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/start.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/reticle.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/damageSpark.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/firework_star.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/RB_ui.png");
@@ -301,7 +300,6 @@ void GameScene::LoadModels() {
 	ModelManager::GetInstance()->LoadModel("ground.obj", dxCommon_);
 	ModelManager::GetInstance()->LoadModel("turtle.obj", dxCommon_);
 	ModelManager::GetInstance()->LoadModel("turtle_flipper.obj", dxCommon_);
-	ModelManager::GetInstance()->LoadModel("enemy.obj", dxCommon_);
 	ModelManager::GetInstance()->LoadModel("jerryfish.obj", dxCommon_);
 	ModelManager::GetInstance()->LoadModel("jerryfish_boss.obj", dxCommon_);
 	ModelManager::GetInstance()->LoadModel("tentacle.obj", dxCommon_);
