@@ -545,6 +545,13 @@ void Player::SetShootingEnabled(bool enabled) {
 	}
 }
 
+void Player::SetRumbleEnabled(bool enabled) {
+	rumbleEnabled_ = enabled; // コントローラー振動の有効 / 無効を切り替えるフラグ
+	if (!enabled) { // 無効にするなら、今鳴ってるのも即停止（追い振動も潰す）
+		StopRumble(); // 鳴ってる最中のも即停止（追い振動も潰す）
+	}
+}
+
 void Player::HandleGamePadMove() {
 	if (!object_) return;
 	if (isDodging_) return;
@@ -1022,11 +1029,12 @@ void Player::ZoomCamera() {
 }
 
 void Player::StartRumble(float sec, WORD leftMotor, WORD rightMotor) {
+	if (!rumbleEnabled_) { return; } // 振動禁止中は無視
 	// 既に鳴ってる場合は「強い方」「長い方」を優先（重なっても破綻しにくい）
 	rumbleT_ = std::max(rumbleT_, sec);
 	rumbleLeft_ = std::max(rumbleLeft_, leftMotor);
 	rumbleRight_ = std::max(rumbleRight_, rightMotor);
-
+	// 追い振動は、今鳴ってるのにさらに強い振動が来たときに、上書きせずに追加するイメージ
 	TKM::Input::GetInstance()->SetVibration(rumbleLeft_, rumbleRight_);
 }
 

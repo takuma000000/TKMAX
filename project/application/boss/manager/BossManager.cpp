@@ -130,6 +130,7 @@ void BossManager::StartBattle() {
 	}
 	if (player_) {
 		player_->SetShootingEnabled(true); // ボス戦開始で射撃許可
+		player_->SetRumbleEnabled(true); // ボス戦開始でコントローラー振動許可
 	}
 }
 
@@ -148,10 +149,18 @@ void BossManager::Update(float dt) {
 	// 撃破演出中：ボスの攻撃を完全停止
 	// ================================
 	if (boss_ && (boss_->IsDying() || boss_->IsDead())) { // ボスが死亡リアクション中 or 死亡している とき
+		// 撃破シーケンス中はプレイヤーの攻撃を止める
+		player_->SetShootingEnabled(false);
+		// 撃破シーケンス中はコントローラー振動も止める
+		player_->SetRumbleEnabled(false);
 		// 1回だけ：残ってる弾を消して、以降当たり判定も出さない
 		if (!killSeq_.attacksStopped_) {
 			bossBullets_.clear(); // 既に出てる弾も全消し
 			killSeq_.attacksStopped_ = true; // フラグセット
+		}
+		// HPバーUI更新（HP減少演出のためにUpdateは呼ぶ）
+		if (hpUI_ && boss_) {
+			hpUI_->Update(dt, boss_.get()); // HPバーUI更新
 		}
 		boss_->Update(dt); // ボス本体更新（死亡リアクションのためにUpdateは呼ぶ）
 		// 撃破ズーム/スロー開始（既存処理を活かす）
@@ -164,9 +173,6 @@ void BossManager::Update(float dt) {
 				killSeq_.slowTriggered_ = true; // フラグセット
 			}
 		}
-		// 撃破シーケンス中はプレイヤーの攻撃を止める
-		player_->SetShootingEnabled(false);
-
 		return;
 	}
 
@@ -283,7 +289,8 @@ void BossManager::Draw(TKM::DirectXCommon* dxCommon) {
 }
 
 void BossManager::DrawUI() {
-	if (hpUI_ && bossBattle_ && boss_ && !boss_->IsDead()) { // HPバーUI描画
+	// もしボス戦中ならHPバーUIも描画
+	if (hpUI_ && bossBattle_ && boss_) { // HPバーUI描画
 		hpUI_->Draw(); // 描画
 	}
 }

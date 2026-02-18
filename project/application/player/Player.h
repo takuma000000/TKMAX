@@ -243,6 +243,11 @@ public:
 	/// </summary>
 	/// <param name="enabled">射撃を有効にする場合 true、それ以外は false</param>
 	void SetShootingEnabled(bool enabled);
+	/// <summary>
+	/// ゲームパッドの振動の有効/無効を設定します。
+	/// </summary>
+	/// <param name="enabled">振動を有効にする場合 true、それ以外は false</param>
+	void SetRumbleEnabled(bool enabled);
 	// =========================================
 
 	enum class DeathPhase { None, FaultSparks, FlyAway }; // 撃墜演出フェーズ
@@ -321,7 +326,6 @@ private:
 	int     cameraShakeFrame_ = 0;
 	float   shakeBaseStrength_ = 1.8f;   // 基本のシェイク強度
 	float   shakeZoomBoost_ = 8.0f;   // ズーム時の追加倍率
-
 	float  bankAngle_ = 0.0f;                 // 現在の傾き（ロール）
 	float  bankVel_ = 0.0f;                 // 補間用
 	Vector3 moveMin_ = { -100.0f, -20.0f, 0.0f }; // 移動範囲（Zは固定）
@@ -331,22 +335,19 @@ private:
 	//======================================================================
 	bool rtHeld_ = false; // RTをいま保持中か
 	bool ltHeld_ = false; // LTの押下状態ラッチ
-
-	ParticleEmitter jetEmitter_;
-
+	ParticleEmitter jetEmitter_; // ジェット煙エミッタ
 	bool debugUnlimitedSpecial_ = false; // ImGuiでONならRTを無制限発射
-
 	bool enableJetSmoke_ = true; // デフォルトON
 	//======================================================================
 	// プレイヤー状態 / 制御フラグ
 	//======================================================================
 	int  maxHp_ = 5; // 最大HP
 	int  hp_ = 5;    // 初期HP
-
 	bool canUseSpecial_ = false; // 一撃必殺が使用可能かどうか
 	bool controlEnabled_ = true;  // trueなら通常操作、falseなら入力系を全部無視
 	bool reticleVisible_ = true;  // trueならレティクル描画
 	bool shootingEnabled_ = true; // trueなら射撃可能、falseなら射撃禁止
+	bool rumbleEnabled_ = true; // true=振動OK / false=振動禁止
 	//======================================================================
 	// 撃墜演出（故障スパーク → 吹き飛び）
 	//======================================================================
@@ -375,7 +376,6 @@ private:
 	float       ltZoomHold_ = 0.0f;    // 最小倍率でホールドする秒数
 	Vector3     camSavedPos_;            // カメラ位置保存用
 	Vector3     camSavedRot_;            // カメラ回転保存用
-
 	// --- ボス撃破時ズームアウト ---
 	bool        bossZoomActive_ = false; // ボス撃破ズーム中か
 	Ease::Tween bossZoomTween_;          // ボス用のズームトゥイーン
