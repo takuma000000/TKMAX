@@ -128,6 +128,9 @@ void BossManager::StartBattle() {
 	if (hpUI_) { // HPバーUI表示
 		hpUI_->SetVisible(true); // 表示ON
 	}
+	if (player_) {
+		player_->SetShootingEnabled(true); // ボス戦開始で射撃許可
+	}
 }
 
 void BossManager::Update(float dt) {
@@ -145,7 +148,6 @@ void BossManager::Update(float dt) {
 	// 撃破演出中：ボスの攻撃を完全停止
 	// ================================
 	if (boss_ && (boss_->IsDying() || boss_->IsDead())) { // ボスが死亡リアクション中 or 死亡している とき
-
 		// 1回だけ：残ってる弾を消して、以降当たり判定も出さない
 		if (!killSeq_.attacksStopped_) {
 			bossBullets_.clear(); // 既に出てる弾も全消し
@@ -162,6 +164,9 @@ void BossManager::Update(float dt) {
 				killSeq_.slowTriggered_ = true; // フラグセット
 			}
 		}
+		// 撃破シーケンス中はプレイヤーの攻撃を止める
+		player_->SetShootingEnabled(false);
+
 		return;
 	}
 

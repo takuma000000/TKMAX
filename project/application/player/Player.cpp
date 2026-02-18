@@ -124,7 +124,9 @@ void Player::Update(float dt) {
 		}
 	}
 
-	HandleShooting(); // 先にプレイヤーの操作より下に置くと自然
+	if (shootingEnabled_) { // 射撃処理
+		HandleShooting(); // 先にプレイヤーの操作より下に置くと自然
+	}
 
 	for (auto it = bullets_.begin(); it != bullets_.end(); ) { // 弾更新と削除
 		(*it)->Update();
@@ -532,6 +534,15 @@ void Player::StopRumble() {
 
 	// 実際に振動も止める
 	TKM::Input::GetInstance()->SetVibration(0, 0);
+}
+
+void Player::SetShootingEnabled(bool enabled) {
+	shootingEnabled_ = enabled; // シューティングの有効 / 無効を切り替えるフラグ
+	if (!enabled) { // 無効にするなら、関連する状態もリセットしておく
+		// 押しっぱなし判定が残らないようにする（復帰時の暴発防止）
+		rtHeld_ = false; // LB/RBは今のところ特に持続処理がないのでリセット不要
+		ltHeld_ = false; // LB/RBは今のところ特に持続処理がないのでリセット不要
+	}
 }
 
 void Player::HandleGamePadMove() {

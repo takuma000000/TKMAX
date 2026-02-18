@@ -236,8 +236,13 @@ public:
 	/// <summary>
 	/// プレイヤーの回転を設定します。
 	/// </summary>
-	/// <param name="r"></param>
+	/// <param name="r">設定する回転角（度数法）</param>
 	void SetRotation(const Vector3& r) { object_->SetRotate(r); }
+	/// <summary>
+	/// プレイヤーの射撃の有効/無効を設定します。
+	/// </summary>
+	/// <param name="enabled">射撃を有効にする場合 true、それ以外は false</param>
+	void SetShootingEnabled(bool enabled);
 	// =========================================
 
 	enum class DeathPhase { None, FaultSparks, FlyAway }; // 撃墜演出フェーズ
@@ -341,6 +346,7 @@ private:
 	bool canUseSpecial_ = false; // 一撃必殺が使用可能かどうか
 	bool controlEnabled_ = true;  // trueなら通常操作、falseなら入力系を全部無視
 	bool reticleVisible_ = true;  // trueならレティクル描画
+	bool shootingEnabled_ = true; // trueなら射撃可能、falseなら射撃禁止
 	//======================================================================
 	// 撃墜演出（故障スパーク → 吹き飛び）
 	//======================================================================
