@@ -99,6 +99,10 @@ public:
 	/// </summary>
 	/// <param name="frameCount">シェイク継続フレーム数</param>
 	void StartCameraShake(int frameCount);
+	/// <summary>
+	/// ゲームパッドの振動停止。
+	/// </summary>
+	void StopRumble();
 
 	// Getter===================================
 	/// <summary>

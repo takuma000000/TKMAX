@@ -517,6 +517,23 @@ void Player::StartCameraShake(int frameCount) {
 	cameraShakeFrame_ = frameCount; // シェイクフレーム数セット
 }
 
+void Player::StopRumble() {
+	// タイマー・強度を全部リセット
+	rumbleT_ = 0.0f;
+	rumbleLeft_ = 0;
+	rumbleRight_ = 0;
+
+	// 追い振動も潰す
+	rumble2Pending_ = false;
+	rumble2DelayT_ = 0.0f;
+	rumble2Sec_ = 0.0f;
+	rumble2Left_ = 0;
+	rumble2Right_ = 0;
+
+	// 実際に振動も止める
+	TKM::Input::GetInstance()->SetVibration(0, 0);
+}
+
 void Player::HandleGamePadMove() {
 	if (!object_) return;
 	if (isDodging_) return;
