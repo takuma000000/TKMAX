@@ -40,6 +40,7 @@ public:
 		bool zoomStarted_ = false; // ズーム開始フラグ
 		bool slowTriggered_ = false; // スローモーション発動済みフラグ
 		bool rippleTriggered_ = false; // スローモーション/波紋エフェクト発動済みフラグ
+		bool attacksStopped_ = false; // 撃破中に攻撃を止めたか
 
 		/// <summary>
 		/// リセット。
@@ -48,6 +49,7 @@ public:
 			zoomStarted_ = false; // ズーム開始フラグ
 			slowTriggered_ = false; // スローモーション発動済みフラグ
 			rippleTriggered_ = false; // スローモーション/波紋エフェクト発動済みフラグ
+			attacksStopped_ = false; // 撃破中に攻撃を止めたか
 		}
 	};
 
@@ -145,11 +147,7 @@ public:
 	/// 使用するカメラを設定します。
 	/// </summary>
 	/// <param name="camera">描画および判定に使用するカメラ</param>
-	void SetCamera(TKM::Camera* camera) {
-		camera_ = camera;
-		if (boss_) { boss_->SetCamera(camera_); }
-		for (auto& b : bossBullets_) { b->SetCamera(camera_); }
-	}
+	void SetCamera(TKM::Camera* camera);
 	// =========================================
 
 private:

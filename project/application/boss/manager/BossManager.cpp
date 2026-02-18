@@ -141,6 +141,30 @@ void BossManager::Update(float dt) {
 		if (slashIdHoldT_ < 0.0f) { slashIdHoldT_ = 0.0f; }
 	}
 
+	// ================================
+	// 撃破演出中：ボスの攻撃を完全停止
+	// ================================
+	if (boss_ && (boss_->IsDying() || boss_->IsDead())) { // ボスが死亡リアクション中 or 死亡している とき
+
+		// 1回だけ：残ってる弾を消して、以降当たり判定も出さない
+		if (!killSeq_.attacksStopped_) {
+			bossBullets_.clear(); // 既に出てる弾も全消し
+			killSeq_.attacksStopped_ = true; // フラグセット
+		}
+		boss_->Update(dt); // ボス本体更新（死亡リアクションのためにUpdateは呼ぶ）
+		// 撃破ズーム/スロー開始（既存処理を活かす）
+		if (!killSeq_.zoomStarted_ && boss_->IsDying()) { // ボス撃破リアクション開始時
+			if (player_) { player_->StartBossDeathCameraZoom(); } // 撃破ズーム開始
+			killSeq_.zoomStarted_ = true; // フラグセット
+
+			if (!killSeq_.slowTriggered_ && timeScale_) { // スローモーション開始
+				timeScale_->RequestSlow(kBossConfig_.killSlowScale_, kBossConfig_.killSlowDuration_); // 撃破時スローモーションリクエスト
+				killSeq_.slowTriggered_ = true; // フラグセット
+			}
+		}
+		return;
+	}
+
 	if (bossController_) {
 		bossController_->Update(dt, *boss_); // ボス挙動コントローラ更新
 	}
@@ -153,18 +177,16 @@ void BossManager::Update(float dt) {
 	// --- Missile（通常時攻撃その1） ---
 	{
 		Vector3 mPos_{}; // 発射位置
-		Vector3 mTarget_{};
-		float mSpeed_ = 0.0f;
-		float mCurveH_ = 0.0f;
-		int mDmg_ = 0;
-		int mLife_ = 0;
+		Vector3 mTarget_{}; // ターゲット位置
+		float mSpeed_ = 0.0f; // 移動速度
+		float mCurveH_ = 0.0f; // 曲線の高さ（0で直線、正で右カーブ、負で左カーブ）
+		int mDmg_ = 0; // ダメージ量
+		int mLife_ = 0; // 生存フレーム数
 
 		if (bossController_->ConsumeMissileFireRequest(mPos_, mTarget_, mSpeed_, mCurveH_, mDmg_, mLife_)) {
 			// BossBulletは「speedが1フレ移動量」なので dt掛けた値を渡す（君が既にやってるやつ）
 			const float spPerFrame_ = mSpeed_ * dt;
-
-			auto bullet_ = std::make_unique<BossBullet>();
-
+			auto bullet_ = std::make_unique<BossBullet>(); // 弾オブジェクト生成
 			// dirはInitializeのために一応入れる（曲線モードでは使われない）
 			Vector3 dir_{ mTarget_.x - mPos_.x, mTarget_.y - mPos_.y, mTarget_.z - mPos_.z };
 			dir_ = MyMath::SafeNormalize(dir_, { 0.0f, 0.0f, 1.0f });
@@ -280,11 +302,7 @@ bool BossManager::IsBossAlive() const {
 }
 
 bool BossManager::IsBossDead() const {
-	return boss_ && boss_->IsDead(); // ボス存在かつ死亡中
-
-	if (hpUI_ && boss_ && boss_->IsDead()) { // ボス死亡時HPバーUI非表示
-		hpUI_->SetVisible(false); // 非表示
-	}
+	return boss_ && boss_->IsDead(); // ボス存在かつ死亡している
 }
 
 void BossManager::OnClearSequenceStart() {
@@ -293,6 +311,12 @@ void BossManager::OnClearSequenceStart() {
 	boss_.reset(); // ボスオブジェクト破棄
 	bossController_.reset(); // ボス挙動コントローラ破棄
 	bossP2BgmPlayed_ = false; // P2BGM再生フラグリセット
+}
+
+void BossManager::SetCamera(TKM::Camera* camera) {
+	camera_ = camera; // カメラセット
+	if (boss_) { boss_->SetCamera(camera_); } // ボス本体にカメラセット
+	for (auto& b : bossBullets_) { b->SetCamera(camera_); } // ボス弾すべてにカメラセット
 }
 
 void BossManager::UpdateBossBullets() {
