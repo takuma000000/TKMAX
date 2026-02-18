@@ -463,4 +463,16 @@ private:
 	float  flipperFlapAmp_ = 0.1f;       // 振り幅（ラジアン）
 	float  flipperFlapHz_ = 1.0f;         // 周波数（1秒あたり何往復）
 	float  flipperYawSwayAmp_ = 0.12f;    // ついでの横揺れ（ラジアン）
+	//======================================================================
+	// ぷかぷか（常時上下）
+	//======================================================================
+	/// <summary>
+	/// プレイヤーの上下ぷかぷかアニメーションを更新します。
+	/// </summary>
+	/// <param name="dt">前フレームからの経過時間（秒）</param>
+	void UpdateFloatBob_(float dt);
+	float floatT_ = 0.0f;          // 経過時間
+	float floatAmp_ = 0.1f;       // 振幅（上下の大きさ）
+	float floatHz_ = 0.35f;        // 周波数（ゆっくり）
+	bool  enableFloatBob_ = true;  // ON/OFF
 };

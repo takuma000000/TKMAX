@@ -163,6 +163,7 @@ void Player::Update(float dt) {
 	}
 
 	UpdateFlipperAnim_(dt); // ヒレのアニメーション更新
+	UpdateFloatBob_(dt); // 浮遊のアニメーション更新
 
 	TKM::ParticleManager::GetInstance()->Update(dt); // パーティクルマネージャー更新
 	object_->Update(); // プレイヤー本体更新
@@ -1046,6 +1047,22 @@ void Player::UpdateFlipperAnim_(float dt) {
 	r.y += sway;
 
 	flipper_->SetRotate(r);
+}
+
+void Player::UpdateFloatBob_(float dt) {
+	if (!enableFloatBob_) { return; }
+	if (!object_) { return; }
+
+	floatT_ += dt;
+
+	// -1..+1 のサイン波
+	float w = 2.0f * MyMath::GetPI() * floatHz_;
+	float s = std::sinf(floatT_ * w);
+
+	// いまの座標に「見た目だけ」足す（Yだけ）
+	Vector3 pos = object_->GetTranslate();
+	pos.y += s * floatAmp_;
+	object_->SetTranslate(pos);
 }
 
 void Player::StartDodge() {
