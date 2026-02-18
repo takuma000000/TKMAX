@@ -15,7 +15,7 @@
 inline std::unique_ptr<TKM::Sprite> CreateCenteredIrisSprite(
 	TKM::DirectXCommon* dxCommon,
 	float& outMaxScale,
-	const char* texturePath = "./resources/circle2.png")
+	const char* texturePath = "./resources/texture/circle2.png")
 {
 	auto sprite_ = std::make_unique<TKM::Sprite>();
 	sprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon, texturePath);

@@ -22,14 +22,14 @@ namespace TKM {
 		};
 		// 設定構造体
 		struct Desc {
-			std::string curtainTex = "./resources/gradationLine.png"; // 暗幕
-			std::string panelTex = "./resources/gradationLine.png"; // パネル
+			std::string curtainTex = "./resources/texture/gradationLine.png"; // 暗幕
+			std::string panelTex = "./resources/texture/gradationLine.png"; // パネル
 			std::array<std::string, 3> itemTex = {
-				"./resources/resume_pause.png", // Resume
-				"./resources/restart_pause.png", // Restart
-				"./resources/title_pause.png"  // ReturnToTitle
+				"./resources/texture/resume_pause.png", // Resume
+				"./resources/texture/restart_pause.png", // Restart
+				"./resources/texture/title_pause.png"  // ReturnToTitle
 			};
-			std::string cursorTex = "./resources/circle2.png"; // カーソル
+			std::string cursorTex = "./resources/texture/circle2.png"; // カーソル
 		};
 
 		/// <summary>

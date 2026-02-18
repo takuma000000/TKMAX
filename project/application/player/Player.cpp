@@ -37,13 +37,13 @@ void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommo
 
 	// パーティクルグループ作成
 	TKM::ParticleManager::GetInstance()->CreateParticleGroup(
-		"jetSmoke", "./resources/circle.png", TKM::ParticleManager::ParticleType::NORMAL); // ジェット煙
+		"jetSmoke", "./resources/texture/circle.png", TKM::ParticleManager::ParticleType::NORMAL); // ジェット煙
 	TKM::ParticleManager::GetInstance()->CreateParticleGroup(
-		"damageSpark", "./resources/circle2.png", TKM::ParticleManager::ParticleType::NORMAL); // 故障スパーク（バチバチ）
-	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_rb", "./resources/circle2.png", TKM::ParticleManager::ParticleType::NORMAL); // 弾の軌跡
-	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lb", "./resources/circle2.png", TKM::ParticleManager::ParticleType::NORMAL); // 弾の軌跡
-	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_rt", "./resources/circle2.png", TKM::ParticleManager::ParticleType::NORMAL); // 弾の軌跡
-	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lt", "./resources/circle2.png", TKM::ParticleManager::ParticleType::NORMAL); // 弾の軌跡
+		"damageSpark", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL); // 故障スパーク（バチバチ）
+	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_rb", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL); // 弾の軌跡
+	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lb", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL); // 弾の軌跡
+	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_rt", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL); // 弾の軌跡
+	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lt", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL); // 弾の軌跡
 
 	if (enableJetSmoke_) { // ジェット煙初期化
 		Vector3 jetPos = object_->GetTranslate();

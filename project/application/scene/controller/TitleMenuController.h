@@ -20,12 +20,12 @@ public:
 	};
 
 	struct Desc {
-		std::string panelTex = "./resources/istockphoto-1310563576-612x612.jpg";
+		std::string panelTex = "./resources/texture/istockphoto-1310563576-612x612.jpg";
 		std::array<std::string, 2> itemTex = {
-			"./resources/start_title.png", // はじめる
-			"./resources/end_title.png",  // とじる
+			"./resources/texture/start_title.png", // はじめる
+			"./resources/texture/end_title.png",  // とじる
 		};
-		std::string cursorTex = "./resources/circle2.png";
+		std::string cursorTex = "./resources/texture/circle2.png";
 	};
 
 	void Initialize(

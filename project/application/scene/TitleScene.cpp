@@ -22,15 +22,14 @@ void TitleScene::Initialize() {
 	camera_->SetTranslate({ 0.0f, camY_, -30.0f });
 
 	// ------------ テクスチャ読み込み -----------using TKM::Camera;---
-	TextureManager::GetInstance()->LoadTexture("./resources/circle.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/gradationLine.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/circle2.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/title_kuraran.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/uvChecker.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/start_title.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/end_title.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/istockphoto-1310563576-612x612.jpg");
-	TextureManager::GetInstance()->LoadTexture("./resources/rostock_laage_airport_4k.dds");
+	TextureManager::GetInstance()->LoadTexture("./resources/texture/circle.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/texture/gradationLine.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/texture/circle2.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/texture/title_kuraran.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/texture/start_title.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/texture/end_title.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/texture/istockphoto-1310563576-612x612.jpg");
+	TextureManager::GetInstance()->LoadTexture("./resources/texture/rostock_laage_airport_4k.dds");
 	//--------------------------------------------
 	// ------------ モデル読み込み --------------
 	ModelManager::GetInstance()->LoadModel("turtle.obj", dxCommon_);
@@ -57,7 +56,7 @@ void TitleScene::Initialize() {
 	titlePlayer_->SetRotation({ 0.0f, 0.0f, 0.0f });
 
 	sprite_ = std::make_unique<Sprite>();
-	sprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, "./resources/title_kuraran.png");
+	sprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, "./resources/texture/title_kuraran.png");
 	// 画面中央に表示
 	sprite_->SetPosition({ 0.0f,0.0f });
 	sprite_->SetSize({ 1.0f, 1.0f });
@@ -66,12 +65,12 @@ void TitleScene::Initialize() {
 	dirLight_->Initialize({ 1,1,1,1 }, { 0.0f, -1.0f, 0.0f }, 1.0f);
 
 	skybox_ = std::make_unique<TKM::Skybox>();
-	skybox_->Initialize(dxCommon_, srvManager_, "resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
+	skybox_->Initialize(dxCommon_, srvManager_, "resources/texture/kloofendal_48d_partly_cloudy_puresky_1k.dds");
 	skybox_->SetCamera(camera_.get());
 
 	// === Iris sprite (白円) 共通ユーティリティ版 ===
 	// 画面中央配置＋画面を覆う最大スケール irisMax_ をまとめて計算
-	iris_ = CreateCenteredIrisSprite(dxCommon_, irisMax_, "./resources/circle2.png");
+	iris_ = CreateCenteredIrisSprite(dxCommon_, irisMax_, "./resources/texture/circle2.png");
 	// 色だけここで上書き（白・不透明）
 	iris_->SetColor({ 1,1,1,1 });
 	// 開始／終了スケールの設定

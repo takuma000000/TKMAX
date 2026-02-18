@@ -155,11 +155,11 @@ namespace TKM {
 		colRBGaugeIcon_ = { 1,1,1,1 };
 
 		// 右側UI（差し替えたい画像パスはここだけ）
-		lbTex_ = "./resources/LB_ui.png";
-		rbTex_ = "./resources/RB_ui.png";
-		xTex_ = "./resources/X_ui.png";
-		lsTex_ = "./resources/LS_ui.png";
-		rbGaugeIconTex_ = "./resources/RB_gauge_ui.png";
+		lbTex_ = "./resources/texture/LB_ui.png";
+		rbTex_ = "./resources/texture/RB_ui.png";
+		xTex_ = "./resources/texture/X_ui.png";
+		lsTex_ = "./resources/texture/LS_ui.png";
+		rbGaugeIconTex_ = "./resources/texture/RB_gauge_ui.png";
 
 		uiLB_ = CreateSprite_(lbTex_, { 1.0f, 1.0f }, &lbTexSize_);
 		uiRB_ = CreateSprite_(rbTex_, { 1.0f, 1.0f }, &rbTexSize_);
@@ -179,8 +179,8 @@ namespace TKM {
 		hpFrame_ = std::make_unique<Sprite>();
 		hpFill_ = std::make_unique<Sprite>();
 
-		const std::string hpFrameTex = "./resources/player_hp_frame.jpg";
-		const std::string hpFillTex = "./resources/player_hp.jpg";
+		const std::string hpFrameTex = "./resources/texture/player_hp_frame.jpg";
+		const std::string hpFillTex = "./resources/texture/player_hp.jpg";
 
 		hpFrame_->Initialize(spriteCommon_, dxCommon_, hpFrameTex);
 		hpFill_->Initialize(spriteCommon_, dxCommon_, hpFillTex);

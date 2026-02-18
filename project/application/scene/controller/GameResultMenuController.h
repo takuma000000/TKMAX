@@ -17,12 +17,12 @@ public:
 	};
 
 	struct Desc {
-		std::string panelTex = "./resources/gradationLine.png";
+		std::string panelTex = "./resources/texture/gradationLine.png";
 		std::array<std::string, 2> itemTex = {
-			"./resources/restart_pause.png",       // リスタート
-			"./resources/title_pause.png",     // タイトルに戻る
+			"./resources/texture/restart_pause.png",       // リスタート
+			"./resources/texture/title_pause.png",     // タイトルに戻る
 		};
-		std::string cursorTex = "./resources/circle2.png";
+		std::string cursorTex = "./resources/texture/circle2.png";
 	};
 
 	void Initialize(

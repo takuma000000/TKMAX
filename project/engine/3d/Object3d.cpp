@@ -57,7 +57,7 @@ namespace TKM {
 		environmentSrvHandleGPU_.ptr = 0;
 
 		// Object3d::Initialize()
-		environmentSrvHandleGPU_ = TextureManager::GetInstance()->GetSrvHandleGPU("./resources/rostock_laage_airport_4k.dds");
+		environmentSrvHandleGPU_ = TextureManager::GetInstance()->GetSrvHandleGPU("./resources/texture/rostock_laage_airport_4k.dds");
 		if (environmentData_) { // 環境マップデータが存在する場合
 			environmentData_->useEnvironment_ = false;
 		}

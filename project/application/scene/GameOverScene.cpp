@@ -13,8 +13,8 @@ using namespace TKM;
 void GameOverScene::Initialize() {
 	ModelManager::GetInstance()->LoadModel("turtle.obj", dxCommon_);
 	ModelManager::GetInstance()->LoadModel("turtle_flipper.obj", dxCommon_);
-	TextureManager::GetInstance()->LoadTexture("./resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
-	TextureManager::GetInstance()->LoadTexture("./resources/over.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/texture/kloofendal_48d_partly_cloudy_puresky_1k.dds");
+	TextureManager::GetInstance()->LoadTexture("./resources/texture/over.png");
 
 	// --- カメラ ---
 	camera_ = std::make_unique<Camera>();
@@ -53,13 +53,13 @@ void GameOverScene::Initialize() {
 
 	// --- skybox ---
 	skybox_ = std::make_unique<Skybox>();
-	skybox_->Initialize(dxCommon_, srvManager_, "resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
+	skybox_->Initialize(dxCommon_, srvManager_, "resources/texture/kloofendal_48d_partly_cloudy_puresky_1k.dds");
 	skybox_->SetCamera(camera_.get());
 
 	// --- Iris（Title / GameScene と同一仕様・共通ユーティリティ版）---
 
 	// 画面中央に iris を作成し、irisMaxScale_（画面を覆える最大サイズ）を計算
-	iris_ = CreateCenteredIrisSprite(dxCommon_, irisMaxScale_, "./resources/circle2.png");
+	iris_ = CreateCenteredIrisSprite(dxCommon_, irisMaxScale_, "./resources/texture/circle2.png");
 
 	// 入場は「覆った状態 → 0」へ（OutBack, 0.8s）
 	irisScale_ = irisMaxScale_;
@@ -75,17 +75,17 @@ void GameOverScene::Initialize() {
 
 	// --- 墜落用パーティクルグループ作成（circle.pngでOK） ---
 	auto* PM = ParticleManager::GetInstance();
-	PM->CreateParticleGroup("crashFlame", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
+	PM->CreateParticleGroup("crashFlame", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
 	// 予備：火花（damageSpark）も使う
-	PM->CreateParticleGroup("damageSpark", "./resources/circle.png", ParticleManager::ParticleType::NORMAL);
+	PM->CreateParticleGroup("damageSpark", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
 	// --- 流星/降下ストリーク（縦に細長い線） ---
-	PM->CreateParticleGroup("fallStreak", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
+	PM->CreateParticleGroup("fallStreak", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
 	// 予備：上向き流星/昇天ストリーク
-	PM->CreateParticleGroup("fallStreakUp", "./resources/circle2.png", ParticleManager::ParticleType::NORMAL);
+	PM->CreateParticleGroup("fallStreakUp", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
 
 	// スプライト生成
 	overSprite_ = std::make_unique<Sprite>();
-	overSprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, "./resources/over.png");
+	overSprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, "./resources/texture/over.png");
 	overSprite_->SetAnchorPoint({ 0.5f, 0.5f });
 	overSprite_->SetPosition({ WindowsAPI::kClientWidth_ * 0.5f, WindowsAPI::kClientHeight_ * 0.5f });
 

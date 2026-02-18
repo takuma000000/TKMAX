@@ -11,7 +11,7 @@ namespace TKM {
 
 		// start.png（最初は非表示）
 		startSprite_ = std::make_unique<Sprite>();
-		startSprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon, "./resources/start.png");
+		startSprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon, "./resources/texture/start.png");
 		startSprite_->SetAnchorPoint({ 0.5f, 0.5f });
 		startSprite_->SetPosition({ startStartPos_.x, startStartPos_.y });
 		startSprite_->SetSize({ 100, 100 });

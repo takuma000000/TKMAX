@@ -299,17 +299,17 @@ namespace TKM {
 		modelData_.vertices_.push_back({ .position_ = {1.0f,-1.0f,0.0f,1.0f},.texcoord_ = {0.0f,1.0f},.normal_ = {0.0f,0.0f,1.0f} });
 		modelData_.vertices_.push_back({ .position_ = {-1.0f,1.0f,0.0f,1.0f},.texcoord_ = {1.0f,0.0f},.normal_ = {0.0f,0.0f,1.0f} });
 		modelData_.vertices_.push_back({ .position_ = {-1.0f,-1.0f,0.0f,1.0f},.texcoord_ = {1.0f,1.0f},.normal_ = {0.0f,0.0f,1.0f} });
-		modelData_.material_.textureFilePath_ = "./resources/circle.png"; //テクスチャパス
+		modelData_.material_.textureFilePath_ = "./resources/texture/circle.png"; //テクスチャパス
 
 		CreateRingVertices(); //リング頂点データ作成
-		ringModelData_.material_.textureFilePath_ = "./resources/gradationLine.png"; //テクスチャパス
+		ringModelData_.material_.textureFilePath_ = "./resources/texture/gradationLine.png"; //テクスチャパス
 
 		CreateCylinderVertices(); //シリンダー頂点データ作成
-		cylinderModelData_.material_.textureFilePath_ = "./resources/gradationLine.png"; //テクスチャパス
+		cylinderModelData_.material_.textureFilePath_ = "./resources/texture/gradationLine.png"; //テクスチャパス
 
 		// リボン（細長い板） 
 		/*CreateRibbonVertices();
-		ribbonModelData.material.textureFilePath = "./resources/circle.png";*/
+		ribbonModelData.material.textureFilePath = "./resources/texture/circle.png";*/
 	}
 
 	void ParticleManager::CreateVR() {

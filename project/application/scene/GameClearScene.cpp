@@ -18,12 +18,12 @@ void GameClearScene::Initialize() {
 	// ─────────────────────
 	ModelManager::GetInstance()->LoadModel("turtle.obj", dxCommon_);
 	ModelManager::GetInstance()->LoadModel("turtle_flipper.obj", dxCommon_);
-	TextureManager::GetInstance()->LoadTexture("./resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
-	TextureManager::GetInstance()->LoadTexture("./resources/clear.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/circle2.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/restart_pause.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/title_pause.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/gradationLine.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/texture/kloofendal_48d_partly_cloudy_puresky_1k.dds");
+	TextureManager::GetInstance()->LoadTexture("./resources/texture/clear.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/texture/circle2.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/texture/restart_pause.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/texture/title_pause.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/texture/gradationLine.png");
 
 	// ─────────────────────
 	// カメラ
@@ -44,7 +44,7 @@ void GameClearScene::Initialize() {
 	// スカイボックス
 	// ─────────────────────
 	skybox_ = std::make_unique<Skybox>();
-	skybox_->Initialize(dxCommon_, srvManager_, "resources/kloofendal_48d_partly_cloudy_puresky_1k.dds");
+	skybox_->Initialize(dxCommon_, srvManager_, "resources/texture/kloofendal_48d_partly_cloudy_puresky_1k.dds");
 	skybox_->SetCamera(camera_.get());
 
 	// ─────────────────────
@@ -71,7 +71,7 @@ void GameClearScene::Initialize() {
 	// 「GAME CLEAR」スプライト（中央にドン）
 	// ─────────────────────
 	clearSprite_ = std::make_unique<Sprite>();
-	clearSprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, "./resources/clear.png");
+	clearSprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, "./resources/texture/clear.png");
 	clearSprite_->SetAnchorPoint({ 0.5f, 0.5f });
 	clearSprite_->SetPosition({ WindowsAPI::kClientWidth_ * 0.5f, WindowsAPI::kClientHeight_ * 0.5f });
 	clearSprite_->SetColor({ 1,1,1,1 });

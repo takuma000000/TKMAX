@@ -27,8 +27,8 @@ namespace TKM {
 			float lagSpeed_ = 900.0f; // 大きいほど速く追従（弾なので速めが気持ちいい）
 
 			// テクスチャ
-			std::string frameTex_ = "./resources/gray.jpg";
-			std::string fillTex_ = "./resources/blue.jpg";
+			std::string frameTex_ = "./resources/texture/gray.jpg";
+			std::string fillTex_ = "./resources/texture/blue.jpg";
 
 			// 色（単純回避用）
 			Vector4 baseColor_ = { 1.0f, 1.0f, 1.0f, 0.3f };   // 通常
