@@ -145,41 +145,41 @@ void GameScene::Update() {
 void GameScene::Draw() { Draw3D(); DrawSprite(); } // 3Dとスプライトの描画を分ける
 
 void GameScene::Draw3D() {
-	if (skybox_) skybox_->Draw();
+	if (skybox_) skybox_->Draw(); // スカイボックス描画
 
 	Object3dCommon::GetInstance()->DrawSetCommon();
-	player_->Draw(dxCommon_);
+	player_->Draw(dxCommon_); // プレイヤー描画
 
 	if (enemyManager_) {
-		enemyManager_->Draw(dxCommon_);
+		enemyManager_->Draw(dxCommon_); // 敵描画
 	}
 
-	const bool isClear = (flow_ && flow_->IsInClear());
+	const bool isClear = (flow_ && flow_->IsInClear()); // クリアシーケンス中はボスを描画しない（撃破後の演出に専念させるため）
 	if (!isClear) {
 		if (bossManager_) {
-			bossManager_->Draw(dxCommon_);
+			bossManager_->Draw(dxCommon_); // ボス描画
 		}
 	}
 
-	TKM::Camera* activeCamera = (useDebugCamera_ && debugCamera_) ? (TKM::Camera*)debugCamera_.get() : camera_.get();
+	TKM::Camera* activeCamera = (useDebugCamera_ && debugCamera_) ? (TKM::Camera*)debugCamera_.get() : camera_.get(); // 今フレームのアクティブカメラを取得
 	if (postFx_) {
-		postFx_->DrawVolumes(activeCamera);
+		postFx_->DrawVolumes(activeCamera); // ポストエフェクトのボリューム描画（デバッグ用）
 	}
 
 	ParticleManager::GetInstance()->Draw();
 
 #ifdef USE_IMGUI
-	Matrix4x4 vp = (useDebugCamera_ && debugCamera_) ? debugCamera_->GetViewProjectionMatrix() : camera_->GetViewProjectionMatrix();
-	LineRenderer::GetInstance()->Draw(vp);
+	Matrix4x4 vp = (useDebugCamera_ && debugCamera_) ? debugCamera_->GetViewProjectionMatrix() : camera_->GetViewProjectionMatrix(); // 今フレームのVP行列を取得
+	LineRenderer::GetInstance()->Draw(vp); // ライン描画
 #endif
 }
 
 void GameScene::DrawSprite() {
 	TKM::SpriteCommon::GetInstance()->DrawSetCommon();
-	if (flow_) { flow_->Draw(); }
-	if (ui_) { ui_->Draw(); }
-	if (pause_) { pause_->Draw(); }
-	if (bossManager_) { bossManager_->DrawUI(); }
+	if (flow_) { flow_->Draw(); } // ゲームフローの描画（イントロシーケンス等）
+	if (ui_) { ui_->Draw(); } // HUD描画
+	if (pause_) { pause_->Draw(); } // ポーズメニュー描画
+	if (bossManager_) { bossManager_->DrawUI(); } // ボスマネージャのUI描画（HPゲージ等）
 }
 
 
