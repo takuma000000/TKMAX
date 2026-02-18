@@ -68,7 +68,7 @@ namespace TKM {
 			return false;
 		}
 
-		std::string fullPath = "resources/" + filename;
+		std::string fullPath = "resources/audio/" + filename;
 
 		SoundData soundData = LoadWaveFile(fullPath);
 		soundMap_[key] = soundData;
