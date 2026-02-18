@@ -71,20 +71,21 @@ void EnemyManager::Update(float dt) {
 		e_->Update(dt); // 敵更新
 
 		if (e_->IsDead()) {
-			// ちゃんと倒した敵だけ、プレイヤーやカウンタに通知する
+
+			// 倒した/逃げた/消えた どれでも「参照してる側」を先に切る
+			if (player_) {
+				player_->OnEnemyDestroyed(e_);
+			}
+
+			// 撃破として数えるのは「倒した時だけ」
 			if (e_->GetDefeated()) {
-				if (player_) { // プレイヤーに通知
-					player_->OnEnemyDestroyed(e_); // 敵撃破時の処理
-				}
-				// 撃破カウント増加
 				++defeatedEnemyCount_;
-				// 3体倒したら特殊攻撃解禁（既存仕様はそのまま）
+
 				if (defeatedEnemyCount_ == 3 && player_) {
 					player_->EnableSpecialAttack();
 				}
 			}
 
-			// 逃げた敵（HasEscaped()==true）はここで静かに消えるだけ
 			it = enemies_.erase(it);
 		} else {
 			++it;
