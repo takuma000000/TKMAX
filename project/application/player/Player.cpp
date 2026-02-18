@@ -959,11 +959,11 @@ void Player::UpdateCameraFollowThirdPerson(float dt) {
 	if (cameraShakeFrame_ > 0) {
 		float zoomKick = std::max(0.0f, 1.0f - camZoom_);
 		float shakeGain = shakeBaseStrength_ + zoomKick * shakeZoomBoost_;
-
+		// ランダムオフセットを生成（距離に応じて強さ変化）
 		cameraShakeOffset_.x = ((rand() % 100 - 50) / 500.0f) * shakeGain;
 		cameraShakeOffset_.y = ((rand() % 100 - 50) / 500.0f) * shakeGain;
 		cameraShakeOffset_.z = ((rand() % 100 - 50) / 500.0f) * shakeGain;
-
+		// フレームを減らす
 		cameraShakeFrame_--;
 	} else {
 		cameraShakeOffset_ = { 0,0,0 };
@@ -1092,7 +1092,7 @@ void Player::StartDodge() {
 	float rx = static_cast<float>(in->GetLeftStickX());
 	float ry = static_cast<float>(in->GetLeftStickY());
 
-	// デッドゾーン（Reticleと同じノリ）
+	// デッドゾーン（Reticleと同じ）
 	const float dz = 6000.0f;
 	if (std::fabs(rx) < dz) rx = 0.0f;
 	if (std::fabs(ry) < dz) ry = 0.0f;
