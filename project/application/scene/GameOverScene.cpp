@@ -144,8 +144,6 @@ void GameOverScene::Update() {
 		UpdateIrisScale(iris_.get(), irisCloseTween_, dt_);
 
 		if (irisCloseTween_.Finished()) {
-			irisClosing_ = false;
-
 			if (nextAction_ == NextAction::Restart) {
 				sceneManager_->SetNextScene(new GameScene(dxCommon_, srvManager_));
 				return;
