@@ -185,7 +185,6 @@ void Player::ImGuiDebug() {
 
 
 	ImGui::Text("直前に当たった攻撃ID: %d", lastHitAttackId_);
-	ImGui::Text("同一攻撃ダメージ無効時間: %.2f", sameAttackLockT_);
 
 	if (ImGui::DragFloat3("位置", &pos.x, 0.01f)) {
 		object_->SetTranslate(pos);
@@ -203,50 +202,38 @@ void Player::ImGuiDebug() {
 		colliderScale_ = col;
 	}
 	ImGui::Separator(); // 区切り線
-	ImGui::Text("RT 一撃必殺: %s", canUseSpecial_ ? "READY" : "NOT READY"); // 一撃必殺の使用可能状態を表示
-	ImGui::Checkbox("RT 無制限", &debugUnlimitedSpecial_);
-	ImGui::Separator(); // 区切り線
-	ImGui::Text("HP: %d", hp_);// 1
-	ImGui::SameLine();// 1 と 2 を同じ行に配置
 	if (ImGui::Button("HPリセット")) { hp_ = 5; } // 2
 	ImGui::SeparatorText("カメラシェイク");
 	ImGui::SliderFloat("強度のベース", &shakeBaseStrength_, 0.0f, 5.0f); // ベースとなるカメラシェイク強度
 	ImGui::SliderFloat("ズーム強調", &shakeZoomBoost_, 0.0f, 15.0f); // ズーム時の追加倍率
 	ImGui::Text("現在の増幅量 : %.2f", shakeBaseStrength_ + (1.0f - camZoom_) * shakeZoomBoost_); // 現在の倍率を表示
 	ImGui::End();
-	//---------------- レティクル ----------------
-	ImGui::Begin("レティクル");
-	if (reticle_) {
-		ImGui::Separator();
-		reticle_->ImGuiDebug();
-	}
-	ImGui::End();
-	//---------------- プレイヤー弾ステータス ----------------
-	ImGui::Begin("P弾ステータス");
-	ImGui::SliderFloat("弾速度(RB,RT,LB)", &normalBulletSpeed_, 0.1f, 15.0); // RB,RT,LBの弾速度調整
+	////---------------- プレイヤー弾ステータス ----------------
+	//ImGui::Begin("P弾ステータス");
+	//ImGui::SliderFloat("弾速度(RB,RT,LB)", &normalBulletSpeed_, 0.1f, 15.0); // RB,RT,LBの弾速度調整
 
-	ImGui::Separator();
+	//ImGui::Separator();
 
-	float rate = float(rbAmmo_) / float(kRbAmmoMax_);
-	char label[64];
-	std::snprintf(
-		label,
-		sizeof(label),
-		"RB弾数 %d / %d",
-		rbAmmo_,
-		kRbAmmoMax_
-	);
-	ImGui::ProgressBar(rate, ImVec2(260.0f, 18.0f), label);
+	//float rate = float(rbAmmo_) / float(kRbAmmoMax_);
+	//char label[64];
+	//std::snprintf(
+	//	label,
+	//	sizeof(label),
+	//	"RB弾数 %d / %d",
+	//	rbAmmo_,
+	//	kRbAmmoMax_
+	//);
+	//ImGui::ProgressBar(rate, ImVec2(260.0f, 18.0f), label);
 
-	if (rbRefilling_) {
-		ImGui::Text("RB回復中...");
-	} else if (rbAmmo_ <= 0) {
-		ImGui::Text("RB回復まで %.2f 秒", std::max(0.0f, kRbEmptyWaitSec_ - rbEmptyTimer_));
-	} else {
-		ImGui::Text("RBアイドル回復まで %.2f 秒", std::max(0.0f, kRbEmptyWaitSec_ - rbNoFireTimer_));
-	}
+	//if (rbRefilling_) {
+	//	ImGui::Text("RB回復中...");
+	//} else if (rbAmmo_ <= 0) {
+	//	ImGui::Text("RB回復まで %.2f 秒", std::max(0.0f, kRbEmptyWaitSec_ - rbEmptyTimer_));
+	//} else {
+	//	ImGui::Text("RBアイドル回復まで %.2f 秒", std::max(0.0f, kRbEmptyWaitSec_ - rbNoFireTimer_));
+	//}
 
-	ImGui::End();
+	//ImGui::End();
 #endif
 }
 

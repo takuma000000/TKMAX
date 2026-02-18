@@ -764,21 +764,21 @@ void EnemyManager::ImGuiDebug() {
 	ImGui::Begin("敵ステータス");
 
 	// 敵の動きを止めるトグル
-	ImGui::Checkbox("敵の動きを止める", &freezeEnemies_);
-	ImGui::Separator();
+	//ImGui::Checkbox("敵の動きを止める", &freezeEnemies_);
+	//ImGui::Separator();
 
 	// 撃破数／最大数
-	int defeated_ = defeatedEnemyCount_ ? defeatedEnemyCount_ : 0;
-	int maxCount_ = maxEnemyCount_ ? maxEnemyCount_ : static_cast<int>(enemies_.size());
+	//int defeated_ = defeatedEnemyCount_ ? defeatedEnemyCount_ : 0;
+	//int maxCount_ = maxEnemyCount_ ? maxEnemyCount_ : static_cast<int>(enemies_.size());
 
-	ImGui::Text("撃破数: %d / %d", defeated_, maxCount_);
+	//ImGui::Text("撃破数: %d / %d", defeated_, maxCount_);
 
 	// 撃破進捗バー
-	float progress_ = 0.0f;
+	/*float progress_ = 0.0f;
 	if (maxCount_ > 0) {
 		progress_ = static_cast<float>(defeated_) / static_cast<float>(maxCount_);
-	}
-	ImGui::ProgressBar(progress_, ImVec2(200, 20), "撃破進行度");
+	}*/
+	//ImGui::ProgressBar(progress_, ImVec2(200, 20), "撃破進行度");
 
 	// ===== Wave 状態表示 =====
 	static const char* kWaveLabel_[] = {
@@ -802,48 +802,48 @@ void EnemyManager::ImGuiDebug() {
 	ImGui::Separator();
 
 	// ===== Wave3 中ボス＆核 デバッグ =====
-	if (wavePhase_ == WavePhase::W3) {
-		ImGui::Text("=== Wave3 MidBoss / Core Debug ===");
+	//if (wavePhase_ == WavePhase::W3) {
+	//	ImGui::Text("=== Wave3 MidBoss / Core Debug ===");
 
-		int aliveMidBoss_ = 0;
-		int dyingMidBoss_ = 0;
-		int deadMidBoss_ = 0;
+	//	int aliveMidBoss_ = 0;
+	//	int dyingMidBoss_ = 0;
+	//	int deadMidBoss_ = 0;
 
-		// 中ボスの状態を数える
-		for (auto& e : enemies_) {
-			if (!e) continue;
-			if (e->GetType() != EnemyType::Wave3MidBoss) continue;
+	//	// 中ボスの状態を数える
+	//	for (auto& e : enemies_) {
+	//		if (!e) continue;
+	//		if (e->GetType() != EnemyType::Wave3MidBoss) continue;
 
-			if (e->IsDead()) {
-				deadMidBoss_++;
-			} else if (e->IsDying()) {
-				dyingMidBoss_++;
-			} else {
-				aliveMidBoss_++;
-			}
-		}
+	//		if (e->IsDead()) {
+	//			deadMidBoss_++;
+	//		} else if (e->IsDying()) {
+	//			dyingMidBoss_++;
+	//		} else {
+	//			aliveMidBoss_++;
+	//		}
+	//	}
 
-		bool coreAlive_ = (midBossCore_ && !midBossCore_->IsDead() && !midBossCore_->IsDying());
+	//	bool coreAlive_ = (midBossCore_ && !midBossCore_->IsDead() && !midBossCore_->IsDying());
 
-		ImGui::Text("MidBoss Alive:%d  Dying:%d  Dead:%d", aliveMidBoss_, dyingMidBoss_, deadMidBoss_);
-		ImGui::Text("prevAliveMidBossCount: %d", wave3PrevAliveMidBossCount_);
+	//	ImGui::Text("MidBoss Alive:%d  Dying:%d  Dead:%d", aliveMidBoss_, dyingMidBoss_, deadMidBoss_);
+	//	ImGui::Text("prevAliveMidBossCount: %d", wave3PrevAliveMidBossCount_);
 
-		bool midBossJustDiedDbg_ = (aliveMidBoss_ < wave3PrevAliveMidBossCount_);
-		ImGui::Text("midBossJustDied: %s", midBossJustDiedDbg_ ? "true" : "false");
+	//	bool midBossJustDiedDbg_ = (aliveMidBoss_ < wave3PrevAliveMidBossCount_);
+	//	ImGui::Text("midBossJustDied: %s", midBossJustDiedDbg_ ? "true" : "false");
 
-		ImGui::Text("ReviveInProgress: %s", wave3ReviveInProgress_ ? "true" : "false");
-		ImGui::Text("CoreAlive: %s", coreAlive_ ? "true" : "false");
-		ImGui::Text("CoreTimer: %.2f / %.2f", wave3CoreTimer_, wave3CoreLifetime_);
+	//	ImGui::Text("ReviveInProgress: %s", wave3ReviveInProgress_ ? "true" : "false");
+	//	ImGui::Text("CoreAlive: %s", coreAlive_ ? "true" : "false");
+	//	ImGui::Text("CoreTimer: %.2f / %.2f", wave3CoreTimer_, wave3CoreLifetime_);
 
-		ImGui::Separator();
-	}
+	//	ImGui::Separator();
+	//}
 
 	// 各敵のデバッグ（※二重ループになっていたので 1 回に統一）
-	for (size_t i = 0; i < enemies_.size(); ++i) {
+	/*for (size_t i = 0; i < enemies_.size(); ++i) {
 		ImGui::PushID(static_cast<int>(i));
 		(enemies_)[i]->ImGuiDebug();
 		ImGui::PopID();
-	}
+	}*/
 
 	ImGui::End();
 

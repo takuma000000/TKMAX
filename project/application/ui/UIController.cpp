@@ -94,24 +94,17 @@ namespace TKM {
 		lsPos.x += lsOffset_.x;
 		lsPos.y += lsOffset_.y;
 
-		// RBゲージアイコン（画面下に配置）
-		Vector2 rbGaugeIconPos{ baseX, baseY - (rbDrawSize_.y + rightUiSpacing_) - (lbDrawSize_.y + rightUiSpacing_) - (xDrawSize_.y + rightUiSpacing_) - (lsDrawSize_.y + rightUiSpacing_) };
-		rbGaugeIconPos.x += rbGaugeIconOffset_.x;
-		rbGaugeIconPos.y += rbGaugeIconOffset_.y;
-
 		// 基準座標を保存（ここがないとシェイク戻し先が分からない）
 		basePosRB_ = rbPos;
 		basePosLB_ = lbPos;
 		basePosX_ = xPos;
 		basePosLS_ = lsPos;
-		basePosRBGaugeIcon_ = rbGaugeIconPos;
 
 		// ひとまず基準位置で配置
 		if (uiRB_) uiRB_->SetPosition(basePosRB_);
 		if (uiLB_) uiLB_->SetPosition(basePosLB_);
 		if (uiX_)  uiX_->SetPosition(basePosX_);
 		if (uiLS_) uiLS_->SetPosition(basePosLS_);
-		if (uiRBGaugeIcon_) uiRBGaugeIcon_->SetPosition(rbGaugeIconPos);
 	}
 
 	void UIController::ApplyShake_(Sprite* sp, const Vector2& basePos, bool down, float& t) {
@@ -133,6 +126,55 @@ namespace TKM {
 		float sy = r2 * amp;
 
 		sp->SetPosition({ basePos.x + sx, basePos.y + sy });
+	}
+
+	void UIController::ApplyHudPositions_() {
+		// 左下HUDは「左側に確保する縦ゲージ幅」を避けた位置を基準にする
+		float leftEdgeX = hudLeftMargin_ + hudReserveLeftW_ + hudReserveGap_;
+
+		// RB残弾ゲージ（中心座標）
+		if (rbGaugeUI_) {
+			auto d = rbGaugeUI_->GetDesc();
+
+			Vector2 rbCenter{
+				leftEdgeX + d.size_.x * 0.5f,
+				screenH_ - hudBottomMargin_ - ammoUiRaiseY_
+			};
+
+			d.center_ = rbCenter;
+			rbGaugeUI_->SetDesc(d);
+
+			// RBゲージアイコン（RBゲージの右に置く）※anchor={1,1}なので右下基準
+			if (uiRBGaugeIcon_) {
+				const float iconW = rbGaugeIconDrawSize_.x;
+				const float iconH = rbGaugeIconDrawSize_.y;
+
+				const float gaugeRightX = rbCenter.x + d.size_.x * 0.5f;
+
+				Vector2 iconPos{
+					gaugeRightX + rbGaugeIconPadX_ + iconW,
+					rbCenter.y + iconH * 0.5f
+				};
+
+				// 微調整
+				iconPos.x += rbGaugeIconOffset_.x;
+				iconPos.y += rbGaugeIconOffset_.y;
+
+				basePosRBGaugeIcon_ = iconPos;
+				uiRBGaugeIcon_->SetPosition(iconPos);
+			}
+		}
+
+		// 縦HPゲージ：左の確保スペース(hudReserveLeftW_)の中央に置く（下基準）
+		{
+			const float hpX = hudLeftMargin_ + (hudReserveLeftW_ * 0.5f);
+			const float hpY = screenH_ - hudBottomMargin_; // 「下からの余白」をそのまま使う
+
+			Vector2 hpPos{ hpX + hpVertOffset_.x, hpY + hpVertOffset_.y }; // 微調整
+
+			if (hpFrame_) hpFrame_->SetPosition(hpPos); // hpFrame_はサイズ変わらないので位置だけ更新すればOK
+			if (hpFill_)  hpFill_->SetPosition(hpPos); // hpFill_はサイズ変わるので位置も更新する必要がある
+		}
 	}
 
 	void UIController::Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, BaseScene* parentScene, float screenW, float screenH) {
@@ -198,11 +240,13 @@ namespace TKM {
 			hpFill_->SetTextureSize({ (float)metaFi.width, (float)metaFi.height });
 		}
 
+		// 縦ゲージなので「下基準」にする（高さを縮めても下に張り付く）
 		hpFrame_->SetAnchorPoint({ 0.5f, 0.5f });
 		hpFill_->SetAnchorPoint({ 0.5f, 0.5f });
 
-		hpFrame_->SetSize(hpSize_);
-		hpFill_->SetSize(hpSize_);
+		// 初期サイズ（縦ゲージ）
+		hpFrame_->SetSize({ hpVertSize_.x + hpFramePad_, hpVertSize_.y + hpFramePad_ });
+		hpFill_->SetSize(hpVertSize_);
 
 		colHPFrame_ = { 1.0f, 1.0f, 1.0f, 0.90f };
 		colHPFill_ = { 0.25f, 1.0f, 0.35f, 0.90f };
@@ -214,22 +258,15 @@ namespace TKM {
 		screenW_ = screenW;
 		screenH_ = screenH;
 
+		// 右側UI（LB/RB/X/LS）は今まで通り
 		ApplyRightUiPositions_();
 
-		if (rbGaugeUI_) {
-			auto desc = rbGaugeUI_->GetDesc();
-			desc.center_ = { screenW_ * 0.5f, screenH_ - 60.0f - ammoUiRaiseY_ };
-			rbGaugeUI_->SetDesc(desc);
+		// 縦HPゲージのサイズを適用
+		if (hpFill_)  hpFill_->SetSize(hpVertSize_); // HPは減るのでサイズ変更の必要があるのはhpFill_の方だけ
+		if (hpFrame_) hpFrame_->SetSize({ hpVertSize_.x + hpFramePad_, hpVertSize_.y + hpFramePad_ }); // フレームはHPより少し大きくしてる前提なので、hpVertSize_を元にサイズを計算して適用
 
-			// RBのサイズにHPバーを合わせる
-			hpSize_ = desc.size_; // fill基準サイズ（520x18など）
-			// サイズを合わせる（fillはレートで伸縮するので、基準サイズを合わせる）
-			if (hpFill_)  hpFill_->SetSize(hpSize_);
-			if (hpFrame_) hpFrame_->SetSize({ hpSize_.x + 10.0f, hpSize_.y + 10.0f }); // RB枠と同じ
-		}
-		hpCenter_ = { screenW_ * 0.5f, screenH_ - 60.0f };
-		if (hpFrame_) hpFrame_->SetPosition(hpCenter_);
-		if (hpFill_)  hpFill_->SetPosition(hpCenter_);
+		// 左下HUD（HP/RB/アイコン）をまとめて配置
+		ApplyHudPositions_();
 	}
 
 	void UIController::Update(float dt, Player* player) {
@@ -305,9 +342,9 @@ namespace TKM {
 			if (rate < 0.0f) rate = 0.0f;
 			if (rate > 1.0f) rate = 1.0f;
 
-			Vector2 s = hpSize_;
-			s.x *= rate;
-			hpFill_->SetSize(s);
+			Vector2 s = hpVertSize_; // 元のサイズ（満タンのときのサイズ）をベースに
+			s.y *= rate;            // 高さを割合で
+			hpFill_->SetSize(s); // HPは減るのでサイズ変更が必要なのはhpFill_の方だけ
 		}
 
 		if (hpFrame_) hpFrame_->Update();
@@ -384,9 +421,27 @@ namespace TKM {
 		// RBゲージアイコン
 		if (ImGui::TreeNode("RBゲージアイコン")) {
 			changed |= ImGui::DragFloat("サイズ##rbGaugeIcon", &rbGaugeIconScale_, 0.001f, 0.01f, 2.0f);
-			changed |= ImGui::DragFloat2("位置オフセット##rbGaugeIcon", &rbGaugeIconOffset_.x, 0.5f, -1500.0f, 500.0f);
+			changed |= ImGui::DragFloat("右端余白(px)##rbGaugeIconPad", &rbGaugeIconPadX_, 0.5f, 0.0f, 200.0f);
+			changed |= ImGui::DragFloat2("微調整オフセット##rbGaugeIcon", &rbGaugeIconOffset_.x, 0.5f, -1500.0f, 300.0f);
 			ImGui::TreePop();
 		}
+
+		ImGui::Separator();
+
+		ImGui::Text("左下HUD：配置（縦ゲージの確保幅込み）");
+		changed |= ImGui::DragFloat("左余白(px)", &hudLeftMargin_, 0.5f, 0.0f, 600.0f);
+		changed |= ImGui::DragFloat("縦ゲージ確保幅(px)", &hudReserveLeftW_, 0.5f, 0.0f, 800.0f);
+		changed |= ImGui::DragFloat("確保幅の右の間隔(px)", &hudReserveGap_, 0.5f, 0.0f, 300.0f);
+		changed |= ImGui::DragFloat("下余白(px)", &hudBottomMargin_, 0.5f, 0.0f, 300.0f);
+		changed |= ImGui::DragFloat("弾UI上げ量(px)", &ammoUiRaiseY_, 0.5f, 0.0f, 300.0f);
+
+		ImGui::Separator();
+		ImGui::Text("縦HPゲージ（左確保スペース内）");
+
+		changed |= ImGui::DragFloat2("HP縦サイズ(w,h)", &hpVertSize_.x, 0.5f, 2.0f, 800.0f);
+		changed |= ImGui::DragFloat2("HP縦オフセット(x,y)", &hpVertOffset_.x, 0.5f, -300.0f, 300.0f);
+		changed |= ImGui::DragFloat("HPフレーム余白", &hpFramePad_, 0.5f, 0.0f, 80.0f);
+
 
 		ImGui::Separator();
 		if (ImGui::TreeNode("色設定")) {
@@ -408,6 +463,9 @@ namespace TKM {
 		if (changed) {
 			ApplyRightUiSizes_();
 			ApplyRightUiPositions_();
+			ApplyHudPositions_();
+			if (hpFill_)  hpFill_->SetSize(hpVertSize_);
+			if (hpFrame_) hpFrame_->SetSize({ hpVertSize_.x + hpFramePad_, hpVertSize_.y + hpFramePad_ });
 		}
 
 		ImGui::End();

@@ -143,8 +143,17 @@ namespace TKM {
 		Vector4 colHPFrame_{ 1.0f,1.0f,1.0f,1.0f };
 		Vector4 colHPFill_{ 1.0f,1.0f,1.0f,1.0f };
 		Vector2 hpCenter_{};
-		Vector2 hpSize_{ 520.0f, 18.0f };
-		float   ammoUiRaiseY_ = 60.0f;
+		// 縦HPゲージ（左の確保スペースに入れる想定）
+		Vector2 hpVertSize_{ 22.0f, 365.0f }; // (幅, 高さ)
+		Vector2 hpVertOffset_{ -25.0f, -210.0f };  // 微調整（+xで右 / +yで下）
+		float   hpFramePad_ = 10.0f;          // フレームの余白（上下左右に足す）
+		float   ammoUiRaiseY_ = 60.0f; // 弾UIを通常位置からどれだけ上に上げるか（ピクセル）。これもHUD全体の位置調整用。
+		// ===== 左下HUD：配置調整 =====
+		float hudLeftMargin_ = 18.5f;     // 画面左端からの余白
+		float hudReserveLeftW_ = 87.5f;  // 左側に置く縦長ゲージ分の確保幅
+		float hudReserveGap_ = 26.0f;     // 確保幅の右側の間隔（見栄え用）
+		float hudBottomMargin_ = 44.0f;   // 画面下からHPバー中心までの距離
+		float rbGaugeIconPadX_ = 60.0f;   // RBゲージ右端→アイコンまでの余白
 
 		// ===== 右側UI：個別調整用 =====
 
@@ -153,14 +162,14 @@ namespace TKM {
 		float rbScale_ = 0.114f;
 		float xScale_ = 0.066f;
 		float lsScale_ = 0.064f;
-		float rbGaugeIconScale_ = 0.084f;
+		float rbGaugeIconScale_ = 0.075f;
 
 		// オフセット（右下基準からのズラし）
 		Vector2 lbOffset_{ 0.0f, 0.0f };
 		Vector2 rbOffset_{ 0.0f, 0.0f };
 		Vector2 xOffset_{ 0.0f, 0.0f };
 		Vector2 lsOffset_{ 1.0f, -37.5f };
-		Vector2 rbGaugeIconOffset_{ -890.50f, 307.0f };
+		Vector2 rbGaugeIconOffset_{ -624.0f, 8.5f };
 
 		// 個別：色（押下色を後でいじるなら）
 		Vector4 idleCol_{ 1.0f, 1.0f, 1.0f, 0.75f };
@@ -196,5 +205,9 @@ namespace TKM {
 		/// <param name="down">そのボタンが押されているかどうか</param>
 		/// <param name="t">押下継続時間。これを元に揺れのオフセットを計算します。</param>
 		void ApplyShake_(Sprite* sp, const Vector2& basePos, bool down, float& t);
+		/// <summary>
+		/// 右側UI（LT / LB / RB）のサイズを、テクスチャサイズと rightUiScale_ を元に計算して適用します。
+		/// </summary>
+		void ApplyHudPositions_();
 	};
 }

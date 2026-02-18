@@ -249,25 +249,6 @@ void BossController::ImGuiDebug(Enemy& boss) {
 	ImGui::ProgressBar(std::clamp(rageGauge_, 0.0f, 1.0f), ImVec2(0.0f, 0.0f));
 	ImGui::Separator();
 	ImGui::Text("状態タイマー: %.2f", timer_);
-	ImGui::Separator();
-
-	ImGui::Text("ボスHP: %d", boss.GetHP());
-	ImGui::Separator();
-
-	if (ImGui::CollapsingHeader("オーラ(Aura)", ImGuiTreeNodeFlags_DefaultOpen)) {
-		ImGui::Text("AuraActive: %s", auraActive_ ? "true" : "false");
-		ImGui::Text("AuraT: %.2f", auraT_);
-
-		ImGui::Checkbox("足元リング", &auraUseRing_);
-		ImGui::DragFloat("強さ(Intensity)", &auraIntensity_, 0.01f, 0.0f, 10.0f);
-		ImGui::DragFloat("広がり倍率(ScaleMul)", &auraScaleMul_, 0.01f, 0.1f, 10.0f);
-		ImGui::ColorEdit3("色(Color)", &auraColor_.x);
-	}
-
-	if (auraVolume_) {
-		auraVolume_->DrawImGui("Aura Volume (3D)");
-	}
-
 	ImGui::End();
 #endif
 }
