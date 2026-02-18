@@ -39,6 +39,14 @@ public:
 	/// </summary>
 	void Draw() override;
 	/// <summary>
+	/// ゲーム本編シーンの3Dオブジェクトを描画します。
+	/// </summary>
+	void Draw3D() override;
+	/// <summary>
+	/// ゲーム本編シーンのSpriteを描画します。
+	/// </summary>
+	void DrawSprite() override;
+	/// <summary>
 	/// ImGuiでデバッグ表示を行います。
 	/// </summary>
 	void ImGuiDebug();

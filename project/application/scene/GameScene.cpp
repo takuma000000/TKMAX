@@ -142,50 +142,46 @@ void GameScene::Update() {
 	EndFrameUpdate();
 }
 
-void GameScene::Draw() {
-	if (skybox_) skybox_->Draw(); // スカイボックスの描画
+void GameScene::Draw() { Draw3D(); DrawSprite(); } // 3Dとスプライトの描画を分ける
 
-	// 3Dまとめ
+void GameScene::Draw3D() {
+	if (skybox_) skybox_->Draw();
+
 	Object3dCommon::GetInstance()->DrawSetCommon();
-	//for (auto& g : groundTiles_) g->Draw(dxCommon);
-	player_->Draw(dxCommon_); // プレイヤーの描画
+	player_->Draw(dxCommon_);
 
 	if (enemyManager_) {
-		enemyManager_->Draw(dxCommon_); // 敵群の描画を EnemyManager に委譲
+		enemyManager_->Draw(dxCommon_);
 	}
 
-	const bool isClear = (flow_ && flow_->IsInClear()); // クリアシーケンス中か？
+	const bool isClear = (flow_ && flow_->IsInClear());
 	if (!isClear) {
 		if (bossManager_) {
-			bossManager_->Draw(dxCommon_); // ボスマネージャの描画
+			bossManager_->Draw(dxCommon_);
 		}
 	}
 
 	TKM::Camera* activeCamera = (useDebugCamera_ && debugCamera_) ? (TKM::Camera*)debugCamera_.get() : camera_.get();
 	if (postFx_) {
-		postFx_->DrawVolumes(activeCamera); // ポストエフェクトのボリューム系エフェクト描画
+		postFx_->DrawVolumes(activeCamera);
 	}
 
-	// パーティクル描画
 	ParticleManager::GetInstance()->Draw();
 
 #ifdef USE_IMGUI
-	// ライン描画
-	Matrix4x4 vp;
-	if (useDebugCamera_ && debugCamera_) {
-		vp = debugCamera_->GetViewProjectionMatrix();
-	} else {
-		vp = camera_->GetViewProjectionMatrix();
-	}
+	Matrix4x4 vp = (useDebugCamera_ && debugCamera_) ? debugCamera_->GetViewProjectionMatrix() : camera_->GetViewProjectionMatrix();
 	LineRenderer::GetInstance()->Draw(vp);
 #endif
-	// スプライトまとめ
-	TKM::SpriteCommon::GetInstance()->DrawSetCommon();
-	if (flow_) { flow_->Draw(); } // ゲームフローの描画
-	if (ui_) { ui_->Draw(); } // UIの描画
-	if (pause_) { pause_->Draw(); } // ポーズメニューの描画
-	if (bossManager_) { bossManager_->DrawUI(); } // ボスのUI描画
 }
+
+void GameScene::DrawSprite() {
+	TKM::SpriteCommon::GetInstance()->DrawSetCommon();
+	if (flow_) { flow_->Draw(); }
+	if (ui_) { ui_->Draw(); }
+	if (pause_) { pause_->Draw(); }
+	if (bossManager_) { bossManager_->DrawUI(); }
+}
+
 
 void GameScene::SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float speed, int damage, int lifeFrame) {
 	if (bossManager_) {

@@ -36,8 +36,15 @@ namespace TKM {
 		/// </summary>シーンを描画します。
 		/// </summary>
 		virtual void Draw() = 0;
-
 		/// <summary>
+		/// </summary>3Dオブジェクトを描画します。
+		/// </summary>
+		virtual void Draw3D();
+		/// <summary>
+		/// </summary>Spriteを描画します。
+		/// </summary>
+		virtual void DrawSprite();
+/// <summary>
 		/// </summary>DrawCall数を加算します。</summary>
 		/// </summary>
 		void AddDrawCallCount() { drawCallCount_++; }

@@ -19,6 +19,13 @@ namespace TKM {
 	void BaseScene::Draw() {
 	}
 
+	void BaseScene::Draw3D() {
+		Draw(); // デフォルトではDraw3DはDrawを呼び出すだけ。必要に応じて派生クラスでオーバーライドして3D描画処理を実装。
+	}
+
+	void BaseScene::DrawSprite() {
+	}
+
 	void BaseScene::UpdatePerformanceInfo() {
 #ifdef USE_IMGUI
 

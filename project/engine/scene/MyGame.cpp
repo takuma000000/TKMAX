@@ -72,23 +72,26 @@ namespace TKM {
 	}
 
 	void MyGame::Draw() {
-		// ① シーンを RenderTexture に描く
+		// ① 3Dを RenderTexture に描く（ポスト対象）
 		dxCommon_->PreDraw();
 		srvManager_->PreDraw();
-
-		sceneManager_->Draw();      // ← GameScene が RenderTexture に描く
+		sceneManager_->Draw3D();
 
 		// ② Swapchain に切り替え
 		dxCommon_->BeginDrawToSwapchain();
 
-		// ③ RenderTexture → Swapchain へコピー（RadialBlur を含めた「正攻法」）
+		// ③ RenderTexture → Swapchain（ポスト適用）
 		srvManager_->PreDraw();
-		dxCommon_->DrawPostEffectToSwapchain(); // RenderTexture を使った後処理
+		dxCommon_->DrawPostEffectToSwapchain();
 
-		// ④ ImGui描画
+		// ④ UI(Sprite)を Swapchain に直描き（ポスト対象外）
+		srvManager_->PreDraw();
+		sceneManager_->DrawSprite();
+
+		// ⑤ ImGui（好みでUIの後でも前でもOK）
 		imguiManager_->Draw();
 
-		// ⑤ フレーム終了
+		// ⑥ フレーム終了
 		dxCommon_->PostDraw();
 	}
 }

@@ -51,6 +51,15 @@ namespace TKM {
 		/// </span class="code-inline">SceneManager</span>の描画
 		/// </summary>
 		void Draw();
+		/// <summary>
+		/// 3Dオブジェクトの描画
+		/// </summary>
+		void Draw3D();
+		/// <summary>
+		/// Spriteの描画
+		/// </summary>
+		void DrawSprite();
+
 		///<summary>
 		/// </span class="code-inline">SceneManager</span>のデストラクタ
 		/// </summary>

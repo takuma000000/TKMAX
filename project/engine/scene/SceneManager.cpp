@@ -26,6 +26,16 @@ namespace TKM {
 		if (scene_) { scene_->Draw(); } // シーンが存在する場合のみ描画
 	}
 
+	void SceneManager::Draw3D() {
+		if (quitRequested_) { return; } // アプリ終了要求がある場合は描画しない
+		if (scene_) { scene_->Draw3D(); } // シーンが存在する場合のみ3D描画
+	}
+
+	void SceneManager::DrawSprite() {
+		if (quitRequested_) { return; } // アプリ終了要求がある場合は描画しない
+		if (scene_) { scene_->DrawSprite(); } // シーンが存在する場合のみスプライト描画
+	}
+
 	SceneManager::~SceneManager() {
 		if (scene_) { // シーンが存在する場合のみ解放
 			scene_->Finalize();
