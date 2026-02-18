@@ -28,7 +28,7 @@ namespace TKM {
 		}
 		//モデルの生成とファイル読み込み、初期化
 		std::unique_ptr<TKM::Model> model = std::make_unique<TKM::Model>();
-		model->Initialize(modelCommon_, dxCommon_, "resources", filePath);
+		model->Initialize(modelCommon_, dxCommon_, "resources/obj", filePath);
 		//モデルをmapコンテナに格納する
 		models_.insert(std::make_pair(filePath, std::move(model)));
 	}

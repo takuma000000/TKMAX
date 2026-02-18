@@ -243,7 +243,6 @@ void GameScene::InitializeAudio() {
 void GameScene::LoadTextures() {
 	//ファイルパス
 	TextureManager::GetInstance()->LoadTexture("./resources/texture/uvChecker.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/pokemon.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/texture/circle.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/texture/circle2.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/texture/gradationLine.png");

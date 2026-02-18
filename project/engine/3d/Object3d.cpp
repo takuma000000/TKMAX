@@ -36,7 +36,7 @@ namespace TKM {
 		transform_.rotate_ = { 0.0f, 0.0f, 0.0f };
 
 		//モデル読み込み
-		modelData_ = LoadObjFile("resources", "plane.obj"); //.objファイル読み込み
+		modelData_ = LoadObjFile("resources/obj", "plane.obj"); //.objファイル読み込み
 
 		VertexResource(dxCommon_); //頂点リソース作成
 		MaterialResource(dxCommon_); //マテリアルリソース作成

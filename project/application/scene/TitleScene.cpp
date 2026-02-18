@@ -28,7 +28,6 @@ void TitleScene::Initialize() {
 	TextureManager::GetInstance()->LoadTexture("./resources/texture/title_kuraran.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/texture/start_title.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/texture/end_title.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/istockphoto-1310563576-612x612.jpg");
 	TextureManager::GetInstance()->LoadTexture("./resources/texture/rostock_laage_airport_4k.dds");
 	//--------------------------------------------
 	// ------------ モデル読み込み --------------
