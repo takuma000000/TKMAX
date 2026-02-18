@@ -1122,6 +1122,31 @@ void Player::StartDodge() {
 	dodgeT_ = 0.0f;
 	dodgeStartPos_ = object_->GetTranslate();
 	dodgeDir_ = dir; // 入力方向
+
+	dodgeBaseRot_ = object_->GetRotate();
+	{
+		// どっち方向として扱うか（4方向に丸める）
+		const float ax = std::fabs(dodgeDir_.x);
+		const float ay = std::fabs(dodgeDir_.y);
+
+		const bool horizontal = (ax >= ay); // 斜めは大きい方に寄せる（好みで > にしてもOK）
+
+		if (horizontal) { // 左右回避
+			// 左右回避：Zだけ回す
+			dodgeSpinWRoll_ = 1.0f;
+			dodgeSpinWPitch_ = 0.0f;
+
+			dodgeSpinRollSign_ = (dodgeDir_.x >= 0.0f) ? -1.0f : +1.0f; // 右=右回り, 左=左回り
+			dodgeSpinPitchSign_ = +1.0f; // 使わないけど念のため
+		} else {
+			// 上下回避：Xだけ回す
+			dodgeSpinWRoll_ = 0.0f;
+			dodgeSpinWPitch_ = 1.0f;
+
+			dodgeSpinPitchSign_ = (dodgeDir_.y >= 0.0f) ? +1.0f : -1.0f; // 上=後ろ回り, 下=前回り
+			dodgeSpinRollSign_ = +1.0f; // 使わないけど念のため
+		}
+	}
 }
 
 void Player::HandleDodge(float dt) {
@@ -1159,18 +1184,28 @@ void Player::HandleDodge(float dt) {
 
 	// 回転：毎フレーム更新（丁寧に1回転）
 	{
-		Vector3 rot = object_->GetRotate();
-		rot.z = bankAngle_ + (MyMath::GetPI() * 2.0f) * dodgeSpinTurns_ * eSpin;
-		object_->SetRotate(rot);
+		Vector3 rot = object_->GetRotate(); // Z回転だけ上書き
+		{ // まずは回転の進み具合をイーズする
+			// uSpin をイーズして、さらに回転の進み具合を 0..2回転くらいの範囲で調整
+			float spin = (MyMath::GetPI() * 2.0f) * dodgeSpinTurns_ * eSpin;
+			// ここで回転の軸・量を決める（StartDodgeで決めたやつを使う）
+			Vector3 rot = object_->GetRotate();
+			// 上下：X回転（前転/後転）
+			rot.x = dodgeBaseRot_.x + dodgeSpinPitchSign_ * spin * dodgeSpinWPitch_;
+			// 左右：Z回転（ロール）
+			rot.z = bankAngle_ + dodgeSpinRollSign_ * spin * dodgeSpinWRoll_;
+			// 反映
+			object_->SetRotate(rot);
+		}
 	}
 
 	// 終了：移動と回転の両方が終わってから
 	if (uMove >= 1.0f && uSpin >= 1.0f) {
-		isDodging_ = false;
-
-		// 回転を戻して通常のバンクに復帰
-		Vector3 r = object_->GetRotate();
-		r.z = bankAngle_;
-		object_->SetRotate(r);
+		isDodging_ = false; // フラグを戻す
+		// 最終的な回転のリセット
+		Vector3 r = object_->GetRotate(); // 現在の回転をベースに
+		r.x = dodgeBaseRot_.x; // ピッチ戻す
+		r.z = bankAngle_;      // バンクに復帰
+		object_->SetRotate(r); // 反映
 	}
 }

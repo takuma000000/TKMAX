@@ -454,6 +454,11 @@ private:
 	float dodgeSpinTurns_ = 1.0f; // 回避行動のスピン回転数（例: 1.0なら1回転）
 	Vector3 dodgeStartPos_ = { 0,0,0 }; // 回避開始位置
 	Vector3 dodgeDir_ = { 0,0,0 }; // 回避方向（正規化済み）
+	float dodgeSpinRollSign_ = 1.0f; // Z回転の向き（右なら右回り等）
+	float dodgeSpinPitchSign_ = 1.0f; // X回転の向き（上なら後ろ回り等）
+	float dodgeSpinWRoll_ = 0.0f; // ロール比率(0..1)
+	float dodgeSpinWPitch_ = 0.0f; // ピッチ比率(0..1)
+	Vector3 dodgeBaseRot_ = { 0,0,0 }; // 回避開始時の回転（戻す用）
 	//======================================================================
 	// ひれパタパタ（常時アニメ）
 	//======================================================================
