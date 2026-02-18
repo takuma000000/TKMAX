@@ -130,7 +130,7 @@ namespace TKM {
 		pos.z += playerSpeed_ * dt;
 		player_->SetPosition(pos);
 
-		player_->UpdateVisualOnly();
+		player_->UpdateVisualOnly(dt); // 移動に合わせて見た目も更新（当たり判定はなし）
 
 		if (fireworkController_) {
 			fireworkController_->Update(dt, camera_);

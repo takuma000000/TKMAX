@@ -428,11 +428,12 @@ void Player::Death() {
 	}
 }
 
-void Player::UpdateVisualOnly() {
+void Player::UpdateVisualOnly(float dt) {
+	// クリア演出用：入力や弾処理は回さず、見た目（親子付け/アニメ）だけ更新する
+	UpdateFlipperAnim_(dt);
 	// クリア演出用
-	if (object_) {
-		object_->Update();
-	}
+	if (object_) { object_->Update(); }
+	if (flipper_) { flipper_->Update(); }
 }
 
 void Player::StartBossDeathCameraZoom() {

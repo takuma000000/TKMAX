@@ -77,7 +77,7 @@ public:
 	/// 入力などのゲームプレイ処理を行わず、
 	/// 見た目用に行列だけ更新したいとき（クリア演出用）
 	/// </summary>
-	void UpdateVisualOnly();
+	void UpdateVisualOnly(float dt);
 	/// <summary>
 	/// 撃墜演出フェーズの更新。
 	/// </summary>

@@ -213,7 +213,7 @@ void GameClearScene::Update() {
 		player_->SetRotation({ pitch, yaw, roll });
 
 		// ゲームプレイ処理なしで行列だけ更新する
-		player_->UpdateVisualOnly();
+		player_->UpdateVisualOnly(dt_);
 	}
 
 	if (clearSprite_) {
