@@ -105,9 +105,7 @@ public:
 	/// <summary>
 	/// いずれかの攻撃をチャージ中か？（触手演出用）
 	/// </summary>
-	bool IsAnyCharging() const {
-		return missileCharging_ || slashCharging_ || laserTelegraph_ || (state_ == State::LaserWindup);
-	}
+	bool IsAnyCharging() const;
 
 	// Getter===================================
 	/// <summary>

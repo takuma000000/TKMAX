@@ -69,6 +69,10 @@ namespace TKM {
 		time_ = 0.0f;
 	}
 
+	float BossHpBarUI::RandRange_(float a, float b) {
+		return a + (b - a) * MyMath::Rand01();
+	}
+
 	void BossHpBarUI::SpawnShards_(int segBegin, int segEnd) {
 		segBegin = std::max(segBegin, 0);
 		segEnd = std::min(segEnd, desc_.segmentCount_);
@@ -100,6 +104,16 @@ namespace TKM {
 			slot_->sp_->SetPosition({ x_, y_ });
 			slot_->sp_->SetColor({ 1,1,1,1 });
 		}
+	}
+
+	Vector4 BossHpBarUI::LerpColor_(const Vector4& a, const Vector4& b, float t) {
+		t = std::clamp(t, 0.0f, 1.0f);
+		return {
+			a.x + (b.x - a.x) * t,
+			a.y + (b.y - a.y) * t,
+			a.z + (b.z - a.z) * t,
+			a.w + (b.w - a.w) * t
+		};
 	}
 
 	void BossHpBarUI::Update(float dt, BossEnemy* boss) {
@@ -284,6 +298,17 @@ namespace TKM {
 			if (s.alive_ && s.sp_) {
 				s.sp_->Draw();
 			}
+		}
+	}
+	void BossHpBarUI::SetVisible(bool v) {
+		visible_ = v;
+		// ボス戦開始などで再表示したとき、HP同期を取り直す
+		if (v) {
+			initialized_ = false;
+			lastHp_ = 0;
+			lagHp_ = 0.0f;
+			drainGlowTimer_ = 0.0f;
+			hitPulse_ = 0.0f;
 		}
 	}
 } // namespace TKM

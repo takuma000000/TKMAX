@@ -45,12 +45,7 @@ public:
 		/// <summary>
 		/// リセット。
 		/// </summary>
-		void Reset() {
-			zoomStarted_ = false; // ズーム開始フラグ
-			slowTriggered_ = false; // スローモーション発動済みフラグ
-			rippleTriggered_ = false; // スローモーション/波紋エフェクト発動済みフラグ
-			attacksStopped_ = false; // 撃破中に攻撃を止めたか
-		}
+		void Reset();
 	};
 
 	/// <summary>
@@ -137,12 +132,12 @@ public:
 	/// タイムスケールコントローラーを設定します。
 	/// </summary>
 	/// <param name="t">使用するタイムスケールコントローラー</param>
-	void SetTimeScaleController(TKM::TimeScaleController* t) { timeScale_ = t; }
+	void SetTimeScaleController(TKM::TimeScaleController* t);
 	/// <summary>
 	/// ウォーターリップルエフェクトを設定します。
 	/// </summary>
 	/// <param name="r">使用するウォーターリップルエフェクト</param>
-	void SetWaterRippleEffect(TKM::WaterRippleEffect* r) { waterRipple_ = r; }
+	void SetWaterRippleEffect(TKM::WaterRippleEffect* r);
 	/// <summary>
 	/// 使用するカメラを設定します。
 	/// </summary>

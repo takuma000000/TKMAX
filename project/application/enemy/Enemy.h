@@ -49,7 +49,6 @@ public:
 	/// </summary>
 	/// <param name="dt">前フレームからの経過時間（秒）</param>
 	void Update(float dt);
-
 	/// <summary>
 	/// 敵を描画します。
 	/// </summary>
@@ -164,25 +163,17 @@ public:
 	/// HP（最大HPも同値）を設定します。
 	/// </summary>
 	/// <param name="hp">設定する HP</param>
-	void SetHP(int hp) {
-		hp_ = hp;
-		maxHP_ = hp;
-	}
+	void SetHP(int hp);
 	/// <summary>
 	/// モデルを設定します。
 	/// </summary>
 	/// <param name="modelName">モデル名（例: "sphere.obj"）</param>
-	void SetModel(const std::string& modelName) {
-		if (object_) object_->SetModel(modelName);
-	}
+	void SetModel(const std::string& modelName);
 	/// <summary>
 	/// スケールを設定します。
 	/// </summary>
 	/// <param name="scale">設定するスケール</param>
-	void SetScale(const Vector3& scale) {
-		baseScale_ = scale; // 元のスケールを更新
-		if (object_) object_->SetScale(scale); // Object3d にも反映
-	}
+	void SetScale(const Vector3& scale);
 	/// <summary>
 	/// 使用するカメラを設定します。
 	/// </summary>
@@ -202,64 +193,61 @@ public:
 	/// 位置ロックフラグを設定します。
 	/// </summary>
 	/// <param name="v">ロックする場合 true、それ以外は false</param>
-	void SetLocked(bool v) { isLocked_ = v; if (!v) pulseT_ = 0.0f; }
+	void SetLocked(bool v);
 	/// <summary>
 	/// 当たり判定用スケールを設定します。
 	/// </summary>
 	/// <param name="s">当たり判定用スケール</param>
-	void SetColliderScale(const Vector3& s) { colliderScale_ = s; }
+	void SetColliderScale(const Vector3& s);
 	/// <summary>
 	/// 挙動パターンを設定します。
 	/// </summary>
 	/// <param name="b">挙動パターン</param>
-	void SetBehavior(EnemyBehavior b) { behavior_ = b; }
+	void SetBehavior(EnemyBehavior b);
 	/// <summary>
 	/// 毎フレームの移動量（速度ベクトル）を設定します。
 	/// </summary>
 	/// <param name="v">移動ベクトル</param>
-	void SetVelocity(const Vector3& v) { velocity_ = v; }
+	void SetVelocity(const Vector3& v);
 	/// <summary>
 	/// 停止 Z 座標を設定します。
 	/// </summary>
 	/// <param name="z">停止 Z 座標（ワールド座標）</param>
-	void SetStopZ(float z) { stopZ_ = z; }
+	void SetStopZ(float z);
 	/// <summary>
 	/// SineX 用のパラメータを設定します。
 	/// </summary>
 	/// <param name="ampX">振幅</param>
 	/// <param name="freq">周波数</param>
-	void SetSineParams(float ampX, float freq) { sineAmpX_ = ampX; sineFreq_ = freq; }
+	void SetSineParams(float ampX, float freq);
 	/// <summary>
 	/// StrafeX 用のパラメータを設定します。
 	/// </summary>
 	/// <param name="left">左端 X 座標</param>
 	/// <param name="right">右端 X 座標</param>
 	/// <param name="speed">移動速度</param>
-	void SetStrafeX(float left, float right, float speed) {
-		strafeLeft_ = left; strafeRight_ = right; strafeSpeed_ = speed;
-		if (strafePosX_ == 0.0f) strafePosX_ = left;
-	}
+	void SetStrafeX(float left, float right, float speed);
 	/// <summary>
 	/// 射撃可否と射撃間隔を設定します。
 	/// </summary>
 	/// <param name="v">射撃可能にする場合 true、それ以外は false</param>
 	/// <param name="interval">射撃間隔（秒）</param>
-	void SetCanShoot(bool v, float interval) { canShoot_ = v; shootInterval_ = interval; }
+	void SetCanShoot(bool v, float interval);
 	/// <summary>
 	/// プレイヤー位置取得関数を設定します。
 	/// </summary>
 	/// <param name="getter">プレイヤー位置を返す関数オブジェクト</param>
-	void SetPlayer(std::function<Vector3()> getter) { playerGetter_ = std::move(getter); }
+	void SetPlayer(std::function<Vector3()> getter);
 	/// <summary>
 	/// Sine 波の位相を設定します。
 	/// </summary>
 	/// <param name="rad">位相（ラジアン）</param>
-	void SetSinePhase(float rad) { sinePhase_ = rad; }
+	void SetSinePhase(float rad);
 	/// <summary>
 	/// レティクル参照を設定します。
 	/// </summary>
 	/// <param name="r">レティクル</param>
-	void SetReticle(class Reticle* r) { reticle_ = r; }
+	void SetReticle(class Reticle* r);
 	/// <summary>
 	/// 飛び掛かり用のパラメータを設定します。
 	/// </summary>
@@ -267,24 +255,12 @@ public:
 	/// <param name="apex">頂点位置（ワールド座標）</param>
 	/// <param name="target">目標位置（ワールド座標）</param>
 	/// <param name="duration">演出時間（秒）</param>
-	void SetPounceParameters(const Vector3& start, const Vector3& apex, const Vector3& target, float duration = 1.6f) {
-		pounceStart_ = start;
-		pounceApex_ = apex;
-		pounceTarget_ = target;
-		pounceDuration_ = duration;
-		pounceTime_ = 0.0f;
-		pounceStarted_ = true;
-		pounceDiving_ = false;
-	}
+	void SetPounceParameters(const Vector3& start, const Vector3& apex, const Vector3& target, float duration = 1.6f);
 	/// <summary>
 	/// 敵のタイプを設定します。
 	/// </summary>
 	/// <param name="t">敵タイプ</param>
-	void SetType(EnemyType t) {
-		type_ = t;
-		lockPulseEnabled_ = (type_ != EnemyType::Boss);
-		if (!lockPulseEnabled_) { pulseT_ = 0.0f; }
-	}
+	void SetType(EnemyType t);
 	/// <summary>
 	/// FreeRoam 用の行動範囲と速度を設定します。
 	/// </summary>
@@ -292,32 +268,22 @@ public:
 	/// <param name="max">行動範囲の最大座標（ワールド座標）</param>
 	/// <param name="normalSpeed">通常時の移動速度</param>
 	/// <param name="angrySpeed">怒り時の移動速度</param>
-	void SetFreeRoamArea(const Vector3& min, const Vector3& max, float normalSpeed, float angrySpeed) {
-		// 中身そのまま
-	}
+	void SetFreeRoamArea(const Vector3& min, const Vector3& max, float normalSpeed, float angrySpeed);
 	/// <summary>
 	/// 敵を怒り状態にします。
 	/// </summary>
 	/// <param name="duration">怒り状態の継続時間（秒）</param>
-	void SetAngry(float duration) {
-		isAngry_ = true;
-		angryDuration_ = duration;
-		angryTimer_ = 0.0f;
-	}
+	void SetAngry(float duration);
 	/// <summary>
 	/// 移動凍結フラグを設定します。
 	/// </summary>
 	/// <param name="v">凍結する場合 true、それ以外は false</param>
-	void SetFreezeMove(bool v) { freezeMove_ = v; }
+	void SetFreezeMove(bool v);
 	/// <summary>
 	/// 現在の HP を設定します。
 	/// </summary>
 	/// <param name="hp">設定する HP（0〜maxHP_ にクランプされます）</param>
-	void SetCurrentHP(int hp) {
-		if (hp < 0) { hp = 0; }
-		if (hp > maxHP_) { hp = maxHP_; }
-		hp_ = hp;
-	}
+	void SetCurrentHP(int hp);
 	/// <summary>
 	/// 触手モデルを設定します。
 	/// </summary>
@@ -337,84 +303,85 @@ private:
 	//--------------------------------------------------------------
 	std::unique_ptr<TKM::Object3d> object_; // 敵の3Dオブジェクト(傘)
 	std::unique_ptr<TKM::Object3d> tentacle_ = nullptr; // 触手オブジェクト
-	Vector3 tentacleLocalPos_{ 0.0f, 0.0f, 0.0f };        /// 触手の取り付け位置（調整用）
-	Vector3 tentacleLocalRot_{ 0.0f, 0.0f, 0.0f };
-	Vector3 tentacleLocalScale_{ 1.0f, 1.0f, 1.0f };
+	// 触手の取り付け位置（調整用）
+	Vector3 tentacleLocalPos_{ 0.0f, 0.0f, 0.0f }; // 触手のローカル回転（オイラー角）
+	Vector3 tentacleLocalRot_{ 0.0f, 0.0f, 0.0f }; // 触手のローカルスケール
+	Vector3 tentacleLocalScale_{ 1.0f, 1.0f, 1.0f }; // 触手のローカルスケール
 	TKM::Camera* camera_ = nullptr;
 	TKM::BaseScene* parentScene_ = nullptr;
 	Reticle* reticle_ = nullptr;
 	//--------------------------------------------------------------
 	//  HP / 生存状態
 	//--------------------------------------------------------------
-	int   hp_ = 3;
-	int   maxHP_ = 3;
+	int   hp_ = 3; // 現在のHP
+	int   maxHP_ = 3; // 最大HP
 	bool  isDead_ = false;  // 完全に死亡（描画/更新停止）
 	bool  defeated_ = false; // プレイヤーに倒された
 	bool  escaped_ = false; // 逃走扱い
 	//--------------------------------------------------------------
 	//  基本行動タイプ
 	//--------------------------------------------------------------
-	EnemyType    type_ = EnemyType::Normal;
-	EnemyBehavior behavior_ = EnemyBehavior::StraightStop;
+	EnemyType    type_ = EnemyType::Normal; // 役割タイプ（通常 / Wave3中ボス / Wave3蘇生核 / ボス）
+	EnemyBehavior behavior_ = EnemyBehavior::StraightStop; // 行動パターン
 	float t_ = 0.0f;    // 各種挙動で使う汎用タイマー
 	//--------------------------------------------------------------
 	//  ロックオン演出
 	//--------------------------------------------------------------
-	bool   isLocked_ = false;
-	float  pulseT_ = 0.0f;
+	bool   isLocked_ = false; // ロックオンされているか
+	float  pulseT_ = 0.0f; // ロックオンの脈動用タイマー
 	Vector3 baseScale_ = { 1.0f, 1.0f, 1.0f }; // 元のスケール
 	Vector3 colliderScale_ = { 3.260f, 5.5f, 4.16f }; // AABBスケール
+	bool lockPulseEnabled_ = true; // ロックオンの脈動エフェクトを有効にするかどうか
 	//--------------------------------------------------------------
 	//  移動（直進・停止）
 	//--------------------------------------------------------------
 	Vector3 velocity_ = { 0.0f, 0.0f, -0.1f }; // 基本前進
 	float   stopZ_ = 30.0f;  // このZで止まる
-	bool    stopMove_ = false;
+	bool    stopMove_ = false; // 停止フラグ（停止後も移動ベクトルは保持しておく）
 	//--------------------------------------------------------------
 	//  Sin 波移動（Wave2など）
 	//--------------------------------------------------------------
-	float sineAmpX_ = 0.0f;
-	float sineFreq_ = 1.0f;
+	float sineAmpX_ = 0.0f; // 振幅
+	float sineFreq_ = 1.0f; // 周波数
 	float sinePhase_ = 0.0f; // ラジアン
 	float startX_ = 0.0f;    // 初期位置保持
 	//--------------------------------------------------------------
 	//  ストレーフ左右移動
 	//--------------------------------------------------------------
-	float strafeLeft_ = -10.0f;
-	float strafeRight_ = 10.0f;
-	float strafeSpeed_ = 0.2f;
-	float strafePosX_ = 0.0f;
-	int   strafeDir_ = +1;
+	float strafeLeft_ = -10.0f; // 左端X座標
+	float strafeRight_ = 10.0f; // 右端X座標
+	float strafeSpeed_ = 0.2f; // 移動速度（X座標/フレーム）
+	float strafePosX_ = 0.0f; // 現在のX座標（ストレーフ移動用）
+	int   strafeDir_ = +1; // ストレーフ移動方向（+1:右へ、-1:左へ）
 	//--------------------------------------------------------------
 	//  プレイヤー追尾（Chase）
 	//--------------------------------------------------------------
-	float chaseSpeed_ = 0.07f;
-	std::function<Vector3()> playerGetter_;
+	float chaseSpeed_ = 0.07f; // 追尾移動速度
+	std::function<Vector3()> playerGetter_; // プレイヤー位置取得関数（外部でプレイヤーの位置を返す関数をセットしてもらう）
 	//--------------------------------------------------------------
 	//  射撃（後で使う）
 	//--------------------------------------------------------------
-	bool  canShoot_ = false;
+	bool  canShoot_ = false; // 射撃可能か
 	float shootInterval_ = 120.0f; // フレーム
-	float shootTimer_ = 0.0f;
+	float shootTimer_ = 0.0f; // 射撃タイマー
 	//--------------------------------------------------------------
 	//  死亡演出（BlowAway / Dissolve 等）
 	//--------------------------------------------------------------
 	bool   isDying_ = false; // 演出中フラグ
-	float  deathTimer_ = 0.0f;
-	float  deathDuration_ = 1.2f;
-	Vector3 deathVelocity_ = { 0,0,0 };
-	Vector3 deathRotateSpeed_ = { 0,0,0 };
+	float  deathTimer_ = 0.0f; // 演出経過時間
+	float  deathDuration_ = 1.2f; // 演出時間
+	Vector3 deathVelocity_ = { 0,0,0 }; // 吹っ飛び速度（BlowAway 用）
+	Vector3 deathRotateSpeed_ = { 0,0,0 }; // 回転速度（BlowAway 用）
 	float  deathAlpha_ = 1.0f;  // フェード
-	EnemyDeathReaction deathReaction_ = EnemyDeathReaction::BlowAway;
-
+	EnemyDeathReaction deathReaction_ = EnemyDeathReaction::BlowAway; // 死亡リアクションの種類
 	// --- BossFinal 用：ぶっ飛び＆カメラ演出 ---
 	bool   bossFinalBigBurstDone_ = false; // 大きいz撃破円を出したか
 	bool   bossFinalCameraInited_ = false; // カメラ初期化済みフラグ
 	Vector3 bossFinalCameraStartPos_{};    // カメラの開始位置
 	Vector3 bossFinalCameraEndPos_{};      // カメラの終了位置
 	// ボス最終死亡リアクション用
-	bool    bossFinalLaunchStarted_ = false;
-	Vector3 bossFinalLaunchStartPos_ = { 0.0f, 0.0f, 0.0f };
+	bool    bossFinalLaunchStarted_ = false; // 打ち上げ開始フラグ
+	Vector3 bossFinalLaunchStartPos_ = { 0.0f, 0.0f, 0.0f }; // 打ち上げ開始位置
 	//--------------------------------------------------------------
 	//  飛び掛かり（PounceFromAbove / Wave1 敵）
 	//--------------------------------------------------------------
@@ -423,31 +390,25 @@ private:
 	Vector3 pounceStart_;             // 開始位置
 	Vector3 pounceApex_;              // 山の頂点
 	Vector3 pounceTarget_;            // 着地点（プレイヤー）
-	bool    pounceStarted_ = false;
-	bool    pounceDiving_ = false;
+	bool    pounceStarted_ = false; // 飛び掛かり開始フラグ
+	bool    pounceDiving_ = false; // 飛び掛かりのうち、急降下フェーズに入ったかどうか
 	//--------------------------------------------------------------
 	//  Wave3 中ボス：FreeRoam（自由移動）
 	//--------------------------------------------------------------
-	Vector3 roamMin_ = { -18.0f, 4.0f, 40.0f };
-	Vector3 roamMax_ = { 18.0f, 10.0f, 62.0f };
-
-	float roamSpeedNormal_ = 0.10f;
-	float roamSpeedAngry_ = 0.24f;
-
-	int   roamPattern_ = 0;   // 0:A 1:B 2:C
-	float roamPatternTimer_ = 0.0f;
-	float roamAngle_ = 0.0f;
-
-	Vector3 roamTarget_ = { 0,0,0 };
-	bool    hasRoamTarget_ = false;
+	Vector3 roamMin_ = { -18.0f, 4.0f, 40.0f }; // 行動範囲の最小座標（ワールド座標）
+	Vector3 roamMax_ = { 18.0f, 10.0f, 62.0f }; // 行動範囲の最大座標（ワールド座標）
+	float roamSpeedNormal_ = 0.10f; // 通常時の移動速度
+	float roamSpeedAngry_ = 0.24f; // 怒り時の移動速度
+	int   roamPattern_ = 0; // 行動パターンの種類（0:ランダム移動、1:プレイヤー追尾、2:特定ポイント移動）
+	float roamPatternTimer_ = 0.0f; // 行動パターンのタイマー
+	float roamAngle_ = 0.0f; // ランダム移動の現在の角度（ラジアン）
+	Vector3 roamTarget_ = { 0,0,0 }; // 特定ポイント移動の目標位置
+	bool    hasRoamTarget_ = false; // 特定ポイント移動の目標位置が有効かどうか
 	//--------------------------------------------------------------
 	//  怒り（Enraged 状態）
 	//--------------------------------------------------------------
-	bool  isAngry_ = false;
-	float angryTimer_ = 0.0f;
-	float angryDuration_ = 0.0f;
-	bool  freezeMove_ = false;
-
-	// Enemy.h の private: に追加
-	bool lockPulseEnabled_ = true; // ロック中の脈動を有効にするか（ボスはOFFにする）
+	bool  isAngry_ = false; // 怒り状態フラグ（攻撃パターンの強化や移動速度アップなどに使う）
+	float angryTimer_ = 0.0f; // 怒り状態の経過時間
+	float angryDuration_ = 0.0f; // 怒り状態の継続時間
+	bool  freezeMove_ = false; // 移動凍結フラグ（怒り状態でも移動しないようにするためのフラグ）
 };

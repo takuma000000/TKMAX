@@ -117,15 +117,7 @@ public:
 	/// 敵およびミッドボス核にも同じカメラを適用します。
 	/// </summary>
 	/// <param name="camera">描画および判定に使用するカメラ</param>
-	void SetCamera(TKM::Camera* camera) {
-		cam_ = camera;
-		for (auto& e : enemies_) {
-			if (e) e->SetCamera(cam_);
-		}
-		if (midBossCore_) { // 蘇生核にもカメラをセット
-			midBossCore_->SetCamera(cam_);
-		}
-	}
+	void SetCamera(TKM::Camera* camera);
 	// ================================================================================
 
 	/// <summary>
@@ -211,8 +203,8 @@ private:
 	int   wave3PrevAliveMidBossCount_ = 0; // 前フレームの生存中中ボス数
 	float wave3AngryDuration_ = 8.0f; // 中ボス怒り時間
 	// 中ボスの定位置（左右 2 体）※必要ならあとで ImGui 化
-	Vector3 wave3LeftPos_ = { -12.0f, 6.0f, 80.0f };
-	Vector3 wave3RightPos_ = { 12.0f, 6.0f, 80.0f };
+	Vector3 wave3LeftPos_ = { -12.0f, 6.0f, 80.0f }; // 中ボスの定位置（右）
+	Vector3 wave3RightPos_ = { 12.0f, 6.0f, 80.0f }; // 中ボスの定位置（左）
 	/// <summary>
 	/// Wave3 の更新処理を行います。
 	/// </summary>
@@ -237,16 +229,15 @@ private:
 	//======================================================================
 	bool freezeEnemies_ = false; // デバッグ用：敵移動停止フラグ
 
-	using SpawnFn = void (EnemyManager::*)();
-	using UpdateFn = void (EnemyManager::*)(float);
+	using SpawnFn = void (EnemyManager::*)(); // スポーン関数のメンバ関数ポインタ型
+	using UpdateFn = void (EnemyManager::*)(float); // 更新関数のメンバ関数ポインタ型
 
-	struct WaveOps {
-		SpawnFn spawn_ = nullptr;
-		UpdateFn update_ = nullptr;
+	struct WaveOps { // 各 Wave のスポーン関数と更新関数をまとめた構造体
+		SpawnFn spawn_ = nullptr; // スポーン関数
+		UpdateFn update_ = nullptr; // 更新関数
 	};
-
+	// WaveOps 配列のインデックスは WavePhase と対応させる（例: kWaveOps_[0] は WavePhase::W1 用）
 	static const WaveOps kWaveOps_[4]; // W1,W2,W3,Done(=nullptr)
-
 	/// <summary>
 	/// Wave1の開始
 	/// </summary>

@@ -325,6 +325,14 @@ void BossManager::OnClearSequenceStart() {
 	bossP2BgmPlayed_ = false; // P2BGM再生フラグリセット
 }
 
+void BossManager::SetTimeScaleController(TKM::TimeScaleController* t) {
+	timeScale_ = t; // タイムスケールコントローラーセット
+}
+
+void BossManager::SetWaterRippleEffect(TKM::WaterRippleEffect* r) {
+	waterRipple_ = r; // 波紋エフェクトセット
+}
+
 void BossManager::SetCamera(TKM::Camera* camera) {
 	camera_ = camera; // カメラセット
 	if (boss_) { boss_->SetCamera(camera_); } // ボス本体にカメラセット
@@ -369,4 +377,11 @@ void BossManager::UpdateBossBullets() {
 			++it;
 		}
 	}
+}
+
+void BossManager::KillSequenceState::Reset() {
+	zoomStarted_ = false; // ズーム開始フラグ
+	slowTriggered_ = false; // スローモーション発動済みフラグ
+	rippleTriggered_ = false; // スローモーション/波紋エフェクト発動済みフラグ
+	attacksStopped_ = false; // 撃破中に攻撃を止めたか
 }

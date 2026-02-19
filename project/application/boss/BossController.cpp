@@ -278,6 +278,10 @@ bool BossController::ConsumeSlashFireRequest(Vector3& outPos, Vector3& outTarget
 	return true;
 }
 
+bool BossController::IsAnyCharging() const {
+	return missileCharging_ || slashCharging_ || laserTelegraph_ || (state_ == State::LaserWindup);
+}
+
 void BossController::UpdateEnter(float dt, Enemy& boss, Vector3& pos) {
 	const float targetZ_ = orbitZ_; // 目標Z座標
 	const float speed_ = 18.0f; // 侵入速度

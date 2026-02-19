@@ -81,17 +81,7 @@ namespace TKM {
 		/// UIの表示/非表示を設定します。
 		/// </summary>
 		/// <param name="v">表示する場合 true、非表示の場合 false</param>
-		void SetVisible(bool v) {
-			visible_ = v;
-			// ボス戦開始などで再表示したとき、HP同期を取り直す
-			if (v) {
-				initialized_ = false;
-				lastHp_ = 0;
-				lagHp_ = 0.0f;
-				drainGlowTimer_ = 0.0f;
-				hitPulse_ = 0.0f;
-			}
-		}
+		void SetVisible(bool v);
 		// ===========================================
 	private:
 		struct Shard {
@@ -110,9 +100,7 @@ namespace TKM {
 		/// <param name="a">最小値</param>
 		/// <param name="b">最大値</param>
 		/// <returns>a 以上 b 以下の乱数値</returns>
-		float RandRange_(float a, float b) {
-			return a + (b - a) * MyMath::Rand01();
-		}
+		float RandRange_(float a, float b);
 		/// <summary>
 		/// 破片（シャード）を指定セグメント範囲で生成します。
 		/// </summary>
@@ -126,16 +114,7 @@ namespace TKM {
 		/// <param name="b">終了色</param>
 		/// <param name="t">補間係数（0.0〜1.0）</param>
 		/// <returns>補間後の色</returns>
-		static Vector4 LerpColor_(const Vector4& a, const Vector4& b, float t) {
-			t = std::clamp(t, 0.0f, 1.0f);
-			return {
-				a.x + (b.x - a.x) * t,
-				a.y + (b.y - a.y) * t,
-				a.z + (b.z - a.z) * t,
-				a.w + (b.w - a.w) * t
-			};
-		}
-
+		static Vector4 LerpColor_(const Vector4& a, const Vector4& b, float t);
 		//==============================
 		// 参照
 		//==============================

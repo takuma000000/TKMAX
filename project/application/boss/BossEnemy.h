@@ -42,19 +42,17 @@ public:
 	/// </summary>
 	/// <param name="model">モデルファイル名</param>
 	/// <param name="localPos">ローカル位置</param>
-	void SetTentacleCharge(bool active, float charge01) {
-		tentacleChargeActive_ = active;
-		tentacleCharge01_ = charge01;
-	}
+	void SetTentacleCharge(bool active, float charge01);
 	// =========================================
-
 private:
-	// 触手関連
-	bool  tentacleChargeActive_ = false;
-	float tentacleCharge01_ = 0.0f;
-	float tentacleWiggleT_ = 0.0f;
+	//=============================
+	// 触手チャージ
+	//=============================
+	bool  tentacleChargeActive_ = false; // チャージ中かどうか
+	float tentacleCharge01_ = 0.0f; // チャージ量（0..1）
+	float tentacleWiggleT_ = 0.0f; // 触手のうねり時間（チャージ中だけ増える）
 	// ベース（チャージしてない時のローカル）
-	Vector3 tentacleBasePos_{ 0.0f, 0.0f, 0.0f };
-	Vector3 tentacleBaseRot_{ 0.0f, 0.0f, 0.0f };
-	Vector3 tentacleBaseScale_{ 1.0f, 1.0f, 1.0f };
+	Vector3 tentacleBasePos_{ 0.0f, 0.0f, 0.0f }; // 触手のローカル位置
+	Vector3 tentacleBaseRot_{ 0.0f, 0.0f, 0.0f }; // 触手のローカル回転
+	Vector3 tentacleBaseScale_{ 1.0f, 1.0f, 1.0f }; // 触手のローカルスケール
 };

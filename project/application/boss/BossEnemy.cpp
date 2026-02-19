@@ -90,3 +90,8 @@ void BossEnemy::ImGuiDebug() {
 	ImGui::End();
 #endif
 }
+
+void BossEnemy::SetTentacleCharge(bool active, float charge01) {
+	tentacleChargeActive_ = active; // チャージのON/OFF
+	tentacleCharge01_ = charge01; // 0..1の範囲でチャージ量を指定
+}

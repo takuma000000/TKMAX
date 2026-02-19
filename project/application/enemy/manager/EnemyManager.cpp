@@ -359,6 +359,16 @@ void EnemyManager::SpawnWave2SubWave(int id) {
 	(this->*kWave2SubWaveTable_[id])();
 }
 
+void EnemyManager::SetCamera(TKM::Camera* camera) {
+	cam_ = camera;
+	for (auto& e : enemies_) {
+		if (e) e->SetCamera(cam_);
+	}
+	if (midBossCore_) { // 蘇生核にもカメラをセット
+		midBossCore_->SetCamera(cam_);
+	}
+}
+
 // ───────────────────────────────────────────────
 // ● Wave2 各小Waveスポーン関数群
 // ───────────────────────────────────────────────

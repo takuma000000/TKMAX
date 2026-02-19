@@ -513,18 +513,96 @@ void Enemy::Draw(TKM::DirectXCommon* dxCommon) {
 	tentacle_->Draw(dxCommon); // 触手
 }
 
+void Enemy::SetHP(int hp) {
+	hp_ = hp;
+	maxHP_ = hp;
+}
+
+void Enemy::SetModel(const std::string& modelName) {
+	if (object_) object_->SetModel(modelName);
+}
+
+void Enemy::SetScale(const Vector3& scale) {
+	baseScale_ = scale; // 元のスケールを更新
+	if (object_) object_->SetScale(scale); // Object3d にも反映
+}
+
 void Enemy::SetCamera(TKM::Camera* camera) {
 	camera_ = camera;
-	if (object_) { object_->SetCamera(camera); }
-	if (tentacle_) { tentacle_->SetCamera(camera); }
+	if (object_) { object_->SetCamera(camera); } // カメラ設定（既存に合わせる）
+	if (tentacle_) { tentacle_->SetCamera(camera); } // カメラ設定（既存に合わせる）
 }
 void Enemy::SetPosition(const Vector3& pos) {
-	if (object_) { object_->SetTranslate(pos); }
+	if (object_) { object_->SetTranslate(pos); } // 位置設定
 }
 void Enemy::SetParentScene(TKM::BaseScene* scene) {
-	parentScene_ = scene;
-	if (object_) { object_->SetParentScene(scene); }
-	if (tentacle_) { tentacle_->SetParentScene(scene); }
+	parentScene_ = scene; // 親シーン設定
+	if (object_) { object_->SetParentScene(scene); } // シーン設定（既存に合わせる）
+	if (tentacle_) { tentacle_->SetParentScene(scene); } // シーン設定（既存に合わせる）
+}
+void Enemy::SetLocked(bool v) {
+	isLocked_ = v; if (!v) pulseT_ = 0.0f; // ロック解除で脈動リセット
+}
+void Enemy::SetColliderScale(const Vector3& s) {
+	colliderScale_ = s; // 当たり判定スケール設定（必要ならAABBも更新）
+}
+void Enemy::SetBehavior(EnemyBehavior b) {
+	behavior_ = b; // 行動パターン設定
+}
+void Enemy::SetVelocity(const Vector3& v) {
+	velocity_ = v; // 移動速度設定
+}
+void Enemy::SetStopZ(float z) {
+	stopZ_ = z; // 停止Z位置設定
+}
+void Enemy::SetSineParams(float ampX, float freq) {
+	sineAmpX_ = ampX; sineFreq_ = freq; // サイン波移動のパラメータ設定
+}
+void Enemy::SetStrafeX(float left, float right, float speed) {
+	strafeLeft_ = left; strafeRight_ = right; strafeSpeed_ = speed; // 左右移動の範囲と速度設定
+	if (strafePosX_ == 0.0f) strafePosX_ = left; // 初期位置が0のままなら左端からスタート
+}
+void Enemy::SetCanShoot(bool v, float interval) {
+	canShoot_ = v; shootInterval_ = interval; // 射撃可能にしたとき、タイマーをリセットしてすぐ撃てるようにする
+}
+void Enemy::SetPlayer(std::function<Vector3()> getter) {
+	playerGetter_ = std::move(getter); // プレイヤー位置取得関数設定
+}
+void Enemy::SetSinePhase(float rad) {
+	sinePhase_ = rad; // サイン波移動の位相設定
+}
+void Enemy::SetReticle(Reticle* r) {
+	reticle_ = r; // レティクル設定
+}
+void Enemy::SetPounceParameters(const Vector3& start, const Vector3& apex, const Vector3& target, float duration) {
+	pounceStart_ = start; // ジャンプ開始位置設定
+	pounceApex_ = apex; // ジャンプ頂点位置設定
+	pounceTarget_ = target; // ジャンプ着地位置設定
+	pounceDuration_ = duration; // ジャンプ時間設定
+	pounceTime_ = 0.0f; // ジャンプタイマーリセット
+	pounceStarted_ = true; // ジャンプ開始フラグを立てる
+	pounceDiving_ = false; // ジャンプ開始フラグとダイブ開始フラグをリセット
+}
+void Enemy::SetType(EnemyType t) {
+	type_ = t; // 敵の種類設定
+	lockPulseEnabled_ = (type_ != EnemyType::Boss); // ボスはロック脈動無効
+	if (!lockPulseEnabled_) { pulseT_ = 0.0f; } // ロック脈動無効なら脈動タイマーもリセット
+}
+void Enemy::SetFreeRoamArea(const Vector3& min, const Vector3& max, float normalSpeed, float angrySpeed) {
+
+}
+void Enemy::SetAngry(float duration) {
+	isAngry_ = true; // 怒り状態にする
+	angryDuration_ = duration; // 怒り持続時間設定
+	angryTimer_ = 0.0f; // 怒りタイマーリセット
+}
+void Enemy::SetFreezeMove(bool v) {
+	freezeMove_ = v; // 移動凍結設定
+}
+void Enemy::SetCurrentHP(int hp) {
+	if (hp < 0) { hp = 0; } // HPが0未満にならないようにする
+	if (hp > maxHP_) { hp = maxHP_; } // HPが最大HPを超えないようにする
+	hp_ = hp; // 現在HP設定
 }
 void Enemy::SetTentacleModel(const std::string& modelName) {
 	if (tentacle_) tentacle_->SetModel(modelName); // モデル設定
@@ -536,9 +614,9 @@ void Enemy::SetTentacleLocal(const Vector3& pos, const Vector3& rot, const Vecto
 }
 Vector3 Enemy::GetWorldPosition() const {
 	if (!object_) {
-		return { 0.0f, 0.0f, 0.0f };
+		return { 0.0f, 0.0f, 0.0f }; // オブジェクトがない場合は原点を返す
 	}
-	return object_->GetTranslate();
+	return object_->GetTranslate(); // ワールド位置を返す
 }
 
 void Enemy::ImGuiDebug() {
