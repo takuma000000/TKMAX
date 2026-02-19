@@ -33,7 +33,7 @@ namespace Ease {
 		InExpo, OutExpo, InOutExpo,
 		InCirc, OutCirc, InOutCirc,
 		InBack, OutBack, InOutBack,
-		// 追加したくなったらここに（Elastic, Bounce など）
+		OutElastic,
 	};
 
 	// ---- イージング本体（t は 0..1） ----
@@ -104,6 +104,16 @@ namespace Ease {
 			? (powf(2.0f * t, 2.0f) * ((c2 + 1.0f) * 2.0f * t - c2)) * 0.5f
 			: (powf(2.0f * t - 2.0f, 2.0f) * ((c2 + 1.0f) * (2.0f * t - 2.0f) + c2) + 2.0f) * 0.5f;
 	}
+	// Elastic（“弾む”）
+	inline float OutElastic(float t) {
+		if (t <= 0.0f) return 0.0f;
+		if (t >= 1.0f) return 1.0f;
+
+		const float pi = 3.1415926535f;
+		const float c4 = (2.0f * pi) / 3.0f;
+
+		return powf(2.0f, -10.0f * t) * sinf((t * 10.0f - 0.75f) * c4) + 1.0f;
+	}
 
 	// 種類→関数のディスパッチ
 	inline float Eval(Type type, float t) {
@@ -135,6 +145,7 @@ namespace Ease {
 		case Type::InBack:      return InBack(t);
 		case Type::OutBack:     return OutBack(t);
 		case Type::InOutBack:   return InOutBack(t);
+		case Type::OutElastic:  return OutElastic(t);
 		}
 	}
 
@@ -161,5 +172,4 @@ namespace Ease {
 		}
 		bool Finished() const { return t >= 1.0f; }
 	};
-
 }

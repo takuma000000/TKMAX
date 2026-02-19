@@ -197,6 +197,27 @@ namespace TKM {
 		// LSのデッドゾーン（0.0f〜1.0f）
 		float lsDeadzone_ = 0.20f;
 
+		// HPアニメ用（被弾時の減りを“ヌルッ”と動かす）
+		int   prevHp_ = -1;
+		float hpAnimRate_ = 1.0f;      // 表示しているHP割合（0..1）
+		float hpTargetRate_ = 1.0f;    // 目標HP割合（0..1）
+		float hpDrainSpeed_ = 6.5f;    // 減少時の追従速度（大きいほど速い）
+		float hpHealSpeed_ = 10.0f;   // 回復時の追従速度
+		float hpHitFlashT_ = 0.0f;    // 被弾フラッシュ残り秒
+		float hpHitFlashSec_ = 0.18f; // 被弾フラッシュの持続時間
+		float hpShakeT_ = 0.0f;        // 被弾シェイク残り秒
+		float hpShakeSec_ = 0.22f; // 被弾シェイクの持続時間
+		float hpShakeAmpPx_ = 4.0f;    // シェイク幅
+		Vector2 basePosHPFrame_{};     // HPフレーム基準位置
+		Vector2 basePosHPFill_{};      // HPフィル基準位置（下基準）
+
+		// ---- HPイージング（減少時の“演出”用）----
+		Ease::Tween hpTween_;
+		bool  hpTweenActive_ = false;
+		float hpDrainEaseSec_ = 1.0f;              // 減少アニメ時間
+		float hpHealEaseSec_ = 0.12f;              // 回復アニメ時間（任意）
+		Ease::Type hpDrainEaseType_ = Ease::Type::OutElastic; // 減少アニメのイージングタイプ
+
 		/// <summary>
 		/// 押下中はスプライトの位置を小刻みにズラしてシェイクさせる処理。tは押下継続時間で、これを元に揺れのオフセットを計算します。
 		/// </summary>

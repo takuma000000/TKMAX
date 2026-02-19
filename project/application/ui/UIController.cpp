@@ -1,6 +1,8 @@
 #include "UIController.h"
 #include "TextureManager.h"
 #include <algorithm>
+#include <cmath>
+#include "Easing.h"
 
 #ifdef USE_IMGUI
 #include "imgui.h"
@@ -172,8 +174,21 @@ namespace TKM {
 
 			Vector2 hpPos{ hpX + hpVertOffset_.x, hpY + hpVertOffset_.y }; // 微調整
 
-			if (hpFrame_) hpFrame_->SetPosition(hpPos); // hpFrame_はサイズ変わらないので位置だけ更新すればOK
-			if (hpFill_)  hpFill_->SetPosition(hpPos); // hpFill_はサイズ変わるので位置も更新する必要がある
+			// HPフレームはそのまま（中心基準）
+			basePosHPFrame_ = hpPos;
+			if (hpFrame_) {
+				hpFrame_->SetPosition(basePosHPFrame_);
+			}
+
+			// HPフィルは「下基準」なので中心→下端座標に変換して保存
+			basePosHPFill_ = {
+				hpPos.x,
+				hpPos.y + hpVertSize_.y * 0.5f
+			};
+
+			if (hpFill_) {
+				hpFill_->SetPosition(basePosHPFill_);
+			}
 		}
 	}
 
@@ -242,7 +257,7 @@ namespace TKM {
 
 		// 縦ゲージなので「下基準」にする（高さを縮めても下に張り付く）
 		hpFrame_->SetAnchorPoint({ 0.5f, 0.5f });
-		hpFill_->SetAnchorPoint({ 0.5f, 0.5f });
+		hpFill_->SetAnchorPoint({ 0.5f, 1.0f });
 
 		// 初期サイズ（縦ゲージ）
 		hpFrame_->SetSize({ hpVertSize_.x + hpFramePad_, hpVertSize_.y + hpFramePad_ });
@@ -336,15 +351,72 @@ namespace TKM {
 			uiLS_->SetPosition({ basePosLS_.x + ofs.x, basePosLS_.y + ofs.y });
 		}
 
-		// ---- HP ----
+		// ---- HP（減るときアニメ＆被弾感） ----
 		if (player && hpFill_) {
-			float rate = player->GetHPRate();
-			if (rate < 0.0f) rate = 0.0f;
-			if (rate > 1.0f) rate = 1.0f;
+			// ターゲット（本当のHP）
+			hpTargetRate_ = player->GetHPRate();
+			if (hpTargetRate_ < 0.0f) hpTargetRate_ = 0.0f;
+			if (hpTargetRate_ > 1.0f) hpTargetRate_ = 1.0f;
 
-			Vector2 s = hpVertSize_; // 元のサイズ（満タンのときのサイズ）をベースに
-			s.y *= rate;            // 高さを割合で
-			hpFill_->SetSize(s); // HPは減るのでサイズ変更が必要なのはhpFill_の方だけ
+			// 被弾検出（整数HPで見る）
+			const int curHp = player->GetHP();
+			if (prevHp_ < 0) {
+				prevHp_ = curHp;
+				hpAnimRate_ = hpTargetRate_;
+				hpTweenActive_ = false;
+			}
+
+			bool damaged = (curHp < prevHp_);
+			bool healed = (curHp > prevHp_);
+
+			if (damaged) {
+				hpHitFlashT_ = hpHitFlashSec_;
+				hpShakeT_ = hpShakeSec_;
+
+				// 減少はイージングで“演出”
+				hpTween_.Reset(hpAnimRate_, hpTargetRate_, hpDrainEaseSec_, hpDrainEaseType_);
+				hpTweenActive_ = true;
+			}
+
+			prevHp_ = curHp;
+
+			// 追従：Tweenが動いてる間はTween、そうでなければ即 or 軽い追従
+			if (hpTweenActive_) {
+				hpAnimRate_ = hpTween_.Update(dt);
+				if (hpTween_.Finished()) {
+					hpAnimRate_ = hpTargetRate_;
+					hpTweenActive_ = false;
+				}
+			} else {
+				// ここは好み：常にイージングにしたいなら削ってOK
+				hpAnimRate_ = hpTargetRate_;
+			}
+
+			// サイズ反映（下基準）
+			Vector2 s = hpVertSize_;
+			s.y *= hpAnimRate_;
+			hpFill_->SetSize(s);
+
+			// シェイク（HPフレーム/フィル両方）
+			if (hpShakeT_ > 0.0f) {
+				hpShakeT_ -= dt;
+				if (hpShakeT_ < 0.0f) hpShakeT_ = 0.0f;
+
+				float r1 = MyMath::Rand01() * 2.0f - 1.0f;
+				float r2 = MyMath::Rand01() * 2.0f - 1.0f;
+				Vector2 ofs{ r1 * hpShakeAmpPx_, r2 * hpShakeAmpPx_ };
+				if (hpFrame_) hpFrame_->SetPosition({ basePosHPFrame_.x + ofs.x, basePosHPFrame_.y + ofs.y });
+				hpFill_->SetPosition({ basePosHPFill_.x + ofs.x, basePosHPFill_.y + ofs.y });
+			} else {
+				if (hpFrame_) hpFrame_->SetPosition(basePosHPFrame_);
+				hpFill_->SetPosition(basePosHPFill_);
+			}
+
+			// フラッシュタイマー
+			if (hpHitFlashT_ > 0.0f) {
+				hpHitFlashT_ -= dt;
+				if (hpHitFlashT_ < 0.0f) hpHitFlashT_ = 0.0f;
+			}
 		}
 
 		if (hpFrame_) hpFrame_->Update();
@@ -360,8 +432,35 @@ namespace TKM {
 			return o;
 			};
 
-		if (hpFrame_) { hpFrame_->SetColor(mulAlpha(colHPFrame_)); hpFrame_->Draw(); }
-		if (hpFill_) { hpFill_->SetColor(mulAlpha(colHPFill_));  hpFill_->Draw(); }
+		// ---- HP ----
+		if (hpFrame_) {
+			hpFrame_->SetColor(mulAlpha(colHPFrame_));
+			hpFrame_->Draw();
+		}
+
+		if (hpFill_) {
+			// フラッシュ割合（0..1）
+			float t = 0.0f;
+			if (hpHitFlashSec_ > 0.0f) {
+				t = hpHitFlashT_ / hpHitFlashSec_;
+				t = std::clamp(t, 0.0f, 1.0f);
+			}
+
+			// 被弾時のフラッシュ色（赤寄り）
+			Vector4 flashCol{
+				1.0f,   // R
+				0.0f,  // G
+				0.0f,  // B
+				colHPFill_.w // Alphaは元のまま
+			};
+
+			// MyMathのVector4Lerpを使用
+			Vector4 c = MyMath::Vector4Lerp(colHPFill_, flashCol, t);
+
+			// HUD全体アルファを適用
+			hpFill_->SetColor(mulAlpha(c));
+			hpFill_->Draw();
+		}
 
 		if (uiLB_) { uiLB_->SetColor(mulAlpha(colLB_)); uiLB_->Draw(); }
 		if (uiRB_) { uiRB_->SetColor(mulAlpha(colRB_)); uiRB_->Draw(); }

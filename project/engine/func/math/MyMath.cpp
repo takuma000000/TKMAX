@@ -110,6 +110,10 @@ Vector3 MyMath::Vector3Lerp(const Vector3& p1, const Vector3& p2, float t) {
 	return { Lerp(p1.x, p2.x, t), Lerp(p1.y, p2.y, t), Lerp(p1.z, p2.z, t) };
 }
 
+Vector4 MyMath::Vector4Lerp(const Vector4& p1, const Vector4& p2, float t) {
+	return { Lerp(p1.x, p2.x, t), Lerp(p1.y, p2.y, t), Lerp(p1.z, p2.z, t), Lerp(p1.w, p2.w, t) };
+}
+
 // 逆行列
 Matrix4x4 MyMath::Inverse4x4(Matrix4x4& m) {
 	Matrix4x4 matrix = {};

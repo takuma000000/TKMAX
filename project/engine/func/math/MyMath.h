@@ -79,6 +79,9 @@ public:
 	// 線形補間関数(Vector3)
 	static Vector3 Vector3Lerp(const Vector3& p1, const Vector3& p2, float t);
 
+	// 線形補間関数(Vector4)
+	static Vector4 Vector4Lerp(const Vector4& p1, const Vector4& p2, float t);
+
 	// ベクトル変換
 	static Vector3 TransformNormal(const Vector3& v, const Matrix4x4& m);
 
