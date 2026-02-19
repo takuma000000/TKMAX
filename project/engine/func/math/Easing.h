@@ -4,7 +4,7 @@
 #endif
 #include <cmath>
 #include <algorithm>
-
+#include "MyMath.h"
 
 #ifdef min
 #undef min
@@ -149,9 +149,6 @@ namespace Ease {
 		}
 	}
 
-	// 値 a→b を t(0..1) で補間（便利関数）
-	inline float Lerp(float a, float b, float t) { return a + (b - a) * t; }
-
 	// Tween構造体
 	// 時間ベースのトゥイーン便利構造体：Update(dt) で値を返す
 	struct Tween {
@@ -168,7 +165,7 @@ namespace Ease {
 		float Update(float dt) {
 			t = Clamp01(t + dt / dur);
 			float k = Eval(type, t);
-			return Lerp(start, end, k);
+			return MyMath::Lerp(start, end, k);
 		}
 		bool Finished() const { return t >= 1.0f; }
 	};
