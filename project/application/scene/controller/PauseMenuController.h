@@ -24,7 +24,7 @@ namespace TKM {
 		struct Desc {
 			std::string curtainTex = "./resources/texture/gradationLine.png"; // 暗幕
 			std::string panelTex = "./resources/texture/gradationLine.png"; // パネル
-			std::array<std::string, 3> itemTex = {
+			std::array<std::string, 3> itemTex = { // 項目テクスチャ（上から Resume, Restart, ReturnToTitle）
 				"./resources/texture/resume_pause.png", // Resume
 				"./resources/texture/restart_pause.png", // Restart
 				"./resources/texture/title_pause.png"  // ReturnToTitle
@@ -77,7 +77,7 @@ namespace TKM {
 		bool IsPaused() const { return state_ != State::Closed; }
 
 	private:
-		Desc desc_{};
+		Desc desc_{}; // 設定
 
 		// 状態
 		enum class State {

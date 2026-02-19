@@ -29,6 +29,26 @@ void MidBossCore::SetCamera(TKM::Camera* cam) {
 	}
 }
 
+void MidBossCore::SetParentScene(TKM::BaseScene* scene) {
+	parent_ = scene; // Object3d の親シーンも設定
+}
+
+void MidBossCore::SetColliderScale(const Vector3& s) {
+	colliderScale_ = s; // 当たり判定のサイズを変更（エフェクトや音などがあればここで）
+}
+
+void MidBossCore::SetReticle(Reticle* r) {
+	reticle_ = r; // 当たり判定の可視化にレティクルの情報を使うために保持
+}
+
+void MidBossCore::SetPlayer(std::function<Vector3()> getter) {
+	playerGetter_ = std::move(getter); // プレイヤー位置取得関数を保持
+}
+
+void MidBossCore::SetHP(int hp) {
+	hp_ = hp; maxHP_ = hp; // HP変化に応じたエフェクトや音などがあればここで
+}
+
 void MidBossCore::SetPosition(const Vector3& pos) {
 	if (!object_) return;
 	object_->SetTranslate(pos);

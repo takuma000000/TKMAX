@@ -61,17 +61,17 @@ namespace TKM {
 		/// プレイヤーの飛行速度を設定します。
 		/// </summary>
 		/// <param name="v">プレイヤーの飛行速度</param>
-		void SetPlayerSpeed(float v) { playerSpeed_ = v; }
+		void SetPlayerSpeed(float v);
 		/// <summary>
 		/// プレイヤーの最短飛行時間を設定します。
 		/// </summary>
 		/// <param name="v">飛行の最短継続時間（秒）</param>
-		void SetPlayerFlyMinTime(float v) { playerFlyMinTime_ = v; }
+		void SetPlayerFlyMinTime(float v);
 		/// <summary>
 		/// プレイヤーの飛行距離を設定します。
 		/// </summary>
 		/// <param name="v">飛行距離</param>
-		void SetPlayerFlyDistance(float v) { playerFlyDistance_ = v; }
+		void SetPlayerFlyDistance(float v);
 		// =========================================
 
 	private:

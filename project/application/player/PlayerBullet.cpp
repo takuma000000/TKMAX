@@ -202,6 +202,44 @@ void PlayerBullet::SetVelocity(const Vector3& vel) {
 	velocity_ = vel; // 速度設定
 }
 
+void PlayerBullet::SetCamera(TKM::Camera* camera) {
+	if (object_) {
+		object_->SetCamera(camera); // Object3d にカメラを設定
+	}
+}
+
+void PlayerBullet::SetTrailGroup(const std::string& group) {
+	trailGroup_ = group; // トレイルグループ名を保存
+	// 位置は現在地で再初期化（生成直後や途中でもOK）
+	Vector3 pos = object_ ? object_->GetTranslate() : Vector3{}; // Object3d がまだない場合は原点で初期化
+	trailEmitter_.Initialize(trailGroup_, pos); // トレイルエミッターを新しいグループで初期化
+}
+
+void PlayerBullet::SetEnemy(Enemy* enemy) {
+	enemy_ = enemy; // ヒット対象の敵を設定
+}
+
+void PlayerBullet::SetPlayer(Player* player) {
+	player_ = player; // プレイヤー参照を設定
+}
+
+void PlayerBullet::SetSpecialAttack(bool flag) {
+	isSpecialAttack_ = flag; // 一撃必殺フラグを設定
+}
+
+void PlayerBullet::SetHoming(bool enable, float speed) {
+	isHoming_ = enable; // ホーミングの有効/無効を設定
+	homingSpeed_ = speed; // ホーミング速度を設定
+}
+
+void PlayerBullet::SetHomingDelay(float sec) {
+	homingDelay_ = std::max(0.0f, sec); // ホーミング開始までの遅延時間を設定（負の値は0に補正）
+}
+
+void PlayerBullet::SetCore(MidBossCore* core) {
+	core_ = core; // ヒット対象の核を設定
+}
+
 void PlayerBullet::StartSpawnBezier(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float duration, const Vector3& velocityAfter) {
 	bezP0_ = p0; bezP1_ = p1; bezP2_ = p2; bezP3_ = p3;
 	spawnDuration_ = std::max(0.001f, duration);

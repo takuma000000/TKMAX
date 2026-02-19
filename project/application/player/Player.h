@@ -200,44 +200,42 @@ public:
 	/// ターゲット敵を設定します。
 	/// </summary>
 	/// <param name="enemy">ターゲットとなる敵（nullptr 可）</param>
-	void SetEnemy(Enemy* enemy) { enemy_ = enemy; }
+	void SetEnemy(Enemy* enemy);
 	/// <summary>
 	/// 全敵リスト参照を設定します。
 	/// </summary>
 	/// <param name="enemies">全敵リスト（外部所有）</param>
-	void SetAllEnemies(std::vector<std::unique_ptr<Enemy>>* enemies) {
-		allEnemies_ = enemies;
-	}
+	void SetAllEnemies(std::vector<std::unique_ptr<Enemy>>* enemies);
 	/// <summary>
 	/// プレイヤー操作の有効/無効を設定します。
 	/// </summary>
 	/// <param name="enabled">操作を有効にする場合 true、それ以外は false</param>
-	void SetControlEnabled(bool enabled) { controlEnabled_ = enabled; }
+	void SetControlEnabled(bool enabled);
 	/// <summary>
 	/// レティクルの表示/非表示を設定します。
 	/// </summary>
 	/// <param name="visible">表示する場合 true、それ以外は false</param>
-	void SetReticleVisible(bool visible) { reticleVisible_ = visible; }
+	void SetReticleVisible(bool visible);
 	/// <summary>
 	/// ミッドボスコア参照を設定します。
 	/// </summary>
 	/// <param name="core">ミッドボスコア（nullptr 可）</param>
-	void SetMidBossCore(MidBossCore* core) { core_ = core; }
+	void SetMidBossCore(MidBossCore* core);
 	/// <summary>
 	/// プレイヤーの当たり判定用スケールを設定します。
 	/// </summary>
 	/// <param name="s">当たり判定用スケール</param>
-	void SetColliderScale(const Vector3& s) { colliderScale_ = s; }
+	void SetColliderScale(const Vector3& s);
 	/// <summary>
 	/// 放射状ブラーエフェクト参照を設定します。
 	/// </summary>
 	/// <param name="effect">放射状ブラーエフェクト（nullptr 可）</param>
-	void SetRadialBlurEffect(TKM::RadialBlurEffect* effect) { radialBlur_ = effect; }
+	void SetRadialBlurEffect(TKM::RadialBlurEffect* effect);
 	/// <summary>
 	/// プレイヤーの回転を設定します。
 	/// </summary>
 	/// <param name="r">設定する回転角（度数法）</param>
-	void SetRotation(const Vector3& r) { object_->SetRotate(r); }
+	void SetRotation(const Vector3& r);
 	/// <summary>
 	/// プレイヤーの射撃の有効/無効を設定します。
 	/// </summary>
@@ -316,20 +314,19 @@ private:
 	std::unique_ptr<TKM::Object3d> flipper_; // プレイヤーの左右フリップ用オブジェクト
 	std::list<std::unique_ptr<PlayerBullet>> bullets_;
 	std::vector<std::unique_ptr<Enemy>>* allEnemies_ = nullptr;
-
 	Enemy* lastLockedEnemy_ = nullptr;  // 直前にロック表示していた敵
 	//======================================================================
 	// カメラシェイク・バンク・移動範囲
 	//======================================================================
 	// --- カメラシェイク ---
-	Vector3 cameraShakeOffset_ = { 0, 0, 0 };
-	int     cameraShakeFrame_ = 0;
+	Vector3 cameraShakeOffset_ = { 0, 0, 0 }; // シェイクによるカメラ位置のオフセット
+	int     cameraShakeFrame_ = 0; // シェイク残りフレーム数
 	float   shakeBaseStrength_ = 1.8f;   // 基本のシェイク強度
 	float   shakeZoomBoost_ = 8.0f;   // ズーム時の追加倍率
 	float  bankAngle_ = 0.0f;                 // 現在の傾き（ロール）
 	float  bankVel_ = 0.0f;                 // 補間用
 	Vector3 moveMin_ = { -100.0f, -20.0f, 0.0f }; // 移動範囲（Zは固定）
-	Vector3 moveMax_ = { 100.0f,  20.0f, 0.0f };
+	Vector3 moveMax_ = { 100.0f,  20.0f, 0.0f }; // 移動範囲（Zは固定）
 	//======================================================================
 	// 入力ラッチ / ジェット煙 / デバッグフラグ
 	//======================================================================
@@ -357,14 +354,12 @@ private:
 	Vector3 deathRotateSpeed_ = { 0,0,0 };   // 回転速度
 	float  deathTimer_ = 0.0f;          // 経過時間(秒想定)
 	float  deathDuration_ = 2.6f;          // 強制演出の長さ（好みで）
-	// デス演出ステート管理
-	DeathPhase deathPhase_ = DeathPhase::None;
-	// 故障スパーク段階の管理
-	float faultTimer_ = 0.0f;
+	DeathPhase deathPhase_ = DeathPhase::None; // 現在の撃墜演出フェーズ
+	float faultTimer_ = 0.0f; // 故障スパークの経過時間
 	float faultDuration_ = 1.3f;   // 何秒間スパークさせるか（ImGuiで調整可）
 	int   faultBurstPerTick_ = 12;    // 1回あたり粒の発生数（ImGuiで調整可）
 	int   faultTickInterval_ = 2;     // 何フレームごとに出すか
-	int   faultFrameCounter_ = 0;
+	int   faultFrameCounter_ = 0; // フレームカウンター（faultTickInterval_管理用）
 	bool  flyInit_ = false;  // FlyAway移行時の一度きり初期化フラグ
 	//======================================================================
 	// 時ズーム（カメラ演出）
@@ -414,9 +409,9 @@ private:
 	//======================================================================
 	int   lastHitAttackId_ = -1;     // 最後に当たった攻撃ID
 	float sameAttackLockT_ = 0.0f;   // 同一攻撃IDロック残り時間（秒）
-	//====================
+	//======================================================================
 	// RB弾（弾数制限）
-	//====================
+	//======================================================================
 	static constexpr int kRbAmmoMax_ = 500; // RB弾の最大数
 	int rbAmmo_; // 現在のRB弾数
 	bool debugUnlimitedRB_ = false; // デバッグで無限

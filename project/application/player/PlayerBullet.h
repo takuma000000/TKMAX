@@ -92,52 +92,43 @@ public:
 	/// 使用するカメラを設定します。
 	/// </summary>
 	/// <param name="camera">描画および判定に使用するカメラ</param>
-	void SetCamera(TKM::Camera* camera) {
-		if (object_) {
-			object_->SetCamera(camera);
-		}
-	}
+	void SetCamera(TKM::Camera* camera);
 	/// <summary>
 	/// 弾のトレイル（軌跡）グループを設定します。
 	/// </summary>
 	/// <param name="group">使用するトレイルグループ名</param>
-	void SetTrailGroup(const std::string& group) {
-		trailGroup_ = group;
-		// 位置は現在地で再初期化（生成直後や途中でもOK）
-		Vector3 pos = object_ ? object_->GetTranslate() : Vector3{};
-		trailEmitter_.Initialize(trailGroup_, pos);
-	}
+	void SetTrailGroup(const std::string& group);
 	/// <summary>
 	/// 弾が当たった対象の敵を設定します。
 	/// </summary>
 	/// <param name="enemy">ヒット対象となる敵（nullptr 可）</param>
-	void SetEnemy(Enemy* enemy) { enemy_ = enemy; }
+	void SetEnemy(Enemy* enemy);
 	/// <summary>
 	/// プレイヤー参照を設定します。
 	/// </summary>
 	/// <param name="player">発射元となるプレイヤー</param>
-	void SetPlayer(Player* player) { player_ = player; }
+	void SetPlayer(Player* player);
 	/// <summary>
 	/// 一撃必殺フラグを設定します。
 	/// </summary>
 	/// <param name="flag">有効にする場合 true、それ以外は false</param>
-	void SetSpecialAttack(bool flag) { isSpecialAttack_ = flag; }
+	void SetSpecialAttack(bool flag);
 	/// <summary>
 	/// ホーミング機能の有効/無効と速度を設定します。
 	/// </summary>
 	/// <param name="enable">ホーミングを有効にする場合 true</param>
 	/// <param name="speed">ホーミング時の回頭・追従速度</param>
-	void SetHoming(bool enable, float speed) { isHoming_ = enable; homingSpeed_ = speed; }
+	void SetHoming(bool enable, float speed);
 	/// <summary>
 	/// ホーミング開始までの遅延時間を設定します。
 	/// </summary>
 	/// <param name="sec">遅延時間（秒）</param>
-	void SetHomingDelay(float sec) { homingDelay_ = std::max(0.0f, sec); }
+	void SetHomingDelay(float sec);
 	/// <summary>
 	/// 中ボスコア参照を設定します。
 	/// </summary>
 	/// <param name="core">中ボスコア（nullptr 可）</param>
-	void SetCore(MidBossCore* core) { core_ = core; }
+	void SetCore(MidBossCore* core);
 	// =========================================
 
 private:
@@ -145,19 +136,16 @@ private:
 	// 参照ポインタ / 本体
 	//======================================================================
 	Player* player_ = nullptr;
-
 	std::unique_ptr<TKM::Object3d> object_;
 	Vector3 velocity_{}; // 弾の現在速度
 	Vector3 prevPos_{}; // 前フレームの位置（トンネリング対策用）
-
 	Enemy* enemy_ = nullptr;
 	MidBossCore* core_ = nullptr;
 	//======================================================================
 	// 生存状態・ヒットフラグ
 	//======================================================================
-	bool isDead_ = false;
-	bool isHit_ = false;
-
+	bool isDead_ = false; // 死亡フラグ（消滅しているかどうか）
+	bool isHit_ = false; // ヒットフラグ（当たったかどうか。死亡とは別に管理）
 	bool isSpecialAttack_ = false; // 一撃必殺フラグ
 	//======================================================================
 	// ホーミング / ベジェ出現フェーズ
@@ -165,14 +153,11 @@ private:
 	bool  isHoming_ = false;
 	float homingSpeed_ = 0.6f;      // 追従弾の速度（調整可）
 	float homingDelay_ = 0.0f;      // 追尾開始までの遅延秒
-
 	bool  isSpawningCurve_ = false;  // 発射の「出方」曲線フェーズ中か
 	float spawnT_ = 0.0f;   // 0..1 の補間量
 	float spawnDuration_ = 0.25f;  // 出方にかける秒数（調整可）
-
 	Vector3 bezP0_, bezP1_, bezP2_, bezP3_;      // ベジェ制御点
 	Vector3 postSpawnVelocity_ = { 0,0,0 };      // 曲線フェーズ終了後に引き継ぐ速度
-
 	/// <summary>
 	/// 発射の「出方」曲線フェーズ更新。
 	/// </summary>
@@ -180,12 +165,11 @@ private:
 	//======================================================================
 	// パーティクル（軌跡）
 	//======================================================================
-	ParticleEmitter trailEmitter_;              // 弾の軌跡パーティクル
+	ParticleEmitter trailEmitter_;               // 弾の軌跡パーティクル
 	std::string     trailGroup_ = "bulletTrail"; // デフォルトのパーティクルグループ名
 	//======================================================================
 	// 共通パラメータ（マジックナンバー解消）
 	//======================================================================
-	// 共通パラメータ（マジックナンバー解消）
 	static constexpr float kDefaultScale_ = 0.2f;  // 弾の見た目サイズ
 	static constexpr float kDespawnZ_ = 150.0f; // 消えるZ位置
 };

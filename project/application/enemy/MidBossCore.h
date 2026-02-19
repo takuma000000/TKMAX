@@ -89,7 +89,7 @@ public:
 	/// HPを設定します（最大HPも更新）。
 	/// </summary>
 	/// <param name="hp"></param>
-	void SetHP(int hp) { hp_ = hp; maxHP_ = hp; }
+	void SetHP(int hp);
 	/// <summary>
 	/// モデルを設定します。
 	/// </summary>
@@ -109,44 +109,54 @@ public:
 	/// 親シーンを設定します。
 	/// </summary>
 	/// <param name="scene"></param>
-	void SetParentScene(TKM::BaseScene* scene) { parent_ = scene; }
+	void SetParentScene(TKM::BaseScene* scene);
 	/// <summary>
 	/// 当たり判定用スケールを設定します。
 	/// </summary>
 	/// <param name="s"></param>
-	void SetColliderScale(const Vector3& s) { colliderScale_ = s; }
+	void SetColliderScale(const Vector3& s);
 	/// <summary>
 	/// レティクルを設定します。
 	/// </summary>
 	/// <param name="r"></param>
-	void SetReticle(Reticle* r) { reticle_ = r; }
+	void SetReticle(Reticle* r);
 	/// <summary>
 	/// プレイヤー位置取得関数を設定します。
 	/// </summary>
 	/// <param name="getter"></param>
-	void SetPlayer(std::function<Vector3()> getter) { playerGetter_ = std::move(getter); }
+	void SetPlayer(std::function<Vector3()> getter);
 	// ========================================
 private:
+	//======================================================================
+	// 所有オブジェクト
+	//======================================================================
 	std::unique_ptr<TKM::Object3d> object_;
 	TKM::Camera* camera_ = nullptr;
 	TKM::BaseScene* parent_ = nullptr;
 	Reticle* reticle_ = nullptr;
 	std::function<Vector3()> playerGetter_;
-
+	//======================================================================
+	// ステータス
+	//======================================================================
 	int hp_ = 3; // 現在のHP
 	int maxHP_ = 3; // 最大HP
 	bool isDead_ = false; // 完全に死亡したかどうか
 	bool isDying_ = false; // 死亡演出中かどうか
-
+	//======================================================================
+	// 見た目 / 当たり判定
+	//======================================================================
 	Vector3 baseScale_{ 0.8f, 0.8f, 0.8f }; // 基本スケール
 	Vector3 colliderScale_{ 1.71f, 1.71f, 1.71f }; // 当たり判定用スケール
-
+	//======================================================================
 	// 死亡演出用
+	//======================================================================
 	float deathTimer_ = 0.0f; // 経過時間
 	float deathDuration_ = 1.0f; // 演出の長さ（秒相当）
-	Vector3 deathVelocity_{ 0.0f, 0.0f, 0.0f };
+	Vector3 deathVelocity_{ 0.0f, 0.0f, 0.0f }; // 演出中の移動速度
 	Vector3 deathRotateSpeed_{ 0.0f, 0.0f, 0.0f }; // 回転速度
-	float deathAlpha_ = 1.0f;
-
-	const float fixedDt_ = 1.0f / 60.0f;
+	float deathAlpha_ = 1.0f; // 演出中の透明度（1.0fで不透明、0.0fで完全に消える）
+	//======================================================================
+	// 固定Δt
+	//======================================================================
+	const float fixedDt_ = 1.0f / 60.0f; // 60FPS相当の固定更新間隔
 };

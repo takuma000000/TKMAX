@@ -197,6 +197,18 @@ namespace TKM {
 		DrawChips_();
 	}
 
+	void RBGaugeUI::SetVisible(bool v) {
+		visible_ = v; // visible_ は単純に描画するかどうかのフラグ。true のとき描画する、false のとき描画しない。
+	}
+
+	void RBGaugeUI::SetDesc(const Desc& desc) {
+		desc_ = desc; // desc_ は RBGaugeUI の設定情報を保持するメンバ変数。SetDesc1 関数は外部から新しい設定情報を受け取って desc_ に保存するための関数。
+	}
+
+	float RBGaugeUI::RandRange_(float a, float b) {
+		return a + (b - a) * (static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX)); // RandRange_11 関数は、a から b の範囲でランダムな浮動小数点数を生成するための関数。std::rand() は 0 から RAND_MAX までの整数を返すため、それを 0.0f から 1.0f の範囲に正規化し、さらに a と b の範囲にスケーリングして返します。
+	}
+
 	// ----------------------------
 	// 破片
 	// ----------------------------

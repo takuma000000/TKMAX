@@ -502,6 +502,38 @@ void Player::SetParentScene(TKM::BaseScene* scene) {
 	parentScene_ = scene; // 親シーン設定
 }
 
+void Player::SetEnemy(Enemy* enemy) {
+	enemy_ = enemy; // 敵1をセット（ロックオン対象）
+}
+
+void Player::SetAllEnemies(std::vector<std::unique_ptr<Enemy>>* enemies) {
+	allEnemies_ = enemies; // 敵全体の参照をセット（弾の追従用）
+}
+
+void Player::SetControlEnabled(bool enabled) {
+	controlEnabled_ = enabled; // プレイヤー操作の有効 / 無効を切り替えるフラグ
+}
+
+void Player::SetReticleVisible(bool visible) {
+	reticleVisible_ = visible; // レティクルの表示 / 非表示を切り替えるフラグ
+}
+
+void Player::SetMidBossCore(MidBossCore* core) {
+	core_ = core; // レティクルのターゲットにコアを追加
+}
+
+void Player::SetColliderScale(const Vector3& s) {
+	colliderScale_ = s;
+}
+
+void Player::SetRadialBlurEffect(TKM::RadialBlurEffect* effect) {
+	radialBlur_ = effect; // ラジアルブラーエフェクトの参照をセット
+}
+
+void Player::SetRotation(const Vector3& r) {
+	object_->SetRotate(r); // 回転設定（直接指定版）
+}
+
 void Player::StartCameraShake(int frameCount) {
 	cameraShakeFrame_ = frameCount; // シェイクフレーム数セット
 }

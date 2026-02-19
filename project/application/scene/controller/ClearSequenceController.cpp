@@ -94,6 +94,18 @@ namespace TKM {
 		return finished;
 	}
 
+	void ClearSequenceController::SetPlayerSpeed(float v) {
+		playerSpeed_ = v; // プレイヤーの飛行速度を設定
+	}
+
+	void ClearSequenceController::SetPlayerFlyMinTime(float v) {
+		playerSpeed_ = v; // プレイヤーの飛行の最短継続時間を設定
+	}
+
+	void ClearSequenceController::SetPlayerFlyDistance(float v) {
+		playerFlyDistance_ = v; // プレイヤーの飛行距離を設定
+	}
+
 	void ClearSequenceController::UpdateCamZoom(float dt, bool& finished) {
 		(void)dt;
 
