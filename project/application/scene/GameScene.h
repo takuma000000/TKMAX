@@ -12,6 +12,7 @@
 #include "ParticleGroupsCatalog.h"
 #include "Input.h"
 #include "PauseMenuController.h"
+#include "TextureCatalog.h"
 
 //=============================================================
 // GameSceneクラス
@@ -72,10 +73,7 @@ public:
 	/// モデルを読み込みます。
 	/// </summary>
 	void LoadModels();
-	/// <summary>
-	/// テクスチャを読み込みます。
-	/// </summary>
-	void LoadTextures();
+
 	/// <summary>
 	/// 敵弾をスポーンします。
 	/// </summary>

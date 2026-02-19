@@ -16,7 +16,7 @@ void GameScene::Initialize() {
 	assert(dxCommon_ != nullptr && "dxCommon is nullptr in GameScene::Initialize");
 	/// ──────────────── 各種初期化処理 ───────────────
 	InitializeAudio();   // サウンドのロード＆再生
-	LoadTextures();      // テクスチャのロード
+	TextureCatalog::LoadTextureCatalogs(); // テクスチャカタログのロード
 	InitializeSprite();  // スプライトの作成＆初期化
 	LoadModels();        // 3Dモデルのロード
 	InitializeObjects(); // 3Dオブジェクトの作成＆初期化
@@ -228,40 +228,6 @@ TKM::Camera* GameScene::UpdateActiveCamera() {
 // ゲーム内のサウンドをロード＆再生する
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeAudio() {
-}
-
-// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-// 必要なテクスチャをロードする
-// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-void GameScene::LoadTextures() {
-	//ファイルパス
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/uvChecker.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/circle.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/circle2.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/gradationLine.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/rostock_laage_airport_4k.dds");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/test.dds");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/kloofendal_48d_partly_cloudy_puresky_1k.dds");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/Ground.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/start.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/damageSpark.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/firework_star.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/RB_ui.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/LB_ui.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/X_ui.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/LS_ui.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/resume_pause.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/restart_pause.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/title_pause.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/gauge_fill_grad.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/gauge_frame_glass.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/RB_gauge_ui.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/gauge_shard.jpeg");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/blue.jpg");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/gray.jpg");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/player_hp.jpg");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/player_hp_frame.jpg");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/uvChecker.dds");
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
