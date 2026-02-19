@@ -96,7 +96,6 @@ namespace EnemySpawner {
 				// もともとここは Spawn エフェクトを出してなかったので false
 				CreateAndPushEnemy(enemies, spawnPos_, dx, cam, parent, config, false);
 			}
-
 			// 下左右
 			for (int side = -1; side <= 1; side += 2) {
 				Vector3 spawnPos_ = { centerX + side * size, centerY - size, z };
