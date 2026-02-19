@@ -228,9 +228,6 @@ TKM::Camera* GameScene::UpdateActiveCamera() {
 // ゲーム内のサウンドをロード＆再生する
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeAudio() {
-	auto* audio = AudioManager::GetInstance();
-	audio->Initialize();
-	audio->LoadSound("bossP2", "FLASHness.wav"); // ボス戦フェーズ2用BGM ( FLASHness / NEURAY )
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
