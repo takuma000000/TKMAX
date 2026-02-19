@@ -8,65 +8,64 @@
 class EnemyWaveConfig {
 public:
 	enum class Wave2Pattern {
-		Triangle,
-		Line,
-		Column,
+		Triangle, // V字隊列
+		Line, // 直線隊列
+		Column, // 縦列隊列
 	};
 
 	struct Wave1 {
-		float spawnInterval_ = 1.5f;
-		int   maxSimultaneous_ = 2;
-		int defeatTarget_ = 5;
+		float spawnInterval_ = 1.5f; // 敵の出現間隔（秒）
+		int   maxSimultaneous_ = 2; // 同時に存在してよい敵の数
+		int defeatTarget_ = 5; // この Wave で「倒すべき敵の数」
 
 		// SpawnPos(base): a(未使用), b=y, c=z
-		float baseY_ = 5.0f;
-		float baseZ_ = 100.0f;
+		float baseY_ = 5.0f; // 敵の生成高さ（ワールド座標）
+		float baseZ_ = 100.0f; // 敵の生成基準 Z 座標（ワールド座標）
 
 		// RandX(range): b=min, c=max
-		float randXMin_ = -20.0f;
-		float randXMax_ = 20.0f;
+		float randXMin_ = -20.0f; // 敵の生成 X 座標の最小値（ワールド座標）
+		float randXMax_ = 20.0f; // 敵の生成 X 座標の最大値（ワールド座標）
 	};
 
 	struct Wave2SubWave {
-		Wave2Pattern pattern_ = Wave2Pattern::Triangle;
+		Wave2Pattern pattern_ = Wave2Pattern::Triangle; // 編隊パターン
 
 		// Triangle: id, a=Triangle, b=段(=countPerSide), c=y, d=z, e=xCenter, f=xStep, g=zStep
-		int   triCountPerSide_ = 1;
-		float triY_ = 6.0f;
-		float triZ_ = 80.0f;
-		float triXCenter_ = 0.0f;
-		float triXStep_ = 7.0f;
-		float triZStep_ = 5.0f;
+		int   triCountPerSide_ = 1; // 片側あたりの敵の数（中央を除く）
+		float triY_ = 6.0f; // 生成高さ（ワールド座標）
+		float triZ_ = 80.0f; // 先頭の Z 座標（ワールド座標）
+		float triXCenter_ = 0.0f; // 中心となる X 座標（ワールド座標）
+		float triXStep_ = 7.0f; // 左右方向の X 間隔
+		float triZStep_ = 5.0f; // 後列との Z 間隔
 
 		// Line: b=count, c=y, d=z, e=xStart, f=xStep
-		int   lineCount_ = 4;
-		float lineY_ = 4.5f;
-		float lineZ_ = 90.0f;
-		float lineXStart_ = -12.0f;
-		float lineXStep_ = 8.0f;
+		int   lineCount_ = 4; // 生成する敵の数
+		float lineY_ = 4.5f; // 生成高さ（ワールド座標）
+		float lineZ_ = 90.0f; // 生成 Z 座標（ワールド座標）
+		float lineXStart_ = -12.0f; // 開始 X 座標（ワールド座標）
+		float lineXStep_ = 8.0f; // X 方向の間隔
 
 		// Column: b=count, c=x, d=zStart, e=zStep, f=yStart, g=yStep
-		int   colCount_ = 3;
-		float colX_ = 18.0f;
-		float colZStart_ = 100.0f;
-		float colZStep_ = 10.0f;
-		float colYStart_ = 5.0f;
-		float colYStep_ = 0.0f;
+		int   colCount_ = 3; // 生成する敵の数
+		float colX_ = 18.0f; // 生成 X 座標（ワールド座標）
+		float colZStart_ = 100.0f; // 開始 Z 座標（ワールド座標）
+		float colZStep_ = 10.0f; // Z 方向の間隔
+		float colYStart_ = 5.0f; // 開始 Y 座標（ワールド座標）
+		float colYStep_ = 0.0f; // Y 方向の間隔（0なら高さ固定）
 	};
 
 	struct Wave3 {
-		Vector3 midBossLeft_ = { -12.0f, 6.0f, 80.0f };
-		Vector3 midBossRight_ = { 12.0f, 6.0f, 80.0f };
+		Vector3 midBossLeft_ = { -12.0f, 6.0f, 80.0f }; // 中ボスの定位置（左）
+		Vector3 midBossRight_ = { 12.0f, 6.0f, 80.0f }; // 中ボスの定位置（右）
 
 		// CoreRand(params): a=xRange, b=zMin, c=zMax, d=y
-		float coreXRange_ = 18.0f;
-		float coreZMin_ = 35.0f;
-		float coreZMax_ = 75.0f;
-		float coreY_ = 6.0f;
-
-		float coreLifetime_ = 5.0f;
-		int   coreHP_ = 5;
-		float angryDuration_ = 8.0f;
+		float coreXRange_ = 18.0f; // 核の生成 X 座標の範囲（中心からの距離、ワールド座標）
+		float coreZMin_ = 35.0f; // 核の生成 Z 座標の最小値（ワールド座標）
+		float coreZMax_ = 75.0f; // 核の生成 Z 座標の最大値（ワールド座標）
+		float coreY_ = 6.0f; // 核の生成 Y 座標（ワールド座標）
+		float coreLifetime_ = 5.0f; // 核が生きていれば蘇生成立（秒）
+		int   coreHP_ = 5; // 核のHP（あとで調整用）
+		float angryDuration_ = 8.0f; // 中ボス怒り時間（秒）
 	};
 
 	/// <summary>
@@ -126,12 +125,14 @@ private:
 	/// <returns>変換後の int 値</returns>
 	static int   ToI(const std::string& s);
 
-	Wave1 wave1_{};
-	float wave2WaitDuration_ = 1.5f;
-	std::array<Wave2SubWave, 3> wave2SubWaves_{};
-	Wave3 wave3_{};
-	// 固定値
-	int wave2SubWaveCount_ = 3;
+	//===================================================
+	// Waveごとの設定データ
+	//===================================================
+	Wave1 wave1_{}; // Wave1の設定
+	float wave2WaitDuration_ = 1.5f; // Wave2の待機時間
+	std::array<Wave2SubWave, 3> wave2SubWaves_{}; // Wave2のサブウェーブ設定（最大3つまで）
+	Wave3 wave3_{}; // Wave3の設定
+	int wave2SubWaveCount_ = 3; // Wave2のサブウェーブ数（実際に使用するサブウェーブの数、0〜3の範囲で wave2SubWaves_ の先頭から使用）
 
 public:
 	// Enemy Params ==========================================
