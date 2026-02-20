@@ -227,7 +227,6 @@ namespace TKM {
 		// スプライトの座標を操作するスライダー
 		ImGui::SliderFloat2("Sprite Position", &position_.x, 0.0f, 500.0f, "%.1f");
 		ImGui::End();
-
 #endif
 	}
 
