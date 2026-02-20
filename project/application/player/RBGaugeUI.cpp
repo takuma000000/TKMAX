@@ -171,7 +171,7 @@ namespace TKM {
 			col.y *= mul;
 			col.z *= mul;
 		} else {
-			blinkT_ = 0.0f;
+			blinkT_ = 0.0f; // 点滅してないときはタイマーリセット
 		}
 		fillL_->SetColor(col);
 		fillR_->SetColor(col);
