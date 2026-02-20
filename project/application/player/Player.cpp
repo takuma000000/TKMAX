@@ -50,11 +50,14 @@ void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommo
 		jetPos.z -= kJetSmokeOffsetZ_;           // 機体のケツあたり
 		jetEmitter_.Initialize("jetSmoke", jetPos);
 	}
-
+	// RB弾
 	rbAmmo_ = kRbAmmoMax_;// ロケット弾初期弾数
 	rbEmptyTimer_ = 0.0f; // ロケット弾空タイマー初期化
 	rbRefilling_ = false; // ロケット弾リフィル中フラグ初期化
 	rbRefillValue_ = float(rbAmmo_); // ロケット弾リフィル値初期化
+	// LB弾
+	lbAmmo_ = kLbAmmoMax_; // LB弾初期弾数
+	lbNoFireTimer_ = 0.0f; // LB弾発射不可タイマー初期化
 }
 
 void Player::Update(float dt) {
@@ -691,6 +694,22 @@ void Player::HandleShooting() {
 			}
 		}
 	}
+	//====================
+	// LB弾 自動満タン回復（一定時間LBを撃ってないとMaxへ）
+	//====================
+	{
+		if (!debugUnlimitedLB_ && lbAmmo_ < kLbAmmoMax_) { // まだ満タンじゃないなら
+			lbNoFireTimer_ += dt; // 撃ってない時間を進める
+
+			if (lbNoFireTimer_ >= kLbRefillWaitSec_) { // 一定時間撃ってないなら満タンにする
+				lbAmmo_ = kLbAmmoMax_; // 満タンにする
+				lbNoFireTimer_ = 0.0f; // 満タンになったらアイドル判定もリセット
+			}
+		} else {
+			// 満タンならタイマーは不要なのでリセット
+			lbNoFireTimer_ = 0.0f;
+		}
+	}
 
 	RBShoot(); // RB弾処理
 	RTShoot(); // RT弾処理
@@ -833,8 +852,14 @@ void Player::LBShoot() {
 	TKM::Input* input = TKM::Input::GetInstance();
 
 	// ▼ LB：ホーミング弾（元LT）
-	// ※「1押し1発」のため、ltHeld_をそのまま流用（名前は気にしなくてOK）
+	// ※「1押し1発」のため、ltHeld_をそのまま流用
 	if (input->TriggerButton(XINPUT_GAMEPAD_LEFT_SHOULDER) && !ltHeld_) {
+		// 弾切れなら撃てない（0のとき）
+		if (!debugUnlimitedLB_ && lbAmmo_ <= 0) {
+			// 発射できないので、ここで終わる
+			return;
+		}
+
 		auto bullet = std::make_unique<PlayerBullet>();
 		bullet->Initialize(common_, dxCommon_);
 
@@ -898,6 +923,13 @@ void Player::LBShoot() {
 		bullet->SetHomingDelay(0.12f);
 
 		bullets_.push_back(std::move(bullet));
+
+		// 発射成功したら消費
+		if (!debugUnlimitedLB_) {
+			lbAmmo_ = std::max(0, lbAmmo_ - 1);
+		}
+		// 「LBを撃ってない時間」リセット
+		lbNoFireTimer_ = 0.0f;
 
 		ZoomCamera();
 		StartCameraShake(10);

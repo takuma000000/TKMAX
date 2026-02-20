@@ -25,7 +25,7 @@ void TitleScene::Initialize() {
 	TextureManager::GetInstance()->LoadTexture("./resources/texture/circle.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/texture/gradationLine.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/texture/circle2.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/title_kuraran.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/texture/title_kuraran.dds");
 	TextureManager::GetInstance()->LoadTexture("./resources/texture/start_title.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/texture/end_title.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/texture/rostock_laage_airport_4k.dds");
@@ -55,7 +55,7 @@ void TitleScene::Initialize() {
 	titlePlayer_->SetRotation({ 0.0f, 0.0f, 0.0f });
 
 	sprite_ = std::make_unique<Sprite>();
-	sprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, "./resources/texture/title_kuraran.png");
+	sprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, "./resources/texture/title_kuraran.dds");
 	// 画面中央に表示
 	sprite_->SetPosition({ 0.0f,0.0f });
 	sprite_->SetSize({ 1.0f, 1.0f });

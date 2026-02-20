@@ -168,6 +168,14 @@ public:
 	/// RB弾の最大数を取得します。
 	/// </summary>
 	int GetRbAmmoMax() const { return kRbAmmoMax_; }
+	/// <summary>
+	/// LB弾の残数を取得します。
+	/// </summary>
+	int GetLbAmmo() const { return lbAmmo_; }
+	/// <summary>
+	/// LB弾の最大数を取得します。
+	/// </summary>
+	int GetLbAmmoMax() const { return kLbAmmoMax_; }
 	// =========================================
 	// Setter===================================
 	/// <summary>
@@ -485,4 +493,12 @@ private:
 	float floatAmp_ = 0.1f;       // 振幅（上下の大きさ）
 	float floatHz_ = 0.35f;        // 周波数（ゆっくり）
 	bool  enableFloatBob_ = true;  // ON/OFF
+	//======================================================================
+	// LB弾（最大5・一定時間で満タン回復）
+	//======================================================================
+	static constexpr int kLbAmmoMax_ = 5;        // LB弾の最大数
+	int  lbAmmo_ = kLbAmmoMax_;                 // 現在のLB弾数
+	bool debugUnlimitedLB_ = false;             // デバッグで無限（必要なら）
+	static constexpr float kLbRefillWaitSec_ = 3.0f; // 最後にLB撃ってから満タンまでの待ち秒数
+	float lbNoFireTimer_ = 0.0f;                // 最後にLBを撃ってからの経過秒
 };
