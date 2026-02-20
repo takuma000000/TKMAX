@@ -196,6 +196,7 @@
     <ClCompile Include="application\boss\BossBullet.cpp" />
     <ClCompile Include="application\catalog\TextureCatalog.cpp" />
     <ClCompile Include="application\catalog\ModelCatalog.cpp" />
+    <ClCompile Include="application\player\LBGaugeUI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -429,6 +430,7 @@
     <ClInclude Include="application\catalog\TextureCatalog.h" />
     <ClInclude Include="application\catalog\ModelCatalog.h" />
     <ClInclude Include="engine\func\math\Transform.h" />
+    <ClInclude Include="application\player\LBGaugeUI.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

@@ -28,7 +28,7 @@ namespace TKM {
 
 			// テクスチャ
 			std::string frameTex_ = "./resources/texture/gray.jpg"; // フレーム
-			std::string fillTex_ = "./resources/texture/blue.jpg"; // 塗り（通常）
+			std::string fillTex_ = "./resources/texture/blue.dds"; // 塗り（通常）
 
 			// 色（単純回避用）
 			Vector4 baseColor_ = { 1.0f, 1.0f, 1.0f, 0.3f };   // 通常

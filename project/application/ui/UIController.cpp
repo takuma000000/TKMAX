@@ -146,6 +146,22 @@ namespace TKM {
 			d.center_ = rbCenter;
 			rbGaugeUI_->SetDesc(d);
 
+			// LB残弾ゲージ（RBの下に同サイズで配置）
+			if (lbGaugeUI_) {
+				auto ld = lbGaugeUI_->GetDesc();
+
+				ld.size_ = d.size_; // RBと同サイズ
+				ld.center_ = {
+					rbCenter.x,
+					rbCenter.y + d.size_.y + lbGaugeSpacingY_
+				};
+
+				// 5分割固定（保険）
+				ld.segments_ = 5;
+
+				lbGaugeUI_->SetDesc(ld);
+			}
+
 			// RBゲージアイコン（RBゲージの右に置く）※anchor={1,1}なので右下基準
 			if (uiRBGaugeIcon_) {
 				const float iconW = rbGaugeIconDrawSize_.x;
@@ -242,10 +258,14 @@ namespace TKM {
 		ApplyRightUiSizes_();
 		ApplyRightUiPositions_();
 
-		// 弾UI
+		// RB弾UI
 		rbGaugeUI_ = std::make_unique<TKM::RBGaugeUI>();
 		TKM::RBGaugeUI::Desc d{};
 		rbGaugeUI_->Initialize(spriteCommon_, dxCommon_, parentScene_, d);
+		// LB弾UI（5分割）
+		lbGaugeUI_ = std::make_unique<TKM::LBGaugeUI>();
+		TKM::LBGaugeUI::Desc ld{};
+		lbGaugeUI_->Initialize(spriteCommon_, dxCommon_, parentScene_, ld);
 
 		// HPバー
 		hpFrame_ = std::make_unique<Sprite>();
@@ -323,6 +343,9 @@ namespace TKM {
 
 		if (rbGaugeUI_ && player) {
 			rbGaugeUI_->Update(dt, player->GetRbAmmo(), player->GetRbAmmoMax(), player->IsRbRefilling(), rbDown); // RB残弾UIはRBの状態とプレイヤーの弾情報を渡して更新
+		}
+		if (lbGaugeUI_ && player) {
+			lbGaugeUI_->Update(dt, player->GetLbAmmo(), player->GetLbAmmoMax(), lbDown); // LB残弾UIはLBの状態とプレイヤーの弾情報を渡して更新
 		}
 
 		// ---- 左スティック入力（倒し量で判定）----
@@ -504,6 +527,7 @@ namespace TKM {
 		if (uiRBGaugeIcon_) { uiRBGaugeIcon_->SetColor(mulAlpha(colRBGaugeIcon_)); uiRBGaugeIcon_->Draw(); }
 
 		if (rbGaugeUI_) rbGaugeUI_->Draw();
+		if (lbGaugeUI_) lbGaugeUI_->Draw();
 	}
 
 	void TKM::UIController::DrawImGui() {
@@ -557,6 +581,31 @@ namespace TKM {
 			changed |= ImGui::DragFloat("サイズ##rbGaugeIcon", &rbGaugeIconScale_, 0.001f, 0.01f, 2.0f);
 			changed |= ImGui::DragFloat("右端余白(px)##rbGaugeIconPad", &rbGaugeIconPadX_, 0.5f, 0.0f, 200.0f);
 			changed |= ImGui::DragFloat2("微調整オフセット##rbGaugeIcon", &rbGaugeIconOffset_.x, 0.5f, -1500.0f, 300.0f);
+			ImGui::TreePop();
+		}
+
+		// LBゲージ
+		if (ImGui::TreeNode("LBゲージ（残弾5分割）")) {
+			changed |= ImGui::DragFloat("RBの下の間隔Y(px)##lbGaugeSpace", &lbGaugeSpacingY_, 0.5f, 0.0f, 200.0f);
+			changed |= ImGui::DragFloat2("LBゲージ微調整(x,y)##lbGaugeOfs", &lbGaugeOffset_.x, 0.5f, -500.0f, 500.0f);
+
+			if (lbGaugeUI_) {
+				auto ld = lbGaugeUI_->GetDesc();
+				bool localChanged = false;
+
+				localChanged |= ImGui::DragFloat("内側余白 pad(px)##lbPad", &ld.pad_, 0.1f, 0.0f, 20.0f);
+				localChanged |= ImGui::DragFloat("分割の隙間 gap(px)##lbGap", &ld.gap_, 0.1f, 0.0f, 20.0f);
+
+				// 色（任意）
+				localChanged |= ImGui::ColorEdit4("通常色##lbBase", &ld.baseColor_.x);
+				localChanged |= ImGui::ColorEdit4("消費色##lbDrain", &ld.drainColor_.x);
+				localChanged |= ImGui::ColorEdit4("回復色##lbRefill", &ld.refillColor_.x);
+
+				if (localChanged) {
+					lbGaugeUI_->SetDesc(ld);
+				}
+			}
+
 			ImGui::TreePop();
 		}
 

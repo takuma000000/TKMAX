@@ -8,6 +8,7 @@
 #include "RBGaugeUI.h"
 #include "Player.h"
 #include <Input.h>
+#include "LBGaugeUI.h"
 
 namespace TKM {
 	class UIController {
@@ -154,6 +155,12 @@ namespace TKM {
 		// RB残弾UI
 		//======================================================================
 		std::unique_ptr<TKM::RBGaugeUI> rbGaugeUI_; // RB残弾ゲージUI
+		//======================================================================
+		// LB残弾UI
+		//======================================================================
+		std::unique_ptr<TKM::LBGaugeUI> lbGaugeUI_; // LB残弾ゲージUI
+		float lbGaugeSpacingY_ = 52.0f; // RBゲージの下にどれだけ離して置くか
+		Vector2 lbGaugeOffset_{ 0.0f, 0.0f }; // LBゲージの位置微調整（+xで右 / +yで下）
 		//======================================================================
 		// 左下HUD（HP）
 		//======================================================================
