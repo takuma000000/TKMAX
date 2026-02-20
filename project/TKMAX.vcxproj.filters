@@ -195,6 +195,7 @@
     <ClCompile Include="application\scene\controller\GameResultMenuController.cpp" />
     <ClCompile Include="application\boss\BossBullet.cpp" />
     <ClCompile Include="application\catalog\TextureCatalog.cpp" />
+    <ClCompile Include="application\catalog\ModelCatalog.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -426,6 +427,7 @@
     <ClInclude Include="application\scene\controller\TitleMenuController.h" />
     <ClInclude Include="application\scene\controller\GameResultMenuController.h" />
     <ClInclude Include="application\catalog\TextureCatalog.h" />
+    <ClInclude Include="application\catalog\ModelCatalog.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

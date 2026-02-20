@@ -18,7 +18,7 @@ void GameScene::Initialize() {
 	InitializeAudio();   // サウンドのロード＆再生
 	TextureCatalog::LoadTextureCatalogs(); // テクスチャカタログのロード
 	InitializeSprite();  // スプライトの作成＆初期化
-	LoadModels();        // 3Dモデルのロード
+	ModelCatalog::LoadModelCatalogs(dxCommon_); // モデルカタログのロード
 	InitializeObjects(); // 3Dオブジェクトの作成＆初期化
 	InitializeCamera();  // カメラの作成＆設定
 	/// ──────────────── ライトの初期化 ───────────────
@@ -246,22 +246,6 @@ void GameScene::InitializeSprite() {
 	// ──────────────── ポーズメニュー（形だけ） ───────────────
 	pause_ = std::make_unique<TKM::PauseMenuController>();
 	pause_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, this, w, h);
-}
-
-// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-// 必要な3Dモデルをロードする
-// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-void GameScene::LoadModels() {
-	ModelManager::GetInstance()->LoadModel("sphere.obj", dxCommon_);
-	ModelManager::GetInstance()->LoadModel("turtle.obj", dxCommon_);
-	ModelManager::GetInstance()->LoadModel("turtle_flipper.obj", dxCommon_);
-	ModelManager::GetInstance()->LoadModel("jerryfish.obj", dxCommon_);
-	ModelManager::GetInstance()->LoadModel("jerryfish_boss.obj", dxCommon_);
-	ModelManager::GetInstance()->LoadModel("tentacle.obj", dxCommon_);
-	ModelManager::GetInstance()->LoadModel("tentacle_boss.obj", dxCommon_);
-	ModelManager::GetInstance()->LoadModel("reticle_big.obj", dxCommon_);
-	ModelManager::GetInstance()->LoadModel("reticle_normal.obj", dxCommon_);
-	ModelManager::GetInstance()->LoadModel("reticle_small.obj", dxCommon_);
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*

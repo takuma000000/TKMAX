@@ -209,6 +209,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\scene\controller\PauseMenuController.cpp" />
     <ClCompile Include="application\scene\controller\TitleMenuController.cpp" />
     <ClCompile Include="application\catalog\TextureCatalog.cpp" />
+    <ClCompile Include="application\catalog\ModelCatalog.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\enemy\manager\EnemyManager.h" />
@@ -299,6 +300,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\effect\ParticleGroupsCatalog.h" />
     <ClInclude Include="application\scene\controller\PauseMenuController.h" />
     <ClInclude Include="application\scene\controller\GameResultMenuController.h" />
+    <ClInclude Include="application\catalog\ModelCatalog.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="application\scene\controller\TitleMenuController.h" />
     <ClInclude Include="application\catalog\TextureCatalog.h" />

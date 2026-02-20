@@ -13,6 +13,7 @@
 #include "Input.h"
 #include "PauseMenuController.h"
 #include "TextureCatalog.h"
+#include "ModelCatalog.h"
 
 //=============================================================
 // GameSceneクラス
@@ -68,11 +69,6 @@ public:
 	/// カメラを初期化します。
 	/// </summary>
 	void InitializeCamera();
-
-	/// <summary>
-	/// モデルを読み込みます。
-	/// </summary>
-	void LoadModels();
 
 	/// <summary>
 	/// 敵弾をスポーンします。
