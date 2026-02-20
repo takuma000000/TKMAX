@@ -34,6 +34,7 @@ void TextureCatalog::LoadTextureCatalogs() {
 		"gray.jpg",
 		"player_hp.jpg",
 		"player_hp_frame.jpg",
+		"player_hp.png",
 		"uvChecker.dds",
 	};
 

@@ -172,6 +172,14 @@ namespace TKM {
 		float hudReserveGap_ = 26.0f;     // 確保幅の右側の間隔（見栄え用）
 		float hudBottomMargin_ = 44.0f;   // 画面下からHPバー中心までの距離
 		float rbGaugeIconPadX_ = 60.0f;   // RBゲージ右端→アイコンまでの余白
+
+		// HPアイコン（player_hp.png）をゲージの下に置く
+		std::unique_ptr<Sprite> hpIcon_;
+		Vector2 hpIconTexSize_{}; // HPアイコンのテクスチャサイズ
+		Vector2 hpIconDrawSize_{}; // HPアイコンの描画サイズ（テクスチャサイズを元に hpIconScale_ で計算して入れる）
+		Vector2 hpIconOffset_{ -1.0f, -4.0f }; // +yで下にズラす（下に置くので正）
+		float   hpIconScale_ = 0.055f;        // 画像に合わせて調整
+		Vector4 colHPIcon_{ 1.0f,1.0f,1.0f,1.0f }; // HPアイコンの色
 		//======================================================================
 		// 右側UI：個別調整用
 		//======================================================================

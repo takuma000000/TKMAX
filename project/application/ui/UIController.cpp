@@ -189,6 +189,21 @@ namespace TKM {
 			if (hpFill_) {
 				hpFill_->SetPosition(basePosHPFill_);
 			}
+
+			// HPアイコン：HPゲージの下に置く（basePosHPFill_ は下端座標）
+			if (hpIcon_) {
+				// アイコンのサイズを考慮して、HPゲージの下に配置するための座標を計算
+				const float iconW = hpIconDrawSize_.x;
+				const float iconH = hpIconDrawSize_.y;
+				// アイコンの上端がHPゲージの下端にくるように配置
+				Vector2 iconPos{
+					basePosHPFill_.x,
+					basePosHPFill_.y + (iconH * 0.5f) + hpIconOffset_.y
+				};
+				iconPos.x += hpIconOffset_.x; // 微調整
+				// アイコンの位置を保存
+				hpIcon_->SetPosition(iconPos);
+			}
 		}
 	}
 
@@ -235,16 +250,21 @@ namespace TKM {
 		// HPバー
 		hpFrame_ = std::make_unique<Sprite>();
 		hpFill_ = std::make_unique<Sprite>();
-
+		// HPアイコン（player_hp.png）
+		hpIcon_ = std::make_unique<Sprite>();
+		// 画像を指定
 		const std::string hpFrameTex = "./resources/texture/player_hp_frame.jpg";
 		const std::string hpFillTex = "./resources/texture/player_hp.jpg";
-
+		const std::string hpIconTex = "./resources/texture/player_hp.png";
+		// スプライトを初期化
 		hpFrame_->Initialize(spriteCommon_, dxCommon_, hpFrameTex);
 		hpFill_->Initialize(spriteCommon_, dxCommon_, hpFillTex);
-
+		hpIcon_->Initialize(spriteCommon_, dxCommon_, hpIconTex);
+		// サイズはこっちで数値管理したいので、自動調整はOFF
 		hpFrame_->SetAutoAdjustTextureSize(false);
 		hpFill_->SetAutoAdjustTextureSize(false);
-
+		hpIcon_->SetAutoAdjustTextureSize(false);
+		// テクスチャ切り出しは「画像そのまま」
 		{
 			const auto& metaF = TextureManager::GetInstance()->GetMetadata(hpFrameTex);
 			hpFrame_->SetTextureLeftTop({ 0.0f, 0.0f });
@@ -253,11 +273,22 @@ namespace TKM {
 			const auto& metaFi = TextureManager::GetInstance()->GetMetadata(hpFillTex);
 			hpFill_->SetTextureLeftTop({ 0.0f, 0.0f });
 			hpFill_->SetTextureSize({ (float)metaFi.width, (float)metaFi.height });
+
+			const auto& metaI = TextureManager::GetInstance()->GetMetadata(hpIconTex);
+			hpIcon_->SetTextureLeftTop({ 0.0f, 0.0f });
+			hpIcon_->SetTextureSize({ (float)metaI.width, (float)metaI.height });
+			hpIconTexSize_ = { (float)metaI.width, (float)metaI.height };
 		}
 
 		// 縦ゲージなので「下基準」にする（高さを縮めても下に張り付く）
-		hpFrame_->SetAnchorPoint({ 0.5f, 0.5f });
-		hpFill_->SetAnchorPoint({ 0.5f, 1.0f });
+		hpFrame_->SetAnchorPoint({ 0.5f, 0.5f }); // 中心
+		hpFill_->SetAnchorPoint({ 0.5f, 1.0f }); // 下基準
+		// アイコンは中心基準
+		if (hpIcon_) {
+			hpIcon_->SetAnchorPoint({ 0.5f, 0.5f }); // アイコンは中心基準
+			hpIconDrawSize_ = { hpIconTexSize_.x * hpIconScale_, hpIconTexSize_.y * hpIconScale_ }; // アイコンは縮小して表示する前提なので、テクスチャサイズとスケールから描画サイズを計算して保存
+			hpIcon_->SetSize(hpIconDrawSize_); // アイコンは縮小して表示する前提なので、テクスチャサイズとスケールから描画サイズを計算して適用
+		}
 
 		// 初期サイズ（縦ゲージ）
 		hpFrame_->SetSize({ hpVertSize_.x + hpFramePad_, hpVertSize_.y + hpFramePad_ });
@@ -266,7 +297,7 @@ namespace TKM {
 		colHPFrame_ = { 1.0f, 1.0f, 1.0f, 0.90f };
 		colHPFill_ = { 0.25f, 1.0f, 0.35f, 0.90f };
 
-		UpdateLayout(screenW, screenH);
+		UpdateLayout(screenW, screenH); // 画面サイズを元に初期レイアウトを適用
 	}
 
 	void UIController::UpdateLayout(float screenW, float screenH) {
@@ -334,6 +365,7 @@ namespace TKM {
 		if (uiX_)  uiX_->Update();
 		if (uiLS_) uiLS_->Update();
 		if (uiRBGaugeIcon_) uiRBGaugeIcon_->Update();
+		if (hpIcon_)  hpIcon_->Update();
 
 		// ---- 押下中シェイク（必要な分だけ）----
 		if (uiRB_) ApplyShake_(uiRB_.get(), basePosRB_, rbDown, shakeT_RB_);
@@ -437,7 +469,10 @@ namespace TKM {
 			hpFrame_->SetColor(mulAlpha(colHPFrame_));
 			hpFrame_->Draw();
 		}
-
+		if (hpIcon_) {
+			hpIcon_->SetColor(mulAlpha(colHPIcon_));
+			hpIcon_->Draw();
+		}
 		if (hpFill_) {
 			// フラッシュ割合（0..1）
 			float t = 0.0f;
@@ -527,6 +562,12 @@ namespace TKM {
 
 		ImGui::Separator();
 
+		ImGui::Text("HPアイコン（player_hp.png）");
+		changed |= ImGui::DragFloat("HPアイコン scale", &hpIconScale_, 0.001f, 0.01f, 2.0f);
+		changed |= ImGui::DragFloat2("HPアイコン offset(x,y)", &hpIconOffset_.x, 0.5f, -300.0f, 300.0f);
+
+		ImGui::Separator();
+
 		ImGui::Text("左下HUD：配置（縦ゲージの確保幅込み）");
 		changed |= ImGui::DragFloat("左余白(px)", &hudLeftMargin_, 0.5f, 0.0f, 600.0f);
 		changed |= ImGui::DragFloat("縦ゲージ確保幅(px)", &hudReserveLeftW_, 0.5f, 0.0f, 800.0f);
@@ -565,6 +606,10 @@ namespace TKM {
 			ApplyHudPositions_();
 			if (hpFill_)  hpFill_->SetSize(hpVertSize_);
 			if (hpFrame_) hpFrame_->SetSize({ hpVertSize_.x + hpFramePad_, hpVertSize_.y + hpFramePad_ });
+			if (hpIcon_) {
+				hpIconDrawSize_ = { hpIconTexSize_.x * hpIconScale_, hpIconTexSize_.y * hpIconScale_ };
+				hpIcon_->SetSize(hpIconDrawSize_);
+			}
 		}
 
 		ImGui::End();
