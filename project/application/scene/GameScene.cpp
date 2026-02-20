@@ -267,16 +267,16 @@ void GameScene::InitializeCamera() {
 	camera_ = std::make_unique<TKM::Camera>();
 
 	// IntroSequence に移したなら、ここは固定値でOK
-	const float camPitchStart = 0.12f;
-	const float camYawStart = -1.2f;
+	const float camPitchStart = 0.12f; // カメラの初期ピッチ（上向き） -1.2fくらいがちょうど良い
+	const float camYawStart = -1.2f; // カメラの初期ヨー（左向き） -1.2fくらいがちょうど良い
 
-	camera_->SetRotate({ camPitchStart, camYawStart, 0.0f });
-	camera_->SetTranslate({ 0.0f,0.0f,-30.0f });
+	camera_->SetRotate({ camPitchStart, camYawStart, 0.0f }); // カメラの初期回転をセット
+	camera_->SetTranslate({ 0.0f,0.0f,-30.0f }); // カメラの初期位置をセット（プレイヤーから少し離す）
 
 	debugCamera_ = std::make_unique<DebugCamera>();
 	debugCamera_->Initialize(
-		camera_->GetTranslate(),
-		Vector3{ 0.0f, 0.0f, 0.0f }
+		camera_->GetTranslate(), //カメラの位置を渡す
+		Vector3{ 0.0f, 0.0f, 0.0f } // カメラの注視点を渡す（最初はプレイヤーの位置と同じ）
 	);
 
 	player_->SetCamera(camera_.get());
