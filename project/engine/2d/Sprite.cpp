@@ -13,8 +13,52 @@ namespace TKM {
 		--activeCount_; //アクティブスプライト数をデクリメント
 	}
 
+	void Sprite::SetPosition(const Vector2& position) {
+		this->position_ = position; // 位置を設定
+	}
+
+	void Sprite::SetTransform(const Transform& transform) {
+		this->transform_ = transform; // 変換情報を設定
+	}
+
+	void Sprite::SetRotation(float rotation) {
+		this->rotation_ = rotation; // 回転角を設定
+	}
+
+	void Sprite::SetColor(const Vector4& color) {
+		materialData_->color = color; // 色を設定
+	}
+
+	void Sprite::SetSize(const Vector2& size) {
+		this->size_ = size; // サイズを設定
+	}
+
+	void Sprite::SetAnchorPoint(const Vector2& anchorPoint) {
+		this->anchorPoint_ = anchorPoint; // アンカーポイントを設定
+	}
+
+	void Sprite::SetIsFlipX(bool isFlipX) {
+		this->isFlipX_ = isFlipX; // 左右フリップを設定
+	}
+
+	void Sprite::SetIsFlipY(bool isFlipY) {
+		this->isFlipY_ = isFlipY; // 上下フリップを設定
+	}
+
+	void Sprite::SetTextureLeftTop(const Vector2& textureLeftTop) {
+		this->textureLeftTop_ = textureLeftTop; // テクスチャ左上座標を設定
+	}
+
+	void Sprite::SetTextureSize(const Vector2& textureSize) {
+		this->textureSize_ = textureSize; // テクスチャ切り出しサイズを設定
+	}
+
 	void Sprite::SetParentScene(BaseScene* parentScene) {
 		parentScene_ = parentScene; //親シーンを設定
+	}
+
+	void Sprite::SetAutoAdjustTextureSize(bool enable) {
+		autoAdjustTextureSize_ = enable; // テクスチャサイズ自動調整の有効/無効を設定
 	}
 
 	void Sprite::Initialize(SpriteCommon* spriteCommon, TKM::DirectXCommon* dxCommon, const std::string textureFilePath) {

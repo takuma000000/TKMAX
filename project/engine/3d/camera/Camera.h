@@ -12,28 +12,16 @@
 //=============================================================
 namespace TKM {
 	class Camera {
-		struct Transform {
+		struct Transform { // カメラの変換情報
 			Vector3 scale_;
 			Vector3 rotate_;
 			Vector3 translate_;
 		};
-
-	private:
-		Transform transform_;
-		Matrix4x4 worldMatrix_;
-		Matrix4x4 viewMatrix_;
-
-		Matrix4x4 projectionMatrix_;
-		float fovY_;	//水平方向視野角
-		float aspectRatio_;	//アスペクト比
-		float nearClip_;	//ニアクリップ距離
-		float farClip_;	//ファークリップ距離
-
-		Matrix4x4 viewProjectionMatrix_;
-
 	public://メンバ関数
 
-		/// <summary>カメラを生成します。</summary>
+		/// <summary>
+		/// Cameraを初期化します。
+		/// </summary>
 		Camera();
 
 		/// <summary>
@@ -118,5 +106,28 @@ namespace TKM {
 		/// <returns></returns>
 		const Vector3& GetScale() const { return transform_.scale_; }
 		// ===========================================
+
+	private:
+		//======================================================================
+		// Transform（カメラの位置・回転）
+		//======================================================================
+		Transform transform_; // カメラの変換情報
+		//======================================================================
+		// World / View
+		//======================================================================
+		Matrix4x4 worldMatrix_; // ワールド行列（カメラの位置・回転を反映した行列）
+		Matrix4x4 viewMatrix_; // ビュー行列
+		//======================================================================
+		// Projection（射影パラメータ）
+		//======================================================================
+		float fovY_;        //水平方向視野角
+		float aspectRatio_; //アスペクト比
+		float nearClip_;    //ニアクリップ距離
+		float farClip_;     //ファークリップ距離
+		Matrix4x4 projectionMatrix_; // 射影行列
+		//======================================================================
+		// ViewProjection（最終描画用）
+		//======================================================================
+		Matrix4x4 viewProjectionMatrix_; // ビュー射影行列
 	};
 } // namespace TKM

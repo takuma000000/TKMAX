@@ -8,7 +8,7 @@
 #include <d3d12.h>
 #include <unordered_map>
 
-namespace TKM{
+namespace TKM {
 	class DirectXCommon;
 	class SrvManager;
 }
@@ -20,52 +20,28 @@ namespace TKM{
 namespace TKM {
 	class TextureManager {
 
-	private:
-		static TextureManager* instance;
-
-		////シングルトン-----------------------------------------------
-
-		//コンストラクタ、デストラクタの隠蔽
-		TextureManager() = default;
-		~TextureManager() = default;
-		//コピーインストラクタの封印
-		TextureManager(TextureManager&) = delete;
-		//コピー代入演算子の封印
-		TextureManager& operator=(TextureManager&) = delete;
-
-		////---------------------------------------------------------
-
-		//SRVインデックスの開始番号
-		static uint32_t kSRVIndexTop;
-
-		TKM::DirectXCommon* dxCommon_ = nullptr;
-		TKM::SrvManager* srvManager_ = nullptr;
-
 	public:
 		/// <summary>
 		/// シングルトンインスタンスの取得。
 		/// </summary>
-		/// <returns></returns>
+		/// <returns>TextureManagerのシングルトンインスタンス</returns>
 		static TextureManager* GetInstance();
 		/// <summary>
 		/// シングルトンインスタンスの破棄。
 		/// </summary>
 		void Finalize();
-
 		/// <summary>
 		/// テクスチャマネージャを初期化します。
 		/// </summary>
-		/// <param name="dxCommon"></param>
-		/// <param name="srvManager"></param>
+		/// <param name="dxCommon">DirectX共通管理クラスのインスタンス</param>
+		/// <param name="srvManager">SRVマネージャのインスタンス</param>
 		void Initialize(TKM::DirectXCommon* dxCommon, TKM::SrvManager* srvManager);
-
-	public: //テクスチャファイル読み込み関数
 		/// <summary>
 		/// テクスチャを読み込みます。
 		/// </summary>
-		/// <param name="filePath"></param>
+		/// <param name="filePath">テクスチャファイルのパス</param>
 		void LoadTexture(const std::string& filePath);
-	public:
+
 		//テクスチャ1枚分のデータ
 		struct TextureData {
 			DirectX::TexMetadata metadata_;
@@ -105,10 +81,6 @@ namespace TKM {
 
 		};
 
-		//テクスチャデータ
-		std::unordered_map<std::string, TextureData> textureDatas_;
-
-	public:
 		// Getter=====================================
 		/// <summary>
 		/// ファイルパスからテクスチャ番号を取得します。
@@ -129,5 +101,36 @@ namespace TKM {
 		/// <returns></returns>
 		const DirectX::TexMetadata& GetMetadata(const std::string& filePath);
 		// ===========================================
+
+	private:
+		static TextureManager* instance;
+
+		///シングルトン-----------------------------------------------
+
+		//コンストラクタ、デストラクタの隠蔽
+		TextureManager() = default;
+		~TextureManager() = default;
+		//コピーインストラクタの封印
+		TextureManager(TextureManager&) = delete;
+		//コピー代入演算子の封印
+		TextureManager& operator=(TextureManager&) = delete;
+
+		///---------------------------------------------------------
+
+		//======================================================================
+		// SRV管理
+		//======================================================================
+		//SRVインデックスの開始番号
+		static uint32_t kSRVIndexTop;
+		//======================================================================
+		// 外部参照
+		//======================================================================
+		TKM::DirectXCommon* dxCommon_ = nullptr;
+		TKM::SrvManager* srvManager_ = nullptr;
+		//======================================================================
+		// テクスチャデータ管理
+		//======================================================================
+		//テクスチャデータ
+		std::unordered_map<std::string, TextureData> textureDatas_;
 	};
 }

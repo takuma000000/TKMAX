@@ -46,6 +46,26 @@ namespace TKM {
 			Matrix4x4 World;
 		};
 
+		/// <summary>
+		/// スプライトを初期化します。
+		/// </summary>
+		/// <param name="spriteCommon">スプライト共通管理クラス</param>
+		/// <param name="dxCommon">DirectX 共通管理クラス</param>
+		/// <param name="textureFilePath">テクスチャファイルのパス</param>
+		void Initialize(SpriteCommon* spriteCommon, TKM::DirectXCommon* dxCommon, const std::string textureFilePath);
+		/// <summary>
+		/// スプライトを更新します。
+		/// </summary>
+		void Update();
+		/// <summary>
+		/// スプライトを描画します。
+		/// </summary>
+		void Draw();
+		/// <summary>
+		/// ImGuiデバッグ表示。
+		/// </summary>
+		void ImGuiDebug();
+
 		// Gettet=====================================
 		/// <summary>
 		/// 位置の取得。
@@ -113,52 +133,52 @@ namespace TKM {
 		/// 位置の設定。
 		/// </summary>
 		/// <param name="position"></param>
-		void SetPosition(const Vector2& position) { this->position_ = position; }
+		void SetPosition(const Vector2& position);
 		/// <summary>
 		/// 変換情報の設定。
 		/// </summary>
 		/// <param name="transform"></param>
-		void SetTransform(const Transform& transform) { this->transform_ = transform; }
+		void SetTransform(const Transform& transform);
 		/// <summary>
 		/// 回転角の設定。
 		/// </summary>
 		/// <param name="rotation"></param>
-		void SetRotation(float rotation) { this->rotation_ = rotation; }
+		void SetRotation(float rotation);
 		/// <summary>
 		/// 色の設定。
 		/// </summary>
 		/// <param name="color"></param>
-		void SetColor(const Vector4& color) { materialData_->color = color; }
+		void SetColor(const Vector4& color);
 		/// <summary>
 		/// サイズの設定。
 		/// </summary>
 		/// <param name="size"></param>
-		void SetSize(const Vector2& size) { this->size_ = size; }
+		void SetSize(const Vector2& size);
 		/// <summary>
 		/// アンカーポイントの設定。
 		/// </summary>
 		/// <param name="anchorPoint"></param>
-		void SetAnchorPoint(const Vector2& anchorPoint) { this->anchorPoint_ = anchorPoint; }
+		void SetAnchorPoint(const Vector2& anchorPoint);
 		/// <summary>
 		/// 左右フリップの設定。
 		/// </summary>
 		/// <param name="isFlipX"></param>
-		void SetIsFlipX(bool isFlipX) { this->isFlipX_ = isFlipX; }
+		void SetIsFlipX(bool isFlipX);
 		/// <summary>
 		/// 上下フリップの設定。
 		/// </summary>
 		/// <param name="isFlipY"></param>
-		void SetIsFlipY(bool isFlipY) { this->isFlipY_ = isFlipY; }
+		void SetIsFlipY(bool isFlipY);
 		/// <summary>
 		/// テクスチャ左上座標の設定。
 		/// </summary>
 		/// <param name="textureLeftTop"></param>
-		void SetTextureLeftTop(const Vector2& textureLeftTop) { this->textureLeftTop_ = textureLeftTop; }
+		void SetTextureLeftTop(const Vector2& textureLeftTop);
 		/// <summary>
 		/// テクスチャ切り出しサイズの設定。
 		/// </summary>
 		/// <param name="textureSize"></param>
-		void SetTextureSize(const Vector2& textureSize) { this->textureSize_ = textureSize; }
+		void SetTextureSize(const Vector2& textureSize);
 		/// <summary>
 		/// 親シーンの設定。
 		/// </summary>
@@ -168,34 +188,19 @@ namespace TKM {
 		/// テクスチャサイズの自動調整の有効化・無効化。
 		/// </summary>
 		/// <param name="enable"></param>
-		void SetAutoAdjustTextureSize(bool enable) { autoAdjustTextureSize_ = enable; }
+		void SetAutoAdjustTextureSize(bool enable);
 		// ===========================================
 
-	public://メンバ関数
-		/// <summary>
-		/// スプライトを初期化します。
-		/// </summary>
-		/// <param name="spriteCommon"></param>
-		/// <param name="dxCommon"></param>
-		/// <param name="textureFilePath"></param>
-		void Initialize(SpriteCommon* spriteCommon, TKM::DirectXCommon* dxCommon, const std::string textureFilePath);
-		/// <summary>
-		/// スプライトを更新します。
-		/// </summary>
-		void Update();
-		/// <summary>
-		/// スプライトを描画します。
-		/// </summary>
-		void Draw();
-		/// <summary>
-		/// ImGuiデバッグ表示。
-		/// </summary>
-		void ImGuiDebug();
-
 	private:
+		//======================================================================
+		// 外部参照
+		//======================================================================
 		SpriteCommon* spriteCommon_ = nullptr;
-		TKM::DirectXCommon* dxCommon_;
-
+		TKM::DirectXCommon* dxCommon_ = nullptr;
+		BaseScene* parentScene_ = nullptr;
+		//======================================================================
+		// GPUリソース（バッファ）
+		//======================================================================
 		//バッファリソース
 		Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource_ = nullptr;
 		Microsoft::WRL::ComPtr<ID3D12Resource> indexResource_ = nullptr;
@@ -209,46 +214,49 @@ namespace TKM {
 		//バッファリソースの使い道を補足するバッファビュー
 		D3D12_VERTEX_BUFFER_VIEW vertexBufferView_{};
 		D3D12_INDEX_BUFFER_VIEW indexBufferView_{};
-
+		//======================================================================
+		// Transform / 表示パラメータ
+		//======================================================================
 		Vector2 position_ = { 100.0f,100.0f };
-
+		// （用途が違うなら名前を分けたいけど、既存に合わせて残す）
 		Transform transformSprite_;
 		Transform cameraTransform_;
 		Transform transform_;
-
 		//回転
 		float rotation_ = 0.0f;
-
 		//サイズ
 		Vector2 size_ = { 360.0f,360.0f };
-
+		//======================================================================
+		// テクスチャ
+		//======================================================================
 		//テクスチャ番号
 		uint32_t textureIndex_ = 0;
-
+		//ファイルパスを保存するメンバー変数
+		std::string textureFilePath_;
+		//テクスチャ左上座標
+		Vector2 textureLeftTop_ = { 0.0f,0.0f };
+		//テクスチャ切り出しサイズ
+		Vector2 textureSize_ = { 64.0f,64.0f };
+		bool autoAdjustTextureSize_ = true; // テクスチャサイズ自動調整フラグ
+		//======================================================================
+		// UV / アンカー / フリップ
+		//======================================================================
 		//アンカーポイント
 		Vector2 anchorPoint_ = { 0.0f,0.0f };
 		//左右フリップ
 		bool isFlipX_ = false;
 		//上下フリップ
 		bool isFlipY_ = false;
-
-		//テクスチャ左上座標
-		Vector2 textureLeftTop_ = { 0.0f,0.0f };
-		//テクスチャ切り出しサイズ
-		Vector2 textureSize_ = { 64.0f,64.0f };
-
+		//======================================================================
+		// 内部状態
+		//======================================================================
+		inline static int activeCount_ = 0; // アクティブスプライト数
+		//======================================================================
+		// 内部処理
+		//======================================================================
 		/// <summary>
 		/// テクスチャサイズを調整する。
 		/// </summary>
 		void AdjustTextureSize();
-
-		//ファイルパスを保存するメンバー変数
-		std::string textureFilePath_;
-
-		BaseScene* parentScene_ = nullptr;
-
-		inline static int activeCount_ = 0;
-
-		bool autoAdjustTextureSize_ = true; // テクスチャサイズ自動調整フラグ
 	};
 } // namespace TKM
