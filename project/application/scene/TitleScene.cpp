@@ -72,22 +72,23 @@ void TitleScene::Initialize() {
 	iris_ = CreateCenteredIrisSprite(dxCommon_, irisMax_, "./resources/texture/circle2.png");
 	// 色だけここで上書き（白・不透明）
 	iris_->SetColor({ 1,1,1,1 });
-	// 開始／終了スケールの設定
-	irisStartScale_ = 10.0f;     // 最初は小さく
-	irisEndScale_ = irisMax_;  // 最後に画面を完全に覆う
-	// 現在スケールも開始値からスタート
+	// 開幕は「覆っている状態」からスタートして、縮んで消える
+	irisStartScale_ = irisMax_;     // 最初：画面を覆う
+	irisEndScale_ = 0.0f;         // 最後：消える（小さく）
 	irisScale_ = irisStartScale_;
-	// スプライトに反映
 	iris_->SetSize({ irisScale_, irisScale_ });
-	// 必要なら速度パラメータはそのまま保持（他で使ってるなら）
-	irisSpeed_ = 3500.0f;
-	// Tween の初期化（小さい → 大きい）
+
+	// Tween：大きい → 小さい（開く）
 	irisTween_.Reset(
-		irisStartScale_,          // start
-		irisEndScale_,            // end
-		kIrisDurationSec_,         // 所要時間
-		Ease::Type::InBack        // ちょっと勢いつけて開く感じ
+		irisStartScale_,
+		irisEndScale_,
+		kIrisDurationSec_,
+		Ease::Type::OutBack   // 好きなのでOK（OutBackでも可）
 	);
+	// 開幕は「開いている状態」からスタート
+	irisOpening_ = true;
+	irisClosing_ = false;
+
 	// タイトル敵を1体だけ置く（傘＋触手）
 	titleEnemies_.clear();
 	titleTentacles_.clear();
@@ -242,10 +243,29 @@ void TitleScene::Update() {
 		rippleEffect_->Update(dt_);
 	}
 
-	if (!irisClosing_ && titleMenu_) {
+	// アイリス（開幕：開く）更新
+	if (irisOpening_) {
+		irisScale_ = UpdateIrisScale(iris_.get(), irisTween_, 0.016f);
+
+		if (irisTween_.Finished()) {
+			irisOpening_ = false;
+			// 念のため完全に消す（Draw条件でも消えるけど保険）
+			irisScale_ = 0.0f;
+			if (iris_) { iris_->SetSize({ irisScale_, irisScale_ }); }
+		}
+	}
+
+	if (!irisOpening_ && !irisClosing_ && titleMenu_) {
 		const auto cmd = titleMenu_->Update(dt_);
 		if (cmd == TitleMenuController::Command::Start) {
 			irisClosing_ = true;
+			// 閉じ：小さい(0) → 覆う(irisMax_)
+			irisTween_.Reset(
+				0.0f,
+				irisMax_,
+				kIrisDurationSec_,
+				Ease::Type::InBack
+			);
 			// 波紋は今のままTriggerでOK
 			if (rippleEffect_) {
 				TKM::WaterRippleEffect::RippleDesc d{};
@@ -270,7 +290,6 @@ void TitleScene::Update() {
 		irisScale_ = UpdateIrisScale(iris_.get(), irisTween_, 0.016f);
 
 		if (irisTween_.Finished()) {
-			irisClosing_ = false; // 状態を戻しておく（お好み）
 			sceneManager_->SetNextScene(new GameScene(dxCommon_, srvManager_));
 			return;
 		}
@@ -327,6 +346,7 @@ void TitleScene::Draw() {
 	if (sprite_) sprite_->Draw();     // タイトル画像
 	if (iris_)  iris_->Draw();      // 白円(アイリス)
 	if (titleMenu_) titleMenu_->Draw();
+	if (iris_ && (irisOpening_ || irisClosing_)) { iris_->Draw(); }
 
 	TKM::ParticleManager::GetInstance()->Draw();
 }

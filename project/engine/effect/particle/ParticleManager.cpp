@@ -2001,7 +2001,7 @@ namespace TKM {
 
 			p.velocity_ = { 0.0f, 0.0f, 0.0f };
 
-			// ★芯：細く長い（GIFの白線）
+			// 芯：細く長い（GIFの白線）
 			float thick = frand(1.2f, 2.0f);
 			float len = frand(18.0f, 28.0f);
 			p.transform_.scale_ = { thick, thick, len };
@@ -2019,7 +2019,7 @@ namespace TKM {
 
 			p.velocity_ = { 0.0f, 0.0f, 0.0f };
 
-			// ★発光：太め＆長め（黄色帯）
+			// 発光：太め＆長め（黄色帯）
 			float thick = frand(2.8f, 4.8f);
 			float len = frand(22.0f, 36.0f);
 			p.transform_.scale_ = { thick, thick, len };
@@ -2037,7 +2037,7 @@ namespace TKM {
 
 			p.velocity_ = { 0.0f, 0.0f, 0.0f };
 
-			// ★残り：さらに太く、少し長い（暗赤のスミア）
+			// 残り：さらに太く、少し長い（暗赤のスミア）
 			float thick = frand(4.0f, 7.0f);
 			float len = frand(26.0f, 46.0f);
 			p.transform_.scale_ = { thick, thick, len };

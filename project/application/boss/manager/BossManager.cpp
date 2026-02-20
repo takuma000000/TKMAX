@@ -222,7 +222,7 @@ void BossManager::Update(float dt) {
 			const float spPerFrame_ = sSpeed_ * dt;
 
 			if (slashIdHoldT_ <= 0.0f) {
-				currentSlashId_ = ++slashAttackId_; // ★このタイミングで「今回の斬撃ID」を確定
+				currentSlashId_ = ++slashAttackId_; // このタイミングで「今回の斬撃ID」を確定
 			}
 			slashIdHoldT_ = 0.5f; // 斬撃の長さに合わせて(0.2〜0.5くらい)
 

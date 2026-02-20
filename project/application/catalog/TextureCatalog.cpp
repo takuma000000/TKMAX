@@ -32,7 +32,7 @@ void TextureCatalog::LoadTextureCatalogs() {
 		"gauge_shard.jpeg",
 		"blue.dds",
 		"gray.jpg",
-		"gold.jpeg",
+		"gauge_green.jpg",
 		"player_hp.jpg",
 		"player_hp_frame.jpg",
 		"player_hp.png",

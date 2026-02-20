@@ -93,8 +93,8 @@ void GameOverScene::Initialize() {
 	overSprite_->SetColor({ 1, 1, 1, 0 });
 
 	// フェードイン（0→1, 0.7秒, OutQuad）& スケール（0.8→1.0, 0.7秒, OutBack）
-	overAlphaTween_.Reset(0.0f, 1.0f, 0.7f, Ease::Type::OutQuad);
-	overScaleTween_.Reset(0.8f, 1.0f, 0.7f, Ease::Type::OutBack);
+	overAlphaTween_.Reset(0.0f, 1.0f, 0.7f, Ease::Type::OutQuad); // フェードイン
+	overScaleTween_.Reset(0.8f, 1.0f, 0.7f, Ease::Type::OutBack); // スケールアップ
 
 	overActive_ = true; // アニメ進行フラグON
 

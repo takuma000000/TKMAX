@@ -104,7 +104,7 @@ GameResultMenuController::Command GameResultMenuController::Update(float dt) {
 		Vector2 baseSize = selected ? Vector2{ 240.0f, 48.0f } : Vector2{ 220.0f, 44.0f };
 		Vector2 size = selected ? Vector2{ baseSize.x * pulse, baseSize.y * pulse } : baseSize;
 
-		// ★中心固定っぽく（拡縮ではみ出しにくくする）
+		// 中心固定っぽく（拡縮ではみ出しにくくする）
 		Vector2 pos = {
 			basePos.x - (size.x - baseSize.x) * 0.5f,
 			basePos.y - (size.y - baseSize.y) * 0.5f
@@ -139,11 +139,11 @@ void GameResultMenuController::UpdateLayout(float screenW, float screenH) {
 	screenW_ = screenW;
 	screenH_ = screenH;
 
-	// ★タイトル/ポーズと同じ「右下・余白40」
+	// タイトル/ポーズと同じ「右下・余白40」
 	panelSize_ = { 340.0f, 200.0f };
 	panelPos_ = { screenW_ - panelSize_.x - 40.0f, screenH_ - panelSize_.y - 40.0f };
 
-	// ★タイトルで調整したのと同じ基準
+	// タイトルで調整したのと同じ基準
 	baseItemPos_ = { panelPos_.x + 80.0f, panelPos_.y + 60.0f };
 	itemSpacingY_ = 64.0f;
 }

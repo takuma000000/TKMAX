@@ -24,7 +24,7 @@ namespace TKM {
 
 			// テクスチャ
 			std::string frameTex_ = "./resources/texture/gray.jpg";
-			std::string fillTex_ = "./resources/texture/gold.jpeg";
+			std::string fillTex_ = "./resources/texture/gauge_green.jpg";
 
 			// 色
 			Vector4 baseColor_ = { 1.0f, 1.0f, 1.0f, 1.0f };   // 通常
@@ -32,7 +32,6 @@ namespace TKM {
 			Vector4 refillColor_ = { 0.55f, 1.0f, 0.55f, 1.0f };// 回復直後
 		};
 
-	public:
 		void Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, BaseScene* parentScene, const Desc& desc);
 		void Update(float dt, int ammo, int maxAmmo, bool blink = false);
 		void Draw();
@@ -44,8 +43,8 @@ namespace TKM {
 
 	private:
 		void ApplyLayout_();
+		void ApplyAnim_(float dt, bool pressed);
 
-	private:
 		SpriteCommon* spriteCommon_ = nullptr;
 		DirectXCommon* dxCommon_ = nullptr;
 		BaseScene* parentScene_ = nullptr;
@@ -62,6 +61,40 @@ namespace TKM {
 
 		std::unique_ptr<Sprite> frame_;
 		std::array<std::unique_ptr<Sprite>, 5> seg_{};
+
+		//======================================================================
+		// レイアウト基準（ApplyLayout_で保存して、Updateで動かす）
+		//======================================================================
+		Vector2 baseFramePos_{};
+		Vector2 baseFrameSize_{};
+		std::array<Vector2, 5> baseSegPos_{};
+		std::array<Vector2, 5> baseSegSize_{};
+
+		//======================================================================
+		// アニメ（押下パルス / 消費パンチ / 回復パンチ / シェイク）
+		//======================================================================
+		float pressPulseT_ = 0.0f;      // 押下中の波
+		float pressPulseAmp_ = 0.0f;    // 0..1（押してない時は0へ戻す）
+
+		float shakeTimer_ = 0.0f;
+		static constexpr float kShakeSec_ = 0.12f;
+		float shakeAmpPx_ = 2.0f;       // 揺れ幅（小さめが良い）
+
+		float punchTimer_ = 0.0f;       // 消費パンチ
+		static constexpr float kPunchSec_ = 0.10f;
+		float punchAmp_ = 0.10f;        // 拡縮量（10%）
+
+		float refillPunchTimer_ = 0.0f; // 回復パンチ
+		static constexpr float kRefillPunchSec_ = 0.10f;
+		float refillPunchAmp_ = 0.07f;  // 回復は少し弱め
+		//======================================================================
+		// 回復時の段階表示
+		//======================================================================
+		int shownAmmo_ = 0;          // 今 “見せてる” 個数
+		int refillTarget_ = 0;       // 最終的に見せたい個数
+		bool refillAnimating_ = false; // 回復アニメ中かどうか
+		float refillStepTimer_ = 0.0f; // 次の個数を見せるまでのタイマー
+		static constexpr float kRefillStepSec_ = 0.045f; // パパパ速度（好みで）
 	};
 
 }

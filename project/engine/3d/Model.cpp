@@ -223,7 +223,7 @@ namespace TKM {
 
 		dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);
 
-		// ★マルチマテリアル
+		// マルチマテリアル
 		if (modelData_.submeshes_.size() > 1) {
 			for (auto& sm : modelData_.submeshes_) {
 				// テクスチャ（RootTable #2）をここで差し替える
