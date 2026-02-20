@@ -166,7 +166,7 @@ namespace TKM {
 		indexData_[5] = 2;
 
 		//座標変換行列の計算
-		Matrix4x4 worldMatrixSprite = MyMath::MakeAffineMatrix(transformSprite_.scale, transformSprite_.rotate, transformSprite_.translate);
+		Matrix4x4 worldMatrixSprite = MyMath::MakeAffineMatrix(transformSprite_.scale_, transformSprite_.rotate_, transformSprite_.translate_);
 		// ビュー行列は単位行列
 		Matrix4x4 viewMatrixSprite = MyMath::MakeIdentity4x4();
 		// 射影行列は直交投影行列
@@ -176,9 +176,9 @@ namespace TKM {
 		transformationMatrixData_->World = worldMatrixSprite; // ワールド行列の設定
 
 		//反映処理
-		transformSprite_.translate = { position_.x,position_.y,0.0f };
-		transformSprite_.rotate = { 0.0f,0.0f,rotation_ };
-		transformSprite_.scale = { size_.x,size_.y,1.0f };
+		transformSprite_.translate_ = { position_.x,position_.y,0.0f };
+		transformSprite_.rotate_ = { 0.0f,0.0f,rotation_ };
+		transformSprite_.scale_ = { size_.x,size_.y,1.0f };
 
 		if (autoAdjustTextureSize_) {
 			AdjustTextureSize();
@@ -209,9 +209,9 @@ namespace TKM {
 		{0.0f,0.0f,0.0f}, // translate
 		};
 
-		Matrix4x4 uvTransformMatrix = MyMath::MakeScaleMatrix(uvTransformSprite.scale); // スケーリング行列を作成
-		uvTransformMatrix = MyMath::Multiply(uvTransformMatrix, MyMath::MakeRotateZMatrix(uvTransformSprite.rotate.z)); // Z回転行列を掛ける
-		uvTransformMatrix = MyMath::Multiply(uvTransformMatrix, MyMath::MakeTranslateMatrix(uvTransformSprite.translate)); // 平行移動行列を掛ける
+		Matrix4x4 uvTransformMatrix = MyMath::MakeScaleMatrix(uvTransformSprite.scale_); // スケーリング行列を作成
+		uvTransformMatrix = MyMath::Multiply(uvTransformMatrix, MyMath::MakeRotateZMatrix(uvTransformSprite.rotate_.z)); // Z回転行列を掛ける
+		uvTransformMatrix = MyMath::Multiply(uvTransformMatrix, MyMath::MakeTranslateMatrix(uvTransformSprite.translate_)); // 平行移動行列を掛ける
 		materialData_->uvTransform = uvTransformMatrix; // UV変換行列を更新
 
 		//SRVのDescriptorTableの先頭を設定

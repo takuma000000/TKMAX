@@ -1,6 +1,7 @@
 #pragma once
 #include "MyMath.h"
 #include "WindowsAPI.h"
+#include "Transform.h"
 
 #ifdef USE_IMGUI
 #include "imgui.h"
@@ -12,11 +13,6 @@
 //=============================================================
 namespace TKM {
 	class Camera {
-		struct Transform { // カメラの変換情報
-			Vector3 scale_;
-			Vector3 rotate_;
-			Vector3 translate_;
-		};
 	public://メンバ関数
 
 		/// <summary>

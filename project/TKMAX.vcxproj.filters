@@ -428,6 +428,7 @@
     <ClInclude Include="application\scene\controller\GameResultMenuController.h" />
     <ClInclude Include="application\catalog\TextureCatalog.h" />
     <ClInclude Include="application\catalog\ModelCatalog.h" />
+    <ClInclude Include="engine\func\math\Transform.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

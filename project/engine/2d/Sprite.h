@@ -4,6 +4,7 @@
 #include "SpriteCommon.h"
 #include "TextureManager.h"
 #include "BaseScene.h"
+#include "Transform.h"
 
 class SpriteCommon;
 class BaseScene;
@@ -18,12 +19,9 @@ namespace TKM {
 
 		Sprite();
 		~Sprite();
-		// 変換情報
-		struct Transform {
-			Vector3 scale;
-			Vector3 rotate;
-			Vector3 translate;
-		};
+
+		// Transformクラスのエイリアス
+		using Transform = TKM::Transform;
 
 		//頂点データ
 		struct VertexData {

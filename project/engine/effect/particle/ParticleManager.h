@@ -5,7 +5,8 @@
 #include "camera/Camera.h"
 #include <random>
 #include <numbers>
-#include "ModelTypes.h" 
+#include "ModelTypes.h"
+#include "Transform.h"
 
 //=============================================================
 // ParticleManagerクラス
@@ -14,7 +15,6 @@
 namespace TKM {
 	class ParticleManager {
 	public:
-
 		enum class ParticleType {
 			NORMAL, // 通常パーティクル
 			RING, // リングパーティクル
@@ -22,12 +22,9 @@ namespace TKM {
 			//RIBBON, // リボンパーティクル
 		};
 
-		//座標変換情報
-		struct Transform {
-			Vector3 scale_;
-			Vector3 rotate_;
-			Vector3 translate_;
-		};
+		// Transformクラスのエイリアス
+		using Transform = TKM::Transform;
+
 		//軸合わせ用AABB構造体
 		struct AABB {
 			Vector3 min_;//最小点
