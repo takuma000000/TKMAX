@@ -285,14 +285,14 @@ namespace TKM {
 	}
 
 	void UIController::Update(float dt, Player* player) {
-		if (rbGaugeUI_ && player) {
-			rbGaugeUI_->Update(dt, player->GetRbAmmo(), player->GetRbAmmoMax(), player->IsRbRefilling());
-		}
-
 		Input* in = Input::GetInstance();
 		const bool rbDown = in->PushButton(XINPUT_GAMEPAD_RIGHT_SHOULDER);
 		const bool lbDown = in->PushButton(XINPUT_GAMEPAD_LEFT_SHOULDER);
 		const bool xDown = in->PushButton(XINPUT_GAMEPAD_X);
+
+		if (rbGaugeUI_ && player) {
+			rbGaugeUI_->Update(dt, player->GetRbAmmo(), player->GetRbAmmoMax(), player->IsRbRefilling(), rbDown); // RB残弾UIはRBの状態とプレイヤーの弾情報を渡して更新
+		}
 
 		// ---- 左スティック入力（倒し量で判定）----
 		const SHORT rawX = in->GetLeftStickX();

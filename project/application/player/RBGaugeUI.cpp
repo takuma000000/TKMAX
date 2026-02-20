@@ -70,7 +70,7 @@ namespace TKM {
 		}
 	}
 
-	void RBGaugeUI::Update(float dt, int ammo, int maxAmmo, bool refilling) {
+	void RBGaugeUI::Update(float dt, int ammo, int maxAmmo, bool refilling, bool blink) {
 		if (!visible_) { return; }
 		if (!frame_ || !fillL_ || !fillR_ || !lagL_ || !lagR_) { return; }
 
@@ -158,6 +158,20 @@ namespace TKM {
 			col = desc_.refillColor_;
 		} else if (drainTimer_ > 0.0f) {
 			col = desc_.drainColor_;
+		}
+
+		// RBゲージ点滅
+		if (blink) {
+			blinkT_ += dt;
+			const int phase = int(blinkT_ / blinkInterval_) % 2; // 0/1で交互
+			const float mul = (phase == 0) ? 1.0f : blinkLowMul_; // OFF側を暗く
+
+			// alphaじゃなくRGBを暗くする（ブレンド無しでも見える）
+			col.x *= mul;
+			col.y *= mul;
+			col.z *= mul;
+		} else {
+			blinkT_ = 0.0f;
 		}
 		fillL_->SetColor(col);
 		fillR_->SetColor(col);

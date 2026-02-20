@@ -54,7 +54,7 @@ namespace TKM {
 		/// <param name="ammo">現在の弾数</param>
 		/// <param name="maxAmmo">最大弾数</param>
 		/// <param name="refilling">リロード（補充）中の場合 true</param>
-		void Update(float dt, int ammo, int maxAmmo, bool refilling);
+		void Update(float dt, int ammo, int maxAmmo, bool refilling, bool blink = false);
 		/// <summary>
 		/// 弾数 UI を描画します。
 		/// </summary>
@@ -153,6 +153,12 @@ namespace TKM {
 		static constexpr float kChipGravity_ = 520.0f; // 破片の重力加速度（ピクセル/秒^2）。0 なら重力なし。正の値で下方向にかかる
 		static constexpr float kChipSizeMin_ = 4.0f; // 破片のサイズの最小値（ピクセル）。これもランダムにして、サイズがランダムになるようにする。あまり小さすぎると見えないし、あまり大きすぎると不自然なので、適当に調整する
 		static constexpr float kChipSizeMax_ = 10.0f; // 破片のサイズの最大値（ピクセル）
+		//======================================================================
+		// 点滅
+		//======================================================================
+		float blinkT_ = 0.0f;          // 点滅用タイマー
+		float blinkInterval_ = 0.10f;  // 何秒ごとにON/OFFするか
+		float blinkLowMul_ = 0.25f;    // OFF側の暗さ（alpha倍率）
 
 		/// <summary>
 		/// 破片を発生させます。
