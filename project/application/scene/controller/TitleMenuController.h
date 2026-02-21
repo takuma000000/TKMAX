@@ -61,6 +61,20 @@ public:
 	/// <param name="screenH">画面高さ（ピクセル）</param>
 	void UpdateLayout(float screenW, float screenH);
 
+	/// <summary>
+	/// タイトルメニューの表示状態を取得します。
+	/// </summary>
+	/// <returns>表示状態</returns>
+	bool IsVisible() const { return visible_; }
+
+	// Sertter=====================================
+	/// <summary>
+	/// タイトルメニューの表示状態を設定します。
+	/// </summary>
+	/// <param name="v">表示状態</param>
+	void SetVisible(bool v);
+	// ============================================
+
 private:
 	enum class Item { // メニュー項目
 		Start = 0, // はじめる
@@ -131,4 +145,8 @@ private:
 	// 脈動アニメーション
 	//======================================================================
 	float pulseTime_ = 0.0f; // 選択中の脈動
+	//======================================================================
+	// 表示状態
+	//======================================================================
+	bool visible_ = true; // 表示状態
 };

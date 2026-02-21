@@ -612,6 +612,15 @@ void Enemy::SetTentacleLocal(const Vector3& pos, const Vector3& rot, const Vecto
 	tentacleLocalRot_ = rot; // ローカル回転設定
 	tentacleLocalScale_ = scale; // ローカルスケール設定
 }
+void Enemy::SetRoamArea(const Vector3& min, const Vector3& max) {
+	roamMin_ = min;
+	roamMax_ = max;
+	hasRoamTarget_ = false; // 目標を作り直す
+}
+void Enemy::SetRoamSpeed(float normal, float angry) {
+	roamSpeedNormal_ = normal;
+	roamSpeedAngry_ = angry;
+}
 Vector3 Enemy::GetWorldPosition() const {
 	if (!object_) {
 		return { 0.0f, 0.0f, 0.0f }; // オブジェクトがない場合は原点を返す

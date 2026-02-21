@@ -296,6 +296,18 @@ public:
 	/// <param name="rot">回転（ローカル座標、オイラー角）</param>
 	/// <param name="scale">スケール（ローカル座標）</param>
 	void SetTentacleLocal(const Vector3& pos, const Vector3& rot, const Vector3& scale);
+	/// <summary>
+	/// RoamArea（自由に動き回る範囲）を設定します。
+	/// </summary>
+	/// <param name="min">行動範囲の最小座標（ワールド座標）</param>
+	/// <param name="max">行動範囲の最大座標（ワールド座標）</param>
+	void SetRoamArea(const Vector3& min, const Vector3& max);
+	/// <summary>
+	/// RoamArea（自由に動き回る範囲）内を移動する速度を設定します。
+	/// </summary>
+	/// <param name="normal">通常時の移動速度</param>
+	///　<param name="angry">怒り時の移動速度</param>
+	void SetRoamSpeed(float normal, float angry);
 	// =========================================
 private:
 	//--------------------------------------------------------------

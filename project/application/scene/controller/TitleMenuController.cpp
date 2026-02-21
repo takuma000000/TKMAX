@@ -41,6 +41,8 @@ void TitleMenuController::Initialize(TKM::SpriteCommon* spriteCommon, TKM::Direc
 }
 
 TitleMenuController::Command TitleMenuController::Update(float dt) {
+	if (!visible_) { return Command::None; } // 非表示のときは入力も見た目も更新しない
+
 	// 入力
 	if (TriggerPadUp_()) { MoveIndex_(-1); }
 	if (TriggerPadDown_()) { MoveIndex_(+1); }
@@ -100,6 +102,8 @@ TitleMenuController::Command TitleMenuController::Update(float dt) {
 }
 
 void TitleMenuController::Draw() {
+	if (!visible_) { return; } // 非表示のときは入力も見た目も更新しない
+
 	if (panel_) panel_->Draw();
 
 	for (int i = 0; i < (int)Item::Count; ++i) {
@@ -137,6 +141,10 @@ void TitleMenuController::UpdateLayout(float screenW, float screenH) {
 		cursor_->SetPosition(cp);
 		cursor_->SetSize({ 32.0f, 32.0f });
 	}
+}
+
+void TitleMenuController::SetVisible(bool v) {
+	visible_ = v; // コマンド自体は常に更新するが、描画は見た目の状態に合わせる
 }
 
 bool TitleMenuController::TriggerPadUp_() {

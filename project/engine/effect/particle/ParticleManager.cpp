@@ -82,6 +82,32 @@ namespace TKM {
 					particleGroup->instancingData_[particleGroupIterator->second.kNumInstance_].color_ = (*particleIterator).color_;
 					float alpha = 1.0f - ((*particleIterator).currentTime_ / (*particleIterator).lifeTime_); //アルファ値計算(0~1)
 					particleGroup->instancingData_[particleGroupIterator->second.kNumInstance_].color_.w = alpha;
+
+					const std::string& g = particleGroupIterator->first;
+					float t = (*particleIterator).currentTime_ / (*particleIterator).lifeTime_;
+					t = std::clamp(t, 0.0f, 1.0f);
+
+					// ★広がり（リング・コア）
+					if (g == "titleExplode_ring") {
+						float grow = 1.0f + 12.0f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.x *= grow;
+						(*particleIterator).transform_.scale_.y *= grow;
+						(*particleIterator).transform_.scale_.z *= grow;
+					}
+					if (g == "titleExplode_core") {
+						float grow = 1.0f + 18.0f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.x *= grow;
+						(*particleIterator).transform_.scale_.y *= grow;
+						(*particleIterator).transform_.scale_.z *= grow;
+					}
+
+					// アルファカーブ（“パァン”を作る）
+					float a = 1.0f - t;
+					if (g == "titleExplode_core") { a = a * a * a * a; }          // 速く消える白飛び
+					else if (g == "titleExplode_rays") { a = a * a; }             // 光線はキレ
+					else if (g == "titleExplode_ring") { a = std::pow(a, 1.2f); } // 少し残す
+					else if (g == "titleExplode_debris") { a = std::pow(a, 1.6f); }
+
 					++particleGroupIterator->second.kNumInstance_;//生きているParticleの数を1つカウントする
 				}
 				++particleIterator; //次のパーティクルへ
@@ -2047,6 +2073,75 @@ namespace TKM {
 
 			// 暗赤（alpha薄）
 			p.color_ = { frand(0.25f, 0.45f), frand(0.02f, 0.06f), frand(0.02f, 0.05f), 0.35f };
+		} else if (groupName == "titleExplode_core") {
+			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
+
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+
+			float sc = frand(2.4f, 4.2f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.06f, 0.12f);
+			p.currentTime_ = 0.0f;
+
+			// 白〜黄白（中心が白飛びする感じ）
+			p.color_ = { 1.0f, frand(0.92f, 1.0f), frand(0.65f, 0.90f), 1.0f };
+
+		} else if (groupName == "titleExplode_rays") {
+			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
+
+			// 放射方向
+			Vector3 dir = MyMath::Normalize(offset);
+
+			// Rayは“伸びる光線”なので移動はほぼ無し（中心から刺さる）
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+
+			// dir に向ける（Z forward を dir に合わせる想定）
+			float yaw = std::atan2(dir.x, dir.z);
+			float pitch = -std::atan2(dir.y, std::sqrt(dir.x * dir.x + dir.z * dir.z));
+			p.transform_.rotate_ = { pitch, yaw, 0.0f };
+
+			float thick = frand(0.25f, 0.60f);   // 細い方が“線”になる
+			float len = frand(16.0f, 44.0f);   // ここが爽快感（桁が足りないと弱い）
+			p.transform_.scale_ = { thick, thick, len };
+
+			p.lifeTime_ = frand(0.10f, 0.22f);
+			p.currentTime_ = 0.0f;
+
+			// 黄〜白（画像寄せ）
+			float k = frand(0.85f, 1.0f);
+			p.color_ = { 1.0f, 0.92f * k, 0.35f * k, 1.0f };
+
+		} else if (groupName == "titleExplode_debris") {
+			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
+
+			Vector3 dir = MyMath::Normalize(offset);
+
+			// 破片/火の粉はちゃんと飛ばす（ここも“勢い”）
+			float spd = frand(8.0f, 22.0f);
+			p.velocity_ = dir * spd;
+
+			float sc = frand(0.18f, 0.55f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.22f, 0.55f);
+			p.currentTime_ = 0.0f;
+
+			// オレンジ〜赤（爆発っぽさ）
+			p.color_ = { 1.0f, frand(0.35f, 0.65f), frand(0.05f, 0.25f), 1.0f };
+
+		} else if (groupName == "titleExplode_ring") {
+			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
+
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+
+			float sc = frand(0.6f, 1.0f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.18f, 0.30f);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { 1.0f, 0.85f, 0.25f, 1.0f };
 		} else { // 上記意外
 			// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 			std::uniform_real_distribution<float> velX(-0.15f, 0.15f);

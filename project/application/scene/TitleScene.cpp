@@ -38,21 +38,14 @@ void TitleScene::Initialize() {
 	//-----------------------------------------
 	//---------------パーティクル----------------
 	TKM::ParticleManager::GetInstance()->Initialize(dxCommon_, srvManager_, camera_.get());
+
+	auto* pm = TKM::ParticleManager::GetInstance();
+
+	pm->CreateParticleGroup("titleExplode_core", "./resources/texture/circle.png", TKM::ParticleManager::ParticleType::NORMAL);
+	pm->CreateParticleGroup("titleExplode_rays", "./resources/texture/gradationLine.png", TKM::ParticleManager::ParticleType::CYLINDER);
+	pm->CreateParticleGroup("titleExplode_debris", "./resources/texture/circle.png", TKM::ParticleManager::ParticleType::NORMAL);
+	pm->CreateParticleGroup("titleExplode_ring", "./resources/texture/gradationLine.png", TKM::ParticleManager::ParticleType::RING);
 	//-----------------------------------------
-
-	titlePlayer_ = std::make_unique<Player>();
-	titlePlayer_->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_);
-	titlePlayer_->SetCamera(camera_.get());
-	titlePlayer_->SetParentScene(this);
-
-	// タイトルでは操作させない（入力・弾など止まる）
-	titlePlayer_->SetControlEnabled(false);
-	// レティクルいらないなら消す
-	titlePlayer_->SetReticleVisible(false);
-
-	// 初期配置（今 heli_ に入れてたのと同じ）
-	titlePlayer_->SetPosition({ 0.0f, baseY_, 0.0f });
-	titlePlayer_->SetRotation({ 0.0f, 0.0f, 0.0f });
 
 	sprite_ = std::make_unique<Sprite>();
 	sprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, "./resources/texture/title_kuraran.dds");
@@ -89,36 +82,6 @@ void TitleScene::Initialize() {
 	irisOpening_ = true;
 	irisClosing_ = false;
 
-	// タイトル敵を1体だけ置く（傘＋触手）
-	titleEnemies_.clear();
-	titleTentacles_.clear();
-	{
-		// 傘
-		auto body = std::make_unique<TKM::Object3d>();
-		body->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_);
-		body->SetModel("jerryfish.obj");
-		body->SetCamera(camera_.get());
-		body->SetScale({ enemyScale_, enemyScale_, enemyScale_ });
-		body->SetTranslate({ enemyRadius_, enemyBaseY_, 0.0f }); // 右前方あたり
-
-		// 触手
-		auto tent = std::make_unique<TKM::Object3d>();
-		tent->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_);
-		tent->SetModel("tentacle.obj");
-		tent->SetCamera(camera_.get());
-
-		// 親子付け：触手を傘の子にする
-		tent->SetParent(body.get());
-
-		// 触手は「傘からの相対位置（ローカル）」だけ決める
-		tent->SetTranslate({ 0.0f, 0.0f, 0.0f }); // ここで上下調整
-		tent->SetRotate({ 0.0f, 0.0f, 0.0f });
-		tent->SetScale({ 1.0f, 1.0f, 1.0f });     // 触手単体の倍率（必要なら調整）
-
-		titleEnemies_.push_back(std::move(body));
-		titleTentacles_.push_back(std::move(tent));
-	}
-
 	// ---------------水面波紋エフェクト----------------
 	rippleEffect_ = std::make_unique<TKM::WaterRippleEffect>();
 	rippleEffect_->Initialize(dxCommon_);
@@ -140,6 +103,15 @@ void TitleScene::Initialize() {
 		1280.0f,
 		720.0f
 	);
+
+	// 敵の初期化
+	CreateTitleEnemies_();
+	// シーケンス開始
+	flow_ = Flow::IntroIrisOpen;
+	showUi_ = true;
+	seqTimer_ = 0.0f;
+	vanishTimer_ = 0.0f;
+	if (titleMenu_) { titleMenu_->SetVisible(true); }
 }
 
 void TitleScene::Finalize() {}
@@ -149,91 +121,6 @@ void TitleScene::Update() {
 	UpdatePerformanceInfo();
 
 	TKM::Input::GetInstance()->Update();
-
-	// === ヘリの旋回＋上下動（上下幅拡大版） ===
-	t_ += 0.01f * std::max(0.0f, speed_);
-
-	float R = radius_;
-	Vector3 pos;
-	pos.x = std::cos(t_) * R;
-	pos.z = std::sin(t_) * R;
-	// 上下動をより大きく（*2.0fで増幅）
-	pos.y = baseY_ + std::sin(t_ * 0.5f) * (bobAmp_ * 2.0f);
-
-	float dirX = -std::sin(t_);
-	float dirZ = std::cos(t_);
-	float yaw = std::atan2(dirX, dirZ) + yawOffset_;
-
-	if (titlePlayer_) {
-		titlePlayer_->SetPosition(pos);
-		titlePlayer_->SetRotation({ 0.0f, yaw, 0.0f });
-
-		// 入力なしで見た目だけ更新（flipper も更新される）
-		titlePlayer_->UpdateVisualOnly(dt_);
-	}
-
-	enemyTime_ += 0.01f * std::max(0.0f, enemySpeed_);
-
-	if (!titleEnemies_.empty()) {
-		auto& e = titleEnemies_.front();
-
-		Vector3 pos{};
-		float yaw = 0.0f;
-
-		switch (enemyMotion_) {
-		case EnemyMotion::EightXZ: {
-			// XZ 平面の 8 の字（リサージュ）
-			float ax = std::cos(enemyTime_);
-			float az = std::sin(2.0f * enemyTime_);    // 2倍速で位相差
-			pos.x = ax * enemyRadius_;
-			pos.z = az * enemyRadius_ * 0.8f;         // 縦横比を少し潰す
-			pos.y = enemyBaseY_ + std::sin(enemyTime_ * 1.3f) * enemyBobAmp_;
-
-			// 進行方向でヨー計算
-			float dx = -std::sin(enemyTime_);
-			float dz = 2.0f * std::cos(2.0f * enemyTime_);
-			yaw = std::atan2(dx, dz) + enemyYawOffset_;
-			break;
-		}
-		case EnemyMotion::SineStrafe: {
-			// 横振り＋手前/奥スラローム（ジグザグ寄り）
-			pos.x = std::sin(enemyTime_ * 1.4f) * enemyRadius_;
-			pos.z = std::cos(enemyTime_ * 0.7f) * (enemyRadius_ * 0.7f);
-			pos.y = enemyBaseY_ + std::sin(enemyTime_ * 2.2f) * (enemyBobAmp_ * 0.6f);
-
-			float dx = 1.4f * std::cos(enemyTime_ * 1.4f);
-			float dz = -0.7f * std::sin(enemyTime_ * 0.7f);
-			yaw = std::atan2(dx, dz) + enemyYawOffset_;
-			break;
-		}
-		case EnemyMotion::Swoop: {
-			// 周期的にカメラへスッと寄って戻る
-			float phase = std::fmod(enemyTime_, kTwoPi_);
-			// 0→1→0 の台形イージング
-			float w = std::clamp(
-				1.0f - std::abs(std::fmod(phase, kPi_) - kHalfPi_) / kHalfPi_,
-				0.0f, 1.0f);
-			float swoop = -enemyRadius_ * 0.6f * w; // 手前(−Z)に引き寄せ
-
-			pos.x = std::cos(enemyTime_) * (enemyRadius_ * 0.6f);
-			pos.z = std::sin(enemyTime_) * (enemyRadius_ * 0.6f) + swoop;
-			pos.y = enemyBaseY_ + std::sin(enemyTime_ * 1.1f) * enemyBobAmp_;
-
-			float dx = -std::sin(enemyTime_);
-			float dz = std::cos(enemyTime_) + (swoop != 0.0f ? -0.6f * (w > 0.0f) : 0.0f);
-			yaw = std::atan2(dx, dz) + enemyYawOffset_;
-			break;
-		}
-		}
-
-		e->SetTranslate(pos);
-		e->SetRotate({ 0.0f, yaw, 0.0f });
-		e->SetScale({ enemyScale_, enemyScale_, enemyScale_ });
-		e->Update();
-		if (!titleTentacles_.empty()) {
-			titleTentacles_.front()->Update();
-		}
-	}
 
 	dirLight_->Update(); // 平行光源更新
 	camera_->Update(); // カメラ更新
@@ -255,18 +142,92 @@ void TitleScene::Update() {
 		}
 	}
 
-	if (!irisOpening_ && !irisClosing_ && titleMenu_) {
-		const auto cmd = titleMenu_->Update(dt_);
-		if (cmd == TitleMenuController::Command::Start) {
-			irisClosing_ = true;
-			// 閉じ：小さい(0) → 覆う(irisMax_)
-			irisTween_.Reset(
-				0.0f,
-				irisMax_,
-				kIrisDurationSec_,
-				Ease::Type::InBack
-			);
-			// 波紋は今のままTriggerでOK
+	// ------------------------------------------------
+	// Flow（タイトル演出）
+	// ------------------------------------------------
+	switch (flow_) {
+	case Flow::IntroIrisOpen:
+		// 開幕アイリスが終わったらIdleへ
+		if (!irisOpening_) {
+			flow_ = Flow::Idle;
+		}
+
+		for (auto& u : titleEnemies_) {
+			if (!u.alive_ || !u.enemy_) { continue; }
+			u.enemy_->Update(dt_);
+		}
+		break;
+
+	case Flow::Idle:
+		// 敵うようよ更新
+		for (auto& u : titleEnemies_) {
+			if (!u.alive_ || !u.enemy_) { continue; }
+			u.enemy_->Update(dt_);
+		}
+
+		// UI更新
+		if (titleMenu_) {
+			const auto cmd = titleMenu_->Update(dt_);
+			if (cmd == TitleMenuController::Command::Start) {
+				flow_ = Flow::StartSequence;
+				seqTimer_ = 0.0f;
+				vanishTimer_ = 0.0f;
+				rippleTimer_ = 0.0f;
+			} else if (cmd == TitleMenuController::Command::Exit) {
+				sceneManager_->RequestQuit();
+				PostQuitMessage(0);
+				return;
+			}
+		}
+		break;
+
+	case Flow::StartSequence:
+		// 敵は動かしてOK
+		for (auto& u : titleEnemies_) {
+			if (!u.alive_ || !u.enemy_) { continue; }
+			u.enemy_->Update(dt_);
+		}
+
+		seqTimer_ += dt_;
+
+		// UI消し
+		if (seqTimer_ >= kHideUiDelaySec_) {
+			showUi_ = false;
+			if (titleMenu_) { titleMenu_->SetVisible(false); }
+		}
+
+		// 消滅スケジュール開始
+		if (seqTimer_ >= kStartVanishDelaySec_) {
+			ScheduleVanish_();
+			flow_ = Flow::Vanishing;
+		}
+		break;
+
+	case Flow::Vanishing:
+		vanishTimer_ += dt_;
+
+		// 消えるまで敵は動いてOK
+		for (auto& u : titleEnemies_) {
+			if (!u.alive_ || !u.enemy_) { continue; }
+			u.enemy_->Update(dt_);
+		}
+
+		// ランダム時差でぱぱぱ消す
+		for (auto& u : titleEnemies_) {
+			if (!u.alive_ || !u.enemy_) { continue; }
+
+			if (vanishTimer_ >= u.vanishDelay_) {
+				EmitTitleExplode_(u.enemy_->GetWorldPosition());
+				u.alive_ = false;
+			}
+		}
+
+		// 全滅したら波紋 → Iris close
+		if (AllEnemiesGone_()) {
+			flow_ = Flow::Ripple;
+			rippleTimer_ = 0.0f;
+
+			// ここで波紋
 			if (rippleEffect_) {
 				TKM::WaterRippleEffect::RippleDesc d{};
 				d.duration_ = 1.0f;
@@ -278,16 +239,32 @@ void TitleScene::Update() {
 				d.colorIntensity_ = 0.0f;
 				rippleEffect_->Trigger({ 0.5f, 0.5f }, d);
 			}
-		} else if (cmd == TitleMenuController::Command::Exit) {
-			sceneManager_->RequestQuit(); // ゲーム終了リクエスト
-			PostQuitMessage(0); // 即時終了でも良い場合
-			return;
 		}
+		break;
+	case Flow::Ripple:
+		rippleTimer_ += dt_;
+
+		// 波紋を見せる待ち
+		if (rippleTimer_ >= kRippleWaitSec_) {
+			flow_ = Flow::IrisClose;
+			irisClosing_ = true;
+
+			irisTween_.Reset(
+				0.0f,
+				irisMax_,
+				kIrisDurationSec_,
+				Ease::Type::InBack
+			);
+		}
+		break;
+	case Flow::IrisClose:
+		// irisClosing_ 更新は下の共通処理に任せる
+		break;
 	}
 
 	// アイリス（閉）更新
 	if (irisClosing_) {
-		irisScale_ = UpdateIrisScale(iris_.get(), irisTween_, 0.016f);
+		irisScale_ = UpdateIrisScale(iris_.get(), irisTween_, dt_);
 
 		if (irisTween_.Finished()) {
 			sceneManager_->SetNextScene(new GameScene(dxCommon_, srvManager_));
@@ -334,19 +311,82 @@ void TitleScene::Update() {
 }
 
 void TitleScene::Draw() {
-	// 3Dは3Dでまとめて
-	TKM::Object3dCommon::GetInstance()->DrawSetCommon();
-	if (titlePlayer_) titlePlayer_->Draw(dxCommon_);
-	for (auto& t : titleTentacles_) t->Draw(dxCommon_); // 触手
-	for (auto& e : titleEnemies_) e->Draw(dxCommon_);   // 傘
-	if (skybox_) skybox_->Draw();
+	if (skybox_) { skybox_->Draw(); } // スカイボックスは一番最初に描画
 
-	// ---- ここで Sprite パイプラインに戻す ----
+	// 3D
+	TKM::Object3dCommon::GetInstance()->DrawSetCommon();
+	for (auto& u : titleEnemies_) {
+		if (!u.alive_ || !u.enemy_) { continue; }
+		u.enemy_->Draw(dxCommon_);
+	}
+
+	// 2D
 	TKM::SpriteCommon::GetInstance()->DrawSetCommon();
-	if (sprite_) sprite_->Draw();     // タイトル画像
-	if (iris_)  iris_->Draw();      // 白円(アイリス)
-	if (titleMenu_) titleMenu_->Draw();
-	if (iris_ && (irisOpening_ || irisClosing_)) { iris_->Draw(); }
+	if (showUi_) {
+		if (sprite_) { sprite_->Draw(); }
+		if (titleMenu_) { titleMenu_->Draw(); }
+	}
+	if (iris_ && (irisOpening_ || irisClosing_)) {
+		iris_->Draw();
+	}
 
 	TKM::ParticleManager::GetInstance()->Draw();
+}
+void TitleScene::CreateTitleEnemies_() {
+	titleEnemies_.clear(); // 念のためクリア
+	titleEnemies_.reserve(15); // 15体くらいは出したい（多すぎるとごちゃごちゃするのでほどほどに）
+
+	const Vector3 roamMin = { -22.0f, 0.8f, 48.0f }; // 敵のうろうろ範囲の最小値（X: -22～18, Y: 0.8～13, Z: 48～96あたり）※適宜調整
+	const Vector3 roamMax = { 18.0f, 13.0f, 96.0f }; // 敵のうろうろ範囲（X: -22～18, Y: 0.8～13, Z: 48～96あたり）※適宜調整
+
+	std::uniform_real_distribution<float> rx(roamMin.x, roamMax.x); // 敵の初期配置用の乱数分布（X座標）
+	std::uniform_real_distribution<float> ry(roamMin.y, roamMax.y); // 敵の初期配置用の乱数分布（Y座標）
+	std::uniform_real_distribution<float> rz(roamMin.z, roamMax.z); // 敵の初期配置用の乱数分布（Z座標）
+
+	for (int i = 0; i < 15; ++i) {
+		TitleEnemyUnit u{};
+		u.enemy_ = std::make_unique<Enemy>();
+		u.enemy_->SetCamera(camera_.get());
+		u.enemy_->SetParentScene(this);
+		u.enemy_->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_);
+
+		u.enemy_->SetModel("jerryfish.obj");
+		u.enemy_->SetTentacleModel("tentacle.obj");
+		u.enemy_->SetTentacleLocal({ 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f });
+
+		u.enemy_->SetScale({ 1.0f, 1.0f, 1.0f }); // 少し大きめにして存在感アップ
+		u.enemy_->SetPosition({ rx(rng_), ry(rng_), rz(rng_) }); // ランダムな位置に配置
+
+		u.enemy_->SetBehavior(EnemyBehavior::FreeRoam); // 自由にうろうろする動き
+		u.enemy_->SetRoamArea(roamMin, roamMax);
+		u.enemy_->SetRoamSpeed(0.08f, 0.08f); // ゆっくり目の移動速度（0.05～0.15くらい��見栄え良い）
+
+		u.alive_ = true;
+		u.vanishDelay_ = 0.0f;
+		titleEnemies_.push_back(std::move(u));
+	}
+}
+
+void TitleScene::ScheduleVanish_() {
+	std::uniform_real_distribution<float> d(0.0f, kVanishDelayMaxSec_);
+	for (auto& u : titleEnemies_) {
+		u.vanishDelay_ = d(rng_);
+	}
+	vanishTimer_ = 0.0f;
+}
+
+void TitleScene::EmitTitleExplode_(const Vector3& pos) {
+	Vector3 p = pos;
+	auto* pm = TKM::ParticleManager::GetInstance();
+
+	pm->Emit("titleExplode_core", p, 28);   // 白飛びコア（爽快感の核）
+	pm->Emit("titleExplode_rays", p, 140);  // 放射光線（画像の“バァン”）
+	pm->Emit("titleExplode_debris", p, 90);   // 火の粉/破片
+	pm->Emit("titleExplode_ring", p, 2);    // 衝撃波
+}
+bool TitleScene::AllEnemiesGone_() const {
+	for (const auto& u : titleEnemies_) {
+		if (u.alive_) { return false; }
+	}
+	return true;
 }

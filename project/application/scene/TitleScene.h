@@ -24,6 +24,8 @@
 #include "WaterRippleEffect.h"
 #include "IrisUtil.h"
 #include "TitleMenuController.h"
+#include "Enemy.h"
+#include <random>
 
 //=============================================================
 // TitleSceneクラス
@@ -63,49 +65,60 @@ private:
 	std::unique_ptr<TKM::Camera> camera_ = nullptr; // カメラ
 	std::unique_ptr<TKM::Skybox> skybox_ = nullptr;
 	std::unique_ptr<TKM::DirectionalLight> dirLight_ = nullptr;
-
+	// スカイボックスの回転制御
 	float skyPitch_ = 0.0f; // スカイボックスのピッチ（X軸回転）角
 	float skyRotSpeedX_ = 0.002f; // スカイボックスのX軸回転速度（ラジアン/フレーム）
-	//======================================================================
-	// タイトル用プレイヤー（見た目だけ）
-	//======================================================================
-	std::unique_ptr<Player> titlePlayer_ = nullptr; // タイトル用プレイヤー（見た目だけ）
-	//======================================================================
-	// タイトル用プレイヤーの周回モーション（ImGui調整）
-	//======================================================================
-	// 旋回タイマー
-	float t_ = 0.0f;
-	// ---- ImGui で調整するパラメータ（初期値は“見える”前提） ----
-	float radius_ = 6.0f;   // 円運動の半径
-	float baseY_ = 1.0f;   // 高さの基準
-	float bobAmp_ = 0.5f;   // 上下ゆれ量
-	float speed_ = 0.8f;   // 角速度（rad/sec のイメージ）
-	float yawOffset_ = 0.0f;   // Yaw に任意オフセット
-	float scale_ = 2.0f;   // モデル表示スケール
 	// カメラ
 	float camDist_ = 20.0f;  // カメラ距離（+Z側）
 	float camY_ = 3.0f;   // カメラ高さ
 	//======================================================================
-	// タイトル敵（1体だけ / モーション切り替え）
+	// タイトル敵のシーケンス制御
 	//======================================================================
-	enum class EnemyMotion {
-		EightXZ,     // XZの8の字
-		SineStrafe,  // 横振り＋前後スラローム
-		Swoop        // たまに手前へ急降下→復帰
+	enum class Flow { // シーケンスの流れ
+		IntroIrisOpen, // タイトル入場（アイリスオープン）
+		Idle, // 待機
+		StartSequence, // シーケンス開始（UI非表示）
+		Vanishing, // 消滅（UI非表示のまま）
+		Ripple, // 波紋エフェクト発生
+		IrisClose // タイトル退場（アイリスクローズ）
 	};
-	// 敵のパラメータ
-	EnemyMotion enemyMotion_ = EnemyMotion::EightXZ; // 現在のモーションパターン
-	float enemyRadius_ = 8.0f; // 円運動の半径
-	float enemyBaseY_ = 2.0f; // 高さの基準
-	float enemyBobAmp_ = 0.7f; // 上下ゆれ量
-	float enemySpeed_ = 1.2f; // 角速度（rad/sec のイメージ）
-	float enemyScale_ = 1.2f; // モデル表示スケール
-	float enemyYawOffset_ = 0.0f; // Yaw に任意オフセット
-	// 内部タイマー（ヘリ用とは別にして独立させる）
-	float enemyTime_ = 0.0f;
-	// 1体だけ置いてるコンテナ
-	std::vector<std::unique_ptr<TKM::Object3d>> titleEnemies_; // タイトル敵（1体だけ）
-	std::vector<std::unique_ptr<TKM::Object3d>> titleTentacles_; // タイトル敵の触手（1体だけ）
+
+	struct TitleEnemyUnit { // タイトル敵ユニット
+		std::unique_ptr<Enemy> enemy_; // 敵オブジェクト
+		float vanishDelay_ = 0.0f; // 消滅開始までの遅延時間（秒）
+		bool alive_ = true; // 生存状態（trueで生きている、falseで消滅開始）
+	};
+	// タイトル敵の数式定義（π系）
+	std::vector<TitleEnemyUnit> titleEnemies_; // タイトル敵ユニットのリスト
+	Flow flow_ = Flow::IntroIrisOpen;
+	std::mt19937 rng_{ std::random_device{}() }; // 乱数生成器
+	bool showUi_ = true; // UI表示フラグ（trueで表示、falseで非表示）
+	float seqTimer_ = 0.0f; // シーケンス全体の経過時間（秒）
+	float vanishTimer_ = 0.0f; // 消滅シーケンスの経過時間（秒）
+	float rippleTimer_ = 0.0f; // 波紋エフェクトの経過時間（秒）
+	// シーケンスのタイミング定数
+	static constexpr float kHideUiDelaySec_ = 0.10f; // UI非表示までの遅延時間（秒）
+	static constexpr float kStartVanishDelaySec_ = 0.18f; // 消滅開始までの遅延時間（秒）
+	static constexpr float kVanishDelayMaxSec_ = 0.65f; // 消滅遅延の最大時間（秒）
+	static constexpr float kRippleWaitSec_ = 0.12f; // 波紋エフェクト発生までの待機時間（秒）
+	/// <summary>
+	/// タイトル敵を生成して配置します。
+	/// </summary>
+	void CreateTitleEnemies_();
+	/// <summary>
+	/// 消滅シーケンスを開始します。
+	/// </summary>
+	void ScheduleVanish_();
+	/// <summary>
+	/// 全てのタイトル敵が消滅したかチェックします。
+	/// </summary>
+	/// <returns>trueなら全て消滅、falseならまだ生きている敵がいる</returns>
+	bool AllEnemiesGone_() const;
+	/// <summary>
+	/// タイトル敵の消滅エフェクトを発生させます。
+	/// </summary>
+	/// <param name="pos">エフェクトを発生させる位置</param>
+	void EmitTitleExplode_(const Vector3& pos);
 	//======================================================================
 	// Iris（白円）トランジション
 	//======================================================================
@@ -122,11 +135,7 @@ private:
 	Ease::Tween irisTween_; // イージング関数
 	// アイリスのトランジション時間
 	static constexpr float kIrisDurationSec_ = 0.8f;
-	bool irisOpening_ = true;   // タイトル入場時の「開く」演出
-	//======================================================================
-	// 定数（π系）
-	//======================================================================
-	// タイトル敵の数式定義（π系）
+	bool irisOpening_ = true; // trueで「開く」演出中
 	static constexpr float kPi_ = 3.14159265358979323846f; // π
 	static constexpr float kHalfPi_ = kPi_ * 0.5f;         // π/2
 	static constexpr float kTwoPi_ = kPi_ * 2.0f;          // 2π
