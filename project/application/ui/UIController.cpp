@@ -596,7 +596,7 @@ namespace TKM {
 				localChanged |= ImGui::DragFloat("内側余白 pad(px)##lbPad", &ld.pad_, 0.1f, 0.0f, 20.0f);
 				localChanged |= ImGui::DragFloat("分割の隙間 gap(px)##lbGap", &ld.gap_, 0.1f, 0.0f, 20.0f);
 
-				// 色（任意）
+				// 色
 				localChanged |= ImGui::ColorEdit4("通常色##lbBase", &ld.baseColor_.x);
 				localChanged |= ImGui::ColorEdit4("消費色##lbDrain", &ld.drainColor_.x);
 				localChanged |= ImGui::ColorEdit4("回復色##lbRefill", &ld.refillColor_.x);
