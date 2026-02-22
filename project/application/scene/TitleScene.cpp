@@ -16,6 +16,21 @@ using TKM::TextureManager;
 using TKM::ModelManager;
 using TKM::Sprite;
 
+static float DegToRad_(float deg) {
+	return deg * 3.14159265f / 180.0f;
+}
+
+static void VisibleHalfExtentsAtZ_(
+	float& outHalfW, float& outHalfH,
+	float z, float camZ,
+	float fovYRad, float aspect
+) {
+	float d = z - camZ;
+	if (d < 0.01f) { d = 0.01f; } // カメラより後ろ/近すぎ防止
+	outHalfH = std::tan(fovYRad * 0.5f) * d;
+	outHalfW = outHalfH * aspect;
+}
+
 void TitleScene::Initialize() {
 	camera_ = std::make_unique<Camera>();
 	camera_->SetRotate({ 0.0f, 0.0f, 0.0f });
@@ -378,17 +393,41 @@ void TitleScene::DrawBack() {
 }
 
 void TitleScene::CreateTitleEnemies_() {
-	titleEnemies_.clear(); // 念のためクリア
-	titleEnemies_.reserve(70); // 何体出すかに応じて適宜調整（多すぎると重くなるので注意）
+	titleEnemies_.clear();
+	titleEnemies_.reserve(kEnemyCount);
 
-	const Vector3 roamMin = { -30.0f, -20.8f, 30.0f }; // 敵のうろうろ範囲の最小値（X: -22～18, Y: 0.8～13, Z: 48～96あたり）※適宜調整
-	const Vector3 roamMax = { 30.0f, 20.0f, 40.0f }; // 敵のうろうろ範囲（X: -22～18, Y: 0.8～13, Z: 48～96あたり）※適宜調整
+	const float screenW = 1280.0f;
+	const float screenH = 720.0f;
+	const float aspect = screenW / screenH;
 
-	std::uniform_real_distribution<float> rx(roamMin.x, roamMax.x); // 敵の初期配置用の乱数分布（X座標）
-	std::uniform_real_distribution<float> ry(roamMin.y, roamMax.y); // 敵の初期配置用の乱数分布（Y座標）
-	std::uniform_real_distribution<float> rz(roamMin.z, roamMax.z); // 敵の初期配置用の乱数分布（Z座標）
+	const float fovY = DegToRad_(60.0f);      // タイトルは広め
+	const float camZ = camera_ ? camera_->GetTranslate().z : -30.0f;
 
-	for (int i = 0; i < 70; ++i) {
+	// Zレンジ（君の近・奥の2層）
+	std::uniform_real_distribution<float> nearZ(6.0f, 14.0f);
+	std::uniform_real_distribution<float> farZ(14.0f, 28.0f);
+
+	const float kNearRatio = 0.65f;
+	const int nearCount = static_cast<int>(kEnemyCount * kNearRatio);
+
+	for (int i = 0; i < kEnemyCount; ++i) {
+		const bool isNear = (i < nearCount);
+
+		float z = isNear ? nearZ(rng_) : farZ(rng_);
+
+		float halfW = 0.0f, halfH = 0.0f;
+		VisibleHalfExtentsAtZ_(halfW, halfH, z, camZ, fovY, aspect);
+
+		// ★少し内側に寄せる（端ギリだと動いた瞬間はみ出るから）
+		const float margin = isNear ? 6.0f : 10.0f;
+		halfW = std::max(1.0f, halfW - margin);
+		halfH = std::max(1.0f, halfH - margin);
+
+		std::uniform_real_distribution<float> rx(-halfW, halfW);
+		std::uniform_real_distribution<float> ry(-halfH, halfH);
+
+		Vector3 pos = { rx(rng_), ry(rng_), z };
+
 		TitleEnemyUnit u{};
 		u.enemy_ = std::make_unique<Enemy>();
 		u.enemy_->SetCamera(camera_.get());
@@ -397,14 +436,20 @@ void TitleScene::CreateTitleEnemies_() {
 
 		u.enemy_->SetModel("jerryfish.obj");
 		u.enemy_->SetTentacleModel("tentacle.obj");
-		u.enemy_->SetTentacleLocal({ 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f });
+		u.enemy_->SetTentacleLocal({ 0,0,0 }, { 0,0,0 }, { 1,1,1 });
 
-		u.enemy_->SetScale({ 1.0f, 1.0f, 1.0f }); // 少し大きめにして存在感アップ
-		u.enemy_->SetPosition({ rx(rng_), ry(rng_), rz(rng_) }); // ランダムな位置に配置
+		u.enemy_->SetScale(isNear ? Vector3{ 1.35f, 1.35f, 1.35f } : Vector3{ 1.10f, 1.10f, 1.10f });
+		u.enemy_->SetPosition(pos);
 
-		u.enemy_->SetBehavior(EnemyBehavior::FreeRoam); // 自由にうろうろする動き
+		u.enemy_->SetBehavior(EnemyBehavior::FreeRoam);
+
+		// ★ローム範囲も「このZの画面内」に合わせてセット（=画面外へ行きにくい）
+		// ただし “絶対に出ない” を保証するには Enemy の移動側でクランプが必要
+		Vector3 roamMin = { -halfW, -halfH, z };
+		Vector3 roamMax = { halfW,  halfH, z };
 		u.enemy_->SetRoamArea(roamMin, roamMax);
-		u.enemy_->SetRoamSpeed(0.08f, 0.08f); // ゆっくり目の移動速度（0.05～0.15くらい��見栄え良い）
+
+		u.enemy_->SetRoamSpeed(0.10f, 0.10f);
 
 		u.alive_ = true;
 		u.vanishDelay_ = 0.0f;

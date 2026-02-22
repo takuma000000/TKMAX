@@ -113,6 +113,7 @@ private:
 	static constexpr float kStartVanishDelaySec_ = 0.18f; // 消滅開始までの遅延時間（秒）
 	static constexpr float kVanishDelayMaxSec_ = 0.65f; // 消滅遅延の最大時間（秒）
 	static constexpr float kRippleWaitSec_ = 0.12f; // 波紋エフェクト発生までの待機時間（秒）
+	int kEnemyCount = 100; // タイトル敵の数
 	/// <summary>
 	/// タイトル敵を生成して配置します。
 	/// </summary>
