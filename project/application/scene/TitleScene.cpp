@@ -631,7 +631,7 @@ void TitleScene::UpdateShowdownActors_(float dt) {
 	bRotRad.y += DegToRad_(titleBossRotDeg_.y);
 	bRotRad.z += DegToRad_(titleBossRotDeg_.z);
 
-	// ★回転を先に適用（このフレームで反映させる）
+	// 回転を先に適用（このフレームで反映させる）
 	titlePlayer_->SetRotate(pRotRad);
 	titleBoss_->SetRotate(bRotRad);
 
