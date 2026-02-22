@@ -527,6 +527,11 @@ void Enemy::SetScale(const Vector3& scale) {
 	if (object_) object_->SetScale(scale); // Object3d にも反映
 }
 
+void Enemy::SetRotate(const Vector3& rot) {
+	if (!object_) { return; }
+	object_->SetRotate(rot);
+}
+
 void Enemy::SetCamera(TKM::Camera* camera) {
 	camera_ = camera;
 	if (object_) { object_->SetCamera(camera); } // カメラ設定（既存に合わせる）

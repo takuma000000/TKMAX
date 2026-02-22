@@ -157,6 +157,14 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	EnemyType GetType() const { return type_; }
+	/// <summary>
+	/// 敵の回転を取得します。
+	/// </summary>
+	/// <returns></returns>
+	Vector3 GetRotate() const {
+		if (!object_) { return { 0.0f, 0.0f, 0.0f }; }
+		return object_->GetRotate();
+	}
 	// =========================================
 	// Setter===================================
 	/// <summary>
@@ -174,6 +182,11 @@ public:
 	/// </summary>
 	/// <param name="scale">設定するスケール</param>
 	void SetScale(const Vector3& scale);
+	/// <summary>
+	/// 回転を設定します。
+	/// </summary>
+	/// <param name="rot">設定する回転（ラジアン）</param>
+	void SetRotate(const Vector3& rot);
 	/// <summary>
 	/// 使用するカメラを設定します。
 	/// </summary>

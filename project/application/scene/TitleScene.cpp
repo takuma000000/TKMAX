@@ -31,6 +31,12 @@ static void VisibleHalfExtentsAtZ_(
 	outHalfW = outHalfH * aspect;
 }
 
+static float LookAtPitch_(const Vector3& from, const Vector3& to) {
+	Vector3 d = { to.x - from.x, to.y - from.y, to.z - from.z };
+	const float horiz = std::sqrt(d.x * d.x + d.z * d.z);
+	return -std::atan2f(d.y, (horiz < 0.0001f ? 0.0001f : horiz)); // ラジアン（上向きがマイナスになる系）
+}
+
 void TitleScene::Initialize() {
 	camera_ = std::make_unique<Camera>();
 	camera_->SetRotate({ 0.0f, 0.0f, 0.0f });
@@ -48,8 +54,10 @@ void TitleScene::Initialize() {
 	// ------------ モデル読み込み --------------
 	ModelManager::GetInstance()->LoadModel("turtle.obj", dxCommon_);
 	ModelManager::GetInstance()->LoadModel("turtle_flipper.obj", dxCommon_);
+	ModelManager::GetInstance()->LoadModel("jerryfish_boss.obj", dxCommon_);
 	ModelManager::GetInstance()->LoadModel("jerryfish.obj", dxCommon_);
 	ModelManager::GetInstance()->LoadModel("tentacle.obj", dxCommon_);
+	ModelManager::GetInstance()->LoadModel("tentacle_boss.obj", dxCommon_);
 	//-----------------------------------------
 	//---------------パーティクル----------------
 	TKM::ParticleManager::GetInstance()->Initialize(dxCommon_, srvManager_, camera_.get());
@@ -121,6 +129,8 @@ void TitleScene::Initialize() {
 
 	// 敵の初期化
 	CreateTitleEnemies_();
+	// メニュー中の見つめ合い用
+	CreateShowdownActors_();
 
 	// シーケンス開始
 	flow_ = Flow::IntroIrisOpen;
@@ -191,6 +201,8 @@ void TitleScene::Update() {
 		if (showUi_) {
 			if (titleMenu_) {
 				const auto cmd = titleMenu_->Update(dt_);
+				// メニューの見つめ合い更新
+				UpdateShowdownActors_(dt_);
 				if (cmd == TitleMenuController::Command::Start) {
 
 					// ★メニューでStartしたら、従来の「波紋→アイリス閉」へ
@@ -217,7 +229,7 @@ void TitleScene::Update() {
 					return;
 				}
 			}
-			break; // ★メニュー表示中はここで終わり
+			break; // メニュー表示中はここで終わり
 		}
 
 		// -------------------------
@@ -330,47 +342,83 @@ void TitleScene::Update() {
 
 	ImGui::Begin("タイトルシーン デバッグ");
 
-	// -------------------------
-	// 敵数カウント
-	// -------------------------
-	int aliveCount = 0;
-	int totalCount = static_cast<int>(titleEnemies_.size());
+	// =========================================================
+	// ① 見つめ合い（Player/Boss）位置調整（折りたたみ）
+	// =========================================================
+	if (ImGui::CollapsingHeader("見つめ合い（位置調整）", ImGuiTreeNodeFlags_DefaultOpen)) {
 
-	for (const auto& u : titleEnemies_) {
-		if (u.alive_) {
-			aliveCount++;
+		ImGui::Checkbox("自動で見つめ合う（Yaw/Pitch）", &titleAutoLookAt_); // デバッグ用：自動で見つめ合うかどうか（Yaw/Pitch計算して向きだけ合わせる）
+
+		const bool 編集できる = (titlePlayer_ != nullptr && titleBoss_ != nullptr);
+		if (!編集できる) {
+			ImGui::TextDisabled("titlePlayer_ / titleBoss_ が null です");
+		} else {
+
+			bool 変更あり = false;
+			変更あり |= ImGui::DragFloat3("プレイヤー位置", &titlePlayerPos_.x, 0.1f);
+			変更あり |= ImGui::DragFloat3("ボス位置", &titleBossPos_.x, 0.1f);
+
+			if (ImGui::Button("位置をリセット")) {
+				titlePlayerPos_ = { -8.0f, -3.0f, 12.0f };
+				titleBossPos_ = { 7.0f, -1.5f, 40.0f };
+				変更あり = true;
+			}
+
+			if (変更あり) {
+				titlePlayer_->SetPosition(titlePlayerPos_);
+				titleBoss_->SetPosition(titleBossPos_);
+			}
+
+			const float py = LookAtYaw_(titlePlayerPos_, titleBossPos_);
+			const float by = LookAtYaw_(titleBossPos_, titlePlayerPos_);
+			ImGui::Text("Yaw（プレイヤー→ボス）: %.3f rad", py);
+			ImGui::Text("Yaw（ボス→プレイヤー）: %.3f rad", by);
 		}
+
+		ImGui::Separator();
 	}
 
-	// 表示
-	ImGui::Text("タイトル敵情報");
-	ImGui::Separator();
-	ImGui::Text("生存数 : %d", aliveCount);
-	ImGui::Text("総数   : %d", totalCount);
-	ImGui::Text("消滅数 : %d", totalCount - aliveCount);
+	// =========================================================
+	// ② タイトル敵情報（折りたたみ）
+	// =========================================================
+	if (ImGui::CollapsingHeader("タイトル敵情報", ImGuiTreeNodeFlags_DefaultOpen)) {
 
-	// -------------------------
-	// Flow 状態表示
-	// -------------------------
-	const char* flowName = "";
-	switch (flow_) {
-	case Flow::IntroIrisOpen: flowName = "アイリスオープン中"; break;
-	case Flow::Idle:          flowName = "待機中"; break;
-	case Flow::Vanishing:     flowName = "消滅演出中"; break;
-	case Flow::Ripple:        flowName = "波紋演出中"; break;
-	case Flow::IrisClose:     flowName = "アイリスクローズ中"; break;
+		int aliveCount = 0;
+		int totalCount = static_cast<int>(titleEnemies_.size());
+
+		for (const auto& u : titleEnemies_) {
+			if (u.alive_) {
+				aliveCount++;
+			}
+		}
+
+		ImGui::Text("生存数 : %d", aliveCount);
+		ImGui::Text("総数   : %d", totalCount);
+		ImGui::Text("消滅数 : %d", totalCount - aliveCount);
+
+		ImGui::Separator();
 	}
 
-	ImGui::Separator();
-	ImGui::Text("現在の状態 : %s", flowName);
+	// =========================================================
+	// ③ Flow / タイマー（折りたたみ）
+	// =========================================================
+	if (ImGui::CollapsingHeader("状態 / タイマー", ImGuiTreeNodeFlags_DefaultOpen)) {
 
-	// -------------------------
-	// タイマー表示
-	// -------------------------
-	ImGui::Separator();
-	ImGui::Text("シーケンスタイマー : %.2f 秒", seqTimer_);
-	ImGui::Text("消滅タイマー       : %.2f 秒", vanishTimer_);
-	ImGui::Text("波紋タイマー       : %.2f 秒", rippleTimer_);
+		const char* flowName = "";
+		switch (flow_) {
+		case Flow::IntroIrisOpen: flowName = "アイリスオープン中"; break;
+		case Flow::Idle:          flowName = "待機中"; break;
+		case Flow::Vanishing:     flowName = "消滅演出中"; break;
+		case Flow::Ripple:        flowName = "波紋演出中"; break;
+		case Flow::IrisClose:     flowName = "アイリスクローズ中"; break;
+		}
+
+		ImGui::Text("現在の状態 : %s", flowName);
+		ImGui::Separator();
+		ImGui::Text("シーケンスタイマー : %.2f 秒", seqTimer_);
+		ImGui::Text("消滅タイマー       : %.2f 秒", vanishTimer_);
+		ImGui::Text("波紋タイマー       : %.2f 秒", rippleTimer_);
+	}
 
 	ImGui::End();
 
@@ -389,6 +437,11 @@ void TitleScene::Draw3D() {
 	for (auto& u : titleEnemies_) {
 		if (!u.alive_ || !u.enemy_) { continue; }
 		u.enemy_->Draw(dxCommon_);
+	}
+
+	// メニュー中だけ：見つめ合い（Player/Boss）
+	if (showUi_ && titleMenu_ && titleMenu_->IsVisible()) {
+		DrawShowdownActors_();
 	}
 
 	// Particle
@@ -504,4 +557,93 @@ bool TitleScene::AllEnemiesGone_() const {
 		if (u.alive_) { return false; }
 	}
 	return true;
+}
+
+float TitleScene::LookAtYaw_(const Vector3& from, const Vector3& to) const {
+	Vector3 d = { to.x - from.x, to.y - from.y, to.z - from.z };
+	return std::atan2f(d.x, d.z); // ラジアン
+}
+
+void TitleScene::CreateShowdownActors_() {
+	// Player（GameScene同様にクラスを使う）
+	titlePlayer_ = std::make_unique<Player>();
+	titlePlayer_->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_);
+	titlePlayer_->SetParentScene(this);
+	titlePlayer_->SetCamera(camera_.get());
+	titlePlayer_->SetPosition(titlePlayerPos_);
+
+	// タイトルでは操作系全部OFF（事故防止）
+	titlePlayer_->SetControlEnabled(false);
+	titlePlayer_->SetShootingEnabled(false);
+	titlePlayer_->SetReticleVisible(false);
+	titlePlayer_->SetEnableJetSmoke(false);
+	titlePlayer_->SetEnemy(nullptr);
+	titlePlayer_->StopRumble();
+
+	// Boss（BossEnemyクラスを使う）
+	titleBoss_ = std::make_unique<BossEnemy>();
+	titleBoss_->SetCamera(camera_.get());
+	titleBoss_->SetParentScene(this);
+	titleBoss_->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_);
+	titleBoss_->SetPosition(titleBossPos_);
+	titleBoss_->SetTentacleCharge(true, 0.35f);
+
+	// 見つめ合い（Yawだけ）
+	const float py = LookAtYaw_(titlePlayerPos_, titleBossPos_);
+	const float by = LookAtYaw_(titleBossPos_, titlePlayerPos_);
+	// タイトル用の回転を別で持つ（GameSceneのとは別物）
+	titlePlayerRot_.y = py;
+	titleBossRot_.y = by;
+	// プレイヤー（Yawだけ）
+	titlePlayer_->SetYaw(titlePlayerRot_.y);
+	// ボス（Euler回転を使う：EnemyにSetRotateを生やした前提）
+	titleBoss_->SetRotate(titleBossRot_);
+}
+
+void TitleScene::UpdateShowdownActors_(float dt) {
+	if (!titlePlayer_ || !titleBoss_) { return; }
+
+	// 位置固定
+	titlePlayer_->SetPosition(titlePlayerPos_);
+	titleBoss_->SetPosition(titleBossPos_);
+
+	// まず「狙うべき回転」を計算
+	Vector3 pRotRad{ 0.0f, 0.0f, 0.0f };
+	Vector3 bRotRad{ 0.0f, 0.0f, 0.0f };
+
+	if (titleAutoLookAt_) {
+		const float py = LookAtYaw_(titlePlayerPos_, titleBossPos_);
+		const float by = LookAtYaw_(titleBossPos_, titlePlayerPos_);
+
+		const float pp = LookAtPitch_(titlePlayerPos_, titleBossPos_);
+		const float bp = LookAtPitch_(titleBossPos_, titlePlayerPos_);
+
+		pRotRad = { pp, py, 0.0f };
+		bRotRad = { bp, by, 0.0f };
+	}
+
+	// 手動オフセット（度→rad）を足す：モデル正面ズレ調整はここでやる
+	pRotRad.x += DegToRad_(titlePlayerRotDeg_.x);
+	pRotRad.y += DegToRad_(titlePlayerRotDeg_.y);
+	pRotRad.z += DegToRad_(titlePlayerRotDeg_.z);
+
+	bRotRad.x += DegToRad_(titleBossRotDeg_.x);
+	bRotRad.y += DegToRad_(titleBossRotDeg_.y);
+	bRotRad.z += DegToRad_(titleBossRotDeg_.z);
+
+	// ★回転を先に適用（このフレームで反映させる）
+	titlePlayer_->SetRotate(pRotRad);
+	titleBoss_->SetRotate(bRotRad);
+
+	// そのあと Update（内部で object_->Update() されて行列が確定する）
+	titlePlayer_->UpdateTitleIdle(dt);
+
+	titleBoss_->Update(dt);
+	titleBoss_->SetPosition(titleBossPos_); // 保険
+}
+
+void TitleScene::DrawShowdownActors_() {
+	if (!titlePlayer_ || !titleBoss_) { return; }
+	titlePlayer_->Draw(dxCommon_);
+	titleBoss_->Draw(dxCommon_);
 }

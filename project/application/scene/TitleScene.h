@@ -26,6 +26,8 @@
 #include "TitleMenuController.h"
 #include "Enemy.h"
 #include <random>
+#include "Player.h"
+#include "BossEnemy.h"
 
 //=============================================================
 // TitleSceneクラス
@@ -163,4 +165,45 @@ private:
 	// タイムステップ
 	//======================================================================
 	const float dt_ = 1.0f / 60.0f; // 固定フレームレート用デルタタイム
+	//======================================================================
+	// タイトル：メニュー中の見つめ合い（Player / Boss）
+	//======================================================================
+	std::unique_ptr<Player> titlePlayer_ = nullptr; // タイトル用プレイヤー（見た目だけ）
+	std::unique_ptr<BossEnemy> titleBoss_ = nullptr; // タイトル用ボス（見た目だけ）
+	Vector3 titlePlayerPos_ = { -12.0f, -3.8f, 13.3f }; // 左手前
+	Vector3 titleBossPos_ = { 24.7f, 6.7f, 53.3f }; // 右奥
+	// 回転（ラジアン想定）
+	Vector3 titlePlayerRot_ = { 0.0f, 0.0f, 0.0f }; // 主にy(Yaw)を使う
+	Vector3 titleBossRot_ = { 0.0f, 0.0f, 0.0f }; // 主にy(Yaw)を使う
+	// 自動で見つめ合うか（Yaw自動）
+	bool showdownAutoLook_ = true; // trueでPlayerがBossを見つめる（Yaw自動更新）、falseで両者とも正面向き固定
+	// リセット用の初期値（今の値をそのまま固定したいならここを基準に）
+	const Vector3 kShowdownDefaultPlayerPos_ = { -12.0f, -3.8f, 13.3f };
+	const Vector3 kShowdownDefaultBossPos_ = { 24.7f,  6.7f, 53.3f };
+	const Vector3 kShowdownDefaultPlayerRot_ = { 0.0f, 0.0f, 0.0f };
+	const Vector3 kShowdownDefaultBossRot_ = { 0.0f, 0.0f, 0.0f };
+	// 見つめ合い：回転調整（度）
+	Vector3 titlePlayerRotDeg_ = { 0.0f, 0.0f, 0.0f }; // 手動オフセット（度）
+	Vector3 titleBossRotDeg_ = { 0.0f, 0.0f, 0.0f }; // 手動オフセット（度）
+	bool titleAutoLookAt_ = true; // trueなら自動で見つめ合う（Yaw/Pitch）
+	/// <summary>
+	/// タイトルの見つめ合い用のPlayerとBossを生成して配置します。
+	/// </summary>
+	void CreateShowdownActors_();
+	/// <summary>
+	/// タイトルの見つめ合い用のPlayerとBossを更新します。
+	/// </summary>
+	/// <param name="dt">デルタタイム</param>
+	void UpdateShowdownActors_(float dt);
+	/// <summary>
+	/// タイトルの見つめ合い用のPlayerとBossを描画します。
+	/// </summary>
+	void DrawShowdownActors_();
+	/// <summary>
+	/// タイトルの見つめ合い用のPlayerとBossの、PlayerからBossへの向き（Yaw角）を計算します。
+	/// </summary>
+	/// <param name="from">Playerの位置</param>
+	/// <param name="to">Bossの位置</param>
+	/// <returns>PlayerからBossへの向き（Yaw角）</returns>
+	float LookAtYaw_(const Vector3& from, const Vector3& to) const;
 };

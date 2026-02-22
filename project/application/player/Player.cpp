@@ -558,6 +558,25 @@ void Player::StopRumble() {
 	TKM::Input::GetInstance()->SetVibration(0, 0);
 }
 
+void Player::SetYaw(float yawRad) {
+	if (!object_) { return; } // 安全確認
+	Vector3 r = object_->GetRotate(); // 現在の回転を取得
+	r.y = yawRad; // ヨー角だけ更新
+	object_->SetRotate(r); // ヨー角だけ更新
+}
+
+void Player::UpdateTitleIdle(float dt) {
+	// タイトル専用：入力/射撃/移動/ロックオン等は一切触らない
+	// ただし Draw に必要な行列更新だけは行う
+
+	// ヒレだけパタパタ（既存の内部関数を使う）
+	UpdateFlipperAnim_(dt);
+
+	// 行列更新（これをしないと描画が古いままになることがある）
+	if (object_) { object_->Update(); }
+	if (flipper_) { flipper_->Update(); }
+}
+
 void Player::SetShootingEnabled(bool enabled) {
 	shootingEnabled_ = enabled; // シューティングの有効 / 無効を切り替えるフラグ
 	if (!enabled) { // 無効にするなら、関連する状態もリセットしておく
@@ -572,6 +591,11 @@ void Player::SetRumbleEnabled(bool enabled) {
 	if (!enabled) { // 無効にするなら、今鳴ってるのも即停止（追い振動も潰す）
 		StopRumble(); // 鳴ってる最中のも即停止（追い振動も潰す）
 	}
+}
+
+void Player::SetRotate(const Vector3& rotRad) {
+	if (!object_) { return; } // 安全確認
+	object_->SetRotate(rotRad); // 回転設定（直接指定版）
 }
 
 void Player::HandleGamePadMove() {

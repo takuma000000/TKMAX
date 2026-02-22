@@ -103,6 +103,10 @@ public:
 	/// ゲームパッドの振動停止。
 	/// </summary>
 	void StopRumble();
+	/// <summary>
+	/// タイトルなど、入力/弾/移動を一切行わず「見た目だけ」動かす更新。
+	/// </summary>
+	void UpdateTitleIdle(float dt);
 
 	// Getter===================================
 	/// <summary>
@@ -254,6 +258,14 @@ public:
 	/// </summary>
 	/// <param name="enabled">振動を有効にする場合 true、それ以外は false</param>
 	void SetRumbleEnabled(bool enabled);
+	/// <summary>
+	/// 回転（Euler, rad）を直接セットします（タイトル等の演出用）。
+	/// </summary>
+	void SetRotate(const Vector3& rotRad);
+	/// <summary>
+	/// Yaw（Y回転）だけ設定します（ラジアン）。
+	/// </summary>
+	void SetYaw(float yawRad);
 	// =========================================
 
 	enum class DeathPhase { None, FaultSparks, FlyAway }; // 撃墜演出フェーズ
