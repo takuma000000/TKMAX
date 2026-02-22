@@ -44,12 +44,12 @@ namespace TKM {
 
 		//テクスチャ1枚分のデータ
 		struct TextureData {
-			DirectX::TexMetadata metadata_;
-			Microsoft::WRL::ComPtr<ID3D12Resource> resource_;
-			Microsoft::WRL::ComPtr <ID3D12Resource> intermediateResource_;
-			uint32_t srvIndex_ = 0;
-			D3D12_CPU_DESCRIPTOR_HANDLE srvHnadleCPU_{};
-			D3D12_GPU_DESCRIPTOR_HANDLE srvHnadleGPU_{};
+			DirectX::TexMetadata metadata_; // テクスチャのメタデータ
+			Microsoft::WRL::ComPtr<ID3D12Resource> resource_; // テクスチャリソース
+			Microsoft::WRL::ComPtr <ID3D12Resource> intermediateResource_; // アップロード用の中間リソース
+			uint32_t srvIndex_ = 0; // SRVのインデックス
+			D3D12_CPU_DESCRIPTOR_HANDLE srvHnadleCPU_{}; // SRVのCPUハンドル
+			D3D12_GPU_DESCRIPTOR_HANDLE srvHnadleGPU_{}; // SRVのGPUハンドル
 
 			// デフォルトコンストラクタ（手動で定義）
 			TextureData() = default;
@@ -67,14 +67,14 @@ namespace TKM {
 
 			// ムーブ代入演算子
 			TextureData& operator=(TextureData&& other) noexcept {
-				if (this != &other) {
-					metadata_ = std::move(other.metadata_);
-					resource_ = std::move(other.resource_);
-					intermediateResource_ = std::move(other.intermediateResource_);
-					srvIndex_ = other.srvIndex_;
-					srvHnadleCPU_ = other.srvHnadleCPU_;
-					srvHnadleGPU_ = other.srvHnadleGPU_;
-					other.srvIndex_ = 0;
+				if (this != &other) { // 自己代入チェック
+					metadata_ = std::move(other.metadata_); // メタデータはムーブできないため、コピーする
+					resource_ = std::move(other.resource_); // ComPtrはムーブセマンティクスをサポートしているため、ムーブする
+					intermediateResource_ = std::move(other.intermediateResource_); // ComPtrはムーブセマンティクスをサポートしているため、ムーブする
+					srvIndex_ = other.srvIndex_; // SRVインデックスはムーブできないため、コピーする
+					srvHnadleCPU_ = other.srvHnadleCPU_; // CPUハンドルはムーブできないため、コピーする
+					srvHnadleGPU_ = other.srvHnadleGPU_; // GPUハンドルはムーブできないため、コピーする
+					other.srvIndex_ = 0; // ムーブ元のSRVインデックスをリセット
 				}
 				return *this;
 			}
