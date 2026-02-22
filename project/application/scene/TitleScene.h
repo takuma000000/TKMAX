@@ -89,7 +89,6 @@ private:
 	enum class Flow { // シーケンスの流れ
 		IntroIrisOpen, // タイトル入場（アイリスオープン）
 		Idle, // 待機
-		StartSequence, // シーケンス開始（UI非表示）
 		Vanishing, // 消滅（UI非表示のまま）
 		Ripple, // 波紋エフェクト発生
 		IrisClose // タイトル退場（アイリスクローズ）
@@ -114,6 +113,7 @@ private:
 	static constexpr float kVanishDelayMaxSec_ = 0.65f; // 消滅遅延の最大時間（秒）
 	static constexpr float kRippleWaitSec_ = 0.12f; // 波紋エフェクト発生までの待機時間（秒）
 	int kEnemyCount = 100; // タイトル敵の数
+	bool showMenuAfterVanish_ = false; // Vanishingが終わったあと、メニューを出すか？（A押しでtrue）
 	/// <summary>
 	/// タイトル敵を生成して配置します。
 	/// </summary>

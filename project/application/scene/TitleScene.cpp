@@ -121,12 +121,18 @@ void TitleScene::Initialize() {
 
 	// 敵の初期化
 	CreateTitleEnemies_();
+
 	// シーケンス開始
 	flow_ = Flow::IntroIrisOpen;
-	showUi_ = true;
+	// 最初は敵だけ見せたいのでUIは消す
+	showUi_ = false;
+	if (titleMenu_) { titleMenu_->SetVisible(false); }
+	// 分岐フラグ初期化
+	showMenuAfterVanish_ = false;
+	// タイマー初期化
 	seqTimer_ = 0.0f;
 	vanishTimer_ = 0.0f;
-	if (titleMenu_) { titleMenu_->SetVisible(true); }
+	rippleTimer_ = 0.0f;
 }
 
 void TitleScene::Finalize() {}
@@ -172,52 +178,61 @@ void TitleScene::Update() {
 			u.enemy_->Update(dt_);
 		}
 		break;
-
 	case Flow::Idle:
-		// 敵うようよ更新
+		// 敵うようよ更新（残ってる敵がいる場合だけ）
 		for (auto& u : titleEnemies_) {
 			if (!u.alive_ || !u.enemy_) { continue; }
 			u.enemy_->Update(dt_);
 		}
 
-		// UI更新
-		if (titleMenu_) {
-			const auto cmd = titleMenu_->Update(dt_);
-			if (cmd == TitleMenuController::Command::Start) {
-				flow_ = Flow::StartSequence;
-				seqTimer_ = 0.0f;
-				vanishTimer_ = 0.0f;
-				rippleTimer_ = 0.0f;
-			} else if (cmd == TitleMenuController::Command::Exit) {
-				sceneManager_->RequestQuit();
-				PostQuitMessage(0);
-				return;
+		// -------------------------
+		// ① メニューが出てる時：メニュー操作
+		// -------------------------
+		if (showUi_) {
+			if (titleMenu_) {
+				const auto cmd = titleMenu_->Update(dt_);
+				if (cmd == TitleMenuController::Command::Start) {
+
+					// ★メニューでStartしたら、従来の「波紋→アイリス閉」へ
+					showMenuAfterVanish_ = false; // 念のため
+					flow_ = Flow::Ripple;
+					rippleTimer_ = 0.0f;
+
+					// 波紋を出す
+					if (rippleEffect_) {
+						TKM::WaterRippleEffect::RippleDesc d{};
+						d.duration_ = 1.0f;
+						d.radiusMax_ = 0.857f;
+						d.amplitude_ = 0.1f;
+						d.frequency_ = 80.0f;
+						d.width_ = 10.0f;
+						d.color_ = { 1.0f, 1.0f, 1.0f };
+						d.colorIntensity_ = 0.0f;
+						rippleEffect_->Trigger({ 0.5f, 0.5f }, d);
+					}
+
+				} else if (cmd == TitleMenuController::Command::Exit) {
+					sceneManager_->RequestQuit();
+					PostQuitMessage(0);
+					return;
+				}
 			}
-		}
-		break;
-
-	case Flow::StartSequence:
-		// 敵は動かしてOK
-		for (auto& u : titleEnemies_) {
-			if (!u.alive_ || !u.enemy_) { continue; }
-			u.enemy_->Update(dt_);
+			break; // ★メニュー表示中はここで終わり
 		}
 
-		seqTimer_ += dt_;
-
-		// UI消し
-		if (seqTimer_ >= kHideUiDelaySec_) {
+		// -------------------------
+		// ② メニューが出てない時：A待ち
+		// -------------------------
+		if (TKM::Input::GetInstance()->TriggerButton(XINPUT_GAMEPAD_A)) {
 			showUi_ = false;
 			if (titleMenu_) { titleMenu_->SetVisible(false); }
-		}
 
-		// 消滅スケジュール開始
-		if (seqTimer_ >= kStartVanishDelaySec_) {
+			showMenuAfterVanish_ = true;
 			ScheduleVanish_();
 			flow_ = Flow::Vanishing;
+			vanishTimer_ = 0.0f;
 		}
 		break;
-
 	case Flow::Vanishing:
 		vanishTimer_ += dt_;
 
@@ -237,22 +252,32 @@ void TitleScene::Update() {
 			}
 		}
 
-		// 全滅したら波紋 → Iris close
+		// 全滅したら「メニューへ」 or 「波紋へ」
 		if (AllEnemiesGone_()) {
-			flow_ = Flow::Ripple;
-			rippleTimer_ = 0.0f;
 
-			// ここで波紋
-			if (rippleEffect_) {
-				TKM::WaterRippleEffect::RippleDesc d{};
-				d.duration_ = 1.0f;
-				d.radiusMax_ = 0.857f;
-				d.amplitude_ = 0.1f;
-				d.frequency_ = 80.0f;
-				d.width_ = 10.0f;
-				d.color_ = { 1.0f, 1.0f, 1.0f };
-				d.colorIntensity_ = 0.0f;
-				rippleEffect_->Trigger({ 0.5f, 0.5f }, d);
+			if (showMenuAfterVanish_) {
+				// A押しで消した場合：ここでメニュー表示
+				showUi_ = true;
+				if (titleMenu_) { titleMenu_->SetVisible(true); }
+
+				// この後Startを押したら波紋へ行きたいので、ここで待機に戻す
+				flow_ = Flow::Idle;
+			} else {
+				// 従来ルート：波紋 → IrisClose
+				flow_ = Flow::Ripple;
+				rippleTimer_ = 0.0f;
+
+				if (rippleEffect_) {
+					TKM::WaterRippleEffect::RippleDesc d{};
+					d.duration_ = 1.0f;
+					d.radiusMax_ = 0.857f;
+					d.amplitude_ = 0.1f;
+					d.frequency_ = 80.0f;
+					d.width_ = 10.0f;
+					d.color_ = { 1.0f, 1.0f, 1.0f };
+					d.colorIntensity_ = 0.0f;
+					rippleEffect_->Trigger({ 0.5f, 0.5f }, d);
+				}
 			}
 		}
 		break;
@@ -331,7 +356,6 @@ void TitleScene::Update() {
 	switch (flow_) {
 	case Flow::IntroIrisOpen: flowName = "アイリスオープン中"; break;
 	case Flow::Idle:          flowName = "待機中"; break;
-	case Flow::StartSequence: flowName = "開始シーケンス"; break;
 	case Flow::Vanishing:     flowName = "消滅演出中"; break;
 	case Flow::Ripple:        flowName = "波紋演出中"; break;
 	case Flow::IrisClose:     flowName = "アイリスクローズ中"; break;
@@ -388,8 +412,9 @@ void TitleScene::DrawBack() {
 	// 2D（背景：3Dより先に描かれる＝奥になる）
 	TKM::SpriteCommon::GetInstance()->DrawSetCommon();
 
-	if (sprite_) { sprite_->Draw(); } // タイトル画像（背景）
-
+	if (showUi_) {
+		if (sprite_) { sprite_->Draw(); } // タイトル画像（背景）
+	}
 }
 
 void TitleScene::CreateTitleEnemies_() {
