@@ -339,8 +339,12 @@ void TitleScene::Update() {
 }
 
 void TitleScene::Draw() {
-	if (skybox_) { skybox_->Draw(); } // スカイボックスは一番最初に描画
+	DrawBack(); // 2D（背景）
+	Draw3D(); // 3Dオブジェクト
+	DrawSprite(); // UI（手前固定）
+}
 
+void TitleScene::Draw3D() {
 	// 3D
 	TKM::Object3dCommon::GetInstance()->DrawSetCommon();
 	for (auto& u : titleEnemies_) {
@@ -348,18 +352,31 @@ void TitleScene::Draw() {
 		u.enemy_->Draw(dxCommon_);
 	}
 
-	// 2D
+	// Particle
+	TKM::ParticleManager::GetInstance()->Draw();
+}
+
+void TitleScene::DrawSprite() {
+	// UI（手前固定：Swapchain側）
 	TKM::SpriteCommon::GetInstance()->DrawSetCommon();
 	if (showUi_) {
-		if (sprite_) { sprite_->Draw(); }
 		if (titleMenu_) { titleMenu_->Draw(); }
 	}
 	if (iris_ && (irisOpening_ || irisClosing_)) {
 		iris_->Draw();
 	}
-
-	TKM::ParticleManager::GetInstance()->Draw();
 }
+
+void TitleScene::DrawBack() {
+	if (skybox_) { skybox_->Draw(); } // スカイボックス（背景3D）
+
+	// 2D（背景：3Dより先に描かれる＝奥になる）
+	TKM::SpriteCommon::GetInstance()->DrawSetCommon();
+
+	if (sprite_) { sprite_->Draw(); } // タイトル画像（背景）
+
+}
+
 void TitleScene::CreateTitleEnemies_() {
 	titleEnemies_.clear(); // 念のためクリア
 	titleEnemies_.reserve(70); // 何体出すかに応じて適宜調整（多すぎると重くなるので注意）

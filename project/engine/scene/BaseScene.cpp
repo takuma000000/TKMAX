@@ -26,6 +26,9 @@ namespace TKM {
 	void BaseScene::DrawSprite() {
 	}
 
+	void BaseScene::DrawBack() {
+	}
+
 	void BaseScene::UpdatePerformanceInfo() {
 #ifdef USE_IMGUI
 

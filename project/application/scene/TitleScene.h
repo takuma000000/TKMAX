@@ -48,9 +48,21 @@ public:
 	/// </summary>
 	void Update() override;
 	/// <summary>
-	/// タイトルシーンを描画します。
+	/// タイトルシーンを描画します（互換用）。
 	/// </summary>
 	void Draw() override;
+	/// <summary>
+	/// 3Dを描画します（RenderTexture側）。
+	/// </summary>
+	void Draw3D() override;
+	/// <summary>
+	/// UI(Sprite)を描画します（Swapchain側）。
+	/// </summary>
+	void DrawSprite() override;
+	/// <summary>
+	/// 背景を描画します（Swapchain側）。タイトルシーンではスカイボックスを背景にしているため、ここで描画します。
+	/// </summary>
+	void DrawBack() override;
 
 private:
 	//======================================================================

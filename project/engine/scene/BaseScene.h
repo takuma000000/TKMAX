@@ -44,7 +44,11 @@ namespace TKM {
 		/// </summary>Spriteを描画します。
 		/// </summary>
 		virtual void DrawSprite();
-/// <summary>
+		/// <summary>
+		/// </summary>背景Spriteを描画します（3Dより先に描かれる）。</summary>
+		/// </summary>
+		virtual void DrawBack();
+		/// <summary>
 		/// </summary>DrawCall数を加算します。</summary>
 		/// </summary>
 		void AddDrawCallCount() { drawCallCount_++; }
