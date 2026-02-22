@@ -288,26 +288,54 @@ void TitleScene::Update() {
 
 #ifdef USE_IMGUI
 
-	//// === ImGui ===
-	//ImGui::Begin("Title Heli (Background)");
-	//// position
-	/*ImGui::Text("Heli Position: (%.2f, %.2f, %.2f)", heli_->GetTranslate().x, heli_->GetTranslate().y, heli_->GetTranslate().z);
-	//ImGui::SliderFloat("Radius", &radius_, 0.0f, 30.0f);
-	//ImGui::SliderFloat("BaseY", &baseY_, -5.0f, 10.0f);
-	//ImGui::SliderFloat("Bob Amp", &bobAmp_, 0.0f, 5.0f);
-	//ImGui::SliderFloat("Speed", &speed_, 0.0f, 5.0f);
-	//ImGui::SliderFloat("Yaw Offset", &yawOffset_, -3.14f, 3.14f);
-	//ImGui::SliderFloat("Scale", &scale_, 0.1f, 5.0f);
-	//ImGui::Separator();
-	//ImGui::SliderFloat("Cam Dist", &camDist_, 2.0f, 60.0f);
-	//ImGui::SliderFloat("Cam Y", &camY_, -5.0f, 20.0f);
-	//if (ImGui::Button("Apply Camera")) {
-	//	camera_->SetTranslate({ 0.0f, camY_, -camDist_ });
-	//	camera_->Update();
-	}*/
-	//ImGui::End();
+	ImGui::Begin("タイトルシーン デバッグ");
 
-#endif // USE_IMGUI
+	// -------------------------
+	// 敵数カウント
+	// -------------------------
+	int aliveCount = 0;
+	int totalCount = static_cast<int>(titleEnemies_.size());
+
+	for (const auto& u : titleEnemies_) {
+		if (u.alive_) {
+			aliveCount++;
+		}
+	}
+
+	// 表示
+	ImGui::Text("タイトル敵情報");
+	ImGui::Separator();
+	ImGui::Text("生存数 : %d", aliveCount);
+	ImGui::Text("総数   : %d", totalCount);
+	ImGui::Text("消滅数 : %d", totalCount - aliveCount);
+
+	// -------------------------
+	// Flow 状態表示
+	// -------------------------
+	const char* flowName = "";
+	switch (flow_) {
+	case Flow::IntroIrisOpen: flowName = "アイリスオープン中"; break;
+	case Flow::Idle:          flowName = "待機中"; break;
+	case Flow::StartSequence: flowName = "開始シーケンス"; break;
+	case Flow::Vanishing:     flowName = "消滅演出中"; break;
+	case Flow::Ripple:        flowName = "波紋演出中"; break;
+	case Flow::IrisClose:     flowName = "アイリスクローズ中"; break;
+	}
+
+	ImGui::Separator();
+	ImGui::Text("現在の状態 : %s", flowName);
+
+	// -------------------------
+	// タイマー表示
+	// -------------------------
+	ImGui::Separator();
+	ImGui::Text("シーケンスタイマー : %.2f 秒", seqTimer_);
+	ImGui::Text("消滅タイマー       : %.2f 秒", vanishTimer_);
+	ImGui::Text("波紋タイマー       : %.2f 秒", rippleTimer_);
+
+	ImGui::End();
+
+#endif
 }
 
 void TitleScene::Draw() {
@@ -334,16 +362,16 @@ void TitleScene::Draw() {
 }
 void TitleScene::CreateTitleEnemies_() {
 	titleEnemies_.clear(); // 念のためクリア
-	titleEnemies_.reserve(15); // 15体くらいは出したい（多すぎるとごちゃごちゃするのでほどほどに）
+	titleEnemies_.reserve(70); // 何体出すかに応じて適宜調整（多すぎると重くなるので注意）
 
-	const Vector3 roamMin = { -22.0f, 0.8f, 48.0f }; // 敵のうろうろ範囲の最小値（X: -22～18, Y: 0.8～13, Z: 48～96あたり）※適宜調整
-	const Vector3 roamMax = { 18.0f, 13.0f, 96.0f }; // 敵のうろうろ範囲（X: -22～18, Y: 0.8～13, Z: 48～96あたり）※適宜調整
+	const Vector3 roamMin = { -30.0f, -20.8f, 30.0f }; // 敵のうろうろ範囲の最小値（X: -22～18, Y: 0.8～13, Z: 48～96あたり）※適宜調整
+	const Vector3 roamMax = { 30.0f, 20.0f, 40.0f }; // 敵のうろうろ範囲（X: -22～18, Y: 0.8～13, Z: 48～96あたり）※適宜調整
 
 	std::uniform_real_distribution<float> rx(roamMin.x, roamMax.x); // 敵の初期配置用の乱数分布（X座標）
 	std::uniform_real_distribution<float> ry(roamMin.y, roamMax.y); // 敵の初期配置用の乱数分布（Y座標）
 	std::uniform_real_distribution<float> rz(roamMin.z, roamMax.z); // 敵の初期配置用の乱数分布（Z座標）
 
-	for (int i = 0; i < 15; ++i) {
+	for (int i = 0; i < 70; ++i) {
 		TitleEnemyUnit u{};
 		u.enemy_ = std::make_unique<Enemy>();
 		u.enemy_->SetCamera(camera_.get());
