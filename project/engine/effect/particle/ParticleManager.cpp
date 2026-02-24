@@ -180,7 +180,7 @@ namespace TKM {
 			// ③ 永続CBに値を書くだけ（Create/Releaseしない）
 			//    ※ Initialize() で materialCB_ を UploadHeap で作って materialCPU_ を永続Map済み
 			materialCPU_->color_ = Vector4(1, 1, 1, 1);
-			materialCPU_->enableLighting_ = true;
+			materialCPU_->enableLighting_ = false;
 			materialCPU_->uvTransform_ = MyMath::MakeIdentity4x4();
 
 			// ④ ルートバインド
@@ -2177,16 +2177,26 @@ namespace TKM {
 			p.color_ = { 1.0f, 0.85f, 0.25f, 1.0f };
 		} else if (groupName == "titleBeam_player" || groupName == "titleBeam_boss") {
 			// “線”を作る：短命・細長い・ほぼ動かない（出す位置を線上にばら撒く想定）
-			p.transform_.scale_ = { 0.20f, 0.20f, 2.2f };   // ★Zを長く（Cylinderが向けばビームになる）
-			p.velocity_ = { 0.0f, 0.0f, 0.0f };            // 動かさず、その場に残像を置く
-			p.lifeTime_ = 0.08f;                            // 短命で密度を上げて“ビーム感”
-			p.color_ = { 1.0f, 1.0f, 1.0f, 1.0f };         // まず白（世界観色は後で調整OK）
+			p.transform_.scale_ = { 0.24f, 0.24f, 2.4f };   // 少し太く&長くして視認性UP
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+			p.lifeTime_ = 0.08f;
+
+			// ★色を分ける（白禁止）
+			if (groupName == "titleBeam_player") {
+				// プレイヤー：はっきりシアン〜青（冷色）
+				p.color_ = { 0.20f, 0.95f, 1.00f, 1.0f };
+			} else {
+				// ボス：はっきりマゼンタ〜赤紫（暖色寄り）
+				p.color_ = { 1.00f, 0.20f, 0.75f, 1.0f };
+			}
+
 		} else if (groupName == "titleBeamClash_core") {
-			// 衝突点の白い塊：一瞬強く光って膨らむ
-			p.transform_.scale_ = { 0.55f, 0.55f, 0.55f };
+			// 衝突点：両者と違う色（黄緑/電気っぽい）
+			p.transform_.scale_ = { 0.70f, 0.70f, 0.70f }; // ちょい大きくして“衝突点”を強調
 			p.velocity_ = { 0.0f, 0.0f, 0.0f };
 			p.lifeTime_ = 0.14f;
-			p.color_ = { 1.0f, 1.0f, 1.0f, 1.0f };
+			p.color_ = { 0.85f, 1.00f, 0.10f, 1.0f };
+
 		} else if (groupName == "titleBeamClash_rays") {
 			// バチバチ：短い線がランダム方向に飛ぶ
 			float spd = 18.0f + (MyMath::Rand01() * 24.0f);
@@ -2197,11 +2207,11 @@ namespace TKM {
 				});
 			p.velocity_ = dir * spd;
 
-			p.transform_.scale_ = { 0.12f, 0.12f, 1.6f }; // ★細長い火花
+			p.transform_.scale_ = { 0.14f, 0.14f, 1.8f };
 			p.lifeTime_ = 0.10f;
 
-			// 火花は少し白寄り（あとで色味は合わせる）
-			p.color_ = { 1.0f, 1.0f, 1.0f, 1.0f };
+			// ★衝突の火花も黄緑寄りで統一（ビームと別系統）
+			p.color_ = { 0.95f, 1.00f, 0.20f, 1.0f };
 
 			// ★CYLINDERを“飛ぶ方向”に向ける（簡易：Yaw/Pitch）
 			const float yaw = std::atan2f(dir.x, dir.z);
@@ -2229,8 +2239,6 @@ namespace TKM {
 			float base = std::uniform_real_distribution<float>(0.8f, 1.0f)(rng);
 			p.color_ = { base, base * 0.5f, base * 0.2f, 1.0f };
 		}
-
-		p.transform_.rotate_ = { 0,0,0 }; // 使ってなければ0で
 		return p;
 	}
 
