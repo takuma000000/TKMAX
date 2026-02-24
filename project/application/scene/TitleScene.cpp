@@ -68,6 +68,23 @@ void TitleScene::Initialize() {
 	pm->CreateParticleGroup("titleExplode_rays", "./resources/texture/gradationLine.png", TKM::ParticleManager::ParticleType::CYLINDER);
 	pm->CreateParticleGroup("titleExplode_debris", "./resources/texture/circle.png", TKM::ParticleManager::ParticleType::NORMAL);
 	pm->CreateParticleGroup("titleExplode_ring", "./resources/texture/gradationLine.png", TKM::ParticleManager::ParticleType::RING);
+	// --- タイトル ビーム用 ---
+	pm->CreateParticleGroup("titleBeam_player", "./resources/texture/gradationLine.png",
+		TKM::ParticleManager::ParticleType::CYLINDER);
+	pm->CreateParticleGroup("titleBeam_boss", "./resources/texture/gradationLine.png",
+		TKM::ParticleManager::ParticleType::CYLINDER);
+
+	// 衝突コア（白い光の塊）
+	pm->CreateParticleGroup("titleBeamClash_core", "./resources/texture/circle2.png",
+		TKM::ParticleManager::ParticleType::NORMAL);
+
+	// 放射スパーク（線っぽく）
+	pm->CreateParticleGroup("titleBeamClash_rays", "./resources/texture/gradationLine.png",
+		TKM::ParticleManager::ParticleType::CYLINDER);
+
+	// 衝撃波リング（リングはgradationLineの方が“波紋/衝撃波”っぽい）
+	pm->CreateParticleGroup("titleBeamClash_ring", "./resources/texture/gradationLine.png",
+		TKM::ParticleManager::ParticleType::RING);
 	//-----------------------------------------
 
 	sprite_ = std::make_unique<Sprite>();
@@ -564,6 +581,68 @@ float TitleScene::LookAtYaw_(const Vector3& from, const Vector3& to) const {
 	return std::atan2f(d.x, d.z); // ラジアン
 }
 
+void TitleScene::UpdateTitleBeamClash_(float dt) {
+	if (!titlePlayer_ || !titleBoss_) { return; }
+	if (!showUi_ || !titleMenu_ || !titleMenu_->IsVisible()) { return; }
+
+	auto* pm = TKM::ParticleManager::GetInstance();
+	if (!pm) { return; }
+
+	// ----------------------------
+	// ビーム開始位置（ざっくり：モデル中心＋オフセット）
+	// ※ ちゃんと“口/砲口”をやりたくなったら Socket 化
+	// ----------------------------
+	Vector3 p0 = titlePlayerPos_ + Vector3{ 0.0f, 1.2f, 0.0f };
+	Vector3 b0 = titleBossPos_ + Vector3{ 0.0f, 6.2f, 0.0f };
+
+	// 衝突点：0=プレイヤー側、1=ボス側（まずは0.5で中央）
+	float t = std::clamp(titleBeamT_, 0.0f, 1.0f);
+	Vector3 hit = {
+		p0.x + (b0.x - p0.x) * t,
+		p0.y + (b0.y - p0.y) * t,
+		p0.z + (b0.z - p0.z) * t
+	};
+
+	// ----------------------------
+	// 2本のビーム（粒を線上に並べて“線”っぽく見せる）
+	// ----------------------------
+	int seg = std::max(2, titleBeamSegments_);
+	int perSeg = std::max(1, titleBeamPerSeg_);
+
+	for (int i = 0; i < seg; ++i) {
+		float u = (float)i / (float)(seg - 1);
+		Vector3 p = {
+			p0.x + (hit.x - p0.x) * u,
+			p0.y + (hit.y - p0.y) * u,
+			p0.z + (hit.z - p0.z) * u
+		};
+		pm->Emit("titleBeam_player", p, perSeg);
+	}
+	for (int i = 0; i < seg; ++i) {
+		float u = (float)i / (float)(seg - 1);
+		Vector3 p = {
+			b0.x + (hit.x - b0.x) * u,
+			b0.y + (hit.y - b0.y) * u,
+			b0.z + (hit.z - b0.z) * u
+		};
+		pm->Emit("titleBeam_boss", p, perSeg);
+	}
+
+	// ----------------------------
+	// 衝突点の“バチバチ”
+	// 毎フレーム出すと濃すぎ＆重いので、レート制御
+	// ----------------------------
+	titleClashEmitAcc_ += dt;
+	const float kClashHz = 30.0f; // 1秒に何回出すか
+	const float kEmitStep = 1.0f / kClashHz;
+	while (titleClashEmitAcc_ >= kEmitStep) {
+		titleClashEmitAcc_ -= kEmitStep;
+		if (titleClashCore_ > 0) { pm->Emit("titleBeamClash_core", hit, titleClashCore_); }
+		if (titleClashRays_ > 0) { pm->Emit("titleBeamClash_rays", hit, titleClashRays_); }
+		if (titleClashRing_ > 0) { pm->Emit("titleBeamClash_ring", hit, titleClashRing_); }
+	}
+}
+
 void TitleScene::CreateShowdownActors_() {
 	// Player（GameScene同様にクラスを使う）
 	titlePlayer_ = std::make_unique<Player>();
@@ -640,6 +719,10 @@ void TitleScene::UpdateShowdownActors_(float dt) {
 
 	titleBoss_->Update(dt);
 	titleBoss_->SetPosition(titleBossPos_); // 保険
+	// ビーム打ち合い（Particle）
+	if (titleBeamActive_) {
+		UpdateTitleBeamClash_(dt);
+	}
 }
 
 void TitleScene::DrawShowdownActors_() {

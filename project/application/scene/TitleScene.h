@@ -206,4 +206,20 @@ private:
 	/// <param name="to">Bossの位置</param>
 	/// <returns>PlayerからBossへの向き（Yaw角）</returns>
 	float LookAtYaw_(const Vector3& from, const Vector3& to) const;
+	//======================================================================
+	// タイトル：ビーム撃ち合い
+	//======================================================================
+	bool  titleBeamActive_ = true;   // メニュー中にONにしたいならshowUi_と合わせて使う
+	float titleClashEmitAcc_ = 0.0f; // 衝突エフェクトの発生レート調整用
+	float titleBeamT_ = 0.5f;        // 衝突点（0=プレイヤー側, 1=ボス側）とりあえず0.5で中央
+	int   titleBeamSegments_ = 18;   // 線上に置く粒の数（増やすほど“線”になる）
+	int   titleBeamPerSeg_ = 1;      // 1セグメントに何粒置くか（重くなるので基本1）
+	int   titleClashCore_ = 8;       // 衝突点のコア粒
+	int   titleClashRays_ = 10;      // 衝突点のスパーク
+	int   titleClashRing_ = 1;       // リング頻度
+	/// <summary>
+	/// タイトルのビーム撃ち合いの衝突点を更新します。
+	/// </summary>
+	/// <param name="dt">デルタタイム</param>
+	void UpdateTitleBeamClash_(float dt);
 };

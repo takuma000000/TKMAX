@@ -87,7 +87,7 @@ namespace TKM {
 					float t = (*particleIterator).currentTime_ / (*particleIterator).lifeTime_;
 					t = std::clamp(t, 0.0f, 1.0f);
 
-					// ★広がり（リング・コア）
+					// 広がり（リング・コア）
 					if (g == "titleExplode_ring") {
 						float grow = 1.0f + 12.0f * kDeltaTime_;
 						(*particleIterator).transform_.scale_.x *= grow;
@@ -2142,6 +2142,78 @@ namespace TKM {
 			p.currentTime_ = 0.0f;
 
 			p.color_ = { 1.0f, 0.85f, 0.25f, 1.0f };
+		} else if (groupName == "titleBeam_player") {
+			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
+
+			std::uniform_real_distribution<float> off(-0.08f, 0.08f);
+			p.transform_.translate_ = center + Vector3{ off(rng), off(rng), off(rng) };
+
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+
+			float sc = frand(0.55f, 0.85f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.07f, 0.11f);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { 0.45f, 0.90f, 1.00f, 0.85f };
+
+		} else if (groupName == "titleBeam_boss") {
+			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
+
+			std::uniform_real_distribution<float> off(-0.08f, 0.08f);
+			p.transform_.translate_ = center + Vector3{ off(rng), off(rng), off(rng) };
+
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+
+			float sc = frand(0.55f, 0.85f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.07f, 0.11f);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { 1.00f, 0.50f, 0.95f, 0.85f };
+
+		} else if (groupName == "titleBeamClash_core") {
+			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
+
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+
+			float sc = frand(1.0f, 1.9f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.05f, 0.09f);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+		} else if (groupName == "titleBeamClash_rays") {
+			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
+
+			Vector3 dir = MyMath::Normalize(offset);
+			float spd = frand(4.0f, 14.0f);
+			p.velocity_ = dir * spd;
+
+			float sc = frand(0.30f, 0.70f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.12f, 0.22f);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { 1.0f, frand(0.75f, 1.0f), frand(0.25f, 0.55f), 1.0f };
+
+		} else if (groupName == "titleBeamClash_ring") {
+			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
+
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+
+			float sc = frand(0.25f, 0.45f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.10f, 0.18f);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { 1.0f, 0.92f, 0.35f, 0.85f };
 		} else { // 上記意外
 			// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 			std::uniform_real_distribution<float> velX(-0.15f, 0.15f);
