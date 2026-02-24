@@ -100,6 +100,18 @@ namespace TKM {
 						(*particleIterator).transform_.scale_.y *= grow;
 						(*particleIterator).transform_.scale_.z *= grow;
 					}
+					if (g == "titleBeamClash_ring") {
+						float grow = 1.0f + 22.0f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.x *= grow;
+						(*particleIterator).transform_.scale_.y *= grow;
+						(*particleIterator).transform_.scale_.z *= grow;
+					}
+					if (g == "titleBeamClash_core") {
+						float grow = 1.0f + 10.0f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.x *= grow;
+						(*particleIterator).transform_.scale_.y *= grow;
+						(*particleIterator).transform_.scale_.z *= grow;
+					}
 
 					// アルファカーブ（“パァン”を作る）
 					float a = 1.0f - t;
@@ -107,6 +119,27 @@ namespace TKM {
 					else if (g == "titleExplode_rays") { a = a * a; }             // 光線はキレ
 					else if (g == "titleExplode_ring") { a = std::pow(a, 1.2f); } // 少し残す
 					else if (g == "titleExplode_debris") { a = std::pow(a, 1.6f); }
+
+					if (g == "titleBeam_player" || g == "titleBeam_boss") {
+						// ビームは短命＆キレよく
+						a = a * a;
+						particleGroup->instancingData_[particleGroupIterator->second.kNumInstance_].color_.w = a;
+					}
+					if (g == "titleBeamClash_core") {
+						// コアは白飛び気味に素早く消える
+						a = a * a * a;
+						particleGroup->instancingData_[particleGroupIterator->second.kNumInstance_].color_.w = a;
+					}
+					if (g == "titleBeamClash_rays") {
+						// スパークは一瞬だけ残す
+						a = a * a;
+						particleGroup->instancingData_[particleGroupIterator->second.kNumInstance_].color_.w = a;
+					}
+					if (g == "titleBeamClash_ring") {
+						// リングは少し残して「衝撃波」を見せる
+						a = std::pow(a, 1.1f);
+						particleGroup->instancingData_[particleGroupIterator->second.kNumInstance_].color_.w = a;
+					}
 
 					++particleGroupIterator->second.kNumInstance_;//生きているParticleの数を1つカウントする
 				}
@@ -2142,78 +2175,45 @@ namespace TKM {
 			p.currentTime_ = 0.0f;
 
 			p.color_ = { 1.0f, 0.85f, 0.25f, 1.0f };
-		} else if (groupName == "titleBeam_player") {
-			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
-
-			std::uniform_real_distribution<float> off(-0.08f, 0.08f);
-			p.transform_.translate_ = center + Vector3{ off(rng), off(rng), off(rng) };
-
-			p.velocity_ = { 0.0f, 0.0f, 0.0f };
-
-			float sc = frand(0.55f, 0.85f);
-			p.transform_.scale_ = { sc, sc, sc };
-
-			p.lifeTime_ = frand(0.07f, 0.11f);
-			p.currentTime_ = 0.0f;
-
-			p.color_ = { 0.45f, 0.90f, 1.00f, 0.85f };
-
-		} else if (groupName == "titleBeam_boss") {
-			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
-
-			std::uniform_real_distribution<float> off(-0.08f, 0.08f);
-			p.transform_.translate_ = center + Vector3{ off(rng), off(rng), off(rng) };
-
-			p.velocity_ = { 0.0f, 0.0f, 0.0f };
-
-			float sc = frand(0.55f, 0.85f);
-			p.transform_.scale_ = { sc, sc, sc };
-
-			p.lifeTime_ = frand(0.07f, 0.11f);
-			p.currentTime_ = 0.0f;
-
-			p.color_ = { 1.00f, 0.50f, 0.95f, 0.85f };
-
+		} else if (groupName == "titleBeam_player" || groupName == "titleBeam_boss") {
+			// “線”を作る：短命・細長い・ほぼ動かない（出す位置を線上にばら撒く想定）
+			p.transform_.scale_ = { 0.20f, 0.20f, 2.2f };   // ★Zを長く（Cylinderが向けばビームになる）
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };            // 動かさず、その場に残像を置く
+			p.lifeTime_ = 0.08f;                            // 短命で密度を上げて“ビーム感”
+			p.color_ = { 1.0f, 1.0f, 1.0f, 1.0f };         // まず白（世界観色は後で調整OK）
 		} else if (groupName == "titleBeamClash_core") {
-			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
-
+			// 衝突点の白い塊：一瞬強く光って膨らむ
+			p.transform_.scale_ = { 0.55f, 0.55f, 0.55f };
 			p.velocity_ = { 0.0f, 0.0f, 0.0f };
-
-			float sc = frand(1.0f, 1.9f);
-			p.transform_.scale_ = { sc, sc, sc };
-
-			p.lifeTime_ = frand(0.05f, 0.09f);
-			p.currentTime_ = 0.0f;
-
+			p.lifeTime_ = 0.14f;
 			p.color_ = { 1.0f, 1.0f, 1.0f, 1.0f };
-
 		} else if (groupName == "titleBeamClash_rays") {
-			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
-
-			Vector3 dir = MyMath::Normalize(offset);
-			float spd = frand(4.0f, 14.0f);
+			// バチバチ：短い線がランダム方向に飛ぶ
+			float spd = 18.0f + (MyMath::Rand01() * 24.0f);
+			Vector3 dir = MyMath::SafeNormalize({
+				MyMath::Rand01() * 2.0f - 1.0f,
+				MyMath::Rand01() * 2.0f - 1.0f,
+				MyMath::Rand01() * 2.0f - 1.0f
+				});
 			p.velocity_ = dir * spd;
 
-			float sc = frand(0.30f, 0.70f);
-			p.transform_.scale_ = { sc, sc, sc };
+			p.transform_.scale_ = { 0.12f, 0.12f, 1.6f }; // ★細長い火花
+			p.lifeTime_ = 0.10f;
 
-			p.lifeTime_ = frand(0.12f, 0.22f);
-			p.currentTime_ = 0.0f;
+			// 火花は少し白寄り（あとで色味は合わせる）
+			p.color_ = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-			p.color_ = { 1.0f, frand(0.75f, 1.0f), frand(0.25f, 0.55f), 1.0f };
-
+			// ★CYLINDERを“飛ぶ方向”に向ける（簡易：Yaw/Pitch）
+			const float yaw = std::atan2f(dir.x, dir.z);
+			const float horiz = std::sqrt(dir.x * dir.x + dir.z * dir.z);
+			const float pitch = -std::atan2f(dir.y, (horiz < 0.0001f ? 0.0001f : horiz));
+			p.transform_.rotate_ = { pitch, yaw, 0.0f };
 		} else if (groupName == "titleBeamClash_ring") {
-			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
-
+			// 衝撃波：リングが広がる（Update側でgrowさせる）
+			p.transform_.scale_ = { 0.35f, 0.35f, 0.35f };
 			p.velocity_ = { 0.0f, 0.0f, 0.0f };
-
-			float sc = frand(0.25f, 0.45f);
-			p.transform_.scale_ = { sc, sc, sc };
-
-			p.lifeTime_ = frand(0.10f, 0.18f);
-			p.currentTime_ = 0.0f;
-
-			p.color_ = { 1.0f, 0.92f, 0.35f, 0.85f };
+			p.lifeTime_ = 0.18f;
+			p.color_ = { 1.0f, 1.0f, 1.0f, 1.0f };
 		} else { // 上記意外
 			// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 			std::uniform_real_distribution<float> velX(-0.15f, 0.15f);
