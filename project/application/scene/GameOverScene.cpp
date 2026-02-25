@@ -164,11 +164,10 @@ void GameOverScene::Update() {
 
 	// --- 墜落中の失速スピン（常時回転）---
 	if (tumbleActive_) {
-		const float dt = 1.0f / 60.0f; // あなたのシーンは固定フレーム刻みでOK
 		Vector3 r = player_->GetRotation();
-		r.x += (tumbleSpeed_.x + ((rand() % 100 - 50) / 5000.0f)) * dt;
-		r.y += tumbleSpeed_.y * dt;
-		r.z += tumbleSpeed_.z * dt;
+		r.x += (tumbleSpeed_.x + ((rand() % 100 - 50) / 5000.0f)) * dt_;
+		r.y += tumbleSpeed_.y * dt_;
+		r.z += tumbleSpeed_.z * dt_;
 		player_->SetRotation(r);
 	}
 
@@ -203,10 +202,9 @@ void GameOverScene::Update() {
 		Matrix4x4 R = MyMath::MakeRotateMatrix(r);
 		const Vector3 basePos = player_->GetPosition();
 
-		const float dt = 1.0f / 60.0f;
 		for (size_t i = 0; i < faultLocal_.size(); ++i) {
 			// クールダウン進行
-			faultCD_[i] = std::max(0.0f, faultCD_[i] - dt);
+			faultCD_[i] = std::max(0.0f, faultCD_[i] - dt_);
 			if (faultCD_[i] > 0.0f) continue;
 
 			// ローカル点を回転→ワールドへ
@@ -237,8 +235,7 @@ void GameOverScene::Update() {
 
 	// --- たまに：ド派手バースト（炎＋火花） ---
 	{
-		const float dt = 1.0f / 60.0f;
-		flameTimer_ += dt;
+		flameTimer_ += dt_;
 		if (flameTimer_ >= flameInterval_) {
 			flameTimer_ = 0.0f;
 			flameInterval_ = 0.35f + (rand() % 250) / 1000.0f; // 0.35〜0.60秒
