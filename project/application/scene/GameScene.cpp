@@ -76,12 +76,12 @@ void GameScene::Finalize() {
 }
 
 void GameScene::Update() {
-	float rawDt = 0.0f; // 生のデルタタイム（ポーズ中も進む）
-	float scaledDt = 0.0f; // スケール済みデルタタイム（ポーズ中は0）
+	float rawDeltaTime = 0.0f; // 前フレームからの経過時間（秒） - ゲーム全体の更新に使用（ポーズ中も動かす）
+	float scaledDeltaTime = 0.0f; // タイムスケール適用後の経過時間（秒） - ゲームプレイシステムの更新に使用（ポーズ中は動かさない）
 
-	BeginFrameUpdate(rawDt, scaledDt); // フレーム開始処理
+	BeginFrameUpdate(rawDeltaTime, scaledDeltaTime); // フレーム開始処理
 
-	if (flow_ && flow_->UpdateClear(rawDt, scaledDt, postFx_.get(), ui_.get(), bossManager_.get(), camera_.get(), player_.get())) { // クリアシーケンス更新
+	if (flow_ && flow_->UpdateClear(rawDeltaTime, scaledDeltaTime, postFx_.get(), ui_.get(), bossManager_.get(), camera_.get(), player_.get())) { // クリアシーケンス更新
 		return; // クリアシーケンス中は他の更新をスキップ
 	}
 
@@ -94,7 +94,7 @@ void GameScene::Update() {
 
 	// ──────────────── ポーズ更新（rawDtでUIだけ動かす） ───────────────
 	if (pause_) {
-		const auto cmd = pause_->Update(rawDt, allowPauseOpen); // ポーズメニュー更新
+		const auto cmd = pause_->Update(rawDeltaTime, allowPauseOpen); // ポーズメニュー更新
 		if (ui_) { // HUD透明度調整
 			const float hudAlpha = pause_->IsPaused() ? 0.25f : 1.0f; // ポーズ中は半透明に
 			ui_->SetHudAlpha(hudAlpha); // HUD透明度セット
@@ -116,7 +116,7 @@ void GameScene::Update() {
 			// アクティブカメラの更新
 			UpdateActiveCamera();
 			// ポーズ中はゲーム更新をスキップ
-			UpdateTransitionsAndSceneChange(rawDt);
+			UpdateTransitionsAndSceneChange(rawDeltaTime);
 			// デバッグキー＆リクエスト処理
 			HandleDebugKeysAndRequests();
 			// フレーム終了処理
@@ -125,17 +125,17 @@ void GameScene::Update() {
 		}
 	}
 
-	// ──────────────── ゲーム本体更新（scaledDtで動かす） ───────────────
+	// ──────────────── ゲーム本体更新（scaledDeltaTimeで動かす） ───────────────
 	// タイムスケールコントローラー更新
-	UpdateEnemyAndWaveLogic(scaledDt);
+	UpdateEnemyAndWaveLogic(scaledDeltaTime);
 	// デバッグ表示更新
 	ImGuiDebug();
 	// アクティブカメラの更新
 	UpdateActiveCamera();
 	// ゲームプレイシステムの更新
-	UpdateGameplaySystems(rawDt, scaledDt);
+	UpdateGameplaySystems(rawDeltaTime, scaledDeltaTime);
 	// シーン遷移＆タイトル戻り等の更新
-	UpdateTransitionsAndSceneChange(rawDt);
+	UpdateTransitionsAndSceneChange(rawDeltaTime);
 	// デバッグキー＆リクエスト処理
 	HandleDebugKeysAndRequests();
 	// フレーム終了処理
@@ -312,10 +312,10 @@ void GameScene::ImGuiDebug() {
 #endif
 }
 
-void GameScene::UpdateAirStreak(float dt) {
+void GameScene::UpdateAirStreak(float rawDeltaTime) {
 	if (!player_) { return; } // プレイヤーがいないなら何もしない
 	// プレイヤーの速度を取得
-	airStreakTimer_ += dt;
+	airStreakTimer_ += rawDeltaTime;
 	// どれくらいの密度で出すか（小さいほど密度↑）
 	const float emitInterval = 0.02f; // 0.02秒ごと ≒ 1秒あたり50個
 
@@ -379,15 +379,15 @@ void GameScene::UpdateAirStreak(float dt) {
 	}
 }
 
-void GameScene::BeginFrameUpdate(float& rawDt, float& scaledDt) {
+void GameScene::BeginFrameUpdate(float& outRawDeltaTime, float& outScaledDeltaTime) {
 	// 入力処理
 	Input::GetInstance()->Update();
 	// 毎フレームの最初に、前フレームのラインをクリア
 	LineRenderer::GetInstance()->BeginFrame();
 	// フレームタイム計測
-	rawDt = dt_; /// デフォルトデルタタイム（補間なし）
-	timeScale_.Update(rawDt); // タイムスケールコントローラーの更新
-	scaledDt = rawDt * timeScale_.GetScale(); /// スローデルタタイム
+	outRawDeltaTime = kFixedDeltaTime_; /// デフォルトデルタタイム（補間なし）
+	timeScale_.Update(outRawDeltaTime); // タイムスケールコントローラーの更新
+	outScaledDeltaTime = outRawDeltaTime * timeScale_.GetScale(); /// スローデルタタイム
 
 	// 描画コール・メモリの初期化
 	ResetDrawCallCount();
@@ -396,11 +396,11 @@ void GameScene::BeginFrameUpdate(float& rawDt, float& scaledDt) {
 
 void GameScene::UpdateFlow() {
 	if (flow_) { // ゲームフローの更新
-		flow_->Update(dt_, camera_.get(), enemiesInitialized_, requestInitEnemies_);
+		flow_->Update(kFixedDeltaTime_, camera_.get(), enemiesInitialized_, requestInitEnemies_);
 	}
 }
 
-void GameScene::UpdateEnemyAndWaveLogic(float scaledDt) {
+void GameScene::UpdateEnemyAndWaveLogic(float scaledDeltaTime) {
 	const bool isClear = (flow_ && flow_->IsInClear()); // クリア演出中かどうか
 	const bool locked = (flow_ && flow_->IsGameplayLocked()) || isClear; // ゲームプレイがロックされているかどうか
 
@@ -409,7 +409,7 @@ void GameScene::UpdateEnemyAndWaveLogic(float scaledDt) {
 
 		// 敵の更新（敵ロジックは EnemyManager に完全委譲）
 		if (enemyManager_) {
-			enemyManager_->Update(scaledDt);
+			enemyManager_->Update(scaledDeltaTime);
 		}
 
 		// 全てのWaveが終了していて、敵がいない → ボスへ進行 or クリア処理
@@ -441,7 +441,7 @@ void GameScene::UpdateEnemyAndWaveLogic(float scaledDt) {
 	}
 }
 
-void GameScene::UpdateGameplaySystems(float dt, float scaledDt) {
+void GameScene::UpdateGameplaySystems(float rawDeltaTime, float scaledDeltaTime) {
 	const bool isClear = (flow_ && flow_->IsInClear()); // クリア演出中かどうか
 	const bool locked = (flow_ && flow_->IsGameplayLocked()) || isClear; // ゲームプレイがロックされているかどうか
 
@@ -452,36 +452,36 @@ void GameScene::UpdateGameplaySystems(float dt, float scaledDt) {
 	// スカイボックスの回転更新
 	skybox_->UpdateRotation();
 	// プレイヤーの更新
-	player_->Update(scaledDt);
+	player_->Update(scaledDeltaTime);
 
 	if (ui_) {
-		ui_->Update(scaledDt, player_.get());
+		ui_->Update(scaledDeltaTime, player_.get());
 	}
 
 	// ボスマネージャの更新
 	if (bossManager_) {
-		bossManager_->Update(scaledDt);
+		bossManager_->Update(scaledDeltaTime);
 	}
 	// ポストエフェクトの更新
 	if (postFx_) {
-		postFx_->Update(scaledDt, bossManager_.get());
+		postFx_->Update(scaledDeltaTime, bossManager_.get());
 	}
 
 	// ライトの更新
 	directionalLight_->Update();
 
 	if (!isClear && !locked) {
-		UpdateAirStreak(dt);
+		UpdateAirStreak(rawDeltaTime);
 	}
 
 	// その他のオブジェクト・パーティクルの更新
-	ParticleManager::GetInstance()->Update(scaledDt);
+	ParticleManager::GetInstance()->Update(scaledDeltaTime);
 }
 
-void GameScene::UpdateTransitionsAndSceneChange(float dt) {
+void GameScene::UpdateTransitionsAndSceneChange(float rawDeltaTime) {
 	// 遷移は enemyManager_ の有無に依存させない（ここが原因になりやすい）
 	if (flow_) {
-		const auto req = flow_->UpdateTransitions(dt, player_.get());
+		const auto req = flow_->UpdateTransitions(rawDeltaTime, player_.get());
 
 		if (req == TKM::GameFlowController::TransitionRequest::ToTitle) { // タイトル戻りリクエスト
 			sceneManager_->SetNextScene(new TitleScene(dxCommon_, srvManager_)); // タイトルシーンをセット

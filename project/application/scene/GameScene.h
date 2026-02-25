@@ -135,7 +135,7 @@ private:
 	// 時間制御
 	//======================================================================
 	TKM::TimeScaleController timeScale_; // タイムスケール制御
-	static constexpr float dt_ = 0.016f; // 固定デルタタイム（仮）
+	static constexpr float kFixedDeltaTime_ = 0.016f; // 固定デルタタイム（秒） - タイムスケールの影響を受けない更新に使用
 	//======================================================================
 	// 演出 / 画面制御（シーン内サブコントローラ）
 	//======================================================================
@@ -151,14 +151,14 @@ private:
 	/// <summary>
 	/// 風エフェクトを更新します。
 	/// </summary>
-	/// <param name="dt">前フレームからの経過時間（秒）</param>
-	void UpdateAirStreak(float dt); // 風エフェクト更新
+	/// <param name="rawDeltaTime">前フレームからの経過時間（秒）</param>
+	void UpdateAirStreak(float rawDeltaTime); // 風エフェクト更新
 	/// <summary>
 	/// フレーム更新の開始処理を行います。
 	/// </summary>
-	/// <param name="rawDt">生のデルタタイム（補間・スケール未適用、秒）</param>
-	/// <param name="scaledDt">タイムスケール適用後のデルタタイム（参照で更新される、秒）</param>
-	void BeginFrameUpdate(float& rawDt, float& scaledDt);
+	/// <param name="outRawDeltaTime">生のデルタタイム（補間・スケール未適用、秒）</param>
+	/// <param name="outScaledDeltaTime">タイムスケール適用後のデルタタイム（参照で更新される、秒）</param>
+	void BeginFrameUpdate(float& outRawDeltaTime, float& outScaledDeltaTime);
 	/// <summary>
 	/// ゲームフローの更新処理を行います。
 	/// </summary>
@@ -166,19 +166,19 @@ private:
 	/// <summary>
 	/// 敵とウェーブのロジック更新を行います。
 	/// </summary>
-	/// <param name="scaledDt">タイムスケール適用後のデルタタイム（秒）</param>
-	void UpdateEnemyAndWaveLogic(float scaledDt);
+	/// <param name="scaledDeltaTime">タイムスケール適用後のデルタタイム（秒）</param>
+	void UpdateEnemyAndWaveLogic(float scaledDeltaTime);
 	/// <summary>
 	/// ゲームプレイシステムの更新処理を行います。
 	/// </summary>
-	/// <param name="dt">生のデルタタイム（タイムスケール未適用、秒）</param>
-	/// <param name="scaledDt">タイムスケール適用後のデルタタイム（秒）</param>
-	void UpdateGameplaySystems(float dt, float scaledDt);
+	/// <param name="rawDeltaTime">生のデルタタイム（タイムスケール未適用、秒）</param>
+	/// <param name="scaledDeltaTime">タイムスケール適用後のデルタタイム（秒）</param>
+	void UpdateGameplaySystems(float rawDeltaTime, float scaledDeltaTime);
 	/// <summary>
 	/// トランジションとシーンチェンジの更新処理を行います。
 	/// </summary>
-	/// <param name="dt">前フレームからの経過時間（秒）</param>
-	void UpdateTransitionsAndSceneChange(float dt);
+	/// <param name="rawDeltaTime">前フレームからの経過時間（秒）</param>
+	void UpdateTransitionsAndSceneChange(float rawDeltaTime);
 	/// <summary>
 	/// デバッグキーとリクエストの処理を行います。
 	/// </summary>
