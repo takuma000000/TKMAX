@@ -222,9 +222,9 @@ void TitleScene::Update() {
 		// ② メニューが出てない時：A待ち（＋2秒で自動発火）
 		// -------------------------
 		{
-			seqTimer_ += dt_; // ★ Idle中の経過時間
+			seqTimer_ += dt_; // Idle中の経過時間
 
-			const bool autoGo = (seqTimer_ >= 2.0f);
+			const bool autoGo = (seqTimer_ >= 1.4f);
 
 			if (autoGo) {
 				showUi_ = false;
