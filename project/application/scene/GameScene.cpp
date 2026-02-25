@@ -57,9 +57,7 @@ void GameScene::Initialize() {
 	/// ──────────────── ゲームフローの初期化 ───────────────
 	clearSeq_ = std::make_unique<TKM::ClearSequenceController>();
 	clearSeq_->Initialize(camera_.get(), player_.get(), bossManager_.get(), flow_.get(), dxCommon_, skybox_.get(), fireworkController_.get());
-	if (flow_) {
-		flow_->BindClearSequence(clearSeq_.get()); // ゲームフローにクリアシーケンスをバインド
-	}
+	flow_->BindClearSequence(clearSeq_.get()); // ゲームフローにクリアシーケンスをバインド
 }
 
 void GameScene::Finalize() {
@@ -112,22 +110,14 @@ void GameScene::Draw3D() {
 
 	Object3dCommon::GetInstance()->DrawSetCommon();
 	player_->Draw(dxCommon_); // プレイヤー描画
-
-	if (enemyManager_) {
-		enemyManager_->Draw(dxCommon_); // 敵描画
-	}
-
+	enemyManager_->Draw(dxCommon_); // 敵描画
 	const bool isClear = (flow_ && flow_->IsInClear()); // クリアシーケンス中はボスを描画しない（撃破後の演出に専念させるため）
 	if (!isClear) {
-		if (bossManager_) {
-			bossManager_->Draw(dxCommon_); // ボス描画
-		}
+		bossManager_->Draw(dxCommon_); // ボス描画
 	}
 
 	TKM::Camera* activeCamera = (useDebugCamera_ && debugCamera_) ? (TKM::Camera*)debugCamera_.get() : camera_.get(); // 今フレームのアクティブカメラを取得
-	if (postFx_) {
-		postFx_->DrawVolumes(activeCamera); // ポストエフェクトのボリューム描画（デバッグ用）
-	}
+	postFx_->DrawVolumes(activeCamera); // ポストエフェクトのボリューム描画（デバッグ用）
 
 	ParticleManager::GetInstance()->Draw();
 
@@ -139,10 +129,10 @@ void GameScene::Draw3D() {
 
 void GameScene::DrawSprite() {
 	TKM::SpriteCommon::GetInstance()->DrawSetCommon();
-	if (flow_) { flow_->Draw(); } // ゲームフローの描画（イントロシーケンス等）
-	if (ui_) { ui_->Draw(); } // HUD描画
-	if (pause_) { pause_->Draw(); } // ポーズメニュー描画
-	if (bossManager_) { bossManager_->DrawUI(); } // ボスマネージャのUI描画（HPゲージ等）
+	flow_->Draw(); // ゲームフローの描画（イントロシーケンス等）
+	ui_->Draw(); // HUD描画
+	pause_->Draw(); // ポーズメニュー描画
+	bossManager_->DrawUI(); // ボスマネージャのUI描画（HPゲージ等）
 }
 
 
@@ -164,25 +154,13 @@ TKM::Camera* GameScene::UpdateActiveCamera() {
 	}
 
 	// ここで「今フレームのカメラ」を全部に渡す
-	if (player_) {
-		player_->SetCamera(activeCamera);
-	}
-	if (skybox_) {
-		skybox_->SetCamera(activeCamera); // スカイボックス適用
-	}
-	if (enemyManager_) {
-		enemyManager_->SetCamera(activeCamera); // 敵マネージャ適用
-	}
-	if (bossManager_) {
-		bossManager_->SetCamera(activeCamera); // ボスマネージャ適用
-	}
-
+	player_->SetCamera(activeCamera);
+	skybox_->SetCamera(activeCamera); // スカイボックス適用
+	enemyManager_->SetCamera(activeCamera); // 敵マネージャ適用
+	bossManager_->SetCamera(activeCamera); // ボスマネージャ適用
 	// パーティクルマネージャー適用
 	ParticleManager::GetInstance()->SetCamera(activeCamera);
-
-	if (postFx_) { // ポストエフェクト適用
-		postFx_->OnCameraUpdated(activeCamera); // カメラ更新通知
-	}
+	postFx_->OnCameraUpdated(activeCamera); // カメラ更新通知
 
 	return activeCamera; // 呼び出し元にも返す
 }
@@ -358,9 +336,7 @@ void GameScene::BeginFrameUpdate(float& outRawDeltaTime, float& outScaledDeltaTi
 }
 
 void GameScene::UpdateFlow() {
-	if (flow_) { // ゲームフローの更新
-		flow_->Update(kFixedDeltaTime_, camera_.get(), enemiesInitialized_, requestInitEnemies_);
-	}
+	flow_->Update(kFixedDeltaTime_, camera_.get(), enemiesInitialized_, requestInitEnemies_);
 }
 
 void GameScene::UpdateEnemyAndWaveLogic(float scaledDeltaTime) {
@@ -371,12 +347,11 @@ void GameScene::UpdateEnemyAndWaveLogic(float scaledDeltaTime) {
 	if (!locked && enemiesInitialized_) {
 
 		// 敵の更新（敵ロジックは EnemyManager に完全委譲）
-		if (enemyManager_) {
-			enemyManager_->Update(scaledDeltaTime);
-		}
+
+		enemyManager_->Update(scaledDeltaTime);
 
 		// 全てのWaveが終了していて、敵がいない → ボスへ進行 or クリア処理
-		if (enemyManager_ && enemyManager_->IsAllWavesCleared()) {
+		if (enemyManager_->IsAllWavesCleared()) {
 			if (bossManager_) {
 				// まだボス戦始まっていなければ開始
 				if (!bossManager_->IsBattleActive() && !bossManager_->IsBossDead()) {
@@ -385,9 +360,7 @@ void GameScene::UpdateEnemyAndWaveLogic(float scaledDeltaTime) {
 					// ボス撃破 → クリア演出へ
 					if (bossManager_->IsBossDead()) {
 						if (!isClear) { // まだクリア演出始まっていなければ開始
-							if (flow_) { // ゲームフローコントローラー経由でクリアシーケンス開始
-								flow_->RequestStartClear(); // クリアシーケンス開始リクエスト
-							}
+							flow_->RequestStartClear(); // クリアシーケンス開始リクエスト
 							return;
 						}
 					}
@@ -408,18 +381,14 @@ void GameScene::UpdateGameplaySystems(float rawDeltaTime, float scaledDeltaTime)
 	const bool isClear = (flow_ && flow_->IsInClear()); // クリア演出中かどうか
 	const bool locked = (flow_ && flow_->IsGameplayLocked()) || isClear; // ゲームプレイがロックされているかどうか
 
-	if (!enemyManager_) {
-		return;
-	}
-
 	// スカイボックスの回転更新
 	skybox_->UpdateRotation();
 	// プレイヤーの更新
 	player_->Update(scaledDeltaTime);
 
-	if (ui_) {
-		ui_->Update(scaledDeltaTime, player_.get());
-	}
+
+	ui_->Update(scaledDeltaTime, player_.get());
+
 
 	// ボスマネージャの更新
 	if (bossManager_) {
@@ -443,31 +412,25 @@ void GameScene::UpdateGameplaySystems(float rawDeltaTime, float scaledDeltaTime)
 
 void GameScene::UpdateTransitionsAndSceneChange(float rawDeltaTime) {
 	// 遷移は enemyManager_ の有無に依存させない（ここが原因になりやすい）
-	if (flow_) {
-		const auto req = flow_->UpdateTransitions(rawDeltaTime, player_.get());
+	const auto req = flow_->UpdateTransitions(rawDeltaTime, player_.get());
 
-		if (req == TKM::GameFlowController::TransitionRequest::ToTitle) { // タイトル戻りリクエスト
-			sceneManager_->SetNextScene(new TitleScene(dxCommon_, srvManager_)); // タイトルシーンをセット
-			return;
-		}
+	if (req == TKM::GameFlowController::TransitionRequest::ToTitle) { // タイトル戻りリクエスト
+		sceneManager_->SetNextScene(new TitleScene(dxCommon_, srvManager_)); // タイトルシーンをセット
+		return;
+	}
 
-		if (req == TKM::GameFlowController::TransitionRequest::ToGameOver) { // ゲームオーバーリクエスト
-			sceneManager_->SetNextScene(new GameOverScene(dxCommon_, srvManager_)); // ゲームオーバーシーンをセット
-			return;
-		}
+	if (req == TKM::GameFlowController::TransitionRequest::ToGameOver) { // ゲームオーバーリクエスト
+		sceneManager_->SetNextScene(new GameOverScene(dxCommon_, srvManager_)); // ゲームオーバーシーンをセット
+		return;
+	}
 
-		if (req == TKM::GameFlowController::TransitionRequest::ToGameClear) { // ゲームクリアリクエスト
-			sceneManager_->SetNextScene(new GameClearScene(dxCommon_, srvManager_)); // ゲームクリアシーンをセット
-			return;
-		}
+	if (req == TKM::GameFlowController::TransitionRequest::ToGameClear) { // ゲームクリアリクエスト
+		sceneManager_->SetNextScene(new GameClearScene(dxCommon_, srvManager_)); // ゲームクリアシーンをセット
+		return;
 	}
 }
 
 void GameScene::HandleDebugKeysAndRequests() {
-	if (!enemyManager_) {
-		return; // 敵マネージャがないなら何もしない
-	}
-
 	// ─── キーボードのYキーでプレイヤーのHPを0にする（デバッグ用）───
 	if (Input::GetInstance()->TriggerKey(DIK_Y)) {
 		if (player_) player_->SetHP(0);
@@ -482,10 +445,6 @@ void GameScene::HandleDebugKeysAndRequests() {
 }
 
 void GameScene::EndFrameUpdate() {
-	if (!enemyManager_) {
-		return; // 敵マネージャがないなら何もしない
-	}
-
 	// パフォーマンス情報・デバッグUI
 	UpdatePerformanceInfo();
 }
@@ -497,16 +456,12 @@ bool GameScene::TryUpdatePauseAndMaybeEarlyReturn_(float rawDeltaTime, bool allo
 	const auto cmd = pause_->Update(rawDeltaTime, allowPauseOpen);
 
 	// HUD透明度調整
-	if (ui_) {
-		const float hudAlpha = pause_->IsPaused() ? 0.25f : 1.0f;
-		ui_->SetHudAlpha(hudAlpha);
-	}
+	const float hudAlpha = pause_->IsPaused() ? 0.25f : 1.0f;
+	ui_->SetHudAlpha(hudAlpha);
 
 	// ポーズメニューのコマンド処理
 	if (cmd == TKM::PauseMenuController::Command::ReturnToTitle) {
-		if (flow_) {
-			flow_->RequestToTitleByIris(); // いつものアイリスで戻す
-		}
+		flow_->RequestToTitleByIris(); // いつものアイリスで戻す
 	} else if (cmd == TKM::PauseMenuController::Command::Restart) {
 		sceneManager_->SetNextScene(new GameScene(dxCommon_, srvManager_));
 		return true; // シーン差し替え要求（このフレームは終了）
