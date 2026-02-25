@@ -9,21 +9,6 @@
 //=============================================================
 namespace TKM {
 	class SceneManager {
-	private:
-
-		//今のシーン( 実行中 )
-		TKM::BaseScene* scene_ = nullptr;
-
-		//次のシーン( 次フレームから実行 )
-		TKM::BaseScene* nextScene_ = nullptr;
-
-		TKM::DirectXCommon* dxCommon_ = nullptr;
-
-		//シーンファクトリー
-		TKM::AbstractSceneFactory* sceneFactory_ = nullptr;
-
-		bool quitRequested_ = false; // アプリ終了要求フラグ
-
 	public://メンバ関数
 		/// <summary>
 		/// </span class="code-inline">SceneManager</span>のコンストラクタ
@@ -72,5 +57,20 @@ namespace TKM {
 			nextScene_ = nextScene;
 		}
 		// ==============================================
+
+	private:
+
+		//今のシーン( 実行中 )
+		TKM::BaseScene* scene_ = nullptr;
+
+		//次のシーン( 次フレームから実行 )
+		TKM::BaseScene* nextScene_ = nullptr;
+
+		TKM::DirectXCommon* dxCommon_ = nullptr;
+
+		//シーンファクトリー
+		TKM::AbstractSceneFactory* sceneFactory_ = nullptr;
+
+		bool quitRequested_ = false; // アプリ終了要求フラグ
 	};
 }
