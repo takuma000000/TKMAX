@@ -7,6 +7,11 @@
 #endif
 
 namespace TKM {
+
+	//=============================================================
+	// VignettingEffectクラス
+	// 画面の周囲を暗くするビネットエフェクトの管理を行うクラス。
+	//=============================================================
 	class VignettingEffect : public TKM::BaseEffect {
 	public:
 		VignettingEffect() = default;

@@ -2,6 +2,11 @@
 #include "ParticleManager.h"
 
 namespace TKM {
+
+	//=============================================
+	// ParticleGroupsCatalogクラス
+	// ゲームシーンで使用するパーティクルグループの登録を行うクラス。
+	//=============================================
 	class ParticleGroupsCatalog {
 	public:
 

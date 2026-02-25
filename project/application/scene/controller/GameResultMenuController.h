@@ -8,6 +8,10 @@
 #include "Input.h"
 #include "MyMath.h"
 
+//=============================================================
+// GameResultMenuControllerクラス
+// ゲーム結果メニューの管理を行うクラス。
+//=============================================================
 class GameResultMenuController {
 public:
 	enum class Command {

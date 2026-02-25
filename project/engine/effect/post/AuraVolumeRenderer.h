@@ -7,6 +7,11 @@ namespace TKM {
 }
 
 namespace TKM {
+
+	//=============================================================
+	// AuraVolumeRendererクラス
+	// オーラボリュームの描画を行うクラス。
+	//=============================================================
 	class AuraVolumeRenderer {
 	public:
 		/// <summary>

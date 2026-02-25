@@ -7,6 +7,11 @@
 #include "WindowsAPI.h"
 
 namespace TKM {
+
+	//=============================================================
+	// FireworkControllerクラス
+	// 花火の生成を制御するクラス。
+	//=============================================================
 	class FireworkController {
 	public:
 		/// <summary>

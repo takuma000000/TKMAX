@@ -4,6 +4,11 @@
 #include <Windows.h>
 
 namespace TKM {
+
+	//=============================================================
+	// DebugCameraクラス
+	// デバッグ用カメラの管理を行うクラス。
+	//=============================================================
 	class DebugCamera : public TKM::Camera {
 	public:
 		DebugCamera() = default;

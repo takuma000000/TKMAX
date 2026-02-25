@@ -3,6 +3,11 @@
 #include "MyMath.h"
 
 namespace TKM {
+
+	//=============================================================
+	// FogEffectクラス
+	// 霧エフェクトの管理を行うクラス。
+	//=============================================================
 	class FogEffect : public TKM::BaseEffect {
 	public:
 		/// <summary>

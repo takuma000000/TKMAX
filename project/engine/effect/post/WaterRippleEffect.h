@@ -3,6 +3,11 @@
 #include "MyMath.h"
 
 namespace TKM {
+
+	//=============================================================
+	// WaterRippleEffectクラス
+	// 水面の波紋エフェクトの管理を行うクラス。
+	//=============================================================
 	class WaterRippleEffect : public TKM::BaseEffect {
 	public:
 		struct RippleDesc {

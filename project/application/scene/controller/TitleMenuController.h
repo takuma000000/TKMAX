@@ -11,6 +11,10 @@
 class DirectXCommon;
 class BaseScene;
 
+//=============================================================
+// TitleMenuControllerクラス
+// タイトルメニューの管理を行うクラス。
+//=============================================================
 class TitleMenuController {
 public:
 	enum class Command {

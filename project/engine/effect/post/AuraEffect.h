@@ -8,6 +8,11 @@ namespace TKM {
 }
 
 namespace TKM {
+
+	//=============================================================
+	// AuraEffectクラス
+	// オーラエフェクトの管理を行うクラス。
+	//=============================================================
 	class AuraEffect : public BaseEffect {
 	public:
 		/// <summary>

@@ -5,6 +5,10 @@
 #include "MyMath.h"
 #include "Enemy.h"
 
+//=============================================================
+// EnemyWaveConfigクラス
+// 敵の Wave 出現パターンや数値設定を管理するクラス。
+//=============================================================
 class EnemyWaveConfig {
 public:
 	enum class Wave2Pattern {

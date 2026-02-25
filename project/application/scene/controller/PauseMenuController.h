@@ -12,6 +12,10 @@ namespace TKM {
 	class DirectXCommon;
 	class BaseScene;
 
+	//=============================================================
+	// PauseMenuControllerクラス
+	// ポーズメニューの管理を行うクラス。
+	//=============================================================
 	class PauseMenuController {
 	public:
 		enum class Command {

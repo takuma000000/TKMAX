@@ -10,6 +10,10 @@
 #include "MyMath.h"
 #include "reticle/Reticle.h"
 
+//==================================================
+// MidBossCoreクラス
+// 中ボスのコア部分を管理するクラス。
+//==================================================
 class MidBossCore {
 public:
 	MidBossCore() = default;

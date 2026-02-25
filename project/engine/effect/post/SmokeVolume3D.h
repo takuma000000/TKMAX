@@ -5,6 +5,10 @@
 namespace TKM {
 	class DirectXCommon;
 
+	//=============================================================
+	// SmokeVolume3Dクラス
+	// 3D空間に存在する煙の管理を行うクラス。
+	//=============================================================
 	class SmokeVolume3D {
 	public:
 		struct Desc {
