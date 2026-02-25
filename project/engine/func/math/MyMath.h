@@ -117,4 +117,7 @@ public:
 		const Vector3& p2,
 		const Vector3& p3,
 		float t);
+
+	// クランプ（0.0～1.0）
+	static float Clamp01(float a);
 };

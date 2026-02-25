@@ -6,6 +6,7 @@
 #include <Windows.h>
 #include <cmath>
 #include "AudioManager.h"
+#include "MyMath.h"
 
 #ifdef USE_IMGUI
 #include "imgui.h"
@@ -49,6 +50,7 @@ void TitleScene::Initialize() {
 	TextureManager::GetInstance()->LoadTexture("./resources/texture/title_kuraran.dds");
 	TextureManager::GetInstance()->LoadTexture("./resources/texture/start_title.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/texture/end_title.png");
+	TextureManager::GetInstance()->LoadTexture("./resources/texture/A_title.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/texture/rostock_laage_airport_4k.dds");
 	//--------------------------------------------
 	// ------------ モデル読み込み --------------
@@ -92,6 +94,22 @@ void TitleScene::Initialize() {
 	// 画面中央に表示
 	sprite_->SetPosition({ 0.0f,0.0f });
 	sprite_->SetSize({ 1.0f, 1.0f });
+
+	// ------------ Aボタン案内（A_title.png） -----------
+	aTitle_ = std::make_unique<Sprite>();
+	aTitle_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, "./resources/texture/A_title.png");
+	// UIControllerと同じ方式で「元画像サイズを取得して手動管理」
+	aTitle_->SetAutoAdjustTextureSize(false);
+	{
+		const auto& m = TextureManager::GetInstance()->GetMetadata("./resources/texture/A_title.png");
+		aTitleTexSize_ = { (float)m.width, (float)m.height };
+		aTitle_->SetTextureLeftTop({ 0.0f, 0.0f });
+		aTitle_->SetTextureSize(aTitleTexSize_);
+	}
+	aTitle_->SetAnchorPoint({ 0.5f, 0.5f }); // 中央基準
+	aTitle_->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f }); // 最初は不透明で表示
+	aTitleBlinkT_ = 0.0f; // 点滅タイマー
+	ApplyATitleParams_();
 
 	dirLight_ = std::make_unique<TKM::DirectionalLight>();
 	dirLight_->Initialize({ 1,1,1,1 }, { 0.0f, -1.0f, 0.0f }, 1.0f);
@@ -173,6 +191,38 @@ void TitleScene::Update() {
 	dirLight_->Update(); // 平行光源更新
 	camera_->Update(); // カメラ更新
 	sprite_->Update(); // タイトル画像更新
+	if (aTitle_) { aTitle_->Update(); } // Aボタン案内更新
+	// ------------------------------------------------
+	// A案内：フェード点滅（A待ちの時だけ）
+	// ------------------------------------------------
+	{
+		const bool aWait = (aTitle_ && aTitleVisible_ && !showUi_ && flow_ == Flow::Idle);
+
+		if (aWait && aTitleBlink_) {
+			aTitleBlinkT_ += dt_;
+
+			// 0..1 を往復させる（sinで滑らか）
+			const float pi = 3.14159265f;
+			const float w = 2.0f * pi * aTitleBlinkHz_;
+
+			// sin: -1..1 → 0..1
+			float s = 0.5f + 0.5f * std::sinf(aTitleBlinkT_ * w);
+
+			// min..max にマップ（入れ替わってても動くように保険）
+			float amin = aTitleAlphaMin_;
+			float amax = aTitleAlphaMax_;
+			if (amin > amax) { std::swap(amin, amax); }
+
+			float a = amin + (amax - amin) * s;
+			a = MyMath::Clamp01(a);
+
+			aTitle_->SetColor({ 1.0f, 1.0f, 1.0f, a });
+		} else if (aTitle_) {
+			// A待ちじゃない時は “普通” に戻す
+			aTitle_->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
+			aTitleBlinkT_ = 0.0f; // 次回入った時に気持ちよく始まる
+		}
+	}
 
 	if (rippleEffect_) {
 		rippleEffect_->Update(dt_);
@@ -195,9 +245,16 @@ void TitleScene::Update() {
 	// ------------------------------------------------
 	switch (flow_) {
 	case Flow::IntroIrisOpen:
-		// 開幕アイリスが終わったらIdleへ
+		// 開幕アイリスが終わったら「自動で敵消滅演出」へ（A押し不要）
 		if (!irisOpening_) {
-			flow_ = Flow::Idle;
+			showUi_ = false;
+			if (titleMenu_) { titleMenu_->SetVisible(false); }
+
+			showMenuAfterVanish_ = true; // 消滅後にメニューを出す（従来のA押しと同じルート）
+			ScheduleVanish_();
+			flow_ = Flow::Vanishing;
+			vanishTimer_ = 0.0f;
+			break;
 		}
 
 		for (auto& u : titleEnemies_) {
@@ -437,6 +494,30 @@ void TitleScene::Update() {
 		ImGui::Text("波紋タイマー       : %.2f 秒", rippleTimer_);
 	}
 
+	// =========================================================
+	// ④ A案内（A_title.png）
+	// =========================================================
+	if (ImGui::CollapsingHeader("A案内（A_title）", ImGuiTreeNodeFlags_DefaultOpen)) {
+
+		bool changed = false;
+
+		changed |= ImGui::Checkbox("表示する", &aTitleVisible_);
+		changed |= ImGui::DragFloat2("位置（px）", &aTitlePos_.x, 1.0f);
+		changed |= ImGui::DragFloat("サイズ倍率", &aTitleScale_, 0.01f, 0.1f, 5.0f);
+
+		if (ImGui::Button("中央下にリセット")) {
+			aTitlePos_ = { 1280.0f * 0.5f, 720.0f - 90.0f };
+			aTitleScale_ = 1.0f;
+			changed = true;
+		}
+
+		if (changed) {
+			ApplyATitleParams_();
+		}
+
+		ImGui::Separator();
+	}
+
 	ImGui::End();
 
 #endif
@@ -473,6 +554,10 @@ void TitleScene::DrawSprite() {
 	}
 	if (iris_ && (irisOpening_ || irisClosing_)) {
 		iris_->Draw();
+	}
+	// A待ちの時だけ「A案内」を出す
+	if (aTitle_ && aTitleVisible_ && !showUi_ && flow_ == Flow::Idle) {
+		aTitle_->Draw();
 	}
 }
 
@@ -729,4 +814,16 @@ void TitleScene::DrawShowdownActors_() {
 	if (!titlePlayer_ || !titleBoss_) { return; }
 	titlePlayer_->Draw(dxCommon_);
 	titleBoss_->Draw(dxCommon_);
+}
+
+void TitleScene::ApplyATitleParams_() {
+	if (!aTitle_) { return; }
+
+	Vector2 drawSize{
+		aTitleTexSize_.x * aTitleScale_,
+		aTitleTexSize_.y * aTitleScale_
+	};
+
+	aTitle_->SetSize(drawSize);
+	aTitle_->SetPosition(aTitlePos_);
 }

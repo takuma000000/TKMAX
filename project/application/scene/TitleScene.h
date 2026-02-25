@@ -222,4 +222,22 @@ private:
 	/// </summary>
 	/// <param name="dt">デルタタイム</param>
 	void UpdateTitleBeamClash_(float dt);
+	//======================================================================
+	// Aボタン案内（A_title.png）
+	//======================================================================
+	std::unique_ptr<TKM::Sprite> aTitle_ = nullptr; // 「A」案内アイコン
+	Vector2 aTitlePos_ = { 1280.0f * 0.5f, 720.0f - 90.0f }; // 画面中央下（中心座標）
+	float aTitleScale_ = 0.16f; // サイズ倍率
+	Vector2 aTitleTexSize_ = { 0.0f, 0.0f }; // テクスチャ元サイズ
+	bool aTitleVisible_ = true; // 表示ON/OFF（ImGui用）
+	/// <summary>
+	/// 「A」案内アイコンのパラメータを適用します（位置・サイズ・透明度など）。ImGuiでaTitleVisible_をON/OFFするための関数。
+	/// </summary>
+	void ApplyATitleParams_();
+	// A案内：フェード点滅
+	float aTitleBlinkT_ = 0.0f;   // 経過時間
+	float aTitleBlinkHz_ = 1.2f;  // 1秒あたりの往復回数（好みで）
+	float aTitleAlphaMin_ = 0.25f; // 透明度の最小値（0.0fで完全に消える、1.0fで常に表示）
+	float aTitleAlphaMax_ = 1.0f; // 透明度の最大値
+	bool  aTitleBlink_ = true; // 点滅ON/OFF（ImGui用）
 };
