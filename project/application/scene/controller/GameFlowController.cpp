@@ -18,16 +18,16 @@ namespace TKM {
 		playerDeathElapsed_ = 0.0f;
 	}
 
-	void GameFlowController::Update(float dt, Camera* camera, bool enemiesInitialized, bool& outRequestInitEnemies) {
+	void GameFlowController::Update(float rawDeltaTime, Camera* camera, bool enemiesInitialized, bool& outRequestInitEnemies) {
 		if (intro_) {
-			intro_->Update(kFixedDt_, camera, enemiesInitialized, outRequestInitEnemies);
+			intro_->Update(kFixedDeltaTime_, camera, enemiesInitialized, outRequestInitEnemies);
 			gameplayLocked_ = intro_->IsGameplayLocked();
 		} else {
 			gameplayLocked_ = false;
 		}
 	}
 
-	GameFlowController::TransitionRequest GameFlowController::UpdateTransitions(float dt, Player* player) {
+	GameFlowController::TransitionRequest GameFlowController::UpdateTransitions(float rawDeltaTime, Player* player) {
 		// ─── 保留中の遷移要求があれば優先して返す ───
 		if (pendingRequest_ != TransitionRequest::None) { // 保留中の遷移要求あり
 			const auto req = pendingRequest_; // 退避
@@ -41,7 +41,7 @@ namespace TKM {
 				playerDeathStarted_ = true; // フラグ立て
 				playerDeathElapsed_ = 0.0f; // 経過時間リセット
 			} else {
-				playerDeathElapsed_ += kFixedDt_; // 経過時間加算
+				playerDeathElapsed_ += kFixedDeltaTime_; // 経過時間加算
 
 				if (playerDeathElapsed_ >= 4.0f && !irisClosing_) { // 4秒経過したらアイリス閉じ開始
 					irisClosing_ = true; // アイリス閉じ開始
@@ -70,7 +70,7 @@ namespace TKM {
 
 		// ─── アイリス閉じ進行 ───
 		if (irisClosing_) {
-			UpdateIrisScale(intro_ ? intro_->GetIrisSprite() : nullptr, irisCloseTween_, kFixedDt_); // アイリススケール更新
+			UpdateIrisScale(intro_ ? intro_->GetIrisSprite() : nullptr, irisCloseTween_, kFixedDeltaTime_); // アイリススケール更新
 
 			if (irisCloseTween_.Finished()) { // 閉じ完了
 				return irisToTitle_ ? TransitionRequest::ToTitle : TransitionRequest::ToGameOver;
@@ -109,25 +109,25 @@ namespace TKM {
 		return (clearSeq_ && clearSeq_->IsActive()); // クリアシーケンスがアクティブか？
 	}
 
-	bool GameFlowController::UpdateClear(float rawDt, float scaledDt, PostEffectController* postFx, UIController* ui, BossManager* bossManager, Camera* camera, Player* player) {
+	bool GameFlowController::UpdateClear(float rawDeltaTime, float scaledDeltaTime, PostEffectController* postFx, UIController* ui, BossManager* bossManager, Camera* camera, Player* player) {
 		if (!clearSeq_ || !clearSeq_->IsActive()) {
 			return false; // クリア中じゃない
 		}
 
 		// クリア演出本体（スロー非依存）
-		const bool finished = clearSeq_->Update(rawDt);
+		const bool finished = clearSeq_->Update(rawDeltaTime);
 
 		// クリア中でも動かしたいもの（止めない）
-		ParticleManager::GetInstance()->Update(scaledDt);
+		ParticleManager::GetInstance()->Update(scaledDeltaTime);
 
 		if (postFx) { // ポストエフェクト更新
-			postFx->Update(scaledDt, bossManager); // ボスマネージャ参照
+			postFx->Update(scaledDeltaTime, bossManager); // ボスマネージャ参照
 			if (camera) { // カメラ更新通知
 				postFx->OnCameraUpdated(camera); // カメラ更新通知
 			}
 		}
 		if (ui) { // UI更新
-			ui->Update(scaledDt, player); // プレイヤー参照
+			ui->Update(scaledDeltaTime, player); // プレイヤー参照
 		}
 		if (finished) { // クリアシーケンス完了
 			pendingRequest_ = TransitionRequest::ToGameClear; // 遷移要求セット

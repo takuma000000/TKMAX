@@ -17,6 +17,10 @@ namespace TKM {
 	class PostEffectController;
 	class UIController;
 
+	//===============================
+	// GameFlowControllerクラス
+	// ゲーム進行フロー制御クラス
+	//===============================
 	class GameFlowController {
 
 	public:
@@ -36,11 +40,11 @@ namespace TKM {
 		/// イントロシーケンスの更新処理を行います。
 		/// 敵初期化の要求（リクエスト）もここで生成します。
 		/// </summary>
-		/// <param name="dt">前フレームからの経過時間（秒）</param>
+		/// <param name="rawDeltaTime">前フレームからの経過時間（秒）</param>
 		/// <param name="camera">演出および描画に使用するカメラ</param>
 		/// <param name="enemiesInitialized">敵の初期化が完了している場合 true</param>
 		/// <param name="outRequestInitEnemies">敵の初期化を要求する場合 true に設定されます</param>
-		void Update(float dt, Camera* camera, bool enemiesInitialized, bool& outRequestInitEnemies);
+		void Update(float rawDeltaTime, Camera* camera, bool enemiesInitialized, bool& outRequestInitEnemies);
 		/// <summary>
 		/// 描画処理を行います。
 		/// </summary>
@@ -53,10 +57,10 @@ namespace TKM {
 		/// トランジション更新処理を行います。
 		/// 死亡／タイトル戻り（Tキー）／アイリス閉じ進行を扱います。
 		/// </summary>
-		/// <param name="dt">前フレームからの経過時間（秒）</param>
+		/// <param name="rawDeltaTime">前フレームからの経過時間（秒）</param>
 		/// <param name="player">状態参照対象となるプレイヤー</param>
 		/// <returns>遷移要求（何もなければ None 等）</returns>
-		TransitionRequest UpdateTransitions(float dt, Player* player);
+		TransitionRequest UpdateTransitions(float rawDeltaTime, Player* player);
 		/// <summary>
 		/// アイリスクローズによってタイトルへ戻るリクエストを出します。
 		/// </summary>
@@ -64,8 +68,8 @@ namespace TKM {
 		/// <summary>
 		/// クリアシーケンスの更新処理を行います。
 		/// </summary>
-		/// <param name="rawDt">前フレームからの経過時間（未スケール、秒）</param>
-		/// <param name="scaledDt">タイムスケール適用後の経過時間（秒）</param>
+		/// <param name="rawDeltaTime">前フレームからの経過時間（未スケール、秒）</param>
+		/// <param name="scaledDeltaTime">タイムスケール適用後の経過時間（秒）</param>
 		/// <param name="postFx">ポストエフェクトコントローラ</param>
 		/// <param name="ui">UI コントローラ</param>
 		/// <param name="bossManager">ボスマネージャ</param>
@@ -73,8 +77,8 @@ namespace TKM {
 		/// <param name="player">プレイヤー</param>
 		/// <returns>クリアシーケンスが完了した場合 true、それ以外は false</returns>
 		bool UpdateClear(
-			float rawDt,
-			float scaledDt,
+			float rawDeltaTime,
+			float scaledDeltaTime,
 			PostEffectController* postFx,
 			UIController* ui,
 			BossManager* bossManager,
@@ -158,7 +162,7 @@ namespace TKM {
 		// 内部制御
 		//==============================
 		// 固定dtで閉じ進行（いまの実装に合わせる）
-		static constexpr float kFixedDt_ = 0.016f; // 固定デルタタイム（秒）
+		static constexpr float kFixedDeltaTime_ = 0.016f; // 固定デルタタイム（秒）
 		bool externalIrisDraw_ = false; // アイリス描画を外部制御するか
 		//==============================
 		// 参照先
