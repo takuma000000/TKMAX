@@ -9,10 +9,10 @@
 #include <memory>
 #include "Object3d.h"
 #include "MyMath.h"
-#include "Enemy.h"
 #include <ParticlerEmitter.h>
 
 class Player;
+class Enemy;
 class MidBossCore;
 
 //=============================================================

@@ -1,4 +1,5 @@
 #include "Player.h"
+#include "Enemy.h"
 #include <ParticleManager.h>
 #include "AABB.h"
 #include <limits>

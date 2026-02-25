@@ -6,7 +6,6 @@
 #include "ModelManager.h"
 #include "PlayerBullet.h"
 #include "Input.h"
-#include "Enemy.h"
 #include <algorithm>
 #include <list>
 #include <ParticlerEmitter.h>
@@ -15,6 +14,7 @@
 #include "LineRenderer.h"
 
 class MidBossCore;
+class Enemy;
 namespace TKM {
 	class RadialBlurEffect;
 }
