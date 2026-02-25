@@ -113,9 +113,9 @@ void GameOverScene::Finalize() {}
 void GameOverScene::Update() {
 	Input::GetInstance()->Update();
 
-	if (player_) { player_->Update(dt_); }
-	if (camera_) { camera_->Update(); }
-	if (dirLight_) { dirLight_->Update(); }
+	player_->Update(dt_);
+	camera_->Update();
+	dirLight_->Update();
 	ParticleManager::GetInstance()->Update(dt_);
 
 	if (irisOpening_) {
@@ -126,7 +126,7 @@ void GameOverScene::Update() {
 		}
 	}
 
-	if (!irisClosing_ && !irisOpening_ && overMenu_) {
+	if (!irisClosing_ && !irisOpening_) {
 		const auto cmd = overMenu_->Update(dt_);
 
 		if (cmd == GameResultMenuController::Command::Restart) {
@@ -160,12 +160,10 @@ void GameOverScene::Update() {
 	if (skyPitch_ > kTwoPi)  skyPitch_ -= kTwoPi;
 	if (skyPitch_ < 0.0f)    skyPitch_ += kTwoPi;
 	// Xだけ回す
-	if (skybox_) {
-		skybox_->SetRotation({ skyPitch_, 0.0f, 0.0f });
-	}
+	skybox_->SetRotation({ skyPitch_, 0.0f, 0.0f });
 
 	// --- 墜落中の失速スピン（常時回転）---
-	if (tumbleActive_ && player_) {
+	if (tumbleActive_) {
 		const float dt = 1.0f / 60.0f; // あなたのシーンは固定フレーム刻みでOK
 		Vector3 r = player_->GetRotation();
 		r.x += (tumbleSpeed_.x + ((rand() % 100 - 50) / 5000.0f)) * dt;
@@ -361,19 +359,17 @@ void GameOverScene::Update() {
 void GameOverScene::Draw() {
 	// 3D
 	Object3dCommon::GetInstance()->DrawSetCommon();
-	if (player_) { player_->Draw(dxCommon_); }
-	if (skybox_) { skybox_->Draw(); }
+	player_->Draw(dxCommon_);
+	skybox_->Draw();
 
 	// パーティクル描画
 	ParticleManager::GetInstance()->Draw();
 
-	// 2D（任意のオーバーレイ）
+	// 2D
 	TKM::SpriteCommon::GetInstance()->DrawSetCommon();
-	if ((irisOpening_ || irisClosing_) && iris_) {
+	if ((irisOpening_ || irisClosing_)) {
 		iris_->Draw(); // 常に最前面
 	}
-	if (overSprite_) {
-		overSprite_->Draw();
-	}
-	if (overMenu_) { overMenu_->Draw(); }
+	overSprite_->Draw(); // 「GAME OVER」も常に最前面
+	overMenu_->Draw(); // メニューは最後に描いて常に最前面（ただしirisよりは後ろ）
 }
