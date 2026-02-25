@@ -41,9 +41,7 @@ void GameScene::Initialize() {
 	enemyManager_ = std::make_unique<EnemyManager>();
 	enemyManager_->Initialize(dxCommon_, camera_.get(), this, player_.get());
 	/// ──────────────── ボスマネージャの初期化 ───────────────
-	if (!bossManager_) {
-		bossManager_ = std::make_unique<BossManager>();
-	}
+	bossManager_ = std::make_unique<BossManager>();
 	bossManager_->Initialize(dxCommon_, camera_.get(), this, player_.get());
 	/// ──────────────── タイムスケールコントローラーの初期化 ───────────────
 	timeScale_.Initialize();
@@ -67,10 +65,8 @@ void GameScene::Finalize() {
 	AudioManager::GetInstance()->Finalize();
 	// 3Dモデルマネージャーの終了
 	ModelManager::GetInstance()->Finalize();
-
-	if (postFx_) { // ポストエフェクトの終了
-		postFx_->Finalize();
-	}
+	// ラインレンダラーの終了
+	postFx_->Finalize();
 }
 
 void GameScene::Update() {
@@ -226,7 +222,7 @@ void GameScene::ImGuiDebug() {
 	/////////////////////////////////////////////////////
 	player_->ImGuiDebug(); // プレイヤーのデバッグ表示
 	/////////////////////////////////////////////////////
-	if (bossManager_ && bossManager_->GetBoss()) { // ボスマネージャ＆ボスが存在するなら
+	if (bossManager_->GetBoss()) { // ボスマネージャ＆ボスが存在するなら
 		bossManager_->GetBoss()->ImGuiDebug(); // ボスのデバッグ表示
 	}
 	/////////////////////////////////////////////////////
@@ -349,24 +345,22 @@ void GameScene::UpdateEnemyAndWaveLogic(float scaledDeltaTime) {
 
 		// 全てのWaveが終了していて、敵がいない → ボスへ進行 or クリア処理
 		if (enemyManager_->IsAllWavesCleared()) {
-			if (bossManager_) {
-				// まだボス戦始まっていなければ開始
-				if (!bossManager_->IsBattleActive() && !bossManager_->IsBossDead()) {
-					bossManager_->StartBattle();
-				} else {
-					// ボス撃破 → クリア演出へ
-					if (bossManager_->IsBossDead()) {
-						if (!isClear) { // まだクリア演出始まっていなければ開始
-							flow_->RequestStartClear(); // クリアシーケンス開始リクエスト
-							return;
-						}
+			// まだボス戦始まっていなければ開始
+			if (!bossManager_->IsBattleActive() && !bossManager_->IsBossDead()) {
+				bossManager_->StartBattle();
+			} else {
+				// ボス撃破 → クリア演出へ
+				if (bossManager_->IsBossDead()) {
+					if (!isClear) { // まだクリア演出始まっていなければ開始
+						flow_->RequestStartClear(); // クリアシーケンス開始リクエスト
+						return;
 					}
 				}
 			}
 		}
 
 		// ロックオン対象の更新
-		if (bossManager_ && bossManager_->IsBossAlive()) {
+		if (bossManager_->IsBossAlive()) {
 			player_->SetEnemy(bossManager_->GetBoss());
 		} else {
 			enemyManager_->UpdateClosestEnemy();
@@ -382,19 +376,12 @@ void GameScene::UpdateGameplaySystems(float rawDeltaTime, float scaledDeltaTime)
 	skybox_->UpdateRotation();
 	// プレイヤーの更新
 	player_->Update(scaledDeltaTime);
-
-
+	// UIの更新（スコアやHPゲージなど、ゲームプレイに関わるUIはタイムスケールの影響を受けるべき）
 	ui_->Update(scaledDeltaTime, player_.get());
-
-
 	// ボスマネージャの更新
-	if (bossManager_) {
-		bossManager_->Update(scaledDeltaTime);
-	}
+	bossManager_->Update(scaledDeltaTime);
 	// ポストエフェクトの更新
-	if (postFx_) {
-		postFx_->Update(scaledDeltaTime, bossManager_.get());
-	}
+	postFx_->Update(scaledDeltaTime, bossManager_.get());
 
 	// ライトの更新
 	directionalLight_->Update();
