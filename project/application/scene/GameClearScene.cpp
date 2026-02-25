@@ -124,7 +124,7 @@ void GameClearScene::Update() {
 	// ─────────────────────
 	// クリアメニュー（リスタート/タイトル）
 	// ─────────────────────
-	if (!irisClosing_ && !irisOpening_ && clearMenu_) {
+	if (!irisClosing_ && !irisOpening_) {
 		const auto cmd = clearMenu_->Update(dt_);
 
 		if (cmd == GameResultMenuController::Command::Restart) {
@@ -155,8 +155,8 @@ void GameClearScene::Update() {
 	// ─────────────────────
 	// カメラ・ライト更新
 	// ─────────────────────
-	if (camera_) { camera_->Update(); }
-	if (dirLight_) { dirLight_->Update(); }
+	camera_->Update(); //（今回はカメラ固定で動かさないけど、念のため毎フレーム更新しておく）
+	dirLight_->Update(); //（今回はライト固定で動かさないけど、念のため毎フレーム更新しておく）
 
 	// ─────────────────────
 	// Skybox回転（GameOverSceneと同じノリ）
@@ -166,10 +166,8 @@ void GameClearScene::Update() {
 	if (skyPitch_ > kTwoPi)  skyPitch_ -= kTwoPi;
 	if (skyPitch_ < 0.0f)    skyPitch_ += kTwoPi;
 
-	if (skybox_) {
-		// X軸だけグルグル
-		skybox_->SetRotation({ skyPitch_, 0.0f, 0.0f });
-	}
+	// X軸だけグルグル
+	skybox_->SetRotation({ skyPitch_, 0.0f, 0.0f });
 
 	// ─────────────────────
 	// 自機ジェットコースター演出
@@ -207,18 +205,13 @@ void GameClearScene::Update() {
 		pos.x = planeEnd_.x + extra;
 	}
 
-	if (player_) {
-		// GameClearScene が計算した「画面外→画面外」の軌道＆くるくる回転を反映
-		player_->SetPosition(pos);
-		player_->SetRotation({ pitch, yaw, roll });
+	// GameClearScene が計算した「画面外→画面外」の軌道＆くるくる回転を反映
+	player_->SetPosition(pos);
+	player_->SetRotation({ pitch, yaw, roll });
+	// ゲームプレイ処理なしで行列だけ更新する
+	player_->UpdateVisualOnly(dt_);
 
-		// ゲームプレイ処理なしで行列だけ更新する
-		player_->UpdateVisualOnly(dt_);
-	}
-
-	if (clearSprite_) {
-		clearSprite_->Update();
-	}
+	clearSprite_->Update();
 
 	UpdatePerformanceInfo();
 }
@@ -226,23 +219,15 @@ void GameClearScene::Update() {
 void GameClearScene::Draw() {
 	// --- 3D ---
 	Object3dCommon::GetInstance()->DrawSetCommon();
-	if (player_) {
-		player_->Draw(dxCommon_);
-	}
-	if (skybox_) {
-		skybox_->Draw();
-	}
+	player_->Draw(dxCommon_);
+	skybox_->Draw();
 
 	// --- 2Dスプライト（文字など）---
 	TKM::SpriteCommon::GetInstance()->DrawSetCommon();
-	if (clearSprite_) {
-		clearSprite_->Draw();
-	}
+	clearSprite_->Draw();
 	// アイリスは一番手前
-	if ((irisOpening_ || irisClosing_) && iris_) {
+	if ((irisOpening_ || irisClosing_)) {
 		iris_->Draw();
 	}
-	if (clearMenu_) {
-		clearMenu_->Draw();
-	}
+	clearMenu_->Draw();
 }
