@@ -36,7 +36,10 @@ void TextureCatalog::LoadTextureCatalogs() {
 		"player_hp.jpg",
 		"player_hp_frame.jpg",
 		"player_hp.png",
+		"start_title.png",
+		"end_title.png",
 		"uvChecker.dds",
+		"title_kuraran.dds",
 	};
 
 	// TKM::TextureManager はシングルトン
