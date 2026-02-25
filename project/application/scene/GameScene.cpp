@@ -106,7 +106,7 @@ void GameScene::Update() {
 void GameScene::Draw() { Draw3D(); DrawSprite(); } // 3Dとスプライトの描画を分ける
 
 void GameScene::Draw3D() {
-	if (skybox_) skybox_->Draw(); // スカイボックス描画
+	skybox_->Draw(); // スカイボックス描画
 
 	Object3dCommon::GetInstance()->DrawSetCommon();
 	player_->Draw(dxCommon_); // プレイヤー描画
@@ -137,9 +137,7 @@ void GameScene::DrawSprite() {
 
 
 void GameScene::SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float speed, int damage, int lifeFrame) {
-	if (bossManager_) {
-		bossManager_->SpawnEnemyBullet(pos, dir, speed, damage, lifeFrame); // ボスマネージャに委譲
-	}
+	bossManager_->SpawnEnemyBullet(pos, dir, speed, damage, lifeFrame); // ボスマネージャに委譲
 }
 
 TKM::Camera* GameScene::UpdateActiveCamera() {
@@ -254,7 +252,6 @@ void GameScene::ImGuiDebug() {
 }
 
 void GameScene::UpdateAirStreak(float rawDeltaTime) {
-	if (!player_) { return; } // プレイヤーがいないなら何もしない
 	// プレイヤーの速度を取得
 	airStreakTimer_ += rawDeltaTime;
 	// どれくらいの密度で出すか（小さいほど密度↑）
@@ -477,13 +474,10 @@ bool GameScene::TryUpdatePauseAndMaybeEarlyReturn_(float rawDeltaTime, bool allo
 void GameScene::UpdatePausedOnly_(float rawDeltaTime) {
 	// デバッグ表示更新
 	ImGuiDebug();
-
 	// アクティブカメラの更新（ポーズ中も視点操作は許可）
 	UpdateActiveCamera();
-
 	// ポーズ中はゲーム更新をスキップするが、遷移は回す
 	UpdateTransitionsAndSceneChange(rawDeltaTime);
-
 	// デバッグキー＆リクエスト処理
 	HandleDebugKeysAndRequests();
 }
@@ -491,19 +485,14 @@ void GameScene::UpdatePausedOnly_(float rawDeltaTime) {
 void GameScene::UpdateNormalGameplay_(float rawDeltaTime, float scaledDeltaTime) {
 	// 敵やウェーブのロジック更新（タイムスケール適用）
 	UpdateEnemyAndWaveLogic(scaledDeltaTime);
-
 	// デバッグ表示更新
 	ImGuiDebug();
-
 	// アクティブカメラの更新
 	UpdateActiveCamera();
-
 	// ゲームプレイシステムの更新
 	UpdateGameplaySystems(rawDeltaTime, scaledDeltaTime);
-
 	// シーン遷移＆タイトル戻り等の更新（rawDeltaTime）
 	UpdateTransitionsAndSceneChange(rawDeltaTime);
-
 	// デバッグキー＆リクエスト処理
 	HandleDebugKeysAndRequests();
 }
