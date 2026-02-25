@@ -187,4 +187,22 @@ private:
 	/// フレーム更新の終了処理を行います。
 	/// </summary>
 	void EndFrameUpdate();
+	/// <summary>
+	/// ポーズメニューを更新し、必要ならこのフレームの更新を早期終了します。
+	/// </summary>
+	/// <param name="rawDeltaTime">生のデルタタイム（秒）</param>
+	/// <param name="allowPauseOpen">ロック中でないならtrue（ポーズを開ける）</param>
+	/// <returns>このフレームを終了するならtrue</returns>
+	bool TryUpdatePauseAndMaybeEarlyReturn_(float rawDeltaTime, bool allowPauseOpen);
+	/// <summary>
+	/// ポーズ中に動かすものだけ更新します（UI/遷移/デバッグ）。
+	/// </summary>
+	/// <param name="rawDeltaTime">生のデルタタイム（秒）</param>
+	void UpdatePausedOnly_(float rawDeltaTime);
+	/// <summary>
+	/// 通常時のゲーム本体更新をまとめて行います。
+	/// </summary>
+	/// <param name="rawDeltaTime">生のデルタタイム（秒）</param>
+	/// <param name="scaledDeltaTime">タイムスケール適用後のデルタタイム（秒）</param>
+	void UpdateNormalGameplay_(float rawDeltaTime, float scaledDeltaTime);
 };

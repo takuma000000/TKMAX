@@ -76,13 +76,14 @@ void GameScene::Finalize() {
 }
 
 void GameScene::Update() {
-	float rawDeltaTime = 0.0f; // 前フレームからの経過時間（秒） - ゲーム全体の更新に使用（ポーズ中も動かす）
+	float rawDeltaTime = 0.0f;   // 前フレームからの経過時間（秒） - ゲーム全体の更新に使用（ポーズ中も動かす）
 	float scaledDeltaTime = 0.0f; // タイムスケール適用後の経過時間（秒） - ゲームプレイシステムの更新に使用（ポーズ中は動かさない）
 
 	BeginFrameUpdate(rawDeltaTime, scaledDeltaTime); // フレーム開始処理
 
-	if (flow_ && flow_->UpdateClear(rawDeltaTime, scaledDeltaTime, postFx_.get(), ui_.get(), bossManager_.get(), camera_.get(), player_.get())) { // クリアシーケンス更新
-		return; // クリアシーケンス中は他の更新をスキップ
+	// クリアシーケンス中は他の更新をスキップ
+	if (flow_ && flow_->UpdateClear(rawDeltaTime, scaledDeltaTime, postFx_.get(), ui_.get(), bossManager_.get(), camera_.get(), player_.get())) {
+		return;
 	}
 
 	UpdateFlow(); // ゲーム進行フロー更新
@@ -92,53 +93,15 @@ void GameScene::Update() {
 	const bool locked = (flow_ && flow_->IsGameplayLocked()) || isClear;
 	const bool allowPauseOpen = !locked;
 
-	// ──────────────── ポーズ更新（rawDtでUIだけ動かす） ───────────────
-	if (pause_) {
-		const auto cmd = pause_->Update(rawDeltaTime, allowPauseOpen); // ポーズメニュー更新
-		if (ui_) { // HUD透明度調整
-			const float hudAlpha = pause_->IsPaused() ? 0.25f : 1.0f; // ポーズ中は半透明に
-			ui_->SetHudAlpha(hudAlpha); // HUD透明度セット
-		}
-
-		if (cmd == TKM::PauseMenuController::Command::ReturnToTitle) {
-			if (flow_) { // タイトル戻りリクエスト
-				flow_->RequestToTitleByIris(); // いつものアイリスで戻す
-			}
-		} else if (cmd == TKM::PauseMenuController::Command::Restart) { // リスタート
-			sceneManager_->SetNextScene(new GameScene(dxCommon_, srvManager_)); // 新しいゲームシーンをセット
-			return;
-		}
-
-		// ポーズ中はゲーム本体を止める。ただし「遷移（タイトル戻り等）」は回す
-		if (pause_->IsPaused()) { // ポーズ中
-			// デバッグ表示更新
-			ImGuiDebug();
-			// アクティブカメラの更新
-			UpdateActiveCamera();
-			// ポーズ中はゲーム更新をスキップ
-			UpdateTransitionsAndSceneChange(rawDeltaTime);
-			// デバッグキー＆リクエスト処理
-			HandleDebugKeysAndRequests();
-			// フレーム終了処理
-			EndFrameUpdate();
-			return;
-		}
+	// ──────────────── ポーズUI更新（rawDeltaTimeでUIだけ動かす） ───────────────
+	if (TryUpdatePauseAndMaybeEarlyReturn_(rawDeltaTime, allowPauseOpen)) {
+		EndFrameUpdate();
+		return;
 	}
 
-	// ──────────────── ゲーム本体更新（scaledDeltaTimeで動かす） ───────────────
-	// タイムスケールコントローラー更新
-	UpdateEnemyAndWaveLogic(scaledDeltaTime);
-	// デバッグ表示更新
-	ImGuiDebug();
-	// アクティブカメラの更新
-	UpdateActiveCamera();
-	// ゲームプレイシステムの更新
-	UpdateGameplaySystems(rawDeltaTime, scaledDeltaTime);
-	// シーン遷移＆タイトル戻り等の更新
-	UpdateTransitionsAndSceneChange(rawDeltaTime);
-	// デバッグキー＆リクエスト処理
-	HandleDebugKeysAndRequests();
-	// フレーム終了処理
+	// ──────────────── 通常ゲーム更新（scaledDeltaTimeで動かす） ───────────────
+	UpdateNormalGameplay_(rawDeltaTime, scaledDeltaTime);
+
 	EndFrameUpdate();
 }
 
@@ -525,4 +488,67 @@ void GameScene::EndFrameUpdate() {
 
 	// パフォーマンス情報・デバッグUI
 	UpdatePerformanceInfo();
+}
+
+bool GameScene::TryUpdatePauseAndMaybeEarlyReturn_(float rawDeltaTime, bool allowPauseOpen) {
+	if (!pause_) { return false; }
+
+	// ポーズメニュー更新
+	const auto cmd = pause_->Update(rawDeltaTime, allowPauseOpen);
+
+	// HUD透明度調整
+	if (ui_) {
+		const float hudAlpha = pause_->IsPaused() ? 0.25f : 1.0f;
+		ui_->SetHudAlpha(hudAlpha);
+	}
+
+	// ポーズメニューのコマンド処理
+	if (cmd == TKM::PauseMenuController::Command::ReturnToTitle) {
+		if (flow_) {
+			flow_->RequestToTitleByIris(); // いつものアイリスで戻す
+		}
+	} else if (cmd == TKM::PauseMenuController::Command::Restart) {
+		sceneManager_->SetNextScene(new GameScene(dxCommon_, srvManager_));
+		return true; // シーン差し替え要求（このフレームは終了）
+	}
+
+	// ポーズ中はゲーム本体を止める。ただし「遷移（タイトル戻り等）」は回す
+	if (!pause_->IsPaused()) { return false; }
+
+	UpdatePausedOnly_(rawDeltaTime);
+	return true;
+}
+
+void GameScene::UpdatePausedOnly_(float rawDeltaTime) {
+	// デバッグ表示更新
+	ImGuiDebug();
+
+	// アクティブカメラの更新（ポーズ中も視点操作は許可）
+	UpdateActiveCamera();
+
+	// ポーズ中はゲーム更新をスキップするが、遷移は回す
+	UpdateTransitionsAndSceneChange(rawDeltaTime);
+
+	// デバッグキー＆リクエスト処理
+	HandleDebugKeysAndRequests();
+}
+
+void GameScene::UpdateNormalGameplay_(float rawDeltaTime, float scaledDeltaTime) {
+	// 敵やウェーブのロジック更新（タイムスケール適用）
+	UpdateEnemyAndWaveLogic(scaledDeltaTime);
+
+	// デバッグ表示更新
+	ImGuiDebug();
+
+	// アクティブカメラの更新
+	UpdateActiveCamera();
+
+	// ゲームプレイシステムの更新
+	UpdateGameplaySystems(rawDeltaTime, scaledDeltaTime);
+
+	// シーン遷移＆タイトル戻り等の更新（rawDeltaTime）
+	UpdateTransitionsAndSceneChange(rawDeltaTime);
+
+	// デバッグキー＆リクエスト処理
+	HandleDebugKeysAndRequests();
 }
