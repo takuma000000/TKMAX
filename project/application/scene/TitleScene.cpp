@@ -7,6 +7,9 @@
 #include <cmath>
 #include "AudioManager.h"
 #include "MyMath.h"
+#include "TextureCatalog.h"
+#include "ModelCatalog.h"
+#include "ParticleGroupsCatalog.h"
 
 #ifdef USE_IMGUI
 #include "imgui.h"
@@ -43,43 +46,13 @@ void TitleScene::Initialize() {
 	camera_->SetRotate({ 0.0f, 0.0f, 0.0f });
 	camera_->SetTranslate({ 0.0f, camY_, -30.0f });
 
-	// ------------ テクスチャ読み込み -----------using TKM::Camera;---
-	TextureCatalog::LoadTextureCatalogs();
-	//--------------------------------------------
-	// ------------ モデル読み込み --------------
-	ModelManager::GetInstance()->LoadModel("turtle.obj", dxCommon_);
-	ModelManager::GetInstance()->LoadModel("turtle_flipper.obj", dxCommon_);
-	ModelManager::GetInstance()->LoadModel("jerryfish_boss.obj", dxCommon_);
-	ModelManager::GetInstance()->LoadModel("jerryfish.obj", dxCommon_);
-	ModelManager::GetInstance()->LoadModel("tentacle.obj", dxCommon_);
-	ModelManager::GetInstance()->LoadModel("tentacle_boss.obj", dxCommon_);
-	//-----------------------------------------
+	// ------------ テクスチャ読み込み -----------
+	TextureCatalog::LoadTextureCatalogs(); // タイトルシーンで使うテクスチャをまとめてロード
+	//------------ モデル読み込み ---------------
+	ModelCatalog::LoadModelCatalogs(dxCommon_); // タイトルシーンで使うモデルをまとめてロード
 	//---------------パーティクル----------------
 	TKM::ParticleManager::GetInstance()->Initialize(dxCommon_, srvManager_, camera_.get());
-
-	auto* pm = TKM::ParticleManager::GetInstance();
-
-	pm->CreateParticleGroup("titleExplode_core", "./resources/texture/circle.png", TKM::ParticleManager::ParticleType::NORMAL);
-	pm->CreateParticleGroup("titleExplode_rays", "./resources/texture/gradationLine.png", TKM::ParticleManager::ParticleType::CYLINDER);
-	pm->CreateParticleGroup("titleExplode_debris", "./resources/texture/circle.png", TKM::ParticleManager::ParticleType::NORMAL);
-	pm->CreateParticleGroup("titleExplode_ring", "./resources/texture/gradationLine.png", TKM::ParticleManager::ParticleType::RING);
-	// --- タイトル ビーム用 ---
-	pm->CreateParticleGroup("titleBeam_player", "./resources/texture/gradationLine.png",
-		TKM::ParticleManager::ParticleType::CYLINDER);
-	pm->CreateParticleGroup("titleBeam_boss", "./resources/texture/gradationLine.png",
-		TKM::ParticleManager::ParticleType::CYLINDER);
-
-	// 衝突コア（白い光の塊）
-	pm->CreateParticleGroup("titleBeamClash_core", "./resources/texture/circle2.png",
-		TKM::ParticleManager::ParticleType::NORMAL);
-
-	// 放射スパーク（線っぽく）
-	pm->CreateParticleGroup("titleBeamClash_rays", "./resources/texture/gradationLine.png",
-		TKM::ParticleManager::ParticleType::CYLINDER);
-
-	// 衝撃波リング（リングはgradationLineの方が“波紋/衝撃波”っぽい）
-	pm->CreateParticleGroup("titleBeamClash_ring", "./resources/texture/gradationLine.png",
-		TKM::ParticleManager::ParticleType::RING);
+	TKM::ParticleGroupsCatalog::RegisterScene(TKM::ParticleManager::GetInstance()); // タイトルシーン用のパーティクルグループを登録
 	//-----------------------------------------
 
 	sprite_ = std::make_unique<Sprite>();

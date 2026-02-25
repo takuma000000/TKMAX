@@ -4,7 +4,6 @@
 #include <memory>
 #include <cmath>
 #include <vector>
-#include "TextureCatalog.h"
 #include "DirectXCommon.h"
 #include "srvManager.h"
 #include "Sprite.h"
@@ -12,9 +11,6 @@
 #include "Object3d.h"
 #include "Object3dCommon.h"
 #include "camera/Camera.h"
-#include "Model.h"
-#include "ModelCommon.h"
-#include "ModelManager.h"
 #include "Input.h"
 #include "SceneManager.h"
 #include "GameScene.h"

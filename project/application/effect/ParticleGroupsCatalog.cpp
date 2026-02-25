@@ -7,7 +7,11 @@ namespace TKM {
 		/// === 共通 ===
 		pm->CreateParticleGroup("uv", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
 
-		/// === パーティクルグループの作成 ===
+		///==============================
+		///=== パーティクルグループの作成 ===
+		///==============================
+
+		/// === エフェクト用 ===
 		// 開幕用：うっすら光が吸い込まれるリング
 		pm->CreateParticleGroup("irisOpen", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
 		// 花火用：放射状に飛ぶ粒（通常クアッド）
@@ -21,7 +25,7 @@ namespace TKM {
 		// 敵スポーン
 		pm->CreateParticleGroup("enemySpawn", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
 
-		/// === ここから被弾エフェクト用 ===
+		/// === 被弾エフェクト用 ===
 		// 中央の強いフラッシュ
 		pm->CreateParticleGroup("enemyHit_flash", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
 		// 外側に広がるリング
@@ -31,7 +35,7 @@ namespace TKM {
 		// 小さいスパーク
 		pm->CreateParticleGroup("enemyHit_spark", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
 
-		/// === ここから LT弾ヒット用・さらにド派手版 ===
+		/// === LT弾ヒット用・さらにド派手版 ===
 		// 爆心コア（まぶしい光の玉）
 		pm->CreateParticleGroup("lt_nova_core", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
 		// 球状ショックウェーブ（外側のエネルギー殻）
@@ -138,5 +142,27 @@ namespace TKM {
 		pm->CreateParticleGroup("bossSlash_glow", "./resources/texture/firework_star.png", ParticleManager::ParticleType::NORMAL);
 		// 斬撃の尾っぽ
 		pm->CreateParticleGroup("bossSlash_tail", "./resources/texture/firework_star.png", ParticleManager::ParticleType::NORMAL);
+
+		/// === タイトル用の爆発エフェクト ===
+		// 爆心コア（中心の光の塊）
+		pm->CreateParticleGroup("titleExplode_core", "./resources/texture/circle.png", TKM::ParticleManager::ParticleType::NORMAL);
+		// 放射状のレイ（光の筋）
+		pm->CreateParticleGroup("titleExplode_rays", "./resources/texture/gradationLine.png", TKM::ParticleManager::ParticleType::CYLINDER);
+		// 破片（小さな光の粒）
+		pm->CreateParticleGroup("titleExplode_debris", "./resources/texture/circle.png", TKM::ParticleManager::ParticleType::NORMAL);
+		// 衝撃波リング（波紋のように広がるリング）
+		pm->CreateParticleGroup("titleExplode_ring", "./resources/texture/gradationLine.png", TKM::ParticleManager::ParticleType::RING);
+
+		/// === タイトル用のビームエフェクト ===
+		// ビーム本体（線状に粒を並べて表現）
+		pm->CreateParticleGroup("titleBeam_player", "./resources/texture/gradationLine.png", TKM::ParticleManager::ParticleType::CYLINDER);
+		// ビーム本体（線状に粒を並べて表現）
+		pm->CreateParticleGroup("titleBeam_boss", "./resources/texture/gradationLine.png", TKM::ParticleManager::ParticleType::CYLINDER);
+		// 衝突コア（白い光の塊）
+		pm->CreateParticleGroup("titleBeamClash_core", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL);
+		// 放射スパーク（線っぽく）
+		pm->CreateParticleGroup("titleBeamClash_rays", "./resources/texture/gradationLine.png", TKM::ParticleManager::ParticleType::CYLINDER);
+		// 衝撃波リング（リングはgradationLineの方が“波紋/衝撃波”っぽい）
+		pm->CreateParticleGroup("titleBeamClash_ring", "./resources/texture/gradationLine.png", TKM::ParticleManager::ParticleType::RING);
 	}
 }
