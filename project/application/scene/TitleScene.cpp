@@ -121,7 +121,7 @@ void TitleScene::Initialize() {
 	flow_ = Flow::IntroIrisOpen;
 	// 最初は敵だけ見せたいのでUIは消す
 	showUi_ = false;
-	if (titleMenu_) { titleMenu_->SetVisible(false); }
+	titleMenu_->SetVisible(false);
 	// 分岐フラグ初期化
 	showMenuAfterVanish_ = false;
 	// タイマー初期化
@@ -141,10 +141,7 @@ void TitleScene::Update() {
 	dirLight_->Update(); // 平行光源更新
 	camera_->Update(); // カメラ更新
 	sprite_->Update(); // タイトル画像更新
-	
-	if (rippleEffect_) {
-		rippleEffect_->Update(dt_);
-	}
+	rippleEffect_->Update(dt_); // 波紋エフェクト更新
 
 	// アイリス（開幕：開く）更新
 	if (irisOpening_) {
@@ -154,7 +151,7 @@ void TitleScene::Update() {
 			irisOpening_ = false;
 			// 念のため完全に消す（Draw条件でも消えるけど保険）
 			irisScale_ = 0.0f;
-			if (iris_) { iris_->SetSize({ irisScale_, irisScale_ }); }
+			iris_->SetSize({ irisScale_, irisScale_ });
 		}
 	}
 
@@ -186,35 +183,30 @@ void TitleScene::Update() {
 		// ① メニューが出てる時：メニュー操作
 		// -------------------------
 		if (showUi_) {
-			if (titleMenu_) {
-				const auto cmd = titleMenu_->Update(dt_);
-				// メニューの見つめ合い更新
-				UpdateShowdownActors_(dt_);
-				if (cmd == TitleMenuController::Command::Start) {
+			const auto cmd = titleMenu_->Update(dt_);
+			// メニューの見つめ合い更新
+			UpdateShowdownActors_(dt_);
+			if (cmd == TitleMenuController::Command::Start) {
 
-					// ★メニューでStartしたら、従来の「波紋→アイリス閉」へ
-					showMenuAfterVanish_ = false; // 念のため
-					flow_ = Flow::Ripple;
-					rippleTimer_ = 0.0f;
+				// ★メニューでStartしたら、従来の「波紋→アイリス閉」へ
+				showMenuAfterVanish_ = false; // 念のため
+				flow_ = Flow::Ripple;
+				rippleTimer_ = 0.0f;
 
-					// 波紋を出す
-					if (rippleEffect_) {
-						TKM::WaterRippleEffect::RippleDesc d{};
-						d.duration_ = 1.0f;
-						d.radiusMax_ = 0.857f;
-						d.amplitude_ = 0.1f;
-						d.frequency_ = 80.0f;
-						d.width_ = 10.0f;
-						d.color_ = { 1.0f, 1.0f, 1.0f };
-						d.colorIntensity_ = 0.0f;
-						rippleEffect_->Trigger({ 0.5f, 0.5f }, d);
-					}
-
-				} else if (cmd == TitleMenuController::Command::Exit) {
-					sceneManager_->RequestQuit();
-					PostQuitMessage(0);
-					return;
-				}
+				// 波紋を出す
+				TKM::WaterRippleEffect::RippleDesc d{};
+				d.duration_ = 1.0f;
+				d.radiusMax_ = 0.857f;
+				d.amplitude_ = 0.1f;
+				d.frequency_ = 80.0f;
+				d.width_ = 10.0f;
+				d.color_ = { 1.0f, 1.0f, 1.0f };
+				d.colorIntensity_ = 0.0f;
+				rippleEffect_->Trigger({ 0.5f, 0.5f }, d);
+			} else if (cmd == TitleMenuController::Command::Exit) {
+				sceneManager_->RequestQuit();
+				PostQuitMessage(0);
+				return;
 			}
 			break; // メニュー表示中はここで終わり
 		}
@@ -228,7 +220,7 @@ void TitleScene::Update() {
 
 			if (autoGo) {
 				showUi_ = false;
-				if (titleMenu_) { titleMenu_->SetVisible(false); }
+				titleMenu_->SetVisible(false);
 
 				showMenuAfterVanish_ = true;   // 消滅後にメニューを出す
 				ScheduleVanish_(); // UI消して敵が消え始めるスケジュールセット
@@ -263,7 +255,7 @@ void TitleScene::Update() {
 			if (showMenuAfterVanish_) {
 				// A押しで消した場合：ここでメニュー表示
 				showUi_ = true;
-				if (titleMenu_) { titleMenu_->SetVisible(true); }
+				titleMenu_->SetVisible(true);
 
 				// この後Startを押したら波紋へ行きたいので、ここで待機に戻す
 				flow_ = Flow::Idle;
@@ -272,17 +264,16 @@ void TitleScene::Update() {
 				flow_ = Flow::Ripple;
 				rippleTimer_ = 0.0f;
 
-				if (rippleEffect_) {
-					TKM::WaterRippleEffect::RippleDesc d{};
-					d.duration_ = 1.0f;
-					d.radiusMax_ = 0.857f;
-					d.amplitude_ = 0.1f;
-					d.frequency_ = 80.0f;
-					d.width_ = 10.0f;
-					d.color_ = { 1.0f, 1.0f, 1.0f };
-					d.colorIntensity_ = 0.0f;
-					rippleEffect_->Trigger({ 0.5f, 0.5f }, d);
-				}
+				// 波紋を出す
+				TKM::WaterRippleEffect::RippleDesc d{};
+				d.duration_ = 1.0f;
+				d.radiusMax_ = 0.857f;
+				d.amplitude_ = 0.1f;
+				d.frequency_ = 80.0f;
+				d.width_ = 10.0f;
+				d.color_ = { 1.0f, 1.0f, 1.0f };
+				d.colorIntensity_ = 0.0f;
+				rippleEffect_->Trigger({ 0.5f, 0.5f }, d);
 			}
 		}
 		break;
@@ -445,7 +436,7 @@ void TitleScene::DrawSprite() {
 	// UI（手前固定：Swapchain側）
 	TKM::SpriteCommon::GetInstance()->DrawSetCommon();
 	if (showUi_) {
-		if (titleMenu_) { titleMenu_->Draw(); }
+		titleMenu_->Draw();
 	}
 	if (iris_ && (irisOpening_ || irisClosing_)) {
 		iris_->Draw();
@@ -453,13 +444,13 @@ void TitleScene::DrawSprite() {
 }
 
 void TitleScene::DrawBack() {
-	if (skybox_) { skybox_->Draw(); } // スカイボックス（背景3D）
+	skybox_->Draw(); // スカイボックス（背景3D）
 
 	// 2D（背景：3Dより先に描かれる＝奥になる）
 	TKM::SpriteCommon::GetInstance()->DrawSetCommon();
 
 	if (showUi_) {
-		if (sprite_) { sprite_->Draw(); } // タイトル画像（背景）
+		sprite_->Draw(); // タイトル画像（背景）
 	}
 }
 
@@ -472,7 +463,7 @@ void TitleScene::CreateTitleEnemies_() {
 	const float aspect = screenW / screenH;
 
 	const float fovY = DegToRad_(60.0f);      // タイトルは広め
-	const float camZ = camera_ ? camera_->GetTranslate().z : -30.0f;
+	const float camZ = camera_->GetTranslate().z; // カメラのZ位置
 
 	// Zレンジ（君の近・奥の2層）
 	std::uniform_real_distribution<float> nearZ(6.0f, 14.0f);

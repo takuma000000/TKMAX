@@ -76,26 +76,26 @@ void GameScene::Update() {
 	BeginFrameUpdate(rawDeltaTime, scaledDeltaTime); // フレーム開始処理
 
 	// クリアシーケンス中は他の更新をスキップ
-	if (flow_ && flow_->UpdateClear(rawDeltaTime, scaledDeltaTime, postFx_.get(), ui_.get(), bossManager_.get(), camera_.get(), player_.get())) {
+	if (flow_->UpdateClear(rawDeltaTime, scaledDeltaTime, postFx_.get(), ui_.get(), bossManager_.get(), camera_.get(), player_.get())) {
 		return;
 	}
 
 	UpdateFlow(); // ゲーム進行フロー更新
 
 	// Intro等でロック中はポーズを開けない（誤動作防止）
-	const bool isClear = (flow_ && flow_->IsInClear());
-	const bool locked = (flow_ && flow_->IsGameplayLocked()) || isClear;
+	const bool isClear = (flow_->IsInClear());
+	const bool locked = (flow_->IsGameplayLocked()) || isClear;
 	const bool allowPauseOpen = !locked;
 
 	// ──────────────── ポーズUI更新（rawDeltaTimeでUIだけ動かす） ───────────────
 	if (TryUpdatePauseAndMaybeEarlyReturn_(rawDeltaTime, allowPauseOpen)) {
-		EndFrameUpdate();
+		EndFrameUpdate(); // ゲームプレイシステムの更新をスキップする場合でも、タイムスケールの更新は行う（ポーズ中のUIアニメーション等に反映させるため）
 		return;
 	}
 
 	// ──────────────── 通常ゲーム更新（scaledDeltaTimeで動かす） ───────────────
 	UpdateNormalGameplay_(rawDeltaTime, scaledDeltaTime);
-
+	// タイムスケールの更新は最後に行う（ゲームプレイシステムの更新が終わってから適用されるようにするため）
 	EndFrameUpdate();
 }
 
@@ -107,7 +107,7 @@ void GameScene::Draw3D() {
 	Object3dCommon::GetInstance()->DrawSetCommon();
 	player_->Draw(dxCommon_); // プレイヤー描画
 	enemyManager_->Draw(dxCommon_); // 敵描画
-	const bool isClear = (flow_ && flow_->IsInClear()); // クリアシーケンス中はボスを描画しない（撃破後の演出に専念させるため）
+	const bool isClear = (flow_->IsInClear()); // クリアシーケンス中はボスを描画しない（撃破後の演出に専念させるため）
 	if (!isClear) {
 		bossManager_->Draw(dxCommon_); // ボス描画
 	}
@@ -333,8 +333,8 @@ void GameScene::UpdateFlow() {
 }
 
 void GameScene::UpdateEnemyAndWaveLogic(float scaledDeltaTime) {
-	const bool isClear = (flow_ && flow_->IsInClear()); // クリア演出中かどうか
-	const bool locked = (flow_ && flow_->IsGameplayLocked()) || isClear; // ゲームプレイがロックされているかどうか
+	const bool isClear = (flow_->IsInClear()); // クリア演出中かどうか
+	const bool locked = (flow_->IsGameplayLocked()) || isClear; // ゲームプレイがロックされているかどうか
 
 	// --- 敵とWaveは「ゲーム開始後」だけ動かす ---
 	if (!locked && enemiesInitialized_) {
@@ -369,8 +369,8 @@ void GameScene::UpdateEnemyAndWaveLogic(float scaledDeltaTime) {
 }
 
 void GameScene::UpdateGameplaySystems(float rawDeltaTime, float scaledDeltaTime) {
-	const bool isClear = (flow_ && flow_->IsInClear()); // クリア演出中かどうか
-	const bool locked = (flow_ && flow_->IsGameplayLocked()) || isClear; // ゲームプレイがロックされているかどうか
+	const bool isClear = (flow_->IsInClear()); // クリア演出中かどうか
+	const bool locked = (flow_->IsGameplayLocked()) || isClear; // ゲームプレイがロックされているかどうか
 
 	// スカイボックスの回転更新
 	skybox_->UpdateRotation();
@@ -417,7 +417,7 @@ void GameScene::UpdateTransitionsAndSceneChange(float rawDeltaTime) {
 void GameScene::HandleDebugKeysAndRequests() {
 	// ─── キーボードのYキーでプレイヤーのHPを0にする（デバッグ用）───
 	if (Input::GetInstance()->TriggerKey(DIK_Y)) {
-		if (player_) player_->SetHP(0);
+		player_->SetHP(0);
 	}
 
 	// ── 敵初期化要求が来ていたら実行 ──
