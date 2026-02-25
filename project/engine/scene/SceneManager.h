@@ -9,24 +9,6 @@
 //=============================================================
 namespace TKM {
 	class SceneManager {
-	public:
-		// Setter========================================
-		/// <summary>
-		/// </span class="code-inline">SceneManager</span>のDirectXCommonセット
-		/// </summary>
-		/// <param name="sceneFactory"></param>
-		void SetSceneFactory(TKM::AbstractSceneFactory* sceneFactory) {
-			sceneFactory_ = sceneFactory;
-		}
-		/// <summary>
-		/// </span class="code-inline">SceneManager</span>のコンストラクタ
-		/// </summary>
-		/// <param name="nextScene"></param>
-		void SetNextScene(TKM::BaseScene* nextScene) {
-			nextScene_ = nextScene;
-		}
-		// ==============================================
-
 	private:
 
 		//今のシーン( 実行中 )
@@ -60,7 +42,7 @@ namespace TKM {
 		/// </summary>
 		void DrawSprite();
 
-		///<summary>
+		/// <summary>
 		/// </span class="code-inline">SceneManager</span>のデストラクタ
 		/// </summary>
 		~SceneManager();
@@ -73,5 +55,22 @@ namespace TKM {
 		/// 終了要求が出ているか
 		/// </summary>
 		bool IsQuitRequested() const { return quitRequested_; }
+
+		// Setter========================================
+		/// <summary>
+		/// </span class="code-inline">SceneManager</span>のDirectXCommonセット
+		/// </summary>
+		/// <param name="sceneFactory"></param>
+		void SetSceneFactory(TKM::AbstractSceneFactory* sceneFactory) {
+			sceneFactory_ = sceneFactory;
+		}
+		/// <summary>
+		/// </span class="code-inline">SceneManager</span>のコンストラクタ
+		/// </summary>
+		/// <param name="nextScene"></param>
+		void SetNextScene(TKM::BaseScene* nextScene) {
+			nextScene_ = nextScene;
+		}
+		// ==============================================
 	};
 }
