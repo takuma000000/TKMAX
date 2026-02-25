@@ -145,7 +145,7 @@ void TitleScene::Update() {
 
 	// アイリス（開幕：開く）更新
 	if (irisOpening_) {
-		irisScale_ = UpdateIrisScale(iris_.get(), irisTween_, 0.016f);
+		irisScale_ = UpdateIrisScale(iris_.get(), irisTween_, dt_);
 
 		if (irisTween_.Finished()) {
 			irisOpening_ = false;
@@ -211,7 +211,7 @@ void TitleScene::Update() {
 			break; // メニュー表示中はここで終わり
 		}
 		// -------------------------
-		// ② メニューが出てない時：A待ち（＋2秒で自動発火）
+		// ② メニューが出てない時：Idleでの待ち or 自動で次のシーケンスへ
 		// -------------------------
 		{
 			seqTimer_ += dt_; // Idle中の経過時間
@@ -424,7 +424,7 @@ void TitleScene::Draw3D() {
 	}
 
 	// メニュー中だけ：見つめ合い（Player/Boss）
-	if (showUi_ && titleMenu_ && titleMenu_->IsVisible()) {
+	if (showUi_ && titleMenu_->IsVisible()) {
 		DrawShowdownActors_();
 	}
 
@@ -438,7 +438,7 @@ void TitleScene::DrawSprite() {
 	if (showUi_) {
 		titleMenu_->Draw();
 	}
-	if (iris_ && (irisOpening_ || irisClosing_)) {
+	if (irisOpening_ || irisClosing_) {
 		iris_->Draw();
 	}
 }
@@ -550,7 +550,7 @@ float TitleScene::LookAtYaw_(const Vector3& from, const Vector3& to) const {
 
 void TitleScene::UpdateTitleBeamClash_(float dt) {
 	if (!titlePlayer_ || !titleBoss_) { return; }
-	if (!showUi_ || !titleMenu_ || !titleMenu_->IsVisible()) { return; }
+	if (!showUi_ || !titleMenu_->IsVisible()) { return; }
 
 	auto* pm = TKM::ParticleManager::GetInstance();
 	if (!pm) { return; }
