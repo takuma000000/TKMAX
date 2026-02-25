@@ -59,7 +59,6 @@ namespace TKM {
 		// ==============================================
 
 	private:
-
 		//今のシーン( 実行中 )
 		TKM::BaseScene* scene_ = nullptr;
 

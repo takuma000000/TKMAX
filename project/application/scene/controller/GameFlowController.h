@@ -168,5 +168,32 @@ namespace TKM {
 		// 参照先
 		//==============================
 		ClearSequenceController* clearSeq_ = nullptr; // 参照先クリアシーケンスコントローラ
+		//==============================
+		// Transition helpers（ネスト削減）
+		//==============================
+		/// <summary>
+		/// 保留中の遷移要求を消費して返します。呼び出すと pendingRequest_ は None にリセットされます。
+		/// </summary>
+		/// <returns>保留中の遷移要求</returns>
+		TransitionRequest ConsumePendingRequest_();
+		/// <summary>
+		/// プレイヤー死亡からの遷移処理を行います。死亡処理開始からの経過時間に応じて、必要な処理を実行し、遷移要求を生成します。
+		/// </summary>
+		/// <param name="player">状態参照対象となるプレイヤー</param>
+		void HandlePlayerDeathTransition_(Player* player);
+		/// <summary>
+		/// Tキーによるタイトル戻りの遷移処理を行います。必要に応じてアイリスクローズを開始し、遷移要求を生成します。
+		/// </summary>
+		void TryStartTitleTransitionByKey_();
+		/// <summary>
+		/// アイリスクローズの更新処理を行います。閉じ進行が完了した場合、遷移要求を生成します。
+		/// </summary>
+		/// <param name="dt">前フレームからの経過時間（秒）</param>
+		TransitionRequest StepIrisClosing_();
+		/// <summary>
+		/// アイリスクローズを開始します。toTitle が true の場合はタイトルへ戻るためのアイリスクローズとなります。
+		/// </summary>
+		/// <param name="toTitle">タイトルへ戻るためのアイリスクローズかどうか</param>
+		void BeginIrisClosing_(bool toTitle);
 	};
 } // namespace TKM
