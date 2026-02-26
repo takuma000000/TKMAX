@@ -3,7 +3,7 @@
 #include <memory>
 #include "DirectXCommon.h"
 #include "srvManager.h"
-#include "camera/Camera.h"
+#include "Camera.h"
 #include "Player.h"
 #include "Object3dCommon.h"
 #include "SpriteCommon.h"

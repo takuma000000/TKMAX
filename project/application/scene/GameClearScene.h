@@ -4,7 +4,7 @@
 #include <memory>
 #include "DirectXCommon.h"
 #include "SrvManager.h"
-#include "camera/Camera.h"
+#include "Camera.h"
 #include "Player.h"
 #include "Object3dCommon.h"
 #include "DirectionalLight.h"

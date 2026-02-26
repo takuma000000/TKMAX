@@ -7,7 +7,7 @@
 #include "Input.h"
 #include "Player.h"
 #include "Sprite.h"
-#include "camera/Camera.h"
+#include "Camera.h"
 
 class BossManager;
 

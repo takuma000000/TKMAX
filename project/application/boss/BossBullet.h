@@ -3,7 +3,7 @@
 #include <string>
 #include "Object3d.h"
 #include "DirectXCommon.h"
-#include "camera/Camera.h"
+#include "Camera.h"
 #include "MyMath.h"
 #include "ParticleManager.h"
 #include "LineRenderer.h"

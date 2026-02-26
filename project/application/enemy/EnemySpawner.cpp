@@ -1,7 +1,7 @@
 #include "EnemySpawner.h"
 #include "Enemy.h"
 #include "Object3dCommon.h"
-#include "camera/Camera.h"
+#include "Camera.h"
 #include "DirectXCommon.h"
 #include "BaseScene.h"
 #include <ParticleManager.h>

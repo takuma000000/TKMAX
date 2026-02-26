@@ -2,7 +2,7 @@
 #define NOMINMAX
 #include <memory>
 #include "Object3d.h"
-#include "camera/Camera.h"
+#include "Camera.h"
 #include "ModelManager.h"
 #include "PlayerBullet.h"
 #include "Input.h"

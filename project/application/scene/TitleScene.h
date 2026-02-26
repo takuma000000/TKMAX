@@ -10,7 +10,7 @@
 #include "SpriteCommon.h"
 #include "Object3d.h"
 #include "Object3dCommon.h"
-#include "camera/Camera.h"
+#include "Camera.h"
 #include "Input.h"
 #include "SceneManager.h"
 #include "GameScene.h"

@@ -6,7 +6,7 @@
 #include "Enemy.h"          // 敵そのもの
 #include "EnemySpawner.h"   // 敵スポーンユーティリティ
 #include "Player.h"        // プレイヤー
-#include "camera/Camera.h"
+#include "Camera.h"
 #include "DirectXCommon.h"
 #include "BaseScene.h"
 #include "MidBossCore.h"

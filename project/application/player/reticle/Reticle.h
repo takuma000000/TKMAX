@@ -10,7 +10,7 @@
 #include "Object3d.h"
 #include "Object3dCommon.h"
 #include "DirectXCommon.h"
-#include "camera/Camera.h"
+#include "Camera.h"
 #include "Vector3.h"
 #include "MyMath.h"
 #include "Input.h"

@@ -2,7 +2,7 @@
 #include <memory>
 #include <vector>
 #include "DirectXCommon.h"
-#include "camera/Camera.h"
+#include "Camera.h"
 #include "MyMath.h"
 #include "Object3dCommon.h"
 #include "AudioManager.h"

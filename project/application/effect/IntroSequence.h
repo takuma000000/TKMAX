@@ -2,7 +2,7 @@
 #include <memory>
 
 #include "DirectXCommon.h"
-#include "camera/Camera.h"
+#include "Camera.h"
 #include "Sprite.h"
 #include "MyMath.h"
 #include "Easing.h"

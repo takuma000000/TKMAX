@@ -5,7 +5,7 @@
 #include "Easing.h"
 #include "IrisUtil.h"
 
-#include "camera/Camera.h"
+#include "Camera.h"
 #include "SkyBox.h"
 #include "Player.h"
 #include "manager/BossManager.h"

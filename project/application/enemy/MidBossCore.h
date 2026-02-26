@@ -2,7 +2,7 @@
 #include <memory>
 #include <functional>
 #include "Object3d.h"
-#include "camera/Camera.h"
+#include "Camera.h"
 #include "BaseScene.h"
 #include "ParticleManager.h"
 #include "LineRenderer.h"

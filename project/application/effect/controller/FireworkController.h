@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include <algorithm>
 #include "MyMath.h"
-#include "camera/Camera.h"
+#include "Camera.h"
 #include "WindowsAPI.h"
 
 namespace TKM {

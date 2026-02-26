@@ -2,7 +2,7 @@
 #include "Framework.h"
 #include "Input.h"
 #include "Object3dCommon.h"
-#include "camera/Camera.h"
+#include "Camera.h"
 #include "ImGuiManager.h"
 #include "SceneFactory.h"
 #include "AbstractSceneFactory.h"

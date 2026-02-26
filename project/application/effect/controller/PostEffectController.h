@@ -12,7 +12,7 @@
 #include "WaterRippleEffect.h"
 #include "FogVolume3D.h"
 #include "SmokeVolume3D.h"
-#include "camera/Camera.h"
+#include "Camera.h"
 #include "MyMath.h"
 
 namespace TKM {
