@@ -14,6 +14,7 @@
 #include "PauseMenuController.h"
 #include "TextureCatalog.h"
 #include "ModelCatalog.h"
+#include "CameraManager.h"
 
 //=============================================================
 // GameSceneクラス
@@ -86,12 +87,11 @@ public:
 	TKM::Camera* UpdateActiveCamera();
 	// Getter==================================
 	/// <summary>
-	/// カメラのポインタを取得します。
+	/// アクティブなカメラのポインタを取得します。
 	/// </summary>
 	/// <returns></returns>
 	TKM::Camera* GetCameraPtr() {
-		if (useDebugCamera_ && debugCamera_) { return debugCamera_.get(); }
-		return camera_.get();
+		return TKM::CameraManager::GetInstance()->GetActiveCamera();
 	}
 	/// <summary>
 	/// DirectXCommonのポインタを取得します。
@@ -113,9 +113,6 @@ private:
 	//======================================================================
 	// カメラ / ライト / スカイボックス
 	//======================================================================
-	std::unique_ptr<TKM::Camera> camera_ = nullptr;           // メインカメラ
-	std::unique_ptr<TKM::DebugCamera> debugCamera_ = nullptr; // デバッグカメラ
-	bool useDebugCamera_ = false;                              // デバッグカメラ使用フラグ
 	std::unique_ptr<TKM::DirectionalLight> directionalLight_ = nullptr; // ディレクショナルライト
 	std::unique_ptr<TKM::Skybox> skybox_ = nullptr;                      // スカイボックス
 	//======================================================================

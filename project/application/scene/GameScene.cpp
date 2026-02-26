@@ -27,7 +27,7 @@ void GameScene::Initialize() {
 	/// ──────────────── ラインレンダラーの初期化 ───────────────
 	LineRenderer::GetInstance()->Initialize(dxCommon_);
 	/// ──────────────── パーティクルの初期化 ───────────────
-	ParticleManager::GetInstance()->Initialize(dxCommon_, srvManager_, camera_.get());
+	ParticleManager::GetInstance()->Initialize(dxCommon_, srvManager_, TKM::CameraManager::GetInstance()->GetMainCamera());
 	// パーティクルグループの登録は ParticleGroupsCatalogクラス へ
 	ParticleGroupsCatalog::RegisterScene(ParticleManager::GetInstance());
 	// パーティクルエミッターの初期化
@@ -36,13 +36,13 @@ void GameScene::Initialize() {
 	/// ──────────────── スカイボックスの初期化 ───────────────
 	skybox_ = std::make_unique<Skybox>();
 	skybox_->Initialize(dxCommon_, srvManager_, "resources/texture/kloofendal_48d_partly_cloudy_puresky_1k.dds");
-	skybox_->SetCamera(camera_.get());
+	skybox_->SetCamera(TKM::CameraManager::GetInstance()->GetMainCamera());
 	/// ──────────────── 敵マネージャの初期化 ───────────────
 	enemyManager_ = std::make_unique<EnemyManager>();
-	enemyManager_->Initialize(dxCommon_, camera_.get(), this, player_.get());
+	enemyManager_->Initialize(dxCommon_, TKM::CameraManager::GetInstance()->GetMainCamera(), this, player_.get());
 	/// ──────────────── ボスマネージャの初期化 ───────────────
 	bossManager_ = std::make_unique<BossManager>();
-	bossManager_->Initialize(dxCommon_, camera_.get(), this, player_.get());
+	bossManager_->Initialize(dxCommon_, TKM::CameraManager::GetInstance()->GetMainCamera(), this, player_.get());
 	/// ──────────────── タイムスケールコントローラーの初期化 ───────────────
 	timeScale_.Initialize();
 	bossManager_->SetTimeScaleController(&timeScale_);
@@ -54,7 +54,7 @@ void GameScene::Initialize() {
 	postFx_->Initialize(dxCommon_, player_.get(), bossManager_.get());
 	/// ──────────────── ゲームフローの初期化 ───────────────
 	clearSeq_ = std::make_unique<TKM::ClearSequenceController>();
-	clearSeq_->Initialize(camera_.get(), player_.get(), bossManager_.get(), flow_.get(), dxCommon_, skybox_.get(), fireworkController_.get());
+	clearSeq_->Initialize(TKM::CameraManager::GetInstance()->GetMainCamera(), player_.get(), bossManager_.get(), flow_.get(), dxCommon_, skybox_.get(), fireworkController_.get());
 	flow_->BindClearSequence(clearSeq_.get()); // ゲームフローにクリアシーケンスをバインド
 }
 
@@ -76,7 +76,7 @@ void GameScene::Update() {
 	BeginFrameUpdate(rawDeltaTime, scaledDeltaTime); // フレーム開始処理
 
 	// クリアシーケンス中は他の更新をスキップ
-	if (flow_->UpdateClear(rawDeltaTime, scaledDeltaTime, postFx_.get(), ui_.get(), bossManager_.get(), camera_.get(), player_.get())) {
+	if (flow_->UpdateClear(rawDeltaTime, scaledDeltaTime, postFx_.get(), ui_.get(), bossManager_.get(), TKM::CameraManager::GetInstance()->GetMainCamera(), player_.get())) {
 		return;
 	}
 
@@ -112,14 +112,16 @@ void GameScene::Draw3D() {
 		bossManager_->Draw(dxCommon_); // ボス描画
 	}
 
-	TKM::Camera* activeCamera = (useDebugCamera_ && debugCamera_) ? (TKM::Camera*)debugCamera_.get() : camera_.get(); // 今フレームのアクティブカメラを取得
+	TKM::Camera* activeCamera = TKM::CameraManager::GetInstance()->GetActiveCamera(); // 今フレームのアクティブカメラを取得
 	postFx_->DrawVolumes(activeCamera); // ポストエフェクトのボリューム描画（デバッグ用）
 
 	ParticleManager::GetInstance()->Draw();
 
 #ifdef USE_IMGUI
-	Matrix4x4 vp = (useDebugCamera_ && debugCamera_) ? debugCamera_->GetViewProjectionMatrix() : camera_->GetViewProjectionMatrix(); // 今フレームのVP行列を取得
-	LineRenderer::GetInstance()->Draw(vp); // ライン描画
+	TKM::Camera* cam = TKM::CameraManager::GetInstance()->GetActiveCamera();
+	if (cam) {
+		LineRenderer::GetInstance()->Draw(cam->GetViewProjectionMatrix());
+	}
 #endif
 }
 
@@ -138,14 +140,8 @@ void GameScene::SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float s
 
 TKM::Camera* GameScene::UpdateActiveCamera() {
 	// ──────────────── アクティブカメラの決定＆更新 ───────────────
-	TKM::Camera* activeCamera = camera_.get();
-	if (useDebugCamera_ && debugCamera_) {
-		debugCamera_->Update();	// デバッグカメラを更新
-		activeCamera = debugCamera_.get();
-	} else {
-		// 通常カメラを更新
-		camera_->Update();
-	}
+	TKM::Camera* activeCamera = TKM::CameraManager::GetInstance()->Update(); // カメラマネージャーに更新を任せて、今フレームのアクティブカメラを取得
+	if (!activeCamera) { return nullptr; } // 万が一カメラマネージャーからnullptrが返ってきたら更新をスキップ（通常はありえないはず）
 
 	// ここで「今フレームのカメラ」を全部に渡す
 	player_->SetCamera(activeCamera);
@@ -199,22 +195,13 @@ void GameScene::InitializeObjects() {
 // カメラを作成し、各オブジェクトに適用する
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeCamera() {
-	camera_ = std::make_unique<TKM::Camera>();
+	const Vector3 mainRot = { 0.12f,-1.2f,0.0f }; // カメラの回転（ラジアン）
+	const Vector3 mainPos = { 0.0f,0.0f,-30.0f }; // カメラの位置
+	const Vector3 debugTarget = { 0.0f, 0.0f, 0.0f }; // デバッグカメラの注視点
+	// カメラマネージャーの初期化
+	TKM::CameraManager::GetInstance()->Initialize(mainRot, mainPos, debugTarget);
 
-	// IntroSequence に移したなら、ここは固定値でOK
-	const float camPitchStart = 0.12f; // カメラの初期ピッチ（上向き） -1.2fくらいがちょうど良い
-	const float camYawStart = -1.2f; // カメラの初期ヨー（左向き） -1.2fくらいがちょうど良い
-
-	camera_->SetRotate({ camPitchStart, camYawStart, 0.0f }); // カメラの初期回転をセット
-	camera_->SetTranslate({ 0.0f,0.0f,-30.0f }); // カメラの初期位置をセット（プレイヤーから少し離す）
-
-	debugCamera_ = std::make_unique<DebugCamera>();
-	debugCamera_->Initialize(
-		camera_->GetTranslate(), //カメラの位置を渡す
-		Vector3{ 0.0f, 0.0f, 0.0f } // カメラの注視点を渡す（最初はプレイヤーの位置と同じ）
-	);
-
-	player_->SetCamera(camera_.get());
+	player_->SetCamera(TKM::CameraManager::GetInstance()->GetMainCamera()); // プレイヤーに通常カメラを適用
 }
 
 void GameScene::ImGuiDebug() {
@@ -228,12 +215,10 @@ void GameScene::ImGuiDebug() {
 	/////////////////////////////////////////////////////
 	enemyManager_->ImGuiDebug(); // 敵マネージャのデバッグ表示
 	/////////////////////////////////////////////////////
-	//camera->ImGuiDebug(); // カメラのデバッグ表示
-
-	ImGui::Begin("デバッグカメラ");
-	ImGui::Checkbox("オン/オフ", &useDebugCamera_);
-	ImGui::Text("DebugCam: RMB rotate, LMB/Z, MMB/Y");
-	ImGui::End();
+	bool useDbg = TKM::CameraManager::GetInstance()->IsUsingDebugCamera();
+	if (ImGui::Checkbox("オン/オフ", &useDbg)) {
+		TKM::CameraManager::GetInstance()->SetUseDebugCamera(useDbg);
+	}
 	/////////////////////////////////////////////////////
 	//skybox_->ImGuiUpdate(); // スカイボックスのデバッグ表示
 	/////////////////////////////////////////////////////
@@ -252,12 +237,15 @@ void GameScene::UpdateAirStreak(float rawDeltaTime) {
 	airStreakTimer_ += rawDeltaTime;
 	// どれくらいの密度で出すか（小さいほど密度↑）
 	const float emitInterval = 0.02f; // 0.02秒ごと ≒ 1秒あたり50個
+	// アクティブなカメラを取得
+	auto* cam = TKM::CameraManager::GetInstance()->GetActiveCamera();
+	if (!cam) { return; } // 万が一カメラが存在しない場合は出さない（通常はありえないはず）
 
 	while (airStreakTimer_ >= emitInterval) { // 一定時間経過したら出す
 		airStreakTimer_ -= emitInterval; // タイマーリセット
 
 		// カメラ基準ベクトル
-		const Matrix4x4 camW = camera_->GetWorldMatrix();
+		const Matrix4x4 camW = cam->GetWorldMatrix();
 		Vector3 camPos = { camW.m[3][0], camW.m[3][1], camW.m[3][2] };
 		Vector3 camFwd = MyMath::Normalize(Vector3{ camW.m[2][0], camW.m[2][1], camW.m[2][2] });
 		Vector3 camRight = MyMath::Normalize(Vector3{ camW.m[0][0], camW.m[0][1], camW.m[0][2] });
@@ -329,7 +317,7 @@ void GameScene::BeginFrameUpdate(float& outRawDeltaTime, float& outScaledDeltaTi
 }
 
 void GameScene::UpdateFlow() {
-	flow_->Update(kFixedDeltaTime_, camera_.get(), enemiesInitialized_, requestInitEnemies_);
+	flow_->Update(kFixedDeltaTime_, TKM::CameraManager::GetInstance()->GetActiveCamera(), enemiesInitialized_, requestInitEnemies_); // ゲームフローの更新（イントロシーケンスの進行管理など）
 }
 
 void GameScene::UpdateEnemyAndWaveLogic(float scaledDeltaTime) {
