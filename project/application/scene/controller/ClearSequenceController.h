@@ -5,13 +5,12 @@
 #include "Easing.h"
 #include "IrisUtil.h"
 
-#include "Camera.h"
+#include "CameraManager.h"
 #include "SkyBox.h"
 #include "Player.h"
 #include "manager/BossManager.h"
 #include "GameFlowController.h"
 #include "DirectXCommon.h"
-
 #include "FireworkController.h"
 
 namespace TKM {
@@ -29,7 +28,6 @@ namespace TKM {
 		/// <summary>
 		/// ゲーム進行関連システムを初期化します。
 		/// </summary>
-		/// <param name="camera">演出および描画に使用するカメラ</param>
 		/// <param name="player">制御対象となるプレイヤー</param>
 		/// <param name="bossManager">ボス管理クラス</param>
 		/// <param name="flow">ゲーム進行フロー制御クラス</param>
@@ -37,7 +35,6 @@ namespace TKM {
 		/// <param name="skybox">背景表示用スカイボックス</param>
 		/// <param name="fireworkController">花火演出制御クラス</param>
 		void Initialize(
-			Camera* camera,
 			Player* player,
 			BossManager* bossManager,
 			GameFlowController* flow,
@@ -67,11 +64,6 @@ namespace TKM {
 		/// </summary>
 		/// <param name="v">プレイヤーの飛行速度</param>
 		void SetPlayerSpeed(float v);
-		/// <summary>
-		/// プレイヤーの最短飛行時間を設定します。
-		/// </summary>
-		/// <param name="v">飛行の最短継続時間（秒）</param>
-		void SetPlayerFlyMinTime(float v);
 		/// <summary>
 		/// プレイヤーの飛行距離を設定します。
 		/// </summary>
@@ -108,7 +100,6 @@ namespace TKM {
 		//==============================
 		// 参照先
 		//==============================
-		Camera* camera_ = nullptr;
 		Player* player_ = nullptr;
 		BossManager* bossManager_ = nullptr;
 		GameFlowController* flow_ = nullptr;

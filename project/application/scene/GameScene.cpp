@@ -54,7 +54,7 @@ void GameScene::Initialize() {
 	postFx_->Initialize(dxCommon_, player_.get(), bossManager_.get());
 	/// ──────────────── ゲームフローの初期化 ───────────────
 	clearSeq_ = std::make_unique<TKM::ClearSequenceController>();
-	clearSeq_->Initialize(TKM::CameraManager::GetInstance()->GetMainCamera(), player_.get(), bossManager_.get(), flow_.get(), dxCommon_, skybox_.get(), fireworkController_.get());
+	clearSeq_->Initialize(player_.get(), bossManager_.get(), flow_.get(), dxCommon_, skybox_.get(), fireworkController_.get());
 	flow_->BindClearSequence(clearSeq_.get()); // ゲームフローにクリアシーケンスをバインド
 }
 
@@ -113,7 +113,7 @@ void GameScene::Draw3D() {
 	}
 
 	TKM::Camera* activeCamera = TKM::CameraManager::GetInstance()->GetActiveCamera(); // 今フレームのアクティブカメラを取得
-	postFx_->DrawVolumes(activeCamera); // ポストエフェクトのボリューム描画（デバッグ用）
+	postFx_->DrawVolumes(activeCamera); // ポストエフェクトのボリューム描画（デバッグ用）zyaa
 
 	ParticleManager::GetInstance()->Draw();
 

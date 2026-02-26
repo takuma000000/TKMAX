@@ -1,7 +1,6 @@
 #pragma once
 #include "BaseScene.h"
 
-#include "DebugCamera.h"
 #include "GameClearScene.h"
 #include "TitleScene.h"
 #include "manager/EnemyManager.h"
