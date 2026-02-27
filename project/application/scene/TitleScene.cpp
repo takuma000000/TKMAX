@@ -6,7 +6,6 @@
 #include <Windows.h>
 #include <cmath>
 #include "AudioManager.h"
-#include "MyMath.h"
 #include "TextureCatalog.h"
 #include "ModelCatalog.h"
 #include "ParticleGroupsCatalog.h"
@@ -45,7 +44,7 @@ static float LookAtPitch_(const Vector3& from, const Vector3& to) {
 void TitleScene::Initialize() {
 	/// ------------- カメラ初期化 -------------
 	const Vector3 mainRot = { 0.0f, 0.0f, 0.0f }; // カメラの初期回転（オイラー角）
-	const Vector3 mainPos = { 0.0f, camY_, -30.0f }; // カメラの初期平行移動
+	const Vector3 mainPos = { 0.0f, camY_, camDist_ }; // カメラの初期平行移動
 	const Vector3 debugTarget = { 0.0f, 0.0f, 0.0f }; // デバッグカメラの注視点
 	// カメラマネージャー初期化
 	TKM::CameraManager::GetInstance()->Initialize(mainRot, mainPos, debugTarget);
@@ -158,12 +157,7 @@ void TitleScene::Update() {
 	if (earlyExitUpdate_) { return; }
 	// ------------------------------------------------
 
-	// Yキーでゲームオーバーシーンへ
-	if (TKM::Input::GetInstance()->TriggerKey(DIK_Y)) {
-		sceneManager_->SetNextScene(new GameOverScene(dxCommon_, srvManager_));
-		return;
-	}
-
+	// スカイボックス回転更新
 	constexpr float kTwoPi = 6.2831853f;
 	skyPitch_ -= skyRotSpeedX_;
 	if (skyPitch_ > kTwoPi)  skyPitch_ -= kTwoPi;

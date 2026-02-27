@@ -13,18 +13,16 @@
 #include "CameraManager.h"
 #include "Input.h"
 #include "SceneManager.h"
-#include "GameScene.h"
 #include <SkyBox.h> 
-#include <Easing.h>
-#include "GameOverScene.h"
 #include "WaterRippleEffect.h"
-#include "IrisUtil.h"
 #include "TitleMenuController.h"
 #include "Enemy.h"
 #include <random>
 #include "Player.h"
 #include "BossEnemy.h"
 #include "StateMachine.h"
+#include "GameOverScene.h"
+#include "GameScene.h"
 
 //=============================================================
 // TitleSceneクラス
@@ -80,7 +78,7 @@ private:
 	float skyPitch_ = 0.0f; // スカイボックスのピッチ（X軸回転）角
 	float skyRotSpeedX_ = 0.002f; // スカイボックスのX軸回転速度（ラジアン/フレーム）
 	// カメラ
-	float camDist_ = 20.0f;  // カメラ距離（+Z側）
+	float camDist_ = -30.0f;  // カメラ距離（+Z側）
 	float camY_ = 3.0f;   // カメラ高さ
 	//======================================================================
 	// タイトル敵のシーケンス制御
@@ -98,8 +96,6 @@ private:
 	float vanishTimer_ = 0.0f; // 消滅シーケンスの経過時間（秒）
 	float rippleTimer_ = 0.0f; // 波紋エフェクトの経過時間（秒）
 	// シーケンスのタイミング定数
-	static constexpr float kHideUiDelaySec_ = 0.10f; // UI非表示までの遅延時間（秒）
-	static constexpr float kStartVanishDelaySec_ = 0.18f; // 消滅開始までの遅延時間（秒）
 	static constexpr float kVanishDelayMaxSec_ = 0.65f; // 消滅遅延の最大時間（秒）
 	static constexpr float kRippleWaitSec_ = 0.12f; // 波紋エフェクト発生までの待機時間（秒）
 	int kEnemyCount = 100; // タイトル敵の数
@@ -128,20 +124,13 @@ private:
 	std::unique_ptr<TKM::Sprite> iris_ = nullptr; // アイリス（白円）スプライト
 	bool irisClosing_ = false;   // trueで「閉じる」演出中
 	float irisScale_ = 0.2f;    // 開始スケール（小さめ）
-	float irisSpeed_ = 2.8f;    // 拡大速度（好みで調整）
 	float irisMax_ = 4.5f;      // これを超えたら画面を覆ったとみなす
-	int irisHoldFrames_ = 0; // 閉じた状態を維持するフレーム数（0なら維持なし）
-	float irisT_ = 0.0f;            // 進行度(0→1)
-	float irisDuration_ = 0.8f;     // アニメ時間(秒)
 	float irisStartScale_ = 10.0f;  // 開始サイズ
 	float irisEndScale_ = 0.0f;     // 目標（Initializeでセット）
 	Ease::Tween irisTween_; // イージング関数
 	// アイリスのトランジション時間
 	static constexpr float kIrisDurationSec_ = 0.8f;
 	bool irisOpening_ = true; // trueで「開く」演出中
-	static constexpr float kPi_ = 3.14159265358979323846f; // π
-	static constexpr float kHalfPi_ = kPi_ * 0.5f;         // π/2
-	static constexpr float kTwoPi_ = kPi_ * 2.0f;          // 2π
 	//======================================================================
 	// エフェクト / UI
 	//======================================================================
@@ -163,13 +152,6 @@ private:
 	// 回転（ラジアン想定）
 	Vector3 titlePlayerRot_ = { 0.0f, 0.0f, 0.0f }; // 主にy(Yaw)を使う
 	Vector3 titleBossRot_ = { 0.0f, 0.0f, 0.0f }; // 主にy(Yaw)を使う
-	// 自動で見つめ合うか（Yaw自動）
-	bool showdownAutoLook_ = true; // trueでPlayerがBossを見つめる（Yaw自動更新）、falseで両者とも正面向き固定
-	// リセット用の初期値（今の値をそのまま固定したいならここを基準に）
-	const Vector3 kShowdownDefaultPlayerPos_ = { -12.0f, -3.8f, 13.3f };
-	const Vector3 kShowdownDefaultBossPos_ = { 24.7f,  6.7f, 53.3f };
-	const Vector3 kShowdownDefaultPlayerRot_ = { 0.0f, 0.0f, 0.0f };
-	const Vector3 kShowdownDefaultBossRot_ = { 0.0f, 0.0f, 0.0f };
 	// 見つめ合い：回転調整（度）
 	Vector3 titlePlayerRotDeg_ = { 0.0f, 0.0f, 0.0f }; // 手動オフセット（度）
 	Vector3 titleBossRotDeg_ = { 0.0f, 0.0f, 0.0f }; // 手動オフセット（度）
@@ -215,7 +197,6 @@ private:
 	//======================================================================
 	TKM::StateMachine flowSM_; // タイトルのFlow制御用ステートマシン
 	bool earlyExitUpdate_ = false; // Updateの早期抜けフラグ（シーン切り替えなどでUpdateの残り処理をスキップしたいときにtrueにする）
-
 	// タイトルFlowの各ステートクラスをフレンド宣言
 	friend class TitleFlowIntroIrisOpenState; // タイトルFlow：イントロのアイリス開きステート
 	friend class TitleFlowIdleState; // タイトルFlow：アイドルステート（敵が出てきてない状態）
