@@ -65,7 +65,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\2d;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\func\common;$(ProjectDir)engine\func\math;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\effect\post;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir)engine\effect\light;$(ProjectDir)engine\audio;$(ProjectDir)engine\effect\particle;$(ProjectDir)engine\effect\line;$(ProjectDir)application\scene;$(ProjectDir)engine\imgui;$(ProjectDir)application\player;$(ProjectDir)application\enemy;$(ProjectDir)application\boss;$(ProjectDir)application\effect;$(ProjectDir)engine\csv;$(ProjectDir)application\controller;$(ProjectDir)application\ui;$(ProjectDir)application\effect\controller;$(ProjectDir)application\scene\controller;$(ProjectDir)application\catalog;$(ProjectDir)engine\3d\camera;$(ProjectDir)engine\3d\camera\manager;$(ProjectDir)engine\state;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\2d;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\func\common;$(ProjectDir)engine\func\math;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\effect\post;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir)engine\effect\light;$(ProjectDir)engine\audio;$(ProjectDir)engine\effect\particle;$(ProjectDir)engine\effect\line;$(ProjectDir)application\scene;$(ProjectDir)engine\imgui;$(ProjectDir)application\player;$(ProjectDir)application\enemy;$(ProjectDir)application\boss;$(ProjectDir)application\effect;$(ProjectDir)engine\csv;$(ProjectDir)application\controller;$(ProjectDir)application\ui;$(ProjectDir)application\effect\controller;$(ProjectDir)application\scene\controller;$(ProjectDir)application\catalog;$(ProjectDir)engine\3d\camera;$(ProjectDir)engine\3d\camera\manager;$(ProjectDir)engine\state;$(ProjectDir)application\state;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -94,7 +94,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\2d;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\func\common;$(ProjectDir)engine\func\math;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\effect\post;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir)engine\effect\light;$(ProjectDir)engine\audio;$(ProjectDir)engine\effect\particle;$(ProjectDir)engine\effect\line;$(ProjectDir)application\scene;$(ProjectDir)engine\imgui;$(ProjectDir)application\player;$(ProjectDir)application\enemy;$(ProjectDir)application\boss;$(ProjectDir)application\effect;$(ProjectDir)engine\csv;$(ProjectDir)application\controller;$(ProjectDir)application\ui;$(ProjectDir)application\effect\controller;$(ProjectDir)application\scene\controller;$(ProjectDir)application\catalog;$(ProjectDir)engine\3d\camera;$(ProjectDir)engine\3d\camera\manager;$(ProjectDir)engine\state;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\2d;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\func\common;$(ProjectDir)engine\func\math;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\effect\post;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir)engine\effect\light;$(ProjectDir)engine\audio;$(ProjectDir)engine\effect\particle;$(ProjectDir)engine\effect\line;$(ProjectDir)application\scene;$(ProjectDir)engine\imgui;$(ProjectDir)application\player;$(ProjectDir)application\enemy;$(ProjectDir)application\boss;$(ProjectDir)application\effect;$(ProjectDir)engine\csv;$(ProjectDir)application\controller;$(ProjectDir)application\ui;$(ProjectDir)application\effect\controller;$(ProjectDir)application\scene\controller;$(ProjectDir)application\catalog;$(ProjectDir)engine\3d\camera;$(ProjectDir)engine\3d\camera\manager;$(ProjectDir)engine\state;$(ProjectDir)application\state;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>MinSpace</Optimization>
     </ClCompile>
     <Link>
@@ -213,6 +213,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\catalog\TextureCatalog.cpp" />
     <ClCompile Include="application\catalog\ModelCatalog.cpp" />
     <ClCompile Include="engine\state\StateMachine.cpp" />
+    <ClCompile Include="application\state\TitleFlowStates.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\enemy\manager\EnemyManager.h" />
@@ -313,6 +314,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\catalog\TextureCatalog.h" />
     <ClInclude Include="engine\func\math\Transform.h" />
     <ClInclude Include="engine\state\StateMachine.h" />
+    <ClInclude Include="application\state\TitleFlowStates.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

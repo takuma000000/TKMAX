@@ -24,12 +24,13 @@
 #include <random>
 #include "Player.h"
 #include "BossEnemy.h"
+#include "StateMachine.h"
 
 //=============================================================
 // TitleSceneクラス
 // タイトル画面を管理するシーンクラス。
 //=============================================================
-class TitleScene : public TKM::BaseScene{
+class TitleScene : public TKM::BaseScene, public TKM::IStateContext {
 public:
 	TitleScene(TKM::DirectXCommon* dxCommon, TKM::SrvManager* srvManager) : dxCommon_(dxCommon), srvManager_(srvManager) {}
 
@@ -84,14 +85,6 @@ private:
 	//======================================================================
 	// タイトル敵のシーケンス制御
 	//======================================================================
-	enum class Flow { // シーケンスの流れ
-		IntroIrisOpen, // タイトル入場（アイリスオープン）
-		Idle, // 待機
-		Vanishing, // 消滅（UI非表示のまま）
-		Ripple, // 波紋エフェクト発生
-		IrisClose // タイトル退場（アイリスクローズ）
-	};
-
 	struct TitleEnemyUnit { // タイトル敵ユニット
 		std::unique_ptr<Enemy> enemy_; // 敵オブジェクト
 		float vanishDelay_ = 0.0f; // 消滅開始までの遅延時間（秒）
@@ -99,7 +92,6 @@ private:
 	};
 	// タイトル敵の数式定義（π系）
 	std::vector<TitleEnemyUnit> titleEnemies_; // タイトル敵ユニットのリスト
-	Flow flow_ = Flow::IntroIrisOpen;
 	std::mt19937 rng_{ std::random_device{}() }; // 乱数生成器
 	bool showUi_ = true; // UI表示フラグ（trueで表示、falseで非表示）
 	float seqTimer_ = 0.0f; // シーケンス全体の経過時間（秒）
@@ -218,4 +210,16 @@ private:
 	/// </summary>
 	/// <param name="dt">デルタタイム</param>
 	void UpdateTitleBeamClash_(float dt);
+	//======================================================================
+	// タイトルFlow（ステートマシン）
+	//======================================================================
+	TKM::StateMachine flowSM_; // タイトルのFlow制御用ステートマシン
+	bool earlyExitUpdate_ = false; // Updateの早期抜けフラグ（シーン切り替えなどでUpdateの残り処理をスキップしたいときにtrueにする）
+
+	// タイトルFlowの各ステートクラスをフレンド宣言
+	friend class TitleFlowIntroIrisOpenState; // タイトルFlow：イントロのアイリス開きステート
+	friend class TitleFlowIdleState; // タイトルFlow：アイドルステート（敵が出てきてない状態）
+	friend class TitleFlowVanishingState; // タイトルFlow：消滅シーケンスステート
+	friend class TitleFlowRippleState; // タイトルFlow：波紋エフェクトステート
+	friend class TitleFlowIrisCloseState; // タイトルFlow：アイリス閉じステート
 };

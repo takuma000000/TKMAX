@@ -10,6 +10,7 @@
 #include "TextureCatalog.h"
 #include "ModelCatalog.h"
 #include "ParticleGroupsCatalog.h"
+#include "TitleFlowStates.h"
 
 #ifdef USE_IMGUI
 #include "imgui.h"
@@ -58,6 +59,10 @@ void TitleScene::Initialize() {
 	TKM::ParticleManager::GetInstance()->Initialize(dxCommon_, srvManager_, TKM::CameraManager::GetInstance()->GetMainCamera());
 	TKM::ParticleGroupsCatalog::RegisterScene(TKM::ParticleManager::GetInstance()); // タイトルシーン用のパーティクルグループを登録
 	///-----------------------------------------
+	// シーケンス開始（StateMachine）
+	flowSM_.Initialize(this); // StateMachine にコンテキストをセットして初期化
+	flowSM_.Change(std::make_unique<TitleFlowIntroIrisOpenState>()); // 最初の状態は「開幕アイリスオープン」
+
 	// タイトルスプライト初期化
 	sprite_ = std::make_unique<Sprite>();
 	sprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, "./resources/texture/title_kuraran.dds");
@@ -121,8 +126,6 @@ void TitleScene::Initialize() {
 	// メニュー中の見つめ合い用
 	CreateShowdownActors_();
 
-	// シーケンス開始
-	flow_ = Flow::IntroIrisOpen;
 	// 最初は敵だけ見せたいのでUIは消す
 	showUi_ = false;
 	titleMenu_->SetVisible(false);
@@ -147,170 +150,13 @@ void TitleScene::Update() {
 	sprite_->Update(); // タイトル画像更新
 	rippleEffect_->Update(dt_); // 波紋エフェクト更新
 
-	// アイリス（開幕：開く）更新
-	if (irisOpening_) {
-		irisScale_ = UpdateIrisScale(iris_.get(), irisTween_, dt_);
-
-		if (irisTween_.Finished()) {
-			irisOpening_ = false;
-			// 念のため完全に消す（Draw条件でも消えるけど保険）
-			irisScale_ = 0.0f;
-			iris_->SetSize({ irisScale_, irisScale_ });
-		}
-	}
-
 	// ------------------------------------------------
-	// Flow（タイトル演出）
+	// Flow（タイトル演出） - StateMachine
 	// ------------------------------------------------
-	switch (flow_) {
-	case Flow::IntroIrisOpen:
-		// 開幕アイリスが終わったら Idle へ（ここではまだ消さない）
-		if (!irisOpening_) {
-			flow_ = Flow::Idle;
-			seqTimer_ = 0.0f;      // ★ 2秒待ちタイマーとして使う
-			break;
-		}
-
-		for (auto& u : titleEnemies_) {
-			if (!u.alive_ || !u.enemy_) { continue; }
-			u.enemy_->Update(dt_);
-		}
-		break;
-	case Flow::Idle:
-		// 敵うようよ更新（残ってる敵がいる場合だけ）
-		for (auto& u : titleEnemies_) {
-			if (!u.alive_ || !u.enemy_) { continue; }
-			u.enemy_->Update(dt_);
-		}
-
-		// -------------------------
-		// ① メニューが出てる時：メニュー操作
-		// -------------------------
-		if (showUi_) {
-			const auto cmd = titleMenu_->Update(dt_);
-			// メニューの見つめ合い更新
-			UpdateShowdownActors_(dt_);
-			if (cmd == TitleMenuController::Command::Start) {
-
-				// メニューでStartしたら、従来の「波紋→アイリス閉」へ
-				showMenuAfterVanish_ = false; // 念のため
-				flow_ = Flow::Ripple;
-				rippleTimer_ = 0.0f;
-
-				// 波紋を出す
-				TKM::WaterRippleEffect::RippleDesc d{};
-				d.duration_ = 1.0f;
-				d.radiusMax_ = 0.857f;
-				d.amplitude_ = 0.1f;
-				d.frequency_ = 80.0f;
-				d.width_ = 10.0f;
-				d.color_ = { 1.0f, 1.0f, 1.0f };
-				d.colorIntensity_ = 0.0f;
-				rippleEffect_->Trigger({ 0.5f, 0.5f }, d);
-			} else if (cmd == TitleMenuController::Command::Exit) {
-				sceneManager_->RequestQuit();
-				PostQuitMessage(0);
-				return;
-			}
-			break; // メニュー表示中はここで終わり
-		}
-		// -------------------------
-		// ② メニューが出てない時：Idleでの待ち or 自動で次のシーケンスへ
-		// -------------------------
-		{
-			seqTimer_ += dt_; // Idle中の経過時間
-
-			const bool autoGo = (seqTimer_ >= 1.4f);
-
-			if (autoGo) {
-				showUi_ = false;
-				titleMenu_->SetVisible(false);
-
-				showMenuAfterVanish_ = true;   // 消滅後にメニューを出す
-				ScheduleVanish_(); // UI消して敵が消え始めるスケジュールセット
-				flow_ = Flow::Vanishing; // シーケンス進行：消滅へ
-				vanishTimer_ = 0.0f; // 消滅開始タイマーリセット
-				seqTimer_ = 0.0f; // 念のため戻す
-			}
-		}
-		break;
-	case Flow::Vanishing:
-		vanishTimer_ += dt_;
-
-		// 消えるまで敵は動いてOK
-		for (auto& u : titleEnemies_) {
-			if (!u.alive_ || !u.enemy_) { continue; }
-			u.enemy_->Update(dt_);
-		}
-
-		// ランダム時差で消す
-		for (auto& u : titleEnemies_) {
-			if (!u.alive_ || !u.enemy_) { continue; }
-
-			if (vanishTimer_ >= u.vanishDelay_) {
-				EmitTitleExplode_(u.enemy_->GetWorldPosition());
-				u.alive_ = false;
-			}
-		}
-
-		// 全滅したら「メニューへ」 or 「波紋へ」
-		if (AllEnemiesGone_()) {
-
-			if (showMenuAfterVanish_) {
-				// A押しで消した場合：ここでメニュー表示
-				showUi_ = true;
-				titleMenu_->SetVisible(true);
-
-				// この後Startを押したら波紋へ行きたいので、ここで待機に戻す
-				flow_ = Flow::Idle;
-			} else {
-				// 従来ルート：波紋 → IrisClose
-				flow_ = Flow::Ripple;
-				rippleTimer_ = 0.0f;
-
-				// 波紋を出す
-				TKM::WaterRippleEffect::RippleDesc d{};
-				d.duration_ = 1.0f;
-				d.radiusMax_ = 0.857f;
-				d.amplitude_ = 0.1f;
-				d.frequency_ = 80.0f;
-				d.width_ = 10.0f;
-				d.color_ = { 1.0f, 1.0f, 1.0f };
-				d.colorIntensity_ = 0.0f;
-				rippleEffect_->Trigger({ 0.5f, 0.5f }, d);
-			}
-		}
-		break;
-	case Flow::Ripple:
-		rippleTimer_ += dt_;
-
-		// 波紋を見せる待ち
-		if (rippleTimer_ >= kRippleWaitSec_) {
-			flow_ = Flow::IrisClose;
-			irisClosing_ = true;
-
-			irisTween_.Reset(
-				0.0f,
-				irisMax_,
-				kIrisDurationSec_,
-				Ease::Type::InBack
-			);
-		}
-		break;
-	case Flow::IrisClose:
-		// irisClosing_ 更新は下の共通処理に任せる
-		break;
-	}
-
-	// アイリス（閉）更新
-	if (irisClosing_) {
-		irisScale_ = UpdateIrisScale(iris_.get(), irisTween_, dt_);
-
-		if (irisTween_.Finished()) {
-			sceneManager_->SetNextScene(new GameScene(dxCommon_, srvManager_));
-			return;
-		}
-	}
+	earlyExitUpdate_ = false; // 更新の早期終了フラグ（これがtrueのときは、以降の更新処理をスキップする）
+	flowSM_.Update(dt_);
+	if (earlyExitUpdate_) { return; }
+	// ------------------------------------------------
 
 	// Yキーでゲームオーバーシーンへ
 	if (TKM::Input::GetInstance()->TriggerKey(DIK_Y)) {
@@ -392,13 +238,9 @@ void TitleScene::Update() {
 	// =========================================================
 	if (ImGui::CollapsingHeader("状態 / タイマー", ImGuiTreeNodeFlags_DefaultOpen)) {
 
-		const char* flowName = "";
-		switch (flow_) {
-		case Flow::IntroIrisOpen: flowName = "アイリスオープン中"; break;
-		case Flow::Idle:          flowName = "待機中"; break;
-		case Flow::Vanishing:     flowName = "消滅演出中"; break;
-		case Flow::Ripple:        flowName = "波紋演出中"; break;
-		case Flow::IrisClose:     flowName = "アイリスクローズ中"; break;
+		const char* flowName = "（なし）";
+		if (flowSM_.GetState()) {
+			if (dynamic_cast<TitleFlowIntroIrisOpenState*>(flowSM_.GetState())) { flowName = "アイリスオープン中"; } else if (dynamic_cast<TitleFlowIdleState*>(flowSM_.GetState())) { flowName = "待機中"; } else if (dynamic_cast<TitleFlowVanishingState*>(flowSM_.GetState())) { flowName = "消滅演出中"; } else if (dynamic_cast<TitleFlowRippleState*>(flowSM_.GetState())) { flowName = "波紋演出中"; } else if (dynamic_cast<TitleFlowIrisCloseState*>(flowSM_.GetState())) { flowName = "アイリスクローズ中"; }
 		}
 
 		ImGui::Text("現在の状態 : %s", flowName);
