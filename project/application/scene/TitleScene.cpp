@@ -42,19 +42,23 @@ static float LookAtPitch_(const Vector3& from, const Vector3& to) {
 }
 
 void TitleScene::Initialize() {
-	camera_ = std::make_unique<Camera>();
-	camera_->SetRotate({ 0.0f, 0.0f, 0.0f });
-	camera_->SetTranslate({ 0.0f, camY_, -30.0f });
-
-	// ------------ テクスチャ読み込み -----------
+	/// ------------- カメラ初期化 -------------
+	const Vector3 mainRot = { 0.0f, 0.0f, 0.0f }; // カメラの初期回転（オイラー角）
+	const Vector3 mainPos = { 0.0f, camY_, -30.0f }; // カメラの初期平行移動
+	const Vector3 debugTarget = { 0.0f, 0.0f, 0.0f }; // デバッグカメラの注視点
+	// カメラマネージャー初期化
+	TKM::CameraManager::GetInstance()->Initialize(mainRot, mainPos, debugTarget);
+	// 初期はメインカメラ
+	camera_ = TKM::CameraManager::GetInstance()->GetMainCamera();
+	/// ------------ テクスチャ読み込み -----------
 	TextureCatalog::LoadTextureCatalogs(); // タイトルシーンで使うテクスチャをまとめてロード
-	//------------ モデル読み込み ---------------
+	///------------ モデル読み込み ---------------
 	ModelCatalog::LoadModelCatalogs(dxCommon_); // タイトルシーンで使うモデルをまとめてロード
-	//---------------パーティクル----------------
-	TKM::ParticleManager::GetInstance()->Initialize(dxCommon_, srvManager_, camera_.get());
+	///---------------パーティクル----------------
+	TKM::ParticleManager::GetInstance()->Initialize(dxCommon_, srvManager_, TKM::CameraManager::GetInstance()->GetMainCamera());
 	TKM::ParticleGroupsCatalog::RegisterScene(TKM::ParticleManager::GetInstance()); // タイトルシーン用のパーティクルグループを登録
-	//-----------------------------------------
-
+	///-----------------------------------------
+	// タイトルスプライト初期化
 	sprite_ = std::make_unique<Sprite>();
 	sprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, "./resources/texture/title_kuraran.dds");
 	// 画面中央に表示
@@ -66,7 +70,7 @@ void TitleScene::Initialize() {
 
 	skybox_ = std::make_unique<TKM::Skybox>();
 	skybox_->Initialize(dxCommon_, srvManager_, "resources/texture/kloofendal_48d_partly_cloudy_puresky_1k.dds");
-	skybox_->SetCamera(camera_.get());
+	skybox_->SetCamera(TKM::CameraManager::GetInstance()->GetMainCamera());
 
 	// === Iris sprite (白円) 共通ユーティリティ版 ===
 	// 画面中央配置＋画面を覆う最大スケール irisMax_ をまとめて計算
@@ -139,7 +143,7 @@ void TitleScene::Update() {
 	TKM::Input::GetInstance()->Update();
 
 	dirLight_->Update(); // 平行光源更新
-	camera_->Update(); // カメラ更新
+	TKM::CameraManager::GetInstance()->Update(); // メインカメラ更新（管理側に任せる）
 	sprite_->Update(); // タイトル画像更新
 	rippleEffect_->Update(dt_); // 波紋エフェクト更新
 
@@ -188,7 +192,7 @@ void TitleScene::Update() {
 			UpdateShowdownActors_(dt_);
 			if (cmd == TitleMenuController::Command::Start) {
 
-				// ★メニューでStartしたら、従来の「波紋→アイリス閉」へ
+				// メニューでStartしたら、従来の「波紋→アイリス閉」へ
 				showMenuAfterVanish_ = false; // 念のため
 				flow_ = Flow::Ripple;
 				rippleTimer_ = 0.0f;
@@ -480,7 +484,7 @@ void TitleScene::CreateTitleEnemies_() {
 		float halfW = 0.0f, halfH = 0.0f;
 		VisibleHalfExtentsAtZ_(halfW, halfH, z, camZ, fovY, aspect);
 
-		// ★少し内側に寄せる（端ギリだと動いた瞬間はみ出るから）
+		// 少し内側に寄せる（端ギリだと動いた瞬間はみ出るから）
 		const float margin = isNear ? 6.0f : 10.0f;
 		halfW = std::max(1.0f, halfW - margin);
 		halfH = std::max(1.0f, halfH - margin);
@@ -492,7 +496,7 @@ void TitleScene::CreateTitleEnemies_() {
 
 		TitleEnemyUnit u{};
 		u.enemy_ = std::make_unique<Enemy>();
-		u.enemy_->SetCamera(camera_.get());
+		u.enemy_->SetCamera(camera_);
 		u.enemy_->SetParentScene(this);
 		u.enemy_->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_);
 
@@ -505,7 +509,7 @@ void TitleScene::CreateTitleEnemies_() {
 
 		u.enemy_->SetBehavior(EnemyBehavior::FreeRoam);
 
-		// ★ローム範囲も「このZの画面内」に合わせてセット（=画面外へ行きにくい）
+		// ローム範囲も「このZの画面内」に合わせてセット（=画面外へ行きにくい）
 		// ただし “絶対に出ない” を保証するには Enemy の移動側でクランプが必要
 		Vector3 roamMin = { -halfW, -halfH, z };
 		Vector3 roamMax = { halfW,  halfH, z };
@@ -615,7 +619,7 @@ void TitleScene::CreateShowdownActors_() {
 	titlePlayer_ = std::make_unique<Player>();
 	titlePlayer_->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_);
 	titlePlayer_->SetParentScene(this);
-	titlePlayer_->SetCamera(camera_.get());
+	titlePlayer_->SetCamera(camera_);
 	titlePlayer_->SetPosition(titlePlayerPos_);
 
 	// タイトルでは操作系全部OFF（事故防止）
@@ -628,7 +632,7 @@ void TitleScene::CreateShowdownActors_() {
 
 	// Boss（BossEnemyクラスを使う）
 	titleBoss_ = std::make_unique<BossEnemy>();
-	titleBoss_->SetCamera(camera_.get());
+	titleBoss_->SetCamera(camera_);
 	titleBoss_->SetParentScene(this);
 	titleBoss_->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_);
 	titleBoss_->SetPosition(titleBossPos_);

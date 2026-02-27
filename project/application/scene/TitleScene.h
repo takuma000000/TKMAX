@@ -10,7 +10,7 @@
 #include "SpriteCommon.h"
 #include "Object3d.h"
 #include "Object3dCommon.h"
-#include "Camera.h"
+#include "CameraManager.h"
 #include "Input.h"
 #include "SceneManager.h"
 #include "GameScene.h"
@@ -68,11 +68,11 @@ private:
 	//======================================================================
 	TKM::DirectXCommon* dxCommon_ = nullptr;
 	TKM::SrvManager* srvManager_ = nullptr;
+	TKM::Camera* camera_ = nullptr; // 今フレームのアクティブカメラ（CameraManagerから取得）
 	//======================================================================
 	// シーン構成（2D / カメラ / ライト / 背景）
 	//======================================================================
 	std::unique_ptr<TKM::Sprite> sprite_ = nullptr; // 2Dスプライト共通
-	std::unique_ptr<TKM::Camera> camera_ = nullptr; // カメラ
 	std::unique_ptr<TKM::Skybox> skybox_ = nullptr;
 	std::unique_ptr<TKM::DirectionalLight> dirLight_ = nullptr;
 	// スカイボックスの回転制御
