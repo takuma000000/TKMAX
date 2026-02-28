@@ -1,4 +1,5 @@
 #include "BattleActorManagerBase.h"
+#include "Player.h"
 
 void BattleActorManagerBase::InitializeCommon(TKM::DirectXCommon* dx, TKM::Camera* camera, TKM::BaseScene* parent, Player* player) {
 	// 共通で参照を保持するための初期化関数
