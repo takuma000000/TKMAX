@@ -4,12 +4,13 @@
 #include "Enemy.h"
 #include "MyMath.h"
 #include "AuraVolumeRenderer.h"
+#include "StateMachine.h"
 
 // =============================================================
 // BossControllerクラス
 // ボス敵の行動制御を行うクラス。
 // =============================================================
-class BossController {
+class BossController : public TKM::IStateContext {
 public:
 	enum class State {
 		Enter,
@@ -174,44 +175,6 @@ public:
 	}
 	// =========================================
 private:
-	/// <summary>
-	/// 侵入状態の更新処理を行います。
-	/// </summary>
-	/// <param name="dt">前フレームからの経過時間（秒）</param>
-	/// <param name="boss">更新対象となるボス敵</param>
-	/// <param name="pos">ボス位置（参照で更新される、ワールド座標）</param>
-	void UpdateEnter(float dt, Enemy& boss, Vector3& pos);
-	/// <summary>
-	/// 軌道回転状態の更新処理を行います。
-	/// </summary>
-	/// <param name="dt">前フレームからの経過時間（秒）</param>
-	/// <param name="boss">更新対象となるボス敵</param>
-	/// <param name="pos">ボス位置（参照で更新される、ワールド座標）</param>
-	/// <param name="playerPos">プレイヤー位置（ワールド座標）</param>
-	void UpdateOrbit(float dt, Enemy& boss, Vector3& pos, const Vector3& playerPos);
-	/// <summary>
-	/// 回復状態の更新処理を行います。
-	/// </summary>
-	/// <param name="dt">前フレームからの経過時間（秒）</param>
-	/// <param name="boss">更新対象となるボス敵</param>
-	/// <param name="pos">ボス位置（参照で更新される、ワールド座標）</param>
-	void UpdateRecover(float dt, Enemy& boss, Vector3& pos);
-	/// <summary>
-	/// レーザー溜め（予備動作）状態の更新処理を行います。
-	/// </summary>
-	/// <param name="dt">前フレームからの経過時間（秒）</param>
-	/// <param name="boss">更新対象となるボス敵</param>
-	/// <param name="pos">ボス位置（参照で更新される、ワールド座標）</param>
-	/// <param name="playerPos">プレイヤー位置（ワールド座標）</param>
-	void UpdateLaserWindup(float dt, Enemy& boss, Vector3& pos, const Vector3& playerPos);
-	/// <summary>
-	/// レーザー発射状態の更新処理を行います。
-	/// </summary>
-	/// <param name="dt">前フレームからの経過時間（秒）</param>
-	/// <param name="boss">更新対象となるボス敵</param>
-	/// <param name="pos">ボス位置（参照で更新される、ワールド座標）</param>
-	/// <param name="playerPos">プレイヤー位置（ワールド座標）</param>
-	void UpdateLaserFire(float dt, Enemy& boss, Vector3& pos, const Vector3& playerPos);
 	/// <summary>
 	/// レーザー後隙（回復）状態の更新処理を行います。
 	/// </summary>
@@ -379,4 +342,17 @@ private:
 	// スラッシュ：発射時点のターゲット固定
 	Vector3 slashTargetSnap_{ 0.0f, 0.0f, 0.0f }; // 発射時点のplayer座標を固定
 	bool slashTargetValid_ = false; // 固定座標が有効かどうか
+	//==============================
+	// ステートパターン
+	//==============================
+	friend class BossEnterState;
+	friend class BossOrbitState;
+	friend class BossRecoverState;
+	friend class BossLaserWindupState;
+	friend class BossLaserFireState;
+	friend class BossLaserRecoverState;
+	// StateMachine
+	TKM::StateMachine sm_; // 状態遷移マシン
+	Enemy* boss_ = nullptr; // Update中だけ有効
+	Vector3 posWork_{}; // State側で動かす座標（最後にbossへ反映）
 };

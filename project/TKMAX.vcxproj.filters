@@ -200,6 +200,7 @@
     <ClCompile Include="engine\3d\camera\manager\CameraManager.cpp" />
     <ClCompile Include="engine\state\StateMachine.cpp" />
     <ClCompile Include="application\state\TitleFlowStates.cpp" />
+    <ClCompile Include="application\state\BossStates.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -439,6 +440,7 @@
     <ClInclude Include="engine\state\IState.h" />
     <ClInclude Include="engine\state\StateMachine.h" />
     <ClInclude Include="application\state\TitleFlowStates.h" />
+    <ClInclude Include="application\state\BossStates.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
