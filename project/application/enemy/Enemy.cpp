@@ -43,7 +43,6 @@ void Enemy::Update(float dt) {
 
 	// =========================================================
 	// Data-driven：死亡リアクション / 行動 の関数テーブル
-	// （switch を排除）
 	// =========================================================
 	struct DeathCtx {
 		float dt_;
@@ -365,9 +364,7 @@ void Enemy::Update(float dt) {
 			TKM::ParticleManager* pm_ = TKM::ParticleManager::GetInstance();
 			Vector3 emitPos_ = GetWorldPosition();
 
-			// ここもテーブル化できるけど、今回は「主要switch排除」が目的なので
-			// いったん必要最小限：deathReaction_ ごとに出すものを if でまとめる
-			// ※完全排除したいなら「Emitテーブル」も作る（言ってくれ）
+			// 死亡リアクションに応じたパーティクルを発生させる
 			if (deathReaction_ == EnemyDeathReaction::BlowAway) {
 				pm_->Emit("enemyDeath_core", emitPos_, 1);
 				pm_->Emit("enemyDeath_shard", emitPos_, 20);

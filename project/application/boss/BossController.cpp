@@ -185,7 +185,7 @@ void BossController::ChangeState(State s) {
 	state_ = s;
 	timer_ = 0.0f;
 
-	switch (s) {
+	switch (s) { // 状態に応じたステートクラスに遷移
 	case State::Enter:        sm_.Change(std::make_unique<BossEnterState>()); break;
 	case State::Orbit:        sm_.Change(std::make_unique<BossOrbitState>()); break;
 	case State::Recover:      sm_.Change(std::make_unique<BossRecoverState>()); break;
