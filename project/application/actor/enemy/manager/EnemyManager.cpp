@@ -15,10 +15,8 @@ const EnemyManager::WaveOps EnemyManager::kWaveOps_[4] = {
 };
 
 void EnemyManager::Initialize(TKM::DirectXCommon* dx, TKM::Camera* camera, TKM::BaseScene* parent, Player* player) {
-	dx_ = dx;
-	cam_ = camera;
-	parent_ = parent;
-	player_ = player;
+	// 共通初期化
+	InitializeCommon(dx, camera, parent, player);
 
 	// CSV読み込み（resources/data に置く運用）
 	waveConfigLoaded_ = waveConfig_.Load("./resources/data/enemy_waves.csv");
@@ -154,7 +152,7 @@ void EnemyManager::InitializeWaves() {
 }
 
 void EnemyManager::SpawnCurrentWave() {
-	if (!dx_ || !cam_ || !parent_) { return; }
+	if (!dx_ || !camera_ || !parent_) { return; }
 
 	NotifyPlayerBeforeClearEnemies_();
 	enemies_.clear();
@@ -216,7 +214,7 @@ void EnemyManager::NotifyPlayerBeforeClearEnemies_() {
 }
 
 void EnemyManager::UpdateWave1(float dt) {
-	if (!&enemies_ || !dx_ || !cam_ || !parent_) {
+	if (!&enemies_ || !dx_ || !camera_ || !parent_) {
 		return;
 	}
 
@@ -252,7 +250,7 @@ void EnemyManager::UpdateWave1(float dt) {
 }
 
 void EnemyManager::SpawnWave1Enemy() {
-	if (!&enemies_ || !dx_ || !cam_ || !parent_) {
+	if (!&enemies_ || !dx_ || !camera_ || !parent_) {
 		return;
 	}
 
@@ -264,7 +262,7 @@ void EnemyManager::SpawnWave1Enemy() {
 	float x_ = w1_.randXMin_ + rx_ * (w1_.randXMax_ - w1_.randXMin_);
 
 	TKM::DirectXCommon* dxPtr_ = dx_;
-	TKM::Camera* camPtr_ = cam_;
+	TKM::Camera* camPtr_ = camera_;
 	TKM::BaseScene* parentPtr_ = parent_;
 
 	EnemySpawner::SpawnLine(
@@ -349,7 +347,7 @@ namespace {
 }
 
 void EnemyManager::SpawnWave2SubWave(int id) {
-	if (!&enemies_ || !dx_ || !cam_ || !parent_) { return; }
+	if (!&enemies_ || !dx_ || !camera_ || !parent_) { return; }
 	NotifyPlayerBeforeClearEnemies_();
 	enemies_.clear(); // 念のためクリア
 
@@ -360,12 +358,15 @@ void EnemyManager::SpawnWave2SubWave(int id) {
 }
 
 void EnemyManager::SetCamera(TKM::Camera* camera) {
-	cam_ = camera;
+	BattleActorManagerBase::SetCamera(camera);
+}
+
+void EnemyManager::OnCameraChanged() {
 	for (auto& e : enemies_) {
-		if (e) e->SetCamera(cam_);
+		if (e) { e->SetCamera(camera_); }
 	}
-	if (midBossCore_) { // 蘇生核にもカメラをセット
-		midBossCore_->SetCamera(cam_);
+	if (midBossCore_) {
+		midBossCore_->SetCamera(camera_);
 	}
 }
 
@@ -373,7 +374,7 @@ void EnemyManager::SetCamera(TKM::Camera* camera) {
 // ● Wave2 各小Waveスポーン関数群
 // ───────────────────────────────────────────────
 void EnemyManager::SpawnWave2_Triangle() {
-	if (!&enemies_ || !dx_ || !cam_ || !parent_) return;
+	if (!&enemies_ || !dx_ || !camera_ || !parent_) return;
 
 	const auto& s_ = waveConfig_.GetWave2SubWave(0);
 	int idx_ = 0;
@@ -385,7 +386,7 @@ void EnemyManager::SpawnWave2_Triangle() {
 		s_.triXCenter_,
 		s_.triXStep_,
 		s_.triZStep_,
-		dx_, cam_, parent_,
+		dx_, camera_, parent_,
 		[this, &idx_](Enemy& e) {
 			const auto& pt_ = waveConfig_.GetWave2TriEnemyParams();
 
@@ -406,7 +407,7 @@ void EnemyManager::SpawnWave2_Triangle() {
 }
 
 void EnemyManager::SpawnWave2_Line() {
-	if (!&enemies_ || !dx_ || !cam_ || !parent_) return;
+	if (!&enemies_ || !dx_ || !camera_ || !parent_) return;
 
 	const auto& s_ = waveConfig_.GetWave2SubWave(1);
 
@@ -414,7 +415,7 @@ void EnemyManager::SpawnWave2_Line() {
 		enemies_,
 		s_.lineCount_, s_.lineY_, s_.lineZ_,
 		s_.lineXStart_, s_.lineXStep_,
-		dx_, cam_, parent_,
+		dx_, camera_, parent_,
 		[this](Enemy& e) {
 			const auto& pl_ = waveConfig_.GetWave2LineEnemyParams();
 
@@ -434,7 +435,7 @@ void EnemyManager::SpawnWave2_Line() {
 }
 
 void EnemyManager::SpawnWave2_FastColumn() {
-	if (!&enemies_ || !dx_ || !cam_ || !parent_) return;
+	if (!&enemies_ || !dx_ || !camera_ || !parent_) return;
 
 	const auto& s_ = waveConfig_.GetWave2SubWave(2);
 
@@ -446,7 +447,7 @@ void EnemyManager::SpawnWave2_FastColumn() {
 		s_.colZStep_,
 		s_.colYStart_,
 		s_.colYStep_,
-		dx_, cam_, parent_,
+		dx_, camera_, parent_,
 		[this](Enemy& e) {
 			const auto& pc_ = waveConfig_.GetWave2ColEnemyParams();
 
@@ -568,7 +569,7 @@ void EnemyManager::UpdateWave3(float dt) {
 }
 
 void EnemyManager::SpawnWave3MidBossStage() {
-	if (!&enemies_ || !dx_ || !cam_ || !parent_) {
+	if (!&enemies_ || !dx_ || !camera_ || !parent_) {
 		return;
 	}
 	NotifyPlayerBeforeClearEnemies_();
@@ -578,7 +579,7 @@ void EnemyManager::SpawnWave3MidBossStage() {
 	wave3ReviveInProgress_ = false;
 	wave3CoreTimer_ = 0.0f;
 
-	auto camPtr_ = cam_;
+	auto camPtr_ = camera_;
 	auto dxPtr_ = dx_;
 	auto parentPtr_ = parent_;
 
@@ -618,7 +619,7 @@ void EnemyManager::SpawnWave3MidBossStage() {
 }
 
 void EnemyManager::SpawnWave3Core() {
-	if (!dx_ || !cam_ || !parent_) {
+	if (!dx_ || !camera_ || !parent_) {
 		return;
 	}
 
@@ -642,7 +643,7 @@ void EnemyManager::SpawnWave3Core() {
 	auto* common_ = TKM::Object3dCommon::GetInstance();
 
 	midBossCore_->Initialize(common_, dx_);
-	midBossCore_->SetCamera(cam_);
+	midBossCore_->SetCamera(camera_);
 	midBossCore_->SetParentScene(parent_);
 
 	midBossCore_->SetPosition({ x_, y_, z_ });
@@ -662,7 +663,7 @@ void EnemyManager::SpawnWave3Core() {
 }
 
 void EnemyManager::SpawnWave3ExtraMidBoss() {
-	if (!&enemies_ || !dx_ || !cam_ || !parent_) {
+	if (!&enemies_ || !dx_ || !camera_ || !parent_) {
 		return;
 	}
 
@@ -694,7 +695,7 @@ void EnemyManager::SpawnWave3ExtraMidBoss() {
 	const Vector3 kSidePos_[2] = { wave3LeftPos_, wave3RightPos_ };
 	const Vector3 spawnPos_ = kSidePos_[kSpawnSide_[state_]];
 
-	auto camPtr_ = cam_;
+	auto camPtr_ = camera_;
 	auto dxPtr_ = dx_;
 	auto parentPtr_ = parent_;
 

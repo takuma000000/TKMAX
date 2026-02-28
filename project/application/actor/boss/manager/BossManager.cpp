@@ -71,10 +71,8 @@ namespace { // 無名名前空間
 }
 
 void BossManager::Initialize(TKM::DirectXCommon* dxCommon, TKM::Camera* camera, TKM::BaseScene* parent, Player* player) {
-	dxCommon_ = dxCommon;
-	camera_ = camera;
-	parentScene_ = parent;
-	player_ = player;
+	// 基底クラスの初期化
+	InitializeCommon(dxCommon, camera, parent, player);
 
 	bossBattle_ = false; // ボス戦開始フラグ
 	bossP2BgmPlayed_ = false; // ボスP2BGM再生フラグ
@@ -88,7 +86,7 @@ void BossManager::Initialize(TKM::DirectXCommon* dxCommon, TKM::Camera* camera, 
 	// HPバーUI初期化
 	hpUI_ = std::make_unique<TKM::BossHpBarUI>();
 	TKM::BossHpBarUI::Desc d{}; // デフォルト設定
-	hpUI_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, parentScene_, d);
+	hpUI_->Initialize(TKM::SpriteCommon::GetInstance(), dx_, parent_, d);
 	hpUI_->SetVisible(false); // 非表示開始
 }
 
@@ -96,7 +94,7 @@ void BossManager::StartBattle() {
 	if (bossBattle_) { // すでにボス戦中
 		return;
 	}
-	if (!dxCommon_ || !camera_ || !parentScene_) { // 安全確認
+	if (!dx_ || !camera_ || !parent_) { // 安全確認
 		return;
 	}
 
@@ -106,9 +104,9 @@ void BossManager::StartBattle() {
 
 	// ボス生成
 	boss_ = std::make_unique<BossEnemy>();
-	boss_->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_);
+	boss_->Initialize(TKM::Object3dCommon::GetInstance(), dx_);
 	boss_->SetCamera(camera_);
-	boss_->SetParentScene(parentScene_); // 親シーンセット
+	boss_->SetParentScene(parent_); // 親シーンセット
 
 	// プレイヤー位置取得ラムダ
 	if (player_) {
@@ -202,7 +200,7 @@ void BossManager::Update(float dt) {
 			Vector3 dir_{ mTarget_.x - mPos_.x, mTarget_.y - mPos_.y, mTarget_.z - mPos_.z };
 			dir_ = MyMath::SafeNormalize(dir_, { 0.0f, 0.0f, 1.0f });
 
-			bullet_->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_, camera_, mPos_, dir_, spPerFrame_, mDmg_, mLife_);
+			bullet_->Initialize(TKM::Object3dCommon::GetInstance(), dx_, camera_, mPos_, dir_, spPerFrame_, mDmg_, mLife_);
 			// 曲線設定（好みで調整OK）
 			bullet_->SetCurveYaw(0.05f); // 1フレームあたりの曲がる角度（ラジアン）
 			bullet_->EnableCurveToTarget(mPos_, mTarget_, mCurveH_, spPerFrame_); // 曲線で終点へ
@@ -231,12 +229,12 @@ void BossManager::Update(float dt) {
 			Vector3 dir_{ sTarget_.x - sPos_.x, sTarget_.y - sPos_.y, sTarget_.z - sPos_.z };
 			dir_ = MyMath::SafeNormalize(dir_, { 0.0f, 0.0f, 1.0f });
 
-			bullet_->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_, camera_, sPos_, dir_, spPerFrame_, 1, sLife_);
+			bullet_->Initialize(TKM::Object3dCommon::GetInstance(), dx_, camera_, sPos_, dir_, spPerFrame_, 1, sLife_);
 			bullet_->SetModel("sphere.obj");
 			bullet_->SetScale({ 3.8f, 0.7f, 1.2f });
 			bullet_->SetFxType(BossBullet::FxType::SlashWave);
-
-			bullet_->SetAttackId(currentSlashId_); // ★斬撃IDセット
+			
+			bullet_->SetAttackId(currentSlashId_); // 斬撃IDセット
 
 			bossBullets_.push_back(std::move(bullet_));
 		}
@@ -296,12 +294,12 @@ void BossManager::DrawUI() {
 }
 
 void BossManager::SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float speed, int damage, int lifeFrame) {
-	if (!dxCommon_ || !camera_) { // 安全確認
+	if (!dx_ || !camera_) { // 安全確認
 		return;
 	}
 
 	auto bullet_ = std::make_unique<BossBullet>(); // 弾オブジェクト生成
-	bullet_->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_, camera_, pos, dir, speed, damage, lifeFrame); // 初期化
+	bullet_->Initialize(TKM::Object3dCommon::GetInstance(), dx_, camera_, pos, dir, speed, damage, lifeFrame); // 初期化
 	bossBullets_.push_back(std::move(bullet_)); // リストに追加
 }
 
@@ -334,9 +332,12 @@ void BossManager::SetWaterRippleEffect(TKM::WaterRippleEffect* r) {
 }
 
 void BossManager::SetCamera(TKM::Camera* camera) {
-	camera_ = camera; // カメラセット
-	if (boss_) { boss_->SetCamera(camera_); } // ボス本体にカメラセット
-	for (auto& b : bossBullets_) { b->SetCamera(camera_); } // ボス弾すべてにカメラセット
+	BattleActorManagerBase::SetCamera(camera);
+}
+
+void BossManager::OnCameraChanged() {
+	if (boss_) { boss_->SetCamera(camera_); }
+	for (auto& b : bossBullets_) { b->SetCamera(camera_); }
 }
 
 void BossManager::UpdateBossBullets() {

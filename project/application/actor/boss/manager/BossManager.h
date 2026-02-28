@@ -14,12 +14,13 @@
 #include "TimeScaleController.h"
 #include "WaterRippleEffect.h"
 #include "BossHpBarUI.h"
+#include "BattleActorManagerBase.h"
 
 //=============================================================
 // BossManagerクラス
 // ボス本体＋ボス弾の管理を行うクラス。
 //=============================================================
-class BossManager {
+class BossManager : public BattleActorManagerBase {
 public:
 	BossManager() = default;
 	~BossManager() = default;
@@ -69,12 +70,12 @@ public:
 	/// 毎フレームの更新処理を行います。
 	/// </summary>
 	/// <param name="dt">前フレームからの経過時間（秒）</param>
-	void Update(float dt);
+	void Update(float dt) override;
 	/// <summary>
 	/// 描画処理を行います。
 	/// </summary>
 	/// <param name="dxCommon">DirectX共通管理クラス</param>
-	void Draw(TKM::DirectXCommon* dxCommon);
+	void Draw(TKM::DirectXCommon* dxCommon) override;
 	/// <summary>
 	/// UI描画。
 	/// </summary>
@@ -142,17 +143,13 @@ public:
 	/// 使用するカメラを設定します。
 	/// </summary>
 	/// <param name="camera">描画および判定に使用するカメラ</param>
-	void SetCamera(TKM::Camera* camera);
+	void SetCamera(TKM::Camera* camera) override;
 	// =========================================
 
 private:
 	//==============================
 	// 外部参照（システム系）
 	//==============================
-	TKM::DirectXCommon* dxCommon_ = nullptr;
-	TKM::Camera* camera_ = nullptr;
-	TKM::BaseScene* parentScene_ = nullptr;
-	Player* player_ = nullptr;
 	// タイムスケールコントローラー参照
 	TKM::TimeScaleController* timeScale_ = nullptr;
 	// ウォーターリップルエフェクト参照
@@ -186,4 +183,10 @@ private:
 	int slashAttackId_ = 0; // スラッシュ攻撃IDカウンタ
 	int currentSlashId_ = -1; // 現在処理中のスラッシュ攻撃ID
 	float slashIdHoldT_ = 0.0f; // 現在のスラッシュ攻撃IDの保持時間
+
+protected:
+	/// <summary>
+	/// カメラが変更されたときの処理。BossManagerはカメラを参照して描画や当たり判定を行うため、カメラが変更されたときに必要な処理をここに実装します。
+	/// </summary>
+	void OnCameraChanged() override;
 };

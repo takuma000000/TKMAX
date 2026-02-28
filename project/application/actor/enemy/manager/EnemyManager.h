@@ -11,12 +11,13 @@
 #include "BaseScene.h"
 #include "MidBossCore.h"
 #include "EnemyWaveConfig.h"
+#include "BattleActorManagerBase.h"
 
 // =============================================================
 // EnemyManagerクラス
 // 敵全体の管理を行うクラス。
 // =============================================================
-class EnemyManager {
+class EnemyManager : public BattleActorManagerBase {
 public:
 	EnemyManager() = default;
 	~EnemyManager() = default;
@@ -36,12 +37,12 @@ public:
 	/// 敵全体の更新処理を行います。
 	/// </summary>
 	/// <param name="dt">前フレームからの経過時間（秒）</param>
-	void Update(float dt);
+	void Update(float dt) override;
 	/// <summary>
 	/// 敵全体の描画処理を行います。
 	/// </summary>
 	/// <param name="dx">DirectX 共通管理クラス</param>
-	void Draw(TKM::DirectXCommon* dx);
+	void Draw(TKM::DirectXCommon* dx) override;
 	/// <summary>
 	/// ImGui によるデバッグ情報を表示します。
 	/// </summary>
@@ -117,7 +118,7 @@ public:
 	/// 敵およびミッドボス核にも同じカメラを適用します。
 	/// </summary>
 	/// <param name="camera">描画および判定に使用するカメラ</param>
-	void SetCamera(TKM::Camera* camera);
+	void SetCamera(TKM::Camera* camera) override;
 	// ================================================================================
 
 	/// <summary>
@@ -146,11 +147,6 @@ private:
 	//======================================================================
 	// 基本参照・共通情報
 	//======================================================================
-	TKM::DirectXCommon* dx_ = nullptr;
-	TKM::Camera* cam_ = nullptr;
-	TKM::BaseScene* parent_ = nullptr;
-	Player* player_ = nullptr;
-
 	// Wave 状態は EnemyManager が持つようにする
 	WavePhase wavePhase_ = WavePhase::W1;
 
@@ -262,4 +258,10 @@ private:
 	int defeatedEnemyCount_ = 0; // 撃破数カウンタ
 	int maxEnemyCount_ = 0; // 最大敵数カウンタ
 	bool initializedWaves_ = false; // Wave 初期化済みフラグ
+
+protected:
+	/// <summary>
+	/// カメラが変更されたときの処理を行います。EnemyManager と MidBossCore に新しいカメラを適用します。
+	/// </summary>
+	void OnCameraChanged() override;
 };
