@@ -202,6 +202,7 @@
     <ClCompile Include="application\state\TitleFlowStates.cpp" />
     <ClCompile Include="application\state\BossStates.cpp" />
     <ClCompile Include="application\actor\BattleActorManagerBase.cpp" />
+    <ClCompile Include="engine\effect\particle\ParticleSpawner.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -443,6 +444,7 @@
     <ClInclude Include="application\state\TitleFlowStates.h" />
     <ClInclude Include="application\state\BossStates.h" />
     <ClInclude Include="application\actor\BattleActorManagerBase.h" />
+    <ClInclude Include="engine\effect\particle\ParticleSpawner.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

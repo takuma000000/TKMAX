@@ -216,6 +216,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\catalog\ModelCatalog.cpp" />
     <ClCompile Include="engine\state\StateMachine.cpp" />
     <ClCompile Include="application\state\TitleFlowStates.cpp" />
+    <ClCompile Include="engine\effect\particle\ParticleSpawner.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\actor\enemy\manager\EnemyManager.h" />
@@ -313,6 +314,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\actor\player\LBGaugeUI.h" />
     <ClInclude Include="engine\state\IState.h" />
     <ClInclude Include="engine\state\IStateContext.h" />
+    <ClInclude Include="engine\effect\particle\ParticleSpawner.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="application\scene\controller\TitleMenuController.h" />
     <ClInclude Include="application\catalog\TextureCatalog.h" />
