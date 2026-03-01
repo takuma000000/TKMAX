@@ -64,6 +64,7 @@ namespace TKM {
 		// 参照
 		//==============================
 		DirectXCommon* dxCommon_ = nullptr;
+		Player* player_ = nullptr;
 		//==============================
 		// Post Effect（2D / Screen Space）
 		//==============================

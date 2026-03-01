@@ -8,6 +8,7 @@
 namespace TKM {
 	void PostEffectController::Initialize(DirectXCommon* dxCommon, Player* player, BossManager* bossManager) {
 		dxCommon_ = dxCommon;
+		player_ = player;
 
 		// ──────────────── 画面エフェクトの初期化 ───────────────
 
@@ -72,35 +73,19 @@ namespace TKM {
 
 	void PostEffectController::Update(float dt, BossManager* bossManager) {
 		// 画面エフェクトの更新=================================
-		if (radialBlur_) {
-			radialBlur_->Update(dt);
-		}
+		radialBlur_->Update(dt);
 
-		if (vignetting_) {
-			bool bossWave =
-				bossManager &&
-				bossManager->IsBattleActive() &&
-				!bossManager->IsBossDead();
+		bool lowHp = (player_ && player_->GetHP() <= 2);
+		vignetting_->SetLowHP(lowHp);
+		vignetting_->Update(dt);
 
-			vignetting_->SetBossWave(bossWave);
-			vignetting_->Update(dt);
-		}
+		fog_->Update(dt);
 
-		if (fog_) {
-			fog_->Update(dt);
-		}
+		waterRipple_->Update(dt);
 
-		if (waterRipple_) {
-			waterRipple_->Update(dt);
-		}
+		fogVolume3D_->Update(dt);
 
-		if (fogVolume3D_) {
-			fogVolume3D_->Update(dt);
-		}
-
-		if (smokeVolume3D_) {
-			smokeVolume3D_->Update(dt);
-		}
+		smokeVolume3D_->Update(dt);
 		// ==================================================
 	}
 
