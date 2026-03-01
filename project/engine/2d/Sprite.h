@@ -126,7 +126,7 @@ namespace TKM {
 		/// <returns></returns>
 		bool GetAutoAdjustTextureSize() const { return autoAdjustTextureSize_; }
 		// ===========================================
-		// Settet=====================================
+		// Setter=====================================
 		/// <summary>
 		/// 位置の設定。
 		/// </summary>

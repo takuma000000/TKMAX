@@ -51,7 +51,7 @@ namespace TKM {
 		/// <summary>
 		/// グラフィックスパイプラインを生成します。
 		/// </summary>
-		void GenerateGraficsPipeline();
+		void GenerateGraphicsPipeline();
 
 		//======================================================================
 		// 外部参照

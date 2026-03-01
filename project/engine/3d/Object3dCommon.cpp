@@ -16,7 +16,7 @@ namespace TKM {
 		//引数で受け取ってメンバ変数に記録する
 		dxCommon_ = dxCommon;
 
-		GenerateGraficsPipeline(); //グラフィックスパイプライン生成
+		GenerateGraphicsPipeline(); //グラフィックスパイプライン生成
 	}
 
 	void Object3dCommon::Finalize() {
@@ -160,7 +160,7 @@ namespace TKM {
 		depthStencilDesc_.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 	}
 
-	void Object3dCommon::GenerateGraficsPipeline() {
+	void Object3dCommon::GenerateGraphicsPipeline() {
 		GenerateRootSignature(); //ルートシグネチャ生成
 
 		HRESULT hr;

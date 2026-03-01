@@ -16,7 +16,7 @@ namespace TKM {
 		//引数で受け取ってメンバ変数に記録する
 		dxCommon_ = dxCommon;
 
-		GenerateGraficsPipeline(); //グラフィックスパイプライン生成
+		GenerateGraphicsPipeline(); //グラフィックスパイプライン生成
 	}
 
 	void SpriteCommon::Finalize() {}
@@ -103,7 +103,7 @@ namespace TKM {
 
 	}
 
-	void SpriteCommon::GenerateGraficsPipeline() {
+	void SpriteCommon::GenerateGraphicsPipeline() {
 
 		GenerateRootSignature(); //ルートシグネチャ生成
 

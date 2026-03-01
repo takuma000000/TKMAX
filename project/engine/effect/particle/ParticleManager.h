@@ -87,7 +87,7 @@ namespace TKM {
 		/// <summary>
 		/// <summary>ルートシグネチャを生成します。</summary>
 		/// </summary>
-		void CreateRootSigunature();
+		void CreateRootSignature();
 		/// <summary>
 		/// <summary>頂点データを初期化します。</summary>
 		/// </summary>

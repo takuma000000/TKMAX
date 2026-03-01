@@ -207,7 +207,7 @@ namespace TKM {
 		HRESULT hr;
 
 		//呼び出し
-		CreateRootSigunature();
+		CreateRootSignature();
 
 		//InputLayoutの設定
 		D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = {};
@@ -279,7 +279,7 @@ namespace TKM {
 		assert(SUCCEEDED(hr));
 	}
 
-	void ParticleManager::CreateRootSigunature() {
+	void ParticleManager::CreateRootSignature() {
 		HRESULT hr;
 
 		//RootSignature作成

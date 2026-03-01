@@ -76,7 +76,7 @@ namespace TKM {
 		/// <returns></returns>
 		const Desc& GetDesc() const { return desc_; }
 		// ===========================================
-		// Settet=====================================
+		// Setter=====================================
 		/// <summary>
 		/// UIの表示/非表示を設定します。
 		/// </summary>

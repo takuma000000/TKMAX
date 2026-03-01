@@ -74,7 +74,7 @@ namespace TKM {
 		/// <summary>
 		/// グラフィックスパイプラインを生成します。
 		/// </summary>
-		void GenerateGraficsPipeline();
+		void GenerateGraphicsPipeline();
 
 		///シングルトン-----------------------------------------------
 		//コンストラクタ、デストラクタの隠蔽
