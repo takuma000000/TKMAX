@@ -1663,25 +1663,29 @@ namespace TKM {
 			// カメラ正対の板に「ねじれ」だけ付ける（メルヘン感）
 			p.transform_.rotate_ = { 0.0f, 0.0f, frand(0.0f, 6.2831853f) };
 
-			// 太さ＆長さ（“線”に見える最重要）
-			float thick = frand(0.18f, 0.38f);
-			float len = frand(2.6f, 5.8f);
+			// 太く＆長く（目玉技）
+			float thick = frand(0.35f, 0.75f);
+			float len = frand(6.0f, 12.0f);
 			p.transform_.scale_ = { thick, thick, len };
 
-			p.lifeTime_ = frand(0.18f, 0.34f);
+			// 残像長め（道筋が残る）
+			p.lifeTime_ = frand(0.28f, 0.55f);
 			p.currentTime_ = 0.0f;
 
-			// パステル3系統（現実離れOK）
+			// 飽和パステル（白を使わない）
 			float kind = frand(0.0f, 1.0f);
-			if (kind < 0.33f) {
-				// シアン〜水色
-				p.color_ = { frand(0.25f, 0.55f), frand(0.85f, 1.10f), frand(0.95f, 1.25f), frand(0.75f, 0.95f) };
-			} else if (kind < 0.66f) {
-				// パープル〜ピンク
-				p.color_ = { frand(0.85f, 1.20f), frand(0.45f, 0.80f), frand(0.95f, 1.25f), frand(0.75f, 0.95f) };
+			if (kind < 0.25f) {
+				// ネオンシアン
+				p.color_ = { frand(0.05f, 0.25f), frand(1.05f, 1.35f), frand(1.10f, 1.45f), frand(0.75f, 0.95f) };
+			} else if (kind < 0.50f) {
+				// マゼンタ
+				p.color_ = { frand(1.10f, 1.45f), frand(0.10f, 0.35f), frand(1.00f, 1.35f), frand(0.75f, 0.95f) };
+			} else if (kind < 0.75f) {
+				// バイオレット
+				p.color_ = { frand(0.65f, 1.05f), frand(0.15f, 0.35f), frand(1.15f, 1.55f), frand(0.70f, 0.92f) };
 			} else {
-				// レモン〜ミント（少し混ぜるとメルヘン）
-				p.color_ = { frand(0.95f, 1.25f), frand(0.95f, 1.25f), frand(0.35f, 0.75f), frand(0.70f, 0.90f) };
+				// ライム/ミント（アクセント）
+				p.color_ = { frand(0.55f, 0.85f), frand(1.10f, 1.50f), frand(0.10f, 0.35f), frand(0.65f, 0.90f) };
 			}
 		} else if (groupName == "trail_lt_sparkle") {
 			// =========================================
@@ -1702,20 +1706,23 @@ namespace TKM {
 
 			// ふわっと外に逃がす
 			Vector3 dir = (MyMath::Length(off) > 0.001f) ? MyMath::Normalize(off) : Vector3{ 0,1,0 };
-			p.velocity_ = dir * frand(0.15f, 0.55f);
+			// もっと踊らせる（花火破片っぽく）
+			p.velocity_ = dir * frand(0.55f, 1.60f);
 
-			float sc = frand(0.14f, 0.30f);
+			float sc = frand(0.22f, 0.55f);
 			p.transform_.scale_ = { sc, sc, sc };
 
-			p.lifeTime_ = frand(0.06f, 0.14f);
+			p.lifeTime_ = frand(0.10f, 0.22f);
 			p.currentTime_ = 0.0f;
 
-			// 白芯＋パステル（星が“魔法っぽい”）
+			// 白寄りをやめて、メルヘン配色に寄せる
 			float kind = frand(0.0f, 1.0f);
-			if (kind < 0.5f) {
-				p.color_ = { frand(0.95f, 1.25f), frand(0.95f, 1.25f), frand(0.95f, 1.25f), 1.0f };
+			if (kind < 0.33f) {
+				p.color_ = { frand(0.35f, 0.75f), frand(1.05f, 1.35f), frand(1.05f, 1.45f), 1.0f }; // シアン
+			} else if (kind < 0.66f) {
+				p.color_ = { frand(1.05f, 1.45f), frand(0.25f, 0.65f), frand(1.05f, 1.45f), 1.0f }; // ピンク
 			} else {
-				p.color_ = { frand(0.55f, 1.20f), frand(0.55f, 1.20f), frand(0.85f, 1.35f), 1.0f };
+				p.color_ = { frand(0.65f, 1.05f), frand(0.35f, 0.85f), frand(1.15f, 1.55f), 1.0f }; // 紫
 			}
 		} else if (groupName == "trail_lt_ring") {
 			// =========================================
@@ -1731,14 +1738,16 @@ namespace TKM {
 
 			p.transform_.rotate_ = { 0.0f, 0.0f, frand(0.0f, 6.2831853f) };
 
-			float sc = frand(0.55f, 1.25f);
+			// 魔法陣はデカい方が勝つ
+			float sc = frand(1.20f, 2.40f);
 			p.transform_.scale_ = { sc, sc, sc };
 
-			p.lifeTime_ = frand(0.12f, 0.24f);
+			// 残像長め
+			p.lifeTime_ = frand(0.22f, 0.42f);
 			p.currentTime_ = 0.0f;
 
-			// パステル輪（alpha薄め）
-			p.color_ = { frand(0.65f, 1.15f), frand(0.65f, 1.15f), frand(0.85f, 1.25f), frand(0.55f, 0.80f) };
+			// 透明すぎると見えないからalpha上げる
+			p.color_ = { frand(0.55f, 1.25f), frand(0.55f, 1.25f), frand(0.85f, 1.45f), frand(0.75f, 0.95f) };
 		} else { // 上記意外
 			// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 			std::uniform_real_distribution<float> velX(-0.15f, 0.15f);
