@@ -19,7 +19,7 @@ namespace TKM {
 			NORMAL, // 通常パーティクル
 			RING, // リングパーティクル
 			CYLINDER, // シリンダーパーティクル
-			//RIBBON, // リボンパーティクル
+			RIBBON, // リボンパーティクル
 		};
 
 		// Transformクラスのエイリアス
@@ -127,6 +127,15 @@ namespace TKM {
 		void Emit(const std::string name, const Vector3& pos, uint32_t count);
 
 		/// <summary>
+		/// <summary>パーティクルを放出します（Transform指定）。</summary>
+		/// </summary>
+		/// <param name="name"></param>
+		/// <param name="tr"></param>
+		/// <param name="color"></param>
+		/// <param name="count"></param>
+		void EmitWithTransform(const std::string& name, const Transform& tr, const Vector4& color, uint32_t count);
+
+		/// <summary>
 		/// <summary>パーティクルグループを取得します。</summary>
 		/// </summary>
 		/// <returns></returns>
@@ -152,7 +161,7 @@ namespace TKM {
 		/// <summary>
 		/// <summary>リボン頂点を作成します。</summary>
 		/// </summary>
-		//void CreateRibbonVertices();
+		void CreateRibbonVertices();
 
 		// Setter===================================
 		/// <summary>
@@ -187,6 +196,10 @@ namespace TKM {
 		ModelData cylinderModelData_;
 		Microsoft::WRL::ComPtr<ID3D12Resource> cylinderVertexResource_ = nullptr;
 		D3D12_VERTEX_BUFFER_VIEW cylinderVertexBufferView_{};
+
+		ModelData ribbonModelData_;
+		Microsoft::WRL::ComPtr<ID3D12Resource> ribbonVertexResource_ = nullptr;
+		D3D12_VERTEX_BUFFER_VIEW ribbonVertexBufferView_{};
 
 		std::unordered_map<std::string, ParticleGroup> particleGroups_;
 

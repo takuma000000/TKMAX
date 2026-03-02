@@ -162,7 +162,7 @@ namespace TKM {
 		const UINT vtxCountNormal = static_cast<UINT>(modelData_.vertices_.size());
 		const UINT vtxCountRing = static_cast<UINT>(ringModelData_.vertices_.size());
 		const UINT vtxCountCylinder = static_cast<UINT>(cylinderModelData_.vertices_.size());
-		//const UINT vtxCountRibbon = static_cast<UINT>(ribbonModelData.vertices.size());
+		const UINT vtxCountRibbon = static_cast<UINT>(ribbonModelData_.vertices_.size());
 
 		for (auto it = particleGroups_.begin(); it != particleGroups_.end(); ++it) { //各パーティクルグループの描画
 			ParticleGroup& group = it->second;
@@ -176,7 +176,7 @@ namespace TKM {
 			if (group.type_ == ParticleType::NORMAL && vtxCountNormal == 0) continue;
 			if (group.type_ == ParticleType::RING && vtxCountRing == 0) continue;
 			if (group.type_ == ParticleType::CYLINDER && vtxCountCylinder == 0) continue;
-			//if (group.type == ParticleType::RIBBON && vtxCountRibbon == 0) continue;
+			if (group.type_ == ParticleType::RIBBON && vtxCountRibbon == 0) continue;
 
 			// ③ 永続CBに値を書くだけ（Create/Releaseしない）
 			//    ※ Initialize() で materialCB_ を UploadHeap で作って materialCPU_ を永続Map済み
@@ -199,6 +199,9 @@ namespace TKM {
 			} else if (group.type_ == ParticleType::CYLINDER) {
 				cmd->IASetVertexBuffers(0, 1, &cylinderVertexBufferView_);
 				cmd->DrawInstanced(vtxCountCylinder, group.kNumInstance_, 0, 0);
+			} else if (group.type_ == ParticleType::RIBBON) {
+				cmd->IASetVertexBuffers(0, 1, &ribbonVertexBufferView_);
+				cmd->DrawInstanced(vtxCountRibbon, group.kNumInstance_, 0, 0);
 			}
 		}
 	}
@@ -367,9 +370,8 @@ namespace TKM {
 		CreateCylinderVertices(); //シリンダー頂点データ作成
 		cylinderModelData_.material_.textureFilePath_ = "./resources/texture/gradationLine.png"; //テクスチャパス
 
-		// リボン（細長い板） 
-		/*CreateRibbonVertices();
-		ribbonModelData.material.textureFilePath = "./resources/texture/circle.png";*/
+		CreateRibbonVertices(); // リボン（細長い板）
+		ribbonModelData_.material_.textureFilePath_ = "./resources/texture/circle.png";
 	}
 
 	void ParticleManager::CreateVR() {
@@ -380,7 +382,7 @@ namespace TKM {
 		//cylinderの頂点リソースを作る
 		cylinderVertexResource_ = dxCommon_->CreateBufferResource(sizeof(VertexData) * cylinderModelData_.vertices_.size());
 		// リボン
-		//ribbonVertexResource = dxCommon_->CreateBufferResource(sizeof(VertexData) * ribbonModelData.vertices.size());
+		ribbonVertexResource_ = dxCommon_->CreateBufferResource(sizeof(VertexData) * ribbonModelData_.vertices_.size());
 	}
 
 	void ParticleManager::CreateVB() {
@@ -400,9 +402,9 @@ namespace TKM {
 		cylinderVertexBufferView_.StrideInBytes = sizeof(VertexData);
 
 		// RIBBON
-		//ribbonVertexBufferView.BufferLocation = ribbonVertexResource->GetGPUVirtualAddress();
-		//ribbonVertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * ribbonModelData.vertices.size());
-		//ribbonVertexBufferView.StrideInBytes = sizeof(VertexData);
+		ribbonVertexBufferView_.BufferLocation = ribbonVertexResource_->GetGPUVirtualAddress();
+		ribbonVertexBufferView_.SizeInBytes = UINT(sizeof(VertexData) * ribbonModelData_.vertices_.size());
+		ribbonVertexBufferView_.StrideInBytes = sizeof(VertexData);
 	}
 
 	void ParticleManager::WriteResource() {
@@ -425,9 +427,9 @@ namespace TKM {
 		std::memcpy(cylinderVertexData, cylinderModelData_.vertices_.data(), sizeof(VertexData) * cylinderModelData_.vertices_.size());
 
 		// RIBBON
-		/*VertexData* ribbonVertexData = nullptr;
-		ribbonVertexResource->Map(0, nullptr, reinterpret_cast<void**>(&ribbonVertexData));
-		std::memcpy(ribbonVertexData, ribbonModelData.vertices.data(), sizeof(VertexData) * ribbonModelData.vertices.size());*/
+		VertexData* ribbonVertexData = nullptr;
+		ribbonVertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&ribbonVertexData));
+		std::memcpy(ribbonVertexData, ribbonModelData_.vertices_.data(), sizeof(VertexData) * ribbonModelData_.vertices_.size());
 
 	}
 
@@ -487,8 +489,26 @@ namespace TKM {
 		}
 	}
 
+	void ParticleManager::EmitWithTransform(const std::string& name, const Transform& tr, const Vector4& color, uint32_t count) {
+		auto it = particleGroups_.find(name); // パーティクルグループを探す
+		if (it == particleGroups_.end()) { return; } // なければ何もしない
+
+		ParticleGroup& group = it->second; // パーティクルグループの参照を取得
+
+		for (uint32_t i = 0; i < count; ++i) { // 指定された数だけパーティクルを作る
+			// 超過してたら古い順に削除（重さ対策）
+			Particle p{};
+			p.transform_ = tr; // 指定されたTransformをコピー
+			p.velocity_ = { 0.0f, 0.0f, 0.0f }; // 速度はゼロ
+			p.color_ = color; // 指定された色
+			p.lifeTime_ = 0.25f; // 寿命（変更可）
+			p.currentTime_ = 0.0f; // 生成直後なので経過時間はゼロ
+			group.particles_.push_back(p); // グループに追加
+		}
+	}
+
 	ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, const std::string& groupName, const Vector3& center) {
-		return ParticleSpawner::MakeNewParticle(rng, groupName, center);
+		return ParticleSpawner::MakeNewParticle(rng, groupName, center); // グループ名と中心位置を渡して、ParticleSpawnerに新しいParticleを作ってもらう
 	}
 
 	void ParticleManager::CreateRingVertices() {
@@ -571,42 +591,42 @@ namespace TKM {
 		}
 	}
 
-	//void ParticleManager::CreateRibbonVertices() {
-	//	// 横長リボン（幅：2.0、高さ：0.3）みたいな比率で作る
-	//	const float halfW = 1.0f;   // X 方向
-	//	const float halfH = 0.15f;  // Y 方向（細い）
-	//
-	//	// 三角形2つ分（通常クアッド）
-	//	ribbonModelData.vertices.push_back({
-	//		.position = { halfW,  halfH, 0.0f, 1.0f},
-	//		.texcoord = {0.0f, 0.0f},
-	//		.normal = {0.0f, 0.0f, 1.0f}
-	//		});
-	//	ribbonModelData.vertices.push_back({
-	//		.position = {-halfW,  halfH, 0.0f, 1.0f},
-	//		.texcoord = {1.0f, 0.0f},
-	//		.normal = {0.0f, 0.0f, 1.0f}
-	//		});
-	//	ribbonModelData.vertices.push_back({
-	//		.position = { halfW, -halfH, 0.0f, 1.0f},
-	//		.texcoord = {0.0f, 1.0f},
-	//		.normal = {0.0f, 0.0f, 1.0f}
-	//		});
-	//
-	//	ribbonModelData.vertices.push_back({
-	//		.position = { halfW, -halfH, 0.0f, 1.0f},
-	//		.texcoord = {0.0f, 1.0f},
-	//		.normal = {0.0f, 0.0f, 1.0f}
-	//		});
-	//	ribbonModelData.vertices.push_back({
-	//		.position = {-halfW,  halfH, 0.0f, 1.0f},
-	//		.texcoord = {1.0f, 0.0f},
-	//		.normal = {0.0f, 0.0f, 1.0f}
-	//		});
-	//	ribbonModelData.vertices.push_back({
-	//		.position = {-halfW, -halfH, 0.0f, 1.0f},
-	//		.texcoord = {1.0f, 1.0f},
-	//		.normal = {0.0f, 0.0f, 1.0f}
-	//		});
-	//}
+	void ParticleManager::CreateRibbonVertices() {
+		// 横長リボン（幅：2.0、高さ：0.3）みたいな比率で作る
+		const float halfW = 1.0f;   // X 方向
+		const float halfH = 0.15f;  // Y 方向（細い）
+	
+		// 三角形2つ分（通常クアッド）
+		ribbonModelData_.vertices_.push_back({
+			.position_ = { halfW,  halfH, 0.0f, 1.0f},
+			.texcoord_ = {0.0f, 0.0f},
+			.normal_ = {0.0f, 0.0f, 1.0f}
+		});
+		ribbonModelData_.vertices_.push_back({
+			.position_ = {-halfW,  halfH, 0.0f, 1.0f},
+			.texcoord_ = {1.0f, 0.0f},
+			.normal_ = {0.0f, 0.0f, 1.0f}
+		});
+		ribbonModelData_.vertices_.push_back({
+			.position_ = { halfW, -halfH, 0.0f, 1.0f},
+			.texcoord_ = {0.0f, 1.0f},
+			.normal_ = {0.0f, 0.0f, 1.0f}
+		});
+	
+		ribbonModelData_.vertices_.push_back({
+			.position_ = { halfW, -halfH, 0.0f, 1.0f},
+			.texcoord_ = {0.0f, 1.0f},
+			.normal_ = {0.0f, 0.0f, 1.0f}
+		});
+		ribbonModelData_.vertices_.push_back({
+			.position_ = {-halfW,  halfH, 0.0f, 1.0f},
+			.texcoord_ = {1.0f, 0.0f},
+			.normal_ = {0.0f, 0.0f, 1.0f}
+		});
+		ribbonModelData_.vertices_.push_back({
+			.position_ = {-halfW, -halfH, 0.0f, 1.0f},
+			.texcoord_ = {1.0f, 1.0f},
+			.normal_ = {0.0f, 0.0f, 1.0f}
+		});
+	}
 }
