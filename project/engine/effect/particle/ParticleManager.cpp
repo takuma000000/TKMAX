@@ -64,7 +64,13 @@ namespace TKM {
 				Matrix4x4 scaleMatrix = MyMath::MakeScaleMatrix((*particleIterator).transform_.scale_);
 				Matrix4x4 translateMatrix = MyMath::MakeTranslateMatrix((*particleIterator).transform_.translate_);
 				Matrix4x4 rotateMatrix = MyMath::MakeRotateMatrix((*particleIterator).transform_.rotate_);
-				Matrix4x4 worldMatrix = scaleMatrix * rotateMatrix * billboardMatrix_ * translateMatrix;
+				Matrix4x4 worldMatrix{};
+				if (particleGroupIterator->second.type_ == ParticleType::RIBBON) {
+					// リボンは“弾道方向”が命。ビルボードしない
+					worldMatrix = scaleMatrix * rotateMatrix * translateMatrix;
+				} else {
+					worldMatrix = scaleMatrix * rotateMatrix * billboardMatrix_ * translateMatrix;
+				}
 				Matrix4x4 cameraMatrix = MyMath::MakeAffineMatrix(camera_->GetScale(), camera_->GetRotate(), camera_->GetTranslate());
 				Matrix4x4 viewMatrix = camera_->GetViewMatrix();
 				Matrix4x4 projectionMatrix = camera_->GetProjectionMatrix();
@@ -82,9 +88,11 @@ namespace TKM {
 					particleGroup->instancingData_[particleGroupIterator->second.kNumInstance_].World_ = worldMatrix;
 					particleGroup->instancingData_[particleGroupIterator->second.kNumInstance_].color_ = (*particleIterator).color_;
 					float alpha = 1.0f - ((*particleIterator).currentTime_ / (*particleIterator).lifeTime_); //アルファ値計算(0~1)
-					particleGroup->instancingData_[particleGroupIterator->second.kNumInstance_].color_.w = alpha;
-
 					const std::string& g = particleGroupIterator->first;
+					if (g == "trail_lt_ribbon") {
+						alpha = 1.0f; // 繋がって見せる（パンツァ寄せ）
+					}
+					particleGroup->instancingData_[particleGroupIterator->second.kNumInstance_].color_.w = alpha;
 					float t = (*particleIterator).currentTime_ / (*particleIterator).lifeTime_;
 					t = std::clamp(t, 0.0f, 1.0f);
 
@@ -490,20 +498,32 @@ namespace TKM {
 	}
 
 	void ParticleManager::EmitWithTransform(const std::string& name, const Transform& tr, const Vector4& color, uint32_t count) {
-		auto it = particleGroups_.find(name); // パーティクルグループを探す
-		if (it == particleGroups_.end()) { return; } // なければ何もしない
+		auto it = particleGroups_.find(name);
+		if (it == particleGroups_.end()) { return; }
 
-		ParticleGroup& group = it->second; // パーティクルグループの参照を取得
+		ParticleGroup& group = it->second;
 
-		for (uint32_t i = 0; i < count; ++i) { // 指定された数だけパーティクルを作る
-			// 超過してたら古い順に削除（重さ対策）
+		size_t kHardCap = std::max<size_t>(group.kNumInstance_, 200);
+		if (name == "trail_lt_ribbon") {
+			kHardCap = 1; // ← “レーザー本体” は常に最新1本だけ残す
+		}
+		for (uint32_t i = 0; i < count; ++i) {
+			while (group.particles_.size() >= kHardCap) {
+				group.particles_.pop_front();
+			}
+
 			Particle p{};
-			p.transform_ = tr; // 指定されたTransformをコピー
-			p.velocity_ = { 0.0f, 0.0f, 0.0f }; // 速度はゼロ
-			p.color_ = color; // 指定された色
-			p.lifeTime_ = 0.25f; // 寿命（変更可）
-			p.currentTime_ = 0.0f; // 生成直後なので経過時間はゼロ
-			group.particles_.push_back(p); // グループに追加
+			p.transform_ = tr;
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+			p.color_ = color;
+			if (name == "trail_lt_ribbon") {
+				p.lifeTime_ = 0.05f; // すぐ消える（毎フレ出すので見た目は常に繋がる）
+			} else {
+				p.lifeTime_ = 0.25f;
+			}
+			p.currentTime_ = 0.0f;
+
+			group.particles_.push_back(p);
 		}
 	}
 
@@ -592,41 +612,24 @@ namespace TKM {
 	}
 
 	void ParticleManager::CreateRibbonVertices() {
-		// 横長リボン（幅：2.0、高さ：0.3）みたいな比率で作る
-		const float halfW = 1.0f;   // X 方向
-		const float halfH = 0.15f;  // Y 方向（細い）
-	
-		// 三角形2つ分（通常クアッド）
-		ribbonModelData_.vertices_.push_back({
-			.position_ = { halfW,  halfH, 0.0f, 1.0f},
-			.texcoord_ = {0.0f, 0.0f},
-			.normal_ = {0.0f, 0.0f, 1.0f}
-		});
-		ribbonModelData_.vertices_.push_back({
-			.position_ = {-halfW,  halfH, 0.0f, 1.0f},
-			.texcoord_ = {1.0f, 0.0f},
-			.normal_ = {0.0f, 0.0f, 1.0f}
-		});
-		ribbonModelData_.vertices_.push_back({
-			.position_ = { halfW, -halfH, 0.0f, 1.0f},
-			.texcoord_ = {0.0f, 1.0f},
-			.normal_ = {0.0f, 0.0f, 1.0f}
-		});
-	
-		ribbonModelData_.vertices_.push_back({
-			.position_ = { halfW, -halfH, 0.0f, 1.0f},
-			.texcoord_ = {0.0f, 1.0f},
-			.normal_ = {0.0f, 0.0f, 1.0f}
-		});
-		ribbonModelData_.vertices_.push_back({
-			.position_ = {-halfW,  halfH, 0.0f, 1.0f},
-			.texcoord_ = {1.0f, 0.0f},
-			.normal_ = {0.0f, 0.0f, 1.0f}
-		});
-		ribbonModelData_.vertices_.push_back({
-			.position_ = {-halfW, -halfH, 0.0f, 1.0f},
-			.texcoord_ = {1.0f, 1.0f},
-			.normal_ = {0.0f, 0.0f, 1.0f}
-		});
+		// 長さ：Z方向（-1..+1）、太さ：Y方向（-0.15..+0.15）
+		// ※ X は 0 固定（板をYZ平面に置く）
+		const float halfL = 1.0f;   // Z方向（基準長さ=2.0）
+		const float halfH = 0.15f;  // Y方向（細い）
+
+		ribbonModelData_.vertices_.clear();
+		ribbonModelData_.vertices_.reserve(6);
+
+		// normal は +X（YZ平面の表面）
+		const Vector3 n = { 1.0f, 0.0f, 0.0f };
+
+		// 三角形2枚
+		ribbonModelData_.vertices_.push_back({ .position_ = {0.0f,  halfH,  halfL, 1.0f}, .texcoord_ = {0.0f, 0.0f}, .normal_ = n });
+		ribbonModelData_.vertices_.push_back({ .position_ = {0.0f,  halfH, -halfL, 1.0f}, .texcoord_ = {1.0f, 0.0f}, .normal_ = n });
+		ribbonModelData_.vertices_.push_back({ .position_ = {0.0f, -halfH,  halfL, 1.0f}, .texcoord_ = {0.0f, 1.0f}, .normal_ = n });
+
+		ribbonModelData_.vertices_.push_back({ .position_ = {0.0f, -halfH,  halfL, 1.0f}, .texcoord_ = {0.0f, 1.0f}, .normal_ = n });
+		ribbonModelData_.vertices_.push_back({ .position_ = {0.0f,  halfH, -halfL, 1.0f}, .texcoord_ = {1.0f, 0.0f}, .normal_ = n });
+		ribbonModelData_.vertices_.push_back({ .position_ = {0.0f, -halfH, -halfL, 1.0f}, .texcoord_ = {1.0f, 1.0f}, .normal_ = n });
 	}
 }

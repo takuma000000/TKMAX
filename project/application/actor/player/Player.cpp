@@ -46,7 +46,7 @@ void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommo
 	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_rt", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL); // 弾の軌跡
 	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lt", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL); // 弾の軌跡
 	// --- LT弾：メルヘン弾道（3レイヤー）---
-	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lt_ribbon", "./resources/texture/gradationLine.png", TKM::ParticleManager::ParticleType::CYLINDER);
+	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lt_ribbon", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::CYLINDER);
 	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lt_sparkle", "./resources/texture/firework_star.png", TKM::ParticleManager::ParticleType::NORMAL);
 	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lt_ring", "./resources/texture/gradationLine.png", TKM::ParticleManager::ParticleType::RING);
 

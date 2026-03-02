@@ -7,6 +7,19 @@
 #include "MidBossCore.h"
 #include "MyMath.h"
 
+// 弾の初期スケール
+static Vector3 DirToEuler_(const Vector3& dir) {
+	Vector3 d = dir;
+	float len = MyMath::Length(d);
+	if (len < 0.0001f) { return { 0,0,0 }; }
+	d = d / len;
+
+	// Z+ が前方向の想定（yaw/pitch）
+	float yaw = std::atan2(d.x, d.z);
+	float pitch = -std::asin(d.y);
+	return { pitch, yaw, 0.0f };
+}
+
 void PlayerBullet::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon) {
 	// 3Dオブジェクト作成
 	object_ = std::make_unique<TKM::Object3d>();
@@ -40,9 +53,15 @@ void PlayerBullet::Update() {
 
 	prevPos_ = oldPos; // 前フレームの座標を保存
 
-	// LT弾：メルヘン弾道（前フレ→今フレ区間を“線”で埋める）
+	// LT弾：プレイヤーから“常に”伸びる線
 	if (trailGroup_ == "trail_lt") {
-		EmitLTFairyTrail_(oldPos, pos);
+		Vector3 start = oldPos; // fallback
+		if (player_) {
+			start = player_->GetWorldPosition(); // ←銃口があるなら GetMuzzleWorldPosition() みたいなのに差し替え
+			// 例：少し前に出したいなら
+			// start = start + Vector3{ 0.0f, 0.8f, 1.0f };
+		}
+		EmitLTFairyTrail_(start, pos);
 	}
 
 	// =========================================
@@ -294,31 +313,42 @@ void PlayerBullet::EmitLTFairyTrail_(const Vector3& from, const Vector3& to) {
 	if (!pm) { return; }
 
 	Vector3 d = to - from;
-	float len = MyMath::Length(d);
-	if (len < 0.001f) { return; }
+	float L = MyMath::Length(d);
+	if (L < 0.001f) { return; }
 
-	// 密度（小さいほど“線”が濃くなる）
-	const float kSpacing = 0.70f;
-	int steps = std::max(1, (int)std::ceil(len / kSpacing));
+	Vector3 dir = d / L;
 
-	for (int i = 0; i <= steps; ++i) {
-		float t = (float)i / (float)steps;
-		Vector3 p = from + d * t;
+	// 線分の中心に1枚置く（パンツァみたいに“伸びる線”になる）
+	Vector3 mid = from + d * 0.5f;
 
-		// 本線
-		pm->Emit("trail_lt_ribbon", p, 1);
+	TKM::ParticleManager::Transform tr{};
+	tr.translate_ = mid;
 
-		// キラキラ（間引き）
-		if ((i & 1) == 0) {
-			pm->Emit("trail_lt_sparkle", p, 1);
-		}
-	}
+	// レーザーの太さ
+	const float thickness = 0.55f;
 
-	// リング（距離で間引き）
-	ltRingDistAcc_ += len;
-	const float kRingEvery = 2.8f;
-	while (ltRingDistAcc_ >= kRingEvery) {
-		pm->Emit("trail_lt_ring", to, 1);
-		ltRingDistAcc_ -= kRingEvery;
+	// リボン頂点は Xが横幅 / Yが厚み / Zは0 なので
+	// Z方向を「長さ」に使うため、スケールZにLを入れる
+	tr.scale_ = { thickness, thickness, L * 0.5f };
+
+	// 進行方向へ向ける
+	tr.rotate_ = DirToEuler_(dir);
+
+	// メルヘン全振り（白なし寄り）
+	Vector4 col = { 1.25f, 0.35f, 1.35f, 0.95f };
+
+	// 1本の線分として出す
+	pm->EmitWithTransform("trail_lt_ribbon", tr, col, 1);
+
+	// 周辺のキラキラ（これは点でOK）
+	pm->Emit("trail_lt_sparkle", tr.translate_, 2);
+
+	// たまにリング（道筋演出）
+	ltRingDistAcc_ += L;
+	const float kRingEvery = 1.8f;
+	if (ltRingDistAcc_ >= kRingEvery) {
+		Vector3 p = to;
+		pm->Emit("trail_lt_ring", p, 1);
+		ltRingDistAcc_ = 0.0f;
 	}
 }
