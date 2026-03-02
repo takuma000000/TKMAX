@@ -503,9 +503,9 @@ void Player::Draw(TKM::DirectXCommon* dxCommon) {
 		reticle_->Draw(dxCommon);
 	}
 
-	for (auto& bullet : bullets_) {
-		bullet->Draw(dxCommon); // 弾の描画はしない(今後も予定なし)
-	}
+	//for (auto& bullet : bullets_) {
+	//	bullet->Draw(dxCommon); // 弾の描画はしない(今後も予定なし)
+	//}
 }
 
 void Player::SetCamera(TKM::Camera* camera) {

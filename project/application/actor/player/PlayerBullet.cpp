@@ -363,22 +363,27 @@ void PlayerBullet::UpdateSpawnBezier() {
 	}
 }
 
-void PlayerBullet::UpdateLTTrail_(const Vector3& pos) {
+void PlayerBullet::UpdateLTTrail_(const Vector3& p) {
+	// 初期
 	if (ltTrailPts_.empty()) {
-		ltTrailPts_.push_back(pos);
+		ltTrailPts_.push_back(p);
+		ltRingDistAcc_ = 0.0f;
 		return;
 	}
 
-	Vector3 d = pos - ltTrailPts_.back();
-	float dist = MyMath::Length(d);
-	if (dist < kLTTrailStep_) { return; }
+	Vector3 last = ltTrailPts_.back();
+	float d = MyMath::Length(p - last);
+	if (d < kLTTrailStep_) { return; }
 
-	ltTrailPts_.push_back(pos);
+	// 追加
+	ltTrailPts_.push_back(p);
 
-	while ((int)ltTrailPts_.size() > kLTTrailMaxPts_) {
+	// 「trail_lt は弾が消えるまで残す」ので、普段は古い点を消さない。
+	// ただし暴走防止の hard cap だけ入れる。
+	while (ltTrailPts_.size() > kLTTrailHardCap_) {
 		ltTrailPts_.erase(ltTrailPts_.begin());
 	}
 
-	// リング用：移動距離を蓄積（前のロジックをここへ）
-	ltRingDistAcc_ += dist;
+	// （必要なら）リング用の距離加算はここで
+	ltRingDistAcc_ += d;
 }

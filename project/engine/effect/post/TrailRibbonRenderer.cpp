@@ -195,13 +195,9 @@ namespace TKM {
 			Vector3 next = (i + 1 < n) ? points[i + 1] : points[i];
 			Vector3 t = next - prev;
 			float tLen = MyMath::Length(t);
-			if (tLen < 0.0001f) {
-				t = { 0,0,1 };
-			} else {
-				t = t / tLen;
-			}
+			if (tLen < 0.0001f) { t = { 0,0,1 }; } else { t = t / tLen; }
 
-			// world up 基準で side を作る（完全ワールド固定）
+			// world up 基準で side を作る（カメラ非依存）
 			Vector3 worldUp = { 0.0f, 1.0f, 0.0f };
 
 			Vector3 side = MyMath::Cross(t, worldUp);
@@ -214,6 +210,8 @@ namespace TKM {
 			}
 
 			side = side / sLen;
+			// up は t と side から作る（右手系になる向き）
+			Vector3 up = MyMath::Cross(side, t);
 
 			float a = (n <= 1) ? 1.0f : (float)i / (float)(n - 1); // 0=head,1=tail ではなく逆なので注意
 			// headを太く：i=0がhead

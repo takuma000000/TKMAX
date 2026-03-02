@@ -1,8 +1,8 @@
 cbuffer CB : register(b0)
 {
-    float4x4 gViewProj;
+    row_major float4x4 gViewProj;
     float gTime;
-    float gUvScroll;
+    float gUVScroll;
     float gIntensity;
     float gPad0;
 };
@@ -30,7 +30,7 @@ VSOut main(VSIn i)
 
 	// uv.x にスクロールを加える（流れる線）
     o.uv = i.uv;
-    o.uv.x += gTime * gUvScroll;
+    o.uv.x += gTime * gUVScroll;
 
     o.color = i.color;
     o.age01 = i.age01;
