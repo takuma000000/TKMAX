@@ -308,7 +308,7 @@ void BossLaserWindupState::Enter(TKM::IStateContext& ctx) {
 	c.laserActive_ = true;
 	c.laserTelegraph_ = true;
 	c.laserBasePos_ = c.posWork_;
-
+	// レーザーの開始位置と終了位置を初期化
 	c.laserStartWS_ = c.laserBasePos_ + Vector3{ 0.0f, c.laserMuzzleYOffset_, 0.0f };
 	c.laserEndWS_ = c.laserAimFixed_;
 }
