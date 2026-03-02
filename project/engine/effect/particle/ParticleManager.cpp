@@ -472,7 +472,7 @@ namespace TKM {
 
 	}
 
-	void ParticleManager::Emit(const std::string name, Vector3& pos, uint32_t count) {
+	void ParticleManager::Emit(const std::string name, const Vector3& pos, uint32_t count) {
 		assert(particleGroups_.find(name) != particleGroups_.end());
 		ParticleGroup& group = particleGroups_[name]; // パーティクルグループの参照を取得
 

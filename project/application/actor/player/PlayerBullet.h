@@ -158,6 +158,13 @@ private:
 	float spawnDuration_ = 0.25f;  // 出方にかける秒数（調整可）
 	Vector3 bezP0_, bezP1_, bezP2_, bezP3_;      // ベジェ制御点
 	Vector3 postSpawnVelocity_ = { 0,0,0 };      // 曲線フェーズ終了後に引き継ぐ速度
+	float ltRingDistAcc_ = 0.0f; // LT弾：リング間引き（移動距離の蓄積）
+	/// <summary>
+	/// LT弾の軌跡（リボン）を放出します。
+	/// </summary>
+	/// <param name="from">放出開始位置</param>
+	/// <param name="to">放出終了位置</param>
+	void EmitLTFairyTrail_(const Vector3& from, const Vector3& to);
 	/// <summary>
 	/// 発射の「出方」曲線フェーズ更新。
 	/// </summary>

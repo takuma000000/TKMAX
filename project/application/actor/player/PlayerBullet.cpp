@@ -19,6 +19,8 @@ void PlayerBullet::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* d
 	// 既定グループで一旦初期化（あとで SetTrailGroup で上書き可）
 	Vector3 start = object_->GetTranslate();
 	trailEmitter_.Initialize(trailGroup_, start);
+
+	ltRingDistAcc_ = 0.0f; // LT弾リングの距離加算値初期化
 }
 
 void PlayerBullet::Update() {
@@ -32,19 +34,15 @@ void PlayerBullet::Update() {
 	pos = pos + velocity_; // 速度分だけ進める
 	object_->SetTranslate(pos); // 座標を更新
 	trailEmitter_.SetPosition(pos); // パーティクル位置更新
-	trailEmitter_.Update(); // 毎フレーム放出
+	if (trailGroup_ != "trail_lt") {
+		trailEmitter_.Update(); // 通常弾は今まで通り
+	}
 
 	prevPos_ = oldPos; // 前フレームの座標を保存
 
-	// LTホーミング弾だけ、飛行中にスパークをばら撒く（全部盛りポイント）
+	// LT弾：メルヘン弾道（前フレ→今フレ区間を“線”で埋める）
 	if (trailGroup_ == "trail_lt") {
-		TKM::ParticleManager* pm = TKM::ParticleManager::GetInstance();
-		Vector3 emitPos = pos;
-
-		// 軽い光の尾
-		pm->Emit("trail_lt_path", emitPos, 1);
-		// バチバチ弾けるスパーク
-		pm->Emit("enemyHit_spark", emitPos, 1);
+		EmitLTFairyTrail_(oldPos, pos);
 	}
 
 	// =========================================
@@ -262,12 +260,16 @@ void PlayerBullet::UpdateSpawnBezier() {
 
 		Vector3 newPos = MyMath::Bezier3(bezP0_, bezP1_, bezP2_, bezP3_, t);
 		object_->SetTranslate(newPos);
-		trailEmitter_.SetPosition(newPos);
-		trailEmitter_.Update();
-
+		if (trailGroup_ == "trail_lt") { // LT弾はベジェ曲線区間も“線”で埋める
+			EmitLTFairyTrail_(pos, newPos); // pos は関数冒頭で取ってる“更新前”位置
+		} else { // 通常弾はベジェ曲線区間もエミッターを追従させるだけ
+			trailEmitter_.SetPosition(newPos); // エミッター位置更新
+			trailEmitter_.Update(); // エミッター更新（通常弾はベジェ区間もエミッターを追従させる）
+		}
+		// ベジェ曲線が終わったら通常の速度に切り替える
 		if (t >= 1.0f) {
-			isSpawningCurve_ = false;
-			velocity_ = postSpawnVelocity_;
+			isSpawningCurve_ = false; // ベジェ曲線終了
+			velocity_ = postSpawnVelocity_; // ベジェ終了後の速度を適用
 		}
 	}
 
@@ -284,5 +286,39 @@ void PlayerBullet::UpdateSpawnBezier() {
 			dir = MyMath::Normalize(dir);
 			velocity_ = dir * homingSpeed_;
 		}
+	}
+}
+
+void PlayerBullet::EmitLTFairyTrail_(const Vector3& from, const Vector3& to) {
+	TKM::ParticleManager* pm = TKM::ParticleManager::GetInstance();
+	if (!pm) { return; }
+
+	Vector3 d = to - from;
+	float len = MyMath::Length(d);
+	if (len < 0.001f) { return; }
+
+	// 密度（小さいほど“線”が濃くなる）
+	const float kSpacing = 0.70f;
+	int steps = std::max(1, (int)std::ceil(len / kSpacing));
+
+	for (int i = 0; i <= steps; ++i) {
+		float t = (float)i / (float)steps;
+		Vector3 p = from + d * t;
+
+		// 本線
+		pm->Emit("trail_lt_ribbon", p, 1);
+
+		// キラキラ（間引き）
+		if ((i & 1) == 0) {
+			pm->Emit("trail_lt_sparkle", p, 1);
+		}
+	}
+
+	// リング（距離で間引き）
+	ltRingDistAcc_ += len;
+	const float kRingEvery = 2.8f;
+	while (ltRingDistAcc_ >= kRingEvery) {
+		pm->Emit("trail_lt_ring", to, 1);
+		ltRingDistAcc_ -= kRingEvery;
 	}
 }

@@ -201,104 +201,6 @@ namespace TKM {
 			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
 			Vector3 col = { 1.0f, 0.2f + 0.3f * t, 0.1f };
 			p.color_ = { 1.0f, 0.05f, 0.05f, 1.0f };  // 強い赤（R100%, G5%, B5%）
-		} else if (groupName == "trail_lt") {
-
-			// =========================================
-			// LT 必殺技：気弾（実サイズ版）
-			// ・巨大コアを常時生成
-			// ・オーラは補助
-			// ・煙にならない
-			// =========================================
-
-			p.transform_.translate_ = center;
-
-			auto frand = [&](float a, float b) {
-				return std::uniform_real_distribution<float>(a, b)(rng);
-				};
-
-			float kind = frand(0.0f, 1.0f);
-
-			// ============================
-			// ① メインコア（最重要）
-			// ============================
-			if (kind < 0.50f) {
-
-				// ほぼ静止（球として見せる）
-				p.velocity_ = { 0.0f, 0.0f, 0.0f };
-
-				// 大きな球
-				float sc = frand(2.0f, 3.5f);
-				p.transform_.scale_ = { sc, sc, sc };
-
-				p.lifeTime_ = frand(0.08f, 0.14f);
-				p.currentTime_ = 0.0f;
-
-				float c = frand(2.8f, 3.8f);
-				p.color_ = {
-					0.95f * c,
-					0.98f * c,
-					1.00f * c,
-					1.0f
-				};
-				return p;
-			}
-
-			// ============================
-			// ② 外側オーラ
-			// ============================
-			if (kind < 0.85f) {
-
-				Vector3 off{
-					frand(-0.5f, 0.5f),
-					frand(-0.5f, 0.5f),
-					frand(-0.5f, 0.5f)
-				};
-				p.transform_.translate_ = center + off;
-
-				Vector3 dir =
-					(MyMath::Length(off) > 0.001f) ?
-					MyMath::Normalize(off) :
-					Vector3{ 0,1,0 };
-
-				p.velocity_ = dir * frand(0.6f, 1.2f);
-
-				float sc = frand(1.6f, 2.8f);
-				p.transform_.scale_ = { sc, sc, sc };
-
-				p.lifeTime_ = frand(0.05f, 0.09f);
-				p.currentTime_ = 0.0f;
-
-				p.color_ = {
-					0.25f,
-					0.75f,
-					1.10f,
-					1.0f
-				};
-				return p;
-			}
-
-			// ============================
-			// ③ 火花（補助）
-			// ============================
-			Vector3 off{
-				frand(-0.6f, 0.6f),
-				frand(-0.6f, 0.6f),
-				frand(-0.6f, 0.6f)
-			};
-			p.transform_.translate_ = center + off;
-
-			Vector3 dir = MyMath::Normalize(off);
-			p.velocity_ = dir * frand(2.0f, 3.0f);
-
-			float sc = frand(0.2f, 0.4f);
-			p.transform_.scale_ = { sc, sc, sc };
-
-			p.lifeTime_ = frand(0.03f, 0.06f);
-			p.currentTime_ = 0.0f;
-
-			float c = frand(2.5f, 4.0f);
-			p.color_ = { c, c, c, 1.0f };
-
 		} else if (groupName == "damageSpark") { //── 故障スパーク ──
 			// 放射状に高速で飛ぶ、短命、明るくチカチカ
 			std::uniform_real_distribution<float> dir(-1.0f, 1.0f);
@@ -1743,6 +1645,100 @@ namespace TKM {
 			p.velocity_ = { 0.0f, 0.0f, 0.0f };
 			p.lifeTime_ = 0.18f;
 			p.color_ = { 1.0f, 1.0f, 1.0f, 1.0f };
+		} else if (groupName == "trail_lt_ribbon") {
+			// =========================================
+			// LT メルヘン弾道：Ribbon（本線）
+			// ・細長い光のストリーク
+			// ・弾の移動区間に沿って高密度に置く前提
+			// =========================================
+			p.transform_.translate_ = center;
+
+			auto frand = [&](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			// ほぼ静止でOK（位置は弾側で線に沿って配置する）
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+
+			// カメラ正対の板に「ねじれ」だけ付ける（メルヘン感）
+			p.transform_.rotate_ = { 0.0f, 0.0f, frand(0.0f, 6.2831853f) };
+
+			// 太さ＆長さ（“線”に見える最重要）
+			float thick = frand(0.18f, 0.38f);
+			float len = frand(2.6f, 5.8f);
+			p.transform_.scale_ = { thick, thick, len };
+
+			p.lifeTime_ = frand(0.18f, 0.34f);
+			p.currentTime_ = 0.0f;
+
+			// パステル3系統（現実離れOK）
+			float kind = frand(0.0f, 1.0f);
+			if (kind < 0.33f) {
+				// シアン〜水色
+				p.color_ = { frand(0.25f, 0.55f), frand(0.85f, 1.10f), frand(0.95f, 1.25f), frand(0.75f, 0.95f) };
+			} else if (kind < 0.66f) {
+				// パープル〜ピンク
+				p.color_ = { frand(0.85f, 1.20f), frand(0.45f, 0.80f), frand(0.95f, 1.25f), frand(0.75f, 0.95f) };
+			} else {
+				// レモン〜ミント（少し混ぜるとメルヘン）
+				p.color_ = { frand(0.95f, 1.25f), frand(0.95f, 1.25f), frand(0.35f, 0.75f), frand(0.70f, 0.90f) };
+			}
+		} else if (groupName == "trail_lt_sparkle") {
+			// =========================================
+			// LT メルヘン弾道：Sparkle（星のキラキラ）
+			// ・本線の周りで瞬く
+			// =========================================
+			auto frand = [&](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			// 本線周りに少し散らす
+			Vector3 off{
+				frand(-0.35f, 0.35f),
+				frand(-0.35f, 0.35f),
+				frand(-0.35f, 0.35f)
+			};
+			p.transform_.translate_ = center + off;
+
+			// ふわっと外に逃がす
+			Vector3 dir = (MyMath::Length(off) > 0.001f) ? MyMath::Normalize(off) : Vector3{ 0,1,0 };
+			p.velocity_ = dir * frand(0.15f, 0.55f);
+
+			float sc = frand(0.14f, 0.30f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.06f, 0.14f);
+			p.currentTime_ = 0.0f;
+
+			// 白芯＋パステル（星が“魔法っぽい”）
+			float kind = frand(0.0f, 1.0f);
+			if (kind < 0.5f) {
+				p.color_ = { frand(0.95f, 1.25f), frand(0.95f, 1.25f), frand(0.95f, 1.25f), 1.0f };
+			} else {
+				p.color_ = { frand(0.55f, 1.20f), frand(0.55f, 1.20f), frand(0.85f, 1.35f), 1.0f };
+			}
+		} else if (groupName == "trail_lt_ring") {
+			// =========================================
+			// LT メルヘン弾道：Ring（道筋の輪）
+			// ・頻度は弾側で間引く
+			// =========================================
+			auto frand = [&](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			p.transform_.translate_ = center;
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+
+			p.transform_.rotate_ = { 0.0f, 0.0f, frand(0.0f, 6.2831853f) };
+
+			float sc = frand(0.55f, 1.25f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.12f, 0.24f);
+			p.currentTime_ = 0.0f;
+
+			// パステル輪（alpha薄め）
+			p.color_ = { frand(0.65f, 1.15f), frand(0.65f, 1.15f), frand(0.85f, 1.25f), frand(0.55f, 0.80f) };
 		} else { // 上記意外
 			// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 			std::uniform_real_distribution<float> velX(-0.15f, 0.15f);

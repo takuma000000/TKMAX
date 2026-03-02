@@ -124,7 +124,7 @@ namespace TKM {
 		/// <param name="name"></param>
 		/// <param name="pos"></param>
 		/// <param name="count"></param>
-		void Emit(const std::string name, Vector3& pos, uint32_t count);
+		void Emit(const std::string name, const Vector3& pos, uint32_t count);
 
 		/// <summary>
 		/// <summary>パーティクルグループを取得します。</summary>
