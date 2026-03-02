@@ -120,4 +120,7 @@ public:
 
 	// クランプ（0.0～1.0）
 	static float Clamp01(float a);
+
+	// ベクトルの外積
+	static Vector3 Cross(const Vector3& a, const Vector3& b);
 };

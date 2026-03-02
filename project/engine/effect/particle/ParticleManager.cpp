@@ -66,8 +66,8 @@ namespace TKM {
 				Matrix4x4 rotateMatrix = MyMath::MakeRotateMatrix((*particleIterator).transform_.rotate_);
 				Matrix4x4 worldMatrix{};
 				if (particleGroupIterator->second.type_ == ParticleType::RIBBON) {
-					// リボンは“弾道方向”が命。ビルボードしない
-					worldMatrix = scaleMatrix * rotateMatrix * translateMatrix;
+					// “線”として見せたいので、RIBBONもビルボード適用（カメラに向ける）
+					worldMatrix = scaleMatrix * rotateMatrix * billboardMatrix_ * translateMatrix;
 				} else {
 					worldMatrix = scaleMatrix * rotateMatrix * billboardMatrix_ * translateMatrix;
 				}
@@ -503,10 +503,7 @@ namespace TKM {
 
 		ParticleGroup& group = it->second;
 
-		size_t kHardCap = std::max<size_t>(group.kNumInstance_, 200);
-		if (name == "trail_lt_ribbon") {
-			kHardCap = 1; // ← “レーザー本体” は常に最新1本だけ残す
-		}
+		const size_t kHardCap = std::max<size_t>(group.kNumInstance_, 200);
 		for (uint32_t i = 0; i < count; ++i) {
 			while (group.particles_.size() >= kHardCap) {
 				group.particles_.pop_front();
@@ -516,15 +513,18 @@ namespace TKM {
 			p.transform_ = tr;
 			p.velocity_ = { 0.0f, 0.0f, 0.0f };
 			p.color_ = color;
-			if (name == "trail_lt_ribbon") {
-				p.lifeTime_ = 0.05f; // すぐ消える（毎フレ出すので見た目は常に繋がる）
-			} else {
-				p.lifeTime_ = 0.25f;
-			}
-			p.currentTime_ = 0.0f;
+			p.lifeTime_ = 0.1f; // 短命にして、更新の重さを減らす
+			p.currentTime_ = 0.0f; // 生まれた瞬間は0秒
 
+			p.currentTime_ = 0.0f;
 			group.particles_.push_back(p);
 		}
+	}
+
+	void ParticleManager::ClearGroup(const std::string& name) {
+		auto it = particleGroups_.find(name);
+		if (it == particleGroups_.end()) { return; }
+		it->second.particles_.clear();
 	}
 
 	ParticleManager::Particle ParticleManager::MakeNewParticle(std::mt19937& rng, const std::string& groupName, const Vector3& center) {

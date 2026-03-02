@@ -554,3 +554,11 @@ float MyMath::Clamp01(float a) {
 	if (a > 1.0f) { return 1.0f; }
 	return a;
 }
+
+Vector3 MyMath::Cross(const Vector3& a, const Vector3& b) {
+	return {
+		a.y * b.z - a.z * b.y,
+		a.z * b.x - a.x * b.z,
+		a.x * b.y - a.y * b.x
+	};
+}

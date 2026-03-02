@@ -134,6 +134,11 @@ namespace TKM {
 		/// <param name="color"></param>
 		/// <param name="count"></param>
 		void EmitWithTransform(const std::string& name, const Transform& tr, const Vector4& color, uint32_t count);
+		/// <summary>
+		/// <summary>パーティクルグループをクリアします。</summary>
+		/// </summary>
+		/// <param name="name"></param>
+		void ClearGroup(const std::string& name);
 
 		/// <summary>
 		/// <summary>パーティクルグループを取得します。</summary>

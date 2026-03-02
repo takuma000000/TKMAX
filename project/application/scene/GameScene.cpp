@@ -117,6 +117,8 @@ void GameScene::Draw3D() {
 
 	ParticleManager::GetInstance()->Draw();
 
+	player_->DrawTrails(dxCommon_); // プレイヤーの軌跡描画（パーティクルの後に描くことで、パーティクルの前に来るようにする）
+
 #ifdef USE_IMGUI
 	TKM::Camera* cam = TKM::CameraManager::GetInstance()->GetActiveCamera();
 	if (cam) {
@@ -132,7 +134,6 @@ void GameScene::DrawSprite() {
 	pause_->Draw(); // ポーズメニュー描画
 	bossManager_->DrawUI(); // ボスマネージャのUI描画（HPゲージ等）
 }
-
 
 void GameScene::SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float speed, int damage, int lifeFrame) {
 	bossManager_->SpawnEnemyBullet(pos, dir, speed, damage, lifeFrame); // ボスマネージャに委譲

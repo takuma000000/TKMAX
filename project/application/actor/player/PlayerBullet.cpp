@@ -33,6 +33,14 @@ void PlayerBullet::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* d
 	Vector3 start = object_->GetTranslate();
 	trailEmitter_.Initialize(trailGroup_, start);
 
+	// LT用も seed
+	if (trailGroup_ == "trail_lt") {
+		ltTrailPts_.clear();
+		ltTrailPts_.push_back(start);
+		ltRingDistAcc_ = 0.0f;
+		ltTrailDistAcc_ = 0.0f;
+	}
+
 	ltRingDistAcc_ = 0.0f; // LT弾リングの距離加算値初期化
 }
 
@@ -41,28 +49,28 @@ void PlayerBullet::Update() {
 	Vector3 oldPos = object_->GetTranslate(); // 前フレームの座標保存
 
 	UpdateSpawnBezier(); // 発射の「出方」曲線更新
+	// ベジェ中は UpdateSpawnBezier 側で位置が決まるので、ここで速度移動しない
+	if (isSpawningCurve_) {
+		object_->Update();
+		return;
+	}
 
 	// 現在の座標を取得して、速度分だけ進める
 	Vector3 pos = object_->GetTranslate();
 	pos = pos + velocity_; // 速度分だけ進める
 	object_->SetTranslate(pos); // 座標を更新
 	trailEmitter_.SetPosition(pos); // パーティクル位置更新
+
+	// Zが一定以上なら消す
+	if (trailGroup_ == "trail_lt") {
+		UpdateLTTrail_(pos); // LT弾は距離ベースでリング生成するため、専用の更新関数を呼ぶ
+	}
+	// LT弾は UpdateLTTrail_ 内でエミッター更新も行う（リングの生成タイミングを距離ベースにするため）
 	if (trailGroup_ != "trail_lt") {
 		trailEmitter_.Update(); // 通常弾は今まで通り
 	}
 
 	prevPos_ = oldPos; // 前フレームの座標を保存
-
-	// LT弾：プレイヤーから“常に”伸びる線
-	if (trailGroup_ == "trail_lt") {
-		Vector3 start = oldPos; // fallback
-		if (player_) {
-			start = player_->GetWorldPosition(); // ←銃口があるなら GetMuzzleWorldPosition() みたいなのに差し替え
-			// 例：少し前に出したいなら
-			// start = start + Vector3{ 0.0f, 0.8f, 1.0f };
-		}
-		EmitLTFairyTrail_(start, pos);
-	}
 
 	// =========================================
 	// 弾AABB vs 相手AABB（線分＋AABB）の共通判定
@@ -210,9 +218,39 @@ void PlayerBullet::Draw(TKM::DirectXCommon* dxCommon) {
 	object_->Draw(dxCommon); // 3Dオブジェクトの描画
 }
 
+void PlayerBullet::DrawTrail(TKM::DirectXCommon* dxCommon) {
+	if (trailGroup_ == "trail_lt") {
+		if (camera_ && ltTrailPts_.size() >= 2) {
+
+			// points は「最新が先頭」になるように渡す（Renderer想定に合わせる）
+			std::vector<Vector3> points = ltTrailPts_;
+			std::reverse(points.begin(), points.end()); // newest -> oldest
+
+			TKM::TrailRibbonRenderer::GetInstance()->DrawRibbon(
+				dxCommon,
+				*camera_,
+				points,
+				0.9f, 0.08f, 3.5f,
+				Vector3{ 1.25f, 0.35f, 1.35f },
+				0.15f, 1.2f
+			);
+		}
+	}
+}
+
 void PlayerBullet::SetPosition(const Vector3& pos) {
 	object_->SetTranslate(pos); // 座標設定
 	prevPos_ = pos;
+
+	// トレイルの「開始点」を必ず発射位置に揃える
+	trailEmitter_.SetPosition(pos);
+
+	if (trailGroup_ == "trail_lt") {
+		ltTrailPts_.clear();
+		ltTrailPts_.push_back(pos);   // 先頭点＝発射位置
+		ltRingDistAcc_ = 0.0f;
+		ltTrailDistAcc_ = 0.0f;
+	}
 }
 
 void PlayerBullet::SetVelocity(const Vector3& vel) {
@@ -220,6 +258,7 @@ void PlayerBullet::SetVelocity(const Vector3& vel) {
 }
 
 void PlayerBullet::SetCamera(TKM::Camera* camera) {
+	camera_ = camera;
 	if (object_) {
 		object_->SetCamera(camera); // Object3d にカメラを設定
 	}
@@ -227,9 +266,17 @@ void PlayerBullet::SetCamera(TKM::Camera* camera) {
 
 void PlayerBullet::SetTrailGroup(const std::string& group) {
 	trailGroup_ = group; // トレイルグループ名を保存
-	// 位置は現在地で再初期化（生成直後や途中でもOK）
-	Vector3 pos = object_ ? object_->GetTranslate() : Vector3{}; // Object3d がまだない場合は原点で初期化
-	trailEmitter_.Initialize(trailGroup_, pos); // トレイルエミッターを新しいグループで初期化
+
+	Vector3 pos = object_ ? object_->GetTranslate() : Vector3{};
+	trailEmitter_.Initialize(trailGroup_, pos);
+
+	// LTならリボン点列も初期化して「今の位置」から開始
+	if (trailGroup_ == "trail_lt") {
+		ltTrailPts_.clear();
+		ltTrailPts_.push_back(pos);
+		ltRingDistAcc_ = 0.0f;
+		ltTrailDistAcc_ = 0.0f;
+	}
 }
 
 void PlayerBullet::SetEnemy(Enemy* enemy) {
@@ -258,6 +305,14 @@ void PlayerBullet::SetCore(MidBossCore* core) {
 }
 
 void PlayerBullet::StartSpawnBezier(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float duration, const Vector3& velocityAfter) {
+	// 発射の「出方」をベジェ曲線で演出するための初期化
+	if (trailGroup_ == "trail_lt") {
+		ltTrailPts_.clear();
+		ltTrailPts_.push_back(p0);
+		ltRingDistAcc_ = 0.0f;
+		ltTrailDistAcc_ = 0.0f;
+	}
+	
 	bezP0_ = p0; bezP1_ = p1; bezP2_ = p2; bezP3_ = p3;
 	spawnDuration_ = std::max(0.001f, duration);
 	spawnT_ = 0.0f;
@@ -279,11 +334,11 @@ void PlayerBullet::UpdateSpawnBezier() {
 
 		Vector3 newPos = MyMath::Bezier3(bezP0_, bezP1_, bezP2_, bezP3_, t);
 		object_->SetTranslate(newPos);
-		if (trailGroup_ == "trail_lt") { // LT弾はベジェ曲線区間も“線”で埋める
-			EmitLTFairyTrail_(pos, newPos); // pos は関数冒頭で取ってる“更新前”位置
-		} else { // 通常弾はベジェ曲線区間もエミッターを追従させるだけ
-			trailEmitter_.SetPosition(newPos); // エミッター位置更新
-			trailEmitter_.Update(); // エミッター更新（通常弾はベジェ区間もエミッターを追従させる）
+		if (trailGroup_ == "trail_lt") {
+			UpdateLTTrail_(newPos);
+		} else {
+			trailEmitter_.SetPosition(newPos);
+			trailEmitter_.Update();
 		}
 		// ベジェ曲線が終わったら通常の速度に切り替える
 		if (t >= 1.0f) {
@@ -308,47 +363,22 @@ void PlayerBullet::UpdateSpawnBezier() {
 	}
 }
 
-void PlayerBullet::EmitLTFairyTrail_(const Vector3& from, const Vector3& to) {
-	TKM::ParticleManager* pm = TKM::ParticleManager::GetInstance();
-	if (!pm) { return; }
-
-	Vector3 d = to - from;
-	float L = MyMath::Length(d);
-	if (L < 0.001f) { return; }
-
-	Vector3 dir = d / L;
-
-	// 線分の中心に1枚置く（パンツァみたいに“伸びる線”になる）
-	Vector3 mid = from + d * 0.5f;
-
-	TKM::ParticleManager::Transform tr{};
-	tr.translate_ = mid;
-
-	// レーザーの太さ
-	const float thickness = 0.55f;
-
-	// リボン頂点は Xが横幅 / Yが厚み / Zは0 なので
-	// Z方向を「長さ」に使うため、スケールZにLを入れる
-	tr.scale_ = { thickness, thickness, L * 0.5f };
-
-	// 進行方向へ向ける
-	tr.rotate_ = DirToEuler_(dir);
-
-	// メルヘン全振り（白なし寄り）
-	Vector4 col = { 1.25f, 0.35f, 1.35f, 0.95f };
-
-	// 1本の線分として出す
-	pm->EmitWithTransform("trail_lt_ribbon", tr, col, 1);
-
-	// 周辺のキラキラ（これは点でOK）
-	pm->Emit("trail_lt_sparkle", tr.translate_, 2);
-
-	// たまにリング（道筋演出）
-	ltRingDistAcc_ += L;
-	const float kRingEvery = 1.8f;
-	if (ltRingDistAcc_ >= kRingEvery) {
-		Vector3 p = to;
-		pm->Emit("trail_lt_ring", p, 1);
-		ltRingDistAcc_ = 0.0f;
+void PlayerBullet::UpdateLTTrail_(const Vector3& pos) {
+	if (ltTrailPts_.empty()) {
+		ltTrailPts_.push_back(pos);
+		return;
 	}
+
+	Vector3 d = pos - ltTrailPts_.back();
+	float dist = MyMath::Length(d);
+	if (dist < kLTTrailStep_) { return; }
+
+	ltTrailPts_.push_back(pos);
+
+	while ((int)ltTrailPts_.size() > kLTTrailMaxPts_) {
+		ltTrailPts_.erase(ltTrailPts_.begin());
+	}
+
+	// リング用：移動距離を蓄積（前のロジックをここへ）
+	ltRingDistAcc_ += dist;
 }

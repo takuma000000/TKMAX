@@ -13,6 +13,9 @@ void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommo
 	common_ = common; // Object3d共通
 	dxCommon_ = dxCommon; // DirectX共通
 
+	// TrailRibbonRenderer初期化
+	TKM::TrailRibbonRenderer::GetInstance()->Initialize(dxCommon_);
+
 	// 3Dオブジェクト作成
 	object_ = std::make_unique<TKM::Object3d>();
 	object_->Initialize(common_, dxCommon_);
@@ -46,8 +49,8 @@ void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommo
 	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_rt", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL); // 弾の軌跡
 	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lt", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL); // 弾の軌跡
 	// --- LT弾：メルヘン弾道（3レイヤー）---
-	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lt_ribbon", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::CYLINDER);
-	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lt_sparkle", "./resources/texture/firework_star.png", TKM::ParticleManager::ParticleType::NORMAL);
+	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lt_ribbon", "./resources/texture/firework_star.png", TKM::ParticleManager::ParticleType::RIBBON);
+	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lt_sparkle", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL);
 	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lt_ring", "./resources/texture/gradationLine.png", TKM::ParticleManager::ParticleType::RING);
 
 	if (enableJetSmoke_) { // ジェット煙初期化
@@ -175,9 +178,19 @@ void Player::Update(float dt) {
 	UpdateFlipperAnim_(dt); // ヒレのアニメーション更新
 	UpdateFloatBob_(dt); // 浮遊のアニメーション更新
 
+	// TrailRibbonRendererの更新
+	TKM::TrailRibbonRenderer::GetInstance()->Update(dt);
+
 	TKM::ParticleManager::GetInstance()->Update(dt); // パーティクルマネージャー更新
 	object_->Update(); // プレイヤー本体更新
 	flipper_->Update(); // ヒレ更新
+}
+
+void Player::DrawTrails(TKM::DirectXCommon* dxCommon) {
+	for (auto& bullet : bullets_) {
+		if (!bullet) { continue; }
+		bullet->DrawTrail(dxCommon); // 弾のトレイル描画
+	}
 }
 
 void Player::ImGuiDebug() {
@@ -490,9 +503,9 @@ void Player::Draw(TKM::DirectXCommon* dxCommon) {
 		reticle_->Draw(dxCommon);
 	}
 
-	//for (auto& bullet : bullets_) {
-	//	bullet->Draw(dxCommon); // 弾描画
-	//}
+	for (auto& bullet : bullets_) {
+		bullet->Draw(dxCommon); // 弾の描画はしない(今後も予定なし)
+	}
 }
 
 void Player::SetCamera(TKM::Camera* camera) {

@@ -12,6 +12,7 @@
 #include "Easing.h"
 #include "reticle/Reticle.h"
 #include "LineRenderer.h"
+#include "TrailRibbonRenderer.h"
 
 class MidBossCore;
 class Enemy;
@@ -41,6 +42,11 @@ public:
 	/// </summary>
 	/// <param name="dxCommon">DirectX 共通管理クラス</param>
 	void Draw(TKM::DirectXCommon* dxCommon);
+	/// <summary>
+	/// プレイヤーの弾のトレイル（軌跡）を描画します。
+	/// </summary>
+	/// <param name="dxCommon">DirectX 共通管理クラス</param>
+	void DrawTrails(TKM::DirectXCommon* dxCommon);
 	/// <summary>
 	/// デバッグ用ImGui表示。
 	/// </summary>

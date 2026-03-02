@@ -10,6 +10,7 @@
 #include "Object3d.h"
 #include "MyMath.h"
 #include <ParticlerEmitter.h>
+#include <vector>
 
 class Player;
 class Enemy;
@@ -37,6 +38,11 @@ public:
 	/// </summary>
 	/// <param name="dxCommon">DirectX 共通管理クラス</param>
 	void Draw(TKM::DirectXCommon* dxCommon);
+	/// <summary>
+	/// プレイヤーの弾のトレイル（軌跡）を描画します。
+	/// </summary>
+	/// <param name="dxCommon">DirectX 共通管理クラス</param>
+	void DrawTrail(TKM::DirectXCommon* dxCommon);
 	/// <summary>
 	/// 弾がヒットしたかどうかを取得します。
 	/// </summary>
@@ -141,6 +147,7 @@ private:
 	Vector3 prevPos_{}; // 前フレームの位置（トンネリング対策用）
 	Enemy* enemy_ = nullptr;
 	MidBossCore* core_ = nullptr;
+	TKM::Camera* camera_ = nullptr;
 	//======================================================================
 	// 生存状態・ヒットフラグ
 	//======================================================================
@@ -150,7 +157,7 @@ private:
 	//======================================================================
 	// ホーミング / ベジェ出現フェーズ
 	//======================================================================
-	bool  isHoming_ = false;
+	bool  isHoming_ = false; // ホーミング有効フラグ
 	float homingSpeed_ = 0.6f;      // 追従弾の速度（調整可）
 	float homingDelay_ = 0.0f;      // 追尾開始までの遅延秒
 	bool  isSpawningCurve_ = false;  // 発射の「出方」曲線フェーズ中か
@@ -159,12 +166,16 @@ private:
 	Vector3 bezP0_, bezP1_, bezP2_, bezP3_;      // ベジェ制御点
 	Vector3 postSpawnVelocity_ = { 0,0,0 };      // 曲線フェーズ終了後に引き継ぐ速度
 	float ltRingDistAcc_ = 0.0f; // LT弾：リング間引き（移動距離の蓄積）
+	std::vector<Vector3> ltTrailPts_; // LT弾：軌跡点のキュー
+	float ltTrailDistAcc_ = 0.0f; // LT弾：軌跡点追加の距離蓄積
+	// 点を追加する間隔＆保持数（調整）
+	static constexpr float kLTTrailStep_ = 0.05f; // LT弾：軌跡点追加の距離間隔
+	static constexpr int   kLTTrailMaxPts_ = 100; // LT弾：軌跡点の最大保持数
 	/// <summary>
-	/// LT弾の軌跡（リボン）を放出します。
+	/// LT弾の軌跡（リボン）を更新します。
 	/// </summary>
-	/// <param name="from">放出開始位置</param>
-	/// <param name="to">放出終了位置</param>
-	void EmitLTFairyTrail_(const Vector3& from, const Vector3& to);
+	/// <param name="pos">現在の弾の位置</param>
+	void UpdateLTTrail_(const Vector3& pos);
 	/// <summary>
 	/// 発射の「出方」曲線フェーズ更新。
 	/// </summary>
@@ -177,6 +188,6 @@ private:
 	//======================================================================
 	// 共通パラメータ（マジックナンバー解消）
 	//======================================================================
-	static constexpr float kDefaultScale_ = 0.2f;  // 弾の見た目サイズ
+	static constexpr float kDefaultScale_ = 1.3f;  // 弾の見た目サイズ
 	static constexpr float kDespawnZ_ = 150.0f; // 消えるZ位置
 };

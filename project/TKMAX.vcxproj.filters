@@ -203,6 +203,7 @@
     <ClCompile Include="application\state\BossStates.cpp" />
     <ClCompile Include="application\actor\BattleActorManagerBase.cpp" />
     <ClCompile Include="engine\effect\particle\ParticleSpawner.cpp" />
+    <ClCompile Include="engine\effect\post\TrailRibbonRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -445,6 +446,7 @@
     <ClInclude Include="application\state\BossStates.h" />
     <ClInclude Include="application\actor\BattleActorManagerBase.h" />
     <ClInclude Include="engine\effect\particle\ParticleSpawner.h" />
+    <ClInclude Include="engine\effect\post\TrailRibbonRenderer.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
@@ -544,6 +546,8 @@
     <FxCompile Include="resources\shaders\SmokeVolume.PS.hlsl" />
     <FxCompile Include="resources\shaders\LaserBeam.VS.hlsl" />
     <FxCompile Include="resources\shaders\LaserBeam.PS.hlsl" />
+    <FxCompile Include="resources\shaders\TrailRibbon.VS.hlsl" />
+    <FxCompile Include="resources\shaders\TrailRibbon.PS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="TKMAX.rc" />
