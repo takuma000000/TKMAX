@@ -171,6 +171,8 @@ private:
 	// 点を追加する間隔＆保持数（調整）
 	static constexpr float  kLTTrailStep_ = 0.05f; // LT弾：軌跡点追加の距離間隔（LT弾は細かく点を追加）
 	static constexpr size_t kLTTrailHardCap_ = 4096; // LT弾：軌跡点のハードキャップ（これ以上は追加しない。安全策）
+	float lifeTimer_ = 0.0f; // LT弾の寿命タイマー
+	static constexpr float kLifeTime_ = 2.5f; // LT弾の寿命（秒。これを超えたら消える。安全策）
 	/// <summary>
 	/// LT弾の軌跡（リボン）を更新します。
 	/// </summary>
@@ -190,4 +192,8 @@ private:
 	//======================================================================
 	static constexpr float kDefaultScale_ = 1.3f;  // 弾の見た目サイズ
 	static constexpr float kDespawnZ_ = 150.0f; // 消えるZ位置
+	//======================================================================
+	// その他の定数
+	//======================================================================
+	const float dt_ = 1.0f / 60.0f; // 更新ごとの想定デルタタイム（秒）。ホーミングの遅延減算などで使用
 };

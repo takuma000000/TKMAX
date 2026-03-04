@@ -947,7 +947,7 @@ void Player::LBShoot() {
 		float reach = std::clamp(distToEnemy * 1.10f, 18.0f, 48.0f);
 		float sweep = std::clamp(distToEnemy * 1.00f, 18.0f, 40.0f);
 		float lift = std::clamp(distToEnemy * 0.60f, 8.0f, 22.0f);
-		float bezTime = std::clamp(distToEnemy * 0.16f, 1.2f, 3.5f);
+		float bezTime = std::clamp(distToEnemy * 0.03f, 0.15f, 0.6f);
 
 		Vector3 enemyPos = (enemy_ && !enemy_->IsDead())
 			? enemy_->GetWorldPosition()

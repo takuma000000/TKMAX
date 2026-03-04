@@ -43,6 +43,7 @@ void PlayerBullet::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* d
 	}
 
 	ltRingDistAcc_ = 0.0f; // LT弾リングの距離加算値初期化
+	lifeTimer_ = 0.0f; // 弾の寿命タイマー初期化
 }
 
 void PlayerBullet::Update() {
@@ -54,6 +55,11 @@ void PlayerBullet::Update() {
 	if (isSpawningCurve_) {
 		object_->Update();
 		return;
+	}
+
+	lifeTimer_ += dt_;
+	if (lifeTimer_ >= kLifeTime_) {
+		isDead_ = true;
 	}
 
 	// 現在の座標を取得して、速度分だけ進める
@@ -332,13 +338,12 @@ void PlayerBullet::StartSpawnBezier(const Vector3& p0, const Vector3& p1, const 
 }
 
 void PlayerBullet::UpdateSpawnBezier() {
-	const float dt = 1.0f / 60.0f;
 	// 現在の座標を取得して、速度分だけ進める
 	Vector3 pos = object_->GetTranslate();
 
 	// --- 発射の“出方”をベジェで演出 ---
 	if (isSpawningCurve_) {
-		spawnT_ += dt / spawnDuration_;
+		spawnT_ += dt_ / spawnDuration_;
 		float t = std::clamp(spawnT_, 0.0f, 1.0f);
 
 		Vector3 newPos = MyMath::Bezier3(bezP0_, bezP1_, bezP2_, bezP3_, t);
