@@ -34,6 +34,7 @@ float4 main(PSIn i) : SV_TARGET
     float flow = 0.75f + 0.25f * sin(i.uv.x * 12.0f);
 
     float a = edge * tailFade;
+    a = saturate(a * 6.0f);
     float3 emissive = i.color.rgb * (gIntensity * flow) * a;
 
 	// 加算前提：alphaは使わないが一応入れる

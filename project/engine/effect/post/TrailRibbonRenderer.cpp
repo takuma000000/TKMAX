@@ -4,6 +4,9 @@
 #include <cassert>
 #include <algorithm>
 #include <cmath>
+#ifdef USE_IMGUI
+#include "imgui.h"
+#endif
 
 #pragma comment(lib, "d3dcompiler.lib")
 
@@ -78,9 +81,21 @@ namespace TKM {
 
 	void TrailRibbonRenderer::Update(float dt) {
 		time_ += dt;
+
+		// フレームごとにリングバッファを回す
+		frameIndex_ = (frameIndex_ + 1) % kFrameRing_;
+		drawVB_[frameIndex_].clear();
+		drawIB_[frameIndex_].clear();
+		drawCB_[frameIndex_].clear();
+
 		if (cbMapped_) {
 			cbMapped_->time = time_;
 		}
+
+#ifdef USE_IMGUI
+		// デバッグ表示
+		ImGuiDebug();
+#endif
 	}
 
 	void TrailRibbonRenderer::EnsureBuffers_(ID3D12Device* device, uint32_t maxVerts, uint32_t maxIndices) {
@@ -120,44 +135,161 @@ namespace TKM {
 		tmpVerts_.clear();
 		tmpIndices_.clear();
 		BuildRibbonMesh_(camera, points, headWidth, tailWidth, color, uvTiling, tmpVerts_, tmpIndices_);
-
 		if (tmpVerts_.empty() || tmpIndices_.empty()) { return; }
 
-		// バッファ確保
 		auto device = dxCommon->GetDevice();
-		EnsureBuffers_(device, (uint32_t)tmpVerts_.size(), (uint32_t)tmpIndices_.size());
 
-		// Uploadへ書き込み
+		// ---- このDraw専用のVB/IB/CBを作る（Upload） ----
+		Microsoft::WRL::ComPtr<ID3D12Resource> vb;
+		Microsoft::WRL::ComPtr<ID3D12Resource> ib;
+		Microsoft::WRL::ComPtr<ID3D12Resource> cb;
+
+		// VB
 		{
-			void* vbMap = nullptr;
-			vb_->Map(0, nullptr, &vbMap);
-			memcpy(vbMap, tmpVerts_.data(), sizeof(Vertex) * tmpVerts_.size());
-			vb_->Unmap(0, nullptr);
+			const UINT vbSize = (UINT)(sizeof(Vertex) * tmpVerts_.size());
+			D3D12_HEAP_PROPERTIES heap{};
+			heap.Type = D3D12_HEAP_TYPE_UPLOAD;
 
-			void* ibMap = nullptr;
-			ib_->Map(0, nullptr, &ibMap);
-			memcpy(ibMap, tmpIndices_.data(), sizeof(uint16_t) * tmpIndices_.size());
-			ib_->Unmap(0, nullptr);
+			D3D12_RESOURCE_DESC desc{};
+			desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+			desc.Width = vbSize;
+			desc.Height = 1;
+			desc.DepthOrArraySize = 1;
+			desc.MipLevels = 1;
+			desc.SampleDesc.Count = 1;
+			desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+			HRESULT hr = device->CreateCommittedResource(
+				&heap, D3D12_HEAP_FLAG_NONE, &desc,
+				D3D12_RESOURCE_STATE_GENERIC_READ,
+				nullptr, IID_PPV_ARGS(&vb)
+			);
+			assert(SUCCEEDED(hr));
+
+			void* map = nullptr;
+			vb->Map(0, nullptr, &map);
+			memcpy(map, tmpVerts_.data(), vbSize);
+			vb->Unmap(0, nullptr);
 		}
 
-		// CB更新
-		cbMapped_->viewProj = camera.GetViewProjectionMatrix();
-		cbMapped_->uvScroll = uvScroll;
-		cbMapped_->intensity = intensity;
+		// IB
+		{
+			const UINT ibSize = (UINT)(sizeof(uint16_t) * tmpIndices_.size());
+			D3D12_HEAP_PROPERTIES heap{};
+			heap.Type = D3D12_HEAP_TYPE_UPLOAD;
+
+			D3D12_RESOURCE_DESC desc{};
+			desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+			desc.Width = ibSize;
+			desc.Height = 1;
+			desc.DepthOrArraySize = 1;
+			desc.MipLevels = 1;
+			desc.SampleDesc.Count = 1;
+			desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+			HRESULT hr = device->CreateCommittedResource(
+				&heap, D3D12_HEAP_FLAG_NONE, &desc,
+				D3D12_RESOURCE_STATE_GENERIC_READ,
+				nullptr, IID_PPV_ARGS(&ib)
+			);
+			assert(SUCCEEDED(hr));
+
+			void* map = nullptr;
+			ib->Map(0, nullptr, &map);
+			memcpy(map, tmpIndices_.data(), ibSize);
+			ib->Unmap(0, nullptr);
+		}
+
+		// CB（256byte aligned）
+		CB cbData{};
+		cbData.viewProj = camera.GetViewProjectionMatrix();
+		cbData.time = time_;
+		cbData.uvScroll = uvScroll;
+		cbData.intensity = intensity;
+
+		{
+			UINT cbSize = (UINT)sizeof(CB);
+			cbSize = (cbSize + 255) & ~255u;
+
+			D3D12_HEAP_PROPERTIES heap{};
+			heap.Type = D3D12_HEAP_TYPE_UPLOAD;
+
+			D3D12_RESOURCE_DESC desc{};
+			desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+			desc.Width = cbSize;
+			desc.Height = 1;
+			desc.DepthOrArraySize = 1;
+			desc.MipLevels = 1;
+			desc.SampleDesc.Count = 1;
+			desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+			HRESULT hr = device->CreateCommittedResource(
+				&heap, D3D12_HEAP_FLAG_NONE, &desc,
+				D3D12_RESOURCE_STATE_GENERIC_READ,
+				nullptr, IID_PPV_ARGS(&cb)
+			);
+			assert(SUCCEEDED(hr));
+
+			void* map = nullptr;
+			cb->Map(0, nullptr, &map);
+			memcpy(map, &cbData, sizeof(CB));
+			cb->Unmap(0, nullptr);
+		}
+
+		// ---- このフレーム枠に保持して解放されないようにする ----
+		drawVB_[frameIndex_].push_back(vb);
+		drawIB_[frameIndex_].push_back(ib);
+		drawCB_[frameIndex_].push_back(cb);
+
+		// Viewはローカルで作る（このDraw専用）
+		D3D12_VERTEX_BUFFER_VIEW vbView{};
+		vbView.BufferLocation = vb->GetGPUVirtualAddress();
+		vbView.StrideInBytes = sizeof(Vertex);
+		vbView.SizeInBytes = (UINT)(sizeof(Vertex) * tmpVerts_.size());
+
+		D3D12_INDEX_BUFFER_VIEW ibView{};
+		ibView.BufferLocation = ib->GetGPUVirtualAddress();
+		ibView.Format = DXGI_FORMAT_R16_UINT;
+		ibView.SizeInBytes = (UINT)(sizeof(uint16_t) * tmpIndices_.size());
 
 		// 描画
 		auto cmd = dxCommon->GetCommandList();
 		cmd->SetPipelineState(pso_.Get());
 		cmd->SetGraphicsRootSignature(rootSig_.Get());
-
 		cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		cmd->IASetVertexBuffers(0, 1, &vbView_);
-		cmd->IASetIndexBuffer(&ibView_);
+		cmd->IASetVertexBuffers(0, 1, &vbView);
+		cmd->IASetIndexBuffer(&ibView);
 
-		// RootParam0 = CBV
-		cmd->SetGraphicsRootConstantBufferView(0, cb_->GetGPUVirtualAddress());
-
+		// RootParam0 = CBV（このDraw専用CB）
+		cmd->SetGraphicsRootConstantBufferView(0, cb->GetGPUVirtualAddress());
 		cmd->DrawIndexedInstanced((UINT)tmpIndices_.size(), 1, 0, 0, 0);
+	}
+
+	void TrailRibbonRenderer::ImGuiDebug() {
+#ifdef USE_IMGUI
+		ImGui::Begin("トレイル(リボン) 調整");
+
+		ImGui::Checkbox("有効", &debug_.enable);
+
+		ImGui::SeparatorText("太さ");
+		ImGui::SliderFloat("先端の太さ", &debug_.headWidth, 0.01f, 5.0f, "%.3f");
+		ImGui::SliderFloat("末端の太さ", &debug_.tailWidth, 0.01f, 5.0f, "%.3f");
+
+		ImGui::SeparatorText("見た目");
+		ImGui::SliderFloat("明るさ", &debug_.intensity, 0.0f, 20.0f, "%.3f");
+
+		// ImGuiのColorEditはfloat[3]なので一旦配列に
+		float c[3] = { debug_.color.x, debug_.color.y, debug_.color.z };
+		if (ImGui::ColorEdit3("色", c)) {
+			debug_.color = { c[0], c[1], c[2] };
+		}
+
+		ImGui::SeparatorText("UV");
+		ImGui::SliderFloat("UVタイル", &debug_.uvTiling, 0.0f, 5.0f, "%.3f");
+		ImGui::SliderFloat("UV流れ速度", &debug_.uvScroll, 0.0f, 10.0f, "%.3f");
+
+		ImGui::End();
+#endif
 	}
 
 	void TrailRibbonRenderer::BuildRibbonMesh_(
@@ -170,7 +302,8 @@ namespace TKM {
 		std::vector<Vertex>& outVerts,
 		std::vector<uint16_t>& outIndices
 	) {
-		// points[0] = head(最新) を想定
+		// points[0] = tail（古い点）
+		// points.back() = head（最新の点）
 		const uint32_t n = (uint32_t)points.size();
 
 		// 累積距離（u用）

@@ -23,6 +23,25 @@ namespace TKM {
 			return &inst;
 		}
 
+		// デバッグ用パラメータ構造体
+		struct DebugParams {
+			bool enable = true;
+
+			// 太さ
+			float headWidth = 2.326f;
+			float tailWidth = 1.94f;
+
+			// 明るさ
+			float intensity = 30.0f;
+
+			// 色(真紫)
+			Vector3 color = { 0.0f, 0.0157f, 1.0f }; // RGB(0,4,255)
+
+			// UV
+			float uvTiling = 0.0f;   // リボン長さ方向の繰り返し
+			float uvScroll = 1.421f;    // 時間で流す速度（VSで gTime*uvScroll）
+		};
+
 		/// <summary>
 		/// TrailRibbonRendererの初期化を行います。
 		/// </summary>
@@ -56,6 +75,24 @@ namespace TKM {
 			float uvTiling,
 			float uvScroll
 		);
+
+		/// <summary>
+		/// ImGuiデバッグ表示。DebugParamsの編集と、描画に必要な頂点数・インデックス数の表示を行います。
+		/// </summary>
+		void ImGuiDebug();
+
+		// Getter========================================
+		/// <summary>
+		/// デバッグ用パラメータの取得。
+		/// </summary>
+		/// <returns>デバッグ用パラメータ</returns>
+		DebugParams& GetDebugParams() { return debug_; }
+		/// <summary>
+		/// デバッグ用パラメータの取得（const）。リボン描画処理内で参照されることを想定。
+		/// </summary>
+		/// <returns>デバッグ用パラメータ</returns>
+		const DebugParams& GetDebugParams() const { return debug_; }
+		// ==============================================
 
 	private:
 		TrailRibbonRenderer() = default;
@@ -134,6 +171,15 @@ namespace TKM {
 		// 一時生成
 		std::vector<Vertex> tmpVerts_;
 		std::vector<uint16_t> tmpIndices_;
+
+		static constexpr int kFrameRing_ = 3;
+		int frameIndex_ = 0;
+
+		std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> drawVB_[kFrameRing_];
+		std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> drawIB_[kFrameRing_];
+		std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> drawCB_[kFrameRing_];
+
+		DebugParams debug_{}; // デバッグ用パラメータ
 	};
 
 } // namespace TKM

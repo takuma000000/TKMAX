@@ -6,6 +6,7 @@
 #include "Enemy.h"
 #include "MidBossCore.h"
 #include "MyMath.h"
+#include "TrailRibbonRenderer.h"
 
 // 弾の初期スケール
 static Vector3 DirToEuler_(const Vector3& dir) {
@@ -226,13 +227,21 @@ void PlayerBullet::DrawTrail(TKM::DirectXCommon* dxCommon) {
 			std::vector<Vector3> points = ltTrailPts_;
 			std::reverse(points.begin(), points.end()); // newest -> oldest
 
-			TKM::TrailRibbonRenderer::GetInstance()->DrawRibbon(
+			auto* rr = TKM::TrailRibbonRenderer::GetInstance();
+			const auto& p = rr->GetDebugParams();
+
+			if (!p.enable) { return; }
+
+			rr->DrawRibbon(
 				dxCommon,
 				*camera_,
 				points,
-				0.9f, 0.08f, 3.5f,
-				Vector3{ 1.25f, 0.35f, 1.35f },
-				0.15f, 1.2f
+				p.headWidth,
+				p.tailWidth,
+				p.intensity,
+				p.color,
+				p.uvTiling,
+				p.uvScroll
 			);
 		}
 	}
