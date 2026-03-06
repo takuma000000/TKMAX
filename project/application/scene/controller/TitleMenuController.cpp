@@ -29,10 +29,6 @@ void TitleMenuController::Initialize(TKM::SpriteCommon* spriteCommon, TKM::Direc
 		items_[i]->SetColor({ 1.0f, 1.0f, 1.0f, 0.65f });
 	}
 
-	cursor_ = std::make_unique<TKM::Sprite>();
-	cursor_->Initialize(spriteCommon_, dxCommon_, desc_.cursorTex);
-	cursor_->SetAutoAdjustTextureSize(false);
-
 	for (int i = 0; i < (int)Item::Count; ++i) {
 		itemScale_[i] = 1.0f;
 	}
@@ -84,15 +80,6 @@ TitleMenuController::Command TitleMenuController::Update(float dt) {
 		items_[i]->Update();
 	}
 
-	// カーソル：選択項目に追従
-	if (cursor_) {
-		Vector2 pos = { baseItemPos_.x - 150.0f, baseItemPos_.y + itemSpacingY_ * (float)index_ };
-		cursor_->SetPosition(pos);
-		cursor_->SetSize({ 28.0f, 28.0f });
-		cursor_->SetColor({ 1.0f, 1.0f, 1.0f, 0.9f });
-		cursor_->Update();
-	}
-
 	// 決定
 	if (TriggerA_()) {
 		return (index_ == (int)Item::Start) ? Command::Start : Command::Exit;
@@ -109,8 +96,6 @@ void TitleMenuController::Draw() {
 	for (int i = 0; i < (int)Item::Count; ++i) {
 		if (items_[i]) items_[i]->Draw();
 	}
-
-	if (cursor_) cursor_->Draw();
 }
 
 void TitleMenuController::UpdateLayout(float screenW, float screenH) {
@@ -136,12 +121,6 @@ void TitleMenuController::UpdateLayout(float screenW, float screenH) {
 			Vector2 p = { baseItemPos_.x, baseItemPos_.y + itemSpacingY_ * (float)i };
 			items_[i]->SetPosition(p);
 		}
-	}
-
-	if (cursor_) {
-		Vector2 cp = { baseItemPos_.x - 150.0f, baseItemPos_.y + itemSpacingY_ * (float)index_ };
-		cursor_->SetPosition(cp);
-		cursor_->SetSize({ 32.0f, 32.0f });
 	}
 }
 
@@ -176,9 +155,4 @@ bool TitleMenuController::TriggerA_() {
 void TitleMenuController::MoveIndex_(int delta) {
 	const int count = (int)Item::Count;
 	index_ = (index_ + delta + count) % count;
-
-	if (cursor_) {
-		Vector2 cp = { baseItemPos_.x - 70.0f, baseItemPos_.y + itemSpacingY_ * (float)index_ + 10.0f };
-		cursor_->SetPosition(cp);
-	}
 }

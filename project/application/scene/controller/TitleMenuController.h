@@ -29,7 +29,6 @@ public:
 			"./resources/texture/start_title.png", // はじめる
 			"./resources/texture/end_title.png",  // とじる
 		};
-		std::string cursorTex = "./resources/texture/circle2.png"; // カーソル
 	};
 	/// <summary>
 	/// タイトルメニューを初期化します。
@@ -130,7 +129,6 @@ private:
 	//======================================================================
 	std::unique_ptr<TKM::Sprite> panel_; // パネル
 	std::array<std::unique_ptr<TKM::Sprite>, (int)Item::Count> items_; // 項目
-	std::unique_ptr<TKM::Sprite> cursor_; // カーソル
 	//======================================================================
 	// レイアウト
 	//======================================================================
