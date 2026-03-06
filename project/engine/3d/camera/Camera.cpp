@@ -7,7 +7,7 @@ namespace TKM {
 		, fovY_(0.45f)
 		, aspectRatio_(float(WindowsAPI::kClientWidth_) / float(WindowsAPI::kClientHeight_))
 		, nearClip_(0.1f)
-		, farClip_(100.0f) // 描画距離の上限
+		, farClip_(200.0f) // 描画距離の上限
 		, worldMatrix_(MyMath::MakeAffineMatrix(transform_.scale_, transform_.rotate_, transform_.translate_))
 		, viewMatrix_(MyMath::Inverse4x4(worldMatrix_))
 		, projectionMatrix_(MyMath::MakePerspectiveFovMatrix(fovY_, aspectRatio_, nearClip_, farClip_))

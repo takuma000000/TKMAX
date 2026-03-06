@@ -318,15 +318,6 @@ void PlayerBullet::SetSpecialAttack(bool flag) {
 	isSpecialAttack_ = flag; // 一撃必殺フラグを設定
 }
 
-void PlayerBullet::SetHoming(bool enable, float speed) {
-	isHoming_ = enable; // ホーミングの有効/無効を設定
-	homingSpeed_ = speed; // ホーミング速度を設定
-}
-
-void PlayerBullet::SetHomingDelay(float sec) {
-	homingDelay_ = std::max(0.0f, sec); // ホーミング開始までの遅延時間を設定（負の値は0に補正）
-}
-
 void PlayerBullet::SetCore(MidBossCore* core) {
 	core_ = core; // ヒット対象の核を設定
 }
@@ -381,21 +372,6 @@ void PlayerBullet::UpdateSpawnBezier() {
 		if (t >= 1.0f) {
 			isSpawningCurve_ = false; // ベジェ曲線終了
 			velocity_ = postSpawnVelocity_; // ベジェ終了後の速度を適用
-		}
-	}
-
-	if (isHoming_ && homingDelay_ > 0.0f) {
-		homingDelay_ -= (1.0f / 60.0f);
-	}
-
-	if (isHoming_ && homingDelay_ <= 0.0f && enemy_ && !enemy_->IsDead()) {
-		if (!enemy_) return;
-		Vector3 enemyPos = enemy_->GetWorldPosition();
-		Vector3 dir = enemyPos - pos;
-		float len = MyMath::Length(dir);
-		if (len > 0.001f) {
-			dir = MyMath::Normalize(dir);
-			velocity_ = dir * homingSpeed_;
 		}
 	}
 }

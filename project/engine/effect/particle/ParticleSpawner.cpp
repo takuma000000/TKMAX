@@ -1687,35 +1687,6 @@ namespace TKM {
 				// ライム/ミント（アクセント）
 				p.color_ = { frand(0.55f, 0.85f), frand(1.10f, 1.50f), frand(0.10f, 0.35f), frand(0.65f, 0.90f) };
 			}
-		} else if (groupName == "trail_lb_spark") {
-			auto frand = [&rng](float a, float b) {
-				return std::uniform_real_distribution<float>(a, b)(rng);
-				};
-
-			float sideY = (frand(0.0f, 1.0f) < 0.5f) ? frand(-0.24f, -0.10f) : frand(0.10f, 0.24f);
-
-			Vector3 offset = {
-				frand(-0.45f, 0.45f),
-				sideY,
-				frand(-0.08f, 0.08f)
-			};
-
-			p.transform_.translate_ = center + offset;
-
-			p.velocity_ = {
-				frand(-0.015f, 0.015f),
-				frand(-0.012f, 0.012f),
-				frand(-0.02f, 0.02f)
-			};
-
-			float sc = frand(0.08f, 0.16f);
-			p.transform_.scale_ = { sc, sc, sc };
-
-			p.lifeTime_ = frand(0.16f, 0.28f);
-			p.currentTime_ = 0.0f;
-
-			float t = frand(0.0f, 1.0f);
-			p.color_ = { 1.0f, 0.82f + 0.16f * t, 0.20f + 0.30f * t, 1.0f };
 		} else if (groupName == "trail_lb_glitter") {
 			auto frand = [&rng](float a, float b) {
 				return std::uniform_real_distribution<float>(a, b)(rng);

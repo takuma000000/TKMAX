@@ -120,17 +120,6 @@ public:
 	/// <param name="flag">有効にする場合 true、それ以外は false</param>
 	void SetSpecialAttack(bool flag);
 	/// <summary>
-	/// ホーミング機能の有効/無効と速度を設定します。
-	/// </summary>
-	/// <param name="enable">ホーミングを有効にする場合 true</param>
-	/// <param name="speed">ホーミング時の回頭・追従速度</param>
-	void SetHoming(bool enable, float speed);
-	/// <summary>
-	/// ホーミング開始までの遅延時間を設定します。
-	/// </summary>
-	/// <param name="sec">遅延時間（秒）</param>
-	void SetHomingDelay(float sec);
-	/// <summary>
 	/// 中ボスコア参照を設定します。
 	/// </summary>
 	/// <param name="core">中ボスコア（nullptr 可）</param>
@@ -157,9 +146,6 @@ private:
 	//======================================================================
 	// ホーミング / ベジェ出現フェーズ
 	//======================================================================
-	bool  isHoming_ = false; // ホーミング有効フラグ
-	float homingSpeed_ = 0.6f;      // 追従弾の速度（調整可）
-	float homingDelay_ = 0.0f;      // 追尾開始までの遅延秒
 	bool  isSpawningCurve_ = false;  // 発射の「出方」曲線フェーズ中か
 	float spawnT_ = 0.0f;   // 0..1 の補間量
 	float spawnDuration_ = 0.25f;  // 出方にかける秒数（調整可）
@@ -173,7 +159,6 @@ private:
 	static constexpr size_t kLTTrailHardCap_ = 4096; // LT弾：軌跡点のハードキャップ（これ以上は追加しない。安全策）
 	float lifeTimer_ = 0.0f; // LT弾の寿命タイマー
 	static constexpr float kLifeTime_ = 2.5f; // LT弾の寿命（秒。これを超えたら消える。安全策）
-	float homingSparkDistAcc_ = 0.0f; // LB弾：スパーク発生の距離蓄積
 	/// <summary>
 	/// LT弾の軌跡（リボン）を更新します。
 	/// </summary>

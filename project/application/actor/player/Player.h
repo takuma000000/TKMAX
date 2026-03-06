@@ -417,7 +417,6 @@ private:
 	static constexpr int   kTriggerThreshold = 128;  // LT/RT 判定しきい値
 	float                  normalBulletSpeed_ = 10.0f; // RB/LB/RT の弾速
 	static constexpr float kJetSmokeOffsetZ_ = 2.0f; // 機体後ろのジェット位置Zオフセット
-	static constexpr float kHomingBulletSpeed_ = 0.6f; // LT弾の追尾速度
 	const float            dt = 1.0f / 60.0f; // 想定フレーム時間
 	//======================================================================
 	// 自機当たり判定 (AABB)
@@ -442,7 +441,6 @@ private:
 	//======================================================================
 	static constexpr int kRbAmmoMax_ = 500; // RB弾の最大数
 	int rbAmmo_; // 現在のRB弾数
-	bool debugUnlimitedRB_ = false; // デバッグで無限
 	static constexpr float kRbEmptyWaitSec_ = 3.0f;   // 0になってから回復開始まで待つ秒数
 	static constexpr float kRbRefillSec_ = 0.60f;  // 回復にかける秒数（短いほど「一気に増える」）
 	float rbEmptyTimer_ = 0.0f;      // 0になってからの経過

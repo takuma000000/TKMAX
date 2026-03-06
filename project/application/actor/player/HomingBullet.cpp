@@ -40,7 +40,6 @@ void HomingBullet::SetPosition(const Vector3& pos) {
 	trailPts_.clear();
 	trailPts_.push_back(pos);
 	trailDistAcc_ = 0.0f;
-	sparkleDistAcc_ = 0.0f;
 	isTrailFading_ = false;
 	trailFadeTimer_ = 0.0f;
 }

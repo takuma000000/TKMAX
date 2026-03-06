@@ -73,7 +73,7 @@ private:
 	// 定数
 	static constexpr float dt_ = 1.0f / 60.0f; // 更新間隔の想定値（秒）
 	static constexpr float kDefaultScale_ = 0.8f; // 弾の基本スケール
-	static constexpr float kLifeTime_ = 1.2f; // 一定時間経過で消える
+	static constexpr float kLifeTime_ = 3.0f; // 一定時間経過で消える
 	static constexpr float kTrailStep_ = 0.15f; // トレイルの点を追加する距離の閾値
 	static constexpr size_t kTrailHardCap_ = 64; // トレイルの最大点数（これ以上は古い点から削除される）
 	static constexpr int kEnemyDamage_ = 50; // 敵へのダメージ量
@@ -81,9 +81,7 @@ private:
 
 	float lifeTimer_ = 0.0f;
 
-	float sparkleDistAcc_ = 0.0f; // スパークエフェクトを出すための距離の累積値
-
 	bool isTrailFading_ = false; // トレイルが消え始めているかどうか
 	float trailFadeTimer_ = 0.0f; // トレイルが消え始めてからの経過時間
-	float trailFadeInterval_ = 0.025f; // トレイルが完全に消えるまでの時間（秒）
+	float trailFadeInterval_ = 0.015f; // トレイルが完全に消えるまでの時間（秒）
 };
