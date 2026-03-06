@@ -41,6 +41,8 @@ void HomingBullet::SetPosition(const Vector3& pos) {
 	trailPts_.push_back(pos);
 	trailDistAcc_ = 0.0f;
 	sparkleDistAcc_ = 0.0f;
+	isTrailFading_ = false;
+	trailFadeTimer_ = 0.0f;
 }
 
 void HomingBullet::SetCamera(TKM::Camera* camera) {
@@ -103,6 +105,24 @@ void HomingBullet::UpdateTrail_(const Vector3& p) {
 
 void HomingBullet::Update() {
 	if (!object_ || isDead_) { return; }
+
+	if (isTrailFading_) {
+		trailFadeTimer_ += dt_;
+
+		while (trailFadeTimer_ >= trailFadeInterval_) {
+			trailFadeTimer_ -= trailFadeInterval_;
+
+			if (!trailPts_.empty()) {
+				trailPts_.erase(trailPts_.begin()); // player側(古い点)から消す
+			}
+		}
+
+		if (trailPts_.size() < 2) {
+			isDead_ = true;
+		}
+
+		return;
+	}
 
 	Vector3 oldPos = object_->GetTranslate();
 	prevPos_ = oldPos;
@@ -253,7 +273,8 @@ void HomingBullet::Update() {
 
 			if (CheckSweptHitAABB(enemyPos, enemySize)) {
 				isHit_ = true;
-				isDead_ = true;
+				isTrailFading_ = true;
+				trailFadeTimer_ = 0.0f;
 
 				TKM::ParticleManager* pm = TKM::ParticleManager::GetInstance();
 				Vector3 hitPos = bulletPos;
@@ -278,7 +299,8 @@ void HomingBullet::Update() {
 
 			if (CheckSweptHitAABB(corePos, coreSize)) {
 				isHit_ = true;
-				isDead_ = true;
+				isTrailFading_ = true;
+				trailFadeTimer_ = 0.0f;
 
 				TKM::ParticleManager* pm = TKM::ParticleManager::GetInstance();
 				Vector3 hitPos = bulletPos;
@@ -299,7 +321,8 @@ void HomingBullet::Update() {
 
 		if (t >= 1.0f) {
 			isArcActive_ = false;
-			isDead_ = true;
+			isTrailFading_ = true;
+			trailFadeTimer_ = 0.0f;
 		}
 	}
 
@@ -307,7 +330,7 @@ void HomingBullet::Update() {
 }
 
 void HomingBullet::Draw(TKM::DirectXCommon* dxCommon) {
-	if (!object_ || isDead_) { return; }
+	if (!object_ || isDead_ || isTrailFading_) { return; }
 	object_->Draw(dxCommon);
 }
 

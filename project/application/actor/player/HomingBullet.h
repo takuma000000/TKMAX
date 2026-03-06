@@ -12,7 +12,7 @@ class MidBossCore;
 
 //=============================================================
 // HomingBulletクラス
-// LB専用の山なり弾を管理するクラス。
+// LB専用のホーミング弾を管理するクラス。
 //=============================================================
 class HomingBullet {
 public:
@@ -82,4 +82,8 @@ private:
 	float lifeTimer_ = 0.0f;
 
 	float sparkleDistAcc_ = 0.0f; // スパークエフェクトを出すための距離の累積値
+
+	bool isTrailFading_ = false; // トレイルが消え始めているかどうか
+	float trailFadeTimer_ = 0.0f; // トレイルが消え始めてからの経過時間
+	float trailFadeInterval_ = 0.025f; // トレイルが完全に消えるまでの時間（秒）
 };
