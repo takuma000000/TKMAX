@@ -106,9 +106,9 @@ void TitleScene::Initialize() {
 
 	// ---------------BGMロード・再生----------------
 	// タイトルBGMロード
-	//TKM::AudioManager::GetInstance()->LoadSound("title", "kuraran.wav");
+	TKM::AudioManager::GetInstance()->LoadSound("title", "kuraran.wav");
 	// タイトルBGM再生
-	//TKM::AudioManager::GetInstance()->PlaySound("title", 0.05f, true); // 音量少し下げめでループ
+	TKM::AudioManager::GetInstance()->PlaySound("title", 0.05f, true); // 音量少し下げめでループ
 
 	// タイトルメニューコントローラ初期化
 	titleMenu_ = std::make_unique<TitleMenuController>();
@@ -136,7 +136,9 @@ void TitleScene::Initialize() {
 	rippleTimer_ = 0.0f;
 }
 
-void TitleScene::Finalize() {}
+void TitleScene::Finalize() {
+	TKM::AudioManager::GetInstance()->StopSound("title"); // タイトルBGM停止
+}
 
 void TitleScene::Update() {
 	ResetDrawCallCount();

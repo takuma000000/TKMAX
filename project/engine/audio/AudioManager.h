@@ -5,6 +5,7 @@
 #include <fstream>
 #include <xaudio2.h>
 #include <unordered_map>
+#include <vector>
 #pragma comment(lib,"xaudio2.lib")
 
 //チャンクヘッダ
@@ -63,6 +64,16 @@ namespace TKM {
 		void PlaySound(const std::string& key, float volume = 1.0f, bool loop = false);
 
 		/// <summary>
+		/// 音声データの再生を停止します。
+		/// </summary>
+		/// <param name="key"></param>
+		void StopSound(const std::string& key);
+		/// <summary>
+		/// 全ての音声データの再生を停止します。
+		/// </summary>
+		void StopAllSounds();
+
+		/// <summary>
 		/// 音声データを解放します。
 		/// </summary>
 		/// <param name="key"></param>
@@ -80,6 +91,12 @@ namespace TKM {
 	private:
 		Microsoft::WRL::ComPtr<IXAudio2> xAudio2_;
 		IXAudio2MasteringVoice* masterVoice_ = nullptr;
+
+		struct PlayingVoice { // 再生中の音声を管理する構造体
+			std::string key_;
+			IXAudio2SourceVoice* voice_ = nullptr;
+		};
+		std::vector<PlayingVoice> playingVoices_; // 再生中の音声のリスト
 
 		// 音声データの管理マップ
 		std::unordered_map<std::string, SoundData> soundMap_;

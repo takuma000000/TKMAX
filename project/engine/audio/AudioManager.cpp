@@ -40,6 +40,17 @@ namespace TKM {
 			masterVoice_ = nullptr;
 		}
 
+		// 再生中の SourceVoice を停止・破棄
+		for (auto& pv : playingVoices_) {
+			if (pv.voice_) {
+				pv.voice_->Stop();
+				pv.voice_->FlushSourceBuffers();
+				pv.voice_->DestroyVoice();
+				pv.voice_ = nullptr;
+			}
+		}
+		playingVoices_.clear();
+
 		// XAudio2解放
 		xAudio2_.Reset();
 
@@ -118,12 +129,17 @@ namespace TKM {
 
 		hr = sourceVoice->Start();
 		assert(SUCCEEDED(hr));
+
+		playingVoices_.push_back({ key, sourceVoice });
 	}
 
 	//============================
 	// UnloadSound
 	//============================
 	void AudioManager::UnloadSound(const std::string& key) {
+		
+		StopSound(key); // 再生中の音声を停止
+
 		auto it = soundMap_.find(key);
 		if (it != soundMap_.end()) {
 			delete[] it->second.pBuffer_;
@@ -184,5 +200,39 @@ namespace TKM {
 		soundData.pBuffer_ = reinterpret_cast<BYTE*>(pBuffer);
 		soundData.bufferSize_ = data.size_;
 		return soundData;
+	}
+
+	//============================
+	// StopSound
+	//============================
+	void AudioManager::StopSound(const std::string& key) {
+		for (auto it = playingVoices_.begin(); it != playingVoices_.end(); ) {
+			if (it->key_ == key) {
+				if (it->voice_) {
+					it->voice_->Stop();
+					it->voice_->FlushSourceBuffers();
+					it->voice_->DestroyVoice();
+					it->voice_ = nullptr;
+				}
+				it = playingVoices_.erase(it);
+			} else {
+				++it;
+			}
+		}
+	}
+
+	//============================
+	// StopAllSounds
+	//============================
+	void AudioManager::StopAllSounds() {
+		for (auto& pv : playingVoices_) {
+			if (pv.voice_) {
+				pv.voice_->Stop();
+				pv.voice_->FlushSourceBuffers();
+				pv.voice_->DestroyVoice();
+				pv.voice_ = nullptr;
+			}
+		}
+		playingVoices_.clear();
 	}
 }
