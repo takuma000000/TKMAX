@@ -36,7 +36,7 @@ void GameResultMenuController::Initialize(
 		items_[i] = std::make_unique<TKM::Sprite>();
 		items_[i]->Initialize(spriteCommon_, dxCommon_, desc_.itemTex[i]);
 		items_[i]->SetParentScene(parentScene_);
-		items_[i]->SetAnchorPoint({ 0.0f, 0.0f });
+		items_[i]->SetAnchorPoint({ 0.5f, 0.5f });
 		items_[i]->SetAutoAdjustTextureSize(false);
 
 		{
@@ -96,19 +96,16 @@ GameResultMenuController::Command GameResultMenuController::Update(float dt) {
 
 		bool selected = (i == index_);
 
-		Vector2 basePos = { baseItemPos_.x + (selected ? 12.0f : 0.0f), baseItemPos_.y + itemSpacingY_ * (float)i };
+		Vector2 pos = {
+			baseItemPos_.x,
+			baseItemPos_.y + itemSpacingY_ * (float)i
+		};
 
 		Vector4 col = selected ? Vector4{ 1.0f, 1.0f, 1.0f, 0.92f } : Vector4{ 1.0f, 1.0f, 1.0f, 0.62f };
 		items_[i]->SetColor(col);
 
 		Vector2 baseSize = selected ? Vector2{ 240.0f, 48.0f } : Vector2{ 220.0f, 44.0f };
 		Vector2 size = selected ? Vector2{ baseSize.x * pulse, baseSize.y * pulse } : baseSize;
-
-		// 中心固定っぽく（拡縮ではみ出しにくくする）
-		Vector2 pos = {
-			basePos.x - (size.x - baseSize.x) * 0.5f,
-			basePos.y - (size.y - baseSize.y) * 0.5f
-		};
 
 		items_[i]->SetPosition(pos);
 		items_[i]->SetSize(size);
@@ -117,7 +114,7 @@ GameResultMenuController::Command GameResultMenuController::Update(float dt) {
 
 	// カーソル
 	if (cursor_) {
-		Vector2 pos = { baseItemPos_.x - 42.0f, baseItemPos_.y + itemSpacingY_ * (float)index_ + 8.0f };
+		Vector2 pos = { baseItemPos_.x - 150.0f, baseItemPos_.y + itemSpacingY_ * (float)index_ };
 		cursor_->SetPosition(pos);
 		cursor_->SetSize({ 28.0f, 28.0f });
 		cursor_->SetColor({ 1.0f, 1.0f, 1.0f, 0.9f });
@@ -144,7 +141,7 @@ void GameResultMenuController::UpdateLayout(float screenW, float screenH) {
 	panelPos_ = { screenW_ - panelSize_.x - 40.0f, screenH_ - panelSize_.y - 40.0f };
 
 	// タイトルで調整したのと同じ基準
-	baseItemPos_ = { panelPos_.x + 80.0f, panelPos_.y + 60.0f };
+	baseItemPos_ = { panelPos_.x + panelSize_.x * 0.5f, panelPos_.y + 60.0f + 22.0f };
 	itemSpacingY_ = 64.0f;
 }
 

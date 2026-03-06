@@ -47,7 +47,7 @@ namespace TKM {
 			items_[i] = std::make_unique<Sprite>();
 			items_[i]->Initialize(spriteCommon_, dxCommon_, desc_.itemTex[i]);
 			items_[i]->SetParentScene(parentScene_);
-			items_[i]->SetAnchorPoint({ 0.0f, 0.0f });
+			items_[i]->SetAnchorPoint({ 0.5f, 0.5f });
 			items_[i]->SetAutoAdjustTextureSize(false);
 			items_[i]->SetSize({ 220.0f, 100.0f });
 			{
@@ -77,7 +77,7 @@ namespace TKM {
 		panelSize_ = { 340.0f, 280.0f };
 		panelPos_ = { screenW_ - panelSize_.x - 40.0f, screenH_ - panelSize_.y - 40.0f };
 
-		baseItemPos_ = { panelPos_.x + 70.0f, panelPos_.y + 70.0f };
+		baseItemPos_ = { panelPos_.x + panelSize_.x * 0.5f, panelPos_.y + 94.0f };
 		itemSpacingY_ = 70.0f;
 
 		if (curtain_) {
@@ -276,8 +276,10 @@ namespace TKM {
 
 			bool selected = (i == index_);
 
-			Vector2 basePos = { baseItemPos_.x + (selected ? 12.0f : 0.0f), baseItemPos_.y + itemSpacingY_ * (float)i };
-			Vector2 itemPos = { basePos.x, basePos.y + (1.0f - itemT) * 10.0f };
+			Vector2 itemPos = {
+				baseItemPos_.x,
+				baseItemPos_.y + itemSpacingY_ * (float)i + (1.0f - itemT) * 10.0f
+			};
 			items_[i]->SetPosition(itemPos);
 
 			Vector4 col = selected ? Vector4{ 1.0f, 1.0f, 1.0f, 0.92f } : Vector4{ 1.0f, 1.0f, 1.0f, 0.62f };
@@ -300,7 +302,10 @@ namespace TKM {
 			float itemT = clamp01((uiOpen - delay) / 0.70f);
 			itemT = smoothStep01(itemT);
 
-			Vector2 pos = { baseItemPos_.x - 42.0f, baseItemPos_.y + itemSpacingY_ * (float)index_ + 8.0f + (1.0f - itemT) * 10.0f };
+			Vector2 pos = {
+				baseItemPos_.x - 150.0f,
+				baseItemPos_.y + itemSpacingY_ * (float)index_ + (1.0f - itemT) * 10.0f
+			};
 			cursor_->SetPosition(pos);
 			cursor_->SetSize({ 28.0f, 28.0f });
 			cursor_->SetColor({ 1.0f, 1.0f, 1.0f, 0.9f * itemT });
