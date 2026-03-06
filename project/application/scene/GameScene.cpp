@@ -102,7 +102,7 @@ void GameScene::Update() {
 void GameScene::Draw() { Draw3D(); DrawSprite(); } // 3Dとスプライトの描画を分ける
 
 void GameScene::Draw3D() {
-	//skybox_->Draw(); // スカイボックス描画
+	skybox_->Draw(); // スカイボックス描画
 
 	Object3dCommon::GetInstance()->DrawSetCommon();
 	player_->Draw(dxCommon_); // プレイヤー描画
@@ -223,9 +223,7 @@ void GameScene::ImGuiDebug() {
 	/////////////////////////////////////////////////////
 	//skybox_->ImGuiUpdate(); // スカイボックスのデバッグ表示
 	/////////////////////////////////////////////////////
-	//if (postFx_) {
-	//	postFx_->ImGuiDebug();
-	//}
+	postFx_->ImGuiDebug(); // ポストエフェクトのデバッグ表示
 	///////////////////////////////////////////////////////
 	//ImGuiDebugGamepad(); // ゲームパッド入力デバッグ
 	//ImGuiDebugInfo(); // パフォーマンス情報デバッグ

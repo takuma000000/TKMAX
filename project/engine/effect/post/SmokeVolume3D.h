@@ -19,22 +19,22 @@ namespace TKM {
 			Vector3 color_{ 0.92f, 0.92f, 0.92f };
 			float density_ = 0.12f;
 
-			uint32_t sliceCount_ = 96;
+			uint32_t sliceCount_ = 57;
 
 			// ノイズ（モクモク）
-			float baseScale_ = 0.14f;        // 大きい塊
-			float detailScale_ = 0.65f;      // 細かいディテール
-			float detailStrength_ = 0.65f;   // 0..1
+			float baseScale_ = 0.124f;        // 大きい塊
+			float detailScale_ = 0.741f;      // 細かいディテール
+			float detailStrength_ = 0.33f;   // 0..1
 
 			// 雲化（threshold/softness）
 			float threshold_ = 0.52f;  // 0..1（高いほど薄くなる）
-			float softness_ = 0.12f;   // 0..1（大きいほど境界が柔らかい）
+			float softness_ = 0.115f;   // 0..1（大きいほど境界が柔らかい）
 
 			// 流れ（画面手前方向：-CamFwd へ流す）
-			float flowSpeed_ = 0.85f;  // 速さ
+			float flowSpeed_ = 4.140f;  // 速さ
 			float riseSpeed_ = 0.15f;  // 上昇（煙っぽさ）
 
-			float alphaMax_ = 0.85f;   // 上限
+			float alphaMax_ = 0.66f;   // 上限
 
 			// ノイズ座標の基準
 			float worldScale_ = 1.0f;
