@@ -13,6 +13,7 @@
 #include "reticle/Reticle.h"
 #include "LineRenderer.h"
 #include "TrailRibbonRenderer.h"
+#include "HomingBullet.h"
 
 class MidBossCore;
 class Enemy;
@@ -340,6 +341,7 @@ private:
 	std::unique_ptr<TKM::Object3d> flipper_; // プレイヤーの左右フリップ用オブジェクト
 	std::list<std::unique_ptr<PlayerBullet>> bullets_;
 	std::vector<std::unique_ptr<Enemy>>* allEnemies_ = nullptr;
+	std::list<std::unique_ptr<HomingBullet>> homingBullets_;
 	Enemy* lastLockedEnemy_ = nullptr;  // 直前にロック表示していた敵
 	//======================================================================
 	// カメラシェイク・バンク・移動範囲

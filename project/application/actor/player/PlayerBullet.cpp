@@ -68,16 +68,14 @@ void PlayerBullet::Update() {
 	object_->SetTranslate(pos); // 座標を更新
 	trailEmitter_.SetPosition(pos); // パーティクル位置更新
 
-	// Zが一定以上なら消す
-	if (trailGroup_ == "trail_lt") {
-		UpdateLTTrail_(pos); // LT弾は距離ベースでリング生成するため、専用の更新関数を呼ぶ
-	}
-	// LT弾は UpdateLTTrail_ 内でエミッター更新も行う（リングの生成タイミングを距離ベースにするため）
-	if (trailGroup_ != "trail_lt") {
-		trailEmitter_.Update(); // 通常弾は今まで通り
-	}
+	prevPos_ = oldPos; // 線分判定用に前フレームの座標を保存
 
-	prevPos_ = oldPos; // 前フレームの座標を保存
+	if (trailGroup_ == "trail_lt") {
+		UpdateLTTrail_(pos);
+	}
+	if (trailGroup_ != "trail_lt") {
+		trailEmitter_.Update();
+	}
 
 	// =========================================
 	// 弾AABB vs 相手AABB（線分＋AABB）の共通判定
@@ -227,21 +225,24 @@ void PlayerBullet::Draw(TKM::DirectXCommon* dxCommon) {
 
 void PlayerBullet::DrawTrail(TKM::DirectXCommon* dxCommon) {
 	if (trailGroup_ == "trail_lt") {
-		if (camera_ && ltTrailPts_.size() >= 2) {
-
-			// points は「最新が先頭」になるように渡す（Renderer想定に合わせる）
-			std::vector<Vector3> points = ltTrailPts_;
-			std::reverse(points.begin(), points.end()); // newest -> oldest
-
+		if (camera_ && ltTrailPts_.size() >= 1) {
 			auto* rr = TKM::TrailRibbonRenderer::GetInstance();
 			const auto& p = rr->GetDebugParams();
-
 			if (!p.enable) { return; }
+
+			std::vector<Vector3> drawPts = ltTrailPts_;
+
+			Vector3 currentPos = object_->GetTranslate();
+			if (drawPts.empty() || MyMath::Length(currentPos - drawPts.back()) > 0.0001f) {
+				drawPts.push_back(currentPos);
+			}
+
+			if (drawPts.size() < 2) { return; }
 
 			rr->DrawRibbon(
 				dxCommon,
 				*camera_,
-				points,
+				drawPts,
 				p.headWidth,
 				p.tailWidth,
 				p.intensity,
@@ -382,22 +383,21 @@ void PlayerBullet::UpdateLTTrail_(const Vector3& p) {
 	if (ltTrailPts_.empty()) {
 		ltTrailPts_.push_back(p);
 		ltRingDistAcc_ = 0.0f;
+		ltTrailDistAcc_ = 0.0f;
 		return;
 	}
 
-	Vector3 last = ltTrailPts_.back();
-	float d = MyMath::Length(p - last);
-	if (d < kLTTrailStep_) { return; }
+	// このフレームで実際に動いた距離を積算する
+	float moveDist = MyMath::Length(p - prevPos_);
+	ltTrailDistAcc_ += moveDist;
 
-	// 追加
-	ltTrailPts_.push_back(p);
+	// 一定距離ぶん進んだら節を追加
+	if (ltTrailDistAcc_ >= kLTTrailStep_) {
+		ltTrailPts_.push_back(p);
+		ltTrailDistAcc_ = 0.0f;
 
-	// 「trail_lt は弾が消えるまで残す」ので、普段は古い点を消さない。
-	// ただし暴走防止の hard cap だけ入れる。
-	while (ltTrailPts_.size() > kLTTrailHardCap_) {
-		ltTrailPts_.erase(ltTrailPts_.begin());
+		while (ltTrailPts_.size() > kLTTrailHardCap_) {
+			ltTrailPts_.erase(ltTrailPts_.begin());
+		}
 	}
-
-	// （必要なら）リング用の距離加算はここで
-	ltRingDistAcc_ += d;
 }

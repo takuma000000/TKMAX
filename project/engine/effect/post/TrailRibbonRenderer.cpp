@@ -330,24 +330,71 @@ namespace TKM {
 			float tLen = MyMath::Length(t);
 			if (tLen < 0.0001f) { t = { 0,0,1 }; } else { t = t / tLen; }
 
-			// world up 基準で side を作る（カメラ非依存）
-			Vector3 worldUp = { 0.0f, 1.0f, 0.0f };
+			// ===== 安定版 side 計算（紙みたいに消えるのを防ぐ）=====
 
-			Vector3 side = MyMath::Cross(t, worldUp);
-			float sLen = MyMath::Length(side);
+			// カメラ方向（長さが距離で暴れないように正規化）
+			Vector3 camVec = camPos - p;
+			float camLen = MyMath::Length(camVec);
+			if (camLen < 0.0001f) { camVec = { 0,0,1 }; } else { camVec = camVec / camLen; }
 
-			if (sLen < 0.0001f) {
-				worldUp = { 1.0f, 0.0f, 0.0f }; // fallback
-				side = MyMath::Cross(t, worldUp);
-				sLen = MyMath::Length(side);
+			// 基本： view方向 × tangent で “画面に幅が出る” side を作る
+			Vector3 side = MyMath::Cross(camVec, t);
+			float sideLen = MyMath::Length(side);
+
+			// しきい値：小さすぎると「ほぼ平行」を拾って暴れる
+			const float kEps = 0.01f;
+
+			if (sideLen < kEps) {
+				// ① prevSide を camVec に直交化してから使う（ここが本命）
+				// side = prevSide - camVec * dot(prevSide, camVec)
+				Vector3 s = prevSide - camVec * MyMath::Dot(prevSide, camVec);
+				float sLen = MyMath::Length(s);
+
+				if (sLen >= kEps) {
+					side = s / sLen;
+				} else {
+					// ② それでもダメなら camVec から安定軸を作って side を再構築
+					Vector3 worldUp = { 0, 1, 0 };
+					Vector3 camRight = MyMath::Cross(worldUp, camVec);
+					float rLen = MyMath::Length(camRight);
+
+					if (rLen < kEps) {
+						worldUp = { 1, 0, 0 }; // 真上向き対策
+						camRight = MyMath::Cross(worldUp, camVec);
+						rLen = MyMath::Length(camRight);
+					}
+
+					if (rLen < kEps) {
+						// 最終保険：前回維持
+						side = prevSide;
+					} else {
+						camRight = camRight / rLen;
+
+						Vector3 s2 = MyMath::Cross(t, camRight);
+						float s2Len = MyMath::Length(s2);
+
+						if (s2Len < kEps) {
+							side = prevSide;
+						} else {
+							side = s2 / s2Len;
+						}
+					}
+				}
+			} else {
+				side = side / sideLen;
 			}
 
-			side = side / sLen;
-			// up は t と side から作る（右手系になる向き）
-			Vector3 up = MyMath::Cross(side, t);
+			// 向き反転を抑える（連続性）
+			if (MyMath::Dot(side, prevSide) < 0.0f) {
+				side = side * -1.0f;
+			}
+			prevSide = side; // ←重要：fallbackでも必ず更新する
 
-			float a = (n <= 1) ? 1.0f : (float)i / (float)(n - 1); // 0=head,1=tail ではなく逆なので注意
-			// headを太く：i=0がhead
+			// points[0] = tail（古い点）
+			// points.back() = head（最新の点）
+			// age01 は head=0, tail=1
+			float a = (n <= 1) ? 1.0f : 1.0f - (float)i / (float)(n - 1);
+			// a は tail=1 -> head=0
 			float width = headWidth + (tailWidth - headWidth) * a;
 
 			Vector3 left = p - side * (width * 0.5f);
@@ -374,12 +421,12 @@ namespace TKM {
 			if (i + 1 < n) {
 				// (base, base+1, base+2, base+3) -> 2 triangles
 				outIndices.push_back(base + 0);
-				outIndices.push_back(base + 2);
 				outIndices.push_back(base + 1);
+				outIndices.push_back(base + 2);
 
 				outIndices.push_back(base + 1);
-				outIndices.push_back(base + 2);
 				outIndices.push_back(base + 3);
+				outIndices.push_back(base + 2);
 			}
 		}
 	}
@@ -455,7 +502,7 @@ namespace TKM {
 
 		// Depth: test ON / write OFF
 		D3D12_DEPTH_STENCIL_DESC ds{};
-		ds.DepthEnable = TRUE;
+		ds.DepthEnable = FALSE;
 		ds.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
 		ds.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 		ds.StencilEnable = FALSE;

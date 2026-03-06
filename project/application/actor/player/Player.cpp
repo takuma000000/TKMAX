@@ -147,6 +147,14 @@ void Player::Update(float dt) {
 			++it;
 		}
 	}
+	for (auto it = homingBullets_.begin(); it != homingBullets_.end(); ) {
+		(*it)->Update();
+		if ((*it)->IsDead()) {
+			it = homingBullets_.erase(it);
+		} else {
+			++it;
+		}
+	}
 
 #ifdef USE_IMGUI
 	// ───────── 自機当たり判定ワイヤーボックス描画 ─────────
@@ -190,6 +198,10 @@ void Player::DrawTrails(TKM::DirectXCommon* dxCommon) {
 	for (auto& bullet : bullets_) {
 		if (!bullet) { continue; }
 		bullet->DrawTrail(dxCommon); // 弾のトレイル描画
+	}
+	for (auto& bullet : homingBullets_) {
+		if (!bullet) { continue; }
+		bullet->DrawTrail(dxCommon);
 	}
 }
 
@@ -271,6 +283,10 @@ void Player::OnEnemyDestroyed(Enemy* e) {
 	for (auto& b : bullets_) { // 弾が追従している敵も解除する
 		if (!b) continue; // 安全確認
 		if (b->GetEnemy() == e) { b->SetEnemy(nullptr); } // 敵解除
+	}
+	for (auto& b : homingBullets_) {
+		if (!b) continue;
+		if (b->GetEnemy() == e) { b->SetEnemy(nullptr); }
 	}
 }
 
@@ -506,6 +522,10 @@ void Player::Draw(TKM::DirectXCommon* dxCommon) {
 	//for (auto& bullet : bullets_) {
 	//	bullet->Draw(dxCommon); // 弾の描画はしない(今後も予定なし)
 	//}
+
+	/*for (auto& bullet : homingBullets_) {
+		bullet->Draw(dxCommon);
+	}*/
 }
 
 void Player::SetCamera(TKM::Camera* camera) {
@@ -893,95 +913,65 @@ void Player::RTShoot() {
 void Player::LBShoot() {
 	TKM::Input* input = TKM::Input::GetInstance();
 
-	// ▼ LB：ホーミング弾（元LT）
-	// ※「1押し1発」のため、ltHeld_をそのまま流用
 	if (input->TriggerButton(XINPUT_GAMEPAD_LEFT_SHOULDER) && !ltHeld_) {
-		// 弾切れなら撃てない（0のとき）
 		if (!debugUnlimitedLB_ && lbAmmo_ <= 0) {
-			// 発射できないので、ここで終わる
 			return;
 		}
 
-		auto bullet = std::make_unique<PlayerBullet>();
+		auto bullet = std::make_unique<HomingBullet>();
 		bullet->Initialize(common_, dxCommon_);
 
-		// 発射位置＝プレイヤー位置
-		Vector3 p0 = object_->GetTranslate();
-		bullet->SetPosition(p0);
+		Vector3 start = object_->GetTranslate();
+
+		// 終点
+		Vector3 end = start + Vector3{ 0.0f, 0.0f, 28.0f };
+		if (enemy_ && !enemy_->IsDead()) {
+			end = enemy_->GetWorldPosition();
+		}
+
+		// 山なり制御点を作る
+		Vector3 flat = end - start;
+		flat.y = 0.0f;
+		float flatLen = MyMath::Length(flat);
+
+		Vector3 forward = { 0.0f, 0.0f, 1.0f };
+		if (flatLen > 0.001f) {
+			forward = flat / flatLen;
+		}
+
+		float arcHeight = std::clamp(flatLen * 0.25f, 6.0f, 18.0f);
+
+		Vector3 c1 = start + forward * (flatLen * 0.25f) + Vector3{ 0.0f, arcHeight, 0.0f };
+		Vector3 c2 = end - forward * (flatLen * 0.20f) + Vector3{ 0.0f, arcHeight * 0.85f, 0.0f };
+
+		bullet->SetPosition(start);
 		bullet->SetEnemy(enemy_);
-		bullet->SetHoming(true, kHomingBulletSpeed_); // ベジェ終了後に効く追尾速度
 		bullet->SetCamera(camera_);
 		bullet->SetPlayer(this);
-		bullet->SetTrailGroup("trail_lt"); // 見た目もLBに寄せるなら "trail_lb" にしてOK
-
-		// ここでラジアルブラー発火
-		if (radialBlur_) {
-			radialBlur_->BulrStartShock(2.0f, 0.35f); // 強さ、長さ
-		}
-
 		bullet->SetCore(core_);
+		bullet->StartArc(start, c1, c2, end, 0.4f);
 
-		// --- 敵方向基準（いなければ前方） ---
-		Vector3 toEnemyDir = { 0,0,1 };
-		float   distToEnemy = 12.0f;
-		if (enemy_ && !enemy_->IsDead()) {
-			Vector3 v = enemy_->GetWorldPosition() - p0;
-			distToEnemy = std::max(4.0f, MyMath::Length(v));
-			toEnemyDir = (distToEnemy > 0.01f) ? MyMath::Normalize(v) : Vector3{ 0,0,1 };
+		if (radialBlur_) {
+			radialBlur_->BulrStartShock(2.0f, 0.35f);
 		}
 
-		// 右方向（Y軸回り 90°回転）
-		Vector3 right = { toEnemyDir.z, 0.0f, -toEnemyDir.x };
-		float rl = MyMath::Length(right);
-		right = (rl > 0.001f) ? right * (1.0f / rl) : Vector3{ 1,0,0 };
+		homingBullets_.push_back(std::move(bullet));
 
-		// 画面右側の敵なら右回り、左なら左回り
-		int side = +1;
-		if (enemy_ && !enemy_->IsDead()) {
-			Vector3 v = enemy_->GetWorldPosition() - p0;
-			float lateral = MyMath::DotOnXZ(right, MyMath::Normalize(Vector3{ v.x,0,v.z }));
-			side = (lateral >= 0.0f) ? +1 : -1;
-		}
-
-		// --- 大きな弧のパラメータ（距離で自動スケール） ---
-		float reach = std::clamp(distToEnemy * 1.10f, 18.0f, 48.0f);
-		float sweep = std::clamp(distToEnemy * 1.00f, 18.0f, 40.0f);
-		float lift = std::clamp(distToEnemy * 0.60f, 8.0f, 22.0f);
-		float bezTime = std::clamp(distToEnemy * 0.03f, 0.15f, 0.6f);
-
-		Vector3 enemyPos = (enemy_ && !enemy_->IsDead())
-			? enemy_->GetWorldPosition()
-			: p0 + toEnemyDir * reach;
-
-		Vector3 p3 = enemyPos;
-		Vector3 p1 = p0 + right * (side * sweep)
-			+ Vector3{ 0.0f, lift * 0.7f, 0.0f }
-		+ toEnemyDir * (reach * 0.25f);
-		Vector3 p2 = p3 - right * (side * sweep * 0.85f)
-			+ Vector3{ 0.0f, lift, 0.0f };
-
-		Vector3 vAfter = toEnemyDir * 0.40f; // 前方速度
-		bullet->StartSpawnBezier(p0, p1, p2, p3, bezTime, vAfter);
-		bullet->SetHomingDelay(0.12f);
-
-		bullets_.push_back(std::move(bullet));
-
-		// 発射成功したら消費
 		if (!debugUnlimitedLB_) {
 			lbAmmo_ = std::max(0, lbAmmo_ - 1);
 		}
-		// 「LBを撃ってない時間」リセット
 		lbNoFireTimer_ = 0.0f;
 
-		ZoomCamera();
-		StartCameraShake(10);
+		ZoomCamera(); // LTの一時ズームアウト開始
+		StartCameraShake(10); // 軽いシェイクも同時に開始
+		StartRumble(0.12f, 42000, 42000); // 振動も同時に開始（0.12秒、強め）
 
-		// 発射の瞬間だけ軽く振動
-		StartRumble(0.12f, 42000, 42000);
+		ltHeld_ = true;
 	}
 
-	// 押しっぱなし防止ラッチ（名前ltHeld_のまま流用）
-	ltHeld_ = input->TriggerButton(XINPUT_GAMEPAD_LEFT_SHOULDER);
+	if (!input->PushButton(XINPUT_GAMEPAD_LEFT_SHOULDER)) {
+		ltHeld_ = false;
+	}
 }
 
 void Player::LTShoot() {

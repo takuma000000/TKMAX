@@ -177,6 +177,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\scene\controller\GameFlowController.cpp" />
     <ClCompile Include="application\scene\controller\GameResultMenuController.cpp" />
     <ClCompile Include="application\actor\player\LBGaugeUI.cpp" />
+    <ClCompile Include="application\actor\player\HomingBullet.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="engine\3d\Model.cpp" />
     <ClCompile Include="engine\3d\ModelCommon.cpp" />
@@ -316,6 +317,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\state\IState.h" />
     <ClInclude Include="engine\state\IStateContext.h" />
     <ClInclude Include="engine\effect\particle\ParticleSpawner.h" />
+    <ClInclude Include="application\actor\player\HomingBullet.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="application\scene\controller\TitleMenuController.h" />
     <ClInclude Include="application\catalog\TextureCatalog.h" />
