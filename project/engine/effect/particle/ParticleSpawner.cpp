@@ -1687,67 +1687,128 @@ namespace TKM {
 				// ライム/ミント（アクセント）
 				p.color_ = { frand(0.55f, 0.85f), frand(1.10f, 1.50f), frand(0.10f, 0.35f), frand(0.65f, 0.90f) };
 			}
-		} else if (groupName == "trail_lt_sparkle") {
-			// =========================================
-			// LT メルヘン弾道：Sparkle（星のキラキラ）
-			// ・本線の周りで瞬く
-			// =========================================
-			auto frand = [&](float a, float b) {
+		} else if (groupName == "trail_lb_spark") {
+			auto frand = [&rng](float a, float b) {
 				return std::uniform_real_distribution<float>(a, b)(rng);
 				};
 
-			// 本線周りに少し散らす
-			Vector3 off{
-				frand(-0.35f, 0.35f),
-				frand(-0.35f, 0.35f),
-				frand(-0.35f, 0.35f)
+			float sideY = (frand(0.0f, 1.0f) < 0.5f) ? frand(-0.24f, -0.10f) : frand(0.10f, 0.24f);
+
+			Vector3 offset = {
+				frand(-0.45f, 0.45f),
+				sideY,
+				frand(-0.08f, 0.08f)
 			};
-			p.transform_.translate_ = center + off;
 
-			// ふわっと外に逃がす
-			Vector3 dir = (MyMath::Length(off) > 0.001f) ? MyMath::Normalize(off) : Vector3{ 0,1,0 };
-			// もっと踊らせる（花火破片っぽく）
-			p.velocity_ = dir * frand(0.55f, 1.60f);
+			p.transform_.translate_ = center + offset;
 
-			float sc = frand(0.22f, 0.55f);
+			p.velocity_ = {
+				frand(-0.015f, 0.015f),
+				frand(-0.012f, 0.012f),
+				frand(-0.02f, 0.02f)
+			};
+
+			float sc = frand(0.08f, 0.16f);
 			p.transform_.scale_ = { sc, sc, sc };
 
-			p.lifeTime_ = frand(0.10f, 0.22f);
+			p.lifeTime_ = frand(0.16f, 0.28f);
 			p.currentTime_ = 0.0f;
 
-			// 白寄りをやめて、メルヘン配色に寄せる
-			float kind = frand(0.0f, 1.0f);
-			if (kind < 0.33f) {
-				p.color_ = { frand(0.35f, 0.75f), frand(1.05f, 1.35f), frand(1.05f, 1.45f), 1.0f }; // シアン
-			} else if (kind < 0.66f) {
-				p.color_ = { frand(1.05f, 1.45f), frand(0.25f, 0.65f), frand(1.05f, 1.45f), 1.0f }; // ピンク
-			} else {
-				p.color_ = { frand(0.65f, 1.05f), frand(0.35f, 0.85f), frand(1.15f, 1.55f), 1.0f }; // 紫
-			}
-		} else if (groupName == "trail_lt_ring") {
-			// =========================================
-			// LT メルヘン弾道：Ring（道筋の輪）
-			// ・頻度は弾側で間引く
-			// =========================================
-			auto frand = [&](float a, float b) {
+			float t = frand(0.0f, 1.0f);
+			p.color_ = { 1.0f, 0.82f + 0.16f * t, 0.20f + 0.30f * t, 1.0f };
+		} else if (groupName == "trail_lb_glitter") {
+			auto frand = [&rng](float a, float b) {
 				return std::uniform_real_distribution<float>(a, b)(rng);
 				};
 
 			p.transform_.translate_ = center;
-			p.velocity_ = { 0.0f, 0.0f, 0.0f };
 
-			p.transform_.rotate_ = { 0.0f, 0.0f, frand(0.0f, 6.2831853f) };
+			p.velocity_ = {
+				frand(-0.012f, 0.012f),
+				frand(-0.012f, 0.012f),
+				frand(-0.012f, 0.012f)
+			};
 
-			// 魔法陣はデカい方が勝つ
-			float sc = frand(1.20f, 2.40f);
+			float sc = frand(0.16f, 0.34f);
 			p.transform_.scale_ = { sc, sc, sc };
 
-			// 残像長め
-			p.lifeTime_ = frand(0.22f, 0.42f);
+			p.lifeTime_ = frand(0.08f, 0.16f);
 			p.currentTime_ = 0.0f;
 
-			// 透明すぎると見えないからalpha上げる
-			p.color_ = { frand(0.55f, 1.25f), frand(0.55f, 1.25f), frand(0.85f, 1.45f), frand(0.75f, 0.95f) };
+			// 白金
+			float t = frand(0.0f, 1.0f);
+			float r = 1.0f;
+			float g = 0.92f + 0.08f * t;
+			float b = 0.72f + 0.24f * t;
+			p.color_ = { r, g, b, 1.0f };
+		} else if (groupName == "trail_lb_bolt_main") {
+			auto frand = [&rng](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			p.transform_.translate_ = center;
+
+			// ここ大事：長さは Y に持たせる
+			float width = frand(0.060f, 0.125f);
+			float length = frand(0.85f, 1.85f); // ここが“ビーム感”の核（長いほどビームっぽい、短いとただの板）
+			p.transform_.scale_ = { width, length, 1.0f };
+
+			// 板の中で斜めに見せる
+			p.transform_.rotate_ = {
+				0.0f,
+				0.0f,
+				frand(-1.15f, 1.15f)
+			};
+
+			// ほぼその場、ほんの少しだけブレる
+			p.velocity_ = {
+				frand(-0.004f, 0.004f),
+				frand(-0.004f, 0.004f),
+				frand(-0.004f, 0.004f)
+			};
+
+			p.lifeTime_ = frand(0.05f, 0.10f);
+			p.currentTime_ = 0.0f;
+
+			// 黄白の本体
+			float t = frand(0.0f, 1.0f);
+			float r = 1.0f;
+			float g = 0.86f + 0.10f * t;
+			float b = 0.38f + 0.18f * t;
+			p.color_ = { r, g, b, 1.0f };
+		} else if (groupName == "trail_lb_bolt_core") {
+			auto frand = [&rng](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			p.transform_.translate_ = center;
+
+			// 本体より細く長い芯
+			float width = frand(0.018f, 0.040f);
+			float length = frand(0.60f, 1.25f);
+			p.transform_.scale_ = { width, length, 1.0f };
+
+			p.transform_.rotate_ = {
+				0.0f,
+				0.0f,
+				frand(-1.00f, 1.00f)
+			};
+
+			p.velocity_ = {
+				frand(-0.003f, 0.003f),
+				frand(-0.003f, 0.003f),
+				frand(-0.003f, 0.003f)
+			};
+
+			p.lifeTime_ = frand(0.035f, 0.075f);
+			p.currentTime_ = 0.0f;
+
+			// 白芯
+			float t = frand(0.0f, 1.0f);
+			float r = 1.0f;
+			float g = 0.95f + 0.05f * t;
+			float b = 0.82f + 0.12f * t;
+			p.color_ = { r, g, b, 1.0f };
 		} else { // 上記意外
 			// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 			std::uniform_real_distribution<float> velX(-0.15f, 0.15f);

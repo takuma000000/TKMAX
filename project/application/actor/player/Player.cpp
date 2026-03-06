@@ -52,6 +52,18 @@ void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommo
 	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lt_ribbon", "./resources/texture/firework_star.png", TKM::ParticleManager::ParticleType::RIBBON);
 	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lt_sparkle", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL);
 	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lt_ring", "./resources/texture/gradationLine.png", TKM::ParticleManager::ParticleType::RING);
+	TKM::ParticleManager::GetInstance()->CreateParticleGroup(
+		"trail_lb_glitter",
+		"./resources/texture/firework_star.png",
+		TKM::ParticleManager::ParticleType::NORMAL);
+	TKM::ParticleManager::GetInstance()->CreateParticleGroup(
+		"trail_lb_bolt_main",
+		"./resources/texture/gradationLine.png",
+		TKM::ParticleManager::ParticleType::NORMAL);
+	TKM::ParticleManager::GetInstance()->CreateParticleGroup(
+		"trail_lb_bolt_core",
+		"./resources/texture/gradationLine.png",
+		TKM::ParticleManager::ParticleType::NORMAL);
 
 	if (enableJetSmoke_) { // ジェット煙初期化
 		Vector3 jetPos = object_->GetTranslate();

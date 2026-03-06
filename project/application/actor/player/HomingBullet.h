@@ -80,4 +80,6 @@ private:
 	static constexpr int kCoreDamage_ = 10; // コアへのダメージは小さめ
 
 	float lifeTimer_ = 0.0f;
+
+	float sparkleDistAcc_ = 0.0f; // スパークエフェクトを出すための距離の累積値
 };

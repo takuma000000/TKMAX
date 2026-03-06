@@ -40,6 +40,7 @@ void HomingBullet::SetPosition(const Vector3& pos) {
 	trailPts_.clear();
 	trailPts_.push_back(pos);
 	trailDistAcc_ = 0.0f;
+	sparkleDistAcc_ = 0.0f;
 }
 
 void HomingBullet::SetCamera(TKM::Camera* camera) {
@@ -131,6 +132,83 @@ void HomingBullet::Update() {
 			pos = pos + (enemyPos - pos) * followT;
 		}
 		object_->SetTranslate(pos);
+
+		// ============================
+		// LB弾：トレイル全体にキラキラ + 稲光
+		// ============================
+		{
+			auto* pm = TKM::ParticleManager::GetInstance();
+
+			if (trailPts_.size() >= 2) {
+
+				auto frand = [](float a, float b) {
+					return a + (b - a) * (static_cast<float>(rand()) / static_cast<float>(RAND_MAX));
+					};
+
+				// トレイル履歴を間引きながら走査
+				const int step = 2; // 大きいほど軽い
+
+				for (size_t i = 0; i < trailPts_.size(); i += step) {
+
+					Vector3 centerPos = trailPts_[i];
+
+					Vector3 dir = { 0,0,1 };
+					if (i + 1 < trailPts_.size()) {
+						dir = trailPts_[i + 1] - trailPts_[i];
+						float len = MyMath::Length(dir);
+						if (len > 0.0001f) dir = dir / len;
+					}
+
+					// ----------------------------
+					// トレイル横方向
+					// ----------------------------
+					Vector3 side = { 1,0,0 };
+
+					if (camera_) {
+						Vector3 camVec = camera_->GetTranslate() - centerPos;
+						float camLen = MyMath::Length(camVec);
+						if (camLen > 0.0001f) {
+							camVec /= camLen;
+							Vector3 s = MyMath::Cross(camVec, dir);
+							float sLen = MyMath::Length(s);
+							if (sLen > 0.0001f) side = s / sLen;
+						}
+					}
+
+					float sign = (rand() % 2 == 0) ? -1.0f : 1.0f;
+
+					float edgeBase = 0.72f;
+					float overhang = frand(0.05f, 0.30f);
+
+					Vector3 edgePos = centerPos + side * sign * (edgeBase + overhang);
+
+					// ----------------------------
+					// キラキラ
+					// ----------------------------
+					if ((rand() % 100) < 80) {
+						pm->Emit("trail_lb_glitter", edgePos, 2);
+
+						if ((rand() % 100) < 55) {
+							pm->Emit("trail_lb_glitter", edgePos, 2);
+						}
+					}
+
+					// ----------------------------
+					// 稲光
+					// ----------------------------
+					if ((rand() % 100) < 45) {
+						Vector3 boltPos = centerPos + side * sign * frand(0.65f, 1.15f);
+
+						pm->Emit("trail_lb_bolt_main", boltPos, 2);
+						pm->Emit("trail_lb_bolt_core", boltPos, 1);
+
+						if ((rand() % 100) < 40) {
+							pm->Emit("trail_lb_bolt_core", boltPos, 1);
+						}
+					}
+				}
+			}
+		}
 
 		// 向きも弾道に沿わせる
 		float t2 = std::min(1.0f, t + 0.01f);

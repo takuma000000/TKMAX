@@ -66,4 +66,12 @@ struct Vector3 final {
 		this->z *= scalar;
 		return *this;
 	}
+
+	// スカラー除算代入演算子
+	Vector3& operator/=(float scalar) {
+		this->x /= scalar;
+		this->y /= scalar;
+		this->z /= scalar;
+		return *this;
+	}
 };

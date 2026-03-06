@@ -173,6 +173,7 @@ private:
 	static constexpr size_t kLTTrailHardCap_ = 4096; // LT弾：軌跡点のハードキャップ（これ以上は追加しない。安全策）
 	float lifeTimer_ = 0.0f; // LT弾の寿命タイマー
 	static constexpr float kLifeTime_ = 2.5f; // LT弾の寿命（秒。これを超えたら消える。安全策）
+	float homingSparkDistAcc_ = 0.0f; // LB弾：スパーク発生の距離蓄積
 	/// <summary>
 	/// LT弾の軌跡（リボン）を更新します。
 	/// </summary>
