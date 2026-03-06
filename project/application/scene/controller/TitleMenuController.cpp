@@ -18,7 +18,7 @@ void TitleMenuController::Initialize(TKM::SpriteCommon* spriteCommon, TKM::Direc
 		items_[i] = std::make_unique<TKM::Sprite>();
 		items_[i]->Initialize(spriteCommon_, dxCommon_, desc_.itemTex[i]);
 		items_[i]->SetAutoAdjustTextureSize(false);
-		items_[i]->SetAnchorPoint({ 0.0f, 0.0f });
+		items_[i]->SetAnchorPoint({ 0.5f, 0.5f });
 		// テクスチャサイズ設定
 		{
 			const auto& md = TKM::TextureManager::GetInstance()->GetMetadata(desc_.itemTex[i]);
@@ -67,7 +67,7 @@ TitleMenuController::Command TitleMenuController::Update(float dt) {
 
 		// 位置：選択中は少し右へ（ポーズ画面と同じ）
 		Vector2 pos = {
-			baseItemPos_.x + (selected ? 12.0f : 0.0f),
+			baseItemPos_.x,
 			baseItemPos_.y + itemSpacingY_ * (float)i
 		};
 		items_[i]->SetPosition(pos);
@@ -86,7 +86,7 @@ TitleMenuController::Command TitleMenuController::Update(float dt) {
 
 	// カーソル：選択項目に追従
 	if (cursor_) {
-		Vector2 pos = { baseItemPos_.x - 42.0f, baseItemPos_.y + itemSpacingY_ * (float)index_ + 8.0f };
+		Vector2 pos = { baseItemPos_.x - 150.0f, baseItemPos_.y + itemSpacingY_ * (float)index_ };
 		cursor_->SetPosition(pos);
 		cursor_->SetSize({ 28.0f, 28.0f });
 		cursor_->SetColor({ 1.0f, 1.0f, 1.0f, 0.9f });
@@ -117,12 +117,14 @@ void TitleMenuController::UpdateLayout(float screenW, float screenH) {
 	screenW_ = screenW;
 	screenH_ = screenH;
 
-	panelSize_ = { 340.0f, 200.0f }; // パネルサイズ
-	// 画面右下に寄せる
-	panelPos_ = { screenW_ - panelSize_.x - 40.0f, screenH_ - panelSize_.y - 40.0f };
-
-	baseItemPos_ = { panelPos_.x + 60.0f, panelPos_.y + 60.0f }; // 項目基準位置
-	itemSpacingY_ = 64.0f; // 項目間隔
+	// サイズ: 項目が収まる程度に
+	panelSize_ = { 340.0f, 200.0f };
+	// 位置: 真ん中下あたり
+	panelPos_ = { 470.0f, 500.0f };
+	// 項目の基準位置: パネルの内側で、上から少し下がったあたり
+	baseItemPos_ = { panelPos_.x + panelSize_.x * 0.5f, panelPos_.y + 72.0f };
+	// 項目間隔
+	itemSpacingY_ = 70.0f;
 
 	if (panel_) {
 		panel_->SetPosition(panelPos_);
@@ -137,7 +139,7 @@ void TitleMenuController::UpdateLayout(float screenW, float screenH) {
 	}
 
 	if (cursor_) {
-		Vector2 cp = { baseItemPos_.x - 70.0f, baseItemPos_.y + itemSpacingY_ * (float)index_ + 10.0f };
+		Vector2 cp = { baseItemPos_.x - 150.0f, baseItemPos_.y + itemSpacingY_ * (float)index_ };
 		cursor_->SetPosition(cp);
 		cursor_->SetSize({ 32.0f, 32.0f });
 	}

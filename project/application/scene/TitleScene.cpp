@@ -66,7 +66,7 @@ void TitleScene::Initialize() {
 	sprite_ = std::make_unique<Sprite>();
 	sprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, "./resources/texture/title_kuraran.dds");
 	// 画面中央に表示
-	sprite_->SetPosition({ 0.0f,0.0f });
+	sprite_->SetPosition({ -10.0f,-290.0f });
 	sprite_->SetSize({ 1.0f, 1.0f });
 
 	dirLight_ = std::make_unique<TKM::DirectionalLight>();
