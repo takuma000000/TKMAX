@@ -117,11 +117,35 @@ void HomingBullet::Update() {
 		float t = std::clamp(arcT_, 0.0f, 1.0f);
 
 		Vector3 pos = MyMath::Bezier3(p0_, p1_, p2_, p3_, t);
+
+		// 終盤だけ敵の現在位置へ少しずつ寄せる
+		if (enemy_ && !enemy_->IsDead() && t >= 0.65f) {
+			float followT = (t - 0.65f) / (1.0f - 0.65f);
+			followT = std::clamp(followT, 0.0f, 1.0f);
+
+			Vector3 enemyPos = enemy_->GetWorldPosition();
+
+			// そのままだと敵の中心へ刺さりすぎるなら少し上を狙う
+			enemyPos.y += 1.5f;
+
+			pos = pos + (enemyPos - pos) * followT;
+		}
 		object_->SetTranslate(pos);
 
 		// 向きも弾道に沿わせる
 		float t2 = std::min(1.0f, t + 0.01f);
 		Vector3 nextPos = MyMath::Bezier3(p0_, p1_, p2_, p3_, t2);
+
+		if (enemy_ && !enemy_->IsDead() && t2 >= 0.65f) {
+			float followT2 = (t2 - 0.65f) / (1.0f - 0.65f);
+			followT2 = std::clamp(followT2, 0.0f, 1.0f);
+
+			Vector3 enemyPos2 = enemy_->GetWorldPosition();
+			enemyPos2.y += 1.5f;
+
+			nextPos = nextPos + (enemyPos2 - nextPos) * followT2;
+		}
+
 		Vector3 dir = nextPos - pos;
 		if (MyMath::Length(dir) > 0.0001f) {
 			object_->SetRotate(DirToEuler_(dir));

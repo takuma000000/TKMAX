@@ -71,7 +71,18 @@ void PlayerBullet::Update() {
 	prevPos_ = oldPos; // 線分判定用に前フレームの座標を保存
 
 	if (trailGroup_ == "trail_lt") {
-		UpdateLTTrail_(pos);
+		Vector3 dir = velocity_;
+		float len = MyMath::Length(dir);
+		if (len > 0.0001f) {
+			dir = dir / len;
+		} else {
+			dir = { 0,0,1 };
+		}
+
+		float trailFrontOffset = 1.2f;
+		Vector3 trailPos = pos + dir * trailFrontOffset;
+
+		UpdateLTTrail_(trailPos);
 	}
 	if (trailGroup_ != "trail_lt") {
 		trailEmitter_.Update();
@@ -350,7 +361,18 @@ void PlayerBullet::UpdateSpawnBezier() {
 		Vector3 newPos = MyMath::Bezier3(bezP0_, bezP1_, bezP2_, bezP3_, t);
 		object_->SetTranslate(newPos);
 		if (trailGroup_ == "trail_lt") {
-			UpdateLTTrail_(newPos);
+			Vector3 dir = newPos - prevPos_;
+			float len = MyMath::Length(dir);
+			if (len > 0.0001f) {
+				dir = dir / len;
+			} else {
+				dir = { 0,0,1 };
+			}
+
+			float trailFrontOffset = 1.2f;
+			Vector3 trailPos = newPos + dir * trailFrontOffset;
+
+			UpdateLTTrail_(trailPos);
 		} else {
 			trailEmitter_.SetPosition(newPos);
 			trailEmitter_.Update();
