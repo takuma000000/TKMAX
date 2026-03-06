@@ -105,7 +105,7 @@ namespace TKM {
 		// ひとまず基準位置で配置
 		if (uiRB_) uiRB_->SetPosition(basePosRB_);
 		if (uiLB_) uiLB_->SetPosition(basePosLB_);
-		if (uiX_)  uiX_->SetPosition(basePosX_);
+		if (uiX_)  uiX_->SetPosition({ basePosX_.x + xCurrentOfs_.x, basePosX_.y + xCurrentOfs_.y });
 		if (uiLS_) uiLS_->SetPosition({ basePosLS_.x + lsCurrentOfs_.x, basePosLS_.y + lsCurrentOfs_.y });
 	}
 
@@ -393,8 +393,54 @@ namespace TKM {
 		// ---- 押下中シェイク（必要な分だけ）----
 		if (uiRB_) ApplyShake_(uiRB_.get(), basePosRB_, rbDown, shakeT_RB_);
 		if (uiLB_) ApplyShake_(uiLB_.get(), basePosLB_, lbDown, shakeT_LB_);
-		if (uiX_)  ApplyShake_(uiX_.get(), basePosX_, xDown, shakeT_X_);
 		if (uiRBGaugeIcon_) ApplyShake_(uiRBGaugeIcon_.get(), basePosRBGaugeIcon_, rbDown, shakeT_RBGaugeIcon_);
+
+		// ---- X（回避）：押した瞬間のスティック方向へシュッ → ぬるっと戻る ----
+		if (uiX_) {
+			const bool xTrig = (xDown && !prevXDown_);
+
+			// Xを押した瞬間だけ、現在の左スティック方向を採用
+			if (xTrig) {
+				Vector2 dir{ lsX, -lsY }; // 画面座標系に合わせる（上入力で上へ）
+				float lenSq = dir.x * dir.x + dir.y * dir.y;
+
+				if (lenSq > 0.0001f) {
+					float len = std::sqrt(lenSq);
+					dir.x /= len;
+					dir.y /= len;
+				} else {
+					// 入力が無いときは、ひとまず上方向へ少し逃がす
+					dir = { 0.0f, -1.0f };
+				}
+
+				xTargetOfs_ = {
+					dir.x * xMoveRangePx_,
+					dir.y * xMoveRangePx_
+				};
+			}
+
+			// 目標を0へぬるっと戻す
+			float rt = 1.0f - std::exp(-xReturnSpeed_ * dt);
+			if (rt < 0.0f) { rt = 0.0f; }
+			if (rt > 1.0f) { rt = 1.0f; }
+
+			xTargetOfs_.x += (0.0f - xTargetOfs_.x) * rt;
+			xTargetOfs_.y += (0.0f - xTargetOfs_.y) * rt;
+
+			// 現在表示位置を目標へ追従
+			float ft = 1.0f - std::exp(-xFollowSpeed_ * dt);
+			if (ft < 0.0f) { ft = 0.0f; }
+			if (ft > 1.0f) { ft = 1.0f; }
+
+			xCurrentOfs_.x += (xTargetOfs_.x - xCurrentOfs_.x) * ft;
+			xCurrentOfs_.y += (xTargetOfs_.y - xCurrentOfs_.y) * ft;
+
+			uiX_->SetPosition({
+				basePosX_.x + xCurrentOfs_.x,
+				basePosX_.y + xCurrentOfs_.y
+				});
+		}
+		prevXDown_ = xDown;
 
 		// ---- LS：倒し方向へぬるぬる追従 ----
 		if (uiLS_) {

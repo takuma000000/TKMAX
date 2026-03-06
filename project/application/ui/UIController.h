@@ -184,7 +184,6 @@ namespace TKM {
 		float hudReserveGap_ = 26.0f;     // 確保幅の右側の間隔（見栄え用）
 		float hudBottomMargin_ = 44.0f;   // 画面下からHPバー中心までの距離
 		float rbGaugeIconPadX_ = 60.0f;   // RBゲージ右端→アイコンまでの余白
-
 		// HPアイコン（player_hp.png）をゲージの下に置く
 		std::unique_ptr<Sprite> hpIcon_;
 		Vector2 hpIconTexSize_{}; // HPアイコンのテクスチャサイズ
@@ -217,6 +216,13 @@ namespace TKM {
 		float shakeT_LB_ = 0.0f; // LBの押下継続時間
 		float shakeT_X_ = 0.0f; // Xの押下継続時間
 		float shakeT_RBGaugeIcon_ = 0.0f; // RBゲージアイコンの押下継続時間
+		// X（回避）アイコン：回避方向へぬめっと動かす
+		Vector2 xCurrentOfs_{ 0.0f, 0.0f };   // 今表示しているオフセット
+		Vector2 xTargetOfs_{ 0.0f, 0.0f };    // 目標オフセット
+		float xMoveRangePx_ = 35.0f;          // どれくらい動かすか
+		float xFollowSpeed_ = 18.0f;          // 目標へ寄る速さ
+		float xReturnSpeed_ = 10.0f;          // 0へ戻る速さ
+		bool prevXDown_ = false;              // X押下立ち上がり検出用
 		// 基準座標（ApplyRightUiPositions_で決めた位置を保持）
 		Vector2 basePosRB_{}; // RBアイコンの基準位置
 		Vector2 basePosLB_{}; // LBアイコンの基準位置
