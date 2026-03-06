@@ -106,7 +106,7 @@ namespace TKM {
 		if (uiRB_) uiRB_->SetPosition(basePosRB_);
 		if (uiLB_) uiLB_->SetPosition(basePosLB_);
 		if (uiX_)  uiX_->SetPosition(basePosX_);
-		if (uiLS_) uiLS_->SetPosition(basePosLS_);
+		if (uiLS_) uiLS_->SetPosition({ basePosLS_.x + lsCurrentOfs_.x, basePosLS_.y + lsCurrentOfs_.y });
 	}
 
 	void UIController::ApplyShake_(Sprite* sp, const Vector2& basePos, bool down, float& t) {
@@ -396,14 +396,28 @@ namespace TKM {
 		if (uiX_)  ApplyShake_(uiX_.get(), basePosX_, xDown, shakeT_X_);
 		if (uiRBGaugeIcon_) ApplyShake_(uiRBGaugeIcon_.get(), basePosRBGaugeIcon_, rbDown, shakeT_RBGaugeIcon_);
 
-		// ---- LS：倒し方向に同期して動かす ----
+		// ---- LS：倒し方向へぬるぬる追従 ----
 		if (uiLS_) {
+			// 目標オフセット
 			// 画面Yは下が+なので、スティック上方向(+)はYをマイナスへ
-			Vector2 ofs{
+			lsTargetOfs_ = {
 				lsX * lsMoveRangePx_,
 				-lsY * lsMoveRangePx_
 			};
-			uiLS_->SetPosition({ basePosLS_.x + ofs.x, basePosLS_.y + ofs.y });
+
+			// 追従率
+			float t = 1.0f - std::exp(-lsFollowSpeed_ * dt);
+			if (t < 0.0f) { t = 0.0f; }
+			if (t > 1.0f) { t = 1.0f; }
+
+			// 現在位置を目標へヌルっと寄せる
+			lsCurrentOfs_.x += (lsTargetOfs_.x - lsCurrentOfs_.x) * t;
+			lsCurrentOfs_.y += (lsTargetOfs_.y - lsCurrentOfs_.y) * t;
+
+			uiLS_->SetPosition({
+				basePosLS_.x + lsCurrentOfs_.x,
+				basePosLS_.y + lsCurrentOfs_.y
+				});
 		}
 
 		// ---- HP（減るときアニメ＆被弾感） ----
