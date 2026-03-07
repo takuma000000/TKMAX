@@ -118,37 +118,45 @@ void GameOverScene::Update() {
 	dirLight_->Update();
 	ParticleManager::GetInstance()->Update(dt_);
 
+	// 「GAME OVER」表示の更新
 	if (irisOpening_) {
-		irisScale_ = UpdateIrisScale(iris_.get(), irisOpenTween_, dt_);
+		irisScale_ = UpdateIrisScale(iris_.get(), irisOpenTween_, dt_); // 虹彩絞りの更新（開き演出）
 
+		// 開き演出が終わったらフラグを下ろす（以降は常に表示される状態）
 		if (irisOpenTween_.Finished()) {
 			irisOpening_ = false;
 		}
 	}
 
+	// 「GAME OVER」表示の更新
 	if (!irisClosing_ && !irisOpening_) {
 		const auto cmd = overMenu_->Update(dt_);
 
+		// コマンドに応じて次のアクションをセットし、虹彩絞りの閉じ演出を開始
 		if (cmd == GameResultMenuController::Command::Restart) {
 			nextAction_ = NextAction::Restart;
 			irisClosing_ = true;
 			irisCloseTween_.Reset(0.0f, irisMaxScale_, kIrisDuration_, Ease::Type::InBack);
-		} else if (cmd == GameResultMenuController::Command::ReturnToTitle) {
+		} else if (cmd == GameResultMenuController::Command::ReturnToTitle) { // タイトルに戻る
 			nextAction_ = NextAction::ReturnToTitle;
 			irisClosing_ = true;
 			irisCloseTween_.Reset(0.0f, irisMaxScale_, kIrisDuration_, Ease::Type::InBack);
 		}
 	}
 
+	// 虹彩絞りの閉じ演出更新と、演出終了後のシーン遷移
 	if (irisClosing_) {
-		UpdateIrisScale(iris_.get(), irisCloseTween_, dt_);
+		UpdateIrisScale(iris_.get(), irisCloseTween_, dt_); // 虹彩絞りの更新（閉じ演出）
 
+		// 閉じ演出が終わったら次のシーンへ遷移
 		if (irisCloseTween_.Finished()) {
+
+			// 次のアクションに応じてシーン遷移
 			if (nextAction_ == NextAction::Restart) {
-				sceneManager_->SetNextScene(new GameScene(dxCommon_, srvManager_));
+				sceneManager_->SetNextScene(new GameScene(dxCommon_, srvManager_)); // リスタート
 				return;
 			}
-
+			// タイトルへ戻る
 			sceneManager_->SetNextScene(new TitleScene(dxCommon_, srvManager_));
 			return;
 		}

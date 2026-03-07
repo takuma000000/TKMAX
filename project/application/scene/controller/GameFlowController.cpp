@@ -178,10 +178,12 @@ namespace TKM {
 	GameFlowController::TransitionRequest GameFlowController::StepIrisClosing_() {
 		if (!irisClosing_) { return TransitionRequest::None; }
 
+		// アイリスのスケールを更新
 		UpdateIrisScale(intro_ ? intro_->GetIrisSprite() : nullptr, irisCloseTween_, kFixedDeltaTime_);
 
+		// 閉じ終わってなければ遷移要求はまだ出さない
 		if (!irisCloseTween_.Finished()) { return TransitionRequest::None; }
 
-		return irisToTitle_ ? TransitionRequest::ToTitle : TransitionRequest::ToGameOver;
+		return irisToTitle_ ? TransitionRequest::ToTitle : TransitionRequest::ToGameOver; // 閉じ終わったらタイトルへ or ゲームオーバーへ遷移要求
 	}
 } // namespace TKM

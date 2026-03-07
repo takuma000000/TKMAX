@@ -10,29 +10,33 @@ void TitleMenuController::Initialize(TKM::SpriteCommon* spriteCommon, TKM::Direc
 	screenH_ = screenH;
 	desc_ = desc;
 
+	// スプライト生成
 	panel_ = std::make_unique<TKM::Sprite>();
 	panel_->Initialize(spriteCommon_, dxCommon_, desc_.panelTex);
 	panel_->SetAutoAdjustTextureSize(false);
 
+	// 項目スプライト生成
 	for (int i = 0; i < (int)Item::Count; ++i) {
 		items_[i] = std::make_unique<TKM::Sprite>();
 		items_[i]->Initialize(spriteCommon_, dxCommon_, desc_.itemTex[i]);
 		items_[i]->SetAutoAdjustTextureSize(false);
-		items_[i]->SetAnchorPoint({ 0.5f, 0.5f });
+		items_[i]->SetAnchorPoint({ 0.5f, 0.5f }); // 中心
 		// テクスチャサイズ設定
 		{
 			const auto& md = TKM::TextureManager::GetInstance()->GetMetadata(desc_.itemTex[i]);
-			items_[i]->SetTextureLeftTop({ 0.0f, 0.0f });
-			items_[i]->SetTextureSize({ (float)md.width, (float)md.height });
+			items_[i]->SetTextureLeftTop({ 0.0f, 0.0f }); // テクスチャ全体を使う
+			items_[i]->SetTextureSize({ (float)md.width, (float)md.height }); // テクスチャサイズをスプライトのサイズにする
 		}
-
+		// 色は少し薄めにしておく（Updateで選択中は濃く、非選択は薄くする）
 		items_[i]->SetColor({ 1.0f, 1.0f, 1.0f, 0.65f });
 	}
 
+	// 初期値
 	for (int i = 0; i < (int)Item::Count; ++i) {
-		itemScale_[i] = 1.0f;
+		itemScale_[i] = 1.0f; // 初期スケールは1.0（等倍）
 	}
 
+	// レイアウト更新
 	UpdateLayout(screenW_, screenH_);
 }
 

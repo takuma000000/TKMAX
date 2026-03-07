@@ -13,12 +13,13 @@ namespace TKM {
 		screenH_ = screenH;
 		desc_ = desc;
 
+		// 状態
 		state_ = State::Closed;
 		index_ = 0;
 		fadeT_ = 0.0f;
 		pulseTime_ = 0.0f;
 		curtainAlpha_ = 0.0f;
-
+		// 入力状態
 		prevStart_ = false;
 		prevUp_ = false;
 		prevDown_ = false;
@@ -29,17 +30,17 @@ namespace TKM {
 		curtain_ = std::make_unique<Sprite>();
 		curtain_->Initialize(spriteCommon_, dxCommon_, desc_.curtainTex);
 		curtain_->SetParentScene(parentScene_);
-		curtain_->SetAnchorPoint({ 0.0f, 0.0f });
+		curtain_->SetAnchorPoint({ 0.0f, 0.0f }); // 左上を基準にする
 		curtain_->SetAutoAdjustTextureSize(false);
-		curtain_->SetPosition({ 0.0f, 0.0f });
-		curtain_->SetSize({ screenW_, screenH_ });
-		curtain_->SetColor({ 0.0f, 0.0f, 0.0f, 0.0f });
+		curtain_->SetPosition({ 0.0f, 0.0f }); // 画面全体を覆うようにする
+		curtain_->SetSize({ screenW_, screenH_ }); // 画面全体を覆うようにする
+		curtain_->SetColor({ 0.0f, 0.0f, 0.0f, 0.0f }); // 最初は透明にする
 
 		// パネル
 		panel_ = std::make_unique<Sprite>();
 		panel_->Initialize(spriteCommon_, dxCommon_, desc_.panelTex);
 		panel_->SetParentScene(parentScene_);
-		panel_->SetAnchorPoint({ 0.0f, 0.0f });
+		panel_->SetAnchorPoint({ 0.0f, 0.0f }); // 左上を基準にする
 		panel_->SetAutoAdjustTextureSize(false);
 
 		// 項目
@@ -47,15 +48,15 @@ namespace TKM {
 			items_[i] = std::make_unique<Sprite>();
 			items_[i]->Initialize(spriteCommon_, dxCommon_, desc_.itemTex[i]);
 			items_[i]->SetParentScene(parentScene_);
-			items_[i]->SetAnchorPoint({ 0.5f, 0.5f });
+			items_[i]->SetAnchorPoint({ 0.5f, 0.5f }); // 中心を基準にする
 			items_[i]->SetAutoAdjustTextureSize(false);
-			items_[i]->SetSize({ 220.0f, 100.0f });
+			items_[i]->SetSize({ 220.0f, 100.0f }); // サイズ設定
 			{
 				const auto& md = TextureManager::GetInstance()->GetMetadata(desc_.itemTex[i]);
-				items_[i]->SetTextureLeftTop({ 0.0f,0.0f });
+				items_[i]->SetTextureLeftTop({ 0.0f,0.0f }); // テクスチャ全体を使う
 				items_[i]->SetTextureSize({ (float)md.width, (float)md.height });
 			}
-			items_[i]->SetColor({ 1.0f, 1.0f, 1.0f, 0.65f });
+			items_[i]->SetColor({ 1.0f, 1.0f, 1.0f, 0.65f }); // 最初は少し透明にする
 		}
 
 		// カーソル
@@ -64,34 +65,35 @@ namespace TKM {
 		cursor_->SetParentScene(parentScene_);
 		cursor_->SetAnchorPoint({ 0.0f, 0.0f });
 		cursor_->SetAutoAdjustTextureSize(false);
-		cursor_->SetSize({ 28.0f, 28.0f });
-		cursor_->SetColor({ 1.0f, 1.0f, 1.0f, 0.9f });
+		cursor_->SetSize({ 28.0f, 28.0f }); // サイズ設定
+		cursor_->SetColor({ 1.0f, 1.0f, 1.0f, 0.9f }); // 最初は少し透明にする
 
-		UpdateLayout(screenW_, screenH_);
+		UpdateLayout(screenW_, screenH_); // レイアウト初期化
 	}
 
 	void PauseMenuController::UpdateLayout(float screenW, float screenH) {
 		screenW_ = screenW;
 		screenH_ = screenH;
 
-		panelSize_ = { 340.0f, 280.0f };
-		panelPos_ = { screenW_ - panelSize_.x - 40.0f, screenH_ - panelSize_.y - 40.0f };
-
-		baseItemPos_ = { panelPos_.x + panelSize_.x * 0.5f, panelPos_.y + 94.0f };
-		itemSpacingY_ = 70.0f;
+		panelSize_ = { 340.0f, 280.0f }; // サイズ設定
+		panelPos_ = { screenW_ - panelSize_.x - 40.0f, screenH_ - panelSize_.y - 40.0f }; // 画面右下に配置
+	
+		baseItemPos_ = { panelPos_.x + panelSize_.x * 0.5f, panelPos_.y + 94.0f }; // 項目の基準位置（パネル内の、最初の項目が来る位置）
+		itemSpacingY_ = 70.0f; // 項目間の垂直スペース
 
 		if (curtain_) {
-			curtain_->SetSize({ screenW_, screenH_ });
+			curtain_->SetSize({ screenW_, screenH_ }); // 画面全体を覆うようにする
 		}
 		if (panel_) {
-			panel_->SetPosition(panelPos_);
-			panel_->SetSize(panelSize_);
-			panel_->SetColor({ 0.08f, 0.08f, 0.10f, 0.75f });
+			panel_->SetPosition(panelPos_); // 位置設定
+			panel_->SetSize(panelSize_); // サイズ設定
+			panel_->SetColor({ 0.08f, 0.08f, 0.10f, 0.75f }); // 半透明の暗い色にする
 		}
 
+		// 項目の位置を更新
 		for (int i = 0; i < (int)Item::Count; ++i) {
 			if (items_[i]) {
-				items_[i]->SetPosition({ baseItemPos_.x, baseItemPos_.y + itemSpacingY_ * (float)i });
+				items_[i]->SetPosition({ baseItemPos_.x, baseItemPos_.y + itemSpacingY_ * (float)i }); // 位置設定
 			}
 		}
 	}
@@ -180,38 +182,44 @@ namespace TKM {
 				state_ = State::Paused;
 				curtainAlpha_ = kTargetCurtainAlpha;
 			}
-		} else if (state_ == State::Resuming) {
+		} else if (state_ == State::Resuming) { // 開いている途中から閉じる途中へ（閉じる途中はフェードアウト）
 			fadeT_ = clamp01(fadeT_ + dt * kCloseSpeed);
 			float e = smoothStep01(fadeT_);
 			curtainAlpha_ = kTargetCurtainAlpha * (1.0f - e);
+			// 完全に閉じたら状態を Closed にして、透明にする
 			if (fadeT_ >= 1.0f) {
 				state_ = State::Closed;
 				curtainAlpha_ = 0.0f;
 				return Command::None;
 			}
-		} else {
+		} else { // Paused
 			curtainAlpha_ = kTargetCurtainAlpha;
 		}
 
 		// 操作
 		if (state_ == State::Paused) {
+			// 上下で選択変更（ループ）
 			if (TriggerPadUp_()) { MoveIndex_(-1); }
+			// 下入力もループ
 			if (TriggerPadDown_()) { MoveIndex_(+1); }
-
+			// B で閉じる（Resume と同じ扱いで、項目選択は無し）
 			if (TriggerB_()) {
 				Close_();
 				return Command::None;
 			}
-
+			// A で決定
 			if (TriggerA_()) {
+				// どの項目が選ばれているかでコマンドを返す
 				if (index_ == (int)Item::Resume) {
 					Close_();
 					return Command::Resume;
 				}
+				// Restart は、選択して A 押した瞬間に即コマンドを返す（長押し無しで即確定）
 				if (index_ == (int)Item::Restart) {
 					Close_();
 					return Command::Restart;
 				}
+				// ReturnToTitle は、選択して A 押した瞬間に即コマンドを返す（長押し無しで即確定）
 				if (index_ == (int)Item::ReturnToTitle) {
 					Close_();
 					return Command::ReturnToTitle; // 長押し無しで即確定
@@ -276,12 +284,13 @@ namespace TKM {
 
 			bool selected = (i == index_);
 
+			// 位置：基準位置から、出現率に応じて少し下からスッと上がるようにする
 			Vector2 itemPos = {
 				baseItemPos_.x,
 				baseItemPos_.y + itemSpacingY_ * (float)i + (1.0f - itemT) * 10.0f
 			};
 			items_[i]->SetPosition(itemPos);
-
+			// 色：選択中は少し明るく、非選択は少し暗く（さらに出現率に応じて透明から不透明へ）
 			Vector4 col = selected ? Vector4{ 1.0f, 1.0f, 1.0f, 0.92f } : Vector4{ 1.0f, 1.0f, 1.0f, 0.62f };
 			col.w *= itemT;
 			items_[i]->SetColor(col);
@@ -291,8 +300,9 @@ namespace TKM {
 			// 出現中は少しだけ小さめ（ポン）にして完成感
 			float s = 0.96f + 0.04f * itemT;
 			size = { size.x * s, size.y * s };
-			items_[i]->SetSize(size);
 
+			// サイズを設定
+			items_[i]->SetSize(size);
 			items_[i]->Update();
 		}
 
@@ -302,17 +312,19 @@ namespace TKM {
 			float itemT = clamp01((uiOpen - delay) / 0.70f);
 			itemT = smoothStep01(itemT);
 
+			// 位置：選択項目の左側に配置。選択項目と同じく、出現率に応じて少し下からスッと上がるようにする
 			Vector2 pos = {
 				baseItemPos_.x - 150.0f,
 				baseItemPos_.y + itemSpacingY_ * (float)index_ + (1.0f - itemT) * 10.0f
 			};
+			// 色：選択項目と同じアルファで表示
 			cursor_->SetPosition(pos);
 			cursor_->SetSize({ 28.0f, 28.0f });
 			cursor_->SetColor({ 1.0f, 1.0f, 1.0f, 0.9f * itemT });
 			cursor_->Update();
 		}
 
-		return Command::None;
+		return Command::None; // 開いている間は特にコマンド無し
 	}
 
 	void PauseMenuController::Draw() {

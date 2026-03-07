@@ -108,10 +108,12 @@ namespace TKM {
 			return;
 		}
 
+		// カメラのワールド行列から、右・上・前方向を抽出
 		const Matrix4x4& camW = activeCamera->GetWorldMatrix();
 		Vector3 right{ camW.m[0][0], camW.m[0][1], camW.m[0][2] };
 		Vector3 up{ camW.m[1][0], camW.m[1][1], camW.m[1][2] };
 		Vector3 fwd{ camW.m[2][0], camW.m[2][1], camW.m[2][2] };
+		// カメラのビュー射影行列を取得
 		Matrix4x4 vp = activeCamera->GetViewProjectionMatrix();
 
 		// FogVolume（空間霧）

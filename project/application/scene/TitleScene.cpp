@@ -362,11 +362,12 @@ void TitleScene::CreateTitleEnemies_() {
 }
 
 void TitleScene::ScheduleVanish_() {
-	std::uniform_real_distribution<float> d(0.0f, kVanishDelayMaxSec_);
+	std::uniform_real_distribution<float> d(0.0f, kVanishDelayMaxSec_); // 0～kVanishDelayMaxSec_秒のランダムな遅延を生成する分布
+	// 各敵ユニットにランダムな消滅遅延をセット
 	for (auto& u : titleEnemies_) {
-		u.vanishDelay_ = d(rng_);
+		u.vanishDelay_ = d(rng_); // 0～kVanishDelayMaxSec_秒のランダムな遅延
 	}
-	vanishTimer_ = 0.0f;
+	vanishTimer_ = 0.0f; // 消滅シーケンスのタイマーリセット
 }
 
 void TitleScene::EmitTitleExplode_(const Vector3& pos) {
@@ -379,8 +380,9 @@ void TitleScene::EmitTitleExplode_(const Vector3& pos) {
 	pm->Emit("titleExplode_ring", p, 2);    // 衝撃波
 }
 bool TitleScene::AllEnemiesGone_() const {
+	// 全てのタイトル敵ユニットが消滅開始（alive_ == false）しているかチェック
 	for (const auto& u : titleEnemies_) {
-		if (u.alive_) { return false; }
+		if (u.alive_) { return false; } // 1体でも生きている敵がいれば false を返す
 	}
 	return true;
 }

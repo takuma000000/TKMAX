@@ -53,17 +53,14 @@ void GameClearScene::Initialize() {
 	player_ = std::make_unique<Player>();
 	player_->Initialize(Object3dCommon::GetInstance(), dxCommon_);
 	player_->SetCamera(camera_.get());
-
 	player_->SetControlEnabled(false);  // 入力&通常ゲーム処理を全部止める
 	player_->SetReticleVisible(false);  // レティクルは要らないので非表示
-
 	// 画面左外からスタート
 	player_->SetPosition(planeStart_);
 	// 正面(+Z)向きで開始
 	player_->SetRotation({ 0.0f, 0.0f, 0.0f });
 	// お祝いだからジェット噴射ON
 	player_->SetEnableJetSmoke(true);
-
 	// 時間リセット
 	planeTime_ = 0.0f;
 
@@ -72,9 +69,9 @@ void GameClearScene::Initialize() {
 	// ─────────────────────
 	clearSprite_ = std::make_unique<Sprite>();
 	clearSprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, "./resources/texture/clear.png");
-	clearSprite_->SetAnchorPoint({ 0.5f, 0.5f });
-	clearSprite_->SetPosition({ WindowsAPI::kClientWidth_ * 0.5f, WindowsAPI::kClientHeight_ * 0.5f });
-	clearSprite_->SetColor({ 1,1,1,1 });
+	clearSprite_->SetAnchorPoint({ 0.5f, 0.5f }); // 中心を基準にする
+	clearSprite_->SetPosition({ WindowsAPI::kClientWidth_ * 0.5f, WindowsAPI::kClientHeight_ * 0.5f }); // 画面中央に配置
+	clearSprite_->SetColor({ 1,1,1,1 }); // 白で表示
 
 	// ─────────────────────
 	// 画面遷移アイリス（他シーンと同じ仕様）
@@ -127,23 +124,26 @@ void GameClearScene::Update() {
 	if (!irisClosing_ && !irisOpening_) {
 		const auto cmd = clearMenu_->Update(dt_);
 
+		// コマンドに応じてアイリス閉じ開始
 		if (cmd == GameResultMenuController::Command::Restart) {
-			nextAction_ = NextAction::Restart;
-			irisClosing_ = true;
-			irisCloseTween_.Reset(/*start*/ 0.0f, /*end*/ irisMaxScale_, /*sec*/ 0.8f, Ease::Type::InBack);
-		} else if (cmd == GameResultMenuController::Command::ReturnToTitle) {
-			nextAction_ = NextAction::ReturnToTitle;
-			irisClosing_ = true;
-			irisCloseTween_.Reset(/*start*/ 0.0f, /*end*/ irisMaxScale_, /*sec*/ 0.8f, Ease::Type::InBack);
+			nextAction_ = NextAction::Restart; // リスタート
+			irisClosing_ = true; // アイリス閉じ開始
+			irisCloseTween_.Reset(/*start*/ 0.0f, /*end*/ irisMaxScale_, /*sec*/ 0.8f, Ease::Type::InBack); // 閉じはInBackで
+		} else if (cmd == GameResultMenuController::Command::ReturnToTitle) { // タイトルに戻る
+			nextAction_ = NextAction::ReturnToTitle; // タイトルに戻る
+			irisClosing_ = true; // アイリス閉じ開始
+			irisCloseTween_.Reset(/*start*/ 0.0f, /*end*/ irisMaxScale_, /*sec*/ 0.8f, Ease::Type::InBack); // 閉じはInBackで
 		}
 	}
 
+	// アイリス閉じ中は、閉じ演出の更新と終了判定のみ行う
 	if (irisClosing_) {
-		irisScale_ = UpdateIrisScale(iris_.get(), irisCloseTween_, dt_);
+		irisScale_ = UpdateIrisScale(iris_.get(), irisCloseTween_, dt_); // 閉じ演出更新
+		// 閉じ演出が終わったら、次のアクションへ
 		if (irisCloseTween_.Finished()) {
-
+			// 演出が終わったら、次のアクションへ
 			if (nextAction_ == NextAction::Restart) {
-				sceneManager_->SetNextScene(new GameScene(dxCommon_, srvManager_));
+				sceneManager_->SetNextScene(new GameScene(dxCommon_, srvManager_)); // リスタート
 				return;
 			}
 			// デフォルトはタイトル
@@ -210,9 +210,9 @@ void GameClearScene::Update() {
 	player_->SetRotation({ pitch, yaw, roll });
 	// ゲームプレイ処理なしで行列だけ更新する
 	player_->UpdateVisualOnly(dt_);
-
 	clearSprite_->Update();
 
+	// メニューはアイリス開閉中は更新しない（操作できないようにするため）
 	UpdatePerformanceInfo();
 }
 
