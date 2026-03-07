@@ -96,13 +96,13 @@ namespace TKM {
 		lsPos.x += lsOffset_.x;
 		lsPos.y += lsOffset_.y;
 
-		// 基準座標を保存（ここがないとシェイク戻し先が分からない）
+		// 基準座標を保存
 		basePosRB_ = rbPos;
 		basePosLB_ = lbPos;
 		basePosX_ = xPos;
 		basePosLS_ = lsPos;
 
-		// ひとまず基準位置で配置
+		// 実際のスプライトに適用
 		if (uiRB_) uiRB_->SetPosition(basePosRB_);
 		if (uiLB_) uiLB_->SetPosition(basePosLB_);
 		if (uiX_)  uiX_->SetPosition({ basePosX_.x + xCurrentOfs_.x, basePosX_.y + xCurrentOfs_.y });
@@ -156,7 +156,7 @@ namespace TKM {
 					rbCenter.y + d.size_.y + lbGaugeSpacingY_
 				};
 
-				// 5分割固定（保険）
+				// 5分割固定
 				ld.segments_ = 5;
 
 				lbGaugeUI_->SetDesc(ld);
@@ -242,7 +242,7 @@ namespace TKM {
 		colLS_ = { 1,1,1,1 };
 		colRBGaugeIcon_ = { 1,1,1,1 };
 
-		// 右側UI（差し替えたい画像パスはここだけ）
+		// 右側UI
 		lbTex_ = "./resources/texture/LB_ui.png";
 		rbTex_ = "./resources/texture/RB_ui.png";
 		xTex_ = "./resources/texture/X_ui.png";

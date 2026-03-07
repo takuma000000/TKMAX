@@ -4,8 +4,7 @@
 #include <string>
 
 void ModelCatalog::LoadModelCatalogs(TKM::DirectXCommon* dxCommon) {
-	// ここだけ見れば「何を読むか」が全部分かる状態にする
-
+	// ロードするモデルファイルのリスト
 	static constexpr const char* kFiles[] = {
 		"sphere.obj",
 		"turtle.obj",

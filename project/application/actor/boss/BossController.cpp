@@ -82,12 +82,7 @@ void BossController::Update(float dt, Enemy& boss) {
 		}
 	}
 	rageGauge_ = std::clamp(rageGauge_, 0.0f, 1.5f); // ゲージクランプ
-	//// 怒りモード判定
-	//if (!rageActive_) { // 怒りモードでなければ発動判定
-	//	if (rageGauge_ >= rageOnThreshold_) { rageActive_ = true; } // 発動
-	//} else {
-	//	if (rageGauge_ <= rageOffThreshold_) { rageActive_ = false; } // 解除
-	//}
+	// 怒りモード判定
 	rageActive_ = false;
 
 	// プレイヤー位置・速度更新
@@ -121,10 +116,10 @@ void BossController::Update(float dt, Enemy& boss) {
 		laserTelegraph_ = false; // レーザー予告無効化
 	}
 
-	ClampToArena(posWork_);
-	boss.SetPosition(posWork_);
-	boss.SyncTransform();
-	boss_ = nullptr;
+	ClampToArena(posWork_); // アリーナ内に位置クランプ
+	boss.SetPosition(posWork_); // 位置セット
+	boss.SyncTransform(); // Transform同期
+	boss_ = nullptr; // キャッシュクリア
 }
 
 void BossController::ImGuiDebug(Enemy& boss) {
@@ -181,9 +176,33 @@ bool BossController::IsAnyCharging() const {
 	return missileCharging_ || slashCharging_ || laserTelegraph_ || (state_ == State::LaserWindup);
 }
 
+float BossController::GetCharge01() const {
+	// -----------------------------------
+	// GetCharge01: 攻撃のチャージ状態を0.0～1.0で返す（レーザー予告は強めに）
+	// -----------------------------------
+	float v = 0.0f; // ミサイルとスラッシュのチャージ状態を計算
+
+	// ミサイル
+	if (missileCharging_ && missileChargeTime_ > 0.0001f) { // チャージ中でチャージ時間が正なら
+		float t = 1.0f - (missileChargeTimer_ / missileChargeTime_); // 経過割合計算
+		v = std::max(v, std::clamp(t, 0.0f, 1.0f)); // 0～1にクランプして最大値を取る
+	}
+	// スラッシュ
+	if (slashCharging_ && slashChargeTime_ > 0.0001f) { // チャージ中でチャージ時間が正なら
+		float t = 1.0f - (slashChargeTimer_ / slashChargeTime_); // 経過割合計算
+		v = std::max(v, std::clamp(t, 0.0f, 1.0f)); // 0～1にクランプして最大値を取る
+	}
+	// レーザー予告は強めに
+	if (laserTelegraph_ || state_ == State::LaserWindup) { // レーザー予告中またはレーザー予告状態なら
+		v = std::max(v, 1.0f); // 予告は1.0f、発射中はレーザー状態で1.0fなので同じ値でOK
+	}
+	// クランプして返す
+	return v;
+}
+
 void BossController::ChangeState(State s) {
-	state_ = s;
-	timer_ = 0.0f;
+	state_ = s; // 状態更新
+	timer_ = 0.0f; // 状態タイマーリセット
 
 	switch (s) { // 状態に応じたステートクラスに遷移
 	case State::Enter:        sm_.Change(std::make_unique<BossEnterState>()); break;

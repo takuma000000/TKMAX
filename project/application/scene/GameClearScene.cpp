@@ -68,7 +68,7 @@ void GameClearScene::Initialize() {
 	planeTime_ = 0.0f;
 
 	// ─────────────────────
-	// 「GAME CLEAR」スプライト（中央にドン）
+	// 「GAME CLEAR」スプライト
 	// ─────────────────────
 	clearSprite_ = std::make_unique<Sprite>();
 	clearSprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, "./resources/texture/clear.png");
@@ -155,8 +155,8 @@ void GameClearScene::Update() {
 	// ─────────────────────
 	// カメラ・ライト更新
 	// ─────────────────────
-	camera_->Update(); //（今回はカメラ固定で動かさないけど、念のため毎フレーム更新しておく）
-	dirLight_->Update(); //（今回はライト固定で動かさないけど、念のため毎フレーム更新しておく）
+	camera_->Update(); // カメラは特に動かないけど、行列更新は必要
+	dirLight_->Update(); // ライトも特に動かないけど、行列更新は必要
 
 	// ─────────────────────
 	// Skybox回転（GameOverSceneと同じノリ）

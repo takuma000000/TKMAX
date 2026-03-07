@@ -363,7 +363,7 @@ void GameScene::UpdateGameplaySystems(float rawDeltaTime, float scaledDeltaTime)
 	skybox_->UpdateRotation();
 	// プレイヤーの更新
 	player_->Update(scaledDeltaTime);
-	// UIの更新（スコアやHPゲージなど、ゲームプレイに関わるUIはタイムスケールの影響を受けるべき）
+	// UIの更新
 	ui_->Update(scaledDeltaTime, player_.get());
 	// ボスマネージャの更新
 	bossManager_->Update(scaledDeltaTime);
@@ -382,7 +382,7 @@ void GameScene::UpdateGameplaySystems(float rawDeltaTime, float scaledDeltaTime)
 }
 
 void GameScene::UpdateTransitionsAndSceneChange(float rawDeltaTime) {
-	// 遷移は enemyManager_ の有無に依存させない（ここが原因になりやすい）
+	// 遷移は enemyManager_ の有無に依存させない
 	const auto req = flow_->UpdateTransitions(rawDeltaTime, player_.get());
 
 	if (req == TKM::GameFlowController::TransitionRequest::ToTitle) { // タイトル戻りリクエスト
@@ -432,7 +432,7 @@ bool GameScene::TryUpdatePauseAndMaybeEarlyReturn_(float rawDeltaTime, bool allo
 
 	// ポーズメニューのコマンド処理
 	if (cmd == TKM::PauseMenuController::Command::ReturnToTitle) {
-		flow_->RequestToTitleByIris(); // いつものアイリスで戻す
+		flow_->RequestToTitleByIris();
 	} else if (cmd == TKM::PauseMenuController::Command::Restart) {
 		sceneManager_->SetNextScene(new GameScene(dxCommon_, srvManager_));
 		return true; // シーン差し替え要求（このフレームは終了）

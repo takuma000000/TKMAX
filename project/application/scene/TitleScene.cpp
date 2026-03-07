@@ -92,7 +92,7 @@ void TitleScene::Initialize() {
 		irisStartScale_,
 		irisEndScale_,
 		kIrisDurationSec_,
-		Ease::Type::OutBack   // 好きなのでOK（OutBackでも可）
+		Ease::Type::OutBack // イージングはお好みで。OutBack は最後にちょっとだけ大きくなってから縮む感じ（バネっぽい）
 	);
 	// 開幕は「開いている状態」からスタート
 	irisOpening_ = true;

@@ -88,7 +88,7 @@ void BossBullet::Update() {
 			Vector3 upA_{ 0.0f, 1.0f, 0.0f }; // fwd と平行だと right が死ぬので、up を状況で切り替える
 			if (std::fabs(fwd_.y) > 0.90f) { upA_ = { 0.0f, 0.0f, 1.0f }; } // ほぼ真上や真下を向いているなら up を Z 軸方向にする
 
-			Vector3 right_ = MyMath::SafeNormalize(Cross_(upA_, fwd_), { 1.0f, 0.0f, 0.0f }); // 進行方向と up から右方向ベクトルを計算
+			Vector3 right_ = MyMath::SafeNormalize(Cross_(upA_, fwd_), { 1.0f, 0.0f, 0.0f }); // 進行方向と up から右方向ベクトルを計算（完全な直交座標系にするため）
 			Vector3 up_ = MyMath::SafeNormalize(Cross_(fwd_, right_), { 0.0f, 1.0f, 0.0f }); // 進行方向と right から改めて上方向ベクトルを計算（完全な直交座標系にするため）
 
 			const float halfLen_ = 14.0f; // X の腕の長さ
@@ -131,7 +131,7 @@ void BossBullet::Update() {
 		auto* pm_ = TKM::ParticleManager::GetInstance();
 		if (pm_) { // ParticleManager があれば、FX を出してみる
 			Vector3 fxPos_ = newPos_; // FX の位置は弾の現在位置（newPos_）を使う
-			// FX の内容は弾の種類（fxType_）で分岐
+			// フレームカウントを元に、弾の種類ごとに異なる FX を出す
 			if (fxType_ == FxType::MissileEvil) {
 				// === ミサイル（今のまま）===
 				pm_->Emit("bossEvil_core", fxPos_, 1);
@@ -195,10 +195,10 @@ void BossBullet::Update() {
 					// Emitは Vector3& なので必ず変数で渡す
 					Vector3 a1 = p1, a2 = p2, b1 = q1, b2 = q2;
 
-					pm_->Emit("bossSlash_main", a1, 1); // メインの斬撃線（重いので全点は出さない）
-					pm_->Emit("bossSlash_main", a2, 1); // メインの斬撃線（重いので全点は出さない）
-					pm_->Emit("bossSlash_main", b1, 1); // メインの斬撃線（重いので全点は出さない）
-					pm_->Emit("bossSlash_main", b2, 1); // メインの斬撃線（重いので全点は出さない）
+					pm_->Emit("bossSlash_main", a1, 1); // メインの斬撃線
+					pm_->Emit("bossSlash_main", a2, 1); // メインの斬撃線
+					pm_->Emit("bossSlash_main", b1, 1); // メインの斬撃線
+					pm_->Emit("bossSlash_main", b2, 1); // メインの斬撃線
 
 					// 発光/残りは間引き（重い＋変にデカく見えるのを防ぐ）
 					if ((i % 2) == 0) {
@@ -302,16 +302,16 @@ void BossBullet::EnableCurveToTarget(const Vector3& start, const Vector3& end, f
 	// 左右方向（up × dir）
 	Vector3 perp_{ -dirXZ_.z, 0.0f, dirXZ_.x };
 
-	// curveYawRad_ を「曲がり量」に変換（総回転量っぽく使う）
+	// curveYawRad_ を「曲がり量」に変換
 	const float totalYaw_ = curveYawRad_ * (float)curveTotalFrames_;
 
 	// 0〜1に丸めた強さ（±は左右）
-	float s_ = totalYaw_ / (3.14159265f * 0.5f); // 90度で1
+	float s_ = totalYaw_ / (3.14159265f * 0.5f); // 曲がり量を 0.5π（90度）で割って、0〜1の範囲に変換（±は左右の曲がりを表す）
 	if (s_ > 1.0f) s_ = 1.0f;
 	if (s_ < -1.0f) s_ = -1.0f;
 
 	// 横ズレ量：距離に比例（見た目で分かるように）
-	const float sideOffset_ = dist_ * 0.35f * s_; // ここ好みで 0.2〜0.6
+	const float sideOffset_ = dist_ * 0.35f * s_; // 曲がり量に応じて、距離に比例した横ズレを計算（0.35f は見た目の調整係数）
 
 	// 制御点：中点 + 横ズレ + 高さ
 	curveCtrl_ = curveMid_;
@@ -326,13 +326,14 @@ void BossBullet::EnableCurveToTarget(const Vector3& start, const Vector3& end, f
 }
 
 bool BossBullet::HitTestSlashX(const Vector3& targetCenter, const Vector3& targetSize) const {
-	if (dead_) return false;
-	if (fxType_ != FxType::SlashWave) return false;
+	if (dead_) return false; // 死亡している弾は当たり判定なし
+	if (fxType_ != FxType::SlashWave) return false; // 斬撃以外の弾はこの当たり判定を使わない
 
-	AABB targetAABB(targetCenter, targetSize);
+	AABB targetAABB(targetCenter, targetSize); // 判定対象の AABB を作成
 
 	// ---- X字の形（FXと同じ作り）----
 	auto Cross_ = [](const Vector3& a, const Vector3& b) {
+		// ベクトルの外積を計算する関数（右手系の座標系で、a と b の外積を返す）
 		return Vector3{
 			a.y * b.z - a.z * b.y,
 			a.z * b.x - a.x * b.z,
@@ -340,21 +341,22 @@ bool BossBullet::HitTestSlashX(const Vector3& targetCenter, const Vector3& targe
 		};
 		};
 
+	// 弾の位置と進行方向から、X字の向きを決めるための基準ベクトルを計算
 	Vector3 pos_ = obj_ ? obj_->GetTranslate() : Vector3{};
 	Vector3 fwd_ = MyMath::SafeNormalize(dir_, { 0.0f, 0.0f, 1.0f });
-
+	// fwd と平行だと right が死ぬので、up を状況で切り替える
 	Vector3 upA_{ 0.0f, 1.0f, 0.0f };
 	if (std::fabs(fwd_.y) > 0.90f) { upA_ = { 0.0f, 0.0f, 1.0f }; }
 
 	Vector3 right_ = MyMath::SafeNormalize(Cross_(upA_, fwd_), { 1.0f, 0.0f, 0.0f });
 	Vector3 up_ = MyMath::SafeNormalize(Cross_(fwd_, right_), { 0.0f, 1.0f, 0.0f });
 
-	// FXで使ってる値と合わせる（見た目＝判定）
-	const float halfLen_ = 14.0f;
-	const float back_ = 8.0f;
+	// FXで使ってる値と合わせる
+	const float halfLen_ = 14.0f; // X の腕の長さ
+	const float back_ = 8.0f; // 中心を少し後ろにして“残光”っぽく
 	const int   seg_ = 24; // 点密度
 
-	Vector3 base_ = pos_ - fwd_ * back_;
+	Vector3 base_ = pos_ - fwd_ * back_; // 斬撃の中心位置（少し後ろにして残光っぽく）
 
 	const float c = 0.70710678f; // cos45
 	const float s = 0.70710678f; // sin45

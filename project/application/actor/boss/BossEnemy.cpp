@@ -18,8 +18,9 @@ void BossEnemy::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCo
 
 	// baseScale_ を正しい値にするために SetScale は最初に1回だけ
 	SetScale({ BossParam::InitScale_, BossParam::InitScale_, BossParam::InitScale_ });
-
+	// 当たり判定サイズも最初に1回だけ
 	SetColliderScale(BossParam::InitColliderScale_);
+	// タイプは最初に1回だけ
 	SetType(EnemyType::Boss);
 }
 
@@ -44,8 +45,11 @@ void BossEnemy::Update(float dt) {
 		float ampZ = 0.15f * s;
 		float lift = 0.12f * s;
 
+		// ベースに揺らぎを加える形で触手のローカル座標を決定
 		Vector3 pos = tentacleBasePos_;
+		// 回転はオイラー角で直接指定
 		Vector3 rot = tentacleBaseRot_;
+		// スケールはベースに倍率をかける形で指定
 		Vector3 scl = tentacleBaseScale_;
 
 		// 回転のうねり
@@ -62,9 +66,9 @@ void BossEnemy::Update(float dt) {
 		scl.y *= pulse;
 		scl.z *= pulse;
 
-		SetTentacleLocal(pos, rot, scl);
+		SetTentacleLocal(pos, rot, scl); // チャージ中は触手を動かす
 	} else {
-		SetTentacleLocal(tentacleBasePos_, tentacleBaseRot_, tentacleBaseScale_);
+		SetTentacleLocal(tentacleBasePos_, tentacleBaseRot_, tentacleBaseScale_); // チャージしてないときは触手をベース位置に
 	}
 
 	// 本体は従来更新

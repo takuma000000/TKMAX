@@ -31,7 +31,7 @@ void GameResultMenuController::Initialize(
 	panel_->SetAnchorPoint({ 0.0f, 0.0f });
 	panel_->SetAutoAdjustTextureSize(false);
 
-	// 項目（Pauseと同じ：autoAdjust OFF なら UV を実サイズにする）
+	// 項目
 	for (int i = 0; i < (int)Item::Count; ++i) {
 		items_[i] = std::make_unique<TKM::Sprite>();
 		items_[i]->Initialize(spriteCommon_, dxCommon_, desc_.itemTex[i]);

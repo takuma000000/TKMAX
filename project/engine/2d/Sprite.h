@@ -216,7 +216,7 @@ namespace TKM {
 		// Transform / 表示パラメータ
 		//======================================================================
 		Vector2 position_ = { 100.0f,100.0f };
-		// （用途が違うなら名前を分けたいけど、既存に合わせて残す）
+		// スプライトの変換情報（スケール、回転、平行移動）をまとめた構造体。これを元にワールド行列を計算する。
 		Transform transformSprite_;
 		Transform cameraTransform_;
 		Transform transform_;

@@ -68,7 +68,7 @@ void TitleFlowIdleState::Update(TKM::IStateContext& ctx, float dt) {
 
 	// ② メニューが出てない時：待ち→自動で消滅へ
 	s.seqTimer_ += dt;
-	const bool autoGo = (s.seqTimer_ >= 1.4f); // 1.4秒待って自動で消滅へ（Aボタンを押さなくても勝手に進む）
+	const bool autoGo = (s.seqTimer_ >= 1.4f); // 1.4秒待って自動で消滅へ
 	// Aボタンが押されたら即座に消滅へ
 	if (autoGo) {
 		s.showUi_ = false; // UI非表示

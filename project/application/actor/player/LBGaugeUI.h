@@ -98,7 +98,7 @@ namespace TKM {
 		int refillTarget_ = 0;       // 最終的に見せたい個数
 		bool refillAnimating_ = false; // 回復アニメ中かどうか
 		float refillStepTimer_ = 0.0f; // 次の個数を見せるまでのタイマー
-		static constexpr float kRefillStepSec_ = 0.045f; // パパパ速度（好みで）
+		static constexpr float kRefillStepSec_ = 0.045f; // 回復アニメの1段階あたりの秒数
 	};
 
 }

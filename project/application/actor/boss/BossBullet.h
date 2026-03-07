@@ -72,18 +72,15 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	bool IsDead() const { return dead_; }
-
 	/// <summary>
 	/// 弾を強制的に死亡状態にします。
 	/// </summary>
 	void Kill() { dead_ = true; }
-
 	/// <summary>
 	/// ダメージ値を返します。
 	/// </summary>
 	/// <returns></returns>
 	int  Damage()  const { return damage_; }
-
 	/// <summary>
 	/// 簡易当たり判定半径を返します。
 	/// </summary>

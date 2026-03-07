@@ -66,7 +66,7 @@ namespace TKM {
 			dxCommon_->SetVignettingEffect(nullptr);
 			dxCommon_->SetFogEffect(nullptr);
 			dxCommon_->SetAuraEffect(nullptr);
-			// WaterRipple は登録してるなら解除しておく（関数がある前提）
+			// 水面波紋エフェクトは BossManager も参照しているため、両方から解除する
 			dxCommon_->SetWaterRippleEffect(nullptr);
 		}
 	}

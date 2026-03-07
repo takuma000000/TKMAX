@@ -13,12 +13,12 @@
 class BossController : public TKM::IStateContext {
 public:
 	enum class State {
-		Enter,
-		Orbit,
-		LaserWindup,
-		LaserFire,
-		LaserRecover,
-		Recover,
+		Enter, // ボス登場
+		Orbit, // プレイヤーを中心に回りながら攻撃
+		LaserWindup, // レーザー予告
+		LaserFire, // レーザー発射
+		LaserRecover, // レーザー回復
+		Recover, // ダメージ受けて回復
 	};
 
 	/// <summary>
@@ -157,31 +157,9 @@ public:
 	/// <summary>
 	/// チャージの進行度(0..1)（触手揺れ強度用）
 	/// </summary>
-	float GetCharge01() const {
-		float v = 0.0f;
-		if (missileCharging_ && missileChargeTime_ > 0.0001f) {
-			float t = 1.0f - (missileChargeTimer_ / missileChargeTime_);
-			v = std::max(v, std::clamp(t, 0.0f, 1.0f));
-		}
-		if (slashCharging_ && slashChargeTime_ > 0.0001f) {
-			float t = 1.0f - (slashChargeTimer_ / slashChargeTime_);
-			v = std::max(v, std::clamp(t, 0.0f, 1.0f));
-		}
-		// レーザー予告は強めに
-		if (laserTelegraph_ || state_ == State::LaserWindup) {
-			v = std::max(v, 1.0f);
-		}
-		return v;
-	}
+	float GetCharge01() const;
 	// =========================================
 private:
-	/// <summary>
-	/// レーザー後隙（回復）状態の更新処理を行います。
-	/// </summary>
-	/// <param name="dt">前フレームからの経過時間（秒）</param>
-	/// <param name="boss">更新対象となるボス敵</param>
-	/// <param name="pos">ボス位置（参照で更新される、ワールド座標）</param>
-	void UpdateLaserRecover(float dt, Enemy& boss, Vector3& pos);
 	/// <summary>
 	/// 状態を変更します。
 	/// </summary>

@@ -17,7 +17,7 @@ namespace TKM {
 		timer_ = 0.0f;
 		interval_ = RandRange_(minInterval_, maxInterval_);
 
-		// カメラ行列から基底を取る（あなたの行列ルール：translationが m[3]）
+		// カメラのワールド行列から前方空間を求める
 		const Matrix4x4 camW = camera->GetWorldMatrix();
 		Vector3 camPos = { camW.m[3][0], camW.m[3][1], camW.m[3][2] };
 		Vector3 camFwd = MyMath::Normalize({ camW.m[2][0], camW.m[2][1], camW.m[2][2] });

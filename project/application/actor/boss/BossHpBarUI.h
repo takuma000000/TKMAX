@@ -43,9 +43,9 @@ namespace TKM {
 			// 減った区間が光って消える
 			float drainGlowTime_ = 0.22f;
 
-			std::string frameTex_ = "./resources/texture/gauge_frame_glass.png";
-			std::string fillTex_ = "./resources/texture/gauge_fill_grad.png";
-			std::string shardTex_ = "./resources/texture/gauge_shard.jpeg";
+			std::string frameTex_ = "./resources/texture/gauge_frame_glass.png"; // フレームテクスチャ
+			std::string fillTex_ = "./resources/texture/gauge_fill_grad.png"; // 塗りつぶしテクスチャ
+			std::string shardTex_ = "./resources/texture/gauge_shard.jpeg"; // 砕けブロックテクスチャ
 		};
 
 		/// <summary>

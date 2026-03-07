@@ -1602,7 +1602,7 @@ namespace TKM {
 			p.velocity_ = { 0.0f, 0.0f, 0.0f };
 			p.lifeTime_ = 0.08f;
 
-			// ★色を分ける（白禁止）
+			// 色を分ける（白禁止）
 			if (groupName == "titleBeam_player") {
 				// プレイヤー：はっきりシアン〜青（冷色）
 				p.color_ = { 0.20f, 0.95f, 1.00f, 1.0f };
@@ -1631,10 +1631,10 @@ namespace TKM {
 			p.transform_.scale_ = { 0.14f, 0.14f, 1.8f };
 			p.lifeTime_ = 0.10f;
 
-			// ★衝突の火花も黄緑寄りで統一（ビームと別系統）
+			// 衝突の火花も黄緑寄りで統一（ビームと別系統）
 			p.color_ = { 0.95f, 1.00f, 0.20f, 1.0f };
 
-			// ★CYLINDERを“飛ぶ方向”に向ける（簡易：Yaw/Pitch）
+			// CYLINDERを“飛ぶ方向”に向ける（簡易：Yaw/Pitch）
 			const float yaw = std::atan2f(dir.x, dir.z);
 			const float horiz = std::sqrt(dir.x * dir.x + dir.z * dir.z);
 			const float pitch = -std::atan2f(dir.y, (horiz < 0.0001f ? 0.0001f : horiz));

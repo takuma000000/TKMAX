@@ -157,13 +157,13 @@ private:
 	//==============================
 	// 状態フラグ
 	//==============================
-	bool bossBattle_ = false;                     // ボス戦フラグ
-	bool bossP2BgmPlayed_ = false;                // P2BGMを1回だけ再生したか
+	bool bossBattle_ = false; // ボス戦フラグ
+	bool bossP2BgmPlayed_ = false; // P2BGMを1回だけ再生したか
 	KillSequenceState killSeq_; // 撃破シーケンス状態
 	//==============================
 	// ボス本体・制御
 	//==============================
-	std::unique_ptr<BossEnemy> boss_;             // ボス本体
+	std::unique_ptr<BossEnemy> boss_; // ボス本体
 	std::unique_ptr<BossController> bossController_; // ボスコントローラー
 	std::vector<std::unique_ptr<BossBullet>> bossBullets_; // ボス弾リスト
 	//==============================

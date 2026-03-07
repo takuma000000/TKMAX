@@ -17,7 +17,7 @@ static Vector2 WorldToUV(const Vector3& world, const Matrix4x4& vp) {
 	return { ndcX * 0.5f + 0.5f, -ndcY * 0.5f + 0.5f };
 }
 
-namespace { // 無名名前空間
+namespace {
 	BossManager::BossBattleConfig MakeBossConfig() {
 		// ボス戦設定生成
 		BossManager::BossBattleConfig c_{}; // 設定構造体
@@ -38,13 +38,12 @@ namespace { // 無名名前空間
 	}
 	// 定数ボス戦設定
 	const BossManager::BossBattleConfig kBossConfig_ = MakeBossConfig();
-
+	// 値をmn～mxの範囲にクランプする
 	static float ClampFloat(float v, float mn, float mx) {
 		if (v < mn) return mn;
 		if (v > mx) return mx;
 		return v;
 	}
-
 	// AABB(center,size) vs Sphere(center,radius)
 	static bool TestAABBSphere(const Vector3& aabbCenter, const Vector3& aabbSize, const Vector3& sphereCenter, float sphereRadius) {
 		const float hx = aabbSize.x * 0.5f;
@@ -105,13 +104,13 @@ void BossManager::StartBattle() {
 	// ボス生成
 	boss_ = std::make_unique<BossEnemy>();
 	boss_->Initialize(TKM::Object3dCommon::GetInstance(), dx_);
-	boss_->SetCamera(camera_);
+	boss_->SetCamera(camera_); // カメラセット
 	boss_->SetParentScene(parent_); // 親シーンセット
 
 	// プレイヤー位置取得ラムダ
 	if (player_) {
 		boss_->SetPlayer([this]() { // ラムダ式でプレイヤー位置取得
-			return player_->GetPosition();
+			return player_->GetPosition(); // プレイヤーの位置を返す
 			});
 	}
 	// ボス初期位置セット
@@ -138,9 +137,9 @@ void BossManager::Update(float dt) {
 		return;
 	}
 
-	if (slashIdHoldT_ > 0.0f) {
-		slashIdHoldT_ -= dt;
-		if (slashIdHoldT_ < 0.0f) { slashIdHoldT_ = 0.0f; }
+	if (slashIdHoldT_ > 0.0f) { // スラッシュ攻撃IDホールド中
+		slashIdHoldT_ -= dt; // 経過時間減算
+		if (slashIdHoldT_ < 0.0f) { slashIdHoldT_ = 0.0f; } // 負にならないようにクランプ
 	}
 
 	// ================================
@@ -229,13 +228,14 @@ void BossManager::Update(float dt) {
 			Vector3 dir_{ sTarget_.x - sPos_.x, sTarget_.y - sPos_.y, sTarget_.z - sPos_.z };
 			dir_ = MyMath::SafeNormalize(dir_, { 0.0f, 0.0f, 1.0f });
 
+			// 斬撃エフェクトは当たり判定も兼ねるので、ダメージと生存フレーム数をしっかり設定する
 			bullet_->Initialize(TKM::Object3dCommon::GetInstance(), dx_, camera_, sPos_, dir_, spPerFrame_, 1, sLife_);
 			bullet_->SetModel("sphere.obj");
-			bullet_->SetScale({ 3.8f, 0.7f, 1.2f });
-			bullet_->SetFxType(BossBullet::FxType::SlashWave);
-			
-			bullet_->SetAttackId(currentSlashId_); // 斬撃IDセット
+			bullet_->SetScale({ 3.8f, 0.7f, 1.2f }); // スラッシュエフェクトは細長い楕円柱みたいな形にする
+			bullet_->SetFxType(BossBullet::FxType::SlashWave); // スラッシュエフェクトタイプセット
 
+			bullet_->SetAttackId(currentSlashId_); // 斬撃IDセット
+			// 斬撃エフェクトは見た目と当たり判定を合わせるために、移動はせずに出現位置で回転するだけにする
 			bossBullets_.push_back(std::move(bullet_));
 		}
 	}
@@ -253,14 +253,6 @@ void BossManager::Update(float dt) {
 			player_->StartBossDeathCameraZoom(); // 撃破ズーム開始
 		}
 		killSeq_.zoomStarted_ = true; // フラグセット
-
-		// 波紋
-		/*if (!killSeq_.rippleTriggered && waterRipple_ && camera_) {
-			Matrix4x4 vp = camera_->GetViewProjectionMatrix();
-			Vector2 uv = WorldToUV(boss_->GetWorldPosition(), vp);
-			waterRipple_->Trigger(uv, kBossConfig.killRipple);
-			killSeq_.rippleTriggered = true;
-		}*/
 
 		// スロー
 		if (!killSeq_.slowTriggered_ && timeScale_) { // タイムスケールコントローラ存在確認
@@ -280,10 +272,6 @@ void BossManager::Draw(TKM::DirectXCommon* dxCommon) {
 	if (!bossBattle_ || !boss_) { return; } // ボス戦未開始またはボス不在
 
 	boss_->Draw(dxCommon); // ボス本体描画
-
-	//for (auto& b : bossBullets_) { // ボス弾描画
-	//	b->Draw(dxCommon); // 描画
-	//}
 }
 
 void BossManager::DrawUI() {
@@ -332,12 +320,12 @@ void BossManager::SetWaterRippleEffect(TKM::WaterRippleEffect* r) {
 }
 
 void BossManager::SetCamera(TKM::Camera* camera) {
-	BattleActorManagerBase::SetCamera(camera);
+	BattleActorManagerBase::SetCamera(camera); // 基底クラスのカメラセット処理呼び出し
 }
 
 void BossManager::OnCameraChanged() {
-	if (boss_) { boss_->SetCamera(camera_); }
-	for (auto& b : bossBullets_) { b->SetCamera(camera_); }
+	if (boss_) { boss_->SetCamera(camera_); } // カメラが変わったらボスと弾の両方に新しいカメラをセットする
+	for (auto& b : bossBullets_) { b->SetCamera(camera_); } // ボス弾ループしてカメラセット
 }
 
 void BossManager::UpdateBossBullets() {
@@ -348,11 +336,11 @@ void BossManager::UpdateBossBullets() {
 
 		// ───────── Player × BossBullet 当たり判定 ─────────
 		if (player_ && !player_->IsDead() && !b_->IsDead()) {
-			const Vector3 pCenter_ = player_->GetPosition();
-			const Vector3 pSize_ = player_->GetColliderScale();
+			const Vector3 pCenter_ = player_->GetPosition(); // プレイヤー中心座標
+			const Vector3 pSize_ = player_->GetColliderScale(); // プレイヤー当たり判定サイズ（AABBの幅・高さ・奥行き）
 
-			if (b_->GetFxType() == BossBullet::FxType::SlashWave) {
-				if (b_->HitTestSlashX(pCenter_, pSize_)) {
+			if (b_->GetFxType() == BossBullet::FxType::SlashWave) { // スラッシュエフェクト：見た目と当たり判定を合わせるために、専用の当たり判定関数で判定する
+				if (b_->HitTestSlashX(pCenter_, pSize_)) { // スラッシュのX軸方向の当たり判定（細長い楕円柱の当たり判定に近い感じ）
 
 					// ダメージは1回だけ（通らないなら減らない）
 					player_->TryDamageFromAttack(b_->Damage(), b_->GetAttackId());
@@ -365,16 +353,16 @@ void BossManager::UpdateBossBullets() {
 				const Vector3 sCenter_ = b_->GetPos();
 				const float   sR_ = b_->Radius();
 
-				if (TestAABBSphere(pCenter_, pSize_, sCenter_, sR_)) {
-					player_->Damage(b_->Damage());
-					b_->Kill();
+				if (TestAABBSphere(pCenter_, pSize_, sCenter_, sR_)) { // 当たった
+					player_->Damage(b_->Damage()); // ダメージを与える
+					b_->Kill(); // 弾は当たったら消す
 				}
 			}
 		}
 
 		if (b_->IsDead()) { // 死亡していたらリストから削除
 			it = bossBullets_.erase(it);
-		} else {
+		} else { // 生存していたら次へ
 			++it;
 		}
 	}

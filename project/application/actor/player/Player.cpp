@@ -481,9 +481,7 @@ void Player::StartBossDeathCameraZoom() {
 		return;
 	}
 
-	// だいぶ引きたいのでかなり小さめにする
-	// camZoom_ と掛け算される前提で、
-	// 0.35f くらいだと「約 1 / 0.35 ≒ 2.85 倍」引きになるイメージ
+	// 調整用定数
 	const float kTargetZoom = 0.35f;
 	const float kZoomTime = 1.2f;   // カメラが引ききるまでの時間
 	const float kBlurTime = 4.795f;   // ブラー継続時間
@@ -1110,7 +1108,6 @@ void Player::ZoomCamera() {
 	if (isInPhase) {
 		if (!finished) {
 			// まだ「寄りアニメ」進行中 → 何もしない（Resetしない）
-			// ※ここでResetすると戻りが始まらず伸び続ける原因になる
 			return;
 		}
 		// INが完了して「HOLD中」→ ホールドを上限まで延長（積み上げない）
@@ -1125,7 +1122,7 @@ void Player::ZoomCamera() {
 
 void Player::StartRumble(float sec, WORD leftMotor, WORD rightMotor) {
 	if (!rumbleEnabled_) { return; } // 振動禁止中は無視
-	// 既に鳴ってる場合は「強い方」「長い方」を優先（重なっても破綻しにくい）
+	// すでに鳴ってるときは、時間は長い方、強さは強い方を優先して上書きするイメージ
 	rumbleT_ = std::max(rumbleT_, sec);
 	rumbleLeft_ = std::max(rumbleLeft_, leftMotor);
 	rumbleRight_ = std::max(rumbleRight_, rightMotor);
@@ -1276,7 +1273,6 @@ void Player::HandleDodge(float dt) {
 	dodgeT_ += dt;
 
 	// 進行（移動/回転）
-	// ※もし Player.h が dodgeMoveDuration_ になってるなら、ここだけ名前を合わせてね
 	float uMove = dodgeT_ / std::max(0.001f, dodgeDuration_);
 	if (uMove > 1.0f) uMove = 1.0f;
 

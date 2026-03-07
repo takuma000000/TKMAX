@@ -95,7 +95,7 @@ namespace TKM {
 		/// </summary>
 		void ApplyRightUiPositions_();
 		/// <summary>
-		/// 押下中はスプライトの位置を小刻みにズラしてシェイクさせる処理。tは押下継続時間で、これを元に揺れのオフセットを計算します。
+		/// 押下中はスプライトの位置を小刻みにズラしてシェイクさせる処理。
 		/// </summary>
 		/// <param name="sp">揺らす対象のスプライト</param>
 		/// <param name="basePos">揺らす前の基準位置</param>
@@ -143,9 +143,9 @@ namespace TKM {
 		Vector2 rbGaugeIconDrawSize_{}; // RBゲージアイコンの描画サイズ（テクスチャサイズを元に rightUiScale_ で計算して入れる）
 
 		// 数値で調整するパラメータ
-		float rightUiScale_ = 0.20f; // 右側UI全体のスケール（これを変えるだけでLB/RB/X/LSアイコン全ての大きさが変わる）
-		float rightUiMargin_ = 20.0f; // 右側UI全体の画面端からの余白（これを変えるだけでLB/RB/X/LSアイコン全ての位置が変わる）
-		float rightUiSpacing_ = 10.0f; // 右側UI同士の間隔（これを変えるだけでLB/RB/X/LSアイコン全ての位置が変わる）
+		float rightUiScale_ = 0.20f; // 右側UI全体のスケール
+		float rightUiMargin_ = 20.0f; // 右側UI全体の画面端からの余白
+		float rightUiSpacing_ = 10.0f; // 右側UI（LT / LB / RB）同士の間隔
 
 		// HUD透明度
 		float hudAlpha_ = 1.0f; // 0.0f〜1.0fでHUD全体の透明度を調整。これを変えるだけでHUD全体の明るさが変わる。

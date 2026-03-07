@@ -3,7 +3,7 @@
 #include <string>
 
 void TextureCatalog::LoadTextureCatalogs() {
-	// ここだけ見れば「何を読むか」が全部分かる状態にする
+	// ベースディレクトリを定数化
 	static constexpr const char* kBaseDir = "./resources/texture/";
 
 	// ファイル名だけ並べる（ベースパスは共通化）

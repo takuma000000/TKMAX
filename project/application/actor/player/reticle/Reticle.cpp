@@ -36,14 +36,14 @@ void Reticle::Update(float dt) {
 	if (!centerInitialized_) { // 最初はプレイヤーの前にレティクルを置いておく
 		float yaw = getYaw_() + yawOffset_; // プレイヤーのヨーにオフセットを加えた方向を向く
 		Vector3 fwd = { std::sinf(yaw), 0.0f, std::cosf(yaw) }; // 前方向ベクトル
-		center_ = ownerPos + fwd * 40.0f; // 好きな距離にしてOK
+		center_ = ownerPos + fwd * 40.0f; // プレイヤーの前方40の位置にレティクルの中心を置く（初期位置）
 		centerInitialized_ = true; // 以降はスティックで動かすので初期化はここだけでいい
 	}
 	//--------------------------------------------------
 	// 1) カメラの Right / Up を取る
 	//--------------------------------------------------
-	Vector3 camRight = { 1,0,0 }; // カメラがあればカメラの向きから Right と Up を取る（なければワールド基準のまま）
-	Vector3 camUp = { 0,1,0 }; // カメラがあればカメラの向きから Right と Up を取る（なければワールド基準のまま）
+	Vector3 camRight = { 1,0,0 }; // カメラの右方向（初期値はワールドの右方向）
+	Vector3 camUp = { 0,1,0 }; // カメラの上方向（初期値はワールドの上方向）
 	if (cam_) {
 		const auto& W = cam_->GetWorldMatrix(); // ワールド行列の向きから Right と Up を抜き取る
 		camRight = MyMath::Normalize({ W.m[0][0], W.m[0][1], W.m[0][2] }); // カメラの右方向
@@ -84,15 +84,15 @@ void Reticle::Update(float dt) {
 	//--------------------------------------------------
 	Vector3 origin = ownerPos; // レティクルの「狙う中心」の位置
 	Vector3 dir = center_ - origin; // プレイヤーからレティクルへの方向ベクトル
-	if (MyMath::Length(dir) < 0.001f) { // あまりに近いときは、前方向を向いておく（このままだと正規化できない）
+	if (MyMath::Length(dir) < 0.001f) { // ほぼ同じ位置ならゼロベクトルになってしまうので、適当な前方向ベクトルを向いておく
 		// ほぼ同じ位置なら「前方向き」にしておく
 		float yaw = getYaw_() + yawOffset_;
 		dir = { std::sinf(yaw), 0.0f, std::cosf(yaw) }; // プレイヤーのヨーにオフセットを加えた方向を向く
 	}
 	dir = MyMath::Normalize(dir); // 正規化して向きベクトルにする
 
-	lastOrigin_ = origin; // キャッシュしておく（必要なら外部からも getter で参照できるようにしてもいい）
-	lastAimDir_ = dir; // キャッシュしておく（外部から getter で参照できるようにしている）
+	lastOrigin_ = origin; // キャッシュしておく
+	lastAimDir_ = dir; // キャッシュしておく
 	hasAim_ = true; // これ以降は GetAimDirection() で有効な値が返るようになる
 
 	float dist = maxDist; // プレイヤーからレティクルまでの距離（狙う距離）。必要に応じて調整してOK

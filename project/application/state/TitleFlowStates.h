@@ -14,7 +14,7 @@ public:
 	/// 状態に入るときの処理を行います。
 	/// </summary>
 	/// <param name="ctx">状態遷移のコンテキスト</param>
-	/// 今回はタイトルシーンの状態なので、TitleScene* を IStateContext として受け取ることを想定しています。
+	/// <param name="dt">デルタタイム</param>
 	void Update(TKM::IStateContext& ctx, float dt) override;
 };
 
