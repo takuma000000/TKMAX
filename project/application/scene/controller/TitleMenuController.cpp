@@ -76,11 +76,25 @@ TitleMenuController::Command TitleMenuController::Update(float dt) {
 		Vector4 col = selected ? Vector4{ 1.0f,1.0f,1.0f,0.92f } : Vector4{ 1.0f,1.0f,1.0f,0.62f };
 		items_[i]->SetColor(col);
 
-		// サイズ：ポーズ画面準拠
-		Vector2 baseSize = selected ? Vector2{ 240.0f, 48.0f } : Vector2{ 220.0f, 44.0f };
-		Vector2 size = selected ? Vector2{ baseSize.x * pulse, baseSize.y * pulse } : baseSize;
+		const auto& md = TKM::TextureManager::GetInstance()->GetMetadata(desc_.itemTex[i]);
+		// 基準の高さ（選択中は大きく、非選択は小さめ）
+		float baseHeight = selected ? 72.0f : 64.0f;
+		// 脈動
+		if (selected) {
+			baseHeight *= pulse;
+		}
+		// アスペクト比を保って幅を決める
+		float aspect = 1.0f;
+		if (md.height > 0) {
+			aspect = (float)md.width / (float)md.height;
+		}
+		// サイズ
+		Vector2 size = {
+			baseHeight * aspect,
+			baseHeight
+		};
+		// スプライトにサイズを設定
 		items_[i]->SetSize(size);
-
 		items_[i]->Update();
 	}
 
