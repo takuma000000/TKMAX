@@ -71,9 +71,9 @@ void MidBossCore::Update(float dt) {
 
 	// 死亡演出中
 	if (isDying_) {
-		deathTimer_ += fixedDt_;
-		float t = std::min(deathTimer_ / deathDuration_, 1.0f);
-
+		deathTimer_ += fixedDt_; // t は 0〜1 で変化する値。1 になったら演出完了
+		float t = std::min(deathTimer_ / deathDuration_, 1.0f); // 0〜1 に正規化
+		// 演出内容：上にふわっと上がって縮む感じ + 回転 + 徐々に透明に
 		Vector3 pos_ = object_->GetTranslate();
 		Vector3 rot_ = object_->GetRotate();
 		Vector3 scale_ = baseScale_;
@@ -81,26 +81,29 @@ void MidBossCore::Update(float dt) {
 		// シンプルに上にふわっと上がって縮む感じ
 		pos_ += deathVelocity_ * fixedDt_;
 		rot_.y += deathRotateSpeed_.y * fixedDt_;
-
+		// t が 0→1 で変化する値を使って、スケールを徐々に小さくする
 		float s = 1.0f - t;
+		// baseScale_ に s を掛けることで、t が 0→1 でスケールが元の大きさ→0 に変化する
 		scale_ = { baseScale_.x * s, baseScale_.y * s, baseScale_.z * s };
-
+		// 変化をオブジェクトに反映
 		object_->SetTranslate(pos_);
 		object_->SetRotate(rot_);
 		object_->SetScale(scale_);
-
+		// t が 0→1 で変化する値を使って、徐々に透明にする
 		deathAlpha_ = 1.0f - t;
+		// 透明度をオブジェクトに反映（モデルのマテリアルが頂点カラーを乗算するタイプである必要あり）
 		object_->SetColor({ 1.0f, 1.0f, 1.0f, deathAlpha_ });
-
+		// 演出完了後はオブジェクトを消す
 		object_->Update();
 
+		// deathTimer_ が deathDuration_ を超えたら演出完了とみなす
 		if (deathTimer_ >= deathDuration_) {
 			// 消える瞬間にエフェクト
 			TKM::ParticleManager* pm_ = TKM::ParticleManager::GetInstance();
-			Vector3 emitPos_ = GetWorldPosition();
-			pm_->Emit("enemyDeath_core", emitPos_, 1);
-			pm_->Emit("enemyDeath_smoke", emitPos_, 4);
-
+			Vector3 emitPos_ = GetWorldPosition(); // 核の位置からエフェクトを出す
+			pm_->Emit("enemyDeath_core", emitPos_, 1); // 爆発の中心エフェクト
+			pm_->Emit("enemyDeath_smoke", emitPos_, 4); // 煙は複数出す
+			// ここでオブジェクトを完全に消す（描画も更新もしない）
 			isDead_ = true;
 		}
 		return;
@@ -159,10 +162,13 @@ void MidBossCore::Update(float dt) {
 			{ "core_charge_flash",  3, 1, 20 },
 		};
 
+		// ルールに従ってパーティクルを放出
 		for (const auto& rule : kChargeRules_) {
+			// rule.probability_ に従って、一定確率で放出するか決める
 			if (rule.probability_ <= 1 || (std::rand() % rule.probability_) == 0) {
+				// rule.repeat_ に従って、同フレームで複数回 Emit する
 				for (int i = 0; i < rule.repeat_; ++i) {
-					pm_->Emit(rule.name_, center_, rule.emitCount_);
+					pm_->Emit(rule.name_, center_, rule.emitCount_); // rule.emitCount_ は、同時に放出するパーティクルの数（例：フラッシュは3つ同時に出す）
 				}
 			}
 		}
@@ -203,26 +209,29 @@ void MidBossCore::ImGuiDebug() {
 
 void MidBossCore::OnHitWithDamage(int damage) {
 	if (isDead_ || isDying_) return;
-	hp_ -= damage;
+	hp_ -= damage; // ダメージを減算
+
+	// ダメージを受けたときのエフェクトや音などがあればここで
 	if (hp_ <= 0) {
-		hp_ = 0;
-		StartDeathReaction({ 0.0f, 0.0f, 1.0f });
+		hp_ = 0; // HPが0以下になったら死亡状態に移行
+		StartDeathReaction({ 0.0f, 0.0f, 1.0f }); // デフォルトの被弾方向（例：正面からの攻撃）で死亡リアクションを開始
 	}
 }
 
 void MidBossCore::StartDeathReaction(const Vector3& hitDir) {
 	if (isDying_) return;
-
+	// 死亡演出開始
 	isDying_ = true;
 	deathTimer_ = 0.0f;
 	deathAlpha_ = 1.0f;
 
 	Vector3 dir_ = hitDir;
+	// hitDir がほぼゼロベクトルだった場合の安全策（正面方向に飛ばす）
 	if (MyMath::Length(dir_) < 0.001f) {
 		dir_ = { 0.0f, 0.0f, 1.0f };
 	}
-	dir_ = MyMath::Normalize(dir_);
-
+	dir_ = MyMath::Normalize(dir_); // 正規化して方向ベクトルにする
+	// 死亡演出のパラメータを設定（例：被弾方向に少し飛ばしつつ、上にもふわっと上がる感じ）
 	deathDuration_ = 0.8f;
 	deathVelocity_ = dir_ * 2.5f + Vector3{ 0.0f, 1.2f, 0.0f };
 	deathRotateSpeed_ = { 0.0f, 2.0f, 0.0f };

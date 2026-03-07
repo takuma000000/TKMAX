@@ -680,6 +680,7 @@ void Player::HandleGamePadMove() {
 			newPos = target; // ほぼ同じなら座標を揃えてピタッと停止
 		}
 
+		// 画面外に行かないようにクランプ
 		newPos.x = std::clamp(newPos.x, moveMin_.x, moveMax_.x);
 		newPos.y = std::clamp(newPos.y, moveMin_.y, moveMax_.y);
 	}
@@ -819,6 +820,7 @@ void Player::RBShoot() {
 		}
 	}
 
+	// 弾の基本設定
 	bullet->SetVelocity(dir * normalBulletSpeed_);
 	bullet->SetCamera(camera_);
 	bullet->SetPlayer(this);
@@ -923,37 +925,46 @@ void Player::RTShoot() {
 void Player::LBShoot() {
 	TKM::Input* input = TKM::Input::GetInstance();
 
+	// ▼ LB：山なりホーミング弾（ロックオンしてる敵に向かう、LB弾は自動で満タン回復する）
 	if (input->TriggerButton(XINPUT_GAMEPAD_LEFT_SHOULDER) && !ltHeld_) {
+
+		// デバッグ無限LBモードでないなら、弾数が0のときは発射できない
 		if (!debugUnlimitedLB_ && lbAmmo_ <= 0) {
 			return;
 		}
-
+		// LB弾はロックオンしてる敵に向かう山なりホーミング弾
 		auto bullet = std::make_unique<HomingBullet>();
 		bullet->Initialize(common_, dxCommon_);
 
-		Vector3 start = object_->GetTranslate();
+		Vector3 start = object_->GetTranslate(); // 発射位置
 
 		// 終点
 		Vector3 end = start + Vector3{ 0.0f, 0.0f, 28.0f };
+
+		// ロック中の敵（ボス含む）を終点にする
 		if (enemy_ && !enemy_->IsDead()) {
 			end = enemy_->GetWorldPosition();
 		}
 
 		// 山なり制御点を作る
-		Vector3 flat = end - start;
-		flat.y = 0.0f;
-		float flatLen = MyMath::Length(flat);
+		Vector3 flat = end - start; // 開始から終点へのベクトル
+		flat.y = 0.0f; // 水平方向のベクトルだけ抜き取る
+		float flatLen = MyMath::Length(flat); // 水平距離
 
-		Vector3 forward = { 0.0f, 0.0f, 1.0f };
+		Vector3 forward = { 0.0f, 0.0f, 1.0f }; // デフォルトの前方向
+
+		// 水平距離が十分あるなら、そこから前方向を計算する
 		if (flatLen > 0.001f) {
 			forward = flat / flatLen;
 		}
 
-		float arcHeight = std::clamp(flatLen * 0.25f, 6.0f, 18.0f);
+		float arcHeight = std::clamp(flatLen * 0.25f, 6.0f, 18.0f); // 水平距離に応じた高さ（最小6、最大18）
 
+		// 制御点は、開始から終点へのベクトルの途中に、上方向へのオフセットを加えた位置にする
 		Vector3 c1 = start + forward * (flatLen * 0.25f) + Vector3{ 0.0f, arcHeight, 0.0f };
 		Vector3 c2 = end - forward * (flatLen * 0.20f) + Vector3{ 0.0f, arcHeight * 0.85f, 0.0f };
 
+		// 弾の基本設定
 		bullet->SetPosition(start);
 		bullet->SetEnemy(enemy_);
 		bullet->SetCamera(camera_);
@@ -962,15 +973,15 @@ void Player::LBShoot() {
 		bullet->StartArc(start, c1, c2, end, 0.4f);
 
 		if (radialBlur_) {
-			radialBlur_->BulrStartShock(2.0f, 0.35f);
+			radialBlur_->BulrStartShock(2.0f, 0.35f); // 強さ = 2.0f、時間 = 0.35秒
 		}
 
-		homingBullets_.push_back(std::move(bullet));
+		homingBullets_.push_back(std::move(bullet)); // ホーミング弾リストに追加
 
 		if (!debugUnlimitedLB_) {
-			lbAmmo_ = std::max(0, lbAmmo_ - 1);
+			lbAmmo_ = std::max(0, lbAmmo_ - 1); // 発射成功したら消費
 		}
-		lbNoFireTimer_ = 0.0f;
+		lbNoFireTimer_ = 0.0f; // 「撃ってない時間」リセット
 
 		ZoomCamera(); // LTの一時ズームアウト開始
 		StartCameraShake(10); // 軽いシェイクも同時に開始
@@ -979,6 +990,7 @@ void Player::LBShoot() {
 		ltHeld_ = true;
 	}
 
+	// 離した瞬間：ホールド状態解除
 	if (!input->PushButton(XINPUT_GAMEPAD_LEFT_SHOULDER)) {
 		ltHeld_ = false;
 	}
@@ -989,27 +1001,29 @@ void Player::LTShoot() {
 
 	// ▼ LT：全敵必中弾（元LB）
 	if ((input->GetLeftTrigger() > kTriggerThreshold) && allEnemies_) {
-		for (auto& enemy : *allEnemies_) {
-			if (enemy->IsDead()) continue;
 
+		// デバッグ無限LBモードでないなら、弾数が0のときは発射できない
+		for (auto& enemy : *allEnemies_) {
+			if (enemy->IsDead()) continue; // 死んでる敵はスキップ
+
+			// LB弾はロックオンしてる敵に向かう山なりホーミング弾
 			auto bullet = std::make_unique<PlayerBullet>();
 			bullet->Initialize(common_, dxCommon_);
 
+			// 発射位置＝プレイヤー位置
 			Vector3 startPos = object_->GetTranslate();
 			Vector3 enemyPos = enemy->GetWorldPosition();
 			Vector3 dir = MyMath::Normalize(enemyPos - startPos);
 
+			// 弾の基本設定
 			bullet->SetPosition(startPos);
 			bullet->SetVelocity(dir * normalBulletSpeed_);
 			bullet->SetCamera(camera_);
 			bullet->SetEnemy(enemy.get());
 			bullet->SetPlayer(this);
-
 			bullet->SetCore(core_);
-
-			// LT側に移したので trail も合わせたいなら "trail_lt" にしてOK
 			bullet->SetTrailGroup("trail_lb");
-
+			// LT弾は全敵必中なので、ターゲットは個々の敵に設定する（LB弾はロック中の敵1体だけだった）
 			bullets_.push_back(std::move(bullet));
 		}
 	}

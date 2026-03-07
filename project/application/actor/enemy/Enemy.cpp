@@ -10,10 +10,11 @@
 #endif
 
 void Enemy::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon) {
+	// 敵の読み込み
 	object_ = std::make_unique<TKM::Object3d>();
 	object_->Initialize(common, dxCommon);
 
-	// 触手
+	// 触手の読み込み
 	tentacle_ = std::make_unique<TKM::Object3d>();
 	tentacle_->Initialize(common, dxCommon);
 
@@ -31,6 +32,7 @@ void Enemy::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon
 	tentacle_->SetRotate(tentacleLocalRot_);
 	tentacle_->SetScale(tentacleLocalScale_);
 
+	// 当たり判定用スケールの初期値
 	baseScale_ = object_->GetScale();
 	startX_ = object_->GetTranslate().x;
 }
@@ -44,72 +46,79 @@ void Enemy::Update(float dt) {
 	// =========================================================
 	// Data-driven：死亡リアクション / 行動 の関数テーブル
 	// =========================================================
+
+	// 死亡リアクション用のコンテキスト構造体
 	struct DeathCtx {
-		float dt_;
-		float t_; // 0..1
-		Vector3 pos_;
-		Vector3 rot_;
-		Vector3 scale_;
+		float dt_; // 前フレームからの経過時間（秒）
+		float t_; // 死亡リアクション開始からの経過時間
+		Vector3 pos_; // 現在の位置
+		Vector3 rot_; // 現在の回転
+		Vector3 scale_; // 現在のスケール
 	};
-
+	// 行動用のコンテキスト構造体
 	struct MoveCtx {
-		float dt_;
-		float factor_;
-		Vector3 pos_;
+		float dt_; // 前フレームからの経過時間（秒）
+		float factor_; // 60fps基準の値をそのまま使えるようにする係数
+		Vector3 pos_; // 現在の位置
 	};
-
+	// ローカル関数をまとめる構造体
 	struct Local {
 
-		// ---------- Death reactions ----------
+		// 死亡リアクション関数の例：被弾方向に吹き飛ぶ + 回転 + 縮む
 		static void Death_BlowAway(Enemy* self, DeathCtx& c) {
-			float speed_ = 1.0f - c.t_;
+			float speed_ = 1.0f - c.t_; // 時間経過で減速
+			float s_ = 1.0f - c.t_; // 時間経過で縮む
+			// 被弾方向に吹き飛ぶ
 			c.pos_ += self->deathVelocity_ * speed_ * c.dt_;
-
+			// 回転も加速していく
 			c.rot_.x += self->deathRotateSpeed_.x * c.dt_;
 			c.rot_.y += self->deathRotateSpeed_.y * c.dt_;
 			c.rot_.z += self->deathRotateSpeed_.z * c.dt_;
-
-			float s_ = 1.0f - c.t_;
+			// スケールは均等に縮む
 			c.scale_ = { self->baseScale_.x * s_, self->baseScale_.y * s_, self->baseScale_.z * s_ };
 		}
-
+		// 死亡リアクション関数の例：空中でふわっと浮かび上がる + 回転 + 縮む
 		static void Death_RiseAbsorb(Enemy* self, DeathCtx& c) {
+			float s_ = 1.0f - c.t_; // 時間経過で縮む
+			// 被弾方向に吹き飛ぶ（Y軸は上向きに固定）
 			c.pos_ += self->deathVelocity_ * c.dt_;
-
+			// Y軸は上向きに固定してふわっと浮かび上がる
 			c.rot_.y += self->deathRotateSpeed_.y * c.dt_;
-
-			float s = 1.0f - c.t_;
+			// スケールはX,Zは縮むがYはあまり縮まない
 			c.scale_ = {
-				self->baseScale_.x * s * 0.5f,
-				self->baseScale_.y * (1.0f - c.t_ * 0.2f),
-				self->baseScale_.z * s * 0.5f
+				self->baseScale_.x* s_ * 0.5f, // X軸は早めに縮む
+				self->baseScale_.y* (1.0f - c.t_ * 0.2f), // Y軸はあまり縮まない
+				self->baseScale_.z* s_ * 0.5f // Z軸は早めに縮む
 			};
 		}
-
+		// 死亡リアクション関数の例：地面に倒れ込むように崩れる
 		static void Death_Collapse(Enemy* self, DeathCtx& c) {
+			float s_ = 1.0f - c.t_; // 時間経過で縮む
+			// 被弾方向に吹き飛ぶ（Y軸は地面に向かって固定）
 			c.pos_ += self->deathVelocity_ * c.dt_;
-
+			// Y軸は地面に向かって固定して倒れ込む
 			c.rot_.x += self->deathRotateSpeed_.x * c.dt_;
-
-			float s_ = 1.0f - c.t_;
+			// スケールはX,Zはあまり縮まないがYは大きく縮む
 			c.scale_ = {
-				self->baseScale_.x,
-				self->baseScale_.y * s_ * 0.2f,
-				self->baseScale_.z
+				self->baseScale_.x, // X軸はあまり縮まない
+				self->baseScale_.y* s_ * 0.2f, // Y軸は大きく縮む
+				self->baseScale_.z // Z軸はあまり縮まない
 			};
 		}
-
+		// 死亡リアクション関数の例：ボスの最終死亡リアクション（空中に打ち上げられて爆発）
 		static void Death_BossFinal(Enemy* self, DeathCtx& c) {
-			const float launchStartT_ = 0.5f;
+			const float launchStartT_ = 0.5f; // 打ち上げ開始までの時間
 
+			// 打ち上げ開始前は、被弾方向に吹き飛びつつ震える
 			if (c.t_ < launchStartT_) {
-				float shakeAmp_ = 0.25f;
-				float shakeFreq_ = 18.0f;
+				float shakeAmp_ = 0.25f; // 震えの振幅
+				float shakeFreq_ = 18.0f; // 震えの周波数
+				float pulse_ = 1.0f + 0.10f * sinf(self->deathTimer_ * 10.0f); // 打ち上げ前の脈動
 
+				// 被弾方向に吹き飛ぶ
 				c.pos_.x += sinf(self->deathTimer_ * shakeFreq_) * shakeAmp_;
 				c.pos_.y += cosf(self->deathTimer_ * shakeFreq_ * 0.7f) * shakeAmp_ * 0.6f;
-
-				float pulse_ = 1.0f + 0.10f * sinf(self->deathTimer_ * 10.0f);
+				// 打ち上げ前の脈動
 				c.scale_ = {
 					self->baseScale_.x * pulse_,
 					self->baseScale_.y * pulse_,
@@ -117,52 +126,57 @@ void Enemy::Update(float dt) {
 				};
 
 				TKM::ParticleManager* pm_ = TKM::ParticleManager::GetInstance();
+
+				// 打ち上げ開始前はまばらに爆散する
 				if (std::rand() % 3 != 0) {
-					Vector3 center_ = self->GetWorldPosition();
-					Vector3 off_ = {
+					Vector3 center_ = self->GetWorldPosition(); // 爆散の中心は敵の現在位置
+					Vector3 off_ = { // -0.5..0.5 のランダムオフセットを当たり判定スケールに応じて生成
 						(static_cast<float>(std::rand()) / RAND_MAX - 0.5f) * self->colliderScale_.x,
 						(static_cast<float>(std::rand()) / RAND_MAX - 0.5f) * self->colliderScale_.y,
 						(static_cast<float>(std::rand()) / RAND_MAX - 0.5f) * self->colliderScale_.z
 					};
-					Vector3 emitPos_ = center_ + off_ * 0.5f;
-					pm_->Emit("bossDeath_bomb", emitPos_, 1);
+					Vector3 emitPos_ = center_ + off_ * 0.5f; // 爆散の位置は中心から少しランダムにオフセット
+					pm_->Emit("bossDeath_bomb", emitPos_, 1); // 爆散のパーティクルを1つ放出
 				}
 
-			} else {
+			} else { // 打ち上げ開始後は空中に打ち上げられて回転しつつ縮む
 
+				// 打ち上げ開始時に一度だけ、打ち上げ開始位置を記録して爆発エフェクトを放出
 				if (!self->bossFinalLaunchStarted_) {
-					self->bossFinalLaunchStarted_ = true;
-					self->bossFinalLaunchStartPos_ = c.pos_;
+					self->bossFinalLaunchStarted_ = true; // 打ち上げ開始フラグを立てる
+					self->bossFinalLaunchStartPos_ = c.pos_; // 打ち上げ開始位置を記録
 
 					TKM::ParticleManager* pm_ = TKM::ParticleManager::GetInstance();
-					Vector3 center_ = self->GetWorldPosition();
-					pm_->Emit("bossDeath_ring", center_, 2);
-					pm_->Emit("bossDeath_bomb", center_, 10);
-					pm_->Emit("bossDeath_smoke", center_, 24);
+					Vector3 center_ = self->GetWorldPosition(); // 爆発の中心は敵の現在位置
+
+					// 打ち上げ開始時の爆発エフェクトを多めに放出
+					pm_->Emit("bossDeath_ring", center_, 2); // リングエフェクトを2つ放出
+					pm_->Emit("bossDeath_bomb", center_, 10); // 爆散エフェクトを10個放出
+					pm_->Emit("bossDeath_smoke", center_, 24); // 煙エフェクトを24個放出
 				}
-
+				// 打ち上げ開始からの経過時間に応じて、0..1の値を計算
 				float u_ = (c.t_ - launchStartT_) / (1.0f - launchStartT_);
-				if (u_ < 0.0f) u_ = 0.0f;
-				if (u_ > 1.0f) u_ = 1.0f;
-
+				if (u_ < 0.0f) u_ = 0.0f; // 念のため0未満は切り捨て
+				if (u_ > 1.0f) u_ = 1.0f; // 念のため1より大きいのも切り捨て
+				// 打ち上げの動きは、時間経過に応じて加速していくように、uを3乗してイージングする
 				float k_ = u_ * u_ * u_;
 
-				Vector3 upDir_ = { 0.0f, 1.0f, 0.0f };
-				Vector3 forwardDir_ = { 0.0f, 0.0f, 1.0f };
-
-				float upDist_ = 15.0f;
-				float depthDist_ = 40.0f;
-
+				Vector3 upDir_ = { 0.0f, 1.0f, 0.0f }; // 打ち上げの方向は上向き固定
+				Vector3 forwardDir_ = { 0.0f, 0.0f, 1.0f }; // 打ち上げの前方向はZ軸正方向固定
+				float s_ = 1.0f - 0.3f * k_; // 時間経過に応じて0.7まで縮むようにする
+				float upDist_ = 15.0f; // 打ち上げの初速は、時間経過に応じて加速していくように、kを掛ける
+				float depthDist_ = 40.0f; // 打ち上げの前方向の動きも加えると、より派手になるので、同様にkを掛ける
+				// 打ち上げ開始位置から、上方向と前方向に距離を加算していく
 				c.pos_ = self->bossFinalLaunchStartPos_
 					+ upDir_ * (upDist_ * k_)
 					+ forwardDir_ * (depthDist_ * k_);
-
+				// 打ち上げと同時に回転も加速していく
 				c.rot_.x += 2.5f * c.dt_;
 				c.rot_.y += 3.0f * c.dt_;
 				c.rot_.z += 1.5f * c.dt_;
-
-				float s_ = 1.0f - 0.3f * k_;
+				// 最小スケールは0.1にする
 				if (s_ < 0.1f) s_ = 0.1f;
+				// スケールは均等に縮む
 				c.scale_ = {
 					self->baseScale_.x * s_,
 					self->baseScale_.y * s_,
@@ -171,139 +185,161 @@ void Enemy::Update(float dt) {
 			}
 		}
 
-		// ---------- Movement behaviors ----------
+		// 行動関数の例：まっすぐ移動して、指定Zで止まる
 		static void Move_StraightStop(Enemy* self, MoveCtx& c) {
+			// まっすぐ移動
 			if (!self->stopMove_) {
 				c.pos_ += self->velocity_ * c.factor_;
 				if (c.pos_.z <= self->stopZ_) { c.pos_.z = self->stopZ_; self->stopMove_ = true; }
 			}
 		}
-
+		// 行動関数の例：X軸方向にサイン波移動しながら、指定Zで止まる
 		static void Move_SineX(Enemy* self, MoveCtx& c) {
-			self->t_ += 0.05f * c.factor_;
-			c.pos_.z += self->velocity_.z * c.factor_;
-			c.pos_.x = self->startX_ + std::sinf(self->sinePhase_ + self->t_ * self->sineFreq_) * self->sineAmpX_;
+			self->t_ += 0.05f * c.factor_; // サイン波の位相を時間経過に応じて進める
+			c.pos_.z += self->velocity_.z * c.factor_; // Z方向にはまっすぐ移動
+			c.pos_.x = self->startX_ + std::sinf(self->sinePhase_ + self->t_ * self->sineFreq_) * self->sineAmpX_; // X方向はサイン波移動
+			// Zが指定値を越えたら止まる
 			if (c.pos_.z <= self->stopZ_) { c.pos_.z = self->stopZ_; }
 		}
-
+		// 行動関数の例：X軸方向に往復移動しながら、指定Zで止まる
 		static void Move_StrafeLtoR(Enemy* self, MoveCtx& c) {
-			c.pos_.z += self->velocity_.z * c.factor_;
-			self->strafePosX_ += self->strafeSpeed_ * self->strafeDir_ * c.factor_;
+			c.pos_.z += self->velocity_.z * c.factor_; // Z方向にはまっすぐ移動
+			self->strafePosX_ += self->strafeSpeed_ * self->strafeDir_ * c.factor_; // X方向は往復移動
+			// Xが指定範囲を越えたら反転する
 			if (self->strafePosX_ > self->strafeRight_) { self->strafePosX_ = self->strafeRight_; self->strafeDir_ = -1; }
+			// Zが指定値を越えたら止まる
 			if (self->strafePosX_ < self->strafeLeft_) { self->strafePosX_ = self->strafeLeft_;  self->strafeDir_ = +1; }
-			c.pos_.x = self->strafePosX_;
+			c.pos_.x = self->strafePosX_; // X位置を更新
+			// Zが指定値を越えたら止まる
 			if (c.pos_.z <= self->stopZ_) { c.pos_.z = self->stopZ_; }
 		}
-
+		// 行動関数の例：プレイヤーを追いかけながら、指定Zで止まる
 		static void Move_ChasePlayer(Enemy* self, MoveCtx& c) {
-			c.pos_.z += self->velocity_.z * c.factor_;
+			c.pos_.z += self->velocity_.z * c.factor_; // Z方向にはまっすぐ移動
+			// プレイヤーの位置を取得できる場合は、プレイヤーを追いかける
 			if (self->playerGetter_) {
-				Vector3 toP_ = self->playerGetter_() - c.pos_;
-				Vector3 desire_ = { toP_.x, toP_.y, 0.0f };
-				float len_ = MyMath::Length(desire_);
+				Vector3 toP_ = self->playerGetter_() - c.pos_; // プレイヤーへのベクトル
+				Vector3 desire_ = { toP_.x, toP_.y, 0.0f }; // Z方向は無視して、X,Y方向のベクトルだけで追いかける
+				float len_ = MyMath::Length(desire_); // プレイヤーへの距離
+				// ある程度距離がある場合だけ追いかける（近すぎると振動してしまうのを防止）
 				if (len_ > 0.001f) {
-					Vector3 dir = MyMath::Normalize(desire_);
+					Vector3 dir = MyMath::Normalize(desire_); // プレイヤーへの方向ベクトル
+					// プレイヤーへの方向に移動する
 					c.pos_.x += dir.x * self->chaseSpeed_ * c.factor_;
 					c.pos_.y += dir.y * self->chaseSpeed_ * c.factor_;
 				}
 			}
+			// Zが指定値を越えたら止まる
 			if (c.pos_.z <= self->stopZ_) { c.pos_.z = self->stopZ_; }
 		}
-
+		// 行動関数の例：空からプレイヤーに向かって急降下する
 		static void Move_PounceFromAbove(Enemy* self, MoveCtx& c) {
 			if (!self->pounceStarted_) { return; }
 
 			TKM::ParticleManager* pm_ = TKM::ParticleManager::GetInstance();
-
+			// 急降下開始前は、空中でホバリングしている状態
 			if (!self->pounceDiving_) {
-				self->pounceTime_ += c.dt_;
-				float t_ = self->pounceTime_ / self->pounceDuration_;
-				if (t_ > 1.0f) t_ = 1.0f;
-
+				self->pounceTime_ += c.dt_; // 急降下開始からの経過時間を更新
+				float t_ = self->pounceTime_ / self->pounceDuration_; // 急降下開始からの経過時間を、急降下の全体時間で割って、0..1の値にする
+				if (t_ > 1.0f) t_ = 1.0f; // 念のため1より大きいのも切り捨て
+				// 急降下の動きは、時間経過に応じて加速していくように、イージングする
 				auto EaseOutQuad_ = [](float x) {
-					return 1.0f - (1.0f - x) * (1.0f - x);
+					return 1.0f - (1.0f - x) * (1.0f - x); // イージング関数（EaseOutQuad）
 					};
-				float u_ = EaseOutQuad_(t_);
+				float u_ = EaseOutQuad_(t_); // 急降下開始からの経過時間に応じて、0..1の値をイージングして計算
 
+				// 急降下の軌道は、急降下開始位置から急降下の頂点を経由して、急降下の目標位置に向かう放物線を想定して、2段階の線形補間で計算する
 				Vector3 pos1_ = MyMath::Vector3Lerp(self->pounceStart_, self->pounceApex_, u_);
 				Vector3 pos2_ = MyMath::Vector3Lerp(self->pounceApex_, self->pounceTarget_, u_);
 				Vector3 newPos_ = MyMath::Vector3Lerp(pos1_, pos2_, u_);
-
+				// 計算した新しい位置を適用
 				c.pos_ = newPos_;
 
+				// 急降下の軌道に沿って、定期的にエフェクトを放出
 				{
 					Vector3 emitPos_ = c.pos_;
 					pm_->Emit("enemyPounceTrail", emitPos_, 2);
 					pm_->Emit("enemyPounceSpark", emitPos_, 3);
 				}
 
+				// 急降下の全体時間が経過したら、急降下の軌道に沿った移動をやめて、プレイヤーに向かって急降下する状態に切り替える
 				if (t_ >= 1.0f) {
-					Vector3 dir_ = self->pounceTarget_ - self->pounceStart_;
-					float len_ = MyMath::Length(dir_);
+					Vector3 dir_ = self->pounceTarget_ - self->pounceStart_; // 急降下の開始位置から目標位置へのベクトルを計算
+					float len_ = MyMath::Length(dir_); // ベクトルの長さを計算
+
+					// ベクトルの長さがある程度ある場合は、正規化して方向ベクトルにする。あまりに短い場合は、下方向を向くようにする（急降下の開始位置と目標位置がほぼ同じ場合への対処）
 					if (len_ > 0.001f) {
 						dir_ = MyMath::Normalize(dir_);
-					} else {
+					} else { // ベクトルの長さがほとんどない場合は、下方向を向くようにする
 						dir_ = { 0.0f, -0.1f, -1.0f };
 					}
 
-					dir_.y -= 0.2f;
-					dir_ = MyMath::Normalize(dir_);
-
+					dir_.y -= 0.2f; // 急降下の軌道から少し下向きにすることで、より急降下っぽい動きになる
+					dir_ = MyMath::Normalize(dir_); // 方向ベクトルを正規化して、移動の方向だけを残す
+					// 急降下の速度を設定
 					float diveSpeed_ = 0.7f;
+					// 急降下の方向に速度を設定して、急降下する状態に切り替える
 					self->velocity_ = dir_ * diveSpeed_;
-
+					// 急降下する状態に切り替えるフラグを立てる
 					self->pounceDiving_ = true;
 				}
 
 			} else {
-
+				// 急降下する状態：プレイヤーに向かって急降下している状態
 				c.pos_ += self->velocity_ * c.factor_;
-
+				// 急降下の軌道に沿って、定期的にエフェクトを放出
 				Vector3 emitPos_ = c.pos_;
-				pm_->Emit("enemyPounceTrail", emitPos_, 2);
-				pm_->Emit("enemyPounceSpark", emitPos_, 2);
+				pm_->Emit("enemyPounceTrail", emitPos_, 2); // こちらは急降下の軌道に沿った煙のエフェクト
+				pm_->Emit("enemyPounceSpark", emitPos_, 2); // こちらは急降下の軌道に沿った火花のエフェクト
 			}
 		}
-
+		// 行動関数の例：Roam（徘徊） - 一定範囲内でランダムに移動する
 		static void Move_FreeRoam(Enemy* self, MoveCtx& c) {
+			// 0..1のランダム値を生成する関数
 			auto random01_ = []() {
 				return static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
 				};
 
-			float distToTarget_ = MyMath::Length(self->roamTarget_ - c.pos_);
-			if (!self->hasRoamTarget_ || distToTarget_ < 0.5f) {
-				self->hasRoamTarget_ = true;
+			float distToTarget_ = MyMath::Length(self->roamTarget_ - c.pos_); // 現在位置と徘徊の目標位置との距離
 
+			// 目標位置が設定されていないか、目標位置に近づきすぎたら、新しい目標位置をランダムに設定する
+			if (!self->hasRoamTarget_ || distToTarget_ < 0.5f) {
+				self->hasRoamTarget_ = true; // 目標位置が設定されたフラグを立てる
+				// 目標位置を、徘徊の範囲を表すローミングエリアの最小値と最大値の間でランダムに生成する
 				Vector3 target_;
 				target_.x = self->roamMin_.x + (self->roamMax_.x - self->roamMin_.x) * random01_();
 				target_.y = self->roamMin_.y + (self->roamMax_.y - self->roamMin_.y) * random01_();
 				target_.z = self->roamMin_.z + (self->roamMax_.z - self->roamMin_.z) * random01_();
 
+				// 怒り状態のときは、プレイヤーの位置に向かって少し目標位置を引き寄せる。これにより、怒り状態のときはプレイヤーに向かって徘徊するようになる
 				if (self->isAngry_ && self->playerGetter_) {
-					Vector3 p = self->playerGetter_();
-					target_.x = (target_.x * 0.4f) + (p.x * 0.6f);
-					target_.x = std::max(self->roamMin_.x, std::min(self->roamMax_.x, target_.x));
+					Vector3 p = self->playerGetter_(); // プレイヤーの位置を取得
+					target_.x = (target_.x * 0.4f) + (p.x * 0.6f); // 目標位置をプレイヤーの位置に向かって引き寄せる（0.4は元の目標位置の重み、0.6はプレイヤーの位置の重み。これらを調整することで、怒り状態のときの徘徊の傾向を変えられる）
+					target_.x = std::max(self->roamMin_.x, std::min(self->roamMax_.x, target_.x)); // 目標位置がローミングエリアの範囲内に収まるようにする
 				}
-
+				// 新しい目標位置を設定する
 				self->roamTarget_ = target_;
 			}
 
-			Vector3 toT_ = self->roamTarget_ - c.pos_;
-			float len_ = MyMath::Length(toT_);
-			if (len_ > 0.001f) {
-				Vector3 dir_ = toT_ / len_;
-				float speed_ = self->isAngry_ ? self->roamSpeedAngry_ : self->roamSpeedNormal_;
-				c.pos_ += dir_ * speed_ * c.factor_;
-			}
+			Vector3 toT_ = self->roamTarget_ - c.pos_; // 現在位置から目標位置へのベクトル
+			float len_ = MyMath::Length(toT_); // 現在位置から目標位置への距離
 
+			// ある程度距離がある場合だけ移動する（近すぎると振動してしまうのを防止）
+			if (len_ > 0.001f) {
+				Vector3 dir_ = toT_ / len_; // 現在位置から目標位置への方向ベクトル（正規化されたベクトル）
+				float speed_ = self->isAngry_ ? self->roamSpeedAngry_ : self->roamSpeedNormal_; // 怒り状態のときは速く移動する
+				c.pos_ += dir_ * speed_ * c.factor_; // 目標位置に向かって移動する
+			}
+			// 目標位置に向かって移動した後、念のため位置がローミングエリアの範囲内に収まるようにする
 			c.pos_.x = std::max(self->roamMin_.x, std::min(self->roamMax_.x, c.pos_.x));
 			c.pos_.y = std::max(self->roamMin_.y, std::min(self->roamMax_.y, c.pos_.y));
 			c.pos_.z = std::max(self->roamMin_.z, std::min(self->roamMax_.z, c.pos_.z));
 		}
 	};
 
-	// Death table（enum順：BlowAway, RiseAbsorb, Collapse, BossFinal）
+	// 死亡リアクションテーブル（enum順：BlowAway, RiseAbsorb, Collapse, BossFinal）
 	using DeathFn = void(*)(Enemy*, DeathCtx&);
+	// 死亡リアクションテーブルは、EnemyDeathReactionのenum値をインデックスにして、対応する関数を呼び出せるようにする
 	static const DeathFn kDeathTable_[] = {
 		&Local::Death_BlowAway,
 		&Local::Death_RiseAbsorb,
@@ -311,8 +347,9 @@ void Enemy::Update(float dt) {
 		&Local::Death_BossFinal,
 	};
 
-	// Move table（enum順：StraightStop, SineX, StrafeLtoR, ChasePlayer, PounceFromAbove, FreeRoam）
+	// 行動テーブル（enum順：StraightStop, SineX, StrafeLtoR, ChasePlayer, PounceFromAbove, FreeRoam）
 	using MoveFn = void(*)(Enemy*, MoveCtx&);
+	// 行動テーブルは、EnemyBehaviorのenum値をインデックスにして、対応する関数を呼び出せるようにする
 	static const MoveFn kMoveTable_[] = {
 		&Local::Move_StraightStop,
 		&Local::Move_SineX,
@@ -325,58 +362,67 @@ void Enemy::Update(float dt) {
 	// =========================================================
 	// 死亡演出（Data-driven）
 	// =========================================================
-	if (isDying_) {
-		deathTimer_ += dt;
-		float t_ = std::min(deathTimer_ / deathDuration_, 1.0f);
 
+	// 死亡中の更新
+	if (isDying_) {
+		deathTimer_ += dt; // 死亡リアクション開始からの経過時間を更新
+		float t_ = std::min(deathTimer_ / deathDuration_, 1.0f); // 死亡リアクション開始からの経過時間を、死亡リアクションの全体時間で割って、0..1の値にする
+		// 死亡リアクションのコンテキストを作成して、関数テーブルから呼び出す
 		DeathCtx c_{};
 		c_.dt_ = dt;
 		c_.t_ = t_;
 		c_.pos_ = object_->GetTranslate();
 		c_.rot_ = object_->GetRotate();
 		c_.scale_ = baseScale_;
-
+		// 死亡リアクションの関数を呼び出す
 		const int di_ = static_cast<int>(deathReaction_);
+		// 念のため、deathReaction_がテーブルの範囲内の値であるかをチェックしてから呼び出す
 		if (0 <= di_ && di_ < static_cast<int>(std::size(kDeathTable_))) {
 			kDeathTable_[di_](this, c_);
 		}
-
+		// コンテキストの更新結果を敵オブジェクトに適用する
 		object_->SetTranslate(c_.pos_);
 		object_->SetRotate(c_.rot_);
 		object_->SetScale(c_.scale_);
 
+		// 死亡リアクションの経過時間に応じて、敵の透明度を変化させる
 		if (deathReaction_ == EnemyDeathReaction::BossFinal) {
+			// ボスの最終死亡リアクションは、前半は透明度1.0のままで、後半で徐々に透明になるようにする
 			if (t_ < 0.7f) {
 				deathAlpha_ = 1.0f;
-			} else {
-				float u_ = (t_ - 0.7f) / 0.3f;
+			} else { // 0.7秒以降は徐々に透明になる
+				float u_ = (t_ - 0.7f) / 0.3f; // 0.7秒から1.0秒の間で、0..1の値を計算
+				// 念のため0未満は切り捨て、1より大きいのも切り捨て
 				if (u_ > 1.0f) u_ = 1.0f;
+				// 透明度は、uをそのまま使うのではなく、イージングして変化させると、より自然な感じになる。ここでは、uを2乗してイージングする
 				deathAlpha_ = 1.0f - u_;
 			}
-		} else {
-			deathAlpha_ = 1.0f - t_;
+		} else { // その他の死亡リアクションは、経過時間に応じて線形に透明になるようにする
+			deathAlpha_ = 1.0f - t_; // 経過時間が0のときは透明度1.0、経過時間が死亡リアクションの全体時間以上のときは透明度0.0になるようにする
 		}
-
+		// 敵オブジェクトの色に透明度を適用する（RGBはそのままで、AにdeathAlpha_を設定する）
 		object_->SetColor({ 1.0f, 1.0f, 1.0f, deathAlpha_ });
+		// 死亡中は移動や攻撃などの行動はしないので、ここで更新を終える
 		object_->Update();
 
+		// 死亡リアクションの経過時間が死亡リアクションの全体時間を超えたら、完全に死亡した状態になる
 		if (deathTimer_ >= deathDuration_) {
 			TKM::ParticleManager* pm_ = TKM::ParticleManager::GetInstance();
-			Vector3 emitPos_ = GetWorldPosition();
+			Vector3 emitPos_ = GetWorldPosition(); // 敵の現在位置をパーティクルの発生位置とする
 
 			// 死亡リアクションに応じたパーティクルを発生させる
-			if (deathReaction_ == EnemyDeathReaction::BlowAway) {
+			if (deathReaction_ == EnemyDeathReaction::BlowAway) { // 吹き飛びの死亡
 				pm_->Emit("enemyDeath_core", emitPos_, 1);
 				pm_->Emit("enemyDeath_shard", emitPos_, 20);
 				pm_->Emit("enemyDeath_smoke", emitPos_, 4);
-			} else if (deathReaction_ == EnemyDeathReaction::RiseAbsorb) {
+			} else if (deathReaction_ == EnemyDeathReaction::RiseAbsorb) { // 浮き上がり吸収の死亡
 				pm_->Emit("enemyDeath_core", emitPos_, 1);
 				pm_->Emit("enemyDeath_shard", emitPos_, 14);
 				pm_->Emit("enemyDeath_smoke", emitPos_, 6);
-			} else if (deathReaction_ == EnemyDeathReaction::Collapse) {
+			} else if (deathReaction_ == EnemyDeathReaction::Collapse) { // 崩れ落ちの死亡
 				pm_->Emit("enemyDeath_shard", emitPos_, 10);
 				pm_->Emit("enemyDeath_smoke", emitPos_, 3);
-			} else if (deathReaction_ == EnemyDeathReaction::BossFinal) {
+			} else if (deathReaction_ == EnemyDeathReaction::BossFinal) { // ボスの最終死亡
 				if (!bossFinalBigBurstDone_) {
 					pm_->Emit("bossClear_core", emitPos_, 1);
 					pm_->Emit("bossClear_ring", emitPos_, 3);
@@ -384,22 +430,23 @@ void Enemy::Update(float dt) {
 					pm_->Emit("bossClear_debris", emitPos_, 60);
 				}
 			}
-
+			// 死亡フラグを立てる
 			isDead_ = true;
 		}
 
 		// 死亡中も触手を更新して、親の動きに追従させる
 		if (tentacle_) {
-			tentacle_->SetColor({ 1.0f, 1.0f, 1.0f, deathAlpha_ });
+			tentacle_->SetColor({ 1.0f, 1.0f, 1.0f, deathAlpha_ }); // 触手も同じアルファで更新
 
+			// 死亡中も触手を回転させたい場合はここで回転させる（例：ゆっくり回転させる）
 			if (type_ != EnemyType::Boss) {
 				tentacleLocalRot_.y += 0.1f * factor_;
 			}
-
+			// 死亡中も取り付け位置を毎フレ反映したいなら
 			tentacle_->SetTranslate(tentacleLocalPos_);
 			tentacle_->SetRotate(tentacleLocalRot_);
 			tentacle_->SetScale(tentacleLocalScale_);
-
+			// 死亡中も更新して、親の動きに追従させる
 			tentacle_->Update();
 		}
 
@@ -410,7 +457,9 @@ void Enemy::Update(float dt) {
 	// 怒りタイマー更新
 	// =========================================================
 	if (isAngry_) {
-		angryTimer_ += dt;
+		angryTimer_ += dt; // 怒り状態の経過時間を更新
+
+		// 怒り状態の経過時間が怒り状態の持続時間を超えたら、怒り状態を解除する
 		if (angryTimer_ >= angryDuration_) {
 			isAngry_ = false;
 		}
@@ -419,27 +468,35 @@ void Enemy::Update(float dt) {
 	// =========================================================
 	// 行動（Data-driven）
 	// =========================================================
+
+	// 移動のコンテキストを作成して、関数テーブルから呼び出す
 	MoveCtx m_{};
 	m_.dt_ = dt;
 	m_.factor_ = factor_;
 	m_.pos_ = object_->GetTranslate();
 
+	// 移動の関数を呼び出す
 	if (!freezeMove_) {
-		const int bi_ = static_cast<int>(behavior_);
+		const int bi_ = static_cast<int>(behavior_); // 行動パターンを表すbehavior_を整数にキャストして、テーブルのインデックスとして使う
+
+		// 念のため、behavior_がテーブルの範囲内の値であるかをチェックしてから呼び出す
 		if (0 <= bi_ && bi_ < static_cast<int>(std::size(kMoveTable_))) {
-			kMoveTable_[bi_](this, m_);
+			kMoveTable_[bi_](this, m_); // 行動関数を呼び出す
 		}
 	}
-
+	// 行動関数の更新結果を敵オブジェクトに適用する
 	object_->SetTranslate(m_.pos_);
 
+	// 敵が画面奥に逃げたら、逃げフラグを立てて死亡させる
 	if (!isDying_) {
+		// 逃げるのは、ボス以外の通常の敵だけにする
 		if (m_.pos_.z < -30.0f) {
-			escaped_ = true;
-			isDead_ = true;
+			escaped_ = true; // 逃げフラグを立てる
+			isDead_ = true; // 死亡フラグを立てる
 		}
 	}
 
+	/// 当たり判定可視化=================================================
 #ifdef USE_IMGUI
 	// AABB 表示（そのまま）
 	{
@@ -466,6 +523,7 @@ void Enemy::Update(float dt) {
 		}
 	}
 #endif
+	/// ==============================================================
 
 	// ロック脈動（そのまま）
 	if (isLocked_ && lockPulseEnabled_) {
@@ -499,7 +557,6 @@ void Enemy::Update(float dt) {
 	tentacle_->SetTranslate(tentacleLocalPos_);
 	tentacle_->SetRotate(tentacleLocalRot_);
 	tentacle_->SetScale(tentacleLocalScale_);
-
 	tentacle_->Update();
 }
 
@@ -708,27 +765,28 @@ void Enemy::StartDeathReaction(const Vector3& hitDir) {
 	}
 	dir_ = MyMath::Normalize(dir_);
 
+	// ランダムに選んだ値に応じて、死亡リアクションのパラメータを設定するラムダ関数を呼び出す
 	auto Pick0_BlowAway_ = [&]() {
 		deathReaction_ = EnemyDeathReaction::BlowAway;
 		deathDuration_ = 3.0f;
 		deathVelocity_ = dir_ * 4.0f;
 		deathRotateSpeed_ = { 1.5f, 2.0f, 0.8f };
 		};
-
+	// RiseAbsorb は、上に浮き上がりながら回転して、最後にゆっくり消える感じのリアクション。dir_はあまり関係ないけど、少しだけ前方に飛ばす方向を入れてもいいかも
 	auto Pick1_RiseAbsorb_ = [&]() {
 		deathReaction_ = EnemyDeathReaction::RiseAbsorb;
 		deathDuration_ = 1.2f;
 		deathVelocity_ = { 0.0f, 3.0f, 0.0f };
 		deathRotateSpeed_ = { 0.0f, 2.0f, 0.0f };
 		};
-
+	// Collapse は、ほとんど動かずに地面に崩れ落ちる感じのリアクション。dir_はあまり関係ないけど、少しだけ前方に飛ばす方向を入れてもいいかも
 	auto Pick2_Collapse_ = [&]() {
 		deathReaction_ = EnemyDeathReaction::Collapse;
 		deathDuration_ = 0.9f;
 		deathVelocity_ = { dir_.x * 1.5f, -3.0f, dir_.z * 1.5f };
 		deathRotateSpeed_ = { 3.0f, 0.5f, 0.0f };
 		};
-
+	// ランダムに選んだ値に応じて、死亡リアクションのパラメータを設定するラムダ関数を呼び出す
 	if (r_ == 0) { Pick0_BlowAway_(); } else if (r_ == 1) { Pick1_RiseAbsorb_(); } else { Pick2_Collapse_(); }
 }
 

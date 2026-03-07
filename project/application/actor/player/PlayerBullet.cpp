@@ -174,19 +174,21 @@ void PlayerBullet::Update() {
 		Vector3 corePos = core_->GetWorldPosition();
 		Vector3 coreSize = core_->GetColliderScale();
 
-		bool hit = CheckSweptHitAABB(corePos, coreSize);
+		bool hit = CheckSweptHitAABB(corePos, coreSize); // 当たり判定
 
+		// 当たったとき
 		if (hit) {
 			isHit_ = true;
 			isDead_ = true;
 
 			TKM::ParticleManager* pm = TKM::ParticleManager::GetInstance();
 			Vector3 hitPos = bulletPos;
-
+			// LT弾かどうかでエフェクトの種類や量を変える
 			bool isLTBullet = (trailGroup_ == "trail_lt");
 			int  damage = isSpecialAttack_ ? 100 : 1;
 			bool willDie = (core_ && core_->GetHP() <= damage);
 
+			// ▼ エフェクト（元のまま）
 			if (isLTBullet) {
 				damage = 10;
 				pm->Emit("lt_nova_core", hitPos, 1);
@@ -194,26 +196,35 @@ void PlayerBullet::Update() {
 				pm->Emit("lt_nova_burst", hitPos, 40);
 				pm->Emit("lt_nova_debris", hitPos, 120);
 				pm->Emit("lt_nova_crack", hitPos, 80);
-			} else {
+			} else { // 通常弾はエフェクト控えめ
 				pm->Emit("enemyHit_flash", hitPos, 1);
 				pm->Emit("enemyHit_ring", hitPos, 1);
 				pm->Emit("enemyHit_rays", hitPos, 18);
 				pm->Emit("enemyHit_spark", hitPos, 32);
 			}
 
+			// ダメージ処理
 			if (core_ && !core_->IsDead()) {
-				core_->OnHitWithDamage(damage);
+				core_->OnHitWithDamage(damage); // ダメージを与える
+
+				// 死亡リアクション開始（このタイミングでいいのかは微妙。ダメージ処理の中でHP減らしてからの方が自然かも？）
 				if (willDie) {
 					Vector3 knockDir = velocity_;
+
+					// もし速度がほとんどないなら、弾→核の方向をノックバック方向にする
 					if (MyMath::Length(knockDir) < 0.001f) {
-						knockDir = corePos - bulletPos;
+						knockDir = corePos - bulletPos; // 弾から核への方向
 					}
 					core_->StartDeathReaction(knockDir);
 				}
 			}
 
+			// カメラシェイク
 			if (player_) {
+
+				// LT弾なら大きく、通常弾なら小さくシェイクする
 				if (isLTBullet) player_->StartCameraShake(40);
+				// 通常弾は控えめに
 				else            player_->StartCameraShake(10);
 			}
 
@@ -244,13 +255,16 @@ void PlayerBullet::DrawTrail(TKM::DirectXCommon* dxCommon) {
 			std::vector<Vector3> drawPts = ltTrailPts_;
 
 			Vector3 currentPos = object_->GetTranslate();
+
+			// 現在の座標が最後の描画点から十分に離れているなら、描画点列に追加する
 			if (drawPts.empty() || MyMath::Length(currentPos - drawPts.back()) > 0.0001f) {
 				drawPts.push_back(currentPos);
 			}
 
+			// 描画点が2点未満ならリボン描画できないのでスキップ
 			if (drawPts.size() < 2) { return; }
 
-			rr->DrawRibbon(
+			rr->DrawRibbon( // リボン描画
 				dxCommon,
 				*camera_,
 				drawPts,
@@ -272,11 +286,12 @@ void PlayerBullet::SetPosition(const Vector3& pos) {
 	// トレイルの「開始点」を必ず発射位置に揃える
 	trailEmitter_.SetPosition(pos);
 
+	// LTならリボン点列も初期化して「今の位置」から開始
 	if (trailGroup_ == "trail_lt") {
 		ltTrailPts_.clear();
-		ltTrailPts_.push_back(pos);   // 先頭点＝発射位置
-		ltRingDistAcc_ = 0.0f;
-		ltTrailDistAcc_ = 0.0f;
+		ltTrailPts_.push_back(pos); // 先頭点＝発射位置
+		ltRingDistAcc_ = 0.0f; // LT弾リングの距離加算値初期化
+		ltTrailDistAcc_ = 0.0f; // LT弾点列の距離加算値初期化
 	}
 }
 
@@ -331,6 +346,7 @@ void PlayerBullet::StartSpawnBezier(const Vector3& p0, const Vector3& p1, const 
 		ltTrailDistAcc_ = 0.0f;
 	}
 	
+	// ベジェ曲線の制御点を保存
 	bezP0_ = p0; bezP1_ = p1; bezP2_ = p2; bezP3_ = p3;
 	spawnDuration_ = std::max(0.001f, duration);
 	spawnT_ = 0.0f;
@@ -351,23 +367,30 @@ void PlayerBullet::UpdateSpawnBezier() {
 
 		Vector3 newPos = MyMath::Bezier3(bezP0_, bezP1_, bezP2_, bezP3_, t);
 		object_->SetTranslate(newPos);
+
+		// LT弾はベジェ曲線に沿ってリボンも動かす。通常トレイルは位置だけ更新してあとは自動で追従させる。
 		if (trailGroup_ == "trail_lt") {
 			Vector3 dir = newPos - prevPos_;
 			float len = MyMath::Length(dir);
+
+			// ベジェ曲線の接線方向を求めてリボンの向きに使う（速度ベクトルがないので）
 			if (len > 0.0001f) {
 				dir = dir / len;
 			} else {
+				// ベジェ曲線の接線がほとんどない（点に近い）場合は、前フレームの向きを維持するか、デフォルトで前方向を向く
 				dir = { 0,0,1 };
 			}
 
 			float trailFrontOffset = 1.2f;
 			Vector3 trailPos = newPos + dir * trailFrontOffset;
 
+			// ベジェ曲線に沿ってリボンの位置を更新
 			UpdateLTTrail_(trailPos);
-		} else {
+		} else { // 通常トレイルは位置だけ更新してあとは自動で追従させる
 			trailEmitter_.SetPosition(newPos);
 			trailEmitter_.Update();
 		}
+
 		// ベジェ曲線が終わったら通常の速度に切り替える
 		if (t >= 1.0f) {
 			isSpawningCurve_ = false; // ベジェ曲線終了
@@ -379,9 +402,9 @@ void PlayerBullet::UpdateSpawnBezier() {
 void PlayerBullet::UpdateLTTrail_(const Vector3& p) {
 	// 初期
 	if (ltTrailPts_.empty()) {
-		ltTrailPts_.push_back(p);
-		ltRingDistAcc_ = 0.0f;
-		ltTrailDistAcc_ = 0.0f;
+		ltTrailPts_.push_back(p); // 最初の点を追加
+		ltRingDistAcc_ = 0.0f; // LT弾リングの距離加算値初期化
+		ltTrailDistAcc_ = 0.0f; // LT弾点列の距離加算値初期化
 		return;
 	}
 
@@ -391,9 +414,10 @@ void PlayerBullet::UpdateLTTrail_(const Vector3& p) {
 
 	// 一定距離ぶん進んだら節を追加
 	if (ltTrailDistAcc_ >= kLTTrailStep_) {
-		ltTrailPts_.push_back(p);
-		ltTrailDistAcc_ = 0.0f;
+		ltTrailPts_.push_back(p); // 新しい点を追加
+		ltTrailDistAcc_ = 0.0f; // 距離加算値リセット
 
+		// LT弾のリボンは距離ベースで節を追加していく。あまりに多くなりすぎないように古い点を削除する上限も設ける。
 		while (ltTrailPts_.size() > kLTTrailHardCap_) {
 			ltTrailPts_.erase(ltTrailPts_.begin());
 		}

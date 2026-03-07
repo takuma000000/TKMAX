@@ -22,6 +22,7 @@ static EnemyBehavior ParseBehavior(const std::string& s, EnemyBehavior fallback)
 	std::transform(t.begin(), t.end(), t.begin(),
 		[](unsigned char c) { return (char)std::tolower(c); });
 
+	// 敵の行動パターンを表す文字列を EnemyBehavior 列挙型に変換
 	if (t == "pouncefromabove") { return EnemyBehavior::PounceFromAbove; }
 	if (t == "sinex") { return EnemyBehavior::SineX; }
 	if (t == "straightstop") { return EnemyBehavior::StraightStop; }
@@ -32,10 +33,11 @@ static EnemyBehavior ParseBehavior(const std::string& s, EnemyBehavior fallback)
 
 bool EnemyWaveConfig::Load(const char* path) {
 	std::vector<std::vector<std::string>> rows_;
+	// CSVファイルを読み込む
 	if (!TKM::CsvReader::ReadFile(path, rows_)) {
 		return false;
 	}
-
+	// 読み込んだ行を1行ずつ処理
 	for (const auto& c : rows_) {
 		// wave,type,id,a,b,c,d,e,f みたいな固定列
 		if (c.size() < 3) { continue; }
@@ -51,9 +53,13 @@ bool EnemyWaveConfig::Load(const char* path) {
 
 		// ---- Wave1 ----
 		if (StrEq(wave_, "Wave1")) {
+			// Wave1の設定行を処理
 			if (StrEq(type_, "Settings")) {
+				// Wave1,Settings,spawnInterval,a,b,c,...
 				if (StrEq(id_, "spawnInterval")) { wave1_.spawnInterval_ = ToF(get_(3)); }
+				// Wave1,Settings,maxSimultaneous,a,b,c,...
 				if (StrEq(id_, "maxSimultaneous")) { wave1_.maxSimultaneous_ = ToI(get_(3)); }
+				// Wave1,Settings,defeatTarget,a,b,c,...
 				if (StrEq(id_, "defeatTarget")) { wave1_.defeatTarget_ = ToI(get_(3)); }
 			} else if (StrEq(type_, "SpawnPos") && StrEq(id_, "base")) {
 				// Wave1,SpawnPos,base,a,b,c,...
@@ -63,7 +69,7 @@ bool EnemyWaveConfig::Load(const char* path) {
 				wave1_.randXMin_ = ToF(get_(4));
 				wave1_.randXMax_ = ToF(get_(5));
 			}
-
+			// 敵のパラメータ行（type=EnemyParams, id=default）を処理
 			if (StrEq(type_, "EnemyParams") && StrEq(id_, "default")) {
 				wave1EnemyParams_.model_ = get_(3);
 				wave1EnemyParams_.hp_ = ToI(get_(4));

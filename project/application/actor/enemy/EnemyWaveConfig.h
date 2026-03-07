@@ -141,59 +141,59 @@ private:
 public:
 	// Enemy Params ==========================================
 	struct Wave1EnemyParams {
-		std::string model_ = "jerryfish.obj";
-		int hp_ = 1;
-		float startY_ = 20.0f;
-		float targetForwardZ_ = 3.0f;
-		float apexY_ = 30.0f;
-		float pounceTime_ = 1.6f;
-		EnemyBehavior behavior_ = EnemyBehavior::PounceFromAbove;
+		std::string model_ = "jerryfish.obj"; // 敵のモデルファイル名
+		int hp_ = 1; // 敵のHP
+		float startY_ = 20.0f; // 敵の生成 Y 座標（ワールド座標）
+		float targetForwardZ_ = 3.0f; // 敵が前進して目指す Z 座標（ワールド座標）
+		float apexY_ = 30.0f; // 敵がジャンプで到達する最高点の Y 座標（ワールド座標）
+		float pounceTime_ = 1.6f; // ジャンプの頂点に達するまでの時間（秒）
+		EnemyBehavior behavior_ = EnemyBehavior::PounceFromAbove; // 敵の行動パターン
 	};
 
 	struct Wave2EnemyParamsTriangle {
-		std::string model_ = "jerryfish.obj";
-		int hp_ = 3;
-		Vector3 vel_ = { 0.0f, 0.0f, -0.30f };
-		float sineAmp_ = 4.0f;
-		float sineFreq_ = 1.4f;
-		float phaseStep_ = 0.6f;
-		EnemyBehavior behavior_ = EnemyBehavior::SineX;
+		std::string model_ = "jerryfish.obj"; // 敵のモデルファイル名
+		int hp_ = 3; // 敵のHP
+		Vector3 vel_ = { 0.0f, 0.0f, -0.30f }; // 敵の基本移動速度（ワールド座標、Z方向が前進）
+		float sineAmp_ = 4.0f; // サイン波移動の振幅（ワールド座標、X方向の揺れ幅）
+		float sineFreq_ = 1.4f; // サイン波移動の周波数（Hz）
+		float phaseStep_ = 0.6f; // 同一ウェーブ内の敵同士の位相差（ラジアン、0.6f なら約34度の位相差で生成される）
+		EnemyBehavior behavior_ = EnemyBehavior::SineX; // 敵の行動パターン
 	};
 
 	struct Wave2EnemyParamsLine {
-		std::string model_ = "jerryfish.obj";
-		int hp_ = 2;
-		Vector3 vel_ = { 0.0f, 0.0f, -0.32f };
-		float stopZ_ = 52.0f;
-		EnemyBehavior behavior_ = EnemyBehavior::StraightStop;
+		std::string model_ = "jerryfish.obj"; // 敵のモデルファイル名
+		int hp_ = 2; // 敵のHP
+		Vector3 vel_ = { 0.0f, 0.0f, -0.32f }; // 敵の基本移動速度（ワールド座標、Z方向が前進）
+		float stopZ_ = 52.0f; // 敵が前進して止まる Z 座標（ワールド座標）
+		EnemyBehavior behavior_ = EnemyBehavior::StraightStop; // 敵の行動パターン
 	};
 
 	struct Wave2EnemyParamsColumn {
-		std::string model_ = "jerryfish.obj";
-		int hp_ = 1;
-		Vector3 vel_ = { -0.20f, 0.0f, -0.75f };
-		float stopZ_ = -50.0f;
-		EnemyBehavior behavior_ = EnemyBehavior::StraightStop;
+		std::string model_ = "jerryfish.obj"; // 敵のモデルファイル名
+		int hp_ = 1; // 敵のHP
+		Vector3 vel_ = { -0.20f, 0.0f, -0.75f }; // 敵の基本移動速度（ワールド座標、Z方向が前進、X方向が左移動）
+		float stopZ_ = -50.0f; // 敵が前進して止まる Z 座標（ワールド座標）
+		EnemyBehavior behavior_ = EnemyBehavior::StraightStop; // 敵の行動パターン
 	};
 
 	struct Wave3MidBossParams {
-		std::string model_ = "jerryfish.obj";
-		int hp_ = 12;
-		Vector3 areaMin_ = { -18.0f, 4.0f, 40.0f };
-		Vector3 areaMax_ = { 18.0f, 10.0f, 62.0f };
-		float normalSpeed_ = 0.10f;
-		float rageSpeed_ = 0.24f;
-		float scale_ = 1.5f;
-		EnemyBehavior behavior_ = EnemyBehavior::FreeRoam;
+		std::string model_ = "jerryfish.obj"; // 敵のモデルファイル名
+		int hp_ = 12; // 敵のHP
+		Vector3 areaMin_ = { -18.0f, 4.0f, 40.0f }; // 行動範囲の最小座標（ワールド座標）
+		Vector3 areaMax_ = { 18.0f, 10.0f, 62.0f }; // 行動範囲の最大座標（ワールド座標）
+		float normalSpeed_ = 0.10f; // 通常時の移動速度
+		float rageSpeed_ = 0.24f; // 怒り時の移動速度
+		float scale_ = 1.5f; // 敵のスケール（倍率）
+		EnemyBehavior behavior_ = EnemyBehavior::FreeRoam; // 敵の行動パターン
 	};
 
 	struct Wave3ExtraMidBossParams {
-		std::string model_ = "jerryfish.obj";
-		int hp_ = 12;
-		Vector3 vel_ = { 0.0f, 0.0f, -0.2f };
-		float stopZ_ = 40.0f;
-		float scale_ = 1.5f;
-		EnemyBehavior behavior_ = EnemyBehavior::StraightStop;
+		std::string model_ = "jerryfish.obj"; // 敵のモデルファイル名
+		int hp_ = 12; // 敵のHP
+		Vector3 vel_ = { 0.0f, 0.0f, -0.2f }; // 敵の基本移動速度（ワールド座標、Z方向が前進）
+		float stopZ_ = 40.0f; // 敵が前進して止まる Z 座標（ワールド座標）
+		float scale_ = 1.5f; // 敵のスケール（倍率）
+		EnemyBehavior behavior_ = EnemyBehavior::StraightStop; // 敵の行動パターン
 	};
 
 	/// <summary>

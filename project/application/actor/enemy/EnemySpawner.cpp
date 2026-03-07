@@ -158,6 +158,7 @@ namespace EnemySpawner {
 		TKM::DirectXCommon* dx, TKM::Camera* cam, TKM::BaseScene* parent,
 		EnemyConfig config
 	) {
+		// i 体分、y と z を段数に応じて進めながら生成
 		for (int i = 0; i < count; ++i) {
 
 			// i に応じて y と z を進める（柱状/斜め列状）
@@ -166,7 +167,7 @@ namespace EnemySpawner {
 				yStart + yStep * i,
 				zStart + zStep * i
 			};
-
+			// こちらもスポーン演出ありで生成
 			CreateAndPushEnemy(enemies, spawnPos_, dx, cam, parent, config, true);
 		}
 	}
