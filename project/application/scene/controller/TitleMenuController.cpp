@@ -148,7 +148,11 @@ void TitleMenuController::SetVisible(bool v) {
 
 bool TitleMenuController::TriggerPadUp_() {
 	auto* in = TKM::Input::GetInstance();
-	const bool cur = in->TriggerKey(DIK_UP) || in->TriggerButton(XINPUT_GAMEPAD_DPAD_UP);
+	const bool cur =
+		in->TriggerKey(DIK_UP) || // キーボード上
+		in->TriggerKey(DIK_W) || // Wキー
+		in->TriggerButton(XINPUT_GAMEPAD_DPAD_UP) || // 十字キー上
+		(in->GetLeftStickY() > 16000);   // 左スティック上
 	const bool trig = (cur && !prevUp_);
 	prevUp_ = cur;
 	return trig;
@@ -156,7 +160,11 @@ bool TitleMenuController::TriggerPadUp_() {
 
 bool TitleMenuController::TriggerPadDown_() {
 	auto* in = TKM::Input::GetInstance();
-	const bool cur = in->TriggerKey(DIK_DOWN) || in->TriggerButton(XINPUT_GAMEPAD_DPAD_DOWN);
+	const bool cur =
+		in->TriggerKey(DIK_DOWN) || // キーボード下
+		in->TriggerKey(DIK_S) || //　Sキー
+		in->TriggerButton(XINPUT_GAMEPAD_DPAD_DOWN) || // 十字キー下
+		(in->GetLeftStickY() < -16000);   // 左スティック下
 	const bool trig = (cur && !prevDown_);
 	prevDown_ = cur;
 	return trig;

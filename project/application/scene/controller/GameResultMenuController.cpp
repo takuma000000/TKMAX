@@ -156,21 +156,32 @@ void GameResultMenuController::UpdateLayout(float screenW, float screenH) {
 // 入力トリガー判定
 bool GameResultMenuController::TriggerPadUp_() {
 	auto* in = TKM::Input::GetInstance();
-	const bool cur = in->TriggerKey(DIK_UP) || in->TriggerButton(XINPUT_GAMEPAD_DPAD_UP);
+	const bool cur =
+		in->TriggerKey(DIK_W) ||                  // Wキー
+		in->TriggerKey(DIK_UP) ||                 // 上キー
+		in->TriggerButton(XINPUT_GAMEPAD_DPAD_UP) || // 十字キー上
+		(in->GetLeftStickY() > 16000);            // 左スティック上
 	const bool trig = (cur && !prevUp_);
 	prevUp_ = cur;
 	return trig;
 }
 bool GameResultMenuController::TriggerPadDown_() {
 	auto* in = TKM::Input::GetInstance();
-	const bool cur = in->TriggerKey(DIK_DOWN) || in->TriggerButton(XINPUT_GAMEPAD_DPAD_DOWN);
+	const bool cur =
+		in->TriggerKey(DIK_S) ||                    // Sキー
+		in->TriggerKey(DIK_DOWN) ||                 // 下キー
+		in->TriggerButton(XINPUT_GAMEPAD_DPAD_DOWN) || // 十字キー下
+		(in->GetLeftStickY() < -16000);             // 左スティック下
 	const bool trig = (cur && !prevDown_);
 	prevDown_ = cur;
 	return trig;
 }
 bool GameResultMenuController::TriggerA_() {
 	auto* in = TKM::Input::GetInstance();
-	const bool cur = in->TriggerKey(DIK_SPACE) || in->TriggerKey(DIK_RETURN) || in->TriggerButton(XINPUT_GAMEPAD_A);
+	const bool cur =
+		in->PushButton(XINPUT_GAMEPAD_A) || // A ボタン
+		in->TriggerKey(DIK_SPACE) || // スペースキー
+		in->TriggerKey(DIK_RETURN); // Enterキー
 	const bool trig = (cur && !prevA_);
 	prevA_ = cur;
 	return trig;

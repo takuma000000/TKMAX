@@ -100,7 +100,11 @@ namespace TKM {
 
 	bool PauseMenuController::TriggerPadUp_() {
 		Input* in = Input::GetInstance();
-		bool now = in->PushButton(XINPUT_GAMEPAD_DPAD_UP);
+		bool now =
+			in->PushButton(XINPUT_GAMEPAD_DPAD_UP) || // 十字キー上
+			in->TriggerKey(DIK_W) || // Wキー
+			in->TriggerKey(DIK_UP) || // 上キー
+			(in->GetLeftStickY() > 16000); // 左スティック上
 		bool trig = (now && !prevUp_);
 		prevUp_ = now;
 		return trig;
@@ -108,7 +112,11 @@ namespace TKM {
 
 	bool PauseMenuController::TriggerPadDown_() {
 		Input* in = Input::GetInstance();
-		bool now = in->PushButton(XINPUT_GAMEPAD_DPAD_DOWN);
+		bool now =
+			in->PushButton(XINPUT_GAMEPAD_DPAD_DOWN) || // 十字キー下
+			in->TriggerKey(DIK_S) || // Sキー
+			in->TriggerKey(DIK_DOWN) || // 下キー
+			(in->GetLeftStickY() < -16000); // 左スティック下
 		bool trig = (now && !prevDown_);
 		prevDown_ = now;
 		return trig;
@@ -116,7 +124,7 @@ namespace TKM {
 
 	bool PauseMenuController::TriggerA_() {
 		Input* in = Input::GetInstance();
-		bool now = in->PushButton(XINPUT_GAMEPAD_A);
+		bool now = in->PushButton(XINPUT_GAMEPAD_A) || in->TriggerKey(DIK_SPACE) || in->TriggerKey(DIK_RETURN);
 		bool trig = (now && !prevA_);
 		prevA_ = now;
 		return trig;
@@ -150,7 +158,7 @@ namespace TKM {
 	PauseMenuController::Command PauseMenuController::Update(float dt, bool allowOpen) {
 		// Startで開く（static は使わず、インスタンスのメンバでエッジ検出）
 		Input* in = Input::GetInstance();
-		bool startNow = in->PushButton(XINPUT_GAMEPAD_START);
+		bool startNow = in->PushButton(XINPUT_GAMEPAD_START) || in->TriggerKey(DIK_TAB);
 		bool trigStart = (startNow && !prevStart_);
 		prevStart_ = startNow;
 
