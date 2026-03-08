@@ -34,6 +34,20 @@ namespace TKM {
 
 		Vector3 basePos = bossCenter - Vector3{ 0.0f, height * 0.5f, 0.0f }; // ボスの中心から下半分移動した位置を基準にする
 
+		/// AuraVolume用の定数バッファをセットして描画
+		/// これらのパラメータを組み合わせて、炎のような動きのあるオーラを表現する
+		// - viewProj --- カメラのビュー射影行列
+		// - basePos --- ワールド空間でのオーラの中心位置
+		// - radius --- オーラの半径
+		// - height --- オーラの高さ
+		// - sliceCount --- オーラを何枚の板で構成するか（多いほど丸く見えるが重い）
+		// - time --- 時間（ノイズの動きに使用）
+		// - color --- オーラの色
+		// - intensity --- オーラの明るさ
+		// - noiseScale --- ノイズの細かさ
+		// - noiseSpeed --- ノイズの速さ
+		// - rimPower --- 外周のキレ
+		// - alphaBase --- 全体の透明度のベース（0.0で完全に透明、1.0で通常の不透明）
 		dxCommon_->DrawAuraVolume(
 			viewProj,
 			basePos,

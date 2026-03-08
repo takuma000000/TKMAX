@@ -165,7 +165,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </ClCompile>
     <ClCompile Include="application\scene\GameScene.cpp" />
     <ClCompile Include="application\scene\GameClearScene.cpp" />
-    <ClCompile Include="engine\effect\light\LightManager.cpp" />
     <ClCompile Include="application\scene\GameOverScene.cpp" />
     <ClCompile Include="engine\effect\line\LineRenderer.cpp" />
     <ClCompile Include="engine\effect\post\FogEffect.cpp" />
@@ -282,7 +281,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\scene\SceneManager.h" />
     <ClInclude Include="application\scene\TitleScene.h" />
     <ClInclude Include="application\scene\GameClearScene.h" />
-    <ClInclude Include="engine\effect\light\LightManager.h" />
     <ClInclude Include="engine\func\math\Vector4.h" />
     <ClInclude Include="application\actor\player\Player.h" />
     <ClInclude Include="application\actor\player\PlayerBullet.h" />

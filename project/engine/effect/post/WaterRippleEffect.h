@@ -24,9 +24,7 @@ namespace TKM {
 		/// 初期化
 		/// </summary>
 		/// <param name="dx"></param>
-		void Initialize(TKM::DirectXCommon* dx) override {
-			TKM::BaseEffect::Initialize(dx);
-		}
+		void Initialize(TKM::DirectXCommon* dx) override;
 		/// <summary>
 		/// 毎フレーム更新
 		/// </summary>
@@ -54,8 +52,17 @@ namespace TKM {
 		void Trigger(const Vector2& centerUV, const RippleDesc& desc);
 
 	private:
-		bool   active_ = false; // エフェクト有効フラグ
-		float  time_ = 0.0f; // 経過時間
+		//==============================================
+		// 状態
+		//==============================================
+		bool active_ = false; // エフェクト有効フラグ
+		//==============================================
+		// タイマー
+		//==============================================
+		float time_ = 0.0f; // 経過時間
+		//==============================================
+		// パラメータ
+		//==============================================
 		Vector2 centerUV_ = { 0.5f, 0.5f }; // 波紋中心 (UV)
 		RippleDesc currentDesc_{}; // 現在の波紋設定
 	};

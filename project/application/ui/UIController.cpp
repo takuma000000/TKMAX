@@ -10,14 +10,8 @@
 
 namespace TKM {
 
-	static float Clamp01_(float a) {
-		if (a < 0.0f) return 0.0f;
-		if (a > 1.0f) return 1.0f;
-		return a;
-	}
-
 	void UIController::SetHudAlpha(float a) {
-		hudAlpha_ = Clamp01_(a);
+		hudAlpha_ = MyMath::Clamp01(a);
 	}
 
 	void UIController::SetRightUiScale(float s) {
@@ -249,12 +243,14 @@ namespace TKM {
 		lsTex_ = "./resources/texture/LS_ui.png";
 		rbGaugeIconTex_ = "./resources/texture/RB_gauge_ui.png";
 
+		// スプライトを作成してテクスチャを適用
 		uiLB_ = CreateSprite_(lbTex_, { 1.0f, 1.0f }, &lbTexSize_);
 		uiRB_ = CreateSprite_(rbTex_, { 1.0f, 1.0f }, &rbTexSize_);
 		uiX_ = CreateSprite_(xTex_, { 1.0f, 1.0f }, &xTexSize_);
 		uiLS_ = CreateSprite_(lsTex_, { 1.0f, 1.0f }, &lsTexSize_);
 		uiRBGaugeIcon_ = CreateSprite_(rbGaugeIconTex_, { 1.0f, 1.0f }, &rbGaugeIconTexSize_);
 
+		// サイズと位置を適用
 		ApplyRightUiSizes_();
 		ApplyRightUiPositions_();
 
@@ -287,17 +283,17 @@ namespace TKM {
 		// テクスチャ切り出しは「画像そのまま」
 		{
 			const auto& metaF = TextureManager::GetInstance()->GetMetadata(hpFrameTex);
-			hpFrame_->SetTextureLeftTop({ 0.0f, 0.0f });
-			hpFrame_->SetTextureSize({ (float)metaF.width, (float)metaF.height });
+			hpFrame_->SetTextureLeftTop({ 0.0f, 0.0f }); // 画像全体を使う
+			hpFrame_->SetTextureSize({ (float)metaF.width, (float)metaF.height }); // テクスチャサイズをスプライトに適用（テクスチャサイズを元に描画サイズを計算する前提なので、テクスチャサイズはスプライトに保存しておく）
 
 			const auto& metaFi = TextureManager::GetInstance()->GetMetadata(hpFillTex);
-			hpFill_->SetTextureLeftTop({ 0.0f, 0.0f });
-			hpFill_->SetTextureSize({ (float)metaFi.width, (float)metaFi.height });
+			hpFill_->SetTextureLeftTop({ 0.0f, 0.0f }); // 画像全体を使う
+			hpFill_->SetTextureSize({ (float)metaFi.width, (float)metaFi.height }); // テクスチャサイズをスプライトに適用（テクスチャサイズを元に描画サイズを計算する前提なので、テクスチャサイズはスプライトに保存しておく）
 
 			const auto& metaI = TextureManager::GetInstance()->GetMetadata(hpIconTex);
-			hpIcon_->SetTextureLeftTop({ 0.0f, 0.0f });
-			hpIcon_->SetTextureSize({ (float)metaI.width, (float)metaI.height });
-			hpIconTexSize_ = { (float)metaI.width, (float)metaI.height };
+			hpIcon_->SetTextureLeftTop({ 0.0f, 0.0f }); // 画像全体を使う
+			hpIcon_->SetTextureSize({ (float)metaI.width, (float)metaI.height }); // テクスチャサイズをスプライトに適用（テクスチャサイズを元に描画サイズを計算する前提なので、テクスチャサイズはスプライトに保存しておく）
+			hpIconTexSize_ = { (float)metaI.width, (float)metaI.height }; // アイコンは縮小して表示する前提なので、テクスチャサイズを元に描画サイズを計算するために、テクスチャサイズを保存しておく
 		}
 
 		// 縦ゲージなので「下基準」にする（高さを縮めても下に張り付く）
@@ -520,9 +516,11 @@ namespace TKM {
 				float r1 = MyMath::Rand01() * 2.0f - 1.0f;
 				float r2 = MyMath::Rand01() * 2.0f - 1.0f;
 				Vector2 ofs{ r1 * hpShakeAmpPx_, r2 * hpShakeAmpPx_ };
+
+				// フレームとフィルは同じオフセットで動かす
 				if (hpFrame_) hpFrame_->SetPosition({ basePosHPFrame_.x + ofs.x, basePosHPFrame_.y + ofs.y });
 				hpFill_->SetPosition({ basePosHPFill_.x + ofs.x, basePosHPFill_.y + ofs.y });
-			} else {
+			} else { // シェイクが終わったら基準位置に戻す
 				if (hpFrame_) hpFrame_->SetPosition(basePosHPFrame_);
 				hpFill_->SetPosition(basePosHPFill_);
 			}
@@ -534,9 +532,12 @@ namespace TKM {
 			}
 		}
 
+		// UI全体の更新
 		if (hpFrame_) hpFrame_->Update();
+		// hpFill_はサイズを変えるのでUpdateの前にサイズをセットしてる
 		if (hpFill_)  hpFill_->Update();
 
+		// ImGui
 		DrawImGui();
 	}
 
@@ -580,12 +581,14 @@ namespace TKM {
 			hpFill_->Draw();
 		}
 
+		// ---- 右側UI ----
 		if (uiLB_) { uiLB_->SetColor(mulAlpha(colLB_)); uiLB_->Draw(); }
 		if (uiRB_) { uiRB_->SetColor(mulAlpha(colRB_)); uiRB_->Draw(); }
 		if (uiX_) { uiX_->SetColor(mulAlpha(colX_)); uiX_->Draw(); }
 		if (uiLS_) { uiLS_->SetColor(mulAlpha(colLS_)); uiLS_->Draw(); }
 		if (uiRBGaugeIcon_) { uiRBGaugeIcon_->SetColor(mulAlpha(colRBGaugeIcon_)); uiRBGaugeIcon_->Draw(); }
 
+		// ---- RB/LBゲージUI ----
 		if (rbGaugeUI_) rbGaugeUI_->Draw();
 		if (lbGaugeUI_) lbGaugeUI_->Draw();
 	}

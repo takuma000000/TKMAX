@@ -19,60 +19,67 @@ namespace TKM {
 	) {
 		UINT flags = 0;
 #if defined(_DEBUG)
-		flags |= D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+		flags |= D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION; // デバッグ時は最適化をオフにして、デバッグ情報を埋め込む
 #endif
 
-		Microsoft::WRL::ComPtr<ID3DBlob> shader;
-		Microsoft::WRL::ComPtr<ID3DBlob> errors;
+		Microsoft::WRL::ComPtr<ID3DBlob> shader; // コンパイルされたシェーダーコードを格納するID3DBlob
+		Microsoft::WRL::ComPtr<ID3DBlob> errors; // コンパイルエラーのメッセージを格納するID3DBlob
+
+		// D3DCompileFromFile関数を呼び出して、指定されたファイルからシェーダーコードをコンパイルします。
 		HRESULT hr = D3DCompileFromFile(
 			path, nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE,
 			entry, target, flags, 0, &shader, &errors
 		);
 
+		// コンパイルに失敗した場合、エラーメッセージをデバッグ出力に表示し、アサートで停止します。
 		if (FAILED(hr)) {
+			// エラーがある場合は、その内容をデバッグ出力に表示します。エラーの内容は、errorsというID3DBlobに格納されているため、GetBufferPointer()を呼び出して文字列として取得します。
 			if (errors) {
-				OutputDebugStringA((char*)errors->GetBufferPointer());
+				OutputDebugStringA((char*)errors->GetBufferPointer()); // エラーメッセージをデバッグ出力に表示
 			}
-			assert(false && "Shader compile failed.");
-			return nullptr;
+			assert(false && "Shader compile failed."); // アサートで停止して、シェーダーのコンパイルが失敗したことを示します。
+			return nullptr; // コンパイルに失敗した場合は、nullptrを返します。
 		}
-		return shader;
+		return shader; // コンパイルに成功した場合は、コンパイルされたシェーダーコードを格納するID3DBlobを返します。
 	}
 
 	static Microsoft::WRL::ComPtr<ID3D12Resource> CreateUploadBuffer_(
 		ID3D12Device* device,
 		size_t sizeBytes
 	) {
-		D3D12_HEAP_PROPERTIES heap{};
-		heap.Type = D3D12_HEAP_TYPE_UPLOAD;
+		D3D12_HEAP_PROPERTIES heap{}; // ヒーププロパティを設定します。ここでは、アップロード用のヒープを指定しています。
+		heap.Type = D3D12_HEAP_TYPE_UPLOAD; // ヒープの種類をアップロード用に設定します。これにより、CPUからGPUへのデータ転送が効率的になります。
 
+		// リソースの説明を設定します。ここでは、バッファリソースを作成するための説明を指定しています。
 		D3D12_RESOURCE_DESC desc{};
-		desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-		desc.Width = (UINT64)sizeBytes;
-		desc.Height = 1;
-		desc.DepthOrArraySize = 1;
-		desc.MipLevels = 1;
-		desc.SampleDesc.Count = 1;
-		desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+		desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER; // リソースの次元をバッファに設定します。
+		desc.Width = (UINT64)sizeBytes; // バッファのサイズをバイト単位で指定します。sizeBytesは、作成するバッファのサイズを表す引数です。
+		desc.Height = 1; // バッファは1行のデータとして扱うため、高さを1に設定します。
+		desc.DepthOrArraySize = 1; // バッファは3Dテクスチャや配列ではないため、深さまたは配列サイズを1に設定します。
+		desc.MipLevels = 1; // バッファはミップマップを使用しないため、ミップレベル数を1に設定します。
+		desc.SampleDesc.Count = 1; // バッファはマルチサンプリングを使用しないため、サンプル数を1に設定します。 
+		desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR; // バッファは行優先のレイアウトであるため、テクスチャレイアウトを行優先に設定します。
 
+		// CreateCommittedResource関数を呼び出して、指定されたヒーププロパティとリソース説明に基づいて、コミットされたリソースを作成します。
 		Microsoft::WRL::ComPtr<ID3D12Resource> res;
+		// この関数は、リソースを作成するためのヒープを自動的に割り当てます。D3D12_HEAP_FLAG_NONEは、ヒープのフラグを指定します。ここでは、特別なフラグは使用しないため、NONEを指定しています。
 		HRESULT hr = device->CreateCommittedResource(
 			&heap, D3D12_HEAP_FLAG_NONE,
 			&desc, D3D12_RESOURCE_STATE_GENERIC_READ,
 			nullptr, IID_PPV_ARGS(&res)
 		);
-		assert(SUCCEEDED(hr));
-		return res;
+		assert(SUCCEEDED(hr)); // リソースの作成に成功したことを確認します。もし失敗していた場合は、アサートで停止します。
+		return res; // 作成されたリソースを返します。呼び出し元は、このリソースを使用してデータの転送や描画などの操作を行うことができます。
 	}
 
 	void TrailRibbonRenderer::Initialize(DirectXCommon* dxCommon) {
 		assert(dxCommon);
-		CreatePipeline_(dxCommon);
+		CreatePipeline_(dxCommon); // パイプラインステートとルートシグネチャの作成
 
 		// CB
 		auto device = dxCommon->GetDevice();
-		cb_ = CreateUploadBuffer_(device, sizeof(CB));
-		cb_->Map(0, nullptr, (void**)&cbMapped_);
+		cb_ = CreateUploadBuffer_(device, sizeof(CB)); // 定数バッファを作成します。サイズはCB構造体のサイズに基づいています。
+		cb_->Map(0, nullptr, (void**)&cbMapped_); // 定数バッファをCPUアドレス空間にマップして、cbMapped_ポインタにアクセスできるようにします。これにより、CPUから定数バッファにデータを書き込むことができます。
 		assert(cbMapped_);
 
 		// まず小さめ確保（必要に応じて拡張）
@@ -84,12 +91,13 @@ namespace TKM {
 
 		// フレームごとにリングバッファを回す
 		frameIndex_ = (frameIndex_ + 1) % kFrameRing_;
-		drawVB_[frameIndex_].clear();
-		drawIB_[frameIndex_].clear();
-		drawCB_[frameIndex_].clear();
+		drawVB_[frameIndex_].clear(); // 描画用の頂点バッファとインデックスバッファをクリアします。これにより、次のフレームで新しい頂点とインデックスを追加できるようになります。
+		drawIB_[frameIndex_].clear(); // 描画用のインデックスバッファをクリアします。これにより、次のフレームで新しいインデックスを追加できるようになります。
+		drawCB_[frameIndex_].clear(); // 描画用の定数バッファをクリアします。これにより、次のフレームで新しい定数データを追加できるようになります。
 
+		// 定数バッファに時間をセット
 		if (cbMapped_) {
-			cbMapped_->time = time_;
+			cbMapped_->time = time_; // 定数バッファに現在の時間をセットします。これにより、シェーダーで時間に基づくエフェクトを実装することができます。
 		}
 
 #ifdef USE_IMGUI
@@ -99,18 +107,22 @@ namespace TKM {
 	}
 
 	void TrailRibbonRenderer::EnsureBuffers_(ID3D12Device* device, uint32_t maxVerts, uint32_t maxIndices) {
-		if (vb_ && vbCapacity_ >= maxVerts && ib_ && ibCapacity_ >= maxIndices) { return; }
-
+		if (vb_ && vbCapacity_ >= maxVerts && ib_ && ibCapacity_ >= maxIndices) { return; } // 既に十分な容量のバッファがある場合は、何もしません。これにより、不要なバッファの再作成を避けることができます。
+		// 必要に応じてバッファを拡張します。新しい容量は、現在の容量と要求された最大容量のうち大きい方になります。これにより、将来の描画で同じサイズのバッファを再利用できるようになります。
 		vbCapacity_ = std::max(vbCapacity_, maxVerts);
+		// インデックスバッファの容量を更新します。新しい容量は、現在の容量と要求された最大容量のうち大きい方になります。これにより、将来の描画で同じサイズのバッファを再利用できるようになります。
 		ibCapacity_ = std::max(ibCapacity_, maxIndices);
 
+		// 新しいバッファを作成します。頂点バッファとインデックスバッファの両方を作成します。これらのバッファは、指定された最大頂点数と最大インデックス数に基づいてサイズが決定されます。
 		vb_ = CreateUploadBuffer_(device, sizeof(Vertex) * (size_t)vbCapacity_);
+		// 頂点バッファを作成します。サイズは、Vertex構造体のサイズに基づいて、要求された最大頂点数に応じて決定されます。
 		ib_ = CreateUploadBuffer_(device, sizeof(uint16_t) * (size_t)ibCapacity_);
 
+		// 頂点バッファビューとインデックスバッファビューを設定します。これらのビューは、描画コマンドで使用されるバッファの場所とサイズを指定します。
 		vbView_.BufferLocation = vb_->GetGPUVirtualAddress();
 		vbView_.StrideInBytes = sizeof(Vertex);
 		vbView_.SizeInBytes = (UINT)(sizeof(Vertex) * vbCapacity_);
-
+		// 頂点バッファビューを設定します。BufferLocationは、頂点バッファのGPU仮想アドレスを指定します。StrideInBytesは、各頂点のサイズをバイト単位で指定します。SizeInBytesは、頂点バッファ全体のサイズをバイト単位で指定します。
 		ibView_.BufferLocation = ib_->GetGPUVirtualAddress();
 		ibView_.Format = DXGI_FORMAT_R16_UINT;
 		ibView_.SizeInBytes = (UINT)(sizeof(uint16_t) * ibCapacity_);
@@ -150,15 +162,17 @@ namespace TKM {
 			D3D12_HEAP_PROPERTIES heap{};
 			heap.Type = D3D12_HEAP_TYPE_UPLOAD;
 
+			// 頂点バッファのリソース記述を設定します。ここでは、バッファリソースを作成するための説明を指定しています。
 			D3D12_RESOURCE_DESC desc{};
-			desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-			desc.Width = vbSize;
-			desc.Height = 1;
-			desc.DepthOrArraySize = 1;
-			desc.MipLevels = 1;
-			desc.SampleDesc.Count = 1;
-			desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+			desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER; // リソースの次元をバッファに設定します。
+			desc.Width = vbSize; // バッファのサイズをバイト単位で指定します。vbSizeは、作成する頂点バッファのサイズを表す変数です。
+			desc.Height = 1; // バッファは1行のデータとして扱うため、高さを1に設定します。
+			desc.DepthOrArraySize = 1; // バッファは3Dテクスチャや配列ではないため、深さまたは配列サイズを1に設定します。
+			desc.MipLevels = 1; // バッファはミップマップを使用しないため、ミップレベル数を1に設定します。
+			desc.SampleDesc.Count = 1; // バッファはマルチサンプリングを使用しないため、サンプル数を1に設定します。
+			desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR; // バッファは行優先のレイアウトであるため、テクスチャレイアウトを行優先に設定します。
 
+			// CreateCommittedResource関数を呼び出して、指定されたヒーププロパティとリソース説明に基づいて、コミットされたリソースを作成します。
 			HRESULT hr = device->CreateCommittedResource(
 				&heap, D3D12_HEAP_FLAG_NONE, &desc,
 				D3D12_RESOURCE_STATE_GENERIC_READ,
@@ -166,10 +180,10 @@ namespace TKM {
 			);
 			assert(SUCCEEDED(hr));
 
-			void* map = nullptr;
-			vb->Map(0, nullptr, &map);
-			memcpy(map, tmpVerts_.data(), vbSize);
-			vb->Unmap(0, nullptr);
+			void* map = nullptr; // 頂点バッファをCPUアドレス空間にマップして、mapポインタにアクセスできるようにします。これにより、CPUから頂点バッファにデータを書き込むことができます。
+			vb->Map(0, nullptr, &map); // 頂点バッファをマップします。最初の引数は、マップするサブリソースのインデックスを指定します。ここでは、0を指定して、最初のサブリソースをマップしています。2番目の引数は、マップのオプションを指定します。ここでは、nullptrを指定して、デフォルトのオプションを使用しています。3番目の引数は、マップされたメモリへのポインタを受け取るためのポインタへのポインタです。
+			memcpy(map, tmpVerts_.data(), vbSize); // マップされたメモリに頂点データをコピーします。mapは、マップされた頂点バッファへのポインタです。tmpVerts_.data()は、頂点データが格納されているstd::vectorのデータへのポインタです。vbSizeは、コピーするデータのサイズをバイト単位で指定します。
+			vb->Unmap(0, nullptr); // 頂点バッファのマッピングを解除します。最初の引数は、アンマップするサブリソースのインデックスを指定します。ここでは、0を指定して、最初のサブリソースをアンマップしています。2番目の引数は、アンマップのオプションを指定します。ここでは、nullptrを指定して、デフォルトのオプションを使用しています。
 		}
 
 		// IB
@@ -178,15 +192,17 @@ namespace TKM {
 			D3D12_HEAP_PROPERTIES heap{};
 			heap.Type = D3D12_HEAP_TYPE_UPLOAD;
 
+			// インデックスバッファのリソース記述を設定します。ここでは、バッファリソースを作成するための説明を指定しています。
 			D3D12_RESOURCE_DESC desc{};
-			desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-			desc.Width = ibSize;
-			desc.Height = 1;
-			desc.DepthOrArraySize = 1;
-			desc.MipLevels = 1;
-			desc.SampleDesc.Count = 1;
-			desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+			desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER; // リソースの次元をバッファに設定します。
+			desc.Width = ibSize; // バッファのサイズをバイト単位で指定します。ibSizeは、作成するインデックスバッファのサイズを表す変数です。
+			desc.Height = 1; // バッファは1行のデータとして扱うため、高さを1に設定します。
+			desc.DepthOrArraySize = 1; // バッファは3Dテクスチャや配列ではないため、深さまたは配列サイズを1に設定します。
+			desc.MipLevels = 1; // バッファはミップマップを使用しないため、ミップレベル数を1に設定します。
+			desc.SampleDesc.Count = 1; // バッファはマルチサンプリングを使用しないため、サンプル数を1に設定します。
+			desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR; // バッファは行優先のレイアウトであるため、テクスチャレイアウトを行優先に設定します。
 
+			// CreateCommittedResource関数を呼び出して、指定されたヒーププロパティとリソース説明に基づいて、コミットされたリソースを作成します。
 			HRESULT hr = device->CreateCommittedResource(
 				&heap, D3D12_HEAP_FLAG_NONE, &desc,
 				D3D12_RESOURCE_STATE_GENERIC_READ,
@@ -200,7 +216,7 @@ namespace TKM {
 			ib->Unmap(0, nullptr);
 		}
 
-		// CB（256byte aligned）
+		// CB
 		CB cbData{};
 		cbData.viewProj = camera.GetViewProjectionMatrix();
 		cbData.time = time_;
@@ -214,15 +230,17 @@ namespace TKM {
 			D3D12_HEAP_PROPERTIES heap{};
 			heap.Type = D3D12_HEAP_TYPE_UPLOAD;
 
+			// 定数バッファのリソース記述を設定します。ここでは、バッファリソースを作成するための説明を指定しています。
 			D3D12_RESOURCE_DESC desc{};
-			desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-			desc.Width = cbSize;
-			desc.Height = 1;
-			desc.DepthOrArraySize = 1;
-			desc.MipLevels = 1;
-			desc.SampleDesc.Count = 1;
-			desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+			desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER; // リソースの次元をバッファに設定します。
+			desc.Width = cbSize; // バッファのサイズをバイト単位で指定します。cbSizeは、作成する定数バッファのサイズを表す変数です。定数バッファは、256バイトの倍数である必要があるため、cbSizeはsizeof(CB)を256の倍数に切り上げた値になります。
+			desc.Height = 1; // バッファは1行のデータとして扱うため、高さを1に設定します。
+			desc.DepthOrArraySize = 1; // バッファは3Dテクスチャや配列ではないため、深さまたは配列サイズを1に設定します。
+			desc.MipLevels = 1; // バッファはミップマップを使用しないため、ミップレベル数を1に設定します。
+			desc.SampleDesc.Count = 1; // バッファはマルチサンプリングを使用しないため、サンプル数を1に設定します。
+			desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR; // バッファは行優先のレイアウトであるため、テクスチャレイアウトを行優先に設定します。
 
+			// CreateCommittedResource関数を呼び出して、指定されたヒーププロパティとリソース説明に基づいて、コミットされたリソースを作成します。
 			HRESULT hr = device->CreateCommittedResource(
 				&heap, D3D12_HEAP_FLAG_NONE, &desc,
 				D3D12_RESOURCE_STATE_GENERIC_READ,
@@ -441,6 +459,7 @@ namespace TKM {
 		rp[0].Descriptor.RegisterSpace = 0;
 		rp[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
+		// ルートシグネチャの説明を設定します。ここでは、1つのルートパラメータを持つルートシグネチャを定義しています。ルートパラメータは、定数バッファビュー（CBV）で、シェーダーレジスタ0にバインドされます。ShaderVisibilityは、すべてのシェーダーステージでこのルートパラメータが使用されることを示しています。
 		D3D12_ROOT_SIGNATURE_DESC rsDesc{};
 		rsDesc.NumParameters = 1;
 		rsDesc.pParameters = rp;
@@ -449,6 +468,8 @@ namespace TKM {
 		Microsoft::WRL::ComPtr<ID3DBlob> sigBlob;
 		Microsoft::WRL::ComPtr<ID3DBlob> errBlob;
 		HRESULT hr = D3D12SerializeRootSignature(&rsDesc, D3D_ROOT_SIGNATURE_VERSION_1, &sigBlob, &errBlob);
+
+		// ルートシグネチャのシリアライズに失敗した場合、エラーメッセージをデバッグ出力に表示し、アサートで停止します。
 		if (FAILED(hr)) {
 			if (errBlob) { OutputDebugStringA((char*)errBlob->GetBufferPointer()); }
 			assert(false);
@@ -485,6 +506,7 @@ namespace TKM {
 		rt.LogicOp = D3D12_LOGIC_OP_NOOP;
 		rt.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 
+		// PSO
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
 		psoDesc.pRootSignature = rootSig_.Get();
 		psoDesc.VS = { vs->GetBufferPointer(), vs->GetBufferSize() };
@@ -507,7 +529,6 @@ namespace TKM {
 		ds.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 		ds.StencilEnable = FALSE;
 		psoDesc.DepthStencilState = ds;
-
 		psoDesc.InputLayout = { layout, _countof(layout) };
 		psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 

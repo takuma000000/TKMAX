@@ -26,6 +26,23 @@ namespace TKM {
 		if (!dxCommon_) { return; }
 		if (!desc_.active_) { return; }
 
+		/// LaserBeamVolume用の定数バッファをセットして描画
+		/// ビームの始点と終点、カメラの向きから、ビームの四隅のワールド座標を計算して描画します。
+		///  内部で、これらのパラメータをもとにビームの四隅のワールド座標を計算し、専用のシェーダーで描画します。
+		// - viewProj: カメラのビュー射影行列
+		// - desc_.startWS_: ビームの始点のワールド座標
+		// - desc_.endWS_: ビームの終点のワールド座標
+		// - desc_.radius_: ビームの半径（太さ）
+		// - camRightWS, camUpWS, camFwdWS: カメラの右、上、前方向のワールドベクトル
+		// - desc_.sliceCount_: ビームを何枚のスライスで描くか
+		// - time_: 経過時間（ノイズのアニメーションに使用）
+		// - desc_.color_: ビームの色
+		// - desc_.intensity_: ビームの発光強さ
+		// - desc_.coreSharpness_: ビームの中心コアの締まり具合（大きいほど細く強い）
+		// - desc_.edgeSoftness_: ビームの外側の落ち方
+		// - desc_.noiseScale_: ビームのゆらぎのスケール
+		// - desc_.noiseSpeed_: ビームのゆらぎの時間変化速度
+		// - desc_.telegraph_: 予告モードかどうか（点滅弱めなどの効果を切り替えるためのフラグ）
 		dxCommon_->DrawLaserBeamVolume(
 			viewProj,
 			desc_.startWS_,

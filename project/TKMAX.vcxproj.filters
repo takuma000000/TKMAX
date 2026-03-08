@@ -53,9 +53,6 @@
     <ClCompile Include="engine\effect\light\DirectionalLight.cpp">
       <Filter>engine\effect\light</Filter>
     </ClCompile>
-    <ClCompile Include="engine\effect\light\LightManager.cpp">
-      <Filter>engine\effect\light</Filter>
-    </ClCompile>
     <ClCompile Include="engine\effect\particle\ParticlerEmitter.cpp">
       <Filter>engine\effect\particle</Filter>
     </ClCompile>
@@ -256,9 +253,6 @@
       <Filter>engine\base</Filter>
     </ClInclude>
     <ClInclude Include="engine\effect\light\DirectionalLight.h">
-      <Filter>engine\effect\light</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\effect\light\LightManager.h">
       <Filter>engine\effect\light</Filter>
     </ClInclude>
     <ClInclude Include="engine\effect\particle\ParticlerEmitter.h">

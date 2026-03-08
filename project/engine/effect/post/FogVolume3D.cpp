@@ -24,6 +24,24 @@ namespace TKM {
 
 		desc_.worldPos_ = desc_.centerWS_;
 
+		/// DirectXCommonのDrawFogVolume関数を呼び出して、空間霧を描画します。
+		/// これらのパラメータを渡すことで、DirectXCommon側で空間霧の描画処理が行われます。
+		// - viewProj: カメラのビュー射影行列
+		// - desc_.centerWS_: 霧の中心座標（ワールド空間）
+		// - desc_.halfSizeWS_: 霧の範囲サイズ（半径）
+		// - camRightWS, camUpWS, camFwdWS: カメラの右、上、前方向ベクトル（ワールド空間）
+		// - desc_.sliceCount_: 霧の重なり枚数（スライス数）
+		// - time_: 経過時間
+		// - desc_.color_: 霧の色
+		// - desc_.density_: 霧の濃さ
+		// - desc_.noiseScale_: ノイズの細かさ
+		// - desc_.noiseSpeed_: ノイズの速さ
+		// - desc_.softness_: 端のぼかし具合
+		// - desc_.fogStart_: 霧開始の高さ
+		// - desc_.fogEnd_: 霧最大の高さ
+		// - desc_.noiseStrength_: ノイズのムラの強さ
+		// - desc_.worldScale_: 霧パターンの「世界空間スケール」
+		// - desc_.worldPos_: ノイズの基準座標（通常はカメラ位置や霧の中心に同期）
 		dxCommon_->DrawFogVolume(
 			viewProj,
 			desc_.centerWS_,

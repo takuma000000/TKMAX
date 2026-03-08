@@ -25,6 +25,17 @@ namespace TKM {
 
 		float sendDensity = active_ ? density_ : 0.0f;
 
+		/// 霧のパラメータをDirectXCommonに送る
+		/// これらのパラメータを組み合わせて、動きのある霧を表現する
+		// - color_ --- 霧の色
+		// - sendDensity --- 画面全体の霧の濃さ（active_ が false の時は0になる）
+		// - start_ --- 霧開始の高さ (0〜1)
+		// - end_ --- 霧最大の高さ (0〜1)
+		// - noiseScale_ --- ノイズの細かさ
+		// - noiseStrength_ --- 濃さのムラの強さ
+		// - time_ --- 経過時間（ノイズの動きに使用）
+		// - sendWorldPos --- 霧の基準となるワールド座標（カメラやプレイヤーの位置を想定）
+		// - worldScale_ --- 霧パターンの「世界空間スケール」（どれくらい動きに反応するか）
 		dxCommon_->SetFogParam(
 			color_,
 			sendDensity,

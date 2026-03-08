@@ -51,34 +51,38 @@ namespace TKM {
 		// ==============================================
 
 	private:
-		// パラメータ
+		//==============================================
+		// 通常パラメータ
+		//==============================================
 		Vector4 color_{ 0.012f, 0.016f, 0.165f, 1.0f }; // 色
-		float   intensity_ = 0.8f;   // 強度
-		float   radius_ = 0.6f;      // 基本の半径（非ボス時など）
-		float   softness_ = 1.0f;    // ぼかし
-
-		bool    active_ = false;
-		bool    inLowHP_ = false;    // HP低下（危険）フラグ
-
-		// フェード用
-		float   currentIntensity_ = 0.0f;
-
-		//=============================================
-		// ボス戦中の半径ゆらぎ用
-		//=============================================
-		float radiusMin_ = 0.677f; // 最小半径
-		float radiusMax_ = 0.382f; // 最大半径
-		float radiusAnimT_ = 0.0f; // アニメ用タイマー
-		float radiusAnimSpeed_ = 0.8f; // 揺れる速さ
-		//=============================================
-		// 低HP用パラメータ
-		//=============================================
+		float intensity_ = 0.8f;   // 強度
+		float radius_ = 0.6f;      // 基本の半径（非ボス時など）
+		float softness_ = 1.0f;    // ぼかし
+		//==============================================
+		// 状態
+		//==============================================
+		bool active_ = false;
+		bool inLowHP_ = false; // HP低下（危険）フラグ
+		//==============================================
+		// フェード
+		//==============================================
+		float currentIntensity_ = 0.0f;
+		//==============================================
+		// ボス戦中の半径ゆらぎ
+		//==============================================
+		float radiusMin_ = 0.677f;      // 最小半径
+		float radiusMax_ = 0.382f;      // 最大半径
+		float radiusAnimT_ = 0.0f;      // アニメ用タイマー
+		float radiusAnimSpeed_ = 0.8f;  // 揺れる速さ
+		//==============================================
+		// 低HPパラメータ
+		//==============================================
 		Vector4 lowHPColor_{ 0.85f, 0.05f, 0.05f, 1.0f }; // 赤
-		float lowHPIntensity_ = 0.95f;  // 強度（固定寄り。パッパ防止）
-		float lowHPRadiusMin_ = 0.42f;  // 半径：小さいほど覆う範囲が広い（想定）
-		float lowHPRadiusMax_ = 0.62f;  // 半径：大きいほど覆う範囲が狭い（想定）
-		float lowHPSoftness_ = 1.0f;    // ぼかし
-		float lowHPPulseT_ = 0.0f;      // 揺れタイマー
-		float lowHPPulseSpeed_ = 0.45f; // ゆっくり揺れる（これが速度）
+		float lowHPIntensity_ = 0.95f;   // 強度（固定寄り。パッパ防止）
+		float lowHPRadiusMin_ = 0.42f;   // 半径：小さいほど覆う範囲が広い
+		float lowHPRadiusMax_ = 0.62f;   // 半径：大きいほど覆う範囲が狭い
+		float lowHPSoftness_ = 1.0f;     // ぼかし
+		float lowHPPulseT_ = 0.0f;       // 揺れタイマー
+		float lowHPPulseSpeed_ = 0.45f;  // 揺れる速さ
 	};
 }

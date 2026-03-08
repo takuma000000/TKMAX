@@ -10,7 +10,6 @@
 #include "CameraManager.h"
 
 namespace TKM {
-
 	//=============================================================
 	// TrailRibbonRendererクラス
 	// 弾の軌跡などに使うリボン描画クラス。
@@ -150,36 +149,43 @@ namespace TKM {
 			std::vector<uint16_t>& outIndices
 		);
 
-		//==============================================================
-		// メンバ変数
-		//==============================================================
+		
+		//==============================================
 		// D3D12リソース
-		Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSig_;
-		Microsoft::WRL::ComPtr<ID3D12PipelineState> pso_;
-		Microsoft::WRL::ComPtr<ID3D12Resource> vb_;
-		Microsoft::WRL::ComPtr<ID3D12Resource> ib_;
-		D3D12_VERTEX_BUFFER_VIEW vbView_{};
-		D3D12_INDEX_BUFFER_VIEW ibView_{};
-		uint32_t vbCapacity_ = 0;
-		uint32_t ibCapacity_ = 0;
-		// CBV（Upload）
-		Microsoft::WRL::ComPtr<ID3D12Resource> cb_;
-		CB* cbMapped_ = nullptr;
-
-		float time_ = 0.0f;
-
-		// 一時生成
-		std::vector<Vertex> tmpVerts_;
-		std::vector<uint16_t> tmpIndices_;
-
-		static constexpr int kFrameRing_ = 3;
-		int frameIndex_ = 0;
-
-		std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> drawVB_[kFrameRing_];
-		std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> drawIB_[kFrameRing_];
-		std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> drawCB_[kFrameRing_];
-
+		//==============================================
+		Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSig_; // ルートシグネチャ
+		Microsoft::WRL::ComPtr<ID3D12PipelineState> pso_; // パイプラインステートオブジェクト
+		Microsoft::WRL::ComPtr<ID3D12Resource> vb_; // 頂点バッファ
+		Microsoft::WRL::ComPtr<ID3D12Resource> ib_; // インデックスバッファ
+		D3D12_VERTEX_BUFFER_VIEW vbView_{}; // 頂点バッファビュー
+		D3D12_INDEX_BUFFER_VIEW ibView_{}; // インデックスバッファビュー
+		uint32_t vbCapacity_ = 0; // 頂点バッファの容量（頂点数）
+		uint32_t ibCapacity_ = 0; // インデックスバッファの容量（インデックス数）
+		//==============================================
+		// 定数バッファ
+		//==============================================
+		Microsoft::WRL::ComPtr<ID3D12Resource> cb_; // 定数バッファ
+		CB* cbMapped_ = nullptr; // 定数バッファにマップされたポインタ
+		//==============================================
+		// タイマー
+		//==============================================
+		float time_ = 0.0f; // 経過時間
+		//==============================================
+		// 一時生成データ
+		//==============================================
+		std::vector<Vertex> tmpVerts_; // 頂点生成のための一時バッファ
+		std::vector<uint16_t> tmpIndices_; // インデックス生成のための一時バッファ
+		//==============================================
+		// フレームリング
+		//==============================================
+		static constexpr int kFrameRing_ = 3; // フレームリングの数。これだけバッファを用意しておけば、GPUが最大2フレーム遅れている状況でも安全に描画できる。
+		int frameIndex_ = 0; // 現在のフレームリングのインデックス。0～(kFrameRing_-1)の範囲で回る。
+		std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> drawVB_[kFrameRing_]; // 描画用頂点バッファのフレームリング。描画ごとにframeIndex_を進めていき、GPUがまだ使用中のバッファを上書きしないようにする。
+		std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> drawIB_[kFrameRing_]; // 描画用インデックスバッファのフレームリング。描画ごとにframeIndex_を進めていき、GPUがまだ使用中のバッファを上書きしないようにする。
+		std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> drawCB_[kFrameRing_]; // 描画用定数バッファのフレームリング。描画ごとにframeIndex_を進めていき、GPUがまだ使用中のバッファを上書きしないようにする。
+		//==============================================
+		// デバッグ
+		//==============================================
 		DebugParams debug_{}; // デバッグ用パラメータ
 	};
-
 } // namespace TKM

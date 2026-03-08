@@ -17,16 +17,17 @@ namespace TKM {
 		// 低HP 状態なら 1.0 までフェードイン、終わったら 0 までフェードアウト
 		const float fadeSpeed = 2.0f; // 早さはお好み
 
-		float target = (inLowHP_) ? 1.0f : 0.0f;
-		float delta = target - currentIntensity_;
-		float step = fadeSpeed * dt;
+		float target = (inLowHP_) ? 1.0f : 0.0f; // 目標値
+		float delta = target - currentIntensity_; // 目標との差
+		float step = fadeSpeed * dt; // 今フレームで変化させる量
 
+		// 目標に近づくように currentIntensity_ を更新
 		if (fabsf(delta) <= step) {
 			currentIntensity_ = target;
-		} else {
+		} else { // 目標にまだ遠い場合は、step 分だけ近づける
 			currentIntensity_ += (delta > 0 ? step : -step);
 		}
-
+		// 強度が十分にあるかどうかで有効・無効を切り替える
 		active_ = (currentIntensity_ > 0.01f);
 
 		// DX 側にパラメータを送る（強度はフェード込）
@@ -50,6 +51,7 @@ namespace TKM {
 			radius = lowHPRadiusMin_ + (lowHPRadiusMax_ - lowHPRadiusMin_) * t;
 		}
 
+		// ボス戦中は半径を Min〜Max で往復させる
 		dxCommon_->SetVignettingParam(col,
 			intensity * currentIntensity_,
 			radius,
