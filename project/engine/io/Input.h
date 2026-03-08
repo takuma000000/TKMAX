@@ -60,6 +60,11 @@ namespace TKM {
 		/// <param name="button"></param>
 		/// <returns></returns>
 		bool TriggerButton(WORD button);
+		/// <summary>
+		/// <para>ゲームパッドが接続されているかを返します。</para>
+		/// </summary>
+		/// <returns></returns>
+		bool IsGamepadConnected() const;
 
 		// Getter========================================
 		/// <summary>

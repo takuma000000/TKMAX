@@ -53,9 +53,13 @@ namespace TKM {
 	}
 
 	void UIController::ApplyRightUiSizes_() {
-		lbDrawSize_ = { lbTexSize_.x * lbScale_, lbTexSize_.y * lbScale_ };
-		rbDrawSize_ = { rbTexSize_.x * rbScale_, rbTexSize_.y * rbScale_ };
-		xDrawSize_ = { xTexSize_.x * xScale_, xTexSize_.y * xScale_ };
+		const float lbScale = isGamepadConnected_ ? padLbScale_ : keyLbScale_;
+		const float rbScale = isGamepadConnected_ ? padRbScale_ : keyRbScale_;
+		const float xScale = isGamepadConnected_ ? padXScale_ : keyXScale_;
+
+		lbDrawSize_ = { lbTexSize_.x * lbScale, lbTexSize_.y * lbScale };
+		rbDrawSize_ = { rbTexSize_.x * rbScale, rbTexSize_.y * rbScale };
+		xDrawSize_ = { xTexSize_.x * xScale, xTexSize_.y * xScale };
 		lsDrawSize_ = { lsTexSize_.x * lsScale_, lsTexSize_.y * lsScale_ };
 		rbGaugeIconDrawSize_ = { rbGaugeIconTexSize_.x * rbGaugeIconScale_, rbGaugeIconTexSize_.y * rbGaugeIconScale_ };
 
@@ -69,21 +73,24 @@ namespace TKM {
 	void UIController::ApplyRightUiPositions_() {
 		const float baseX = screenW_ - rightUiMargin_;
 		const float baseY = screenH_ - rightUiMargin_;
+		const Vector2& lbOffset = isGamepadConnected_ ? padLbOffset_ : keyLbOffset_;
+		const Vector2& rbOffset = isGamepadConnected_ ? padRbOffset_ : keyRbOffset_;
+		const Vector2& xOffset = isGamepadConnected_ ? padXOffset_ : keyXOffset_;
 
 		// RB
 		Vector2 rbPos{ baseX, baseY };
-		rbPos.x += rbOffset_.x;
-		rbPos.y += rbOffset_.y;
+		rbPos.x += rbOffset.x;
+		rbPos.y += rbOffset.y;
 
 		// LB（RBの上に積む）
 		Vector2 lbPos{ baseX, baseY - (rbDrawSize_.y + rightUiSpacing_) };
-		lbPos.x += lbOffset_.x;
-		lbPos.y += lbOffset_.y;
+		lbPos.x += lbOffset.x;
+		lbPos.y += lbOffset.y;
 
 		// X（LBの上に積む）
 		Vector2 xPos{ baseX, baseY - (rbDrawSize_.y + rightUiSpacing_) - (lbDrawSize_.y + rightUiSpacing_) };
-		xPos.x += xOffset_.x;
-		xPos.y += xOffset_.y;
+		xPos.x += xOffset.x;
+		xPos.y += xOffset.y;
 
 		// LS（Xの上に積む）
 		Vector2 lsPos{ baseX, baseY - (rbDrawSize_.y + rightUiSpacing_) - (lbDrawSize_.y + rightUiSpacing_) - (xDrawSize_.y + rightUiSpacing_) };
@@ -217,6 +224,49 @@ namespace TKM {
 		}
 	}
 
+	void UIController::ApplySpriteTexture_(Sprite* sp, const std::string& texPath, Vector2* outTexSize) {
+		if (!sp) { return; }
+
+		sp->Initialize(spriteCommon_, dxCommon_, texPath);
+		sp->SetAutoAdjustTextureSize(false);
+
+		// テクスチャ切り出しは「画像そのまま」
+		const auto& m = TextureManager::GetInstance()->GetMetadata(texPath);
+		// テクスチャサイズを取得してスプライトに適用
+		const Vector2 texSize{ (float)m.width, (float)m.height };
+
+		sp->SetTextureLeftTop({ 0.0f, 0.0f });
+		sp->SetTextureSize(texSize);
+
+		// テクスチャサイズを出力先に保存
+		if (outTexSize) {
+			*outTexSize = texSize;
+		}
+	}
+
+	void UIController::RefreshRightUiTextures_() {
+		// ゲームパッド接続状態に応じて、右側UIのテクスチャを切り替える
+		if (isGamepadConnected_) {
+			lbTex_ = padLbTex_;
+			rbTex_ = padRbTex_;
+			xTex_ = padXTex_;
+		} else { // キーボード
+			lbTex_ = keyLbTex_;
+			rbTex_ = keyRbTex_;
+			xTex_ = keyXTex_;
+		}
+
+		// テクスチャをスプライトに適用
+		ApplySpriteTexture_(uiLB_.get(), lbTex_, &lbTexSize_);
+		ApplySpriteTexture_(uiRB_.get(), rbTex_, &rbTexSize_);
+		ApplySpriteTexture_(uiX_.get(), xTex_, &xTexSize_);
+
+		// サイズと位置を再適用
+		ApplyRightUiSizes_();
+		// テクスチャサイズが変わると位置も変わる可能性があるので、位置も再適用
+		ApplyRightUiPositions_();
+	}
+
 	void UIController::Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, BaseScene* parentScene, float screenW, float screenH) {
 		spriteCommon_ = spriteCommon;
 		dxCommon_ = dxCommon;
@@ -237,11 +287,23 @@ namespace TKM {
 		colRBGaugeIcon_ = { 1,1,1,1 };
 
 		// 右側UI
-		lbTex_ = "./resources/texture/LB_ui.png";
-		rbTex_ = "./resources/texture/RB_ui.png";
-		xTex_ = "./resources/texture/X_ui.png";
-		lsTex_ = "./resources/texture/LS_ui.png";
-		rbGaugeIconTex_ = "./resources/texture/RB_gauge_ui.png";
+		padLbTex_ = "./resources/texture/LB_ui.png"; // ゲームパッド用LBアイコン
+		padRbTex_ = "./resources/texture/RB_ui.png"; // ゲームパッド用RBアイコン
+		padXTex_ = "./resources/texture/X_ui.png"; // ゲームパッド用Xアイコン
+
+		keyLbTex_ = "./resources/texture/L_ui.png"; // キーボード用LBアイコン（Lキーを模したもの）
+		keyRbTex_ = "./resources/texture/K_ui.png"; // キーボード用RBアイコン（Kキーを模したもの）
+		keyXTex_ = "./resources/texture/J_ui.png"; // キーボード用Xアイコン（Jキーを模したもの）
+
+		lsTex_ = "./resources/texture/LS_ui.png"; // 左スティックアイコン（ゲームパッドでもキーボードでも同じものを使う）
+		rbGaugeIconTex_ = "./resources/texture/RB_gauge_ui.png"; // RBゲージアイコン（ゲームパッドでもキーボードでも同じものを使う）
+
+		isGamepadConnected_ = Input::GetInstance()->IsGamepadConnected();
+		prevGamepadConnected_ = isGamepadConnected_;
+		// 最初のテクスチャ選択
+		lbTex_ = isGamepadConnected_ ? padLbTex_ : keyLbTex_;
+		rbTex_ = isGamepadConnected_ ? padRbTex_ : keyRbTex_;
+		xTex_ = isGamepadConnected_ ? padXTex_ : keyXTex_;
 
 		// スプライトを作成してテクスチャを適用
 		uiLB_ = CreateSprite_(lbTex_, { 1.0f, 1.0f }, &lbTexSize_);
@@ -333,10 +395,29 @@ namespace TKM {
 
 	void UIController::Update(float dt, Player* player) {
 		Input* in = Input::GetInstance();
-		const bool rbDown = in->PushButton(XINPUT_GAMEPAD_RIGHT_SHOULDER);
-		const bool lbDown = in->PushButton(XINPUT_GAMEPAD_LEFT_SHOULDER);
-		const bool xDown = in->PushButton(XINPUT_GAMEPAD_X);
 
+		isGamepadConnected_ = in->IsGamepadConnected(); // 毎フレームゲームパッド接続状態をチェック
+
+		// ゲームパッドの接続状態が変わったら、右側UIのテクスチャを切り替える
+		if (isGamepadConnected_ != prevGamepadConnected_) {
+			RefreshRightUiTextures_(); // ゲームパッド接続状態に応じて右側UIのテクスチャを切り替える
+			prevGamepadConnected_ = isGamepadConnected_; // 前回の接続状態を更新
+		}
+
+		// ---- ボタン入力（ゲームパッドとキーボードで対応するものをチェック）----
+		const bool rbDown = isGamepadConnected_
+			? in->PushButton(XINPUT_GAMEPAD_RIGHT_SHOULDER)
+			: in->PushKey(DIK_K);
+
+		const bool lbDown = isGamepadConnected_
+			? in->PushButton(XINPUT_GAMEPAD_LEFT_SHOULDER)
+			: in->PushKey(DIK_L);
+
+		const bool xDown = isGamepadConnected_
+			? in->PushButton(XINPUT_GAMEPAD_X)
+			: in->PushKey(DIK_J);
+
+		// ---- RB/LB残弾UIの更新 ----
 		if (rbGaugeUI_ && player) {
 			rbGaugeUI_->Update(dt, player->GetRbAmmo(), player->GetRbAmmoMax(), player->IsRbRefilling(), rbDown); // RB残弾UIはRBの状態とプレイヤーの弾情報を渡して更新
 		}
@@ -345,8 +426,18 @@ namespace TKM {
 		}
 
 		// ---- 左スティック入力（倒し量で判定）----
-		const SHORT rawX = in->GetLeftStickX();
-		const SHORT rawY = in->GetLeftStickY();
+		SHORT rawX = 0;
+		SHORT rawY = 0;
+		// ゲームパッドならスティックの値を、キーボードならWASDで擬似的にスティック入力を作る
+		if (isGamepadConnected_) {
+			rawX = in->GetLeftStickX();
+			rawY = in->GetLeftStickY();
+		} else {
+			if (in->PushKey(DIK_A)) { rawX -= 32768; }
+			if (in->PushKey(DIK_D)) { rawX += 32767; }
+			if (in->PushKey(DIK_W)) { rawY += 32767; }
+			if (in->PushKey(DIK_S)) { rawY -= 32768; }
+		}
 
 		auto normAxis = [&](SHORT v)->float {
 			// -32768 対策（負側だけ分母が違う）
@@ -602,6 +693,12 @@ namespace TKM {
 
 		bool changed = false;
 
+		ImGui::Text("入力デバイス : %s", isGamepadConnected_ ? "ゲームパッド" : "キーボード");
+		if (ImGui::Button("UI画像を再読込")) {
+			RefreshRightUiTextures_();
+		}
+		ImGui::Separator();
+
 		ImGui::Text("右側UI：個別調整");
 
 		changed |= ImGui::DragFloat("右下余白(px)", &rightUiMargin_, 0.5f, 0.0f, 300.0f);
@@ -609,24 +706,33 @@ namespace TKM {
 
 		ImGui::Separator();
 
-		// RB
-		if (ImGui::TreeNode("RB（右バンパー）")) {
-			changed |= ImGui::DragFloat("サイズ##rb", &rbScale_, 0.001f, 0.01f, 2.0f);
-			changed |= ImGui::DragFloat2("位置オフセット##rb", &rbOffset_.x, 0.5f, -500.0f, 500.0f);
+		// RB / K
+		if (ImGui::TreeNode(isGamepadConnected_ ? "RB（右バンパー）" : "Kキー")) {
+			float& rbScale = isGamepadConnected_ ? padRbScale_ : keyRbScale_;
+			Vector2& rbOffset = isGamepadConnected_ ? padRbOffset_ : keyRbOffset_;
+
+			changed |= ImGui::DragFloat("サイズ##rb", &rbScale, 0.001f, 0.01f, 2.0f);
+			changed |= ImGui::DragFloat2("位置オフセット##rb", &rbOffset.x, 0.5f, -500.0f, 500.0f);
 			ImGui::TreePop();
 		}
 
-		// LB
-		if (ImGui::TreeNode("LB（左バンパー）")) {
-			changed |= ImGui::DragFloat("サイズ##lb", &lbScale_, 0.001f, 0.01f, 2.0f);
-			changed |= ImGui::DragFloat2("位置オフセット##lb", &lbOffset_.x, 0.5f, -500.0f, 500.0f);
+		// LB / L
+		if (ImGui::TreeNode(isGamepadConnected_ ? "LB（左バンパー）" : "Lキー")) {
+			float& lbScale = isGamepadConnected_ ? padLbScale_ : keyLbScale_;
+			Vector2& lbOffset = isGamepadConnected_ ? padLbOffset_ : keyLbOffset_;
+
+			changed |= ImGui::DragFloat("サイズ##lb", &lbScale, 0.001f, 0.01f, 2.0f);
+			changed |= ImGui::DragFloat2("位置オフセット##lb", &lbOffset.x, 0.5f, -500.0f, 500.0f);
 			ImGui::TreePop();
 		}
 
-		// X
-		if (ImGui::TreeNode("Xボタン")) {
-			changed |= ImGui::DragFloat("サイズ##x", &xScale_, 0.001f, 0.01f, 2.0f);
-			changed |= ImGui::DragFloat2("位置オフセット##x", &xOffset_.x, 0.5f, -500.0f, 500.0f);
+		// X / J
+		if (ImGui::TreeNode(isGamepadConnected_ ? "Xボタン" : "Jキー")) {
+			float& xScale = isGamepadConnected_ ? padXScale_ : keyXScale_;
+			Vector2& xOffset = isGamepadConnected_ ? padXOffset_ : keyXOffset_;
+
+			changed |= ImGui::DragFloat("サイズ##x", &xScale, 0.001f, 0.01f, 2.0f);
+			changed |= ImGui::DragFloat2("位置オフセット##x", &xOffset.x, 0.5f, -500.0f, 500.0f);
 			ImGui::TreePop();
 		}
 
@@ -659,7 +765,6 @@ namespace TKM {
 				localChanged |= ImGui::DragFloat("内側余白 pad(px)##lbPad", &ld.pad_, 0.1f, 0.0f, 20.0f);
 				localChanged |= ImGui::DragFloat("分割の隙間 gap(px)##lbGap", &ld.gap_, 0.1f, 0.0f, 20.0f);
 
-				// 色
 				localChanged |= ImGui::ColorEdit4("通常色##lbBase", &ld.baseColor_.x);
 				localChanged |= ImGui::ColorEdit4("消費色##lbDrain", &ld.drainColor_.x);
 				localChanged |= ImGui::ColorEdit4("回復色##lbRefill", &ld.refillColor_.x);
@@ -694,7 +799,6 @@ namespace TKM {
 		changed |= ImGui::DragFloat2("HP縦オフセット(x,y)", &hpVertOffset_.x, 0.5f, -300.0f, 300.0f);
 		changed |= ImGui::DragFloat("HPフレーム余白", &hpFramePad_, 0.5f, 0.0f, 80.0f);
 
-
 		ImGui::Separator();
 		if (ImGui::TreeNode("色設定")) {
 			changed |= ImGui::ColorEdit4("通常色", &idleCol_.x);
@@ -706,6 +810,22 @@ namespace TKM {
 			rightUiMargin_ = 20.0f;
 			rightUiSpacing_ = 10.0f;
 
+			padLbScale_ = 0.065f;
+			padRbScale_ = 0.114f;
+			padXScale_ = 0.066f;
+
+			keyLbScale_ = 0.065f;
+			keyRbScale_ = 0.114f;
+			keyXScale_ = 0.066f;
+
+			padLbOffset_ = { 0.0f, 0.0f };
+			padRbOffset_ = { 0.0f, 0.0f };
+			padXOffset_ = { 0.0f, 0.0f };
+
+			keyLbOffset_ = { 0.0f, 0.0f };
+			keyRbOffset_ = { 0.0f, 0.0f };
+			keyXOffset_ = { 0.0f, 0.0f };
+
 			idleCol_ = { 1,1,1,0.75f };
 			onCol_ = { 1,0.25f,0.25f,1.0f };
 
@@ -716,8 +836,13 @@ namespace TKM {
 			ApplyRightUiSizes_();
 			ApplyRightUiPositions_();
 			ApplyHudPositions_();
-			if (hpFill_)  hpFill_->SetSize(hpVertSize_);
-			if (hpFrame_) hpFrame_->SetSize({ hpVertSize_.x + hpFramePad_, hpVertSize_.y + hpFramePad_ });
+
+			if (hpFill_) {
+				hpFill_->SetSize(hpVertSize_);
+			}
+			if (hpFrame_) {
+				hpFrame_->SetSize({ hpVertSize_.x + hpFramePad_, hpVertSize_.y + hpFramePad_ });
+			}
 			if (hpIcon_) {
 				hpIconDrawSize_ = { hpIconTexSize_.x * hpIconScale_, hpIconTexSize_.y * hpIconScale_ };
 				hpIcon_->SetSize(hpIconDrawSize_);

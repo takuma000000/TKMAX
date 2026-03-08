@@ -106,6 +106,17 @@ namespace TKM {
 		/// 右側UI（LT / LB / RB）のサイズを、テクスチャサイズと rightUiScale_ を元に計算して適用します。
 		/// </summary>
 		void ApplyHudPositions_();
+		/// <summary>
+		/// 右側UI（LT / LB / RB）のテクスチャを、テクスチャパスから読み込んで適用します。テクスチャサイズも取得して保存します。
+		/// </summary>
+		void RefreshRightUiTextures_();
+		/// <summary>
+		/// 指定したスプライトにテクスチャを適用し、テクスチャサイズも取得して保存します。
+		/// </summary>
+		/// <param name="sp">テクスチャを適用するスプライト</param>
+		/// <param name="texPath">テクスチャのファイルパス</param>
+		/// <param name="outTexSize">テクスチャサイズの出力先（幅, 高さ）</param>
+		void ApplySpriteTexture_(Sprite* sp, const std::string& texPath, Vector2* outTexSize);
 
 		//======================================================================
 		// 参照ポインタ / 共通
@@ -129,6 +140,13 @@ namespace TKM {
 		std::string xTex_; // Xアイコンのテクスチャパス
 		std::string lsTex_; // LSアイコンのテクスチャパス
 		std::string rbGaugeIconTex_; // RBゲージアイコンのテクスチャパス
+
+		std::string padLbTex_; // ゲームパッド時のLB
+		std::string padRbTex_; // ゲームパッド時のRB
+		std::string padXTex_;  // ゲームパッド時のX
+		std::string keyLbTex_; // キーボード時のL
+		std::string keyRbTex_; // キーボード時のK
+		std::string keyXTex_;  // キーボード時のJ
 
 		Vector2 lbTexSize_{}; // LBアイコンのテクスチャサイズ
 		Vector2 rbTexSize_{}; // RBアイコンのテクスチャサイズ
@@ -194,18 +212,28 @@ namespace TKM {
 		//======================================================================
 		// 右側UI：個別調整用
 		//======================================================================
-		// 個別：スケール
-		float lbScale_ = 0.065f; // LBスケール
-		float rbScale_ = 0.114f; // RBスケール
-		float xScale_ = 0.066f; // Xスケール
-		float lsScale_ = 0.064f; // LSスケール
-		float rbGaugeIconScale_ = 0.075f; // RBゲージアイコンのスケール
-		// オフセット（右下基準からのズラし）
-		Vector2 lbOffset_{ 0.0f, 0.0f }; // LBアイコンの位置微調整（+xで右 / +yで下）
-		Vector2 rbOffset_{ 0.0f, 0.0f }; // RBアイコンの位置微調整（+xで右 / +yで下）
-		Vector2 xOffset_{ 0.0f, 0.0f }; // Xアイコンの位置微調整（+xで右 / +yで下）
-		Vector2 lsOffset_{ 1.0f, -37.5f }; // LSアイコンの位置微調整（+xで右 / +yで下）
-		Vector2 rbGaugeIconOffset_{ -624.0f, 8.5f }; // RBゲージアイコンの位置微調整（+xで右 / +yで下）
+				// 個別：スケール（ゲームパッド用）
+		float padLbScale_ = 0.065f;
+		float padRbScale_ = 0.114f;
+		float padXScale_ = 0.066f;
+		// 個別：スケール（キーボード用）
+		float keyLbScale_ = 0.076f;
+		float keyRbScale_ = 0.074f;
+		float keyXScale_ = 0.084f;
+		// 共通
+		float lsScale_ = 0.064f;
+		float rbGaugeIconScale_ = 0.075f;
+		// オフセット（ゲームパッド用）
+		Vector2 padLbOffset_{ 0.0f, 0.0f };
+		Vector2 padRbOffset_{ 0.0f, 0.0f };
+		Vector2 padXOffset_{ 0.0f, 0.0f };
+		// オフセット（キーボード用）
+		Vector2 keyLbOffset_{ 4.0f, 0.0f };
+		Vector2 keyRbOffset_{ 1.5f, 0.0f };
+		Vector2 keyXOffset_{ 5.0f, 0.0f };
+		// 共通
+		Vector2 lsOffset_{ 1.0f, -37.5f };
+		Vector2 rbGaugeIconOffset_{ -624.0f, 8.5f };
 		// 色
 		Vector4 idleCol_{ 1.0f, 1.0f, 1.0f, 0.75f }; // 通常の色
 		Vector4 onCol_{ 1.0f, 0.25f, 0.25f, 1.0f }; // 押下中の色
@@ -237,6 +265,8 @@ namespace TKM {
 		Vector2 lsCurrentOfs_{ 0.0f, 0.0f }; // 今表示しているオフセット
 		Vector2 lsTargetOfs_{ 0.0f, 0.0f };  // 入力から決まる目標オフセット
 		float lsFollowSpeed_ = 14.0f;        // 追従速度（大きいほどキビキビ）
+		bool isGamepadConnected_ = true; // 今フレームの入力デバイス状態
+		bool prevGamepadConnected_ = true; // 前フレームの入力デバイス状態
 		//======================================================================
 		// HPアニメ用（被弾時の減りを“ヌルッ”と動かす）
 		//======================================================================

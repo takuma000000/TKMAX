@@ -71,6 +71,12 @@ namespace TKM {
 			(controllerState_.Gamepad.wButtons & button);
 	}
 
+	// ゲームパッドの接続判定
+	bool Input::IsGamepadConnected() const {
+		XINPUT_STATE state{};
+		return XInputGetState(0, &state) == ERROR_SUCCESS;
+	}
+
 	// 左スティックの取得
 	SHORT Input::GetLeftStickX() {
 		return controllerState_.Gamepad.sThumbLX;
