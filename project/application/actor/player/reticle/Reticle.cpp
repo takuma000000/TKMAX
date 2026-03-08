@@ -50,33 +50,72 @@ void Reticle::Update(float dt) {
 		camUp = MyMath::Normalize({ W.m[1][0], W.m[1][1], W.m[1][2] }); // カメラの上方向
 	}
 	//--------------------------------------------------
-	// 2) 左スティックで center_ を直接動かす
+	// 2) ゲームパッド左スティック + キーボードWASDで center_ を直接動かす
 	//--------------------------------------------------
 	if (stickControl_) {
 		auto* in = TKM::Input::GetInstance();
-		// スティックの値を -32768 〜 32767 の範囲で取得
-		float rx = static_cast<float>(in->GetLeftStickX()); // 左スティックのX軸
-		float ry = static_cast<float>(in->GetLeftStickY()); // 左スティックのY軸（通常は前が -32768、後ろが 32767）
 
-		const float dz = stickDeadZone_; // 0〜32767 想定のデッドゾーン
-		// デッドゾーン内はゼロ、外はデッドゾーン分を引いて正規化（-1〜1の範囲に）
-		if (std::fabs(rx) < dz) rx = 0; else rx = (rx > 0 ? rx - dz : rx + dz);
-		if (std::fabs(ry) < dz) ry = 0; else ry = (ry > 0 ? ry - dz : ry + dz);
+		//==============================
+		// ゲームパッド入力
+		//==============================
+		float padX = static_cast<float>(in->GetLeftStickX());
+		float padY = static_cast<float>(in->GetLeftStickY());
 
-		float norm = 32767.0f - dz; // デッドゾーンを引いた後の最大値で割って正規化
-		if (norm < 1.0f) norm = 1.0f; // 念のためゼロ割り防止
-		rx /= norm; // ry は通常、前が -32768、後ろが 32767 なので符号を反転しておく（前が正になるように）
-		ry /= norm; // ry は通常、前が -32768、後ろが 32767 なので符号を反転しておく（前が正になるように）
+		const float dz = stickDeadZone_;
+		if (std::fabs(padX) < dz) { padX = 0.0f; } else { padX = (padX > 0.0f) ? (padX - dz) : (padX + dz); }
 
-		// 2乗カーブでスティック端だけ強く
-		float lx = rx * std::fabs(rx); // スティックのX軸（左右）を -1〜1 の範囲で取得（デッドゾーン処理済み）
-		float ly = ry * std::fabs(ry); // スティックのY軸（前後）を -1〜1 の範囲で取得（デッドゾーン処理済み）
+		if (std::fabs(padY) < dz) { padY = 0.0f; } else { padY = (padY > 0.0f) ? (padY - dz) : (padY + dz); }
 
-		// 入力があるときだけ動かす（離したら center_ はその場で完全停止）
-		if (std::fabs(lx) > 0.00001f || std::fabs(ly) > 0.00001f) {
-			const float moveSpeed = stickMovePerSec_; // 既存の速度パラメータを流用
-			center_ += camRight * (lx * moveSpeed * dt) // カメラの向きに応じて左右と上下に動かす
-				+ camUp * (ly * moveSpeed * dt); // カメラの向きに応じて左右と上下に動かす
+		float norm = 32767.0f - dz;
+		if (norm < 1.0f) { norm = 1.0f; }
+
+		padX /= norm;
+		padY /= norm;
+
+		// スティックは2乗カーブ
+		float lx = padX * std::fabs(padX);
+		float ly = padY * std::fabs(padY);
+
+		//==============================
+		// キーボード入力（WASD）
+		//==============================
+		float keyX = 0.0f;
+		float keyY = 0.0f;
+
+		if (GetAsyncKeyState('A') & 0x8000) { keyX -= 1.0f; }
+		if (GetAsyncKeyState('D') & 0x8000) { keyX += 1.0f; }
+		if (GetAsyncKeyState('W') & 0x8000) { keyY += 1.0f; }
+		if (GetAsyncKeyState('S') & 0x8000) { keyY -= 1.0f; }
+
+		// 斜め入力を速くしすぎない
+		if (keyX != 0.0f || keyY != 0.0f) {
+			float len = std::sqrt(keyX * keyX + keyY * keyY);
+			if (len > 0.0001f) {
+				keyX /= len;
+				keyY /= len;
+			}
+		}
+
+		//==============================
+		// パッドとキーボードを合成
+		// キーボードも使ったときだけ 1.0 を超えないように丸める
+		//==============================
+		float moveX = lx + keyX;
+		float moveY = ly + keyY;
+
+		float moveLen = std::sqrt(moveX * moveX + moveY * moveY);
+		if (moveLen > 1.0f) {
+			moveX /= moveLen;
+			moveY /= moveLen;
+		}
+
+		//==============================
+		// 実際に移動
+		//==============================
+		if (std::fabs(moveX) > 0.00001f || std::fabs(moveY) > 0.00001f) {
+			const float moveSpeed = stickMovePerSec_;
+			center_ += camRight * (moveX * moveSpeed * dt)
+				+ camUp * (moveY * moveSpeed * dt);
 		}
 	}
 	//--------------------------------------------------

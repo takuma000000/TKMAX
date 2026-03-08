@@ -794,7 +794,10 @@ void Player::RBShoot() {
 	TKM::Input* input = TKM::Input::GetInstance();
 
 	// ▼ RB：通常弾
-	if (!input->PushButton(XINPUT_GAMEPAD_RIGHT_SHOULDER)) {
+	const bool padRB = input->PushButton(XINPUT_GAMEPAD_RIGHT_SHOULDER);
+	const bool keyK = input->PushKey(DIK_K);
+
+	if (!padRB && !keyK) {
 		return;
 	}
 
@@ -926,7 +929,7 @@ void Player::LBShoot() {
 	TKM::Input* input = TKM::Input::GetInstance();
 
 	// ▼ LB：山なりホーミング弾（ロックオンしてる敵に向かう、LB弾は自動で満タン回復する）
-	if (input->TriggerButton(XINPUT_GAMEPAD_LEFT_SHOULDER) && !ltHeld_) {
+	if ((input->TriggerButton(XINPUT_GAMEPAD_LEFT_SHOULDER) || input->TriggerKey(DIK_L)) && !ltHeld_) {
 
 		// デバッグ無限LBモードでないなら、弾数が0のときは発射できない
 		if (!debugUnlimitedLB_ && lbAmmo_ <= 0) {
@@ -999,8 +1002,11 @@ void Player::LBShoot() {
 void Player::LTShoot() {
 	TKM::Input* input = TKM::Input::GetInstance();
 
-	// ▼ LT：全敵必中弾（元LB）
-	if ((input->GetLeftTrigger() > kTriggerThreshold) && allEnemies_) {
+	// ▼ LT：全敵必中弾
+	const bool padLT = (input->GetLeftTrigger() > kTriggerThreshold);
+	const bool keyL = input->PushKey(DIK_Z);
+
+	if ((padLT || keyL) && allEnemies_) {
 
 		// デバッグ無限LBモードでないなら、弾数が0のときは発射できない
 		for (auto& enemy : *allEnemies_) {
@@ -1213,18 +1219,52 @@ void Player::StartDodge() {
 
 	auto* in = TKM::Input::GetInstance();
 
-	// スティック方向（左スティック）
+	//========================================
+	// ゲームパッド方向入力（左スティック）
+	//========================================
 	float rx = static_cast<float>(in->GetLeftStickX());
 	float ry = static_cast<float>(in->GetLeftStickY());
 
-	// デッドゾーン（Reticleと同じ）
 	const float dz = 6000.0f;
-	if (std::fabs(rx) < dz) rx = 0.0f;
-	if (std::fabs(ry) < dz) ry = 0.0f;
+	if (std::fabs(rx) < dz) { rx = 0.0f; }
+	if (std::fabs(ry) < dz) { ry = 0.0f; }
 
 	const float norm = 32767.0f;
 	rx /= norm;
 	ry /= norm;
+
+	//========================================
+	// キーボード方向入力
+	// WASD と 方向キー 両対応
+	//========================================
+	float keyX = 0.0f;
+	float keyY = 0.0f;
+
+	if (in->PushKey(DIK_A) || in->PushKey(DIK_LEFT)) { keyX -= 1.0f; }
+	if (in->PushKey(DIK_D) || in->PushKey(DIK_RIGHT)) { keyX += 1.0f; }
+	if (in->PushKey(DIK_W) || in->PushKey(DIK_UP)) { keyY += 1.0f; }
+	if (in->PushKey(DIK_S) || in->PushKey(DIK_DOWN)) { keyY -= 1.0f; }
+
+	// 斜めをちゃんと扱うため正規化
+	if (std::fabs(keyX) > 0.0001f || std::fabs(keyY) > 0.0001f) {
+		float keyLen = std::sqrt(keyX * keyX + keyY * keyY);
+		if (keyLen > 0.0001f) {
+			keyX /= keyLen;
+			keyY /= keyLen;
+		}
+	}
+
+	//========================================
+	// パッド + キーボードを合成
+	// キーボード入力があるならそっちを優先
+	//========================================
+	float moveX = rx;
+	float moveY = ry;
+
+	if (std::fabs(keyX) > 0.0001f || std::fabs(keyY) > 0.0001f) {
+		moveX = keyX;
+		moveY = keyY;
+	}
 
 	// カメラRight/Up基準でワールド方向へ
 	Vector3 camRight = { 1,0,0 };
@@ -1235,41 +1275,40 @@ void Player::StartDodge() {
 		camUp = MyMath::Normalize({ W.m[1][0], W.m[1][1], W.m[1][2] });
 	}
 
-	Vector3 dir = camRight * rx + camUp * ry;
+	Vector3 dir = camRight * moveX + camUp * moveY;
 	dir.z = 0.0f;
 
 	if (MyMath::Length(dir) < 0.001f) {
-		return; // 方向入力なしなら回避しない（好みで前方向にしてもOK）
+		return; // 方向入力なしなら回避しない
 	}
 	dir = MyMath::Normalize(dir);
 
 	isDodging_ = true;
 	dodgeT_ = 0.0f;
 	dodgeStartPos_ = object_->GetTranslate();
-	dodgeDir_ = dir; // 入力方向
+	dodgeDir_ = dir;
 
 	dodgeBaseRot_ = object_->GetRotate();
 	{
-		// どっち方向として扱うか（4方向に丸める）
 		const float ax = std::fabs(dodgeDir_.x);
 		const float ay = std::fabs(dodgeDir_.y);
 
-		const bool horizontal = (ax >= ay); // 斜めは大きい方に寄せる（好みで > にしてもOK）
+		const bool horizontal = (ax >= ay);
 
-		if (horizontal) { // 左右回避
-			// 左右回避：Zだけ回す
+		if (horizontal) {
+			// 左右回避：Z回転
 			dodgeSpinWRoll_ = 1.0f;
 			dodgeSpinWPitch_ = 0.0f;
 
-			dodgeSpinRollSign_ = (dodgeDir_.x >= 0.0f) ? -1.0f : +1.0f; // 右=右回り, 左=左回り
-			dodgeSpinPitchSign_ = +1.0f; // 使わないけど念のため
+			dodgeSpinRollSign_ = (dodgeDir_.x >= 0.0f) ? -1.0f : +1.0f;
+			dodgeSpinPitchSign_ = +1.0f;
 		} else {
-			// 上下回避：Xだけ回す
+			// 上下回避：X回転
 			dodgeSpinWRoll_ = 0.0f;
 			dodgeSpinWPitch_ = 1.0f;
 
-			dodgeSpinPitchSign_ = (dodgeDir_.y >= 0.0f) ? +1.0f : -1.0f; // 上=後ろ回り, 下=前回り
-			dodgeSpinRollSign_ = +1.0f; // 使わないけど念のため
+			dodgeSpinPitchSign_ = (dodgeDir_.y >= 0.0f) ? +1.0f : -1.0f;
+			dodgeSpinRollSign_ = +1.0f;
 		}
 	}
 }
@@ -1277,8 +1316,8 @@ void Player::StartDodge() {
 void Player::HandleDodge(float dt) {
 	auto* in = TKM::Input::GetInstance();
 
-	// X押した瞬間に開始
-	if (!isDodging_ && in->PushButton(XINPUT_GAMEPAD_X)) {
+	// Xボタン または Jキーを押した瞬間に開始
+	if (!isDodging_ && (in->PushButton(XINPUT_GAMEPAD_X) || in->TriggerKey(DIK_J))) {
 		StartDodge();
 	}
 
