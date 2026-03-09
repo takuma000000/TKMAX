@@ -676,7 +676,9 @@ namespace TKM {
 		if (uiLB_) { uiLB_->SetColor(mulAlpha(colLB_)); uiLB_->Draw(); }
 		if (uiRB_) { uiRB_->SetColor(mulAlpha(colRB_)); uiRB_->Draw(); }
 		if (uiX_) { uiX_->SetColor(mulAlpha(colX_)); uiX_->Draw(); }
+		if(isGamepadConnected_){
 		if (uiLS_) { uiLS_->SetColor(mulAlpha(colLS_)); uiLS_->Draw(); }
+		}
 		if (uiRBGaugeIcon_) { uiRBGaugeIcon_->SetColor(mulAlpha(colRBGaugeIcon_)); uiRBGaugeIcon_->Draw(); }
 
 		// ---- RB/LBゲージUI ----
