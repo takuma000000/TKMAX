@@ -1,4 +1,6 @@
+#define NOMINMAX
 #include "Sprite.h"
+#include <algorithm>
 
 #ifdef USE_IMGUI
 #include "imgui.h"
@@ -93,12 +95,15 @@ namespace TKM {
 		materialResource_ = dxCommon->CreateBufferResource(sizeof(Material));
 		//書き込むためのアドレスを取得
 		materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
-		//色は白に設定
+				// 色は白
 		materialData_->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-		//SprightはLightingしないのでfalseを設定する
-		materialData_->enableLighting = false;
-		//UV変換行列は単位行列を設定する
-		materialData_->uvTransform = MyMath::MakeIdentity4x4();
+
+		// 発光初期値
+		materialData_->glowColor = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+		materialData_->glowParam = Vector4(0.0f, 1.0f, 0.05f, 2.0f); // intensity, width, threshold, softness
+		materialData_->glowEnabled = 0;
+
+		// UV変換
 
 		//座標変換行列リソースを作る
 		transformationMatrixResource_ = dxCommon->CreateBufferResource(sizeof(TransformationMatrix));
@@ -237,5 +242,39 @@ namespace TKM {
 		textureSize_.y = static_cast<float>(metadata.height); //テクスチャの高さを取得
 		//画像サイズをテクスチャサイズに合わせる
 		size_ = textureSize_;
+	}
+
+	void Sprite::SetGlowEnabled(bool enable) {
+		materialData_->glowEnabled = enable ? 1 : 0;
+	}
+
+	void Sprite::SetGlowColor(const Vector4& color) {
+		materialData_->glowColor = color;
+	}
+
+	void Sprite::SetGlowIntensity(float intensity) {
+		materialData_->glowParam.x = std::max(0.0f, intensity);
+	}
+
+	void Sprite::SetGlowWidth(float width) {
+		materialData_->glowParam.y = std::max(0.0f, width);
+	}
+
+	void Sprite::SetGlowThreshold(float threshold) {
+		materialData_->glowParam.z = std::max(0.0f, threshold);
+	}
+
+	void Sprite::SetGlowSoftness(float softness) {
+		materialData_->glowParam.w = std::max(0.001f, softness);
+	}
+
+	void Sprite::SetGlowParams(bool enable, const Vector4& color, float intensity, float width, float threshold, float softness) { // 引数::グローの有効/無効、色、強さ、幅、閾値、柔らかさ
+		// グローのパラメータを一括で設定する便利な関数
+		SetGlowEnabled(enable); // グローの有効/無効を設定
+		SetGlowColor(color); // グローの色を設定
+		SetGlowIntensity(intensity); // グローの強さを設定
+		SetGlowWidth(width); // グローの幅を設定s
+		SetGlowThreshold(threshold); // グローの閾値を設定
+		SetGlowSoftness(softness); // グローの柔らかさを設定
 	}
 } //namespace TKM

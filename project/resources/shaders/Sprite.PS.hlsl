@@ -6,7 +6,12 @@ SamplerState gSampler : register(s0);
 struct Material
 {
     float4 color;
-    int enableLighting;
+    float4 glowColor;
+    float4 glowParam; // x=intensity, y=width, z=threshold, w=softness
+
+    int glowEnabled;
+    float3 _pad;
+
     float4x4 uvTransform;
 };
 
@@ -26,35 +31,59 @@ struct PixelShaderOutput
 
 //ConstantBuffer<DirectionalLight> gDirectionalLight : register(b1);
 
-
 PixelShaderOutput main(VertexShaderOutput input)
 {
     PixelShaderOutput output;
 
-    //Materialを拡張する
     float4 transformedUV = mul(float4(input.texcoord, 0.0f, 1.0f), gMaterial.uvTransform);
+    float2 uv = transformedUV.xy;
 
-    // テクスチャサンプルを行う
-    float4 textureColor = gTexture.Sample(gSampler, transformedUV.xy);
+    float4 textureColor = gTexture.Sample(gSampler, uv);
+    float4 baseColor = gMaterial.color * textureColor;
 
-    // ピクセルの色を計算する
-    //output.color = gMaterial.color * textureColor;
+    float4 finalColor = baseColor;
 
-    //if (gMaterial.enableLighting != 0)
-    //{
-    //    float NdotL = dot(normalize(input.normal), -gDirectionalLight.direction);
-    //    float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
-        
-        
-     
-    //    output.color.a = gMaterial.color.a * textureColor.a; // 透明度
-    //}
-    //else
-    //{
-    //    output.color = gMaterial.color * textureColor;
-    //}
+    float glowIntensity = gMaterial.glowParam.x;
+    float glowWidth = gMaterial.glowParam.y;
+    float glowThreshold = gMaterial.glowParam.z;
+    float glowSoftness = gMaterial.glowParam.w;
 
-    output.color = gMaterial.color * textureColor;
-    
+    if (gMaterial.glowEnabled != 0 && glowIntensity > 0.0001f)
+    {
+        uint texW, texH;
+        gTexture.GetDimensions(texW, texH);
+
+        float2 texel = 1.0f / float2((float) texW, (float) texH);
+        float2 glowStep = texel * max(glowWidth, 0.0f);
+
+        float aC = textureColor.a;
+        float aL = gTexture.Sample(gSampler, uv + float2(-glowStep.x, 0.0f)).a;
+        float aR = gTexture.Sample(gSampler, uv + float2(glowStep.x, 0.0f)).a;
+        float aU = gTexture.Sample(gSampler, uv + float2(0.0f, -glowStep.y)).a;
+        float aD = gTexture.Sample(gSampler, uv + float2(0.0f, glowStep.y)).a;
+        float aUL = gTexture.Sample(gSampler, uv + float2(-glowStep.x, -glowStep.y)).a;
+        float aUR = gTexture.Sample(gSampler, uv + float2(glowStep.x, -glowStep.y)).a;
+        float aDL = gTexture.Sample(gSampler, uv + float2(-glowStep.x, glowStep.y)).a;
+        float aDR = gTexture.Sample(gSampler, uv + float2(glowStep.x, glowStep.y)).a;
+
+        float aroundMax = max(max(max(aL, aR), max(aU, aD)), max(max(aUL, aUR), max(aDL, aDR)));
+
+        // 輪郭外側にだけ乗るグロー
+        float edge = saturate(aroundMax - aC);
+
+        // しきい値とにじみ
+        edge = saturate((edge - glowThreshold) * glowSoftness);
+
+        float glowAlpha = edge * glowIntensity * gMaterial.glowColor.a;
+        float3 glowRgb = gMaterial.glowColor.rgb * glowAlpha;
+
+        // ベースの上に加算気味で乗せる
+        finalColor.rgb += glowRgb;
+
+        // アルファは元の輪郭を壊しすぎないよう少しだけ補強
+        finalColor.a = saturate(max(finalColor.a, baseColor.a + glowAlpha * 0.35f));
+    }
+
+    output.color = finalColor;
     return output;
 }

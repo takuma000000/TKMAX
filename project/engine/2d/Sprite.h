@@ -32,9 +32,14 @@ namespace TKM {
 
 		//マテリアルデータ
 		struct Material {
-			Vector4 color;
-			int32_t enableLighting;
-			float padding[3];
+			Vector4 color;       // 通常色
+			Vector4 glowColor;   // 発光色
+
+			Vector4 glowParam;   // x=intensity, y=width, z=threshold, w=softness
+
+			int32_t glowEnabled = 0;
+			float padding[3] = {};
+
 			Matrix4x4 uvTransform;
 		};
 
@@ -187,6 +192,34 @@ namespace TKM {
 		/// </summary>
 		/// <param name="enable"></param>
 		void SetAutoAdjustTextureSize(bool enable);
+		/// <summary>
+		/// 発光の有効 / 無効を設定。
+		/// </summary>
+		void SetGlowEnabled(bool enable);
+		/// <summary>
+		/// 発光色を設定。
+		/// </summary>
+		void SetGlowColor(const Vector4& color);
+		/// <summary>
+		/// 発光の強さを設定。
+		/// </summary>
+		void SetGlowIntensity(float intensity);
+		/// <summary>
+		/// 発光の広がりを設定。
+		/// </summary>
+		void SetGlowWidth(float width);
+		/// <summary>
+		/// 輪郭判定のしきい値を設定。
+		/// </summary>
+		void SetGlowThreshold(float threshold);
+		/// <summary>
+		/// 輪郭のにじみ具合を設定。
+		/// </summary>
+		void SetGlowSoftness(float softness);
+		/// <summary>
+		/// 発光パラメータをまとめて設定。
+		/// </summary>
+		void SetGlowParams(bool enable, const Vector4& color, float intensity, float width, float threshold = 0.05f, float softness = 2.0f);
 		// ===========================================
 
 	private:
