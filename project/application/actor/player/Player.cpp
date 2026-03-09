@@ -1000,6 +1000,7 @@ void Player::LBShoot() {
 }
 
 void Player::LTShoot() {
+#ifdef _DEBUG
 	TKM::Input* input = TKM::Input::GetInstance();
 
 	// ▼ LT：全敵必中弾
@@ -1033,6 +1034,7 @@ void Player::LTShoot() {
 			bullets_.push_back(std::move(bullet));
 		}
 	}
+#endif
 }
 
 void Player::UpdateCameraFollowThirdPerson(float dt) {
