@@ -975,9 +975,9 @@ void Player::LBShoot() {
 		bullet->SetCore(core_);
 		bullet->StartArc(start, c1, c2, end, 0.4f);
 
-		if (radialBlur_) {
-			radialBlur_->BulrStartShock(2.0f, 0.35f); // 強さ = 2.0f、時間 = 0.35秒
-		}
+		//if (radialBlur_) {
+		//	radialBlur_->BulrStartShock(2.0f, 0.35f); // 強さ = 2.0f、時間 = 0.35秒
+		//}
 
 		homingBullets_.push_back(std::move(bullet)); // ホーミング弾リストに追加
 
@@ -987,7 +987,7 @@ void Player::LBShoot() {
 		lbNoFireTimer_ = 0.0f; // 「撃ってない時間」リセット
 
 		ZoomCamera(); // LTの一時ズームアウト開始
-		StartCameraShake(10); // 軽いシェイクも同時に開始
+		//StartCameraShake(10); // 軽いシェイクも同時に開始
 		StartRumble(0.12f, 42000, 42000); // 振動も同時に開始（0.12秒、強め）
 
 		ltHeld_ = true;
