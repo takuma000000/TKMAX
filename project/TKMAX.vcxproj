@@ -218,6 +218,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\state\TitleFlowStates.cpp" />
     <ClCompile Include="engine\effect\particle\ParticleSpawner.cpp" />
     <ClCompile Include="engine\effect\post\TrailRibbonRenderer.cpp" />
+    <ClCompile Include="application\ui\OperationGuideUI.cpp" />
+    <ClCompile Include="application\ui\PlayerHudUI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\actor\enemy\manager\EnemyManager.h" />
@@ -316,6 +318,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\state\IStateContext.h" />
     <ClInclude Include="engine\effect\particle\ParticleSpawner.h" />
     <ClInclude Include="application\actor\player\HomingBullet.h" />
+    <ClInclude Include="application\ui\OperationGuideUI.h" />
+    <ClInclude Include="application\ui\PlayerHudUI.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="application\scene\controller\TitleMenuController.h" />
     <ClInclude Include="application\catalog\TextureCatalog.h" />

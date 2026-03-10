@@ -202,6 +202,8 @@
     <ClCompile Include="engine\effect\particle\ParticleSpawner.cpp" />
     <ClCompile Include="engine\effect\post\TrailRibbonRenderer.cpp" />
     <ClCompile Include="application\actor\player\HomingBullet.cpp" />
+    <ClCompile Include="application\ui\OperationGuideUI.cpp" />
+    <ClCompile Include="application\ui\PlayerHudUI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -443,6 +445,8 @@
     <ClInclude Include="engine\effect\particle\ParticleSpawner.h" />
     <ClInclude Include="engine\effect\post\TrailRibbonRenderer.h" />
     <ClInclude Include="application\actor\player\HomingBullet.h" />
+    <ClInclude Include="application\ui\OperationGuideUI.h" />
+    <ClInclude Include="application\ui\PlayerHudUI.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
