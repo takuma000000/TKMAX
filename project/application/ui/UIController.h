@@ -237,6 +237,9 @@ namespace TKM {
 		// 色
 		Vector4 idleCol_{ 1.0f, 1.0f, 1.0f, 0.75f }; // 通常の色
 		Vector4 onCol_{ 1.0f, 0.25f, 0.25f, 1.0f }; // 押下中の色
+		// 右側UIの透明度
+		float rightUiIdleAlpha_ = 0.45f;   // 通常時（ちょい透明）
+		float rightUiActiveAlpha_ = 1.0f;  // 入力中（くっきり）
 		// シェイク（押下中だけ位置を小刻みにズラす）
 		float shakeAmpPx_ = 3.0f;     // 揺れ幅（ピクセル）
 		// 押下継続時間（ボタンごと）

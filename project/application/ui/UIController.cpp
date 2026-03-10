@@ -280,6 +280,9 @@ namespace TKM {
 		idleCol_ = { 1,1,1,1.0f }; // 押されてないときは通常の色
 		onCol_ = { 1,0.25f,0.25f,1.0f }; // 押されたときは赤みが強くなるように
 
+		rightUiIdleAlpha_ = 0.45f; // 右側UIのアイドル状態の透明度（押されてないときは半透明）
+		rightUiActiveAlpha_ = 1.0f; // 右側UIのアクティブ状態の透明度（押されたときは完全に不透明）
+
 		colLB_ = { 1,1,1,1 };
 		colRB_ = { 1,1,1,1 };
 		colX_ = { 1,1,1,1 };
@@ -468,6 +471,12 @@ namespace TKM {
 		colLB_ = lbDown ? onCol_ : idleCol_;
 		colX_ = xDown ? onCol_ : idleCol_;
 		colLS_ = lsMoving ? onCol_ : idleCol_;
+
+		// 透明度はそれぞれ個別
+		colRB_.w = rbDown ? rightUiActiveAlpha_ : rightUiIdleAlpha_;
+		colLB_.w = lbDown ? rightUiActiveAlpha_ : rightUiIdleAlpha_;
+		colX_.w = xDown ? rightUiActiveAlpha_ : rightUiIdleAlpha_;
+		colLS_.w = lsMoving ? rightUiActiveAlpha_ : rightUiIdleAlpha_;
 
 		// ---- UI Update ----
 		if (uiLB_) uiLB_->Update();
@@ -805,6 +814,8 @@ namespace TKM {
 		if (ImGui::TreeNode("色設定")) {
 			changed |= ImGui::ColorEdit4("通常色", &idleCol_.x);
 			changed |= ImGui::ColorEdit4("押下色", &onCol_.x);
+			changed |= ImGui::DragFloat("通常時アルファ", &rightUiIdleAlpha_, 0.01f, 0.0f, 1.0f);
+			changed |= ImGui::DragFloat("入力時アルファ", &rightUiActiveAlpha_, 0.01f, 0.0f, 1.0f);
 			ImGui::TreePop();
 		}
 
@@ -830,6 +841,8 @@ namespace TKM {
 
 			idleCol_ = { 1,1,1,0.75f };
 			onCol_ = { 1,0.25f,0.25f,1.0f };
+			rightUiIdleAlpha_ = 0.45f;
+			rightUiActiveAlpha_ = 1.0f;
 
 			changed = true;
 		}
