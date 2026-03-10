@@ -2,6 +2,7 @@
 #include <memory>
 
 #include "IntroSequence.h"
+#include "Object3dCommon.h"
 #include "Easing.h"
 #include "IrisUtil.h"
 #include "Input.h"
@@ -32,10 +33,11 @@ namespace TKM {
 		};
 
 		/// <summary>
-		/// イントロシーケンスを初期化します。
+		/// ゲーム進行関連システムを初期化します。
 		/// </summary>
 		/// <param name="dxCommon">DirectX 共通管理クラス</param>
-		void Initialize(DirectXCommon* dxCommon);
+		/// <param name="object3dCommon">3Dオブジェクト共通管理クラス</param>
+		void Initialize(DirectXCommon* dxCommon, TKM::Object3dCommon* object3dCommon);
 		/// <summary>
 		/// イントロシーケンスの更新処理を行います。
 		/// 敵初期化の要求（リクエスト）もここで生成します。
@@ -51,7 +53,12 @@ namespace TKM {
 		/// <note>
 		/// 実際の描画呼び出しは IntroSequence 側から行われます。
 		/// </note>
-		void Draw() const;
+		void Draw(DirectXCommon* dxCommon) const;
+		/// <summary>
+		/// イントロ用ボスの3D描画を行います。
+		/// </summary>
+		/// <param name="dxCommon">DirectX 共通管理クラス</param>
+		void DrawIntroBoss3D(DirectXCommon* dxCommon) const;
 
 		/// <summary>
 		/// トランジション更新処理を行います。

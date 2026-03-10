@@ -104,12 +104,15 @@ void GameScene::Draw() { Draw3D(); DrawSprite(); } // 3Dとスプライトの描
 void GameScene::Draw3D() {
 	skybox_->Draw(); // スカイボックス描画
 
+	// 3Dオブジェクト描画の共通設定
 	Object3dCommon::GetInstance()->DrawSetCommon();
-	player_->Draw(dxCommon_); // プレイヤー描画
-	enemyManager_->Draw(dxCommon_); // 敵描画
-	const bool isClear = (flow_->IsInClear()); // クリアシーケンス中はボスを描画しない（撃破後の演出に専念させるため）
+	player_->Draw(dxCommon_);
+	enemyManager_->Draw(dxCommon_);
+	flow_->DrawIntroBoss3D(dxCommon_);
+	const bool isClear = (flow_->IsInClear());
+	// クリアシーケンス中はボスを描画しない（撃破後の演出で、ボスが残っていると見栄えが悪いため）
 	if (!isClear) {
-		bossManager_->Draw(dxCommon_); // ボス描画
+		bossManager_->Draw(dxCommon_);
 	}
 
 	TKM::Camera* activeCamera = TKM::CameraManager::GetInstance()->GetActiveCamera(); // 今フレームのアクティブカメラを取得
@@ -129,7 +132,7 @@ void GameScene::Draw3D() {
 
 void GameScene::DrawSprite() {
 	TKM::SpriteCommon::GetInstance()->DrawSetCommon();
-	flow_->Draw(); // ゲームフローの描画（イントロシーケンス等）
+	flow_->Draw(dxCommon_); // ゲームフローの描画（イントロシーケンス等）
 	ui_->Draw(); // HUD描画
 	pause_->Draw(); // ポーズメニュー描画
 	bossManager_->DrawUI(); // ボスマネージャのUI描画（HPゲージ等）
@@ -169,7 +172,7 @@ void GameScene::InitializeSprite() {
 
 	// ──────────────── ゲームフローの初期化 ───────────────
 	flow_ = std::make_unique<TKM::GameFlowController>();
-	flow_->Initialize(dxCommon_);
+	flow_->Initialize(dxCommon_, TKM::Object3dCommon::GetInstance());
 	// ──────────────── UIコントローラーの初期化 ───────────────
 	ui_ = std::make_unique<TKM::UIController>();
 	const float w = (float)WindowsAPI::kClientWidth_;

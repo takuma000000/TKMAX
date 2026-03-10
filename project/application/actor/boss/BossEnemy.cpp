@@ -28,47 +28,73 @@ void BossEnemy::Update(float dt) {
 	if (IsDead()) { return; }
 
 	// ============================
-	// チャージ中だけ触手を動かす
+	// イントロ用パニック触手
 	// ============================
-	if (tentacleChargeActive_) {
+	if (introPanicActive_) {
 		tentacleWiggleT_ += dt;
 
-		// 強度（0..1）
+		float s = introPanic01_;
+		if (s < 0.0f) s = 0.0f;
+		if (s > 1.0f) s = 1.0f;
+
+		float freq = 18.0f + s * 10.0f;
+		float ampX = 0.22f * s;
+		float ampY = 0.16f * s;
+		float ampZ = 0.28f * s;
+		float lift = 0.20f * s;
+
+		Vector3 pos = tentacleBasePos_;
+		Vector3 rot = tentacleBaseRot_;
+		Vector3 scl = tentacleBaseScale_;
+
+		rot.x += sinf(tentacleWiggleT_ * freq) * ampX;
+		rot.y += cosf(tentacleWiggleT_ * (freq * 1.35f)) * ampY;
+		rot.z += sinf(tentacleWiggleT_ * (freq * 1.8f)) * ampZ;
+
+		pos.x += sinf(tentacleWiggleT_ * (freq * 0.7f)) * 0.18f * s;
+		pos.y += fabsf(sinf(tentacleWiggleT_ * (freq * 0.9f))) * lift;
+
+		float pulse = 1.0f + fabsf(sinf(tentacleWiggleT_ * (freq * 0.65f))) * (0.06f * s);
+		scl.x *= pulse;
+		scl.y *= 1.0f + 0.03f * s;
+		scl.z *= pulse;
+
+		SetTentacleLocal(pos, rot, scl);
+	}
+	// ============================
+	// 通常のチャージ触手
+	// ============================
+	else if (tentacleChargeActive_) {
+		tentacleWiggleT_ += dt;
+
 		float s = tentacleCharge01_;
 		if (s < 0.0f) s = 0.0f;
 		if (s > 1.0f) s = 1.0f;
 
-		// 抑えめ設定（生物感重視）
-		float freq = 9.0f + s * 4.0f;   // やや速くなる程度
+		float freq = 9.0f + s * 4.0f;
 		float ampX = 0.18f * s;
 		float ampY = 0.08f * s;
 		float ampZ = 0.15f * s;
 		float lift = 0.12f * s;
 
-		// ベースに揺らぎを加える形で触手のローカル座標を決定
 		Vector3 pos = tentacleBasePos_;
-		// 回転はオイラー角で直接指定
 		Vector3 rot = tentacleBaseRot_;
-		// スケールはベースに倍率をかける形で指定
 		Vector3 scl = tentacleBaseScale_;
 
-		// 回転のうねり
 		rot.x += sinf(tentacleWiggleT_ * freq) * ampX;
 		rot.y += cosf(tentacleWiggleT_ * (freq * 0.7f)) * ampY;
 		rot.z += sinf(tentacleWiggleT_ * (freq * 1.2f)) * ampZ;
 
-		// 上下の脈動
 		pos.y += sinf(tentacleWiggleT_ * (freq * 0.5f)) * lift;
 
-		// ごく軽いスケール変化
 		float pulse = 1.0f + sinf(tentacleWiggleT_ * (freq * 0.8f)) * (0.03f * s);
 		scl.x *= pulse;
 		scl.y *= pulse;
 		scl.z *= pulse;
 
-		SetTentacleLocal(pos, rot, scl); // チャージ中は触手を動かす
+		SetTentacleLocal(pos, rot, scl);
 	} else {
-		SetTentacleLocal(tentacleBasePos_, tentacleBaseRot_, tentacleBaseScale_); // チャージしてないときは触手をベース位置に
+		SetTentacleLocal(tentacleBasePos_, tentacleBaseRot_, tentacleBaseScale_);
 	}
 
 	// 本体は従来更新
@@ -98,4 +124,9 @@ void BossEnemy::ImGuiDebug() {
 void BossEnemy::SetTentacleCharge(bool active, float charge01) {
 	tentacleChargeActive_ = active; // チャージのON/OFF
 	tentacleCharge01_ = charge01; // 0..1の範囲でチャージ量を指定
+}
+
+void BossEnemy::SetIntroPanic(bool active, float panic01) {
+	introPanicActive_ = active; // イントロ用パニック触手のON/OFF
+	introPanic01_ = panic01; // 0..1の範囲で慌て強度を指定
 }

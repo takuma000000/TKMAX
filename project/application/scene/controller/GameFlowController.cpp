@@ -6,9 +6,9 @@
 #include "ParticleManager.h"
 
 namespace TKM {
-	void GameFlowController::Initialize(DirectXCommon* dxCommon) {
+	void GameFlowController::Initialize(DirectXCommon* dxCommon, TKM::Object3dCommon* object3dCommon) {
 		intro_ = std::make_unique<IntroSequence>();
-		intro_->Initialize(dxCommon);
+		intro_->Initialize(dxCommon, object3dCommon);
 
 		gameplayLocked_ = true;
 
@@ -51,10 +51,16 @@ namespace TKM {
 		return TransitionRequest::None;
 	}
 
-	void GameFlowController::Draw() const {
+	void GameFlowController::Draw(DirectXCommon* dxCommon) const {
 		if (intro_) {
 			// Iris閉じ or 外部制御なら描画
-			intro_->Draw(irisClosing_ || externalIrisDraw_);
+			intro_->Draw(dxCommon, irisClosing_ || externalIrisDraw_);
+		}
+	}
+
+	void GameFlowController::DrawIntroBoss3D(DirectXCommon* dxCommon) const {
+		if (intro_) {
+			intro_->DrawIntroBoss3D(dxCommon); // イントロ用ボスの3D描画
 		}
 	}
 

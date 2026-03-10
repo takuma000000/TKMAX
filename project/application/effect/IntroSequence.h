@@ -2,6 +2,8 @@
 #include <memory>
 
 #include "DirectXCommon.h"
+#include "BossEnemy.h"
+#include "Object3dCommon.h"
 #include "Camera.h"
 #include "Sprite.h"
 #include "MyMath.h"
@@ -11,7 +13,7 @@
 namespace TKM {
 	//=============================================================
 	// IntroSequenceクラス
-	// ゲーム開始時の演出（アイリス開き / カメラ回転 / start.png表示）を管理する。
+	// ・ゲーム開始時のイントロ演出を管理するクラス。
 	//=============================================================
 	class IntroSequence {
 	public:
@@ -22,7 +24,8 @@ namespace TKM {
 		/// イントロ表示関連の初期化を行います。
 		/// </summary>
 		/// <param name="dxCommon">DirectX 共通管理クラス</param>
-		void Initialize(DirectXCommon* dxCommon);
+		/// <param name="object3dCommon">Object3d 共通管理クラス</param>
+		void Initialize(DirectXCommon* dxCommon, TKM::Object3dCommon* object3dCommon);
 		/// <summary>
 		/// イントロ表示の更新処理を行います。
 		/// 敵初期化の要求生成もここで行います。
@@ -35,8 +38,14 @@ namespace TKM {
 		/// <summary>
 		/// イントロ表示の描画処理を行います。
 		/// </summary>
-		/// <param name="irisClosing">アイリス閉じ中の場合 true</param>
-		void Draw(bool irisClosing) const;
+		/// <param name="dxCommon">DirectX 共通管理クラス</param>
+		/// <param name="irisClosing">アイリスが閉じる演出中の場合 true</param>
+		void Draw(DirectXCommon* dxCommon, bool irisClosing) const;
+		/// <summary>
+		/// イントロ用ボスを3D描画します。
+		/// </summary>
+		/// <param name="dxCommon">DirectX 共通管理クラス</param>
+		void DrawIntroBoss3D(DirectXCommon* dxCommon) const;
 
 		/// <summary>
 		/// ゲームプレイがロックされているかを取得します。
@@ -73,6 +82,58 @@ namespace TKM {
 		// ===========================================
 
 	private:
+		/// <summary>
+		/// ボス登場演出の開始処理。カメラの初期設定などを行います。
+		/// </summary>
+		/// <param name="camera">演出および描画に使用するカメラ</param>
+		void StartBossIntro_(Camera* camera);
+		/// <summary>
+		/// ボス登場演出の更新処理。カメラの回転や位置の変化、エフェクトの発生などを管理します。
+		/// </summary>
+		/// <param name="camera">演出および描画に使用するカメラ</param>
+		void UpdateBossAppear_(Camera* camera);
+		/// <summary>
+		/// ボスが到達位置で止まる演出の更新処理。カメラの揺れやエフェクトの発生などを管理します。
+		/// </summary>
+		/// <param name="camera">演出および描画に使用するカメラ</param>
+		void UpdateBossPause_(Camera* camera);
+		/// <summary>
+		/// ボスが気づいて跳ねる演出の更新処理。カメラの揺れやエフェクトの発生などを管理します。
+		/// </summary>
+		/// <param name="camera">演出および描画に使用するカメラ</param>
+		void UpdateBossNoticeHop_(Camera* camera);
+		/// <summary>
+		/// ボスが慌てる演出の更新処理。カメラの揺れやエフェクトの発生などを管理します。
+		/// </summary>
+		/// <param name="camera">演出および描画に使用するカメラ</param>
+		void UpdateBossPanic_(Camera* camera);
+		/// <summary>
+		/// ボスが逃げる演出の更新処理。カメラの移動やエフェクトの発生などを管理します。
+		/// </summary>
+		/// <param name="camera">演出および描画に使用するカメラ</param>
+		void UpdateBossEscape_(Camera* camera);
+		/// <summary>
+		/// 「ゲームスタート」表示の更新処理。スライドインとフェードアウトの管理を行います。
+		/// </summary>
+		/// <param name="camera">演出および描画に使用するカメラ</param>
+		/// <param name="enemiesInitialized">敵の初期化が完了している場合 true</param>
+		void StartGameStart_(bool enemiesInitialized, bool& outRequestInitEnemies);
+
+		//======================================================================
+		// イントロ進行フェーズ
+		//======================================================================
+		enum class Phase {
+			IrisOpen, // アイリス開き
+			CameraIntro, // カメラインロ（回転）
+			BossAppear, // ボス登場
+			BossPause, // 到達位置で止まる
+			BossNoticeHop, // ボスが気づいて跳ねる
+			BossPanic, // ボスが慌てる
+			BossEscape, // ボスが逃げる
+			ShowStart, // 「ゲームスタート」表示
+			Done, // イントロ完了
+		};
+		Phase phase_ = Phase::IrisOpen; // 現在のイントロ進行フェーズ
 		// ======================================================================
 		// --- 演出全体に関するフラグや定数 ---
 		// ======================================================================
@@ -135,5 +196,61 @@ namespace TKM {
 		float startGlowAmp_ = 0.8f; // 「ゲームスタート」表示のグローの強さ。0.0fでグローなし、1.0fで最大のグロー。スライドインとフェードアウト両方で使用。
 		float startGlowSpeed_ = 10.0f; // 「ゲームスタート」表示のグローの速さ。値が大きいほど速くグローが変化する。スライドインとフェードアウト両方で使用。
 		bool  startGlowOn_ = true; // 「ゲームスタート」表示のグローがオンか。スライドインとフェードアウト両方で使用。trueのとき、startGlowAmp_の値に応じてグローが変化する。falseのとき、グローなし。
+		//======================================================================
+		// イントロ用ボス演出
+		//======================================================================
+		std::unique_ptr<BossEnemy> introBoss_ = nullptr;
+		TKM::Object3dCommon* object3dCommon_ = nullptr;
+		DirectXCommon* dxCommon_ = nullptr;
+
+		bool introBossVisible_ = false;
+		bool introBossSpawned_ = false;
+
+		float introBossElapsed_ = 0.0f;
+		float introBossPhaseElapsed_ = 0.0f;
+
+		Vector3 introBossPos_{ 0.0f, 6.0f, 48.0f };
+		Vector3 introBossBasePos_{ 0.0f, 6.0f, 48.0f };
+		Vector3 introBossRot_{ 0.0f, 3.14159265f, 0.0f };
+
+		float introBossAppearSec_ = 1.90f; // 奥から近づいてくる時間
+		float introBossPauseSec_ = 0.28f;  // 到達後に一瞬止まる時間
+		float introBossPanicSec_ = 1.20f; // 慌てる時間
+		float introBossEscapeSec_ = 2.10f; // 逃げる時間
+
+		float introBossAppearStartZ_ = 120.0f; // ボス登場演出開始時のZ位置
+		float introBossAppearEndZ_ = 44.0f; // ボス登場演出終了時のZ位置
+		float introBossEscapeEndZ_ = 120.0f; // ボス逃げる演出終了時のZ位置
+		float introBossNoticeHopSec_ = 2.10f; // ボスが気づいて跳ねる演出の時間（秒）
+
+		float introBossPanicAmpX_ = 2.8f; // ボスが慌てる演出のカメラ揺れのX方向の強さ
+		float introBossPanicAmpY_ = 0.55f; // ボスが慌てる演出のカメラ揺れのY方向の強さ
+		float introBossEscapeAmpX_ = 7.5f; // ボスが逃げる演出のカメラ揺れのX方向の強さ
+		float introBossEscapeHopY_ = 2.0f; // ボスが逃げる演出のホップの高さ
+		float introBossEscapeSpeedZ_ = 28.0f; // ボスが逃げる演出のZ方向の移動速度
+
+		float introBossNoticeHopY_ = 2.6f; // ボスが気づいて跳ねる演出のホップの高さ
+		float introBossNoticeSquashX_ = 1.08f; // ボスが気づいて跳ねる演出の横方向の潰れの強さ。値が大きいほど横に潰れることになる。
+		float introBossNoticeSquashY_ = 0.88f; // ボスが気づいて跳ねる演出の縦方向の潰れの強さ。値が小さいほど縦に潰れることになる。
+
+		float introBossEscapeTargetX_ = 0.0f; // ボスが逃げる演出のターゲットX位置。ボスはこのX位置を目指して逃げる。値を大きくするとより横に逃げることになる。
+		float introBossEscapeTargetTimer_ = 0.0f; // ボスが逃げる演出のターゲットX位置を更新するためのタイマー。これが0になるとターゲットX位置を更新する。
+		float introBossEscapeTargetInterval_ = 0.10f; // ボスが逃げる演出のターゲットX位置を更新する間隔（秒）。この値を小さくするとターゲットX位置が頻繁に変わることになる。
+		//======================================================================
+		// ボス演出用カメラブレンド
+		//======================================================================
+		bool camBlendToBossActive_ = false;     // 通常→ボス演出カメラへ補間中
+		bool camBlendBackActive_ = false;       // ボス演出→通常カメラへ補間中
+		// カメラの位置は変えず、回転のみを補間する。以下はそのための変数。
+		Vector3 camSavedRot_{ 0.0f, 0.0f, 0.0f };      // ボス演出開始前の回転を保存
+		Vector3 camBossStartRot_{ 0.0f, 0.0f, 0.0f };  // ボス演出ブレンド開始回転
+		Vector3 camBossTargetRot_{ 0.0f, 0.0f, 0.0f }; // ボス演出時の目標回転
+		Vector3 camReturnStartRot_{ 0.0f, 0.0f, 0.0f };// 戻り補間開始回転
+		// カメラブレンドのイージング
+		Ease::Tween camBlendToBossTween_; // 通常→ボス演出
+		Ease::Tween camBlendBackTween_;   // ボス演出→通常
+		// カメラブレンドの時間
+		float camBlendToBossSec_ = 0.45f; // 入り補間時間
+		float camBlendBackSec_ = 0.55f;   // 戻り補間時間
 	};
 } // namespace TKM

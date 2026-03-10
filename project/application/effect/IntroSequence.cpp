@@ -3,7 +3,10 @@
 #include "ParticleManager.h"
 
 namespace TKM {
-	void IntroSequence::Initialize(DirectXCommon* dxCommon) {
+	void IntroSequence::Initialize(DirectXCommon* dxCommon, TKM::Object3dCommon* object3dCommon) {
+		object3dCommon_ = object3dCommon;
+		dxCommon_ = dxCommon;
+
 		// Iris（開始は画面を覆った状態→開く）
 		iris_ = CreateCenteredIrisSprite(dxCommon, irisMaxScale_);
 		irisScale_ = irisMaxScale_; // 開始は画面全体を覆うサイズにしておく
@@ -34,6 +37,23 @@ namespace TKM {
 		startFadeOut_ = false;
 		startHoldElapsed_ = 0.0f;
 		startAlpha_ = 1.0f;
+		phase_ = Phase::IrisOpen;
+		introBoss_.reset();
+		introBossVisible_ = false;
+		introBossSpawned_ = false;
+		introBossElapsed_ = 0.0f;
+		introBossPhaseElapsed_ = 0.0f;
+		introBossPos_ = { 0.0f, 6.0f, introBossAppearStartZ_ };
+		introBossBasePos_ = introBossPos_;
+		introBossRot_ = { 0.0f, 3.14159265f, 0.0f };
+		introBossEscapeTargetX_ = 0.0f;
+		introBossEscapeTargetTimer_ = 0.0f;
+		camBlendToBossActive_ = false;
+		camBlendBackActive_ = false;
+		camSavedRot_ = { 0.0f, 0.0f, 0.0f };
+		camBossStartRot_ = { 0.0f, 0.0f, 0.0f };
+		camBossTargetRot_ = { 0.0f, 0.0f, 0.0f };
+		camReturnStartRot_ = { 0.0f, 0.0f, 0.0f };
 	}
 
 	void IntroSequence::Update(float dt, Camera* camera, bool enemiesInitialized, bool& outRequestInitEnemies) {
@@ -84,12 +104,13 @@ namespace TKM {
 			// Iris が終わったら、カメラインロ開始（1回だけ）
 			if (!irisOpening_ && !camIntroActive_ && !camIntroDone_) {
 				camIntroActive_ = true;
+				phase_ = Phase::CameraIntro;
 				camYawTween_.Reset(camYawStart_, camYawEnd_, camIntroDuration_, Ease::Type::OutBack);
 			}
 		}
 
 		// --- Camera Intro ---
-		if (camIntroActive_) {
+		if (camIntroActive_) { // カメラインロ更新
 			float yawNow = camYawTween_.Update(kFixedDt_);
 
 			float denom = std::max(0.0001f, (camYawEnd_ - camYawStart_));
@@ -97,27 +118,86 @@ namespace TKM {
 			float pitchNow = MyMath::Lerp(camPitchStart_, camPitchEnd_, t01);
 
 			camera->SetRotate({ pitchNow, yawNow, 0.0f });
-
+			// ツイーン完了でカメラインロ終了
 			if (camYawTween_.Finished()) {
 				camIntroActive_ = false;
 				camIntroDone_ = true;
-				camera->SetRotate({ camPitchEnd_, camYawEnd_, 0.0f });
+				camera->SetRotate({ camPitchEnd_, camYawEnd_, 0.0f }); // 最終的な回転を確実にセット
+			}
+		}
+		// --- Boss Intro ---
+		// カメラインロが終わったら、ボス登場開始
+		if (camIntroDone_ && phase_ == Phase::CameraIntro) {
+			StartBossIntro_(camera); // ボス登場開始
+		}
+		// --- Boss camera blend in ---
+		if (camBlendToBossActive_) {
+			float t = camBlendToBossTween_.Update(kFixedDt_);
+
+			Vector3 rot{};
+			rot.x = MyMath::Lerp(camBossStartRot_.x, camBossTargetRot_.x, t);
+			rot.y = MyMath::Lerp(camBossStartRot_.y, camBossTargetRot_.y, t);
+			rot.z = MyMath::Lerp(camBossStartRot_.z, camBossTargetRot_.z, t);
+
+			camera->SetRotate(rot);
+
+			if (camBlendToBossTween_.Finished()) {
+				camBlendToBossActive_ = false;
+				camera->SetRotate(camBossTargetRot_);
+			}
+		}
+		// --- Boss camera blend back ---
+		if (camBlendBackActive_) {
+			float t = camBlendBackTween_.Update(kFixedDt_);
+
+			Vector3 rot{};
+			rot.x = MyMath::Lerp(camReturnStartRot_.x, camSavedRot_.x, t);
+			rot.y = MyMath::Lerp(camReturnStartRot_.y, camSavedRot_.y, t);
+			rot.z = MyMath::Lerp(camReturnStartRot_.z, camSavedRot_.z, t);
+
+			camera->SetRotate(rot);
+
+			if (camBlendBackTween_.Finished()) {
+				camBlendBackActive_ = false;
+				camera->SetRotate(camSavedRot_);
+			}
+		}
+		// ボス登場～逃走更新
+		if (phase_ == Phase::BossAppear) {
+			UpdateBossAppear_(camera);
+		} else if (phase_ == Phase::BossPause) {
+			UpdateBossPause_(camera);
+		} else if (phase_ == Phase::BossNoticeHop) {
+			UpdateBossNoticeHop_(camera);
+		} else if (phase_ == Phase::BossPanic) {
+			UpdateBossPanic_(camera);
+		} else if (phase_ == Phase::BossEscape) {
+			UpdateBossEscape_(camera);
+		}
+
+		// --- Boss phase camera follow ---
+		if (!camBlendToBossActive_ && !camBlendBackActive_) {
+			if (phase_ == Phase::BossAppear ||
+				phase_ == Phase::BossPause ||
+				phase_ == Phase::BossNoticeHop ||
+				phase_ == Phase::BossPanic ||
+				phase_ == Phase::BossEscape) {
+
+				Vector3 nowRot = camera->GetRotate();
+				Vector3 nextRot{};
+				float follow = 8.0f * kFixedDt_;
+
+				nextRot.x = MyMath::Lerp(nowRot.x, camBossTargetRot_.x, follow);
+				nextRot.y = MyMath::Lerp(nowRot.y, camBossTargetRot_.y, follow);
+				nextRot.z = MyMath::Lerp(nowRot.z, camBossTargetRot_.z, follow);
+
+				camera->SetRotate(nextRot);
 			}
 		}
 
 		// --- start.png を一度だけ出す ---
-		if (camIntroDone_ && !startPlayed_) {
-			startPlayed_ = true;
-			startVisible_ = true;
-			startSlideIn_ = true;
-
-			startFadeOut_ = false;
-			startHoldElapsed_ = 0.0f;
-			startAlpha_ = 1.0f;
-
-			startSprite_->SetColor({ 1,1,1,startAlpha_ });
-			startSprite_->SetPosition({ startStartPos_.x, startEndPos_.y });
-			startTween_.Reset(0.0f, 1.0f, startDuration_, Ease::Type::OutBack);
+		if (phase_ == Phase::ShowStart && !startPlayed_ && !camBlendBackActive_) {
+			StartGameStart_(enemiesInitialized, outRequestInitEnemies);
 		}
 
 		// --- スライドイン更新 ---
@@ -162,6 +242,7 @@ namespace TKM {
 				if (startAlpha_ <= 0.0f) {
 					startAlpha_ = 0.0f;
 					startVisible_ = false;
+					phase_ = Phase::Done;
 
 					// 演出終了：敵初期化要求 + ゲーム解放
 					if (!enemiesInitialized) {
@@ -176,18 +257,271 @@ namespace TKM {
 		}
 	}
 
-	void IntroSequence::Draw(bool irisClosing) const {
-		// Iris（開く）
+	void IntroSequence::Draw(DirectXCommon* dxCommon, bool irisClosing) const {
+		// Iris（開いているとき、または閉じる演出中は描画）
 		if (irisOpening_ && iris_) {
 			iris_->Draw();
 		}
-		// Iris（閉じ）…GameScene側のフラグを受ける
+		// アイリスが閉じる演出中は描画
 		if (irisClosing && iris_) {
 			iris_->Draw();
 		}
-		// start.png
+		// start.png（表示中のみ）
 		if (startVisible_ && startSprite_) {
 			startSprite_->Draw();
 		}
+	}
+
+	void IntroSequence::DrawIntroBoss3D(DirectXCommon* dxCommon) const {
+		if (introBossVisible_ && introBoss_) {
+			introBoss_->Draw(dxCommon); // イントロ用ボスの3D描画
+		}
+	}
+
+	void IntroSequence::StartBossIntro_(Camera* camera) {
+		if (!camera || !object3dCommon_ || introBossSpawned_) { return; }
+
+		introBoss_ = std::make_unique<BossEnemy>();
+		introBoss_->Initialize(object3dCommon_, dxCommon_);
+		introBoss_->SetCamera(camera);
+		introBoss_->SetPosition({ 0.0f, 6.0f, introBossAppearStartZ_ });
+		introBoss_->SetRotate({ 0.0f, 3.14159265f, 0.0f });
+		introBoss_->SetLocked(true);
+
+		introBossPos_ = { 0.0f, 6.0f, introBossAppearStartZ_ };
+		introBossBasePos_ = introBossPos_;
+		introBossRot_ = { 0.0f, 3.14159265f, 0.0f };
+
+		introBossVisible_ = true;
+		introBossSpawned_ = true;
+		introBossPhaseElapsed_ = 0.0f;
+		introBossElapsed_ = 0.0f;
+		phase_ = Phase::BossAppear;
+
+		// 通常カメラ → ボス演出カメラへの入りを補間する
+		camSavedRot_ = camera->GetRotate();
+		camBossStartRot_ = camSavedRot_;
+		camBossTargetRot_ = { 0.10f, -0.10f, 0.0f };
+
+		camBlendToBossActive_ = true;
+		camBlendBackActive_ = false;
+		camBlendToBossTween_.Reset(0.0f, 1.0f, camBlendToBossSec_, Ease::Type::InOutSine);
+	}
+
+	void IntroSequence::UpdateBossAppear_(Camera* camera) {
+		if (!introBoss_ || !camera) { return; }
+
+		introBossPhaseElapsed_ += kFixedDt_;
+		float t = introBossPhaseElapsed_ / introBossAppearSec_;
+		if (t < 0.0f) t = 0.0f;
+		if (t > 1.0f) t = 1.0f;
+
+		introBossPos_.z = MyMath::Lerp(introBossAppearStartZ_, introBossAppearEndZ_, t);
+		introBossPos_.x = std::sinf(t * MyMath::GetPI()) * 0.6f;
+		introBossPos_.y = 6.0f + std::sinf(t * MyMath::GetPI()) * 0.9f;
+
+		introBoss_->SetPosition(introBossPos_);
+		introBoss_->SetRotate({ 0.0f, 3.14159265f, 0.0f });
+		introBoss_->SetIntroPanic(false, 0.0f);
+		introBoss_->Update(kFixedDt_);
+
+		camBossTargetRot_ = {
+		MyMath::Lerp(0.10f, 0.06f, t),
+		MyMath::Lerp(-0.10f, 0.0f, t),
+		0.0f
+		};
+
+		if (t >= 1.0f) {
+			introBossPhaseElapsed_ = 0.0f;
+			introBossBasePos_ = introBossPos_;
+			phase_ = Phase::BossPause;
+		}
+	}
+
+	void IntroSequence::UpdateBossPause_(Camera* camera) {
+		if (!introBoss_ || !camera) { return; }
+
+		introBossPhaseElapsed_ += kFixedDt_;
+
+		float t = introBossPhaseElapsed_ / introBossPauseSec_;
+		if (t < 0.0f) t = 0.0f;
+		if (t > 1.0f) t = 1.0f;
+
+		// 到達位置で一瞬静止
+		introBossPos_ = introBossBasePos_;
+		introBoss_->SetPosition(introBossPos_);
+		introBoss_->SetRotate({ 0.0f, 3.14159265f, 0.0f });
+
+		// 完全静止だと硬いので、ほんの少しだけ上下に呼吸
+		float idleY = std::sinf(introBossPhaseElapsed_ * 5.0f) * 0.10f;
+		introBoss_->SetPosition({ introBossPos_.x, introBossPos_.y + idleY, introBossPos_.z });
+
+		// この段階ではまだ慌てさせない
+		introBoss_->SetIntroPanic(false, 0.0f);
+		introBoss_->Update(kFixedDt_);
+
+		// カメラも落ち着かせる
+		camBossTargetRot_ = { 0.055f, 0.0f, 0.0f };
+
+		if (t >= 1.0f) {
+			introBossPhaseElapsed_ = 0.0f;
+			introBossBasePos_ = { introBossPos_.x, introBossPos_.y + idleY, introBossPos_.z };
+			phase_ = Phase::BossNoticeHop;
+		}
+	}
+
+	void IntroSequence::UpdateBossNoticeHop_(Camera* camera) {
+		if (!introBoss_ || !camera) { return; }
+
+		introBossPhaseElapsed_ += kFixedDt_;
+
+		float t = introBossPhaseElapsed_ / introBossNoticeHopSec_;
+		if (t < 0.0f) t = 0.0f;
+		if (t > 1.0f) t = 1.0f;
+
+		// 最初に少し溜めてから跳ねる
+		float hopT = 0.0f;
+		if (t < 0.20f) {
+			hopT = 0.0f;
+		} else {
+			hopT = (t - 0.20f) / 0.80f;
+			if (hopT > 1.0f) hopT = 1.0f;
+		}
+
+		float hop = std::sinf(hopT * 3.14159265f);
+		float hopY = hop * introBossNoticeHopY_;
+
+		// 少しだけ「ビクッ」と横にもズレると気づいた感が出る
+		float surpriseX = std::sinf(t * 3.14159265f) * 0.35f;
+
+		// 軽く潰れてから伸びる感じ
+		float squash = std::sinf(t * 3.14159265f);
+
+		Vector3 pos = introBossBasePos_;
+		pos.x += surpriseX;
+		pos.y += hopY;
+
+		// ほんの少し後ろにのけぞる
+		float rotZ = std::sinf(t * 3.14159265f) * 0.12f;
+
+		introBossPos_ = pos; // ベース位置に、ホップと横ズレを加算した位置を現在位置とする
+		introBoss_->SetPosition(pos);
+		introBoss_->SetRotate({ 0.0f, 3.14159265f, rotZ }); // 回転は、ベースの向きに、気づいたときのビクッと感を少し加える感じ
+
+		// 気づいた瞬間の触手バタつき
+		introBoss_->SetIntroPanic(true, 0.85f);
+
+		// カメラは少しだけ反応させる
+		camBossTargetRot_ = {
+			0.045f,
+			0.015f,
+			0.0f
+		};
+
+		introBoss_->Update(kFixedDt_);
+
+		if (t >= 1.0f) {
+			introBoss_->SetIntroPanic(true, 1.0f);
+			introBossPhaseElapsed_ = 0.0f;
+			introBossBasePos_ = introBossPos_;
+			phase_ = Phase::BossPanic;
+		}
+	}
+
+	void IntroSequence::UpdateBossPanic_(Camera* camera) {
+		if (!introBoss_ || !camera) { return; }
+
+		introBossPhaseElapsed_ += kFixedDt_;
+		float t = introBossPhaseElapsed_ / introBossPanicSec_;
+		if (t < 0.0f) t = 0.0f;
+		if (t > 1.0f) t = 1.0f;
+
+		float shakeX = std::sinf(introBossPhaseElapsed_ * 12.0f) * introBossPanicAmpX_ * (0.30f + t * 0.70f);
+		float shakeY = std::fabs(std::sinf(introBossPhaseElapsed_ * 15.0f)) * introBossPanicAmpY_;
+		float wobbleRotZ = std::sinf(introBossPhaseElapsed_ * 13.0f) * 0.14f;
+
+		introBossPos_.x = introBossBasePos_.x + shakeX;
+		introBossPos_.y = introBossBasePos_.y + shakeY;
+		introBossPos_.z = introBossBasePos_.z;
+
+		introBoss_->SetPosition(introBossPos_);
+		introBoss_->SetRotate({ 0.0f, 3.14159265f, wobbleRotZ });
+		introBoss_->SetIntroPanic(true, 0.55f + t * 0.45f);
+		introBoss_->Update(kFixedDt_);
+
+		camBossTargetRot_ = { 0.06f, 0.0f, 0.0f };
+		// ボス登場から慌てるフェーズの間は、カメラはボス演出用の回転を維持する
+
+		if (t >= 1.0f) {
+			introBossPhaseElapsed_ = 0.0f;
+			introBossEscapeTargetX_ = introBossPos_.x;
+			introBossEscapeTargetTimer_ = 0.0f;
+			phase_ = Phase::BossEscape;
+		}
+	}
+
+	void IntroSequence::UpdateBossEscape_(Camera* camera) {
+		if (!introBoss_ || !camera) { return; }
+
+		introBossPhaseElapsed_ += kFixedDt_;
+		introBossEscapeTargetTimer_ += kFixedDt_;
+
+		float t = introBossPhaseElapsed_ / introBossEscapeSec_;
+		if (t < 0.0f) t = 0.0f;
+		if (t > 1.0f) t = 1.0f;
+
+		// 逃走中は、X軸方向の逃げる動きの目標位置を一定時間ごとにランダムに変える
+		if (introBossEscapeTargetTimer_ >= introBossEscapeTargetInterval_) {
+			introBossEscapeTargetTimer_ = 0.0f;
+			float sign = (std::rand() % 2 == 0) ? -1.0f : 1.0f;
+			float ampGrow = MyMath::Lerp(0.65f, 1.25f, t);
+			float mag = 2.0f + (static_cast<float>(std::rand()) / RAND_MAX) * introBossEscapeAmpX_ * ampGrow;
+			introBossEscapeTargetX_ = sign * mag;
+		}
+
+		float follow = 16.0f * kFixedDt_;
+		introBossPos_.x = MyMath::Lerp(introBossPos_.x, introBossEscapeTargetX_, follow);
+		introBossPos_.z += introBossEscapeSpeedZ_ * kFixedDt_ * (1.0f + t * 0.30f);
+		introBossPos_.y = 6.0f + std::fabs(std::sinf(introBossPhaseElapsed_ * 14.0f)) * introBossEscapeHopY_;
+
+		float leanZ = std::sinf(introBossPhaseElapsed_ * 16.0f) * 0.22f;
+
+		introBoss_->SetPosition(introBossPos_);
+		introBoss_->SetRotate({ 0.0f, 3.14159265f + std::sinf(introBossPhaseElapsed_ * 8.0f) * 0.10f, leanZ });
+		introBoss_->SetIntroPanic(true, 1.0f);
+		introBoss_->Update(kFixedDt_);
+
+		camBossTargetRot_ = { 0.05f, 0.0f, 0.0f };
+
+		if (introBossPos_.z >= introBossEscapeEndZ_ || t >= 1.0f) {
+			introBoss_->SetIntroPanic(false, 0.0f);
+			introBossVisible_ = false;
+			introBoss_.reset();
+
+			// ボス演出カメラ → 通常カメラへ戻す
+			camReturnStartRot_ = camera->GetRotate();
+			camBlendBackActive_ = true;
+			camBlendToBossActive_ = false;
+			camBlendBackTween_.Reset(0.0f, 1.0f, camBlendBackSec_, Ease::Type::InOutSine);
+
+			phase_ = Phase::ShowStart;
+		}
+	}
+
+	void IntroSequence::StartGameStart_(bool enemiesInitialized, bool& outRequestInitEnemies) {
+		startPlayed_ = true;
+		startVisible_ = true;
+		startSlideIn_ = true;
+
+		startFadeOut_ = false;
+		startHoldElapsed_ = 0.0f;
+		startAlpha_ = 1.0f;
+
+		startSprite_->SetColor({ 1,1,1,startAlpha_ });
+		startSprite_->SetPosition({ startStartPos_.x, startEndPos_.y });
+		startTween_.Reset(0.0f, 1.0f, startDuration_, Ease::Type::OutBack);
+
+		(void)enemiesInitialized;
+		(void)outRequestInitEnemies;
 	}
 } // namespace TKM

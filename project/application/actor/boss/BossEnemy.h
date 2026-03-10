@@ -43,6 +43,12 @@ public:
 	/// <param name="model">モデルファイル名</param>
 	/// <param name="localPos">ローカル位置</param>
 	void SetTentacleCharge(bool active, float charge01);
+	/// <summary>
+	/// イントロ用の慌て触手演出を設定します。
+	/// </summary>
+	/// <param name="active">有効かどうか</param>
+	/// <param name="panic01">強度（0..1）</param>
+	void SetIntroPanic(bool active, float panic01);
 	// =========================================
 private:
 	//=============================
@@ -55,4 +61,9 @@ private:
 	Vector3 tentacleBasePos_{ 0.0f, 0.0f, 0.0f }; // 触手のローカル位置
 	Vector3 tentacleBaseRot_{ 0.0f, 0.0f, 0.0f }; // 触手のローカル回転
 	Vector3 tentacleBaseScale_{ 1.0f, 1.0f, 1.0f }; // 触手のローカルスケール
+	//=============================
+	// イントロ用パニック触手
+	//=============================
+	bool  introPanicActive_ = false; // イントロ中の慌て演出
+	float introPanic01_ = 0.0f;      // 慌て強度（0..1）
 };
