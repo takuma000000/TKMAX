@@ -362,6 +362,11 @@ void GameScene::UpdateGameplaySystems(float rawDeltaTime, float scaledDeltaTime)
 	const bool isClear = (flow_->IsInClear()); // クリア演出中かどうか
 	const bool locked = (flow_->IsGameplayLocked()) || isClear; // ゲームプレイがロックされているかどうか
 
+	// start.png が消えるまではプレイヤー操作を無効にする
+	if (player_) {
+		player_->SetControlEnabled(!locked);
+	}
+
 	// スカイボックスの回転更新
 	skybox_->UpdateRotation();
 	// プレイヤーの更新

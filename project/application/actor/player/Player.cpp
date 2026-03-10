@@ -83,11 +83,6 @@ void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommo
 void Player::Update(float dt) {
 	UpdateRumble(dt); // コントローラー振動更新
 
-	if (!controlEnabled_) {
-		HandleFollowCamera(); // カメラ演出は動かす
-		return;
-	}
-
 	// --- 無敵時間 更新（操作無効でも進める）---
 	if (isInvincible_) {
 		invincibleT_ += dt;
@@ -121,34 +116,45 @@ void Player::Update(float dt) {
 
 	if (reticle_) reticle_->Update(dt);
 
-	HandleGamePadMove(); // ゲームパッドのスティック入力で移動
 	HandleFollowCamera(); // カメラの追従処理
 	RemoveEnemyIfDead(); // 敵が死んでたら参照をクリア
-	HandleDodge(dt); // 回避処理
+	HandleFollowCamera(); // カメラの追従処理
+	RemoveEnemyIfDead(); // 敵が死んでたら参照をクリア
 
-	// RTホールド中はターゲットをロック表示（切り替わり時は前の敵を解除）
-	{
-		TKM::Input* input = TKM::Input::GetInstance();
-		Enemy* cur = (enemy_ && !enemy_->IsDead()) ? enemy_ : nullptr;
+	if (controlEnabled_) {
+		HandleGamePadMove(); // ゲームパッドのスティック入力で移動
+		HandleDodge(dt); // 回避処理
 
-		bool hold = (input->GetRightTrigger() > kTriggerThreshold) && (canUseSpecial_ || debugUnlimitedSpecial_);
+		// RTホールド中はターゲットをロック表示（切り替わり時は前の敵を解除）
+		{
+			TKM::Input* input = TKM::Input::GetInstance();
+			Enemy* cur = (enemy_ && !enemy_->IsDead()) ? enemy_ : nullptr;
 
-		// ターゲットが切り替わったら前のロックを解除
-		if (lastLockedEnemy_ && lastLockedEnemy_ != cur) {
-			lastLockedEnemy_->SetLocked(false);
+			bool hold = (input->GetRightTrigger() > kTriggerThreshold) && (canUseSpecial_ || debugUnlimitedSpecial_);
+
+			// ターゲットが切り替わったら前のロックを解除
+			if (lastLockedEnemy_ && lastLockedEnemy_ != cur) {
+				lastLockedEnemy_->SetLocked(false);
+			}
+
+			if (cur && hold) { // ロック中
+				cur->SetLocked(true);
+				lastLockedEnemy_ = cur;
+			} else { // ロック解除
+				if (cur) cur->SetLocked(false);
+				lastLockedEnemy_ = nullptr;
+			}
 		}
 
-		if (cur && hold) { // ロック中
-			cur->SetLocked(true);
-			lastLockedEnemy_ = cur;
-		} else { // ロック解除
-			if (cur) cur->SetLocked(false);
+		if (shootingEnabled_) { // 射撃処理
+			HandleShooting(); // 先にプレイヤーの操作より下に置くと自然
+		}
+	} else {
+		// 操作不能中はロック表示を解除しておく
+		if (lastLockedEnemy_) {
+			lastLockedEnemy_->SetLocked(false);
 			lastLockedEnemy_ = nullptr;
 		}
-	}
-
-	if (shootingEnabled_) { // 射撃処理
-		HandleShooting(); // 先にプレイヤーの操作より下に置くと自然
 	}
 
 	for (auto it = bullets_.begin(); it != bullets_.end(); ) { // 弾更新と削除
