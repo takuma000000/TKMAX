@@ -164,5 +164,13 @@ namespace TKM {
 		pm->CreateParticleGroup("titleBeamClash_rays", "./resources/texture/gradationLine.png", TKM::ParticleManager::ParticleType::CYLINDER);
 		// 衝撃波リング（リングはgradationLineの方が“波紋/衝撃波”っぽい）
 		pm->CreateParticleGroup("titleBeamClash_ring", "./resources/texture/gradationLine.png", TKM::ParticleManager::ParticleType::RING);
+
+		/// === Intro Boss Spawn ===
+		pm->CreateParticleGroup("bossIntro_core", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
+		pm->CreateParticleGroup("bossIntro_swirl", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
+		pm->CreateParticleGroup("bossIntro_spark", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
+		/// === Intro Boss Escape ===
+		pm->CreateParticleGroup("bossEscape_trail", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
+		
 	}
 }

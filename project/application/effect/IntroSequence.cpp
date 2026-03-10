@@ -306,6 +306,10 @@ namespace TKM {
 		camBlendToBossActive_ = true;
 		camBlendBackActive_ = false;
 		camBlendToBossTween_.Reset(0.0f, 1.0f, camBlendToBossSec_, Ease::Type::InOutSine);
+
+		ParticleManager::GetInstance()->Emit("bossIntro_core", introBossPos_, 3);
+		ParticleManager::GetInstance()->Emit("bossIntro_swirl", introBossPos_, 80);
+		ParticleManager::GetInstance()->Emit("bossIntro_spark", introBossPos_, 40);
 	}
 
 	void IntroSequence::UpdateBossAppear_(Camera* camera) {
@@ -536,6 +540,8 @@ namespace TKM {
 
 			phase_ = Phase::ShowStart;
 		}
+
+		ParticleManager::GetInstance()->Emit("bossEscape_trail", introBossPos_, 6);
 	}
 
 	void IntroSequence::StartGameStart_(bool enemiesInitialized, bool& outRequestInitEnemies) {

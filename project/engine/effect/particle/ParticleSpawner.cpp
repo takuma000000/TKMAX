@@ -1780,6 +1780,86 @@ namespace TKM {
 			float g = 0.95f + 0.05f * t;
 			float b = 0.82f + 0.12f * t;
 			p.color_ = { r, g, b, 1.0f };
+		} else if (groupName == "bossIntro_core") {
+
+			p.transform_.translate_ = center;
+
+			// 中央の閃光をかなり大きく
+			std::uniform_real_distribution<float> sc(7.0f, 11.0f);
+			float s = sc(rng);
+			p.transform_.scale_ = { s,s,s };
+
+			p.velocity_ = { 0,0,0 };
+
+			p.lifeTime_ = 0.55f;
+			p.currentTime_ = 0.0f;
+
+			// 少し白寄りにして中心の強さを出す
+			float c = std::uniform_real_distribution<float>(0.95f, 1.10f)(rng);
+			p.color_ = { 0.85f * c, 0.95f * c, 1.45f * c, 1.0f };
+		} else if (groupName == "bossIntro_swirl") {
+
+			// 広い空間から吸い込まれるようにする
+			float ang = std::uniform_real_distribution<float>(0.0f, 6.2831853f)(rng);
+			float r = std::uniform_real_distribution<float>(7.0f, 16.0f)(rng);
+			float y = std::uniform_real_distribution<float>(-4.5f, 4.5f)(rng);
+
+			Vector3 pos = {
+				std::cos(ang) * r,
+				y,
+				std::sin(ang) * r
+			};
+
+			p.transform_.translate_ = center + pos;
+
+			Vector3 toCenter = MyMath::Normalize(-pos);
+
+			// 少しだけ接線方向を混ぜて「渦っぽさ」を出す
+			Vector3 tangent = MyMath::Normalize(Vector3{ -pos.z, 0.0f, pos.x });
+			float tangentMul = std::uniform_real_distribution<float>(0.8f, 1.8f)(rng);
+			float inwardMul = std::uniform_real_distribution<float>(3.5f, 6.5f)(rng);
+
+			p.velocity_ = toCenter * inwardMul + tangent * tangentMul;
+
+			float sc = std::uniform_real_distribution<float>(0.7f, 1.5f)(rng);
+			p.transform_.scale_ = { sc,sc,sc };
+
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.8f, 1.25f)(rng);
+			p.currentTime_ = 0.0f;
+
+			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+			p.color_ = {
+				0.45f + 0.15f * t,
+				0.70f + 0.15f * t,
+				1.00f + 0.20f * t,
+				1.0f
+			};
+		} else if (groupName == "bossIntro_spark") {
+
+			// 中心だけじゃなく少し周囲にもばらけさせる
+			std::uniform_real_distribution<float> off(-2.0f, 2.0f);
+			p.transform_.translate_ = center + Vector3{ off(rng), off(rng) * 0.6f, off(rng) };
+
+			std::uniform_real_distribution<float> d(-1.0f, 1.0f);
+			Vector3 dir = { d(rng), d(rng) * 0.7f, d(rng) };
+			dir = MyMath::Normalize(dir);
+
+			float spd = std::uniform_real_distribution<float>(8.0f, 15.0f)(rng);
+			p.velocity_ = dir * spd;
+
+			float sc = std::uniform_real_distribution<float>(0.22f, 0.45f)(rng);
+			p.transform_.scale_ = { sc,sc,sc };
+
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.28f, 0.50f)(rng);
+			p.currentTime_ = 0.0f;
+
+			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+			p.color_ = {
+				1.0f,
+				0.85f + 0.15f * t,
+				0.35f + 0.20f * t,
+				1.0f
+			};
 		} else { // 上記意外
 			// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 			std::uniform_real_distribution<float> velX(-0.15f, 0.15f);
