@@ -236,6 +236,12 @@ namespace TKM {
 		float introBossEscapeTargetX_ = 0.0f; // ボスが逃げる演出のターゲットX位置。ボスはこのX位置を目指して逃げる。値を大きくするとより横に逃げることになる。
 		float introBossEscapeTargetTimer_ = 0.0f; // ボスが逃げる演出のターゲットX位置を更新するためのタイマー。これが0になるとターゲットX位置を更新する。
 		float introBossEscapeTargetInterval_ = 0.10f; // ボスが逃げる演出のターゲットX位置を更新する間隔（秒）。この値を小さくするとターゲットX位置が頻繁に変わることになる。
+
+		float introBossAppearFloatAmpX_ = 2.0f;   // 登場時の左右ふわふわ幅
+		float introBossAppearFloatAmpY_ = 3.4f;   // 登場時の上下ふわふわ幅
+		float introBossAppearFloatFreqX_ = 1.9f;  // 登場時の左右ふわふわ速さ
+		float introBossAppearFloatFreqY_ = 2.1f;  // 登場時の上下ふわふわ速さ
+		float introBossAppearTiltZ_ = 0.14f;      // 登場時のふわふわ傾き
 		//======================================================================
 		// ボス演出用カメラブレンド
 		//======================================================================

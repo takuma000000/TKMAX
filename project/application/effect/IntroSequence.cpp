@@ -316,12 +316,42 @@ namespace TKM {
 		if (t < 0.0f) t = 0.0f;
 		if (t > 1.0f) t = 1.0f;
 
-		introBossPos_.z = MyMath::Lerp(introBossAppearStartZ_, introBossAppearEndZ_, t);
-		introBossPos_.x = std::sinf(t * MyMath::GetPI()) * 0.6f;
-		introBossPos_.y = 6.0f + std::sinf(t * MyMath::GetPI()) * 0.9f;
+		// 進行度
+		float moveT = t;
+		// 直線的すぎないように、少しゆっくり寄ってくる感じにする
+		moveT = moveT * moveT * (3.0f - 2.0f * moveT); // smoothstep
+
+		// 前進の基本
+		float z = MyMath::Lerp(introBossAppearStartZ_, introBossAppearEndZ_, moveT);
+
+		// ぷかぷか漂うオフセット
+		float floatX = std::sinf(introBossPhaseElapsed_ * introBossAppearFloatFreqX_) * introBossAppearFloatAmpX_;
+
+		// 上下は1本だと機械っぽいので、遅い大波 + 速い小波 を重ねる
+		float floatYMain =
+			std::sinf(introBossPhaseElapsed_ * introBossAppearFloatFreqY_) * introBossAppearFloatAmpY_;
+
+		float floatYSub =
+			std::sinf(introBossPhaseElapsed_ * (introBossAppearFloatFreqY_ * 2.15f) + 0.8f) *
+			(introBossAppearFloatAmpY_ * 0.38f);
+
+		float floatY = floatYMain + floatYSub;
+
+		// 到着時に暴れすぎないよう、後半は少し弱める
+		float damp = MyMath::Lerp(1.0f, 0.45f, moveT);
+
+		introBossPos_.z = z;
+		introBossPos_.x = floatX * damp;
+		float bodyDrift = std::sinf(introBossPhaseElapsed_ * 0.95f + 1.2f) * 0.9f;
+		introBossPos_.y = 6.0f + bodyDrift + floatY * damp;
+
+		// 上下のぷかぷかに合わせて少し傾ける
+		float rotZ =
+			std::sinf(introBossPhaseElapsed_ * 2.2f) * introBossAppearTiltZ_ * damp +
+			std::sinf(introBossPhaseElapsed_ * 4.6f + 0.5f) * (introBossAppearTiltZ_ * 0.35f) * damp;
 
 		introBoss_->SetPosition(introBossPos_);
-		introBoss_->SetRotate({ 0.0f, 3.14159265f, 0.0f });
+		introBoss_->SetRotate({ 0.0f, 3.14159265f, rotZ });
 		introBoss_->SetIntroPanic(false, 0.0f);
 		introBoss_->Update(kFixedDt_);
 
