@@ -1954,6 +1954,26 @@ namespace TKM {
 				1.00f,
 				1.0f
 			};
+		} else if (groupName == "bossNoticeMark") {
+
+			p.transform_.translate_ = center;
+
+			// ！マークなので少し縦長に
+			float sx = std::uniform_real_distribution<float>(1.4f, 1.8f)(rng);
+			float sy = std::uniform_real_distribution<float>(2.2f, 3.0f)(rng);
+			p.transform_.scale_ = { sx, sy, 1.0f };
+
+			// 少し上に抜ける
+			float vx = std::uniform_real_distribution<float>(-0.15f, 0.15f)(rng);
+			float vy = std::uniform_real_distribution<float>(1.8f, 2.6f)(rng);
+			float vz = std::uniform_real_distribution<float>(-0.15f, 0.15f)(rng);
+			p.velocity_ = { vx, vy, vz };
+
+			p.lifeTime_ = std::uniform_real_distribution<float>(1.2f, 1.6f)(rng);
+			p.currentTime_ = 0.0f;
+
+			// アニメっぽく黄色寄り。白でもいいけどまずは見やすさ優先
+			p.color_ = { 1.0f, 0.95f, 0.25f, 1.0f };
 		} else { // 上記意外
 			// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 			std::uniform_real_distribution<float> velX(-0.15f, 0.15f);

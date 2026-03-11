@@ -165,17 +165,23 @@ namespace TKM {
 		// 衝撃波リング（リングはgradationLineの方が“波紋/衝撃波”っぽい）
 		pm->CreateParticleGroup("titleBeamClash_ring", "./resources/texture/gradationLine.png", TKM::ParticleManager::ParticleType::RING);
 
-		/// === Intro Boss Spawn ===
+		/// === スタート演出のボス用エフェクト ===
+		// コア：中心の光の塊
 		pm->CreateParticleGroup("bossIntro_core", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
+		// 渦巻き：コアを包むように渦巻くエネルギー
 		pm->CreateParticleGroup("bossIntro_swirl", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
+		// スパーク：コアから飛び散る火花
 		pm->CreateParticleGroup("bossIntro_spark", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		/// === Intro Boss Escape ===
+		// トレイル：コアから引きずるように伸びる粒
 		pm->CreateParticleGroup("bossEscape_trail", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
-
-		/// === Intro Boss Pre Spawn ===
+		// ワープエフェクト：コアがワープしていくときのエフェクト群
 		pm->CreateParticleGroup("bossWarp_core", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
+		// ワープエフェクト：コアがワープしていくときのエフェクト群
 		pm->CreateParticleGroup("bossWarp_swirl", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
+		// ワープエフェクト：コアがワープしていくときのエフェクト群
 		pm->CreateParticleGroup("bossWarp_dust", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
+		// ボスの注意マーク（！）
+		pm->CreateParticleGroup("bossNoticeMark", "./resources/texture/exclamation.png", ParticleManager::ParticleType::NORMAL);
 		
 	}
 }

@@ -58,7 +58,7 @@ namespace TKM {
 		introBossPreSpawnEmitAccum_ = 0.0f;
 		introBossSpawnFxStarted_ = false;
 		introBossSpawnFxFinished_ = false;
-
+		introBossNoticeMarkEmitted_ = false;
 	}
 
 	void IntroSequence::Update(float dt, Camera* camera, bool enemiesInitialized, bool& outRequestInitEnemies) {
@@ -309,9 +309,8 @@ namespace TKM {
 		introBossElapsed_ = 0.0f;
 		phase_ = Phase::BossAppear;
 
-		// 通常カメラ → ボス演出カメラへの入りを補間する
-		camSavedRot_ = camera->GetRotate();
-		camBossStartRot_ = camSavedRot_;
+		// BossPreSpawn 開始時に保存した通常カメラ回転へ最後に戻すため。
+		camBossStartRot_ = camera->GetRotate();
 		camBossTargetRot_ = { 0.10f, -0.10f, 0.0f };
 
 		camBlendToBossActive_ = true;
@@ -504,7 +503,20 @@ namespace TKM {
 			hopT = 0.0f;
 		} else {
 			hopT = (t - 0.20f) / 0.80f;
-			if (hopT > 1.0f) hopT = 1.0f;
+			if (hopT > 1.0f) { hopT = 1.0f; }
+		}
+
+		if (!introBossNoticeMarkEmitted_ && t >= 0.20f) {
+			introBossNoticeMarkEmitted_ = true;
+
+			// 顔より少し手前
+			const Vector3 center = introBossBasePos_ + Vector3{ 0.0f, 3.2f, -3.0f };
+
+			ParticleManager::GetInstance()->Emit("bossNoticeMark", center + Vector3{ -7.0f,  2.0f, 0.0f }, 1); // 左上
+			ParticleManager::GetInstance()->Emit("bossNoticeMark", center + Vector3{ 7.0f,  2.0f, 0.0f }, 1); // 右上
+			ParticleManager::GetInstance()->Emit("bossNoticeMark", center + Vector3{ -9.0f,  0.0f, 0.0f }, 1); // 左
+			ParticleManager::GetInstance()->Emit("bossNoticeMark", center + Vector3{ 9.0f,  0.0f, 0.0f }, 1); // 右
+			ParticleManager::GetInstance()->Emit("bossNoticeMark", center + Vector3{ 6.0f, -2.5f, 0.0f }, 1); // 右下
 		}
 
 		float hop = std::sinf(hopT * 3.14159265f);
@@ -543,6 +555,7 @@ namespace TKM {
 			introBoss_->SetIntroPanic(true, 1.0f);
 			introBossPhaseElapsed_ = 0.0f;
 			introBossBasePos_ = introBossPos_;
+			introBossNoticeMarkEmitted_ = false;
 			phase_ = Phase::BossPanic;
 		}
 	}

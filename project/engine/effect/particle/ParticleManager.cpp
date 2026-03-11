@@ -131,6 +131,11 @@ namespace TKM {
 						float growY = 1.0f + 5.0f * kDeltaTime_;
 						(*particleIterator).transform_.scale_.y *= growY;
 					}
+					if (g == "bossNoticeMark") {
+						float grow = 1.0f + 2.5f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.x *= grow;
+						(*particleIterator).transform_.scale_.y *= grow;
+					}
 
 					// アルファカーブ（“パァン”を作る）
 					float a = 1.0f - t;
@@ -170,6 +175,10 @@ namespace TKM {
 					if (g == "bossWarp_dust") {
 						a = a * a;
 						particleGroup->instancingData_[particleGroupIterator->second.kNumInstance_].color_.w = a * 0.75f;
+					}
+					if (g == "bossNoticeMark") {
+						a = a * a;
+						particleGroup->instancingData_[particleGroupIterator->second.kNumInstance_].color_.w = a;
 					}
 
 					++particleGroupIterator->second.kNumInstance_;//生きているParticleの数を1つカウントする
