@@ -54,6 +54,11 @@ namespace TKM {
 		camBossStartRot_ = { 0.0f, 0.0f, 0.0f };
 		camBossTargetRot_ = { 0.0f, 0.0f, 0.0f };
 		camReturnStartRot_ = { 0.0f, 0.0f, 0.0f };
+		introBossPreSpawnElapsed_ = 0.0f;
+		introBossPreSpawnEmitAccum_ = 0.0f;
+		introBossSpawnFxStarted_ = false;
+		introBossSpawnFxFinished_ = false;
+
 	}
 
 	void IntroSequence::Update(float dt, Camera* camera, bool enemiesInitialized, bool& outRequestInitEnemies) {
@@ -125,9 +130,9 @@ namespace TKM {
 			}
 		}
 		// --- Boss Intro ---
-		// カメラインロが終わったら、ボス登場開始
+		// カメラインロが完了したら、ボス出現前の待機演出を開始（1回だけ）。カメラインロが完了していないときは、ここでボス出現前の待機演出を開始しないようにする（これも安全側の措置。通常はカメラインロが完了してからこのコードに到達するはずなので、ここでチェックする必要はないが、万が一の初期化順の問題などでカメラインロが完了していない状態でここに到達してしまったときに、ボス出現前の待機演出を開始しないようにするため）。
 		if (camIntroDone_ && phase_ == Phase::CameraIntro) {
-			StartBossIntro_(camera); // ボス登場開始
+			StartBossPreSpawn_(camera);
 		}
 		// --- Boss camera blend in ---
 		if (camBlendToBossActive_) {
@@ -166,7 +171,9 @@ namespace TKM {
 			}
 		}
 		// ボス登場～逃走更新
-		if (phase_ == Phase::BossAppear) {
+		if (phase_ == Phase::BossPreSpawn) {
+			UpdateBossPreSpawn_(camera);
+		} else if (phase_ == Phase::BossAppear) {
 			UpdateBossAppear_(camera);
 		} else if (phase_ == Phase::BossPause) {
 			UpdateBossPause_(camera);
@@ -311,9 +318,83 @@ namespace TKM {
 		camBlendBackActive_ = false;
 		camBlendToBossTween_.Reset(0.0f, 1.0f, camBlendToBossSec_, Ease::Type::InOutSine);
 
-		ParticleManager::GetInstance()->Emit("bossIntro_core", introBossPos_, 3);
-		ParticleManager::GetInstance()->Emit("bossIntro_swirl", introBossPos_, 80);
-		ParticleManager::GetInstance()->Emit("bossIntro_spark", introBossPos_, 40);
+		ParticleManager::GetInstance()->Emit("bossWarp_core", introBossPos_, 12);
+	}
+
+	void IntroSequence::StartBossPreSpawn_(Camera* camera) {
+		if (!camera) { return; }
+
+		phase_ = Phase::BossPreSpawn;
+		introBossPreSpawnElapsed_ = 0.0f;
+		introBossPreSpawnEmitAccum_ = 0.0f;
+		introBossSpawnFxStarted_ = true;
+		introBossSpawnFxFinished_ = false;
+
+		// まだボス本体は出さない
+		introBossVisible_ = false;
+		introBossSpawned_ = false;
+
+		// 出現予定位置だけ先に決める
+		introBossPos_ = { 0.0f, 6.0f, introBossAppearStartZ_ };
+		introBossBasePos_ = introBossPos_;
+		introBossRot_ = { 0.0f, 3.14159265f, 0.0f };
+
+		// カメラはもうボス出現位置を見に行く
+		camSavedRot_ = camera->GetRotate();
+		camBossStartRot_ = camSavedRot_;
+		camBossTargetRot_ = { 0.10f, -0.10f, 0.0f };
+
+		camBlendToBossActive_ = true;
+		camBlendBackActive_ = false;
+		camBlendToBossTween_.Reset(0.0f, 1.0f, camBlendToBossSec_, Ease::Type::InOutSine);
+
+		// 最初の“ゆがみの芯”
+		ParticleManager::GetInstance()->Emit("bossWarp_core", introBossPos_, 4);
+		ParticleManager::GetInstance()->Emit("bossWarp_swirl", introBossPos_, 18);
+		ParticleManager::GetInstance()->Emit("bossWarp_dust", introBossPos_, 8);
+	}
+
+	void IntroSequence::UpdateBossPreSpawn_(Camera* camera) {
+		if (!camera) { return; }
+
+		introBossPreSpawnElapsed_ += kFixedDt_;
+		introBossPreSpawnEmitAccum_ += kFixedDt_;
+
+		float t = introBossPreSpawnElapsed_ / introBossPreSpawnSec_;
+		t = std::clamp(t, 0.0f, 1.0f);
+
+		// 時間経過に応じて、徐々にエフェクトの密度を上げていく
+		while (introBossPreSpawnEmitAccum_ >= 0.08f) {
+			introBossPreSpawnEmitAccum_ -= 0.08f;
+
+			if (t < 0.45f) {
+				// 前半：小さい粒子がパラパラ漂って、少しずつ吸われる
+				ParticleManager::GetInstance()->Emit("bossWarp_swirl", introBossPos_, 6);
+				ParticleManager::GetInstance()->Emit("bossWarp_dust", introBossPos_, 3);
+			} else if (t < 0.80f) {
+				// 中盤：明らかに吸い込みが始まる
+				ParticleManager::GetInstance()->Emit("bossWarp_swirl", introBossPos_, 12);
+				ParticleManager::GetInstance()->Emit("bossWarp_dust", introBossPos_, 6);
+				ParticleManager::GetInstance()->Emit("bossWarp_core", introBossPos_, 2);
+			} else {
+				// 終盤：中心密度を上げて、出現直前感を出す
+				ParticleManager::GetInstance()->Emit("bossWarp_swirl", introBossPos_, 16);
+				ParticleManager::GetInstance()->Emit("bossWarp_dust", introBossPos_, 8);
+				ParticleManager::GetInstance()->Emit("bossWarp_core", introBossPos_, 4);
+			}
+		}
+
+		// 終盤で一回だけ「穴が開く」感じを強める
+		if (!introBossSpawnFxFinished_ && t >= 0.82f) {
+			introBossSpawnFxFinished_ = true;
+			ParticleManager::GetInstance()->Emit("bossWarp_core", introBossPos_, 20);
+			ParticleManager::GetInstance()->Emit("bossWarp_swirl", introBossPos_, 40);
+		}
+
+		// ゆがみ演出が終わったら、ここで初めてボス本体登場へ
+		if (introBossPreSpawnElapsed_ >= introBossPreSpawnSec_) {
+			StartBossIntro_(camera);
+		}
 	}
 
 	void IntroSequence::UpdateBossAppear_(Camera* camera) {

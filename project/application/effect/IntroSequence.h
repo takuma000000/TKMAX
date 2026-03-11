@@ -88,6 +88,16 @@ namespace TKM {
 		/// <param name="camera">演出および描画に使用するカメラ</param>
 		void StartBossIntro_(Camera* camera);
 		/// <summary>
+		/// ボス出現前の待機演出の開始処理。カメラの初期設定などを行います。
+		/// </summary>
+		/// <param name="camera">演出および描画に使用するカメラ</param>
+		void StartBossPreSpawn_(Camera* camera);
+		/// <summary>
+		/// ボス登場演出の開始処理。カメラの初期設定などを行います。
+		/// </summary>
+		/// <param name="camera">演出および描画に使用するカメラ</param>
+		void UpdateBossPreSpawn_(Camera* camera);
+		/// <summary>
 		/// ボス登場演出の更新処理。カメラの回転や位置の変化、エフェクトの発生などを管理します。
 		/// </summary>
 		/// <param name="camera">演出および描画に使用するカメラ</param>
@@ -125,6 +135,7 @@ namespace TKM {
 		enum class Phase {
 			IrisOpen, // アイリス開き
 			CameraIntro, // カメラインロ（回転）
+			BossPreSpawn, // ボス出現前の待機
 			BossAppear, // ボス登場
 			BossPause, // 到達位置で止まる
 			BossNoticeHop, // ボスが気づいて跳ねる
@@ -258,5 +269,13 @@ namespace TKM {
 		// カメラブレンドの時間
 		float camBlendToBossSec_ = 0.45f; // 入り補間時間
 		float camBlendBackSec_ = 0.55f;   // 戻り補間時間
+		//======================================================================
+		// ボス出現前の「空間ゆがみ」演出
+		//======================================================================
+		float introBossPreSpawnElapsed_ = 0.0f; // ボス出現前の待機演出の経過時間
+		static constexpr float introBossPreSpawnSec_ = 1.8f; // ボス出現前の待機演出の時間（秒）
+		float introBossPreSpawnEmitAccum_ = 0.0f; // ボス出現前の待機演出でエフェクトを発生させるための累積時間。これが一定値を超えるごとにエフェクトを発生させる。
+		bool  introBossSpawnFxStarted_ = false; // ボス登場演出の開始と同時に一度だけ空間ゆがみエフェクトを発生させたかどうかのフラグ。最初はfalseで、ボス登場演出の開始と同時にtrueになる。これを使って、ボス登場演出の開始と同時に一度だけ空間ゆがみエフェクトを発生させる。
+		bool  introBossSpawnFxFinished_ = false; // ボス登場演出の開始と同時に一度だけ空間ゆがみエフェクトを発生させてから、そのエフェクトが完了するまで待つフラグ。最初はfalseで、ボス登場演出の開始と同時にtrueになる。これを使って、ボス登場演出の開始と同時に一度だけ空間ゆがみエフェクトを発生させた後、そのエフェクトが完了するまで待つ。
 	};
 } // namespace TKM

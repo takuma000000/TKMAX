@@ -77,7 +77,7 @@ namespace TKM {
 
 		panelSize_ = { 340.0f, 280.0f }; // サイズ設定
 		panelPos_ = { screenW_ - panelSize_.x - 40.0f, screenH_ - panelSize_.y - 40.0f }; // 画面右下に配置
-	
+
 		baseItemPos_ = { panelPos_.x + panelSize_.x * 0.5f, panelPos_.y + 94.0f }; // 項目の基準位置（パネル内の、最初の項目が来る位置）
 		itemSpacingY_ = 70.0f; // 項目間の垂直スペース
 
@@ -132,7 +132,7 @@ namespace TKM {
 
 	bool PauseMenuController::TriggerB_() {
 		Input* in = Input::GetInstance();
-		bool now = in->PushButton(XINPUT_GAMEPAD_B);
+		bool now = in->PushButton(XINPUT_GAMEPAD_B) || in->PushButton(XINPUT_GAMEPAD_START) || in->TriggerKey(DIK_TAB) || in->TriggerKey(DIK_ESCAPE);
 		bool trig = (now && !prevB_);
 		prevB_ = now;
 		return trig;
@@ -158,7 +158,7 @@ namespace TKM {
 	PauseMenuController::Command PauseMenuController::Update(float dt, bool allowOpen) {
 		// Startで開く（static は使わず、インスタンスのメンバでエッジ検出）
 		Input* in = Input::GetInstance();
-		bool startNow = in->PushButton(XINPUT_GAMEPAD_START) || in->TriggerKey(DIK_TAB);
+		bool startNow = in->PushButton(XINPUT_GAMEPAD_START) || in->TriggerKey(DIK_TAB) || in->TriggerKey(DIK_ESCAPE);
 		bool trigStart = (startNow && !prevStart_);
 		prevStart_ = startNow;
 

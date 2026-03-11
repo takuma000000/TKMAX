@@ -1860,6 +1860,100 @@ namespace TKM {
 				0.35f + 0.20f * t,
 				1.0f
 			};
+		} else if (groupName == "bossWarp_core") {
+
+			p.transform_.translate_ = center;
+
+			float sc = std::uniform_real_distribution<float>(3.5f, 6.5f)(rng);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.35f, 0.65f)(rng);
+			p.currentTime_ = 0.0f;
+
+			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+			p.color_ = {
+				0.70f + 0.10f * t,
+				0.88f + 0.07f * t,
+				1.10f + 0.15f * t,
+				1.0f
+			};
+		} else if (groupName == "bossWarp_swirl") {
+
+			auto frand = [&](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			float ang = frand(0.0f, 2.0f * std::numbers::pi_v<float>);
+			float radius = frand(6.0f, 15.0f);
+			float y = frand(-5.0f, 5.0f);
+
+			Vector3 local = {
+				std::cos(ang) * radius,
+				y,
+				std::sin(ang) * radius
+			};
+
+			p.transform_.translate_ = center + local;
+
+			Vector3 toCenter = MyMath::Normalize(-local);
+			Vector3 tangent = MyMath::Normalize(Vector3{ -local.z, 0.0f, local.x });
+
+			float inward = frand(3.0f, 5.8f);
+			float spin = frand(1.0f, 2.6f);
+
+			p.velocity_ = toCenter * inward + tangent * spin;
+
+			float sc = frand(0.45f, 1.10f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.55f, 1.00f);
+			p.currentTime_ = 0.0f;
+
+			float c = frand(0.0f, 1.0f);
+			p.color_ = {
+				0.45f + 0.12f * c,
+				0.65f + 0.15f * c,
+				0.95f + 0.20f * c,
+				1.0f
+			};
+		} else if (groupName == "bossWarp_dust") {
+
+			auto frand = [&](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			float ang = frand(0.0f, 2.0f * std::numbers::pi_v<float>);
+			float radius = frand(8.0f, 18.0f);
+			float y = frand(-4.0f, 4.0f);
+
+			Vector3 local = {
+				std::cos(ang) * radius,
+				y,
+				std::sin(ang) * radius
+			};
+
+			p.transform_.translate_ = center + local;
+
+			Vector3 toCenter = MyMath::Normalize(-local);
+			float spd = frand(2.0f, 4.0f);
+			p.velocity_ = toCenter * spd;
+
+			float thin = frand(0.12f, 0.24f);
+			float len = frand(0.8f, 1.6f);
+			p.transform_.scale_ = { thin, len, 1.0f };
+
+			p.lifeTime_ = frand(0.35f, 0.60f);
+			p.currentTime_ = 0.0f;
+
+			float c = frand(0.0f, 1.0f);
+			p.color_ = {
+				0.72f + 0.08f * c,
+				0.84f + 0.08f * c,
+				1.00f,
+				1.0f
+			};
 		} else { // 上記意外
 			// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 			std::uniform_real_distribution<float> velX(-0.15f, 0.15f);

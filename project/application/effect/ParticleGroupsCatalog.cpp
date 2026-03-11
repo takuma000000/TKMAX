@@ -171,6 +171,11 @@ namespace TKM {
 		pm->CreateParticleGroup("bossIntro_spark", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
 		/// === Intro Boss Escape ===
 		pm->CreateParticleGroup("bossEscape_trail", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
+
+		/// === Intro Boss Pre Spawn ===
+		pm->CreateParticleGroup("bossWarp_core", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
+		pm->CreateParticleGroup("bossWarp_swirl", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
+		pm->CreateParticleGroup("bossWarp_dust", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
 		
 	}
 }

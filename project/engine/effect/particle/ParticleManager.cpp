@@ -121,6 +121,16 @@ namespace TKM {
 						(*particleIterator).transform_.scale_.y *= grow;
 						(*particleIterator).transform_.scale_.z *= grow;
 					}
+					if (g == "bossWarp_core") {
+						float grow = 1.0f + 10.0f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.x *= grow;
+						(*particleIterator).transform_.scale_.y *= grow;
+						(*particleIterator).transform_.scale_.z *= grow;
+					}
+					if (g == "bossWarp_dust") {
+						float growY = 1.0f + 5.0f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.y *= growY;
+					}
 
 					// アルファカーブ（“パァン”を作る）
 					float a = 1.0f - t;
@@ -148,6 +158,18 @@ namespace TKM {
 						// リングは少し残して「衝撃波」を見せる
 						a = std::pow(a, 1.1f);
 						particleGroup->instancingData_[particleGroupIterator->second.kNumInstance_].color_.w = a;
+					}
+					if (g == "bossWarp_core") {
+						a = a * a * a;
+						particleGroup->instancingData_[particleGroupIterator->second.kNumInstance_].color_.w = a;
+					}
+					if (g == "bossWarp_swirl") {
+						a = std::pow(a, 1.4f);
+						particleGroup->instancingData_[particleGroupIterator->second.kNumInstance_].color_.w = a;
+					}
+					if (g == "bossWarp_dust") {
+						a = a * a;
+						particleGroup->instancingData_[particleGroupIterator->second.kNumInstance_].color_.w = a * 0.75f;
 					}
 
 					++particleGroupIterator->second.kNumInstance_;//生きているParticleの数を1つカウントする
