@@ -204,6 +204,7 @@
     <ClCompile Include="application\actor\player\HomingBullet.cpp" />
     <ClCompile Include="application\ui\OperationGuideUI.cpp" />
     <ClCompile Include="application\ui\PlayerHudUI.cpp" />
+    <ClCompile Include="application\state\IntroFlowStates.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -447,6 +448,7 @@
     <ClInclude Include="application\actor\player\HomingBullet.h" />
     <ClInclude Include="application\ui\OperationGuideUI.h" />
     <ClInclude Include="application\ui\PlayerHudUI.h" />
+    <ClInclude Include="application\state\IntroFlowStates.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

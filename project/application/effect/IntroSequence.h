@@ -9,13 +9,27 @@
 #include "MyMath.h"
 #include "Easing.h"
 #include "IrisUtil.h"
+#include "StateMachine.h"
 
 namespace TKM {
+
+	// 前方宣言
+	class IntroIrisOpenState;
+	class IntroCameraIntroState;
+	class IntroBossPreSpawnState;
+	class IntroBossAppearState;
+	class IntroBossPauseState;
+	class IntroBossNoticeHopState;
+	class IntroBossPanicState;
+	class IntroBossEscapeState;
+	class IntroShowStartState;
+	class IntroDoneState;
+
 	//=============================================================
 	// IntroSequenceクラス
 	// ・ゲーム開始時のイントロ演出を管理するクラス。
 	//=============================================================
-	class IntroSequence {
+	class IntroSequence : public TKM::IStateContext {
 	public:
 		IntroSequence() = default;
 		~IntroSequence() = default;
@@ -84,56 +98,19 @@ namespace TKM {
 		/// </summary>
 		/// <returns></returns>
 		float   GetIrisMaxScale() const { return irisMaxScale_; }
+		/// <summary>
+		/// StateMachineの取得。
+		/// </summary>
+		/// <returns></returns>
+		StateMachine& GetStateMachine() { return flowSM_; }
+		/// <summary>
+		/// StateMachineの取得（const版）。
+		/// </summary>
+		/// <returns></returns>
+		const StateMachine& GetStateMachine() const { return flowSM_; }
 		// ===========================================
 
 	private:
-		/// <summary>
-		/// ボス登場演出の開始処理。カメラの初期設定などを行います。
-		/// </summary>
-		/// <param name="camera">演出および描画に使用するカメラ</param>
-		void StartBossIntro_(Camera* camera);
-		/// <summary>
-		/// ボス出現前の待機演出の開始処理。カメラの初期設定などを行います。
-		/// </summary>
-		/// <param name="camera">演出および描画に使用するカメラ</param>
-		void StartBossPreSpawn_(Camera* camera);
-		/// <summary>
-		/// ボス登場演出の開始処理。カメラの初期設定などを行います。
-		/// </summary>
-		/// <param name="camera">演出および描画に使用するカメラ</param>
-		void UpdateBossPreSpawn_(Camera* camera);
-		/// <summary>
-		/// ボス登場演出の更新処理。カメラの回転や位置の変化、エフェクトの発生などを管理します。
-		/// </summary>
-		/// <param name="camera">演出および描画に使用するカメラ</param>
-		void UpdateBossAppear_(Camera* camera);
-		/// <summary>
-		/// ボスが到達位置で止まる演出の更新処理。カメラの揺れやエフェクトの発生などを管理します。
-		/// </summary>
-		/// <param name="camera">演出および描画に使用するカメラ</param>
-		void UpdateBossPause_(Camera* camera);
-		/// <summary>
-		/// ボスが気づいて跳ねる演出の更新処理。カメラの揺れやエフェクトの発生などを管理します。
-		/// </summary>
-		/// <param name="camera">演出および描画に使用するカメラ</param>
-		void UpdateBossNoticeHop_(Camera* camera);
-		/// <summary>
-		/// ボスが慌てる演出の更新処理。カメラの揺れやエフェクトの発生などを管理します。
-		/// </summary>
-		/// <param name="camera">演出および描画に使用するカメラ</param>
-		void UpdateBossPanic_(Camera* camera);
-		/// <summary>
-		/// ボスが逃げる演出の更新処理。カメラの移動やエフェクトの発生などを管理します。
-		/// </summary>
-		/// <param name="camera">演出および描画に使用するカメラ</param>
-		void UpdateBossEscape_(Camera* camera);
-		/// <summary>
-		/// 「ゲームスタート」表示の更新処理。スライドインとフェードアウトの管理を行います。
-		/// </summary>
-		/// <param name="camera">演出および描画に使用するカメラ</param>
-		/// <param name="enemiesInitialized">敵の初期化が完了している場合 true</param>
-		void StartGameStart_(bool enemiesInitialized, bool& outRequestInitEnemies);
-
 		//======================================================================
 		// イントロ進行フェーズ
 		//======================================================================
@@ -150,6 +127,12 @@ namespace TKM {
 			Done, // イントロ完了
 		};
 		Phase phase_ = Phase::IrisOpen; // 現在のイントロ進行フェーズ
+
+		StateMachine flowSM_;
+
+		Camera* currentCamera_ = nullptr;
+		bool currentEnemiesInitialized_ = false;
+		bool* currentOutRequestInitEnemies_ = nullptr;
 		// ======================================================================
 		// --- 演出全体に関するフラグや定数 ---
 		// ======================================================================
@@ -173,15 +156,12 @@ namespace TKM {
 
 		bool  emitFireworkPending_ = false; // アイリス開きと同時に出す花火エフェクトの発射が保留されているか（最初はfalseで、アイリス開きの途中で一度だけtrueになる）
 		float emitFireworkDelaySec_ = 0.7f; // アイリス開きの途中で出す花火エフェクトの発射（0.0fだと同時、0.8fだとアイリスが完全に開いてから）
-		float emitFireworkElapsed_ = 0.0f; // 念のため
 		Vector3 lastEmitPos_{ 0.0f,0.0f,0.0f }; // アイリス開きと同時に出す花火エフェクトの発射位置（ワールド座標）。アイリスの中心に近い位置をランダムに選ぶ。
 		// アイリスのトランジション時間
 		static constexpr float kIrisDurationSec_ = 0.8f; // アイリスの最大スケール（画面全体を覆うサイズ）に対する、開始スケールの割合
 		//======================================================================
 		// カメラインロ（回転）
 		//======================================================================
-		bool  camIntroActive_ = false; // カメラインロ演出がアクティブか
-		bool  camIntroDone_ = false; // カメラインロ演出が完了したか
 		Ease::Tween camYawTween_; // カメラインロのヨーイング（左右回転）のイージング
 		float camIntroDuration_ = 1.2f; // カメラインロの全体の時間（秒）
 		// カメラインロの開始・終了時の角度（ラジアン）。開始は少し左を向いていて、終了は正面を向く。
@@ -222,13 +202,11 @@ namespace TKM {
 		bool introBossVisible_ = false;
 		bool introBossSpawned_ = false;
 
-		float introBossElapsed_ = 0.0f;
 		float introBossPhaseElapsed_ = 0.0f;
 
 		Vector3 introBossPos_{ 0.0f, 6.0f, 48.0f };
 		Vector3 introBossBasePos_{ 0.0f, 6.0f, 48.0f };
-		Vector3 introBossRot_{ 0.0f, 3.14159265f, 0.0f };
-
+		
 		float introBossAppearSec_ = 1.90f; // 奥から近づいてくる時間
 		float introBossPauseSec_ = 0.28f;  // 到達後に一瞬止まる時間
 		float introBossPanicSec_ = 1.20f; // 慌てる時間
@@ -246,8 +224,6 @@ namespace TKM {
 		float introBossEscapeSpeedZ_ = 28.0f; // ボスが逃げる演出のZ方向の移動速度
 
 		float introBossNoticeHopY_ = 2.6f; // ボスが気づいて跳ねる演出のホップの高さ
-		float introBossNoticeSquashX_ = 1.08f; // ボスが気づいて跳ねる演出の横方向の潰れの強さ。値が大きいほど横に潰れることになる。
-		float introBossNoticeSquashY_ = 0.88f; // ボスが気づいて跳ねる演出の縦方向の潰れの強さ。値が小さいほど縦に潰れることになる。
 
 		float introBossEscapeTargetX_ = 0.0f; // ボスが逃げる演出のターゲットX位置。ボスはこのX位置を目指して逃げる。値を大きくするとより横に逃げることになる。
 		float introBossEscapeTargetTimer_ = 0.0f; // ボスが逃げる演出のターゲットX位置を更新するためのタイマー。これが0になるとターゲットX位置を更新する。
@@ -280,9 +256,22 @@ namespace TKM {
 		float introBossPreSpawnElapsed_ = 0.0f; // ボス出現前の待機演出の経過時間
 		static constexpr float introBossPreSpawnSec_ = 1.8f; // ボス出現前の待機演出の時間（秒）
 		float introBossPreSpawnEmitAccum_ = 0.0f; // ボス出現前の待機演出でエフェクトを発生させるための累積時間。これが一定値を超えるごとにエフェクトを発生させる。
-		bool  introBossSpawnFxStarted_ = false; // ボス登場演出の開始と同時に一度だけ空間ゆがみエフェクトを発生させたかどうかのフラグ。最初はfalseで、ボス登場演出の開始と同時にtrueになる。これを使って、ボス登場演出の開始と同時に一度だけ空間ゆがみエフェクトを発生させる。
 		bool  introBossSpawnFxFinished_ = false; // ボス登場演出の開始と同時に一度だけ空間ゆがみエフェクトを発生させてから、そのエフェクトが完了するまで待つフラグ。最初はfalseで、ボス登場演出の開始と同時にtrueになる。これを使って、ボス登場演出の開始と同時に一度だけ空間ゆがみエフェクトを発生させた後、そのエフェクトが完了するまで待つ。
 		bool introBossNoticeMarkEmitted_ = false; // ボスが気づいて跳ねる演出の開始と同時に一度だけ「！」マークエフェクトを発生させたかどうかのフラグ。最初はfalseで、ボスが気づいて跳ねる演出の開始と同時にtrueになる。これを使って、ボスが気づいて跳ねる演出の開始と同時に一度だけ「！」マークエフェクトを発生させる。
 		bool introBossEscapeWarpBurstEmitted_ = false; // ボスが逃げる演出の開始と同時に一度だけワープエフェクトを発生させたかどうかのフラグ。最初はfalseで、ボスが逃げる演出の開始と同時にtrueになる。これを使って、ボスが逃げる演出の開始と同時に一度だけワープエフェクトを発生させる。
-	};
+	
+		//======================================================================
+		// StateMachine
+		//======================================================================
+		friend class IntroIrisOpenState;
+		friend class IntroCameraIntroState;
+		friend class IntroBossPreSpawnState;
+		friend class IntroBossAppearState;
+		friend class IntroBossPauseState;
+		friend class IntroBossNoticeHopState;
+		friend class IntroBossPanicState;
+		friend class IntroBossEscapeState;
+		friend class IntroShowStartState;
+		friend class IntroDoneState;
+};
 } // namespace TKM
