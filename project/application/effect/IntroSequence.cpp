@@ -111,17 +111,16 @@ namespace TKM {
 
 		// --- Camera Intro ---
 		if (camIntroActive_) { // カメラインロ更新
-			float yawNow = camYawTween_.Update(kFixedDt_);
+			float yawNow = camYawTween_.Update(kFixedDt_); // ツイーンの進行に合わせて現在のヨー回転を計算
+			float denom = std::max(0.0001f, (camYawEnd_ - camYawStart_)); // 開始と終了のヨー回転の差が小さい場合にゼロ割りを防ぐため、denom を小さな値でクランプ
+			float t01 = std::clamp((yawNow - camYawStart_) / denom, 0.0f, 1.0f); // 現在のヨー回転が開始と終了の間でどれくらい進んでいるかを0..1の範囲で計算
+			float pitchNow = MyMath::Lerp(camPitchStart_, camPitchEnd_, t01); // ツイーンの進行に合わせてピッチも線形補間で計算
 
-			float denom = std::max(0.0001f, (camYawEnd_ - camYawStart_));
-			float t01 = std::clamp((yawNow - camYawStart_) / denom, 0.0f, 1.0f);
-			float pitchNow = MyMath::Lerp(camPitchStart_, camPitchEnd_, t01);
-
-			camera->SetRotate({ pitchNow, yawNow, 0.0f });
+			camera->SetRotate({ pitchNow, yawNow, 0.0f }); // 現在の回転をカメラにセット
 			// ツイーン完了でカメラインロ終了
 			if (camYawTween_.Finished()) {
-				camIntroActive_ = false;
-				camIntroDone_ = true;
+				camIntroActive_ = false; // カメラインロ終了
+				camIntroDone_ = true; // カメラインロが完了したことを記録
 				camera->SetRotate({ camPitchEnd_, camYawEnd_, 0.0f }); // 最終的な回転を確実にセット
 			}
 		}
@@ -132,8 +131,9 @@ namespace TKM {
 		}
 		// --- Boss camera blend in ---
 		if (camBlendToBossActive_) {
-			float t = camBlendToBossTween_.Update(kFixedDt_);
-
+			float t = camBlendToBossTween_.Update(kFixedDt_); // ツイーンの進行に合わせて0..1の範囲で t を計算
+			
+			// カメラ回転を開始と終了の間で線形補間して計算
 			Vector3 rot{};
 			rot.x = MyMath::Lerp(camBossStartRot_.x, camBossTargetRot_.x, t);
 			rot.y = MyMath::Lerp(camBossStartRot_.y, camBossTargetRot_.y, t);
@@ -141,15 +141,17 @@ namespace TKM {
 
 			camera->SetRotate(rot);
 
+			// ツイーン完了でブレンド終了
 			if (camBlendToBossTween_.Finished()) {
 				camBlendToBossActive_ = false;
 				camera->SetRotate(camBossTargetRot_);
 			}
 		}
 		// --- Boss camera blend back ---
+		// ボス登場～逃走の間に、何らかの理由でカメラを元の位置に戻す必要が出たときのブレンド（例：プレイヤーが死んでリトライしたときなど）。ブレンド開始から終了まで、カメラ回転を開始と終了の間で線形補間して計算。
 		if (camBlendBackActive_) {
 			float t = camBlendBackTween_.Update(kFixedDt_);
-
+			// カメラ回転を開始と終了の間で線形補間して計算
 			Vector3 rot{};
 			rot.x = MyMath::Lerp(camReturnStartRot_.x, camSavedRot_.x, t);
 			rot.y = MyMath::Lerp(camReturnStartRot_.y, camSavedRot_.y, t);
@@ -157,6 +159,7 @@ namespace TKM {
 
 			camera->SetRotate(rot);
 
+			// ツイーン完了でブレンド終了
 			if (camBlendBackTween_.Finished()) {
 				camBlendBackActive_ = false;
 				camera->SetRotate(camSavedRot_);
@@ -176,6 +179,7 @@ namespace TKM {
 		}
 
 		// --- Boss phase camera follow ---
+		// ボス登場～逃走の間、ブレンド中でないときは、カメラをゆっくりボスの方に向ける（ブレンド中はツイーンで回転を制御するため、ここでは回転を更新しない）
 		if (!camBlendToBossActive_ && !camBlendBackActive_) {
 			if (phase_ == Phase::BossAppear ||
 				phase_ == Phase::BossPause ||
@@ -183,7 +187,7 @@ namespace TKM {
 				phase_ == Phase::BossPanic ||
 				phase_ == Phase::BossEscape) {
 
-				Vector3 nowRot = camera->GetRotate();
+				Vector3 nowRot = camera->GetRotate(); // 現在のカメラ回転を取得
 				Vector3 nextRot{};
 				float follow = 8.0f * kFixedDt_;
 
@@ -545,14 +549,15 @@ namespace TKM {
 	}
 
 	void IntroSequence::StartGameStart_(bool enemiesInitialized, bool& outRequestInitEnemies) {
+		// start.png をスライドインさせて表示開始
 		startPlayed_ = true;
 		startVisible_ = true;
 		startSlideIn_ = true;
-
+		// スライドインと同時にフェードアウトも始めるため、開始前からアルファを0にしておく（両方が同時に始まったときに、アルファが0のままになってしまうのを防ぐため）
 		startFadeOut_ = false;
 		startHoldElapsed_ = 0.0f;
 		startAlpha_ = 1.0f;
-
+		// スライドイン開始前からアルファを0にしておくと、スライドインとフェードアウトが両方始まったときにアルファが0のままになってしまうため、スライドイン開始前からアルファを0にしておく
 		startSprite_->SetColor({ 1,1,1,startAlpha_ });
 		startSprite_->SetPosition({ startStartPos_.x, startEndPos_.y });
 		startTween_.Reset(0.0f, 1.0f, startDuration_, Ease::Type::OutBack);
