@@ -86,7 +86,7 @@ void GameScene::Update() {
 	if (flow_ && skybox_) {
 		if (flow_->GetIntro()->IsBossSkyRedPhase()) {
 			// 真っ黒
-			skybox_->SetColor({ 1.0f,0.0f,0.0f,1.0f });
+			skybox_->SetColor({ 10.0f,0.0f,0.0f,1.0f });
 		} else {
 			skybox_->SetColor({ 1.0f,1.0f,1.0f,1.0f }); // 元に戻す
 		}
