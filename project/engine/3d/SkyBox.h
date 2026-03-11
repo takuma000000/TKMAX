@@ -39,6 +39,9 @@ namespace TKM {
 		///<param name="position">位置ベクトル。</param>
 		void SetRotation(const Vector3& rot) { rotation_ = rot; }
 
+		void SetColor(const Vector4& color);
+		Vector4 GetColor() const;
+
 		// 定数バッファ用構造体
 		struct TransformationMatrix {
 			Matrix4x4 viewProjection_;

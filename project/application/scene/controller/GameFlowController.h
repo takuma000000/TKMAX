@@ -139,6 +139,11 @@ namespace TKM {
 		/// </summary>
 		/// <returns></returns>
 		float GetIrisMaxScale() const;
+		/// <summary>
+		/// イントロシーケンスコントローラの取得。
+		/// </summary>
+		/// <returns></returns>
+		IntroSequence* GetIntro() { return intro_.get(); }
 		// ===========================================
 	private:
 		//==============================

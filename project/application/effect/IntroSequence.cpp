@@ -292,6 +292,15 @@ namespace TKM {
 		}
 	}
 
+	bool IntroSequence::IsBossSkyRedPhase() const {
+		//return phase_ == Phase::BossPreSpawn ||
+			return phase_ == Phase::BossAppear ||
+			phase_ == Phase::BossPause ||
+			phase_ == Phase::BossNoticeHop ||
+			phase_ == Phase::BossPanic ||
+			phase_ == Phase::BossEscape;
+	}
+
 	void IntroSequence::StartBossIntro_(Camera* camera) {
 		if (!camera || !object3dCommon_ || introBossSpawned_) { return; }
 

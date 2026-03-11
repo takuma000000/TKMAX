@@ -62,6 +62,11 @@ namespace TKM {
 		/// </summary>
 		/// <returns>表示中の場合 true、それ以外は false</returns>
 		bool IsStartVisible()  const { return startVisible_; }
+		/// <summary>
+		/// ボス登場演出のうち、空が赤くなっているフェーズかを取得します。
+		/// </summary>
+		/// <returns>空が赤くなっているフェーズの場合 true、それ以外は false</returns>
+		bool IsBossSkyRedPhase() const;
 
 		// Getter=====================================
 		/// <summary>

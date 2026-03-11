@@ -236,4 +236,15 @@ namespace TKM {
 		ImGui::End();
 #endif
 	}
+	void Skybox::SetColor(const Vector4& color) {
+		if (mappedMaterial_) {
+			mappedMaterial_->color_ = color;
+		}
+	}
+	Vector4 Skybox::GetColor() const {
+		if (mappedMaterial_) {
+			return mappedMaterial_->color_;
+		}
+		return { 1.0f, 1.0f, 1.0f, 1.0f };
+	}
 }
