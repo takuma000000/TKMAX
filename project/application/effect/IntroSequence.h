@@ -146,7 +146,6 @@ namespace TKM {
 		std::unique_ptr<Sprite> iris_ = nullptr; // アイリス用スプライト
 		bool   irisOpening_ = true; // trueで「開く」演出中
 		float  irisMaxScale_ = 0.0f; // アイリスが最大に広がるスケール（画面全体を覆うサイズ）
-		float  irisScale_ = 0.0f; // 開始スケールは小さめにしておく
 		Ease::Tween irisTween_; // アイリス開きのイージング
 
 		// Iris開きと同時に出すエフェクト
@@ -173,7 +172,6 @@ namespace TKM {
 		// 「ゲームスタート」スライドイン演出
 		//======================================================================
 		std::unique_ptr<Sprite> startSprite_; // 「ゲームスタート」表示用スプライト
-		float startT_ = 0.0f; // 演出の進行度合い（0.0f～1.0f）。スライドインとフェードアウト両方で使用する。
 		bool  startSlideIn_ = false; // 「ゲームスタート」スライドイン演出中か
 		bool  startVisible_ = false; // 「ゲームスタート」表示が可視状態か
 		bool  startPlayed_ = false; // 「ゲームスタート」表示の演出が一度でも開始されたか（スライドイン開始のトリガー用）
@@ -198,9 +196,6 @@ namespace TKM {
 		std::unique_ptr<BossEnemy> introBoss_ = nullptr;
 		TKM::Object3dCommon* object3dCommon_ = nullptr;
 		DirectXCommon* dxCommon_ = nullptr;
-
-		bool introBossVisible_ = false;
-		bool introBossSpawned_ = false;
 
 		float introBossPhaseElapsed_ = 0.0f;
 

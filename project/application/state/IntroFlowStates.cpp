@@ -50,8 +50,8 @@ namespace TKM {
 		}
 
 		// Iris更新
-		s.irisScale_ = s.irisTween_.Update(IntroSequence::kFixedDt_);
-		s.iris_->SetSize({ s.irisScale_, s.irisScale_ });
+		float irisScale = s.irisTween_.Update(IntroSequence::kFixedDt_);
+		s.iris_->SetSize({ irisScale, irisScale });
 		s.iris_->Update();
 
 		if (s.irisTween_.Finished()) {
@@ -96,8 +96,6 @@ namespace TKM {
 		s.introBossSpawnFxFinished_ = false;
 
 		// まだボス本体は出さない
-		s.introBossVisible_ = false;
-		s.introBossSpawned_ = false;
 		s.introBossEscapeWarpBurstEmitted_ = false;
 
 		// 出現予定位置だけ先に決める
@@ -155,7 +153,7 @@ namespace TKM {
 
 		// ゆがみ演出が終わったら、ここで初めてボス本体登場へ
 		if (s.introBossPreSpawnElapsed_ >= s.introBossPreSpawnSec_) {
-			if (!camera || !s.object3dCommon_ || s.introBossSpawned_) { return; }
+			if (!camera || !s.object3dCommon_ || s.introBoss_) { return; }
 
 			s.introBoss_ = std::make_unique<BossEnemy>();
 			s.introBoss_->Initialize(s.object3dCommon_, s.dxCommon_);
@@ -168,8 +166,6 @@ namespace TKM {
 			s.introBossPos_ = { 0.0f, 6.0f, s.introBossAppearStartZ_ };
 			s.introBossBasePos_ = s.introBossPos_;
 
-			s.introBossVisible_ = true;
-			s.introBossSpawned_ = true;
 			s.introBossPhaseElapsed_ = 0.0f;
 			s.phase_ = IntroSequence::Phase::BossAppear;
 
@@ -449,7 +445,6 @@ namespace TKM {
 				ParticleManager::GetInstance()->Emit("bossEscape_warpRing", s.introBossPos_, 1);
 			}
 
-			s.introBossVisible_ = false;
 			s.introBoss_.reset();
 
 			s.camReturnStartRot_ = camera->GetRotate();
@@ -488,16 +483,16 @@ namespace TKM {
 		}
 
 		if (s.startSlideIn_) {
-			s.startT_ = s.startTween_.Update(IntroSequence::kFixedDt_);
+			float startT = s.startTween_.Update(IntroSequence::kFixedDt_);
 
 			if (s.startGlowOn_) {
-				float glow = 1.0f + s.startGlowAmp_ * std::sin(s.startT_ * MyMath::GetPI());
+				float glow = 1.0f + s.startGlowAmp_ * std::sin(startT * MyMath::GetPI());
 				s.startSprite_->SetColor({ glow, glow, glow, s.startAlpha_ });
 			} else {
 				s.startSprite_->SetColor({ 1,1,1,s.startAlpha_ });
 			}
 
-			float x = MyMath::Lerp(s.startStartPos_.x, s.startEndPos_.x, s.startT_);
+			float x = MyMath::Lerp(s.startStartPos_.x, s.startEndPos_.x, startT);
 			float y = s.startEndPos_.y;
 			s.startSprite_->SetPosition({ x, y });
 			s.startSprite_->Update();

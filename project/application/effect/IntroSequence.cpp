@@ -10,7 +10,6 @@ namespace TKM {
 
 		// Iris（開始は画面を覆った状態→開く）
 		iris_ = CreateCenteredIrisSprite(dxCommon, irisMaxScale_);
-		irisScale_ = irisMaxScale_; // 開始は画面全体を覆うサイズにしておく
 		irisTween_.Reset(irisMaxScale_, 0.0f, kIrisDurationSec_, Ease::Type::OutBack); // 開始から終わりにかけて、画面を覆った状態から完全に開いた状態へ（Ease::OutBackで、少し戻しながら勢いよく開く感じにする）
 
 		// start.png（最初は非表示）
@@ -28,7 +27,6 @@ namespace TKM {
 		emitOpenElapsed_ = 0.0f;
 		emitFireworkPending_ = false;
 		lastEmitPos_ = { 0,0,0 };
-		startT_ = 0.0f;
 		startSlideIn_ = false;
 		startVisible_ = false;
 		startPlayed_ = false;
@@ -37,8 +35,6 @@ namespace TKM {
 		startAlpha_ = 1.0f;
 		phase_ = Phase::IrisOpen;
 		introBoss_.reset();
-		introBossVisible_ = false;
-		introBossSpawned_ = false;
 		introBossPhaseElapsed_ = 0.0f;
 		introBossPos_ = { 0.0f, 6.0f, introBossAppearStartZ_ };
 		introBossBasePos_ = introBossPos_;
@@ -145,7 +141,7 @@ namespace TKM {
 	}
 
 	void IntroSequence::DrawIntroBoss3D(DirectXCommon* dxCommon) const {
-		if (introBossVisible_ && introBoss_) {
+		if (introBoss_) {
 			introBoss_->Draw(dxCommon); // イントロ用ボスの3D描画
 		}
 	}
