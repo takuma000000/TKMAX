@@ -136,6 +136,23 @@ namespace TKM {
 						(*particleIterator).transform_.scale_.x *= grow;
 						(*particleIterator).transform_.scale_.y *= grow;
 					}
+					if (g == "bossEscape_warpCore") {
+						float shrink = 1.0f - 1.4f * kDeltaTime_;
+						if (shrink < 0.0f) { shrink = 0.0f; }
+						(*particleIterator).transform_.scale_.x *= shrink;
+						(*particleIterator).transform_.scale_.y *= shrink;
+						(*particleIterator).transform_.scale_.z *= shrink;
+					}
+					if (g == "bossEscape_warpRing") {
+						float grow = 1.0f + 16.0f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.x *= grow;
+						(*particleIterator).transform_.scale_.y *= grow;
+						(*particleIterator).transform_.scale_.z *= grow;
+					}
+					if (g == "bossEscape_warpShred") {
+						float stretch = 1.0f + 8.0f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.y *= stretch;
+					}
 
 					// アルファカーブ（“パァン”を作る）
 					float a = 1.0f - t;
@@ -179,6 +196,22 @@ namespace TKM {
 					if (g == "bossNoticeMark") {
 						a = a * a;
 						particleGroup->instancingData_[particleGroupIterator->second.kNumInstance_].color_.w = a;
+					}
+					if (g == "bossEscape_warpCore") {
+						a = a * a * a;
+						particleGroup->instancingData_[particleGroupIterator->second.kNumInstance_].color_.w = a;
+					}
+					if (g == "bossEscape_warpSwirl") {
+						a = std::pow(a, 1.4f);
+						particleGroup->instancingData_[particleGroupIterator->second.kNumInstance_].color_.w = a;
+					}
+					if (g == "bossEscape_warpShred") {
+						a = a * a;
+						particleGroup->instancingData_[particleGroupIterator->second.kNumInstance_].color_.w = a * 0.85f;
+					}
+					if (g == "bossEscape_warpRing") {
+						a = std::pow(a, 1.1f);
+						particleGroup->instancingData_[particleGroupIterator->second.kNumInstance_].color_.w = a * 0.75f;
 					}
 
 					++particleGroupIterator->second.kNumInstance_;//生きているParticleの数を1つカウントする

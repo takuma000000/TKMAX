@@ -59,6 +59,7 @@ namespace TKM {
 		introBossSpawnFxStarted_ = false;
 		introBossSpawnFxFinished_ = false;
 		introBossNoticeMarkEmitted_ = false;
+		introBossEscapeWarpBurstEmitted_ = false;
 	}
 
 	void IntroSequence::Update(float dt, Camera* camera, bool enemiesInitialized, bool& outRequestInitEnemies) {
@@ -332,6 +333,8 @@ namespace TKM {
 		// まだボス本体は出さない
 		introBossVisible_ = false;
 		introBossSpawned_ = false;
+
+		introBossEscapeWarpBurstEmitted_ = false; // 逃走ワープのバーストはまだ出してない状態にリセット
 
 		// 出現予定位置だけ先に決める
 		introBossPos_ = { 0.0f, 6.0f, introBossAppearStartZ_ };
@@ -627,6 +630,16 @@ namespace TKM {
 
 		if (introBossPos_.z >= introBossEscapeEndZ_ || t >= 1.0f) {
 			introBoss_->SetIntroPanic(false, 0.0f);
+
+			if (!introBossEscapeWarpBurstEmitted_) {
+				introBossEscapeWarpBurstEmitted_ = true;
+
+				ParticleManager::GetInstance()->Emit("bossEscape_warpCore", introBossPos_, 10);
+				ParticleManager::GetInstance()->Emit("bossEscape_warpSwirl", introBossPos_, 36);
+				ParticleManager::GetInstance()->Emit("bossEscape_warpShred", introBossPos_, 20);
+				ParticleManager::GetInstance()->Emit("bossEscape_warpRing", introBossPos_, 1);
+			}
+
 			introBossVisible_ = false;
 			introBoss_.reset();
 
@@ -639,7 +652,9 @@ namespace TKM {
 			phase_ = Phase::ShowStart;
 		}
 
-		ParticleManager::GetInstance()->Emit("bossEscape_trail", introBossPos_, 6);
+		// 逃走中も少しずつ空間が乱れる
+		ParticleManager::GetInstance()->Emit("bossEscape_warpSwirl", introBossPos_, 5);
+		ParticleManager::GetInstance()->Emit("bossEscape_warpShred", introBossPos_, 3);
 	}
 
 	void IntroSequence::StartGameStart_(bool enemiesInitialized, bool& outRequestInitEnemies) {

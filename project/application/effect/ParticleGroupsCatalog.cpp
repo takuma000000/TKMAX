@@ -174,14 +174,21 @@ namespace TKM {
 		pm->CreateParticleGroup("bossIntro_spark", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
 		// トレイル：コアから引きずるように伸びる粒
 		pm->CreateParticleGroup("bossEscape_trail", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
-		// ワープエフェクト：コアがワープしていくときのエフェクト群
+		// ワープエフェクト：コア
 		pm->CreateParticleGroup("bossWarp_core", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// ワープエフェクト：コアがワープしていくときのエフェクト群
+		// ワープエフェクト：渦巻き
 		pm->CreateParticleGroup("bossWarp_swirl", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
-		// ワープエフェクト：コアがワープしていくときのエフェクト群
+		// ワープエフェクト：破片
 		pm->CreateParticleGroup("bossWarp_dust", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
 		// ボスの注意マーク（！）
 		pm->CreateParticleGroup("bossNoticeMark", "./resources/texture/exclamation.png", ParticleManager::ParticleType::NORMAL);
-		
+		// ワープエフェクト：コア
+		pm->CreateParticleGroup("bossEscape_warpCore", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
+		// ワープエフェクト：渦巻き
+		pm->CreateParticleGroup("bossEscape_warpSwirl", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
+		// ワープエフェクト：破片
+		pm->CreateParticleGroup("bossEscape_warpShred", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
+		// ワープエフェクト：リング
+		pm->CreateParticleGroup("bossEscape_warpRing", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
 	}
 }

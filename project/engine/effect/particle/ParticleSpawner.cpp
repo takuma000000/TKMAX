@@ -1974,6 +1974,113 @@ namespace TKM {
 
 			// アニメっぽく黄色寄り。白でもいいけどまずは見やすさ優先
 			p.color_ = { 1.0f, 0.95f, 0.25f, 1.0f };
+		} else if (groupName == "bossEscape_warpCore") {
+
+			p.transform_.translate_ = center;
+
+			float sc = std::uniform_real_distribution<float>(3.5f, 5.8f)(rng);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.28f, 0.45f)(rng);
+			p.currentTime_ = 0.0f;
+
+			float c = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+			p.color_ = {
+				0.70f + 0.12f * c,
+				0.90f + 0.06f * c,
+				1.15f + 0.18f * c,
+				1.0f
+			};
+		} else if (groupName == "bossEscape_warpSwirl") {
+
+			auto frand = [&](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			float ang = frand(0.0f, 2.0f * std::numbers::pi_v<float>);
+			float radius = frand(4.5f, 10.0f);
+			float y = frand(-3.5f, 3.5f);
+
+			Vector3 local = {
+				std::cos(ang) * radius,
+				y,
+				std::sin(ang) * radius
+			};
+
+			p.transform_.translate_ = center + local;
+
+			Vector3 toCenter = MyMath::Normalize(-local);
+			Vector3 tangent = MyMath::Normalize(Vector3{ -local.z, 0.0f, local.x });
+
+			float inward = frand(4.5f, 8.0f);
+			float spin = frand(0.8f, 2.2f);
+
+			p.velocity_ = toCenter * inward + tangent * spin;
+
+			float sc = frand(0.45f, 1.00f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.35f, 0.70f);
+			p.currentTime_ = 0.0f;
+
+			float t = frand(0.0f, 1.0f);
+			p.color_ = {
+				0.38f + 0.10f * t,
+				0.62f + 0.12f * t,
+				0.95f + 0.18f * t,
+				1.0f
+			};
+		} else if (groupName == "bossEscape_warpShred") {
+
+			auto frand = [&](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			float ang = frand(0.0f, 2.0f * std::numbers::pi_v<float>);
+			float radius = frand(2.0f, 6.0f);
+			float y = frand(-3.0f, 3.0f);
+
+			Vector3 local = {
+				std::cos(ang) * radius,
+				y,
+				std::sin(ang) * radius
+			};
+
+			p.transform_.translate_ = center + local;
+
+			Vector3 toCenter = MyMath::Normalize(-local);
+			float spd = frand(8.0f, 13.0f);
+			p.velocity_ = toCenter * spd;
+
+			float thin = frand(0.10f, 0.20f);
+			float len = frand(1.6f, 3.4f);
+			p.transform_.scale_ = { thin, len, 1.0f };
+
+			p.lifeTime_ = frand(0.20f, 0.35f);
+			p.currentTime_ = 0.0f;
+
+			float t = frand(0.0f, 1.0f);
+			p.color_ = {
+				0.65f + 0.10f * t,
+				0.82f + 0.08f * t,
+				1.00f,
+				1.0f
+			};
+		} else if (groupName == "bossEscape_warpRing") {
+
+			p.transform_.translate_ = center;
+
+			float sc = std::uniform_real_distribution<float>(6.0f, 8.0f)(rng);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.30f, 0.45f)(rng);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { 0.72f, 0.88f, 1.08f, 1.0f };
 		} else { // 上記意外
 			// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 			std::uniform_real_distribution<float> velX(-0.15f, 0.15f);
