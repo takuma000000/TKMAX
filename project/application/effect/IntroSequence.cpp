@@ -545,8 +545,12 @@ namespace TKM {
 		introBoss_->SetPosition(pos);
 		introBoss_->SetRotate({ 0.0f, 3.14159265f, rotZ }); // 回転は、ベースの向きに、気づいたときのビクッと感を少し加える感じ
 
-		// 気づいた瞬間の触手バタつき
-		introBoss_->SetIntroPanic(true, 0.85f);
+		// 触手は「跳ね始めてから」揺らす
+		if (t < 0.20f) {
+			introBoss_->SetIntroPanic(false, 0.0f);
+		} else {
+			introBoss_->SetIntroPanic(true, 0.85f);
+		}
 
 		// カメラは少しだけ反応させる
 		camBossTargetRot_ = {
