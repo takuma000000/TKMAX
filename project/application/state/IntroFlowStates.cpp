@@ -470,71 +470,21 @@ namespace TKM {
 		(void)dt;
 		auto& s = AsIntro_(ctx);
 
-		if (s.phase_ == IntroSequence::Phase::ShowStart && !s.startPlayed_ && !s.camBlendBackActive_) {
-			s.startPlayed_ = true;
-			s.startVisible_ = true;
-			s.startSlideIn_ = true;
-			s.startFadeOut_ = false;
-			s.startHoldElapsed_ = 0.0f;
-			s.startAlpha_ = 1.0f;
-			s.startSprite_->SetColor({ 1,1,1,s.startAlpha_ });
-			s.startSprite_->SetPosition({ s.startStartPos_.x, s.startEndPos_.y });
-			s.startTween_.Reset(0.0f, 1.0f, s.startDuration_, Ease::Type::OutBack);
+		if (!s.camBlendBackActive_) {
+			s.startBanner_.Start();
 		}
 
-		if (s.startSlideIn_) {
-			float startT = s.startTween_.Update(IntroSequence::kFixedDt_);
+		s.startBanner_.Update(IntroSequence::kFixedDt_);
 
-			if (s.startGlowOn_) {
-				float glow = 1.0f + s.startGlowAmp_ * std::sin(startT * MyMath::GetPI());
-				s.startSprite_->SetColor({ glow, glow, glow, s.startAlpha_ });
-			} else {
-				s.startSprite_->SetColor({ 1,1,1,s.startAlpha_ });
+		if (s.startBanner_.IsFinished()) {
+			s.phase_ = IntroSequence::Phase::Done;
+
+			if (!s.currentEnemiesInitialized_ && s.currentOutRequestInitEnemies_) {
+				*s.currentOutRequestInitEnemies_ = true;
 			}
+			s.gameplayLocked_ = false;
 
-			float x = MyMath::Lerp(s.startStartPos_.x, s.startEndPos_.x, startT);
-			float y = s.startEndPos_.y;
-			s.startSprite_->SetPosition({ x, y });
-			s.startSprite_->Update();
-
-			if (s.startTween_.Finished()) {
-				s.startSlideIn_ = false;
-				s.startHoldElapsed_ = 0.0f;
-			}
-		} else if (s.startVisible_) {
-			if (!s.startFadeOut_ && s.startGlowOn_) {
-				float t01 = (s.startHoldSec_ > 0.0f) ? std::min(s.startHoldElapsed_ / s.startHoldSec_, 1.0f) : 1.0f;
-				float decay = 1.0f - 0.7f * t01;
-				float glow = 1.0f + decay * 0.20f * std::sin(s.startHoldElapsed_ * s.startGlowSpeed_);
-				s.startSprite_->SetColor({ glow, glow, glow, s.startAlpha_ });
-			}
-
-			if (!s.startFadeOut_) {
-				s.startHoldElapsed_ += IntroSequence::kFixedDt_;
-				if (s.startHoldElapsed_ >= s.startHoldSec_) {
-					s.startFadeOut_ = true;
-				}
-			}
-
-			if (s.startFadeOut_) {
-				s.startAlpha_ -= IntroSequence::kFixedDt_ / s.startFadeSec_;
-				if (s.startAlpha_ <= 0.0f) {
-					s.startAlpha_ = 0.0f;
-					s.startVisible_ = false;
-					s.phase_ = IntroSequence::Phase::Done;
-
-					if (!s.currentEnemiesInitialized_ && s.currentOutRequestInitEnemies_) {
-						*s.currentOutRequestInitEnemies_ = true;
-					}
-					s.gameplayLocked_ = false;
-
-					s.flowSM_.Change(std::make_unique<IntroDoneState>());
-					return;
-				}
-				s.startSprite_->SetColor({ 1,1,1,s.startAlpha_ });
-			}
-
-			s.startSprite_->Update();
+			s.flowSM_.Change(std::make_unique<IntroDoneState>());
 		}
 	}
 

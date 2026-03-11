@@ -10,15 +10,11 @@ namespace TKM {
 
 		// Iris（開始は画面を覆った状態→開く）
 		iris_ = CreateCenteredIrisSprite(dxCommon, irisMaxScale_);
-		irisTween_.Reset(irisMaxScale_, 0.0f, kIrisDurationSec_, Ease::Type::OutBack); // 開始から終わりにかけて、画面を覆った状態から完全に開いた状態へ（Ease::OutBackで、少し戻しながら勢いよく開く感じにする）
+		irisTween_.Reset(irisMaxScale_, 0.0f, kIrisDurationSec_, Ease::Type::OutBack); // 最初は画面全体を覆う状態にセット
 
 		// start.png（最初は非表示）
-		startSprite_ = std::make_unique<Sprite>();
-		startSprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon, "./resources/texture/start.png"); // テクスチャは適宜用意してください
-		startSprite_->SetAnchorPoint({ 0.5f, 0.5f }); // 画像の中心が位置座標になるようにアンカーポイントを設定
-		startSprite_->SetPosition({ startStartPos_.x, startStartPos_.y });
-		startSprite_->SetSize({ 100, 100 }); // 適宜サイズを調整してください
-		startSprite_->SetColor({ 1,1,1,1 }); // 最初は完全に不透明にしておく（スライドインと同時にフェードアウトも始める想定なので、スライドイン開始前からアルファを0にしておくと、スライドインとフェードアウトが両方始まったときにアルファが0のままになってしまうため）
+		startBanner_.Initialize(dxCommon);
+		startBanner_.Reset(); // 非表示状態にリセット
 
 		// 初期状態
 		gameplayLocked_ = true;
@@ -27,12 +23,6 @@ namespace TKM {
 		emitOpenElapsed_ = 0.0f;
 		emitFireworkPending_ = false;
 		lastEmitPos_ = { 0,0,0 };
-		startSlideIn_ = false;
-		startVisible_ = false;
-		startPlayed_ = false;
-		startFadeOut_ = false;
-		startHoldElapsed_ = 0.0f;
-		startAlpha_ = 1.0f;
 		phase_ = Phase::IrisOpen;
 		introBoss_.reset();
 		introBossPhaseElapsed_ = 0.0f;
@@ -134,10 +124,8 @@ namespace TKM {
 		if (irisClosing && iris_) {
 			iris_->Draw();
 		}
-		// start.png（表示中のみ）
-		if (startVisible_ && startSprite_) {
-			startSprite_->Draw();
-		}
+		// 「ゲームスタート」表示
+		startBanner_.Draw();
 	}
 
 	void IntroSequence::DrawIntroBoss3D(DirectXCommon* dxCommon) const {

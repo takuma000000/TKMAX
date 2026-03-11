@@ -1,4 +1,5 @@
 #include "ClearSequenceController.h"
+#include "IntroStartBanner.h"
 
 namespace TKM {
 	void ClearSequenceController::Initialize(Player* player, BossManager* bossManager, GameFlowController* flow, DirectXCommon* dxCommon, Skybox* skybox, FireworkController* fireworkController) {

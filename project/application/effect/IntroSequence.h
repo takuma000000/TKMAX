@@ -10,20 +10,9 @@
 #include "Easing.h"
 #include "IrisUtil.h"
 #include "StateMachine.h"
+#include "IntroStartBanner.h"
 
 namespace TKM {
-
-	// 前方宣言
-	class IntroIrisOpenState;
-	class IntroCameraIntroState;
-	class IntroBossPreSpawnState;
-	class IntroBossAppearState;
-	class IntroBossPauseState;
-	class IntroBossNoticeHopState;
-	class IntroBossPanicState;
-	class IntroBossEscapeState;
-	class IntroShowStartState;
-	class IntroDoneState;
 
 	//=============================================================
 	// IntroSequenceクラス
@@ -75,7 +64,7 @@ namespace TKM {
 		/// 「ゲームスタート」表示が可視状態かを取得します。
 		/// </summary>
 		/// <returns>表示中の場合 true、それ以外は false</returns>
-		bool IsStartVisible()  const { return startVisible_; }
+		bool IsStartVisible() const { return startBanner_.IsVisible(); }
 		/// <summary>
 		/// ボス登場演出のうち、空が赤くなっているフェーズかを取得します。
 		/// </summary>
@@ -169,27 +158,9 @@ namespace TKM {
 		float camPitchStart_ = 0.12f; // ラジアンで、カメラが少し上を向いている状態。これを大きくすると開始時により上を向いていることになる。
 		float camPitchEnd_ = 0.05f; // ラジアンで、カメラが少し上を向いている状態。これを大きくすると終了時により上を向いていることになる。
 		//======================================================================
-		// 「ゲームスタート」スライドイン演出
+		// 「ゲームスタート」表示
 		//======================================================================
-		std::unique_ptr<Sprite> startSprite_; // 「ゲームスタート」表示用スプライト
-		bool  startSlideIn_ = false; // 「ゲームスタート」スライドイン演出中か
-		bool  startVisible_ = false; // 「ゲームスタート」表示が可視状態か
-		bool  startPlayed_ = false; // 「ゲームスタート」表示の演出が一度でも開始されたか（スライドイン開始のトリガー用）
-		// 「ゲームスタート」スライドインの開始・終了位置。開始位置は画面右外、終了位置は画面中央。
-		Vector2 startStartPos_ = { TKM::WindowsAPI::kClientWidth_ + 400.0f, TKM::WindowsAPI::kClientHeight_ * 0.5f }; // 画面右外（右端からさらに400ピクセル右）。この値を大きくすると開始位置がさらに右になる。
-		Vector2 startEndPos_ = { TKM::WindowsAPI::kClientWidth_ * 0.5f,  TKM::WindowsAPI::kClientHeight_ * 0.5f }; // 画面中央
-		// 「ゲームスタート」スライドインのイージング
-		Ease::Tween startTween_; // 「ゲームスタート」スライドインのイージング
-		float       startDuration_ = 1.0f; // 「ゲームスタート」スライドインの全体の時間（秒）
-		float       startHoldSec_ = 1.0f; // 「ゲームスタート」表示が中央に留まる時間（秒）
-		float       startHoldElapsed_ = 0.0f; // 「ゲームスタート」表示が中央に留まっている時間の経過（秒）
-		bool        startFadeOut_ = false; // 「ゲームスタート」表示のフェードアウト中か
-		float       startFadeSec_ = 0.6f; // 「ゲームスタート」表示のフェードアウトにかける時間（秒）
-		float       startAlpha_ = 1.0f; // 「ゲームスタート」表示のアルファ値（0.0f～1.0f）。フェードアウトで使用。
-		// 「ゲームスタート」表示のフェードアウトのイージング
-		float startGlowAmp_ = 0.8f; // 「ゲームスタート」表示のグローの強さ。0.0fでグローなし、1.0fで最大のグロー。スライドインとフェードアウト両方で使用。
-		float startGlowSpeed_ = 10.0f; // 「ゲームスタート」表示のグローの速さ。値が大きいほど速くグローが変化する。スライドインとフェードアウト両方で使用。
-		bool  startGlowOn_ = true; // 「ゲームスタート」表示のグローがオンか。スライドインとフェードアウト両方で使用。trueのとき、startGlowAmp_の値に応じてグローが変化する。falseのとき、グローなし。
+		IntroStartBanner startBanner_; // 「ゲームスタート」表示の管理クラス
 		//======================================================================
 		// イントロ用ボス演出
 		//======================================================================
