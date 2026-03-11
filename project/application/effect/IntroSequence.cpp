@@ -135,10 +135,26 @@ namespace TKM {
 		if (camIntroDone_ && phase_ == Phase::CameraIntro) {
 			StartBossPreSpawn_(camera);
 		}
+
+		// ボス登場～逃走更新
+		if (phase_ == Phase::BossPreSpawn) {
+			UpdateBossPreSpawn_(camera);
+		} else if (phase_ == Phase::BossAppear) {
+			UpdateBossAppear_(camera);
+		} else if (phase_ == Phase::BossPause) {
+			UpdateBossPause_(camera);
+		} else if (phase_ == Phase::BossNoticeHop) {
+			UpdateBossNoticeHop_(camera);
+		} else if (phase_ == Phase::BossPanic) {
+			UpdateBossPanic_(camera);
+		} else if (phase_ == Phase::BossEscape) {
+			UpdateBossEscape_(camera);
+		}
+
 		// --- Boss camera blend in ---
 		if (camBlendToBossActive_) {
 			float t = camBlendToBossTween_.Update(kFixedDt_); // ツイーンの進行に合わせて0..1の範囲で t を計算
-			
+
 			// カメラ回転を開始と終了の間で線形補間して計算
 			Vector3 rot{};
 			rot.x = MyMath::Lerp(camBossStartRot_.x, camBossTargetRot_.x, t);
@@ -170,20 +186,6 @@ namespace TKM {
 				camBlendBackActive_ = false;
 				camera->SetRotate(camSavedRot_);
 			}
-		}
-		// ボス登場～逃走更新
-		if (phase_ == Phase::BossPreSpawn) {
-			UpdateBossPreSpawn_(camera);
-		} else if (phase_ == Phase::BossAppear) {
-			UpdateBossAppear_(camera);
-		} else if (phase_ == Phase::BossPause) {
-			UpdateBossPause_(camera);
-		} else if (phase_ == Phase::BossNoticeHop) {
-			UpdateBossNoticeHop_(camera);
-		} else if (phase_ == Phase::BossPanic) {
-			UpdateBossPanic_(camera);
-		} else if (phase_ == Phase::BossEscape) {
-			UpdateBossEscape_(camera);
 		}
 
 		// --- Boss phase camera follow ---
@@ -299,6 +301,7 @@ namespace TKM {
 		introBoss_->SetPosition({ 0.0f, 6.0f, introBossAppearStartZ_ });
 		introBoss_->SetRotate({ 0.0f, 3.14159265f, 0.0f });
 		introBoss_->SetLocked(true);
+		introBoss_->SyncTransform();
 
 		introBossPos_ = { 0.0f, 6.0f, introBossAppearStartZ_ };
 		introBossBasePos_ = introBossPos_;
