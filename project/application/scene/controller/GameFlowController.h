@@ -53,7 +53,7 @@ namespace TKM {
 		/// <note>
 		/// 実際の描画呼び出しは IntroSequence 側から行われます。
 		/// </note>
-		void Draw(DirectXCommon* dxCommon) const;
+		void Draw() const;
 		/// <summary>
 		/// イントロ用ボスの3D描画を行います。
 		/// </summary>

@@ -142,7 +142,7 @@ void GameScene::Draw3D() {
 
 void GameScene::DrawSprite() {
 	TKM::SpriteCommon::GetInstance()->DrawSetCommon();
-	flow_->Draw(dxCommon_); // ゲームフローの描画（イントロシーケンス等）
+	flow_->Draw(); // ゲームフローの描画（イントロシーケンス等）
 	ui_->Draw(); // HUD描画
 	pause_->Draw(); // ポーズメニュー描画
 	bossManager_->DrawUI(); // ボスマネージャのUI描画（HPゲージ等）

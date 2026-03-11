@@ -179,6 +179,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\actor\player\HomingBullet.cpp" />
     <ClCompile Include="application\state\IntroFlowStates.cpp" />
     <ClCompile Include="application\effect\IntroStartBanner.cpp" />
+    <ClCompile Include="application\effect\IntroBossActor.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="engine\3d\Model.cpp" />
     <ClCompile Include="engine\3d\ModelCommon.cpp" />
@@ -324,6 +325,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\ui\PlayerHudUI.h" />
     <ClInclude Include="application\state\IntroFlowStates.h" />
     <ClInclude Include="application\effect\IntroStartBanner.h" />
+    <ClInclude Include="application\effect\IntroBossActor.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="application\scene\controller\TitleMenuController.h" />
     <ClInclude Include="application\catalog\TextureCatalog.h" />

@@ -1,20 +1,22 @@
 #include "IntroSequence.h"
 #include "IntroFlowStates.h"
-#include <algorithm>
-#include "ParticleManager.h"
 
 namespace TKM {
 	void IntroSequence::Initialize(DirectXCommon* dxCommon, TKM::Object3dCommon* object3dCommon) {
-		object3dCommon_ = object3dCommon;
-		dxCommon_ = dxCommon;
-
 		// Iris（開始は画面を覆った状態→開く）
 		iris_ = CreateCenteredIrisSprite(dxCommon, irisMaxScale_);
 		irisTween_.Reset(irisMaxScale_, 0.0f, kIrisDurationSec_, Ease::Type::OutBack); // 最初は画面全体を覆う状態にセット
 
 		// start.png（最初は非表示）
 		startBanner_.Initialize(dxCommon);
-		startBanner_.Reset(); // 非表示状態にリセット
+
+		// イントロ用ボス
+		introBossActor_.Initialize(object3dCommon, dxCommon);
+		introBossActor_.Reset();
+
+		// 状態遷移の初期化
+		flowSM_.Initialize(this);
+		flowSM_.Change(std::make_unique<IntroIrisOpenState>());
 
 		// 初期状態
 		gameplayLocked_ = true;
@@ -24,26 +26,13 @@ namespace TKM {
 		emitFireworkPending_ = false;
 		lastEmitPos_ = { 0,0,0 };
 		phase_ = Phase::IrisOpen;
-		introBoss_.reset();
-		introBossPhaseElapsed_ = 0.0f;
-		introBossPos_ = { 0.0f, 6.0f, introBossAppearStartZ_ };
-		introBossBasePos_ = introBossPos_;
-		introBossEscapeTargetX_ = 0.0f;
-		introBossEscapeTargetTimer_ = 0.0f;
+		
 		camBlendToBossActive_ = false;
 		camBlendBackActive_ = false;
 		camSavedRot_ = { 0.0f, 0.0f, 0.0f };
 		camBossStartRot_ = { 0.0f, 0.0f, 0.0f };
 		camBossTargetRot_ = { 0.0f, 0.0f, 0.0f };
 		camReturnStartRot_ = { 0.0f, 0.0f, 0.0f };
-		introBossPreSpawnElapsed_ = 0.0f;
-		introBossPreSpawnEmitAccum_ = 0.0f;
-		introBossSpawnFxFinished_ = false;
-		introBossNoticeMarkEmitted_ = false;
-		introBossEscapeWarpBurstEmitted_ = false;
-
-		flowSM_.Initialize(this);
-		flowSM_.Change(std::make_unique<IntroIrisOpenState>());
 	}
 
 	void IntroSequence::Update(float dt, Camera* camera, bool enemiesInitialized, bool& outRequestInitEnemies) {
@@ -115,7 +104,7 @@ namespace TKM {
 		currentOutRequestInitEnemies_ = nullptr;
 	}
 
-	void IntroSequence::Draw(DirectXCommon* dxCommon, bool irisClosing) const {
+	void IntroSequence::Draw(bool irisClosing) const {
 		// Iris（開いているとき、または閉じる演出中は描画）
 		if (irisOpening_ && iris_) {
 			iris_->Draw();
@@ -129,9 +118,7 @@ namespace TKM {
 	}
 
 	void IntroSequence::DrawIntroBoss3D(DirectXCommon* dxCommon) const {
-		if (introBoss_) {
-			introBoss_->Draw(dxCommon); // イントロ用ボスの3D描画
-		}
+		introBossActor_.Draw(dxCommon); // ボスが存在するフェーズのみ描画
 	}
 
 	bool IntroSequence::IsBossSkyRedPhase() const {

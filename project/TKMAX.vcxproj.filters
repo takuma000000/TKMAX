@@ -206,6 +206,7 @@
     <ClCompile Include="application\ui\PlayerHudUI.cpp" />
     <ClCompile Include="application\state\IntroFlowStates.cpp" />
     <ClCompile Include="application\effect\IntroStartBanner.cpp" />
+    <ClCompile Include="application\effect\IntroBossActor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -451,6 +452,7 @@
     <ClInclude Include="application\ui\PlayerHudUI.h" />
     <ClInclude Include="application\state\IntroFlowStates.h" />
     <ClInclude Include="application\effect\IntroStartBanner.h" />
+    <ClInclude Include="application\effect\IntroBossActor.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

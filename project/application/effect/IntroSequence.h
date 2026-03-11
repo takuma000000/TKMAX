@@ -2,7 +2,6 @@
 #include <memory>
 
 #include "DirectXCommon.h"
-#include "BossEnemy.h"
 #include "Object3dCommon.h"
 #include "Camera.h"
 #include "Sprite.h"
@@ -11,6 +10,7 @@
 #include "IrisUtil.h"
 #include "StateMachine.h"
 #include "IntroStartBanner.h"
+#include "IntroBossActor.h"
 
 namespace TKM {
 
@@ -42,8 +42,7 @@ namespace TKM {
 		/// イントロ表示の描画処理を行います。
 		/// </summary>
 		/// <param name="dxCommon">DirectX 共通管理クラス</param>
-		/// <param name="irisClosing">アイリスが閉じる演出中の場合 true</param>
-		void Draw(DirectXCommon* dxCommon, bool irisClosing) const;
+		void Draw(bool irisClosing) const;
 		/// <summary>
 		/// イントロ用ボスを3D描画します。
 		/// </summary>
@@ -162,44 +161,9 @@ namespace TKM {
 		//======================================================================
 		IntroStartBanner startBanner_; // 「ゲームスタート」表示の管理クラス
 		//======================================================================
-		// イントロ用ボス演出
+		// イントロ用ボス
 		//======================================================================
-		std::unique_ptr<BossEnemy> introBoss_ = nullptr;
-		TKM::Object3dCommon* object3dCommon_ = nullptr;
-		DirectXCommon* dxCommon_ = nullptr;
-
-		float introBossPhaseElapsed_ = 0.0f;
-
-		Vector3 introBossPos_{ 0.0f, 6.0f, 48.0f };
-		Vector3 introBossBasePos_{ 0.0f, 6.0f, 48.0f };
-		
-		float introBossAppearSec_ = 1.90f; // 奥から近づいてくる時間
-		float introBossPauseSec_ = 0.28f;  // 到達後に一瞬止まる時間
-		float introBossPanicSec_ = 1.20f; // 慌てる時間
-		float introBossEscapeSec_ = 2.10f; // 逃げる時間
-
-		float introBossAppearStartZ_ = 120.0f; // ボス登場演出開始時のZ位置
-		float introBossAppearEndZ_ = 44.0f; // ボス登場演出終了時のZ位置
-		float introBossEscapeEndZ_ = 120.0f; // ボス逃げる演出終了時のZ位置
-		float introBossNoticeHopSec_ = 2.10f; // ボスが気づいて跳ねる演出の時間（秒）
-
-		float introBossPanicAmpX_ = 2.8f; // ボスが慌てる演出のカメラ揺れのX方向の強さ
-		float introBossPanicAmpY_ = 0.55f; // ボスが慌てる演出のカメラ揺れのY方向の強さ
-		float introBossEscapeAmpX_ = 7.5f; // ボスが逃げる演出のカメラ揺れのX方向の強さ
-		float introBossEscapeHopY_ = 2.0f; // ボスが逃げる演出のホップの高さ
-		float introBossEscapeSpeedZ_ = 28.0f; // ボスが逃げる演出のZ方向の移動速度
-
-		float introBossNoticeHopY_ = 2.6f; // ボスが気づいて跳ねる演出のホップの高さ
-
-		float introBossEscapeTargetX_ = 0.0f; // ボスが逃げる演出のターゲットX位置。ボスはこのX位置を目指して逃げる。値を大きくするとより横に逃げることになる。
-		float introBossEscapeTargetTimer_ = 0.0f; // ボスが逃げる演出のターゲットX位置を更新するためのタイマー。これが0になるとターゲットX位置を更新する。
-		float introBossEscapeTargetInterval_ = 0.10f; // ボスが逃げる演出のターゲットX位置を更新する間隔（秒）。この値を小さくするとターゲットX位置が頻繁に変わることになる。
-
-		float introBossAppearFloatAmpX_ = 2.0f;   // 登場時の左右ふわふわ幅
-		float introBossAppearFloatAmpY_ = 3.4f;   // 登場時の上下ふわふわ幅
-		float introBossAppearFloatFreqX_ = 1.9f;  // 登場時の左右ふわふわ速さ
-		float introBossAppearFloatFreqY_ = 2.1f;  // 登場時の上下ふわふわ速さ
-		float introBossAppearTiltZ_ = 0.14f;      // 登場時のふわふわ傾き
+		IntroBossActor introBossActor_;
 		//======================================================================
 		// ボス演出用カメラブレンド
 		//======================================================================
@@ -216,16 +180,6 @@ namespace TKM {
 		// カメラブレンドの時間
 		float camBlendToBossSec_ = 0.45f; // 入り補間時間
 		float camBlendBackSec_ = 0.55f;   // 戻り補間時間
-		//======================================================================
-		// ボス出現前の「空間ゆがみ」演出
-		//======================================================================
-		float introBossPreSpawnElapsed_ = 0.0f; // ボス出現前の待機演出の経過時間
-		static constexpr float introBossPreSpawnSec_ = 1.8f; // ボス出現前の待機演出の時間（秒）
-		float introBossPreSpawnEmitAccum_ = 0.0f; // ボス出現前の待機演出でエフェクトを発生させるための累積時間。これが一定値を超えるごとにエフェクトを発生させる。
-		bool  introBossSpawnFxFinished_ = false; // ボス登場演出の開始と同時に一度だけ空間ゆがみエフェクトを発生させてから、そのエフェクトが完了するまで待つフラグ。最初はfalseで、ボス登場演出の開始と同時にtrueになる。これを使って、ボス登場演出の開始と同時に一度だけ空間ゆがみエフェクトを発生させた後、そのエフェクトが完了するまで待つ。
-		bool introBossNoticeMarkEmitted_ = false; // ボスが気づいて跳ねる演出の開始と同時に一度だけ「！」マークエフェクトを発生させたかどうかのフラグ。最初はfalseで、ボスが気づいて跳ねる演出の開始と同時にtrueになる。これを使って、ボスが気づいて跳ねる演出の開始と同時に一度だけ「！」マークエフェクトを発生させる。
-		bool introBossEscapeWarpBurstEmitted_ = false; // ボスが逃げる演出の開始と同時に一度だけワープエフェクトを発生させたかどうかのフラグ。最初はfalseで、ボスが逃げる演出の開始と同時にtrueになる。これを使って、ボスが逃げる演出の開始と同時に一度だけワープエフェクトを発生させる。
-	
 		//======================================================================
 		// StateMachine
 		//======================================================================

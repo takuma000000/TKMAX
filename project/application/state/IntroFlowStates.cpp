@@ -91,16 +91,7 @@ namespace TKM {
 		if (!camera) { return; }
 
 		s.phase_ = IntroSequence::Phase::BossPreSpawn;
-		s.introBossPreSpawnElapsed_ = 0.0f;
-		s.introBossPreSpawnEmitAccum_ = 0.0f;
-		s.introBossSpawnFxFinished_ = false;
-
-		// まだボス本体は出さない
-		s.introBossEscapeWarpBurstEmitted_ = false;
-
-		// 出現予定位置だけ先に決める
-		s.introBossPos_ = { 0.0f, 6.0f, s.introBossAppearStartZ_ };
-		s.introBossBasePos_ = s.introBossPos_;
+		s.introBossActor_.BeginPreSpawn();
 
 		// カメラはもうボス出現位置を見に行く
 		s.camSavedRot_ = camera->GetRotate();
@@ -111,9 +102,10 @@ namespace TKM {
 		s.camBlendBackActive_ = false;
 		s.camBlendToBossTween_.Reset(0.0f, 1.0f, s.camBlendToBossSec_, Ease::Type::InOutSine);
 
-		ParticleManager::GetInstance()->Emit("bossWarp_core", s.introBossPos_, 4);
-		ParticleManager::GetInstance()->Emit("bossWarp_swirl", s.introBossPos_, 18);
-		ParticleManager::GetInstance()->Emit("bossWarp_dust", s.introBossPos_, 8);
+		const Vector3& pos = s.introBossActor_.GetPosition();
+		ParticleManager::GetInstance()->Emit("bossWarp_core", pos, 4);
+		ParticleManager::GetInstance()->Emit("bossWarp_swirl", pos, 18);
+		ParticleManager::GetInstance()->Emit("bossWarp_dust", pos, 8);
 	}
 
 	void IntroBossPreSpawnState::Update(IStateContext& ctx, float dt) {
@@ -122,110 +114,64 @@ namespace TKM {
 		Camera* camera = s.currentCamera_;
 		if (!camera) { return; }
 
-		s.introBossPreSpawnElapsed_ += IntroSequence::kFixedDt_;
-		s.introBossPreSpawnEmitAccum_ += IntroSequence::kFixedDt_;
+		s.introBossActor_.UpdatePreSpawn(IntroSequence::kFixedDt_);
 
-		float t = s.introBossPreSpawnElapsed_ / s.introBossPreSpawnSec_;
-		t = std::clamp(t, 0.0f, 1.0f);
+		float t = std::clamp(s.introBossActor_.GetPreSpawnElapsed() / 1.8f, 0.0f, 1.0f);
 
-		while (s.introBossPreSpawnEmitAccum_ >= 0.08f) {
-			s.introBossPreSpawnEmitAccum_ -= 0.08f;
+		float emitAccum = s.introBossActor_.GetPreSpawnEmitAccum();
+		while (emitAccum >= 0.08f) {
+			emitAccum -= 0.08f;
 
 			if (t < 0.45f) {
-				ParticleManager::GetInstance()->Emit("bossWarp_swirl", s.introBossPos_, 6);
-				ParticleManager::GetInstance()->Emit("bossWarp_dust", s.introBossPos_, 3);
+				ParticleManager::GetInstance()->Emit("bossWarp_swirl", s.introBossActor_.GetPosition(), 6);
+				ParticleManager::GetInstance()->Emit("bossWarp_dust", s.introBossActor_.GetPosition(), 3);
 			} else if (t < 0.80f) {
-				ParticleManager::GetInstance()->Emit("bossWarp_swirl", s.introBossPos_, 12);
-				ParticleManager::GetInstance()->Emit("bossWarp_dust", s.introBossPos_, 6);
-				ParticleManager::GetInstance()->Emit("bossWarp_core", s.introBossPos_, 2);
+				ParticleManager::GetInstance()->Emit("bossWarp_swirl", s.introBossActor_.GetPosition(), 12);
+				ParticleManager::GetInstance()->Emit("bossWarp_dust", s.introBossActor_.GetPosition(), 6);
+				ParticleManager::GetInstance()->Emit("bossWarp_core", s.introBossActor_.GetPosition(), 2);
 			} else {
-				ParticleManager::GetInstance()->Emit("bossWarp_swirl", s.introBossPos_, 16);
-				ParticleManager::GetInstance()->Emit("bossWarp_dust", s.introBossPos_, 8);
-				ParticleManager::GetInstance()->Emit("bossWarp_core", s.introBossPos_, 4);
+				ParticleManager::GetInstance()->Emit("bossWarp_swirl", s.introBossActor_.GetPosition(), 16);
+				ParticleManager::GetInstance()->Emit("bossWarp_dust", s.introBossActor_.GetPosition(), 8);
+				ParticleManager::GetInstance()->Emit("bossWarp_core", s.introBossActor_.GetPosition(), 4);
 			}
 		}
+		s.introBossActor_.SetPreSpawnEmitAccum(emitAccum);
 
-		if (!s.introBossSpawnFxFinished_ && t >= 0.82f) {
-			s.introBossSpawnFxFinished_ = true;
-			ParticleManager::GetInstance()->Emit("bossWarp_core", s.introBossPos_, 20);
-			ParticleManager::GetInstance()->Emit("bossWarp_swirl", s.introBossPos_, 40);
+		if (!s.introBossActor_.IsSpawnFxFinished() && t >= 0.82f) {
+			s.introBossActor_.SetSpawnFxFinished(true);
+			ParticleManager::GetInstance()->Emit("bossWarp_core", s.introBossActor_.GetPosition(), 20);
+			ParticleManager::GetInstance()->Emit("bossWarp_swirl", s.introBossActor_.GetPosition(), 40);
 		}
 
-		// ゆがみ演出が終わったら、ここで初めてボス本体登場へ
-		if (s.introBossPreSpawnElapsed_ >= s.introBossPreSpawnSec_) {
-			if (!camera || !s.object3dCommon_ || s.introBoss_) { return; }
+		// ボス出現
+		if (s.introBossActor_.IsPreSpawnFinished()) {
+			if (!s.introBossActor_.Exists()) {
+				s.introBossActor_.Spawn(camera);
+				s.phase_ = IntroSequence::Phase::BossAppear;
 
-			s.introBoss_ = std::make_unique<BossEnemy>();
-			s.introBoss_->Initialize(s.object3dCommon_, s.dxCommon_);
-			s.introBoss_->SetCamera(camera);
-			s.introBoss_->SetPosition({ 0.0f, 6.0f, s.introBossAppearStartZ_ });
-			s.introBoss_->SetRotate({ 0.0f, 3.14159265f, 0.0f });
-			s.introBoss_->SetLocked(true);
-			s.introBoss_->SyncTransform();
+				s.camBossTargetRot_ = { 0.10f, -0.10f, 0.0f };
+				s.camBlendBackActive_ = false;
 
-			s.introBossPos_ = { 0.0f, 6.0f, s.introBossAppearStartZ_ };
-			s.introBossBasePos_ = s.introBossPos_;
-
-			s.introBossPhaseElapsed_ = 0.0f;
-			s.phase_ = IntroSequence::Phase::BossAppear;
-
-			// BossPreSpawnですでにボス方向へのカメラブレンドは始まっている
-			s.camBossTargetRot_ = { 0.10f, -0.10f, 0.0f };
-			s.camBlendBackActive_ = false;
-
-			ParticleManager::GetInstance()->Emit("bossWarp_core", s.introBossPos_, 12);
-
-			s.flowSM_.Change(std::make_unique<IntroBossAppearState>());
+				ParticleManager::GetInstance()->Emit("bossWarp_core", s.introBossActor_.GetPosition(), 12);
+				s.flowSM_.Change(std::make_unique<IntroBossAppearState>());
+			}
 		}
 	}
 
 	void IntroBossAppearState::Enter(IStateContext& ctx) {
 		auto& s = AsIntro_(ctx);
 		s.phase_ = IntroSequence::Phase::BossAppear;
+		s.introBossActor_.BeginAppear();
 	}
 
 	void IntroBossAppearState::Update(IStateContext& ctx, float dt) {
 		(void)dt;
 		auto& s = AsIntro_(ctx);
 		Camera* camera = s.currentCamera_;
-		if (!s.introBoss_ || !camera) { return; }
+		if (!camera || !s.introBossActor_.Exists()) { return; }
 
-		s.introBossPhaseElapsed_ += IntroSequence::kFixedDt_;
-		float t = s.introBossPhaseElapsed_ / s.introBossAppearSec_;
-		if (t < 0.0f) t = 0.0f;
-		if (t > 1.0f) t = 1.0f;
-
-		float moveT = t;
-		moveT = moveT * moveT * (3.0f - 2.0f * moveT);
-
-		float z = MyMath::Lerp(s.introBossAppearStartZ_, s.introBossAppearEndZ_, moveT);
-
-		float floatX = std::sinf(s.introBossPhaseElapsed_ * s.introBossAppearFloatFreqX_) * s.introBossAppearFloatAmpX_;
-
-		float floatYMain =
-			std::sinf(s.introBossPhaseElapsed_ * s.introBossAppearFloatFreqY_) * s.introBossAppearFloatAmpY_;
-
-		float floatYSub =
-			std::sinf(s.introBossPhaseElapsed_ * (s.introBossAppearFloatFreqY_ * 2.15f) + 0.8f) *
-			(s.introBossAppearFloatAmpY_ * 0.38f);
-
-		float floatY = floatYMain + floatYSub;
-
-		float damp = MyMath::Lerp(1.0f, 0.45f, moveT);
-
-		s.introBossPos_.z = z;
-		s.introBossPos_.x = floatX * damp;
-		float bodyDrift = std::sinf(s.introBossPhaseElapsed_ * 0.95f + 1.2f) * 0.9f;
-		s.introBossPos_.y = 6.0f + bodyDrift + floatY * damp;
-
-		float rotZ =
-			std::sinf(s.introBossPhaseElapsed_ * 2.2f) * s.introBossAppearTiltZ_ * damp +
-			std::sinf(s.introBossPhaseElapsed_ * 4.6f + 0.5f) * (s.introBossAppearTiltZ_ * 0.35f) * damp;
-
-		s.introBoss_->SetPosition(s.introBossPos_);
-		s.introBoss_->SetRotate({ 0.0f, 3.14159265f, rotZ });
-		s.introBoss_->SetIntroPanic(false, 0.0f);
-		s.introBoss_->Update(IntroSequence::kFixedDt_);
+		float t = s.introBossActor_.GetAppearRatio();
+		bool finished = s.introBossActor_.UpdateAppear(IntroSequence::kFixedDt_);
 
 		s.camBossTargetRot_ = {
 			MyMath::Lerp(0.10f, 0.06f, t),
@@ -233,9 +179,7 @@ namespace TKM {
 			0.0f
 		};
 
-		if (t >= 1.0f) {
-			s.introBossPhaseElapsed_ = 0.0f;
-			s.introBossBasePos_ = s.introBossPos_;
+		if (finished) {
 			s.phase_ = IntroSequence::Phase::BossPause;
 			s.flowSM_.Change(std::make_unique<IntroBossPauseState>());
 		}
@@ -244,35 +188,19 @@ namespace TKM {
 	void IntroBossPauseState::Enter(IStateContext& ctx) {
 		auto& s = AsIntro_(ctx);
 		s.phase_ = IntroSequence::Phase::BossPause;
+		s.introBossActor_.BeginPause();
 	}
 
 	void IntroBossPauseState::Update(IStateContext& ctx, float dt) {
 		(void)dt;
 		auto& s = AsIntro_(ctx);
 		Camera* camera = s.currentCamera_;
-		if (!s.introBoss_ || !camera) { return; }
+		if (!camera || !s.introBossActor_.Exists()) { return; }
 
-		s.introBossPhaseElapsed_ += IntroSequence::kFixedDt_;
-
-		float t = s.introBossPhaseElapsed_ / s.introBossPauseSec_;
-		if (t < 0.0f) t = 0.0f;
-		if (t > 1.0f) t = 1.0f;
-
-		s.introBossPos_ = s.introBossBasePos_;
-		s.introBoss_->SetPosition(s.introBossPos_);
-		s.introBoss_->SetRotate({ 0.0f, 3.14159265f, 0.0f });
-
-		float idleY = std::sinf(s.introBossPhaseElapsed_ * 5.0f) * 0.10f;
-		s.introBoss_->SetPosition({ s.introBossPos_.x, s.introBossPos_.y + idleY, s.introBossPos_.z });
-
-		s.introBoss_->SetIntroPanic(false, 0.0f);
-		s.introBoss_->Update(IntroSequence::kFixedDt_);
-
+		bool finished = s.introBossActor_.UpdatePause(IntroSequence::kFixedDt_);
 		s.camBossTargetRot_ = { 0.055f, 0.0f, 0.0f };
 
-		if (t >= 1.0f) {
-			s.introBossPhaseElapsed_ = 0.0f;
-			s.introBossBasePos_ = { s.introBossPos_.x, s.introBossPos_.y + idleY, s.introBossPos_.z };
+		if (finished) {
 			s.phase_ = IntroSequence::Phase::BossNoticeHop;
 			s.flowSM_.Change(std::make_unique<IntroBossNoticeHopState>());
 		}
@@ -281,32 +209,21 @@ namespace TKM {
 	void IntroBossNoticeHopState::Enter(IStateContext& ctx) {
 		auto& s = AsIntro_(ctx);
 		s.phase_ = IntroSequence::Phase::BossNoticeHop;
+		s.introBossActor_.BeginNoticeHop();
 	}
 
 	void IntroBossNoticeHopState::Update(IStateContext& ctx, float dt) {
 		(void)dt;
 		auto& s = AsIntro_(ctx);
 		Camera* camera = s.currentCamera_;
-		if (!s.introBoss_ || !camera) { return; }
+		if (!camera || !s.introBossActor_.Exists()) { return; }
 
-		s.introBossPhaseElapsed_ += IntroSequence::kFixedDt_;
+		float t = s.introBossActor_.GetNoticeHopRatio();
 
-		float t = s.introBossPhaseElapsed_ / s.introBossNoticeHopSec_;
-		if (t < 0.0f) t = 0.0f;
-		if (t > 1.0f) t = 1.0f;
+		if (!s.introBossActor_.IsNoticeMarkEmitted() && t >= 0.20f) {
+			s.introBossActor_.SetNoticeMarkEmitted(true);
 
-		float hopT = 0.0f;
-		if (t < 0.20f) {
-			hopT = 0.0f;
-		} else {
-			hopT = (t - 0.20f) / 0.80f;
-			if (hopT > 1.0f) { hopT = 1.0f; }
-		}
-
-		if (!s.introBossNoticeMarkEmitted_ && t >= 0.20f) {
-			s.introBossNoticeMarkEmitted_ = true;
-
-			const Vector3 center = s.introBossBasePos_ + Vector3{ 0.0f, 3.2f, -3.0f };
+			const Vector3 center = s.introBossActor_.GetBasePosition() + Vector3{ 0.0f, 3.2f, -3.0f };
 
 			ParticleManager::GetInstance()->Emit("bossNoticeMark", center + Vector3{ -7.0f,  2.0f, 0.0f }, 1);
 			ParticleManager::GetInstance()->Emit("bossNoticeMark", center + Vector3{ 7.0f,  2.0f, 0.0f }, 1);
@@ -315,25 +232,7 @@ namespace TKM {
 			ParticleManager::GetInstance()->Emit("bossNoticeMark", center + Vector3{ 6.0f, -2.5f, 0.0f }, 1);
 		}
 
-		float hop = std::sinf(hopT * 3.14159265f);
-		float hopY = hop * s.introBossNoticeHopY_;
-		float surpriseX = std::sinf(t * 3.14159265f) * 0.35f;
-
-		Vector3 pos = s.introBossBasePos_;
-		pos.x += surpriseX;
-		pos.y += hopY;
-
-		float rotZ = std::sinf(t * 3.14159265f) * 0.12f;
-
-		s.introBossPos_ = pos;
-		s.introBoss_->SetPosition(pos);
-		s.introBoss_->SetRotate({ 0.0f, 3.14159265f, rotZ });
-
-		if (t < 0.20f) {
-			s.introBoss_->SetIntroPanic(false, 0.0f);
-		} else {
-			s.introBoss_->SetIntroPanic(true, 0.85f);
-		}
+		bool finished = s.introBossActor_.UpdateNoticeHop(IntroSequence::kFixedDt_);
 
 		s.camBossTargetRot_ = {
 			0.045f,
@@ -341,13 +240,7 @@ namespace TKM {
 			0.0f
 		};
 
-		s.introBoss_->Update(IntroSequence::kFixedDt_);
-
-		if (t >= 1.0f) {
-			s.introBoss_->SetIntroPanic(true, 1.0f);
-			s.introBossPhaseElapsed_ = 0.0f;
-			s.introBossBasePos_ = s.introBossPos_;
-			s.introBossNoticeMarkEmitted_ = false;
+		if (finished) {
 			s.phase_ = IntroSequence::Phase::BossPanic;
 			s.flowSM_.Change(std::make_unique<IntroBossPanicState>());
 		}
@@ -356,38 +249,19 @@ namespace TKM {
 	void IntroBossPanicState::Enter(IStateContext& ctx) {
 		auto& s = AsIntro_(ctx);
 		s.phase_ = IntroSequence::Phase::BossPanic;
+		s.introBossActor_.BeginPanic();
 	}
 
 	void IntroBossPanicState::Update(IStateContext& ctx, float dt) {
 		(void)dt;
 		auto& s = AsIntro_(ctx);
 		Camera* camera = s.currentCamera_;
-		if (!s.introBoss_ || !camera) { return; }
+		if (!camera || !s.introBossActor_.Exists()) { return; }
 
-		s.introBossPhaseElapsed_ += IntroSequence::kFixedDt_;
-		float t = s.introBossPhaseElapsed_ / s.introBossPanicSec_;
-		if (t < 0.0f) t = 0.0f;
-		if (t > 1.0f) t = 1.0f;
-
-		float shakeX = std::sinf(s.introBossPhaseElapsed_ * 12.0f) * s.introBossPanicAmpX_ * (0.30f + t * 0.70f);
-		float shakeY = std::fabs(std::sinf(s.introBossPhaseElapsed_ * 15.0f)) * s.introBossPanicAmpY_;
-		float wobbleRotZ = std::sinf(s.introBossPhaseElapsed_ * 13.0f) * 0.14f;
-
-		s.introBossPos_.x = s.introBossBasePos_.x + shakeX;
-		s.introBossPos_.y = s.introBossBasePos_.y + shakeY;
-		s.introBossPos_.z = s.introBossBasePos_.z;
-
-		s.introBoss_->SetPosition(s.introBossPos_);
-		s.introBoss_->SetRotate({ 0.0f, 3.14159265f, wobbleRotZ });
-		s.introBoss_->SetIntroPanic(true, 0.55f + t * 0.45f);
-		s.introBoss_->Update(IntroSequence::kFixedDt_);
-
+		bool finished = s.introBossActor_.UpdatePanic(IntroSequence::kFixedDt_);
 		s.camBossTargetRot_ = { 0.06f, 0.0f, 0.0f };
 
-		if (t >= 1.0f) {
-			s.introBossPhaseElapsed_ = 0.0f;
-			s.introBossEscapeTargetX_ = s.introBossPos_.x;
-			s.introBossEscapeTargetTimer_ = 0.0f;
+		if (finished) {
 			s.phase_ = IntroSequence::Phase::BossEscape;
 			s.flowSM_.Change(std::make_unique<IntroBossEscapeState>());
 		}
@@ -396,56 +270,30 @@ namespace TKM {
 	void IntroBossEscapeState::Enter(IStateContext& ctx) {
 		auto& s = AsIntro_(ctx);
 		s.phase_ = IntroSequence::Phase::BossEscape;
+		s.introBossActor_.BeginEscape();
 	}
 
 	void IntroBossEscapeState::Update(IStateContext& ctx, float dt) {
 		(void)dt;
 		auto& s = AsIntro_(ctx);
 		Camera* camera = s.currentCamera_;
-		if (!s.introBoss_ || !camera) { return; }
+		if (!camera || !s.introBossActor_.Exists()) { return; }
 
-		s.introBossPhaseElapsed_ += IntroSequence::kFixedDt_;
-		s.introBossEscapeTargetTimer_ += IntroSequence::kFixedDt_;
-
-		float t = s.introBossPhaseElapsed_ / s.introBossEscapeSec_;
-		if (t < 0.0f) t = 0.0f;
-		if (t > 1.0f) t = 1.0f;
-
-		if (s.introBossEscapeTargetTimer_ >= s.introBossEscapeTargetInterval_) {
-			s.introBossEscapeTargetTimer_ = 0.0f;
-			float sign = (std::rand() % 2 == 0) ? -1.0f : 1.0f;
-			float ampGrow = MyMath::Lerp(0.65f, 1.25f, t);
-			float mag = 2.0f + (static_cast<float>(std::rand()) / RAND_MAX) * s.introBossEscapeAmpX_ * ampGrow;
-			s.introBossEscapeTargetX_ = sign * mag;
-		}
-
-		float follow = 16.0f * IntroSequence::kFixedDt_;
-		s.introBossPos_.x = MyMath::Lerp(s.introBossPos_.x, s.introBossEscapeTargetX_, follow);
-		s.introBossPos_.z += s.introBossEscapeSpeedZ_ * IntroSequence::kFixedDt_ * (1.0f + t * 0.30f);
-		s.introBossPos_.y = 6.0f + std::fabs(std::sinf(s.introBossPhaseElapsed_ * 14.0f)) * s.introBossEscapeHopY_;
-
-		float leanZ = std::sinf(s.introBossPhaseElapsed_ * 16.0f) * 0.22f;
-
-		s.introBoss_->SetPosition(s.introBossPos_);
-		s.introBoss_->SetRotate({ 0.0f, 3.14159265f + std::sinf(s.introBossPhaseElapsed_ * 8.0f) * 0.10f, leanZ });
-		s.introBoss_->SetIntroPanic(true, 1.0f);
-		s.introBoss_->Update(IntroSequence::kFixedDt_);
-
+		bool finished = s.introBossActor_.UpdateEscape(IntroSequence::kFixedDt_);
 		s.camBossTargetRot_ = { 0.05f, 0.0f, 0.0f };
 
-		if (s.introBossPos_.z >= s.introBossEscapeEndZ_ || t >= 1.0f) {
-			s.introBoss_->SetIntroPanic(false, 0.0f);
+		if (finished) {
+			if (!s.introBossActor_.IsEscapeWarpBurstEmitted()) {
+				s.introBossActor_.SetEscapeWarpBurstEmitted(true);
 
-			if (!s.introBossEscapeWarpBurstEmitted_) {
-				s.introBossEscapeWarpBurstEmitted_ = true;
-
-				ParticleManager::GetInstance()->Emit("bossEscape_warpCore", s.introBossPos_, 10);
-				ParticleManager::GetInstance()->Emit("bossEscape_warpSwirl", s.introBossPos_, 36);
-				ParticleManager::GetInstance()->Emit("bossEscape_warpShred", s.introBossPos_, 20);
-				ParticleManager::GetInstance()->Emit("bossEscape_warpRing", s.introBossPos_, 1);
+				const Vector3 pos = s.introBossActor_.GetPosition();
+				ParticleManager::GetInstance()->Emit("bossEscape_warpCore", pos, 10);
+				ParticleManager::GetInstance()->Emit("bossEscape_warpSwirl", pos, 36);
+				ParticleManager::GetInstance()->Emit("bossEscape_warpShred", pos, 20);
+				ParticleManager::GetInstance()->Emit("bossEscape_warpRing", pos, 1);
 			}
 
-			s.introBoss_.reset();
+			s.introBossActor_.Reset();
 
 			s.camReturnStartRot_ = camera->GetRotate();
 			s.camBlendBackActive_ = true;
@@ -457,8 +305,9 @@ namespace TKM {
 			return;
 		}
 
-		ParticleManager::GetInstance()->Emit("bossEscape_warpSwirl", s.introBossPos_, 5);
-		ParticleManager::GetInstance()->Emit("bossEscape_warpShred", s.introBossPos_, 3);
+		const Vector3 pos = s.introBossActor_.GetPosition();
+		ParticleManager::GetInstance()->Emit("bossEscape_warpSwirl", pos, 5);
+		ParticleManager::GetInstance()->Emit("bossEscape_warpShred", pos, 3);
 	}
 
 	void IntroShowStartState::Enter(IStateContext& ctx) {

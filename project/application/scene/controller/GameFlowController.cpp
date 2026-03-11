@@ -51,11 +51,9 @@ namespace TKM {
 		return TransitionRequest::None;
 	}
 
-	void GameFlowController::Draw(DirectXCommon* dxCommon) const {
-		if (intro_) {
-			// Iris閉じ or 外部制御なら描画
-			intro_->Draw(dxCommon, irisClosing_ || externalIrisDraw_);
-		}
+	void GameFlowController::Draw() const {
+		// Iris閉じ or 外部制御なら描画
+		intro_->Draw(irisClosing_ || externalIrisDraw_);
 	}
 
 	void GameFlowController::DrawIntroBoss3D(DirectXCommon* dxCommon) const {
@@ -66,7 +64,7 @@ namespace TKM {
 
 	void GameFlowController::RequestToTitleByIris() {
 		if (irisClosing_) { return; }
-		
+
 		// アイリス閉じ開始
 		irisClosing_ = true;
 		irisToTitle_ = true;
