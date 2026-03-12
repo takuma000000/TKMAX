@@ -1,4 +1,4 @@
-#include "EnemySpawner.h"
+#include "EnemyFactory.h"
 #include "Enemy.h"
 #include "Object3dCommon.h"
 #include "Camera.h"
@@ -6,7 +6,7 @@
 #include "BaseScene.h"
 #include <ParticleManager.h>
 
-namespace EnemySpawner {
+namespace EnemyFactory {
 
 	// ------------------------------------------------------------
 	// CreateAndPushEnemy

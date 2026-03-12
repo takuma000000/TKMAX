@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "Enemy.h"          // 敵そのもの
-#include "EnemySpawner.h"   // 敵スポーンユーティリティ
+#include "EnemyFactory.h"   // 敵スポーンユーティリティ
 #include "Player.h"        // プレイヤー
 #include "Camera.h"
 #include "DirectXCommon.h"

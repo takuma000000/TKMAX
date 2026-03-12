@@ -11,10 +11,10 @@ namespace TKM {
 }
 
 //=============================================================
-// EnemySpawner名前空間
+// EnemyFactory名前空間
 // 敵の生成処理をまとめたユーティリティ。
 //=============================================================
-namespace EnemySpawner {
+namespace EnemyFactory {
 	// 敵出現エフェクトの粒子数（マジックナンバー 32 の定数化）
 	constexpr int kSpawnParticleCount_ = 32;
 	using EnemyConfig = std::function<void(Enemy&)>;

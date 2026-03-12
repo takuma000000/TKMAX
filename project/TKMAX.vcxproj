@@ -130,7 +130,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\actor\boss\BossEnemy.cpp" />
     <ClCompile Include="engine\effect\light\DirectionalLight.cpp" />
     <ClCompile Include="application\actor\enemy\Enemy.cpp" />
-    <ClCompile Include="application\actor\enemy\EnemySpawner.cpp" />
+    <ClCompile Include="application\actor\enemy\EnemyFactory.cpp" />
     <ClCompile Include="engine\scene\BaseScene.cpp" />
     <ClCompile Include="engine\audio\AudioManager.cpp" />
     <ClCompile Include="engine\3d\camera\Camera.cpp" />
@@ -246,7 +246,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\actor\boss\BossEnemy.h" />
     <ClInclude Include="engine\effect\light\DirectionalLight.h" />
     <ClInclude Include="application\actor\enemy\Enemy.h" />
-    <ClInclude Include="application\actor\enemy\EnemySpawner.h" />
+    <ClInclude Include="application\actor\enemy\EnemyFactory.h" />
     <ClInclude Include="engine\scene\BaseScene.h" />
     <ClInclude Include="engine\audio\AudioManager.h" />
     <ClInclude Include="engine\3d\camera\Camera.h" />

@@ -92,7 +92,7 @@
     <ClCompile Include="application\actor\enemy\Enemy.cpp">
       <Filter>application\enemy</Filter>
     </ClCompile>
-    <ClCompile Include="application\actor\enemy\EnemySpawner.cpp">
+    <ClCompile Include="application\actor\enemy\EnemyFactory.cpp">
       <Filter>application\enemy</Filter>
     </ClCompile>
     <ClCompile Include="application\scene\GameClearScene.cpp">
@@ -317,7 +317,7 @@
     <ClInclude Include="application\actor\enemy\Enemy.h">
       <Filter>application\enemy</Filter>
     </ClInclude>
-    <ClInclude Include="application\actor\enemy\EnemySpawner.h">
+    <ClInclude Include="application\actor\enemy\EnemyFactory.h">
       <Filter>application\enemy</Filter>
     </ClInclude>
     <ClInclude Include="application\scene\GameClearScene.h">

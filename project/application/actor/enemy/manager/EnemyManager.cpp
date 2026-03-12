@@ -279,7 +279,7 @@ void EnemyManager::SpawnWave1Enemy() {
 	TKM::Camera* camPtr_ = camera_;
 	TKM::BaseScene* parentPtr_ = parent_;
 
-	EnemySpawner::SpawnLine( // 敵を1体スポーンさせる
+	EnemyFactory::SpawnLine( // 敵を1体スポーンさせる
 		enemies_,
 		1,
 		y_,
@@ -400,7 +400,7 @@ void EnemyManager::SpawnWave2_Triangle() {
 	const auto& s_ = waveConfig_.GetWave2SubWave(0);
 	int idx_ = 0; // 敵ごとに位相をずらすためのインデックス（0から始まる連番）
 
-	EnemySpawner::SpawnV( // 画面中央を頂点とするV字型の隊列で敵をスポーンさせる
+	EnemyFactory::SpawnV( // 画面中央を頂点とするV字型の隊列で敵をスポーンさせる
 		enemies_,
 		s_.triCountPerSide_,
 		s_.triY_, s_.triZ_,
@@ -435,7 +435,7 @@ void EnemyManager::SpawnWave2_Line() {
 	// Wave2のサブWave2のスポーン設定をCSVから取得
 	const auto& s_ = waveConfig_.GetWave2SubWave(1);
 
-	EnemySpawner::SpawnLine( // 画面奥から手前に向かって、等間隔で敵を並べてスポーンさせる
+	EnemyFactory::SpawnLine( // 画面奥から手前に向かって、等間隔で敵を並べてスポーンさせる
 		enemies_,
 		s_.lineCount_, s_.lineY_, s_.lineZ_,
 		s_.lineXStart_, s_.lineXStep_,
@@ -466,7 +466,7 @@ void EnemyManager::SpawnWave2_FastColumn() {
 	// Wave2のサブWave3のスポーン設定をCSVから取得
 	const auto& s_ = waveConfig_.GetWave2SubWave(2);
 
-	EnemySpawner::SpawnColumn( // 画面奥から手前に向かって、等間隔で敵を並べてスポーンさせる（列）
+	EnemyFactory::SpawnColumn( // 画面奥から手前に向かって、等間隔で敵を並べてスポーンさせる（列）
 		enemies_,
 		s_.colCount_,
 		s_.colX_,
@@ -622,7 +622,7 @@ void EnemyManager::SpawnWave3MidBossStage() {
 	auto dxPtr_ = dx_; // ラムダ内でキャプチャするためのローカル変数に、クラスメンバのポインタをコピーしておく
 	auto parentPtr_ = parent_; // ラムダ内でキャプチャするためのローカル変数に、クラスメンバのポインタをコピーしておく
 
-	EnemySpawner::SpawnLine( // 画面左と右の両端から、等間隔で中ボスを並べてスポーンさせる
+	EnemyFactory::SpawnLine( // 画面左と右の両端から、等間隔で中ボスを並べてスポーンさせる
 		enemies_,
 		2,
 		wave3LeftPos_.y,
@@ -743,7 +743,7 @@ void EnemyManager::SpawnWave3ExtraMidBoss() {
 	auto dxPtr_ = dx_; // ラムダ内でキャプチャするためのローカル変数に、クラスメンバのポインタをコピーしておく
 	auto parentPtr_ = parent_; // ラムダ内でキャプチャするためのローカル変数に、クラスメンバのポインタをコピーしておく
 
-	EnemySpawner::SpawnLine( // 画面左か右の端から、1体だけ中ボスをスポーンさせる
+	EnemyFactory::SpawnLine( // 画面左か右の端から、1体だけ中ボスをスポーンさせる
 		enemies_,
 		1,
 		spawnPos_.y,
