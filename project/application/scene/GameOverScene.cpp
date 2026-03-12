@@ -153,11 +153,11 @@ void GameOverScene::Update() {
 
 			// 次のアクションに応じてシーン遷移
 			if (nextAction_ == NextAction::Restart) {
-				sceneManager_->SetNextScene(new GameScene(dxCommon_, srvManager_)); // リスタート
+				sceneManager_->SetNextScene(std::make_unique<GameScene>(dxCommon_, srvManager_)); // リスタート
 				return;
 			}
 			// タイトルへ戻る
-			sceneManager_->SetNextScene(new TitleScene(dxCommon_, srvManager_));
+			sceneManager_->SetNextScene(std::make_unique<TitleScene>(dxCommon_, srvManager_)); // タイトルへ
 			return;
 		}
 	}

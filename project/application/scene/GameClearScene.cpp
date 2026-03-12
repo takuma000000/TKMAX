@@ -143,11 +143,11 @@ void GameClearScene::Update() {
 		if (irisCloseTween_.Finished()) {
 			// 演出が終わったら、次のアクションへ
 			if (nextAction_ == NextAction::Restart) {
-				sceneManager_->SetNextScene(new GameScene(dxCommon_, srvManager_)); // リスタート
+				sceneManager_->SetNextScene(std::make_unique<GameScene>(dxCommon_, srvManager_)); // リスタート
 				return;
 			}
 			// デフォルトはタイトル
-			sceneManager_->SetNextScene(new TitleScene(dxCommon_, srvManager_));
+			sceneManager_->SetNextScene(std::make_unique<TitleScene>(dxCommon_, srvManager_)); // タイトルへ
 			return;
 		}
 	}

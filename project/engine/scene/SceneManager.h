@@ -2,6 +2,7 @@
 #include "BaseScene.h"
 #include "DirectXCommon.h"
 #include "AbstractSceneFactory.h"
+#include <memory>
 
 //=============================================================
 // SceneManagerクラス
@@ -50,20 +51,18 @@ namespace TKM {
 			sceneFactory_ = sceneFactory;
 		}
 		/// <summary>
-		/// </span class="code-inline">SceneManager</span>のコンストラクタ
+		/// 次のシーンをセットします（シーン切り替えは次のUpdateで行われる）
 		/// </summary>
 		/// <param name="nextScene"></param>
-		void SetNextScene(TKM::BaseScene* nextScene) {
-			nextScene_ = nextScene;
+		void SetNextScene(std::unique_ptr<TKM::BaseScene> nextScene) {
+			nextScene_ = std::move(nextScene);
 		}
 		// ==============================================
 
 	private:
-		//今のシーン( 実行中 )
-		TKM::BaseScene* scene_ = nullptr;
-
-		//次のシーン( 次フレームから実行 )
-		TKM::BaseScene* nextScene_ = nullptr;
+		// 現在のシーン
+		std::unique_ptr<TKM::BaseScene> scene_ = nullptr;
+		std::unique_ptr<TKM::BaseScene> nextScene_ = nullptr;
 
 		TKM::DirectXCommon* dxCommon_ = nullptr;
 

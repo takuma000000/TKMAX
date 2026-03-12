@@ -168,7 +168,7 @@ void TitleFlowIrisCloseState::Update(TKM::IStateContext& ctx, float dt) {
 	s.irisScale_ = UpdateIrisScale(s.iris_.get(), s.irisTween_, dt); // アイリスのサイズを更新
 	// アイリスのサイズを反映
 	if (s.irisTween_.Finished()) {
-		s.sceneManager_->SetNextScene(new GameScene(s.dxCommon_, s.srvManager_)); // 次のシーンをゲームシーンにセット
+		s.sceneManager_->SetNextScene(std::make_unique<GameScene>(s.dxCommon_, s.srvManager_)); // 次のシーンをゲームシーンにセット
 		s.earlyExitUpdate_ = true; // Updateの早期終了フラグを立てる（念のため）
 	}
 }

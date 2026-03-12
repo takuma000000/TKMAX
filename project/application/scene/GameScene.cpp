@@ -404,17 +404,17 @@ void GameScene::UpdateTransitionsAndSceneChange(float rawDeltaTime) {
 	const auto req = flow_->UpdateTransitions(rawDeltaTime, player_.get());
 
 	if (req == TKM::GameFlowController::TransitionRequest::ToTitle) { // タイトル戻りリクエスト
-		sceneManager_->SetNextScene(new TitleScene(dxCommon_, srvManager_)); // タイトルシーンをセット
+		sceneManager_->SetNextScene(std::make_unique<TitleScene>(dxCommon_, srvManager_)); // タイトルシーンをセット
 		return;
 	}
 
 	if (req == TKM::GameFlowController::TransitionRequest::ToGameOver) { // ゲームオーバーリクエスト
-		sceneManager_->SetNextScene(new GameOverScene(dxCommon_, srvManager_)); // ゲームオーバーシーンをセット
+		sceneManager_->SetNextScene(std::make_unique<GameOverScene>(dxCommon_, srvManager_)); // ゲームオーバーシーンをセット
 		return;
 	}
 
 	if (req == TKM::GameFlowController::TransitionRequest::ToGameClear) { // ゲームクリアリクエスト
-		sceneManager_->SetNextScene(new GameClearScene(dxCommon_, srvManager_)); // ゲームクリアシーンをセット
+		sceneManager_->SetNextScene(std::make_unique<GameClearScene>(dxCommon_, srvManager_)); // ゲームクリアシーンをセット
 		return;
 	}
 }
@@ -452,7 +452,7 @@ bool GameScene::TryUpdatePauseAndMaybeEarlyReturn_(float rawDeltaTime, bool allo
 	if (cmd == TKM::PauseMenuController::Command::ReturnToTitle) {
 		flow_->RequestToTitleByIris();
 	} else if (cmd == TKM::PauseMenuController::Command::Restart) {
-		sceneManager_->SetNextScene(new GameScene(dxCommon_, srvManager_));
+		sceneManager_->SetNextScene(std::make_unique<GameScene>(dxCommon_, srvManager_));
 		return true; // シーン差し替え要求（このフレームは終了）
 	}
 
