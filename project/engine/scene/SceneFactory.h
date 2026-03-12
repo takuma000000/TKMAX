@@ -1,6 +1,7 @@
 #pragma once
 #include "AbstractSceneFactory.h"
 #include "Framework.h"
+#include <memory>
 
 //=============================================================
 // SceneFactoryクラス
@@ -23,7 +24,7 @@ namespace TKM {
 		/// </summary>
 		/// <param name="sceneName"></param>
 		/// <returns></returns>
-		TKM::BaseScene* CreateScene(const std::string& sceneName) override;
+		std::unique_ptr<TKM::BaseScene> CreateScene(const std::string& sceneName) override;
 
 	private:
 		TKM::DirectXCommon* dxCommon_ = nullptr;

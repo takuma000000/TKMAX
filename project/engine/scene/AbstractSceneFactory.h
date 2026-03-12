@@ -23,7 +23,7 @@ namespace TKM {
 		/// </summary>
 		/// <returns>生成したシーン</returns>
 		/// <param name="sceneName">シーン名</param>
-		virtual BaseScene* CreateScene(const std::string& sceneName) = 0;
+		virtual std::unique_ptr<BaseScene> CreateScene(const std::string& sceneName) = 0;
 
 	};
 }
