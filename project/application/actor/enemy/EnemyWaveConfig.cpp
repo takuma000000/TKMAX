@@ -2,6 +2,9 @@
 #include <cstdlib>
 #include <CsvReader.h>
 #include <algorithm>
+#include <cctype>
+#include "json.hpp"
+using json = nlohmann::json;
 
 bool EnemyWaveConfig::StrEq(const std::string& a, const char* b) {
 	return a == b;
@@ -13,6 +16,27 @@ float EnemyWaveConfig::ToF(const std::string& s) {
 
 int EnemyWaveConfig::ToI(const std::string& s) {
 	return std::stoi(s);
+}
+
+bool EnemyWaveConfig::HasExtension(const std::string& path, const char* ext) {
+	if (!ext) {
+		return false;
+	}
+
+	std::string lowerPath = path;
+	std::string lowerExt = ext;
+
+	std::transform(lowerPath.begin(), lowerPath.end(), lowerPath.begin(),
+		[](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+
+	std::transform(lowerExt.begin(), lowerExt.end(), lowerExt.begin(),
+		[](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+
+	if (lowerPath.size() < lowerExt.size()) {
+		return false;
+	}
+
+	return lowerPath.compare(lowerPath.size() - lowerExt.size(), lowerExt.size(), lowerExt) == 0;
 }
 
 static EnemyBehavior ParseBehavior(const std::string& s, EnemyBehavior fallback) {
@@ -32,6 +56,24 @@ static EnemyBehavior ParseBehavior(const std::string& s, EnemyBehavior fallback)
 }
 
 bool EnemyWaveConfig::Load(const char* path) {
+	if (!path) {
+		return false;
+	}
+
+	const std::string path_ = path;
+
+	if (HasExtension(path_, ".csv")) {
+		return LoadCsv(path);
+	}
+
+	if (HasExtension(path_, ".json")) {
+		return LoadJson(path);
+	}
+
+	return false;
+}
+
+bool EnemyWaveConfig::LoadCsv(const char* path) {
 	std::vector<std::vector<std::string>> rows_;
 	// CSVファイルを読み込む
 	if (!TKM::CsvReader::ReadFile(path, rows_)) {
@@ -185,4 +227,9 @@ bool EnemyWaveConfig::Load(const char* path) {
 		}
 	}
 	return true;
+}
+
+bool EnemyWaveConfig::LoadJson(const char* path) {
+	(void)path;
+	return false;
 }

@@ -74,10 +74,23 @@ public:
 
 	/// <summary>
 	/// 設定ファイルを読み込みます。
+	/// 拡張子に応じて CSV / JSON の読込関数へ振り分けます。
 	/// </summary>
 	/// <param name="path">読み込む設定ファイルのパス</param>
 	/// <returns>読み込みに成功した場合 true、それ以外は false</returns>
 	bool Load(const char* path);
+	/// <summary>
+	/// CSV形式の設定ファイルを読み込みます。
+	/// </summary>
+	/// <param name="path">読み込む CSV ファイルのパス</param>
+	/// <returns>読み込みに成功した場合 true、それ以外は false</returns>
+	bool LoadCsv(const char* path);
+	/// <summary>
+	/// JSON形式の設定ファイルを読み込みます。
+	/// </summary>
+	/// <param name="path">読み込む JSON ファイルのパス</param>
+	/// <returns>読み込みに成功した場合 true、それ以外は false</returns>
+	bool LoadJson(const char* path);
 
 	// Getter==========================================
 	/// <summary>
@@ -128,6 +141,13 @@ private:
 	/// <param name="s">変換元となる文字列</param>
 	/// <returns>変換後の int 値</returns>
 	static int   ToI(const std::string& s);
+	/// <summary>
+	/// ファイルパスの拡張子が一致するかを判定します。
+	/// </summary>
+	/// <param name="path">ファイルパス</param>
+	/// <param name="ext">比較する拡張子（例: ".csv"）</param>
+	/// <returns>一致したら true</returns>
+	static bool HasExtension(const std::string& path, const char* ext);
 
 	//===================================================
 	// Waveごとの設定データ

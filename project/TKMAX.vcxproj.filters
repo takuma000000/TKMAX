@@ -453,6 +453,7 @@
     <ClInclude Include="application\state\IntroFlowStates.h" />
     <ClInclude Include="application\effect\IntroStartBanner.h" />
     <ClInclude Include="application\effect\IntroBossActor.h" />
+    <ClInclude Include="externals\nlohmann\json.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

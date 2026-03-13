@@ -1,0 +1,112 @@
+{
+  "wave1": {
+    "settings": {
+      "spawnInterval": 1.5,
+      "maxSimultaneous": 2,
+      "defeatTarget": 5
+    },
+    "spawn": {
+      "baseY": 5.0,
+      "baseZ": 100.0,
+      "randXMin": -20.0,
+      "randXMax": 20.0
+    },
+    "enemyParams": {
+      "model": "jerryfish.obj",
+      "hp": 1,
+      "startY": 20.0,
+      "targetForwardZ": 3.0,
+      "apexY": 30.0,
+      "pounceTime": 1.6,
+      "behavior": "PounceFromAbove"
+    }
+  },
+
+  "wave2": {
+    "waitDuration": 1.5,
+    "subWaveCount": 3,
+
+    "subWaves": [
+      {
+        "pattern": "Triangle",
+        "triCountPerSide": 1,
+        "triY": 6.0,
+        "triZ": 80.0,
+        "triXCenter": 0.0,
+        "triXStep": 7.0,
+        "triZStep": 5.0
+      },
+      {
+        "pattern": "Line",
+        "lineCount": 4,
+        "lineY": 4.5,
+        "lineZ": 90.0,
+        "lineXStart": -12.0,
+        "lineXStep": 8.0
+      },
+      {
+        "pattern": "Column",
+        "colCount": 3,
+        "colX": 18.0,
+        "colZStart": 100.0,
+        "colZStep": 10.0,
+        "colYStart": 5.0,
+        "colYStep": 0.0
+      }
+    ],
+
+    "enemyParams": {
+      "triangle": {
+        "model": "jerryfish.obj",
+        "hp": 1,
+        "vel": { "x": 0.0, "y": 0.0, "z": -0.2 },
+        "sineAmp": 3.5,
+        "sineFreq": 2.0,
+        "phaseStep": 0.9,
+        "behavior": "SineX"
+      },
+      "line": {
+        "model": "jerryfish.obj",
+        "hp": 1,
+        "vel": { "x": 0.0, "y": 0.0, "z": -0.35 },
+        "stopZ": 25.0,
+        "behavior": "StraightStop"
+      },
+      "column": {
+        "model": "jerryfish.obj",
+        "hp": 2,
+        "vel": { "x": 0.0, "y": 0.0, "z": -0.45 },
+        "roamMin": { "x": -22.0, "y": 3.0, "z": 20.0 },
+        "roamMax": { "x": 22.0, "y": 10.0, "z": 85.0 },
+        "freeRoamSpeed": 6.0,
+        "freeRoamAngrySpeed": 8.5,
+        "behavior": "FreeRoam"
+      }
+    }
+  },
+
+  "wave3": {
+    "midBossLeft":  { "x": -12.0, "y": 6.0, "z": 80.0 },
+    "midBossRight": { "x": 12.0, "y": 6.0, "z": 80.0 },
+
+    "core": {
+      "xRange": 18.0,
+      "zMin": 35.0,
+      "zMax": 75.0,
+      "y": 6.0,
+      "lifetime": 5.0,
+      "hp": 5
+    },
+
+    "angryDuration": 8.0,
+
+    "enemyParams": {
+      "midBoss": {
+        "model": "jerryfish.obj",
+        "hp": 10,
+        "scale": 3.0,
+        "behavior": "StraightStop"
+      }
+    }
+  }
+}
