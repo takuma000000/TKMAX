@@ -20,7 +20,7 @@ void EnemyManager::Initialize(TKM::DirectXCommon* dx, TKM::Camera* camera, TKM::
 	InitializeCommon(dx, camera, parent, player);
 
 	// CSV読み込み（resources/data に置く運用）
-	waveConfigLoaded_ = waveConfig_.Load("./resources/data/enemy_waves.csv");
+	waveConfig_.Load("./resources/data/enemy_waves.json");
 
 	// Wave1の設定
 	{
