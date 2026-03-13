@@ -4,7 +4,6 @@
 #include <algorithm>
 
 namespace TKM {
-	AudioManager* AudioManager::instance = nullptr;
 
 	//============================
 	// Initialize
@@ -28,8 +27,7 @@ namespace TKM {
 	void AudioManager::Finalize() {
 		// 登録されている音声データを解放
 		for (auto& [key, soundData] : soundMap_) {
-			delete[] soundData.pBuffer_;
-			soundData.pBuffer_ = nullptr;
+			soundData.buffer_.clear();
 			soundData.bufferSize_ = 0;
 		}
 		soundMap_.clear();
@@ -61,10 +59,9 @@ namespace TKM {
 	// DestroyInstance（必要ならアプリ終了時だけ呼ぶ）
 	//============================
 	void AudioManager::DestroyInstance() {
-		if (instance) {
+		AudioManager* instance = GetInstance();
+		if (instance->initialized_) {
 			instance->Finalize();
-			delete instance;
-			instance = nullptr;
 		}
 	}
 
@@ -115,7 +112,7 @@ namespace TKM {
 
 		// バッファ設定
 		XAUDIO2_BUFFER buffer = {};
-		buffer.pAudioData = soundData.pBuffer_;
+		buffer.pAudioData = soundData.buffer_.data();
 		buffer.AudioBytes = soundData.bufferSize_;
 
 		if (loop) {
@@ -142,8 +139,7 @@ namespace TKM {
 
 		auto it = soundMap_.find(key);
 		if (it != soundMap_.end()) {
-			delete[] it->second.pBuffer_;
-			it->second.pBuffer_ = nullptr;
+			it->second.buffer_.clear();
 			it->second.bufferSize_ = 0;
 			soundMap_.erase(it);
 		}
@@ -153,11 +149,11 @@ namespace TKM {
 	// GetInstance
 	//============================
 	AudioManager* AudioManager::GetInstance() {
-		if (instance == nullptr) {
-			instance = new AudioManager;
-			instance->Initialize(); // 生成時に必ず初期化
+		static AudioManager instance;
+		if (!instance.initialized_) {
+			instance.Initialize();
 		}
-		return instance;
+		return &instance;
 	}
 
 	//============================
@@ -191,14 +187,14 @@ namespace TKM {
 			file.seekg(data.size_, std::ios_base::cur);
 		}
 
-		char* pBuffer = new char[data.size_];
-		file.read(pBuffer, data.size_);
+		std::vector<BYTE> buffer(data.size_);
+		file.read(reinterpret_cast<char*>(buffer.data()), data.size_);
 		file.close();
 
 		SoundData soundData;
 		soundData.wfex_ = format.fmt_;
-		soundData.pBuffer_ = reinterpret_cast<BYTE*>(pBuffer);
-		soundData.bufferSize_ = data.size_;
+		soundData.buffer_ = std::move(buffer);
+		soundData.bufferSize_ = data.size_;;
 		return soundData;
 	}
 

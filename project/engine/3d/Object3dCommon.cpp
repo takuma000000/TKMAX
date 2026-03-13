@@ -3,13 +3,9 @@
 using namespace Logger;
 
 namespace TKM {
-	Object3dCommon* Object3dCommon::instance_ = nullptr;
-
 	Object3dCommon* Object3dCommon::GetInstance() {
-		if (instance_ == nullptr) {
-			instance_ = new Object3dCommon;
-		}
-		return instance_;
+		static Object3dCommon instance;
+		return &instance;
 	}
 
 	void Object3dCommon::Initialize(DirectXCommon* dxCommon) {
@@ -20,8 +16,6 @@ namespace TKM {
 	}
 
 	void Object3dCommon::Finalize() {
-		delete instance_;
-		instance_ = nullptr;
 	}
 
 	void Object3dCommon::DrawSetCommon() {

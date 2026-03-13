@@ -177,7 +177,6 @@ namespace TKM {
 		// =========================================
 
 	private:
-		static ParticleManager* instance_;
 
 		ParticleManager() = default;
 		~ParticleManager() = default;

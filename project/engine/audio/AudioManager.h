@@ -25,12 +25,9 @@ struct FormatChunk {
 };
 //音声データ
 struct SoundData {
-	//波形フォーマット
-	WAVEFORMATEX wfex_;
-	//バッファの先頭アドレス
-	BYTE* pBuffer_;
-	//バッファのサイズ
-	unsigned int bufferSize_;
+	WAVEFORMATEX wfex_; // 波形フォーマット
+	std::vector<BYTE> buffer_; // 音声データのバッファ
+	unsigned int bufferSize_; // 音声データのサイズ
 };
 
 //=============================================================
@@ -118,8 +115,6 @@ namespace TKM {
 		AudioManager(AudioManager&) = delete;
 		//コピー代入演算子の封印
 		AudioManager& operator=(AudioManager&) = delete;
-		// インスタンス
-		static AudioManager* instance;
 		////---------------------------------------------------------
 	};
 }

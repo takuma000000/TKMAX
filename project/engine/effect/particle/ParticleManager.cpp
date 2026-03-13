@@ -7,14 +7,10 @@
 #include <algorithm>
 
 namespace TKM {
-	ParticleManager* ParticleManager::instance_ = nullptr;
 
 	ParticleManager* ParticleManager::GetInstance() {
-		if (instance_ == nullptr) {
-			instance_ = new ParticleManager();
-		}
-
-		return instance_;
+		static ParticleManager instance;
+		return &instance;
 	}
 
 	void ParticleManager::Initialize(TKM::DirectXCommon* dxCommon, TKM::SrvManager* srvManager, TKM::Camera* camera) {

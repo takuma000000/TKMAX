@@ -5,13 +5,10 @@
 #pragma comment(lib,"Xinput.lib")  // XInputのライブラリ追加
 
 namespace TKM {
-	Input* Input::instance_ = nullptr;
 
 	Input* Input::GetInstance() {
-		if (instance_ == nullptr) {
-			instance_ = new Input;
-		}
-		return instance_;
+		static Input instance;
+		return &instance;
 	}
 
 	void Input::Initialize(TKM::WindowsAPI* windowsAPI) {
@@ -34,8 +31,6 @@ namespace TKM {
 	}
 
 	void Input::Finalize() {
-		delete instance_;
-		instance_ = nullptr;
 	}
 
 	void Input::Update() {

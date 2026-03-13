@@ -84,8 +84,6 @@ namespace TKM {
 		Object3dCommon(Object3dCommon&) = delete;
 		//コピー代入演算子の封印
 		Object3dCommon& operator=(Object3dCommon&) = delete;
-		// シングルトンインスタンス
-		static Object3dCommon* instance_;
 		///---------------------------------------------------------
 	};
 }

@@ -117,7 +117,6 @@ namespace TKM {
 		void SetWheel(int delta) { wheel_ = delta; }
 		// ==============================================
 	private:
-		static Input* instance_;
 
 		ComPtr<IDirectInputDevice8> keyboard_;
 		BYTE key_[256] = {};
