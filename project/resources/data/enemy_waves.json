@@ -1,17 +1,26 @@
 {
+  "_comment": "敵WAVE全体設定。wave1, wave2, wave3 ごとに出現ルールと敵パラメータを持つ。",
+
   "wave1": {
+    "_comment": "WAVE1: 上空から飛び込み敵が出る基本WAVE。",
+
     "settings": {
+      "_comment": "WAVE1全体の進行設定。",
       "spawnInterval": 1.5,
       "maxSimultaneous": 2,
       "defeatTarget": 5
     },
+
     "spawn": {
+      "_comment": "敵を出す基準位置。Xだけランダム、Y/Zは固定基準。",
       "baseY": 5.0,
       "baseZ": 100.0,
       "randXMin": -20.0,
       "randXMax": 20.0
     },
+
     "enemyParams": {
+      "_comment": "WAVE1敵1体ごとの挙動パラメータ。",
       "model": "jerryfish.obj",
       "hp": 1,
       "startY": 20.0,
@@ -23,10 +32,14 @@
   },
 
   "wave2": {
+    "_comment": "WAVE2: 編隊パターンで敵を出すWAVE。Triangle → Line → Column の3サブWAVE。",
+
     "waitDuration": 1.5,
     "subWaveCount": 3,
+
     "subWaves": [
       {
+        "_comment": "サブWAVE1: 三角編隊。",
         "pattern": "Triangle",
         "triCountPerSide": 1,
         "triY": 6.0,
@@ -36,6 +49,7 @@
         "triZStep": 5.0
       },
       {
+        "_comment": "サブWAVE2: 横一列編隊。",
         "pattern": "Line",
         "lineCount": 4,
         "lineY": 4.5,
@@ -44,6 +58,7 @@
         "lineXStep": 8.0
       },
       {
+        "_comment": "サブWAVE3: 縦列編隊。",
         "pattern": "Column",
         "colCount": 3,
         "colX": 18.0,
@@ -53,27 +68,50 @@
         "colYStep": 0.0
       }
     ],
+
     "enemyParams": {
+      "_comment": "編隊ごとに使う敵パラメータ。pattern名と対応している。",
+
       "triangle": {
+        "_comment": "三角編隊用。左右に揺れながら前進する。",
         "model": "jerryfish.obj",
         "hp": 3,
-        "vel": { "x": 0.0, "y": 0.0, "z": -0.30 },
+        "vel": {
+          "_comment": "基本移動速度。",
+          "x": 0.0,
+          "y": 0.0,
+          "z": -0.30
+        },
         "sineAmp": 4.0,
         "sineFreq": 1.4,
         "phaseStep": 0.6,
         "behavior": "SineX"
       },
+
       "line": {
+        "_comment": "横一列編隊用。まっすぐ進んで stopZ で止まる。",
         "model": "jerryfish.obj",
         "hp": 2,
-        "vel": { "x": 0.0, "y": 0.0, "z": -0.32 },
+        "vel": {
+          "_comment": "基本移動速度。",
+          "x": 0.0,
+          "y": 0.0,
+          "z": -0.32
+        },
         "stopZ": 52.0,
         "behavior": "StraightStop"
       },
+
       "column": {
+        "_comment": "縦列編隊用。斜め気味に進みつつ stopZ を基準に動く。",
         "model": "jerryfish.obj",
         "hp": 1,
-        "vel": { "x": -0.20, "y": 0.0, "z": -0.75 },
+        "vel": {
+          "_comment": "基本移動速度。",
+          "x": -0.20,
+          "y": 0.0,
+          "z": -0.75
+        },
         "stopZ": -50.0,
         "behavior": "StraightStop"
       }
@@ -81,17 +119,24 @@
   },
 
   "wave3": {
+    "_comment": "WAVE3: 中ボス戦。左右に中ボスを置き、コア出現や怒り時間も管理する。",
+
     "midBossLeft": {
+      "_comment": "左側の中ボス初期位置。",
       "x": -12.0,
       "y": 6.0,
       "z": 80.0
     },
+
     "midBossRight": {
+      "_comment": "右側の中ボス初期位置。",
       "x": 12.0,
       "y": 6.0,
       "z": 80.0
     },
+
     "core": {
+      "_comment": "コア出現関連。ランダム範囲と寿命、HP。",
       "xRange": 18.0,
       "zMin": 35.0,
       "zMax": 75.0,
@@ -99,13 +144,31 @@
       "lifetime": 5.0,
       "hp": 5
     },
+
     "angryDuration": 8.0,
+
     "enemyParams": {
+      "_comment": "WAVE3で使う敵パラメータ。今は midBoss のみ。",
+
       "midBoss": {
+        "_comment": "中ボス本体。FreeRoamで areaMin～areaMax の範囲を動く。",
         "model": "jerryfish.obj",
         "hp": 12,
-        "areaMin": { "x": -18.0, "y": 4.0, "z": 40.0 },
-        "areaMax": { "x": 18.0, "y": 10.0, "z": 62.0 },
+
+        "areaMin": {
+          "_comment": "行動範囲の最小座標。",
+          "x": -18.0,
+          "y": 4.0,
+          "z": 40.0
+        },
+
+        "areaMax": {
+          "_comment": "行動範囲の最大座標。",
+          "x": 18.0,
+          "y": 10.0,
+          "z": 62.0
+        },
+
         "normalSpeed": 0.10,
         "rageSpeed": 0.24,
         "scale": 1.5,
