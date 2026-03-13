@@ -1,0 +1,119 @@
+{
+  "_comment": "ボス設定全体。BossEnemy の基本値、BossManager の戦闘設定、BossController の調整値をまとめる。",
+
+  "bossEnemy": {
+    "_comment": "BossEnemy の初期パラメータ。",
+    "model": "jerryfish_boss.obj",
+    "tentacleModel": "tentacle_boss.obj",
+    "hp": 1000,
+    "scale": {
+      "x": 5.0,
+      "y": 5.0,
+      "z": 5.0
+    },
+    "colliderScale": {
+      "x": 12.180,
+      "y": 26.970,
+      "z": 11.560
+    },
+    "normalScale": 5.0,
+    "lockBlinkSpeed": 0.2,
+    "lockBlinkAmount": 0.2
+  },
+
+  "bossBattle": {
+    "_comment": "BossManager 側の戦闘設定。",
+    "spawnPos": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 200.0
+    },
+    "arenaMin": {
+      "x": -18.0,
+      "y": 3.0,
+      "z": 35.0
+    },
+    "arenaMax": {
+      "x": 18.0,
+      "y": 12.0,
+      "z": 70.0
+    },
+    "killRipple": {
+      "duration": 0.35,
+      "radiusMax": 1.45,
+      "amplitude": 0.10,
+      "frequency": 85.0,
+      "width": 10.0
+    },
+    "killSlowScale": 0.00001,
+    "killSlowDuration": 1.7
+  },
+
+  "bossController": {
+    "_comment": "BossController / BossStates が使う調整値。",
+
+    "predictLeadTime": 0.35,
+
+    "orbit": {
+      "z": 55.0,
+      "y": 8.0,
+      "radiusX": 10.0,
+      "radiusY": 2.5,
+      "angularSpeed": 1.3,
+      "playerInfluence": 0.35,
+      "follow": 0.16,
+      "duration": 3.2
+    },
+
+    "recover": {
+      "follow": 0.18,
+      "duration": 1.0
+    },
+
+    "rage": {
+      "gainPerHp": 0.08,
+      "decayDelay": 1.25,
+      "decayPerSec": 0.25,
+      "onThreshold": 1.0,
+      "offThreshold": 0.20,
+      "maxGauge": 1.5
+    },
+
+    "missile": {
+      "muzzleYOffset": 1.0,
+      "chargeTime": 1.0,
+      "burstCount": 3,
+      "burstInterval": 0.5,
+      "speed": 70.0,
+      "curveHeight": 2.5,
+      "damage": 1,
+      "lifeFrame": 180
+    },
+
+    "slash": {
+      "cooldown": 2.0,
+      "selectRate": 0.45,
+      "chargeTime": 0.55,
+      "speed": 95.0,
+      "damage": 2,
+      "lifeFrame": 90
+    },
+
+    "laser": {
+      "cooldown": 0.0,
+      "windup": 1.0,
+      "fire": 1.2,
+      "recover": 0.8,
+      "radius": 1.6,
+      "muzzleYOffset": 1.5,
+      "trackStrength": 0.18
+    },
+
+    "enter": {
+      "approachSpeedZ": 18.0,
+      "approachSpeedX": 10.0,
+      "approachSpeedY": 10.0,
+      "completeEpsilonZ": 0.05
+    }
+  }
+}
