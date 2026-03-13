@@ -25,7 +25,6 @@
   "wave2": {
     "waitDuration": 1.5,
     "subWaveCount": 3,
-
     "subWaves": [
       {
         "pattern": "Triangle",
@@ -54,41 +53,44 @@
         "colYStep": 0.0
       }
     ],
-
     "enemyParams": {
       "triangle": {
         "model": "jerryfish.obj",
-        "hp": 1,
-        "vel": { "x": 0.0, "y": 0.0, "z": -0.2 },
-        "sineAmp": 3.5,
-        "sineFreq": 2.0,
-        "phaseStep": 0.9,
+        "hp": 3,
+        "vel": { "x": 0.0, "y": 0.0, "z": -0.30 },
+        "sineAmp": 4.0,
+        "sineFreq": 1.4,
+        "phaseStep": 0.6,
         "behavior": "SineX"
       },
       "line": {
         "model": "jerryfish.obj",
-        "hp": 1,
-        "vel": { "x": 0.0, "y": 0.0, "z": -0.35 },
-        "stopZ": 25.0,
+        "hp": 2,
+        "vel": { "x": 0.0, "y": 0.0, "z": -0.32 },
+        "stopZ": 52.0,
         "behavior": "StraightStop"
       },
       "column": {
         "model": "jerryfish.obj",
-        "hp": 2,
-        "vel": { "x": 0.0, "y": 0.0, "z": -0.45 },
-        "roamMin": { "x": -22.0, "y": 3.0, "z": 20.0 },
-        "roamMax": { "x": 22.0, "y": 10.0, "z": 85.0 },
-        "freeRoamSpeed": 6.0,
-        "freeRoamAngrySpeed": 8.5,
-        "behavior": "FreeRoam"
+        "hp": 1,
+        "vel": { "x": -0.20, "y": 0.0, "z": -0.75 },
+        "stopZ": -50.0,
+        "behavior": "StraightStop"
       }
     }
   },
 
   "wave3": {
-    "midBossLeft":  { "x": -12.0, "y": 6.0, "z": 80.0 },
-    "midBossRight": { "x": 12.0, "y": 6.0, "z": 80.0 },
-
+    "midBossLeft": {
+      "x": -12.0,
+      "y": 6.0,
+      "z": 80.0
+    },
+    "midBossRight": {
+      "x": 12.0,
+      "y": 6.0,
+      "z": 80.0
+    },
     "core": {
       "xRange": 18.0,
       "zMin": 35.0,
@@ -97,15 +99,17 @@
       "lifetime": 5.0,
       "hp": 5
     },
-
     "angryDuration": 8.0,
-
     "enemyParams": {
       "midBoss": {
         "model": "jerryfish.obj",
-        "hp": 10,
-        "scale": 3.0,
-        "behavior": "StraightStop"
+        "hp": 12,
+        "areaMin": { "x": -18.0, "y": 4.0, "z": 40.0 },
+        "areaMax": { "x": 18.0, "y": 10.0, "z": 62.0 },
+        "normalSpeed": 0.10,
+        "rageSpeed": 0.24,
+        "scale": 1.5,
+        "behavior": "FreeRoam"
       }
     }
   }

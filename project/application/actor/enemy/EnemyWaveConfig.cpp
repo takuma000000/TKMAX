@@ -300,6 +300,10 @@ bool EnemyWaveConfig::LoadJson(const char* path) {
 			if (e.contains("pounceTime")) {
 				wave1EnemyParams_.pounceTime_ = e["pounceTime"].get<float>();
 			}
+			if (e.contains("behavior")) {
+				wave1EnemyParams_.behavior_ =
+					ParseBehavior(e["behavior"].get<std::string>(), wave1EnemyParams_.behavior_);
+			}
 		}
 	}
 
@@ -477,6 +481,27 @@ bool EnemyWaveConfig::LoadJson(const char* path) {
 				}
 				if (e.contains("hp")) {
 					wave3MidBossParams_.hp_ = e["hp"].get<int>();
+				}
+
+				if (e.contains("areaMin")) {
+					auto& a = e["areaMin"];
+					if (a.contains("x")) { wave3MidBossParams_.areaMin_.x = a["x"].get<float>(); }
+					if (a.contains("y")) { wave3MidBossParams_.areaMin_.y = a["y"].get<float>(); }
+					if (a.contains("z")) { wave3MidBossParams_.areaMin_.z = a["z"].get<float>(); }
+				}
+
+				if (e.contains("areaMax")) {
+					auto& a = e["areaMax"];
+					if (a.contains("x")) { wave3MidBossParams_.areaMax_.x = a["x"].get<float>(); }
+					if (a.contains("y")) { wave3MidBossParams_.areaMax_.y = a["y"].get<float>(); }
+					if (a.contains("z")) { wave3MidBossParams_.areaMax_.z = a["z"].get<float>(); }
+				}
+
+				if (e.contains("normalSpeed")) {
+					wave3MidBossParams_.normalSpeed_ = e["normalSpeed"].get<float>();
+				}
+				if (e.contains("rageSpeed")) {
+					wave3MidBossParams_.rageSpeed_ = e["rageSpeed"].get<float>();
 				}
 				if (e.contains("scale")) {
 					wave3MidBossParams_.scale_ = e["scale"].get<float>();
