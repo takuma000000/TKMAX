@@ -2,6 +2,7 @@
 #include "GameScene.h"
 #include <algorithm>
 #include "MyMath.h"
+#include "BossConfigLoader.h"
 
 // ワールド座標をスクリーンUV座標に変換する
 static Vector2 WorldToUV(const Vector3& world, const Matrix4x4& vp) {
@@ -18,26 +19,6 @@ static Vector2 WorldToUV(const Vector3& world, const Matrix4x4& vp) {
 }
 
 namespace {
-	BossManager::BossBattleConfig MakeBossConfig() {
-		// ボス戦設定生成
-		BossManager::BossBattleConfig c_{}; // 設定構造体
-		c_.spawnPos_ = { 0.0f, 0.0f, 200.0f }; // スポーン位置
-		c_.arenaMin_ = { -18.0f, 3.0f, 35.0f }; // アリーナ最小座標
-		c_.arenaMax_ = { 18.0f,12.0f, 70.0f }; // アリーナ最大座標
-		// 撃破時波紋エフェクト設定
-		TKM::WaterRippleEffect::RippleDesc d_{}; // 波紋設定構造体
-		d_.duration_ = 0.35f; // 継続秒
-		d_.radiusMax_ = 1.45f; // 最大半径(UV)
-		d_.amplitude_ = 0.10f; // ゆがみ量
-		d_.frequency_ = 85.0f; // 細かさ
-		d_.width_ = 10.0f; // 帯の幅（大きいほどシャープ）
-		c_.killRipple_ = d_; // 波紋設定代入
-		c_.killSlowScale_ = 0.00001f; // 撃破時スローモーション倍率
-		c_.killSlowDuration_ = 1.7f; // 撃破時スローモーション継続秒
-		return c_;
-	}
-	// 定数ボス戦設定
-	const BossManager::BossBattleConfig kBossConfig_ = MakeBossConfig();
 	// 値をmn～mxの範囲にクランプする
 	static float ClampFloat(float v, float mn, float mx) {
 		if (v < mn) return mn;
@@ -72,6 +53,8 @@ namespace {
 void BossManager::Initialize(TKM::DirectXCommon* dxCommon, TKM::Camera* camera, TKM::BaseScene* parent, Player* player) {
 	// 基底クラスの初期化
 	InitializeCommon(dxCommon, camera, parent, player);
+	// ボス戦設定ファイルから読み込み
+	BossConfigLoader::Load("resources/data/boss_config.json", bossConfig_);
 
 	bossBattle_ = false; // ボス戦開始フラグ
 	bossP2BgmPlayed_ = false; // ボスP2BGM再生フラグ
@@ -103,22 +86,25 @@ void BossManager::StartBattle() {
 
 	// ボス生成
 	boss_ = std::make_unique<BossEnemy>();
+	boss_->SetConfig(&bossConfig_.bossEnemy_);
 	boss_->Initialize(TKM::Object3dCommon::GetInstance(), dx_);
-	boss_->SetCamera(camera_); // カメラセット
-	boss_->SetParentScene(parent_); // 親シーンセット
-
+	boss_->SetCamera(camera_);
+	boss_->SetParentScene(parent_);
+	boss_->SetPosition(bossConfig_.bossBattle_.spawnPos_);
 	// プレイヤー位置取得ラムダ
 	if (player_) {
 		boss_->SetPlayer([this]() { // ラムダ式でプレイヤー位置取得
 			return player_->GetPosition(); // プレイヤーの位置を返す
 			});
 	}
-	// ボス初期位置セット
-	boss_->SetPosition(kBossConfig_.spawnPos_);
 
 	// --- ボス挙動コントローラ生成 ---
 	bossController_ = std::make_unique<BossController>();
-	bossController_->Initialize(kBossConfig_.arenaMin_, kBossConfig_.arenaMax_);
+	bossController_->SetConfig(&bossConfig_.bossController_);
+	bossController_->Initialize(
+		bossConfig_.bossBattle_.arenaMin_,
+		bossConfig_.bossBattle_.arenaMax_
+	);
 
 	killSeq_.Reset(); // 撃破シーケンス状態リセット
 
@@ -166,7 +152,11 @@ void BossManager::Update(float dt) {
 			killSeq_.zoomStarted_ = true; // フラグセット
 
 			if (!killSeq_.slowTriggered_ && timeScale_) { // スローモーション開始
-				timeScale_->RequestSlow(kBossConfig_.killSlowScale_, kBossConfig_.killSlowDuration_); // 撃破時スローモーションリクエスト
+				// 撃破ズームと同時にスローモーション開始
+				timeScale_->RequestSlow(
+					bossConfig_.bossBattle_.killSlowScale_,
+					bossConfig_.bossBattle_.killSlowDuration_
+				);
 				killSeq_.slowTriggered_ = true; // フラグセット
 			}
 		}
@@ -248,16 +238,19 @@ void BossManager::Update(float dt) {
 	boss_->Update(dt);
 
 	// ボス撃破ズーム開始（1回だけ）
-	if (!killSeq_.zoomStarted_ && boss_->IsDying()) { // ボス撃破リアクション開始時
-		if (player_) { // プレイヤー存在確認
-			player_->StartBossDeathCameraZoom(); // 撃破ズーム開始
+	if (!killSeq_.zoomStarted_ && boss_->IsDying()) {
+		if (player_) {
+			player_->StartBossDeathCameraZoom();
 		}
-		killSeq_.zoomStarted_ = true; // フラグセット
+		killSeq_.zoomStarted_ = true;
 
 		// スロー
-		if (!killSeq_.slowTriggered_ && timeScale_) { // タイムスケールコントローラ存在確認
-			timeScale_->RequestSlow(kBossConfig_.killSlowScale_, kBossConfig_.killSlowDuration_); // スロー要求
-			killSeq_.slowTriggered_ = true; // フラグセット
+		if (!killSeq_.slowTriggered_ && timeScale_) {
+			timeScale_->RequestSlow(
+				bossConfig_.bossBattle_.killSlowScale_,
+				bossConfig_.bossBattle_.killSlowDuration_
+			);
+			killSeq_.slowTriggered_ = true;
 		}
 	}
 	// ボス弾更新

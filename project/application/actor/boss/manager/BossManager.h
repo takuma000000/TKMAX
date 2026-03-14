@@ -15,6 +15,7 @@
 #include "WaterRippleEffect.h"
 #include "BossHpBarUI.h"
 #include "BattleActorManagerBase.h"
+#include "BossConfig.h"
 
 //=============================================================
 // BossManagerクラス
@@ -183,6 +184,10 @@ private:
 	int slashAttackId_ = 0; // スラッシュ攻撃IDカウンタ
 	int currentSlashId_ = -1; // 現在処理中のスラッシュ攻撃ID
 	float slashIdHoldT_ = 0.0f; // 現在のスラッシュ攻撃IDの保持時間
+	//==============================
+	// 設定
+	//==============================
+	BossConfig bossConfig_;
 
 protected:
 	/// <summary>

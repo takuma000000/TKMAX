@@ -207,7 +207,7 @@
     <ClCompile Include="application\state\IntroFlowStates.cpp" />
     <ClCompile Include="application\effect\IntroStartBanner.cpp" />
     <ClCompile Include="application\effect\IntroBossActor.cpp" />
-    <ClCompile Include="BossConfig.cpp" />
+    <ClCompile Include="application\actor\boss\BossConfigLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -455,7 +455,8 @@
     <ClInclude Include="application\effect\IntroStartBanner.h" />
     <ClInclude Include="application\effect\IntroBossActor.h" />
     <ClInclude Include="externals\nlohmann\json.hpp" />
-    <ClInclude Include="BossConfig.h" />
+    <ClInclude Include="application\actor\boss\BossConfig.h" />
+    <ClInclude Include="application\actor\boss\BossConfigLoader.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

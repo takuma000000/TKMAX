@@ -5,6 +5,7 @@
 #include "MyMath.h"
 #include "AuraVolumeRenderer.h"
 #include "StateMachine.h"
+#include "BossConfig.h"
 
 // =============================================================
 // BossControllerクラス
@@ -158,6 +159,13 @@ public:
 	/// チャージの進行度(0..1)（触手揺れ強度用）
 	/// </summary>
 	float GetCharge01() const;
+	// =========================================
+	// Setter===================================
+	/// <summary>
+	/// BossControllerConfig を設定します。
+	/// </summary>
+	/// <param name="config">設定へのポインタ</param>
+	void SetConfig(const BossControllerConfig* config);
 	// =========================================
 private:
 	/// <summary>
@@ -333,4 +341,8 @@ private:
 	TKM::StateMachine sm_; // 状態遷移マシン
 	Enemy* boss_ = nullptr; // Update中だけ有効
 	Vector3 posWork_{}; // State側で動かす座標（最後にbossへ反映）
+	//==============================
+	// Config
+	//==============================
+	const BossControllerConfig* config_ = nullptr;
 };

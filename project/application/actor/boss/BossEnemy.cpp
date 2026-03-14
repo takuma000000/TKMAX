@@ -2,24 +2,26 @@
 #include <cmath>
 
 void BossEnemy::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon) {
-	Enemy::Initialize(common, dxCommon);
+	Enemy::Initialize(common, dxCommon); // 基底クラスの初期化
 
-	// 傘（本体）
-	SetModel("jerryfish_boss.obj");
+	// 設定があればそれを、なければデフォルトの設定を使用
+	const BossEnemyConfig& cfg = config_ ? *config_ : BossEnemyConfig{};
 
-	// 触手（子）
-	SetTentacleModel("tentacle_boss.obj");
+	SetModel(cfg.model_);
+	SetTentacleModel(cfg.tentacleModel_);
 	SetTentacleLocal({ 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f });
 	tentacleBasePos_ = { 0.0f, 0.0f, 0.0f };
 	tentacleBaseRot_ = { 0.0f, 0.0f, 0.0f };
 	tentacleBaseScale_ = { 1.0f, 1.0f, 1.0f };
 
-	SetHP(BossParam::InitHP_);
+	SetHP(cfg.hp_);
 
 	// baseScale_ を正しい値にするために SetScale は最初に1回だけ
-	SetScale({ BossParam::InitScale_, BossParam::InitScale_, BossParam::InitScale_ });
+	SetScale(cfg.scale_);
+
 	// 当たり判定サイズも最初に1回だけ
-	SetColliderScale(BossParam::InitColliderScale_);
+	SetColliderScale(cfg.colliderScale_);
+
 	// タイプは最初に1回だけ
 	SetType(EnemyType::Boss);
 }
@@ -129,4 +131,8 @@ void BossEnemy::SetTentacleCharge(bool active, float charge01) {
 void BossEnemy::SetIntroPanic(bool active, float panic01) {
 	introPanicActive_ = active; // イントロ用パニック触手のON/OFF
 	introPanic01_ = panic01; // 0..1の範囲で慌て強度を指定
+}
+
+void BossEnemy::SetConfig(const BossEnemyConfig* config) {
+	config_ = config; // 設定を保存
 }

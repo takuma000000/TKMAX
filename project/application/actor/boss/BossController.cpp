@@ -11,6 +11,36 @@ void BossController::Initialize(const Vector3& arenaMin, const Vector3& arenaMax
 	arenaMin_ = arenaMin;
 	arenaMax_ = arenaMax;
 
+	// コンフィグから各種パラメータ読み込み
+	predictLeadTime_ = config_->predictLeadTime_;
+	rageGainPerHp_ = config_->rage_.gainPerHp_;
+	rageDecayDelay_ = config_->rage_.decayDelay_;
+	rageDecayPerSec_ = config_->rage_.decayPerSec_;
+	rageOnThreshold_ = config_->rage_.onThreshold_;
+	rageOffThreshold_ = config_->rage_.offThreshold_;
+	orbitZ_ = config_->orbit_.z_;
+	orbitY_ = config_->orbit_.y_;
+	orbitRadiusX_ = config_->orbit_.radiusX_;
+	orbitRadiusY_ = config_->orbit_.radiusY_;
+	orbitAngularSpeed_ = config_->orbit_.angularSpeed_;
+	orbitPlayerInfluence_ = config_->orbit_.playerInfluence_;
+	orbitFollow_ = config_->orbit_.follow_;
+	orbitDuration_ = config_->orbit_.duration_;
+	recoverDuration_ = config_->recover_.duration_;
+	missileMuzzleYOffset_ = config_->missile_.muzzleYOffset_;
+	missileChargeTime_ = config_->missile_.chargeTime_;
+	burstLeft_ = 0;
+	burstInterval_ = config_->missile_.burstInterval_;
+	missileSpeed_ = config_->missile_.speed_;
+	missileCurveHeight_ = config_->missile_.curveHeight_;
+	missileDamage_ = config_->missile_.damage_;
+	missileLifeFrame_ = config_->missile_.lifeFrame_;
+	slashCooldown_ = config_->slash_.cooldown_;
+	slashChargeTime_ = config_->slash_.chargeTime_;
+	slashSpeed_ = config_->slash_.speed_;
+	slashDamage_ = config_->slash_.damage_;
+	slashLifeFrame_ = config_->slash_.lifeFrame_;
+
 	// 状態遷移初期化
 	sm_.Initialize(this);
 	ChangeState(State::Enter);
@@ -198,6 +228,10 @@ float BossController::GetCharge01() const {
 	}
 	// クランプして返す
 	return v;
+}
+
+void BossController::SetConfig(const BossControllerConfig* config) {
+	config_ = config; // 設定セット
 }
 
 void BossController::ChangeState(State s) {

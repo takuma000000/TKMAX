@@ -1,14 +1,6 @@
 #pragma once
 #include "Enemy.h"
-
-namespace BossParam {
-	constexpr int   InitHP_ = 1000; // 初期HP
-	constexpr float InitScale_ = 5.0f; // 初期スケール
-	constexpr Vector3 InitColliderScale_ = { 12.180f, 26.970f, 11.560f }; // 当たり判定スケール
-	constexpr float NormalScale_ = 5.0f; // 通常スケール
-	constexpr float LockBlinkSpeed_ = 0.2f; // 点滅速度
-	constexpr float LockBlinkAmount_ = 0.2f; // 点滅幅
-}
+#include "BossConfig.h"
 
 //=============================================================
 // BossEnemy
@@ -49,6 +41,11 @@ public:
 	/// <param name="active">有効かどうか</param>
 	/// <param name="panic01">強度（0..1）</param>
 	void SetIntroPanic(bool active, float panic01);
+	/// <summary>
+	/// BossEnemyConfig を設定します。
+	/// </summary>
+	/// <param name="config">設定へのポインタ</param>
+	void SetConfig(const BossEnemyConfig* config);
 	// =========================================
 private:
 	//=============================
@@ -66,4 +63,8 @@ private:
 	//=============================
 	bool  introPanicActive_ = false; // イントロ中の慌て演出
 	float introPanic01_ = 0.0f;      // 慌て強度（0..1）
+	//=============================
+	// 設定
+	//=============================
+	const BossEnemyConfig* config_ = nullptr;
 };
