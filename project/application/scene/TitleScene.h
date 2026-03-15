@@ -181,17 +181,42 @@ private:
 	//======================================================================
 	bool  titleBeamActive_ = true;   // メニュー中にONにしたいならshowUi_と合わせて使う
 	float titleClashEmitAcc_ = 0.0f; // 衝突エフェクトの発生レート調整用
-	float titleBeamT_ = 0.5f;        // 衝突点（0=プレイヤー側, 1=ボス側）とりあえず0.5で中央
+	/// <summary>
+	/// タイトルのビーム撃ち合いの衝突点を更新します。
+	/// </summary>
+	/// <param name="dt">デルタタイム</param>
+	void UpdateTitleBeamClash_(float dt);
+	//======================================================================
+	// タイトル：ビーム押し合い制御
+	// 0=プレイヤー側、1=ボス側
+	//======================================================================
+	static constexpr float kTitleBeamCenterT_ = 0.30f;             // 基準の中央
+	static constexpr float kTitleBeamMinT_ = 0.25f;                // プレイヤー側へ寄れる下限
+	static constexpr float kTitleBeamMaxT_ = 0.58f;                // ボス側へ寄れる上限
+	static constexpr float kTitleBeamTargetChangeMinSec_ = 1.10f;  // 目標切り替え最短
+	static constexpr float kTitleBeamTargetChangeMaxSec_ = 1.85f;  // 目標切り替え最長
+	static constexpr float kTitleBeamApproachSpeed_ = 1.90f;       // 目標位置へ寄る速さ
+	static constexpr float kTitleBeamMicroOscAmp_ = 0.012f;        // 細かい押し返し揺れ幅
+	static constexpr float kTitleBeamMicroOscSpeed_ = 4.00f;       // 細かい揺れ速度
+	static constexpr float kTitleBeamNeutralReturnSpeed_ = 1.60f;  // ビーム停止中に中央へ戻す速さ
+	float titleBeamT_ = kTitleBeamCenterT_;         // 実際に使う衝突点
+	float titleBeamTargetT_ = kTitleBeamCenterT_;   // 今向かっている目標位置
+	float titleBeamTargetTimer_ = 0.0f;             // 次の目標切り替えまでの残り時間
+	float titleBeamMicroOscTime_ = 0.0f;            // 細かい揺れ用時間
 	int   titleBeamSegments_ = 18;   // 線上に置く粒の数（増やすほど“線”になる）
 	int   titleBeamPerSeg_ = 1;      // 1セグメントに何粒置くか（重くなるので基本1）
 	int   titleClashCore_ = 8;       // 衝突点のコア粒
 	int   titleClashRays_ = 10;      // 衝突点のスパーク
 	int   titleClashRing_ = 1;       // リング頻度
 	/// <summary>
-	/// タイトルのビーム撃ち合いの衝突点を更新します。
+	/// タイトルのビーム押し合い位置を更新します。
 	/// </summary>
 	/// <param name="dt">デルタタイム</param>
-	void UpdateTitleBeamClash_(float dt);
+	void UpdateTitleBeamPush_(float dt);
+	/// <summary>
+	/// 次に狙うビーム衝突位置を選びます。
+	/// </summary>
+	void ResetTitleBeamTarget_();
 	//======================================================================
 	// タイトルFlow（ステートマシン）
 	//======================================================================

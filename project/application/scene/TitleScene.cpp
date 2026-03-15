@@ -128,6 +128,12 @@ void TitleScene::Initialize() {
 	// 最初は敵だけ見せたいのでUIは消す
 	showUi_ = false;
 	titleMenu_->SetVisible(false);
+	// 見つめ合い用の初期化
+	titleBeamT_ = kTitleBeamCenterT_;
+	titleBeamTargetT_ = kTitleBeamCenterT_;
+	titleBeamTargetTimer_ = 0.0f;
+	titleBeamMicroOscTime_ = 0.0f;
+	ResetTitleBeamTarget_();
 	// 分岐フラグ初期化
 	showMenuAfterVanish_ = false;
 	// タイマー初期化
@@ -454,6 +460,48 @@ void TitleScene::UpdateTitleBeamClash_(float dt) {
 	}
 }
 
+void TitleScene::UpdateTitleBeamPush_(float dt) {
+	titleBeamMicroOscTime_ += dt;
+
+	// ビーム無効中は中央へ戻しておく
+	if (!titleBeamActive_) {
+		const float toCenter = kTitleBeamCenterT_ - titleBeamT_;
+		titleBeamT_ += toCenter * std::clamp(dt * kTitleBeamNeutralReturnSpeed_, 0.0f, 1.0f);
+		titleBeamT_ = std::clamp(titleBeamT_, kTitleBeamMinT_, kTitleBeamMaxT_);
+		return;
+	}
+
+	// 初回 or 期限切れなら次の優勢位置を選ぶ
+	titleBeamTargetTimer_ -= dt;
+	if (titleBeamTargetTimer_ <= 0.0f) {
+		ResetTitleBeamTarget_();
+	}
+
+	// まずは目標位置へなめらかに寄せる
+	const float approachRate = std::clamp(dt * kTitleBeamApproachSpeed_, 0.0f, 1.0f);
+	titleBeamT_ += (titleBeamTargetT_ - titleBeamT_) * approachRate;
+
+	// そのうえで細かい押し返し揺れを足す
+	const float microOsc = std::sin(titleBeamMicroOscTime_ * kTitleBeamMicroOscSpeed_) * kTitleBeamMicroOscAmp_;
+	const float baseT = titleBeamT_;
+	titleBeamT_ = std::clamp(baseT + microOsc, kTitleBeamMinT_, kTitleBeamMaxT_);
+}
+
+void TitleScene::ResetTitleBeamTarget_() {
+	std::uniform_real_distribution<float> timeDist(
+		kTitleBeamTargetChangeMinSec_,
+		kTitleBeamTargetChangeMaxSec_
+	);
+
+	std::uniform_real_distribution<float> sideDist(
+		kTitleBeamMinT_,
+		kTitleBeamMaxT_
+	);
+
+	titleBeamTargetTimer_ = timeDist(rng_);
+	titleBeamTargetT_ = sideDist(rng_);
+}
+
 void TitleScene::CreateShowdownActors_() {
 	// Player（GameScene同様にクラスを使う）
 	titlePlayer_ = std::make_unique<Player>();
@@ -530,6 +578,8 @@ void TitleScene::UpdateShowdownActors_(float dt) {
 
 	titleBoss_->Update(dt);
 	titleBoss_->SetPosition(titleBossPos_); // 保険
+	// ビーム押し合い位置を先に更新
+	UpdateTitleBeamPush_(dt);
 	// ビーム打ち合い（Particle）
 	if (titleBeamActive_) {
 		UpdateTitleBeamClash_(dt);

@@ -24,7 +24,6 @@ public:
 	};
 
 	struct Desc {
-		std::string panelTex = "./resources/texture/gradationLine.png"; // パネル
 		std::array<std::string, 2> itemTex = {
 			"./resources/texture/start_title.png", // はじめる
 			"./resources/texture/end_title.png",  // とじる
@@ -127,7 +126,6 @@ private:
 	//======================================================================
 	// スプライト
 	//======================================================================
-	std::unique_ptr<TKM::Sprite> panel_; // パネル
 	std::array<std::unique_ptr<TKM::Sprite>, (int)Item::Count> items_; // 項目
 	//======================================================================
 	// レイアウト

@@ -10,11 +10,6 @@ void TitleMenuController::Initialize(TKM::SpriteCommon* spriteCommon, TKM::Direc
 	screenH_ = screenH;
 	desc_ = desc;
 
-	// スプライト生成
-	panel_ = std::make_unique<TKM::Sprite>();
-	panel_->Initialize(spriteCommon_, dxCommon_, desc_.panelTex);
-	panel_->SetAutoAdjustTextureSize(false);
-
 	// 項目スプライト生成
 	for (int i = 0; i < (int)Item::Count; ++i) {
 		items_[i] = std::make_unique<TKM::Sprite>();
@@ -52,12 +47,6 @@ TitleMenuController::Command TitleMenuController::Update(float dt) {
 	// ==========================
 	pulseTime_ += dt;
 	float pulse = 1.0f + 0.06f * std::sin(pulseTime_ * 6.0f);
-
-	// パネル
-	if (panel_) {
-		panel_->SetColor({ 1.0f, 1.0f, 1.0f, 0.3f }); // 色指定
-		panel_->Update();
-	}
 
 	// 項目：選択中は大きく + 脈動、非選択は小さめ
 	for (int i = 0; i < (int)Item::Count; ++i) {
@@ -109,10 +98,8 @@ TitleMenuController::Command TitleMenuController::Update(float dt) {
 void TitleMenuController::Draw() {
 	if (!visible_) { return; } // 非表示のときは入力も見た目も更新しない
 
-	if (panel_) panel_->Draw();
-
 	for (int i = 0; i < (int)Item::Count; ++i) {
-		if (items_[i]) items_[i]->Draw();
+		items_[i]->Draw();
 	}
 }
 
@@ -129,16 +116,9 @@ void TitleMenuController::UpdateLayout(float screenW, float screenH) {
 	// 項目間隔
 	itemSpacingY_ = 70.0f;
 
-	if (panel_) {
-		panel_->SetPosition(panelPos_);
-		panel_->SetSize(panelSize_);
-	}
-
 	for (int i = 0; i < (int)Item::Count; ++i) {
-		if (items_[i]) {
-			Vector2 p = { baseItemPos_.x, baseItemPos_.y + itemSpacingY_ * (float)i };
-			items_[i]->SetPosition(p);
-		}
+		Vector2 p = { baseItemPos_.x, baseItemPos_.y + itemSpacingY_ * (float)i };
+		items_[i]->SetPosition(p);
 	}
 }
 
