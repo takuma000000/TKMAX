@@ -49,7 +49,7 @@ void TitleFlowIdleState::Update(TKM::IStateContext& ctx, float dt) {
 	// ① メニューが出てる時：メニュー操作
 	if (s.showUi_) {
 		const auto cmd = s.titleMenu_->Update(dt); // メニューの更新（入力処理など）を行い、発行されたコマンドを取得
-		s.UpdateShowdownActors_(dt); // メニューが出てるときの演出更新（敵の動きやエフェクトなど）
+		s.titleShowdown_->Update(dt, true); // 見つめ合い演出の更新（ビーム演出有効）
 		// コマンドに応じた処理
 		if (cmd == TitleMenuController::Command::Start) {
 			s.showMenuAfterVanish_ = false; // Vanishing後にメニューを出さない（直接波紋へ）

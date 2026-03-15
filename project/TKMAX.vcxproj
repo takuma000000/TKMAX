@@ -224,6 +224,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\effect\post\TrailRibbonRenderer.cpp" />
     <ClCompile Include="application\ui\OperationGuideUI.cpp" />
     <ClCompile Include="application\ui\PlayerHudUI.cpp" />
+    <ClCompile Include="application\scene\controller\TitleShowdownController.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\actor\enemy\manager\EnemyManager.h" />
@@ -337,6 +338,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\state\StateMachine.h" />
     <ClInclude Include="application\state\TitleFlowStates.h" />
     <ClInclude Include="engine\effect\post\TrailRibbonRenderer.h" />
+    <ClInclude Include="application\scene\controller\TitleShowdownController.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

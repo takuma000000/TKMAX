@@ -122,18 +122,15 @@ void TitleScene::Initialize() {
 
 	// 敵の初期化
 	CreateTitleEnemies_();
-	// メニュー中の見つめ合い用
-	CreateShowdownActors_();
+
+	// メニュー中の見つめ合い演出
+	titleShowdown_ = std::make_unique<TitleShowdownController>();
+	titleShowdown_->Initialize(this, dxCommon_, srvManager_, camera_);
+	titleShowdown_->SetBeamActive(true);
 
 	// 最初は敵だけ見せたいのでUIは消す
 	showUi_ = false;
 	titleMenu_->SetVisible(false);
-	// 見つめ合い用の初期化
-	titleBeamT_ = kTitleBeamCenterT_;
-	titleBeamTargetT_ = kTitleBeamCenterT_;
-	titleBeamTargetTimer_ = 0.0f;
-	titleBeamMicroOscTime_ = 0.0f;
-	ResetTitleBeamTarget_();
 	// 分岐フラグ初期化
 	showMenuAfterVanish_ = false;
 	// タイマー初期化
@@ -177,43 +174,6 @@ void TitleScene::Update() {
 #ifdef USE_IMGUI
 
 	ImGui::Begin("タイトルシーン デバッグ");
-
-	// =========================================================
-	// ① 見つめ合い（Player/Boss）位置調整（折りたたみ）
-	// =========================================================
-	if (ImGui::CollapsingHeader("見つめ合い（位置調整）", ImGuiTreeNodeFlags_DefaultOpen)) {
-
-		ImGui::Checkbox("自動で見つめ合う（Yaw/Pitch）", &titleAutoLookAt_); // デバッグ用：自動で見つめ合うかどうか（Yaw/Pitch計算して向きだけ合わせる）
-
-		const bool 編集できる = (titlePlayer_ != nullptr && titleBoss_ != nullptr);
-		if (!編集できる) {
-			ImGui::TextDisabled("titlePlayer_ / titleBoss_ が null です");
-		} else {
-
-			bool 変更あり = false;
-			変更あり |= ImGui::DragFloat3("プレイヤー位置", &titlePlayerPos_.x, 0.1f);
-			変更あり |= ImGui::DragFloat3("ボス位置", &titleBossPos_.x, 0.1f);
-
-			if (ImGui::Button("位置をリセット")) {
-				titlePlayerPos_ = { -8.0f, -3.0f, 12.0f };
-				titleBossPos_ = { 7.0f, -1.5f, 40.0f };
-				変更あり = true;
-			}
-
-			if (変更あり) {
-				titlePlayer_->SetPosition(titlePlayerPos_);
-				titleBoss_->SetPosition(titleBossPos_);
-			}
-
-			const float py = LookAtYaw_(titlePlayerPos_, titleBossPos_);
-			const float by = LookAtYaw_(titleBossPos_, titlePlayerPos_);
-			ImGui::Text("Yaw（プレイヤー→ボス）: %.3f rad", py);
-			ImGui::Text("Yaw（ボス→プレイヤー）: %.3f rad", by);
-		}
-
-		ImGui::Separator();
-	}
-
 	// =========================================================
 	// ② タイトル敵情報（折りたたみ）
 	// =========================================================
@@ -273,7 +233,7 @@ void TitleScene::Draw3D() {
 
 	// メニュー中だけ：見つめ合い（Player/Boss）
 	if (showUi_ && titleMenu_->IsVisible()) {
-		DrawShowdownActors_();
+		titleShowdown_->Draw(dxCommon_);
 	}
 
 	// Particle
@@ -391,203 +351,4 @@ bool TitleScene::AllEnemiesGone_() const {
 		if (u.alive_) { return false; } // 1体でも生きている敵がいれば false を返す
 	}
 	return true;
-}
-
-float TitleScene::LookAtYaw_(const Vector3& from, const Vector3& to) const {
-	Vector3 d = { to.x - from.x, to.y - from.y, to.z - from.z };
-	return std::atan2f(d.x, d.z); // ラジアン
-}
-
-void TitleScene::UpdateTitleBeamClash_(float dt) {
-	if (!titlePlayer_ || !titleBoss_) { return; }
-	if (!showUi_ || !titleMenu_->IsVisible()) { return; }
-
-	auto* pm = TKM::ParticleManager::GetInstance();
-	if (!pm) { return; }
-
-	// ----------------------------
-	// ビーム開始位置（ざっくり：モデル中心＋オフセット）
-	// ※ ちゃんと“口/砲口”をやりたくなったら Socket 化
-	// ----------------------------
-	Vector3 p0 = titlePlayerPos_ + Vector3{ 0.0f, 1.2f, 0.0f };
-	Vector3 b0 = titleBossPos_ + Vector3{ 0.0f, 6.2f, 0.0f };
-
-	// 衝突点：0=プレイヤー側、1=ボス側（まずは0.5で中央）
-	float t = std::clamp(titleBeamT_, 0.0f, 1.0f);
-	Vector3 hit = {
-		p0.x + (b0.x - p0.x) * t,
-		p0.y + (b0.y - p0.y) * t,
-		p0.z + (b0.z - p0.z) * t
-	};
-
-	// ----------------------------
-	// 2本のビーム（粒を線上に並べて“線”っぽく見せる）
-	// ----------------------------
-	int seg = std::max(2, titleBeamSegments_);
-	int perSeg = std::max(1, titleBeamPerSeg_);
-
-	for (int i = 0; i < seg; ++i) {
-		float u = (float)i / (float)(seg - 1);
-		Vector3 p = {
-			p0.x + (hit.x - p0.x) * u,
-			p0.y + (hit.y - p0.y) * u,
-			p0.z + (hit.z - p0.z) * u
-		};
-		pm->Emit("titleBeam_player", p, perSeg);
-	}
-	for (int i = 0; i < seg; ++i) {
-		float u = (float)i / (float)(seg - 1);
-		Vector3 p = {
-			b0.x + (hit.x - b0.x) * u,
-			b0.y + (hit.y - b0.y) * u,
-			b0.z + (hit.z - b0.z) * u
-		};
-		pm->Emit("titleBeam_boss", p, perSeg);
-	}
-
-	// ----------------------------
-	// 衝突点の“バチバチ”
-	// 毎フレーム出すと濃すぎ＆重いので、レート制御
-	// ----------------------------
-	titleClashEmitAcc_ += dt;
-	const float kClashHz = 30.0f; // 1秒に何回出すか
-	const float kEmitStep = 1.0f / kClashHz;
-	while (titleClashEmitAcc_ >= kEmitStep) {
-		titleClashEmitAcc_ -= kEmitStep;
-		if (titleClashCore_ > 0) { pm->Emit("titleBeamClash_core", hit, titleClashCore_); }
-		if (titleClashRays_ > 0) { pm->Emit("titleBeamClash_rays", hit, titleClashRays_); }
-		if (titleClashRing_ > 0) { pm->Emit("titleBeamClash_ring", hit, titleClashRing_); }
-	}
-}
-
-void TitleScene::UpdateTitleBeamPush_(float dt) {
-	titleBeamMicroOscTime_ += dt;
-
-	// ビーム無効中は中央へ戻しておく
-	if (!titleBeamActive_) {
-		const float toCenter = kTitleBeamCenterT_ - titleBeamT_;
-		titleBeamT_ += toCenter * std::clamp(dt * kTitleBeamNeutralReturnSpeed_, 0.0f, 1.0f);
-		titleBeamT_ = std::clamp(titleBeamT_, kTitleBeamMinT_, kTitleBeamMaxT_);
-		return;
-	}
-
-	// 初回 or 期限切れなら次の優勢位置を選ぶ
-	titleBeamTargetTimer_ -= dt;
-	if (titleBeamTargetTimer_ <= 0.0f) {
-		ResetTitleBeamTarget_();
-	}
-
-	// まずは目標位置へなめらかに寄せる
-	const float approachRate = std::clamp(dt * kTitleBeamApproachSpeed_, 0.0f, 1.0f);
-	titleBeamT_ += (titleBeamTargetT_ - titleBeamT_) * approachRate;
-
-	// そのうえで細かい押し返し揺れを足す
-	const float microOsc = std::sin(titleBeamMicroOscTime_ * kTitleBeamMicroOscSpeed_) * kTitleBeamMicroOscAmp_;
-	const float baseT = titleBeamT_;
-	titleBeamT_ = std::clamp(baseT + microOsc, kTitleBeamMinT_, kTitleBeamMaxT_);
-}
-
-void TitleScene::ResetTitleBeamTarget_() {
-	std::uniform_real_distribution<float> timeDist(
-		kTitleBeamTargetChangeMinSec_,
-		kTitleBeamTargetChangeMaxSec_
-	);
-
-	std::uniform_real_distribution<float> sideDist(
-		kTitleBeamMinT_,
-		kTitleBeamMaxT_
-	);
-
-	titleBeamTargetTimer_ = timeDist(rng_);
-	titleBeamTargetT_ = sideDist(rng_);
-}
-
-void TitleScene::CreateShowdownActors_() {
-	// Player（GameScene同様にクラスを使う）
-	titlePlayer_ = std::make_unique<Player>();
-	titlePlayer_->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_);
-	titlePlayer_->SetParentScene(this);
-	titlePlayer_->SetCamera(camera_);
-	titlePlayer_->SetPosition(titlePlayerPos_);
-
-	// タイトルでは操作系全部OFF（事故防止）
-	titlePlayer_->SetControlEnabled(false);
-	titlePlayer_->SetShootingEnabled(false);
-	titlePlayer_->SetReticleVisible(false);
-	titlePlayer_->SetEnableJetSmoke(false);
-	titlePlayer_->SetEnemy(nullptr);
-	titlePlayer_->StopRumble();
-
-	// Boss（BossEnemyクラスを使う）
-	titleBoss_ = std::make_unique<BossEnemy>();
-	titleBoss_->SetCamera(camera_);
-	titleBoss_->SetParentScene(this);
-	titleBoss_->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_);
-	titleBoss_->SetPosition(titleBossPos_);
-	titleBoss_->SetTentacleCharge(true, 0.35f);
-
-	// 見つめ合い（Yawだけ）
-	const float py = LookAtYaw_(titlePlayerPos_, titleBossPos_);
-	const float by = LookAtYaw_(titleBossPos_, titlePlayerPos_);
-	// タイトル用の回転を別で持つ（GameSceneのとは別物）
-	titlePlayerRot_.y = py;
-	titleBossRot_.y = by;
-	// プレイヤー（Yawだけ）
-	titlePlayer_->SetYaw(titlePlayerRot_.y);
-	// ボス（Euler回転を使う：EnemyにSetRotateを生やした前提）
-	titleBoss_->SetRotate(titleBossRot_);
-}
-
-void TitleScene::UpdateShowdownActors_(float dt) {
-	if (!titlePlayer_ || !titleBoss_) { return; }
-
-	// 位置固定
-	titlePlayer_->SetPosition(titlePlayerPos_);
-	titleBoss_->SetPosition(titleBossPos_);
-
-	// まず「狙うべき回転」を計算
-	Vector3 pRotRad{ 0.0f, 0.0f, 0.0f };
-	Vector3 bRotRad{ 0.0f, 0.0f, 0.0f };
-
-	if (titleAutoLookAt_) {
-		const float py = LookAtYaw_(titlePlayerPos_, titleBossPos_);
-		const float by = LookAtYaw_(titleBossPos_, titlePlayerPos_);
-
-		const float pp = LookAtPitch_(titlePlayerPos_, titleBossPos_);
-		const float bp = LookAtPitch_(titleBossPos_, titlePlayerPos_);
-
-		pRotRad = { pp, py, 0.0f };
-		bRotRad = { bp, by, 0.0f };
-	}
-
-	// 手動オフセット（度→rad）を足す：モデル正面ズレ調整はここでやる
-	pRotRad.x += DegToRad_(titlePlayerRotDeg_.x);
-	pRotRad.y += DegToRad_(titlePlayerRotDeg_.y);
-	pRotRad.z += DegToRad_(titlePlayerRotDeg_.z);
-
-	bRotRad.x += DegToRad_(titleBossRotDeg_.x);
-	bRotRad.y += DegToRad_(titleBossRotDeg_.y);
-	bRotRad.z += DegToRad_(titleBossRotDeg_.z);
-
-	// 回転を先に適用（このフレームで反映させる）
-	titlePlayer_->SetRotate(pRotRad);
-	titleBoss_->SetRotate(bRotRad);
-
-	// そのあと Update（内部で object_->Update() されて行列が確定する）
-	titlePlayer_->UpdateTitleIdle(dt);
-
-	titleBoss_->Update(dt);
-	titleBoss_->SetPosition(titleBossPos_); // 保険
-	// ビーム押し合い位置を先に更新
-	UpdateTitleBeamPush_(dt);
-	// ビーム打ち合い（Particle）
-	if (titleBeamActive_) {
-		UpdateTitleBeamClash_(dt);
-	}
-}
-
-void TitleScene::DrawShowdownActors_() {
-	if (!titlePlayer_ || !titleBoss_) { return; }
-	titlePlayer_->Draw(dxCommon_);
-	titleBoss_->Draw(dxCommon_);
 }

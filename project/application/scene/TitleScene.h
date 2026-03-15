@@ -23,6 +23,7 @@
 #include "StateMachine.h"
 #include "GameOverScene.h"
 #include "GameScene.h"
+#include "TitleShowdownController.h"
 
 //=============================================================
 // TitleSceneクラス
@@ -143,81 +144,6 @@ private:
 	//======================================================================
 	const float dt_ = 1.0f / 60.0f; // 固定フレームレート用デルタタイム
 	//======================================================================
-	// タイトル：メニュー中の見つめ合い（Player / Boss）
-	//======================================================================
-	std::unique_ptr<Player> titlePlayer_ = nullptr; // タイトル用プレイヤー（見た目だけ）
-	std::unique_ptr<BossEnemy> titleBoss_ = nullptr; // タイトル用ボス（見た目だけ）
-	Vector3 titlePlayerPos_ = { -12.0f, -3.8f, 13.3f }; // 左手前
-	Vector3 titleBossPos_ = { 24.7f, 6.7f, 53.3f }; // 右奥
-	// 回転（ラジアン想定）
-	Vector3 titlePlayerRot_ = { 0.0f, 0.0f, 0.0f }; // 主にy(Yaw)を使う
-	Vector3 titleBossRot_ = { 0.0f, 0.0f, 0.0f }; // 主にy(Yaw)を使う
-	// 見つめ合い：回転調整（度）
-	Vector3 titlePlayerRotDeg_ = { 0.0f, 0.0f, 0.0f }; // 手動オフセット（度）
-	Vector3 titleBossRotDeg_ = { 0.0f, 0.0f, 0.0f }; // 手動オフセット（度）
-	bool titleAutoLookAt_ = true; // trueなら自動で見つめ合う（Yaw/Pitch）
-	/// <summary>
-	/// タイトルの見つめ合い用のPlayerとBossを生成して配置します。
-	/// </summary>
-	void CreateShowdownActors_();
-	/// <summary>
-	/// タイトルの見つめ合い用のPlayerとBossを更新します。
-	/// </summary>
-	/// <param name="dt">デルタタイム</param>
-	void UpdateShowdownActors_(float dt);
-	/// <summary>
-	/// タイトルの見つめ合い用のPlayerとBossを描画します。
-	/// </summary>
-	void DrawShowdownActors_();
-	/// <summary>
-	/// タイトルの見つめ合い用のPlayerとBossの、PlayerからBossへの向き（Yaw角）を計算します。
-	/// </summary>
-	/// <param name="from">Playerの位置</param>
-	/// <param name="to">Bossの位置</param>
-	/// <returns>PlayerからBossへの向き（Yaw角）</returns>
-	float LookAtYaw_(const Vector3& from, const Vector3& to) const;
-	//======================================================================
-	// タイトル：ビーム撃ち合い
-	//======================================================================
-	bool  titleBeamActive_ = true;   // メニュー中にONにしたいならshowUi_と合わせて使う
-	float titleClashEmitAcc_ = 0.0f; // 衝突エフェクトの発生レート調整用
-	/// <summary>
-	/// タイトルのビーム撃ち合いの衝突点を更新します。
-	/// </summary>
-	/// <param name="dt">デルタタイム</param>
-	void UpdateTitleBeamClash_(float dt);
-	//======================================================================
-	// タイトル：ビーム押し合い制御
-	// 0=プレイヤー側、1=ボス側
-	//======================================================================
-	static constexpr float kTitleBeamCenterT_ = 0.30f;             // 基準の中央
-	static constexpr float kTitleBeamMinT_ = 0.25f;                // プレイヤー側へ寄れる下限
-	static constexpr float kTitleBeamMaxT_ = 0.58f;                // ボス側へ寄れる上限
-	static constexpr float kTitleBeamTargetChangeMinSec_ = 1.10f;  // 目標切り替え最短
-	static constexpr float kTitleBeamTargetChangeMaxSec_ = 1.85f;  // 目標切り替え最長
-	static constexpr float kTitleBeamApproachSpeed_ = 1.90f;       // 目標位置へ寄る速さ
-	static constexpr float kTitleBeamMicroOscAmp_ = 0.012f;        // 細かい押し返し揺れ幅
-	static constexpr float kTitleBeamMicroOscSpeed_ = 4.00f;       // 細かい揺れ速度
-	static constexpr float kTitleBeamNeutralReturnSpeed_ = 1.60f;  // ビーム停止中に中央へ戻す速さ
-	float titleBeamT_ = kTitleBeamCenterT_;         // 実際に使う衝突点
-	float titleBeamTargetT_ = kTitleBeamCenterT_;   // 今向かっている目標位置
-	float titleBeamTargetTimer_ = 0.0f;             // 次の目標切り替えまでの残り時間
-	float titleBeamMicroOscTime_ = 0.0f;            // 細かい揺れ用時間
-	int   titleBeamSegments_ = 18;   // 線上に置く粒の数（増やすほど“線”になる）
-	int   titleBeamPerSeg_ = 1;      // 1セグメントに何粒置くか（重くなるので基本1）
-	int   titleClashCore_ = 8;       // 衝突点のコア粒
-	int   titleClashRays_ = 10;      // 衝突点のスパーク
-	int   titleClashRing_ = 1;       // リング頻度
-	/// <summary>
-	/// タイトルのビーム押し合い位置を更新します。
-	/// </summary>
-	/// <param name="dt">デルタタイム</param>
-	void UpdateTitleBeamPush_(float dt);
-	/// <summary>
-	/// 次に狙うビーム衝突位置を選びます。
-	/// </summary>
-	void ResetTitleBeamTarget_();
-	//======================================================================
 	// タイトルFlow（ステートマシン）
 	//======================================================================
 	TKM::StateMachine flowSM_; // タイトルのFlow制御用ステートマシン
@@ -228,4 +154,8 @@ private:
 	friend class TitleFlowVanishingState; // タイトルFlow：消滅シーケンスステート
 	friend class TitleFlowRippleState; // タイトルFlow：波紋エフェクトステート
 	friend class TitleFlowIrisCloseState; // タイトルFlow：アイリス閉じステート
+	//======================================================================
+	// タイトル：見つめ合い演出
+	//======================================================================
+	std::unique_ptr<TitleShowdownController> titleShowdown_ = nullptr;
 };
