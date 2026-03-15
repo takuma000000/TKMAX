@@ -81,6 +81,7 @@ public:
 	/// ボス回転オフセット（度）を取得します。
 	/// </summary>
 	Vector3& GetBossRotDeg() { return bossRotDeg_; }
+	// ========================================
 
 private:
 	/// <summary>
