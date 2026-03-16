@@ -2081,6 +2081,140 @@ namespace TKM {
 			p.currentTime_ = 0.0f;
 
 			p.color_ = { 0.72f, 0.88f, 1.08f, 1.0f };
+		} else if (groupName == "bossEntrance_gather") {
+			std::uniform_real_distribution<float> rDist(1.8f, 5.0f);
+			std::uniform_real_distribution<float> ang(0.0f, 6.2831853f);
+			std::uniform_real_distribution<float> h(-1.5f, 1.8f);
+
+			float r = rDist(rng);
+			float a = ang(rng);
+
+			Vector3 offset{
+				std::cos(a) * r,
+				h(rng),
+				std::sin(a) * r
+			};
+
+			p.transform_.translate_ = center + offset;
+
+			Vector3 dir = MyMath::Normalize(center - p.transform_.translate_);
+			float speed = std::uniform_real_distribution<float>(18.0f, 30.0f)(rng);
+			p.velocity_ = dir * speed * 0.016f;
+
+			float sc = std::uniform_real_distribution<float>(0.18f, 0.45f)(rng);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.25f, 0.45f)(rng);
+			p.currentTime_ = 0.0f;
+
+			float red = std::uniform_real_distribution<float>(0.85f, 1.00f)(rng);
+			float green = std::uniform_real_distribution<float>(0.05f, 0.18f)(rng);
+			float blue = std::uniform_real_distribution<float>(0.05f, 0.14f)(rng);
+			p.color_ = { red, green, blue, 1.0f };
+		} else if (groupName == "bossEntrance_ringShock") {
+			p.transform_.translate_ = center;
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+
+			float sc = std::uniform_real_distribution<float>(1.8f, 2.6f)(rng);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.22f, 0.34f)(rng);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { 1.0f, 0.18f, 0.12f, 1.0f };
+		} else if (groupName == "bossEntrance_smoke") {
+
+			auto frand = [&rng](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			// 出現範囲をかなり広げる（画面を覆うため）
+			p.transform_.translate_ = center + Vector3{
+				frand(-9.0f, 9.0f),
+				frand(-4.0f, 4.0f),
+				frand(-9.0f, 9.0f)
+			};
+
+			// ゆっくり拡散する煙
+			p.velocity_ = {
+				frand(-0.35f, 0.35f),
+				frand(0.05f, 0.25f),
+				frand(-0.35f, 0.35f)
+			};
+
+			// 粒をかなり大きくする
+			float sc = frand(6.0f, 11.0f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			// 長めに残す
+			p.lifeTime_ = frand(1.0f, 1.6f);
+			p.currentTime_ = 0.0f;
+
+			float t = frand(0.0f, 1.0f);
+
+			// 少し濃い煙
+			p.color_ = {
+				0.15f + 0.10f * t,
+				0.03f + 0.03f * t,
+				0.03f + 0.03f * t,
+				0.92f
+			};
+		} else if (groupName == "bossEntrance_ringThin") {
+			p.transform_.translate_ = center;
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+
+			float sc = std::uniform_real_distribution<float>(1.2f, 1.8f)(rng);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.18f, 0.28f)(rng);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { 0.95f, 0.08f, 0.08f, 1.0f };
+		} else if (groupName == "bossEntrance_streak") {
+			std::uniform_real_distribution<float> ang(0.0f, 6.2831853f);
+			std::uniform_real_distribution<float> rad(0.4f, 1.5f);
+
+			float a = ang(rng);
+			float r = rad(rng);
+
+			p.transform_.translate_ = center + Vector3{
+				std::cos(a) * r,
+				std::uniform_real_distribution<float>(-0.6f, 0.6f)(rng),
+				std::sin(a) * r
+			};
+
+			Vector3 dir = MyMath::Normalize(p.transform_.translate_ - center);
+			float speed = std::uniform_real_distribution<float>(26.0f, 44.0f)(rng);
+			p.velocity_ = dir * speed * 0.016f;
+
+			float thin = std::uniform_real_distribution<float>(0.08f, 0.16f)(rng);
+			float len = std::uniform_real_distribution<float>(0.8f, 1.9f)(rng);
+			p.transform_.scale_ = { thin, thin, len };
+
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.12f, 0.22f)(rng);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { 1.0f, 0.22f, 0.10f, 1.0f };
+		} else if (groupName == "bossEntrance_spark") {
+			std::uniform_real_distribution<float> dir(-1.0f, 1.0f);
+			Vector3 v{ dir(rng), dir(rng) * 0.45f, dir(rng) };
+			if (MyMath::Length(v) < 0.001f) {
+				v = { 0.0f, 0.0f, 1.0f };
+			}
+			v = MyMath::Normalize(v);
+
+			float speed = std::uniform_real_distribution<float>(20.0f, 36.0f)(rng);
+			p.velocity_ = v * speed * 0.016f;
+
+			p.transform_.translate_ = center;
+
+			float sc = std::uniform_real_distribution<float>(0.10f, 0.22f)(rng);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.10f, 0.18f)(rng);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { 1.0f, 0.35f, 0.12f, 1.0f };
 		} else { // 上記意外
 			// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 			std::uniform_real_distribution<float> velX(-0.15f, 0.15f);

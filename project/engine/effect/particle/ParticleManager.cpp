@@ -149,6 +149,30 @@ namespace TKM {
 						float stretch = 1.0f + 8.0f * kDeltaTime_;
 						(*particleIterator).transform_.scale_.y *= stretch;
 					}
+					if (g == "bossEntrance_ringShock") {
+						float grow = 1.0f + 30.0f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.x *= grow;
+						(*particleIterator).transform_.scale_.y *= grow;
+						(*particleIterator).transform_.scale_.z *= grow;
+					}
+					if (g == "bossEntrance_ringThin") {
+						float grow = 1.0f + 18.0f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.x *= grow;
+						(*particleIterator).transform_.scale_.y *= grow;
+						(*particleIterator).transform_.scale_.z *= grow;
+					}
+					if (g == "bossEntrance_core") {
+						float grow = 1.0f + 10.0f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.x *= grow;
+						(*particleIterator).transform_.scale_.y *= grow;
+						(*particleIterator).transform_.scale_.z *= grow;
+					}
+					if (g == "bossEntrance_smoke") {
+						float grow = 1.0f + 4.5f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.x *= grow;
+						(*particleIterator).transform_.scale_.y *= grow;
+						(*particleIterator).transform_.scale_.z *= grow;
+					}
 
 					// アルファカーブ（“パァン”を作る）
 					float a = 1.0f - t;

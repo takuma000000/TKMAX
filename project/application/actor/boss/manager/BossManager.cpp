@@ -73,48 +73,18 @@ void BossManager::Initialize(TKM::DirectXCommon* dxCommon, TKM::Camera* camera, 
 }
 
 void BossManager::StartBattle() {
-	if (bossBattle_) { // すでにボス戦中
+	// すでにボス戦開始している場合は何もしない
+	if (bossBattle_) {
 		return;
 	}
-	if (!dx_ || !camera_ || !parent_) { // 安全確認
-		return;
+
+	if (!boss_) {
+		// まだボスが生成されていない場合は、まず登場演出用に生成する
+		SpawnForEntrance();
 	}
 
-	// --- ボス本体生成 ---
-	bossBattle_ = true; // ボス戦開始フラグセット
-	bossP2BgmPlayed_ = false; // P2BGM再生フラグリセット
-
-	// ボス生成
-	boss_ = std::make_unique<BossEnemy>();
-	boss_->SetConfig(&bossConfig_.bossEnemy_);
-	boss_->Initialize(TKM::Object3dCommon::GetInstance(), dx_);
-	boss_->SetCamera(camera_);
-	boss_->SetParentScene(parent_);
-	boss_->SetPosition(bossConfig_.bossBattle_.spawnPos_);
-	// プレイヤー位置取得ラムダ
-	if (player_) {
-		boss_->SetPlayer([this]() { // ラムダ式でプレイヤー位置取得
-			return player_->GetPosition(); // プレイヤーの位置を返す
-			});
-	}
-
-	// --- ボス挙動コントローラ生成 ---
-	bossController_ = std::make_unique<BossController>();
-	bossController_->SetConfig(&bossConfig_.bossController_);
-	bossController_->Initialize(
-		bossConfig_.bossBattle_.arenaMin_,
-		bossConfig_.bossBattle_.arenaMax_
-	);
-
-	killSeq_.Reset(); // 撃破シーケンス状態リセット
-
-	if (hpUI_) { // HPバーUI表示
-		hpUI_->SetVisible(true); // 表示ON
-	}
-	if (player_) {
-		player_->SetShootingEnabled(true); // ボス戦開始で射撃許可
-		player_->SetRumbleEnabled(true); // ボス戦開始でコントローラー振動許可
-	}
+	// ボス戦開始
+	BeginBattle();
 }
 
 void BossManager::Update(float dt) {
@@ -264,7 +234,16 @@ void BossManager::Update(float dt) {
 }
 
 void BossManager::Draw(TKM::DirectXCommon* dxCommon) {
-	if (!bossBattle_ || !boss_) { return; }
+	if (!boss_) {
+		UpdateBossBullets();
+		return;
+	}
+
+	// ボス戦中でなければ、ボスは描画せず弾だけ描画する
+	if (!bossBattle_) {
+		UpdateBossBullets();
+		return;
+	}
 
 	// ボス
 	boss_->Draw(dxCommon);
@@ -278,6 +257,64 @@ void BossManager::DrawUI() {
 	// もしボス戦中ならHPバーUIも描画
 	if (hpUI_ && bossBattle_ && boss_) { // HPバーUI描画
 		hpUI_->Draw(); // 描画
+	}
+}
+
+void BossManager::SpawnForEntrance() {
+	if (boss_) {
+		return;
+	}
+	if (!dx_ || !camera_ || !parent_) {
+		return;
+	}
+
+	bossP2BgmPlayed_ = false;
+
+	boss_ = std::make_unique<BossEnemy>();
+	boss_->SetConfig(&bossConfig_.bossEnemy_);
+	boss_->Initialize(TKM::Object3dCommon::GetInstance(), dx_);
+	boss_->SetCamera(camera_);
+	boss_->SetParentScene(parent_);
+	boss_->SetPosition(bossConfig_.bossBattle_.spawnPos_);
+	boss_->SyncTransform();
+
+	if (player_) {
+		boss_->SetPlayer([this]() {
+			return player_->GetPosition();
+			});
+	}
+
+	bossController_ = std::make_unique<BossController>();
+	bossController_->SetConfig(&bossConfig_.bossController_);
+	bossController_->Initialize(
+		bossConfig_.bossBattle_.arenaMin_,
+		bossConfig_.bossBattle_.arenaMax_
+	);
+
+	killSeq_.Reset();
+
+	if (hpUI_) {
+		hpUI_->SetVisible(false);
+	}
+}
+
+void BossManager::BeginBattle() {
+	if (bossBattle_) {
+		return;
+	}
+	if (!boss_) {
+		return;
+	}
+
+	bossBattle_ = true;
+	bossP2BgmPlayed_ = false;
+
+	if (hpUI_) {
+		hpUI_->SetVisible(true);
+	}
+	if (player_) {
+		player_->SetShootingEnabled(true);
+		player_->SetRumbleEnabled(true);
 	}
 }
 

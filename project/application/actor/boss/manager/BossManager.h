@@ -83,6 +83,16 @@ public:
 	void DrawUI();
 
 	/// <summary>
+	/// ボス登場演出用にボス本体だけ生成します。
+	/// まだ本戦開始せず、UIも出しません。
+	/// </summary>
+	void SpawnForEntrance();
+	/// <summary>
+	/// 生成済みのボスで本戦を開始します。
+	/// UI表示・射撃許可などをここで有効化します。
+	/// </summary>
+	void BeginBattle();
+	/// <summary>
 	/// ボスが使用する弾をスポーンさせます。
 	/// </summary>
 	/// <param name="pos">弾の生成位置（ワールド座標）</param>
@@ -128,6 +138,11 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	const BossEnemy* GetBoss() const { return boss_.get(); }
+	/// <summary>
+	/// ボスの出現位置を取得します。
+	/// </summary>
+	/// <returns></returns>
+	const Vector3& GetSpawnPos() const { return bossConfig_.bossBattle_.spawnPos_; }
 	// =========================================
 	// Setter===================================
 	/// <summary>

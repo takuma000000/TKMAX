@@ -43,6 +43,7 @@ void GameScene::Initialize() {
 	/// ──────────────── ボスマネージャの初期化 ───────────────
 	bossManager_ = std::make_unique<BossManager>();
 	bossManager_->Initialize(dxCommon_, TKM::CameraManager::GetInstance()->GetMainCamera(), this, player_.get());
+	bossEntranceSeq_ = std::make_unique<BossEntranceSequence>(); // ボス登場シーケンスの初期化
 	/// ──────────────── タイムスケールコントローラーの初期化 ───────────────
 	timeScale_.Initialize();
 	bossManager_->SetTimeScaleController(&timeScale_);
@@ -82,19 +83,32 @@ void GameScene::Update() {
 
 	UpdateFlow(); // ゲーム進行フロー更新
 
-	// ──────────────── 空の色変更（ボス演出） ────────────────
-	if (flow_ && skybox_) {
-		if (flow_->GetIntro()->IsBossSkyRedPhase()) {
-			// 真っ黒
-			skybox_->SetColor({ 10.0f,0.0f,0.0f,1.0f });
+	// ──────────────── 空の色変更（イントロ / ボス登場 / ボス戦中） ────────────────
+	if (skybox_) {
+		const bool introBossRed =
+			(flow_ && flow_->GetIntro() && flow_->GetIntro()->IsBossSkyRedPhase());
+
+		const bool entranceActive =
+			(bossEntranceSeq_ && bossEntranceSeq_->IsActive());
+
+		const bool bossBattleRed =
+			(bossManager_ && bossManager_->IsBattleActive() && !bossManager_->IsBossDead());
+
+		if (entranceActive) {
+			skybox_->SetColor(bossEntranceSeq_->GetSkyColor());
+		} else if (bossBattleRed) {
+			skybox_->SetColor({ 10.0f, 0.0f, 0.0f, 1.0f });
+		} else if (introBossRed) {
+			skybox_->SetColor({ 10.0f, 0.0f, 0.0f, 1.0f });
 		} else {
-			skybox_->SetColor({ 1.0f,1.0f,1.0f,1.0f }); // 元に戻す
+			skybox_->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
 		}
 	}
 
-	// Intro等でロック中はポーズを開けない（誤動作防止）
+	// ──────────────── ゲームプレイのロック状態を判定 ────────────────
 	const bool isClear = (flow_->IsInClear());
-	const bool locked = (flow_->IsGameplayLocked()) || isClear;
+	const bool bossEntranceLocked = (bossEntranceSeq_ && bossEntranceSeq_->IsActive());
+	const bool locked = (flow_->IsGameplayLocked()) || isClear || bossEntranceLocked;
 	const bool allowPauseOpen = !locked;
 
 	// ──────────────── ポーズUI更新（rawDeltaTimeでUIだけ動かす） ───────────────
@@ -334,7 +348,8 @@ void GameScene::UpdateFlow() {
 
 void GameScene::UpdateEnemyAndWaveLogic(float scaledDeltaTime) {
 	const bool isClear = (flow_->IsInClear()); // クリア演出中かどうか
-	const bool locked = (flow_->IsGameplayLocked()) || isClear; // ゲームプレイがロックされているかどうか
+	const bool bossEntranceActive = (bossEntranceSeq_ && bossEntranceSeq_->IsActive());
+	const bool locked = (flow_->IsGameplayLocked()) || isClear || bossEntranceActive;
 
 	// --- 敵とWaveは「ゲーム開始後」だけ動かす ---
 	if (!locked && enemiesInitialized_) {
@@ -343,16 +358,23 @@ void GameScene::UpdateEnemyAndWaveLogic(float scaledDeltaTime) {
 
 		enemyManager_->Update(scaledDeltaTime);
 
-		// 全てのWaveが終了していて、敵がいない → ボスへ進行 or クリア処理
+		// 全Waveクリア → ボス戦開始 or クリア演出へ
 		if (enemyManager_->IsAllWavesCleared()) {
-			// まだボス戦始まっていなければ開始
+			// まだボス戦始まっていないなら、即開始ではなく専用登場演出を挟む
 			if (!bossManager_->IsBattleActive() && !bossManager_->IsBossDead()) {
-				bossManager_->StartBattle();
+				if (bossEntranceSeq_) {
+					if (!bossEntranceSeq_->IsActive()) {
+						bossEntranceSeq_->Start(bossManager_->GetSpawnPos());
+					}
+				} else {
+					// 念のためのフォールバック
+					bossManager_->StartBattle();
+				}
 			} else {
 				// ボス撃破 → クリア演出へ
 				if (bossManager_->IsBossDead()) {
-					if (!isClear) { // まだクリア演出始まっていなければ開始
-						flow_->RequestStartClear(); // クリアシーケンス開始リクエスト
+					if (!isClear) {
+						flow_->RequestStartClear();
 						return;
 					}
 				}
@@ -370,21 +392,30 @@ void GameScene::UpdateEnemyAndWaveLogic(float scaledDeltaTime) {
 
 void GameScene::UpdateGameplaySystems(float rawDeltaTime, float scaledDeltaTime) {
 	const bool isClear = (flow_->IsInClear()); // クリア演出中かどうか
-	const bool locked = (flow_->IsGameplayLocked()) || isClear; // ゲームプレイがロックされているかどうか
+	const bool bossEntranceActive = (bossEntranceSeq_ && bossEntranceSeq_->IsActive());
+	const bool bossEntranceSpawned = (bossEntranceSeq_ && bossEntranceSeq_->HasSpawnedBoss());
+	const bool locked = (flow_->IsGameplayLocked()) || isClear || bossEntranceActive; // ゲームプレイがロックされているかどうか
 
-	// start.png が消えるまではプレイヤー操作を無効にする
-	if (player_) {
-		player_->SetControlEnabled(!locked);
+	player_->SetControlEnabled(!locked);
+
+	if (bossEntranceSeq_ && bossEntranceSeq_->IsActive()) {
+		bossEntranceSeq_->Update(rawDeltaTime, bossManager_.get());
 	}
 
 	// スカイボックスの回転更新
 	skybox_->UpdateRotation();
+
 	// プレイヤーの更新
 	player_->Update(scaledDeltaTime);
+
 	// UIの更新
 	ui_->Update(scaledDeltaTime, player_.get());
+
 	// ボスマネージャの更新
-	bossManager_->Update(scaledDeltaTime);
+	// 演出中でも、ボス生成後は本体のEnter移動を見せるため更新を回す
+	if (!bossEntranceActive || bossEntranceSpawned) {
+		bossManager_->Update(scaledDeltaTime);
+	}
 	// ポストエフェクトの更新
 	postFx_->Update(scaledDeltaTime, bossManager_.get());
 
@@ -475,12 +506,12 @@ void GameScene::UpdatePausedOnly_(float rawDeltaTime) {
 }
 
 void GameScene::UpdateNormalGameplay_(float rawDeltaTime, float scaledDeltaTime) {
+	// アクティブカメラの更新
+	UpdateActiveCamera();
 	// 敵やウェーブのロジック更新（タイムスケール適用）
 	UpdateEnemyAndWaveLogic(scaledDeltaTime);
 	// デバッグ表示更新
 	ImGuiDebug();
-	// アクティブカメラの更新
-	UpdateActiveCamera();
 	// ゲームプレイシステムの更新
 	UpdateGameplaySystems(rawDeltaTime, scaledDeltaTime);
 	// シーン遷移＆タイトル戻り等の更新（rawDeltaTime）

@@ -14,6 +14,7 @@
 #include "TextureCatalog.h"
 #include "ModelCatalog.h"
 #include "CameraManager.h"
+#include "BossEntranceSequence.h"
 
 //=============================================================
 // GameSceneクラス
@@ -141,6 +142,7 @@ private:
 	std::unique_ptr<TKM::PostEffectController>    postFx_ = nullptr; // ポストエフェクト制御
 	std::unique_ptr<TKM::ClearSequenceController> clearSeq_ = nullptr; // クリア演出シーケンス
 	std::unique_ptr<TKM::PauseMenuController>     pause_ = nullptr;
+	std::unique_ptr<BossEntranceSequence>         bossEntranceSeq_ = nullptr; // WAVE3後のボス登場演出
 	//======================================================================
 	// 内部処理
 	//======================================================================

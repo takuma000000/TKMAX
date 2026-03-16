@@ -190,5 +190,21 @@ namespace TKM {
 		pm->CreateParticleGroup("bossEscape_warpShred", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
 		// ワープエフェクト：リング
 		pm->CreateParticleGroup("bossEscape_warpRing", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
+
+		/// === ボス登場用エフェクト ===
+		// コア：中心の光の塊
+		pm->CreateParticleGroup("bossEntrance_core", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
+		// 渦巻き：コアを包むように渦巻くエネルギー
+		pm->CreateParticleGroup("bossEntrance_ringShock", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
+		// 細いリング：コアの周りを高速で回る細いリング
+		pm->CreateParticleGroup("bossEntrance_ringThin", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
+		// スパーク：コアから飛び散る火花
+		pm->CreateParticleGroup("bossEntrance_smoke", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
+		// ストリーク：コアから引きずるように伸びる細い光の筋
+		pm->CreateParticleGroup("bossEntrance_streak", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
+		// スパーク：コアから飛び散る火花
+		pm->CreateParticleGroup("bossEntrance_spark", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
+		// スパーク：コアから飛び散る火花
+		pm->CreateParticleGroup("bossEntrance_gather", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);	
 	}
 }
