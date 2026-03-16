@@ -52,6 +52,7 @@ public:
 	/// </summary>
 	/// <param name="dx">DirectX 共通管理クラス</param>
 	void Draw(TKM::DirectXCommon* dx);
+
 	/// <summary>
 	/// ターゲットへの曲線移動を有効にします。
 	/// </summary>
@@ -86,6 +87,14 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	float Radius() const { return kDefaultScale_; } // 簡易当たり半径
+	/// <summary>
+	/// ターゲットへの曲線移動を、制御点オフセット指定で有効にします。
+	/// </summary>
+	/// <param name="start">開始位置（ワールド座標）</param>
+	/// <param name="target">終了位置（ターゲット位置、ワールド座標）</param>
+	/// <param name="controlOffset">制御点のオフセット（開始位置からの相対座標）</param>
+	/// <param name="speed">1フレームあたりの移動速度</param>
+	void EnableCurveToTargetWithControlOffset(const Vector3& start, const Vector3& target, const Vector3& controlOffset, float speed);
 
 	// Getter===================================
 	/// <summary>
@@ -175,4 +184,5 @@ private:
 	int ageFrame_ = 0; // 経過フレーム数
 	static constexpr int kSlashHitActiveFrames_ = 18; // 斬撃の判定が生きるフレーム
 	int attackId_ = 0; // 斬撃の攻撃ID（連続ヒット防止用）
+	Vector3 curveControlOffset_{ 0.0f, 0.0f, 0.0f }; // 曲線制御点のオフセット（開始位置からの相対座標）
 };

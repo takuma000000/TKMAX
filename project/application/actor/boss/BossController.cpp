@@ -29,8 +29,8 @@ void BossController::Initialize(const Vector3& arenaMin, const Vector3& arenaMax
 	recoverDuration_ = config_->recover_.duration_;
 	missileMuzzleYOffset_ = config_->missile_.muzzleYOffset_;
 	missileChargeTime_ = config_->missile_.chargeTime_;
-	burstLeft_ = 0;
-	burstInterval_ = config_->missile_.burstInterval_;
+	missileRequestCount_ = 0;
+	missileRequestConsumeIndex_ = 0;
 	missileSpeed_ = config_->missile_.speed_;
 	missileCurveHeight_ = config_->missile_.curveHeight_;
 	missileDamage_ = config_->missile_.damage_;
@@ -80,6 +80,14 @@ void BossController::Reset() {
 	hasPrevPlayerPos_ = false; // 前フレーム位置無し
 	prevPlayerPos_ = { 0.0f, 0.0f, 0.0f }; // 前フレーム位置初期化
 	playerVel_ = { 0.0f, 0.0f, 0.0f }; // 速度初期化
+	// ミサイル関連
+	missileRequestCount_ = 0;
+	missileRequestConsumeIndex_ = 0;
+	burstTargetValid_ = false;
+	burstCharged_ = false;
+	missileCharging_ = false;
+	missileChargeTimer_ = 0.0f;
+	missileChargeFrame_ = 0;
 }
 
 void BossController::Update(float dt, Enemy& boss) {
@@ -177,17 +185,37 @@ void BossController::ImGuiDebug(Enemy& boss) {
 #endif
 }
 
-bool BossController::ConsumeMissileFireRequest(Vector3& outPos, Vector3& outTarget, float& outSpeed, float& outCurveHeight, int& outDamage, int& outLifeFrame) {
-	if (!missileFireReq_) { return false; } // リクエスト無し
-	missileFireReq_ = false; // リクエスト消費
-	// 出力セット
-	outPos = missilePos_; // 発射位置
-	outTarget = missileTarget_; // 目標位置
-	outSpeed = missileSpeed_; // 速度
-	outCurveHeight = missileCurveHeight_; // 曲線高さ
-	outDamage = missileDamage_; // ダメージ
-	outLifeFrame = missileLifeFrame_; // 寿命フレーム
-	return true;
+bool BossController::ConsumeMissileFireRequest(
+	Vector3& outPos,
+	Vector3& outTarget,
+	float& outSpeed,
+	Vector3& outControlOffset,
+	int& outDamage,
+	int& outLifeFrame
+) {
+	// ミサイル発射リクエストが存在するかチェック
+	if (missileRequestConsumeIndex_ >= missileRequestCount_) {
+		return false; // リクエスト無し
+	}
+
+	// リクエスト消費
+	const MissileFireRequest& req = missileRequests_[missileRequestConsumeIndex_];
+	++missileRequestConsumeIndex_; // 消費インデックスを進める
+
+	outPos = req.pos_;
+	outTarget = req.target_;
+	outSpeed = missileSpeed_;
+	outControlOffset = req.controlOffset_;
+	outDamage = missileDamage_;
+	outLifeFrame = missileLifeFrame_;
+
+	// 全て消費したらリクエストリセット
+	if (missileRequestConsumeIndex_ >= missileRequestCount_) {
+		missileRequestCount_ = 0; // リクエスト数リセット
+		missileRequestConsumeIndex_ = 0; // 消費インデックスリセット
+	}
+
+	return true; // リクエスト消費成功
 }
 
 bool BossController::ConsumeSlashFireRequest(Vector3& outPos, Vector3& outTarget, float& outSpeed, int& outDamage, int& outLifeFrame) {

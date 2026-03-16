@@ -383,6 +383,39 @@ bool BossBullet::HitTestSlashX(const Vector3& targetCenter, const Vector3& targe
 	return false; // どのセグメントとも当たっていなければ false を返す
 }
 
+void BossBullet::EnableCurveToTargetWithControlOffset(const Vector3& start, const Vector3& target, const Vector3& controlOffset, float speed) {
+	useCurve_ = true;
+	curveStart_ = start;
+	curveEnd_ = target;
+	curveControlOffset_ = controlOffset;
+	speed_ = speed;
+
+	const Vector3 d_{ target.x - start.x, target.y - start.y, target.z - start.z };
+	const float dist_ = std::sqrt(d_.x * d_.x + d_.y * d_.y + d_.z * d_.z);
+
+	const float sp_ = (speed > 0.0001f) ? speed : 0.0001f;
+	curveTotalFrames_ = (int)std::ceil(dist_ / sp_);
+	if (curveTotalFrames_ < 1) {
+		curveTotalFrames_ = 1;
+	}
+	curveFrame_ = 0;
+
+	curveMid_ = {
+		(start.x + target.x) * 0.5f,
+		(start.y + target.y) * 0.5f,
+		(start.z + target.z) * 0.5f
+	};
+
+	curveCtrl_ = curveMid_;
+	curveCtrl_.x += controlOffset.x;
+	curveCtrl_.y += controlOffset.y;
+	curveCtrl_.z += controlOffset.z;
+
+	if (life_ < curveTotalFrames_) {
+		life_ = curveTotalFrames_;
+	}
+}
+
 void BossBullet::SetCamera(TKM::Camera* cam) {
 	if (obj_) { obj_->SetCamera(cam); } // カメラを変更するためのセッター（描画に使用するカメラを差し替える際などに使う）
 }

@@ -177,11 +177,11 @@ void BossManager::Update(float dt) {
 		Vector3 mPos_{}; // 発射位置
 		Vector3 mTarget_{}; // ターゲット位置
 		float mSpeed_ = 0.0f; // 移動速度
-		float mCurveH_ = 0.0f; // 曲線の高さ（0で直線、正で右カーブ、負で左カーブ）
+		Vector3 mControlOffset_{ 0.0f, 0.0f, 0.0f }; // 曲線制御用オフセット（ワールド座標で、弾の進行方向に対して左右どちらかにオフセットする想定）
 		int mDmg_ = 0; // ダメージ量
 		int mLife_ = 0; // 生存フレーム数
 
-		if (bossController_->ConsumeMissileFireRequest(mPos_, mTarget_, mSpeed_, mCurveH_, mDmg_, mLife_)) {
+		while (bossController_->ConsumeMissileFireRequest(mPos_, mTarget_, mSpeed_, mControlOffset_, mDmg_, mLife_)) {
 			// BossBulletは「speedが1フレ移動量」なので dt掛けた値を渡す（君が既にやってるやつ）
 			const float spPerFrame_ = mSpeed_ * dt;
 			auto bullet_ = std::make_unique<BossBullet>(); // 弾オブジェクト生成
@@ -190,9 +190,8 @@ void BossManager::Update(float dt) {
 			dir_ = MyMath::SafeNormalize(dir_, { 0.0f, 0.0f, 1.0f });
 
 			bullet_->Initialize(TKM::Object3dCommon::GetInstance(), dx_, camera_, mPos_, dir_, spPerFrame_, mDmg_, mLife_);
-			// 曲線設定（好みで調整OK）
-			bullet_->SetCurveYaw(0.05f); // 1フレームあたりの曲がる角度（ラジアン）
-			bullet_->EnableCurveToTarget(mPos_, mTarget_, mCurveH_, spPerFrame_); // 曲線で終点へ
+			// ミサイルエフェクトは見た目と当たり判定を合わせるために、曲線移動モードで出現位置からターゲット位置に向かって移動させる
+			bullet_->EnableCurveToTargetWithControlOffset(mPos_, mTarget_, mControlOffset_, spPerFrame_);
 
 			bossBullets_.push_back(std::move(bullet_));
 		}

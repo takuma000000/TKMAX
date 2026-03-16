@@ -1,6 +1,7 @@
 #pragma once
 #include <random>
 #include <algorithm>
+#include <array>
 #include "Enemy.h"
 #include "MyMath.h"
 #include "AuraVolumeRenderer.h"
@@ -43,14 +44,13 @@ public:
 	/// </summary>
 	/// <param name="boss">デバッグ表示および調整対象となるボス敵</param>
 	void ImGuiDebug(Enemy& boss);
-
 	/// <summary>
-	/// ミサイル発射リクエストを取得して消費します。
+	/// ミサイル攻撃発射リクエストを取得して消費します。
 	/// </summary>
 	/// <param name="outPos">ミサイルの発射位置（ワールド座標）</param>
 	/// <param name="outTarget">ミサイルのターゲット位置（ワールド座標）</param>
 	/// <param name="outSpeed">ミサイルの移動速度</param>
-	/// <param name="outCurveHeight">曲線移動時の高さオフセット</param>
+	/// <param name="outControlOffset">ミサイルの制御点オフセット（ワールド座標、ターゲットに対する相対位置）</param>
 	/// <param name="outDamage">ミサイルのダメージ量</param>
 	/// <param name="outLifeFrame">ミサイルの生存フレーム数</param>
 	/// <returns>発射リクエストが存在した場合 true、それ以外は false</returns>
@@ -58,7 +58,7 @@ public:
 		Vector3& outPos,
 		Vector3& outTarget,
 		float& outSpeed,
-		float& outCurveHeight,
+		Vector3& outControlOffset,
 		int& outDamage,
 		int& outLifeFrame
 	);
@@ -287,27 +287,29 @@ private:
 	//==============================
 	// Missile（通常時攻撃その1）
 	//==============================
-	bool missileFireReq_ = false; // 発射要求フラグ
-	Vector3 missilePos_{ 0.0f, 0.0f, 0.0f }; // 発射位置
-	Vector3 missileDir_{ 0.0f, 0.0f, 1.0f }; // 発射方向
-	Vector3 missileTarget_{ 0.0f,0.0f,0.0f }; // 発射時点のplayer座標（到達点）
+	// 同時発射数分のリクエストをキューイングして、Update側で消費していく方式。これも予備動作やクールタイムとは独立。
+	struct MissileFireRequest {
+		Vector3 pos_{ 0.0f, 0.0f, 0.0f };
+		Vector3 target_{ 0.0f, 0.0f, 0.0f };
+		Vector3 controlOffset_{ 0.0f, 0.0f, 0.0f };
+	};
+	static constexpr int kMissileSimultaneousCount_ = 6; // 同時発射数（多すぎると見た目がうるさくなるので注意）
+	std::array<MissileFireRequest, kMissileSimultaneousCount_> missileRequests_{}; // 発射リクエスト配列
+	int missileRequestCount_ = 0; // 発射リクエスト数
+	int missileRequestConsumeIndex_ = 0; // 発射リクエスト消費用インデックス
 	float missileSpeed_ = 70.0f; // 速度
 	int missileDamage_ = 1; // ダメージ
 	int missileLifeFrame_ = 180; // 寿命フレーム
 	float missileMuzzleYOffset_ = 1.0f; // 発射位置Yオフセット（ボス中心＋）
-	float missileCurveHeight_ = 2.5f;         // 曲線の山なり高さ
-	// --- Missile burst (3連射) ---
-	int burstLeft_ = 0; // 残り連射数
-	float burstInterval_ = 0.5f; // 何秒おきに撃つか（0.08〜0.18あたり好み）
-	float burstTimer_ = 0.0f; // 連射タイマー
-	Vector3 burstTargetSnap_{}; // 発射時点のplayer座標を固定
-	bool burstTargetValid_ = false; // 固定座標が有効かどうか
-	bool burstCharged_ = false; // このバーストはチャージ完了済み？
-	// --- Missile charge（予備動作）---
-	bool missileCharging_ = false;     // 溜め中か
-	float missileChargeTime_ = 1.0f;  // 溜め時間（秒）
-	float missileChargeTimer_ = 0.0f;  // 溜め残り
-	int missileChargeFrame_ = 0;       // 間引き用
+	float missileCurveHeight_ = 2.5f; // 曲線の山なり高さ
+	// --- Missile simultaneous shot ---
+	bool missileCharging_ = false; // 溜め中か
+	float missileChargeTime_ = 1.0f; // 溜め時間（秒）
+	float missileChargeTimer_ = 0.0f; // 溜め残り
+	int missileChargeFrame_ = 0; // 間引き用
+	Vector3 burstTargetSnap_{ 0.0f, 0.0f, 0.0f }; // 発射瞬間のplayer座標
+	bool burstTargetValid_ = false; // スナップ座標が有効か
+	bool burstCharged_ = false; // チャージ完了済みか
 	//==============================
 	// SlashWave（通常時攻撃その2）
 	//==============================

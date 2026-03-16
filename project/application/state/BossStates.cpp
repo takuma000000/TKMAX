@@ -95,8 +95,6 @@ void BossOrbitState::Update(TKM::IStateContext& ctx, float dt) {
 			c.slashCooldownT_ = c.slashCooldown_;
 
 			// --- スラッシュ選択時：ミサイル系は完全に止める（混在防止）---
-			c.burstLeft_ = 0;
-			c.burstTimer_ = 0.0f;
 			c.burstTargetValid_ = false;
 			c.burstCharged_ = false;
 			c.missileCharging_ = false;
@@ -112,15 +110,14 @@ void BossOrbitState::Update(TKM::IStateContext& ctx, float dt) {
 		c.slashChargeTimer_ = 0.0f;
 		c.slashChargeFrame_ = 0;
 		c.slashFireReq_ = false;
-		// ミサイル（1回溜め→3連射）
-		c.burstLeft_ = 3;
-		c.burstTimer_ = 0.0f;
+		// ミサイル（1回溜め→6方向同時発射）
 		c.burstTargetValid_ = false;
 		c.burstCharged_ = false;
-		// ミサイル攻撃のチャージ開始
 		c.missileCharging_ = true;
 		c.missileChargeTimer_ = c.missileChargeTime_;
 		c.missileChargeFrame_ = 0;
+		c.missileRequestCount_ = 0;
+		c.missileRequestConsumeIndex_ = 0;
 
 		if (boss.GetPlayer()) { // プレイヤー位置のスナップを取得（プレイヤーが存在する場合）
 			c.burstTargetSnap_ = boss.GetPlayer()(); // プレイヤー位置をスナップ
@@ -165,65 +162,92 @@ void BossRecoverState::Update(TKM::IStateContext& ctx, float dt) {
 	pos = BossController::SmoothDamp(pos, target_, 0.18f, dt); // スムーズに軌道の高さとZへ戻す
 
 	// ============================================================
-	// Missile Burst Execute（Recover中のみ）
+	// Missile Charge / 6-way Fire Execute（Recover中のみ）
 	// ============================================================
-	if (c.missileCharging_ || c.burstLeft_ > 0 || (c.burstCharged_ && c.burstTimer_ > 0.0f)) { // ミサイル攻撃のチャージ中、または連射が残っている、または連射の待ちが残っている場合
-		// ミサイルの発射位置とターゲットを毎フレーム更新
-		Vector3 muzzlePos_ = boss.GetWorldPosition();
-		muzzlePos_.y += c.missileMuzzleYOffset_; // ミサルの発射位置は、ボスの現在位置から少し上にオフセット
-		c.missilePos_ = muzzlePos_; // ミサイルの発射位置を更新
-		// ミサイルのターゲットは、チャージ中はスナップ位置、そうでない場合はプレイヤー位置を直接ターゲットにする
-		Vector3 target_ = c.burstTargetValid_ ? c.burstTargetSnap_ : c.playerPos_;
-		c.missileTarget_ = target_; // ミサイルのターゲット位置を更新
+	if (c.missileCharging_ || c.burstCharged_) {
+		Vector3 muzzleCenter_ = boss.GetWorldPosition();
+		muzzleCenter_.y += c.missileMuzzleYOffset_;
 
-		if (!c.burstCharged_) { // まだチャージ中の場合
+		if (c.missileCharging_) {
 			auto* pm_ = TKM::ParticleManager::GetInstance();
-			if (pm_) { // パーティクルマネージャーが存在する場合は、チャージ中のエフェクトを出す
-				Vector3 p_ = muzzlePos_; // エフェクトの位置はミサイルの発射位置
+			if (pm_) {
+				Vector3 p_ = muzzleCenter_;
 
-				float t = 1.0f - (c.missileChargeTimer_ / c.missileChargeTime_); // チャージの進行度（0.0f～1.0f）
-				t = std::clamp(t, 0.0f, 1.0f); // チャージの進行度を0.0f～1.0fにクランプ
-				// チャージの進行度に応じて、エフェクトの量を増やす
+				float t = 1.0f - (c.missileChargeTimer_ / c.missileChargeTime_);
+				t = std::clamp(t, 0.0f, 1.0f);
+
 				int inwardCount_ = 2 + (int)(t * 7);
 				int crackleCount_ = 1 + (int)(t * 3);
-				pm_->Emit("boss_windup_inward", p_, inwardCount_); // ミサイルの発射位置から内側に向かうエフェクト
-				pm_->Emit("boss_windup_crackle", p_, crackleCount_); // ミサイルの発射位置でパチパチするエフェクト
-				// チャージの進行度に応じて、エフェクトの発生頻度を上げる（後半ほど頻繁に出す）
+				pm_->Emit("boss_windup_inward", p_, inwardCount_);
+				pm_->Emit("boss_windup_crackle", p_, crackleCount_);
+
 				int step_ = (t < 0.55f) ? 4 : 2;
-				if ((c.missileChargeFrame_ % step_) == 0) { // チャージのフレームカウンターがstep_の倍数のときに、チャージの進行度に応じたエフェクトを出す
-					pm_->Emit("boss_windup_shell", p_, 1); // ミサイルの発射位置から外側に向かうエフェクト
+				if ((c.missileChargeFrame_ % step_) == 0) {
+					pm_->Emit("boss_windup_shell", p_, 1);
 				}
 			}
-			++c.missileChargeFrame_; // チャージのフレームカウンターをインクリメント
+			++c.missileChargeFrame_;
 
-			c.missileChargeTimer_ -= dt; // チャージタイマーを減算していく
-			if (c.missileChargeTimer_ <= 0.0f) { // チャージタイマーが0以下になったらチャージ完了
-				c.burstCharged_ = true; // 連射が可能な状態になったことを示すフラグを立てる
-				c.missileCharging_ = false; // チャージ完了 → チャージ中フラグを下ろす
-
-				// 1発目即発射
-				c.missileFireReq_ = true;
-				c.burstLeft_--;
-				c.burstTimer_ = c.burstInterval_;
-			}
-		} else {
-			c.burstTimer_ -= dt; // 連射の待ちタイマーを減算していく
-
-			if (c.burstTimer_ <= 0.0f) { // 連射の待ちタイマーが0以下になったら、次の弾を撃つかどうか判定
-				// まだ撃つ弾が残ってる時だけ発射
-				if (c.burstLeft_ > 0) {
-					c.missileFireReq_ = true;
-					c.burstLeft_--;
-					c.burstTimer_ = c.burstInterval_;
+			c.missileChargeTimer_ -= dt;
+			if (c.missileChargeTimer_ <= 0.0f) {
+				// 発射瞬間のplayer座標を固定
+				if (boss.GetPlayer()) {
+					c.burstTargetSnap_ = boss.GetPlayer()();
 				} else {
-					// 撃ち終わってる：タイマーだけ終わらせる（固まり防止）
-					c.burstTimer_ = 0.0f;
+					c.burstTargetSnap_ = c.playerPos_;
 				}
+				c.burstTargetValid_ = true;
+
+				// 左3発・右3発で固定配置
+				static constexpr int kMissileCount_ = BossController::kMissileSimultaneousCount_;
+
+				const float kSideX_ = 7.5f;
+				const float kUpperY_ = 3.5f;
+				const float kMiddleY_ = 1.2f;
+				const float kLowerY_ = -1.5f;
+				const float kFrontZ_ = 2.5f;
+
+				const Vector3 kOffsets_[kMissileCount_] = {
+					{-kSideX_,  kUpperY_,  -kFrontZ_},
+					{-kSideX_,  kMiddleY_,  0.0f},
+					{-kSideX_,  kLowerY_,   kFrontZ_},
+					{ kSideX_,  kUpperY_,  -kFrontZ_},
+					{ kSideX_,  kMiddleY_,  0.0f},
+					{ kSideX_,  kLowerY_,   kFrontZ_},
+				};
+
+				const Vector3 kControlOffsets_[kMissileCount_] = {
+					{ -11.0f,  7.0f,  0.0f }, // 左上 → 左上へ大きくふくらむ
+					{ -13.0f,  0.0f,  0.0f }, // 左中 → 左へ大きくふくらむ
+					{ -11.0f, -7.0f,  0.0f }, // 左下 → 左下へ大きくふくらむ
+					{  11.0f,  7.0f,  0.0f }, // 右上 → 右上へ大きくふくらむ
+					{  13.0f,  0.0f,  0.0f }, // 右中 → 右へ大きくふくらむ
+					{  11.0f, -7.0f,  0.0f }, // 右下 → 右下へ大きくふくらむ
+				};
+
+				c.missileRequestCount_ = 0;
+				c.missileRequestConsumeIndex_ = 0;
+
+				for (int i = 0; i < kMissileCount_; ++i) {
+					Vector3 spawnPos_ = muzzleCenter_;
+					spawnPos_.x += kOffsets_[i].x;
+					spawnPos_.y += kOffsets_[i].y;
+					spawnPos_.z += kOffsets_[i].z;
+
+					auto& req = c.missileRequests_[c.missileRequestCount_++];
+					req.pos_ = spawnPos_;
+					req.target_ = c.burstTargetSnap_;
+					req.controlOffset_ = kControlOffsets_[i];
+				}
+
+				c.burstCharged_ = true;
+				c.missileCharging_ = false;
 			}
 		}
 	}
-	// ミサイルが完全に終わったら状態をクリア（Recover抜け用）
-	if (c.burstCharged_ && c.burstLeft_ <= 0 && c.burstTimer_ <= 0.0f) {
+
+	// 6発の発射要求を全部吐き終えたら完了
+	if (c.burstCharged_ && c.missileRequestCount_ == 0) {
 		c.burstCharged_ = false;
 		c.burstTargetValid_ = false;
 		c.missileCharging_ = false;
@@ -279,16 +303,17 @@ void BossRecoverState::Update(TKM::IStateContext& ctx, float dt) {
 	// どちらもチャージ中はもちろん忙しいし、ミサイルは連射の待ちも残ってると忙しいとみなす
 	const bool missileBusy_ =
 		(c.missileCharging_) ||
-		(c.burstLeft_ > 0) ||
-		(c.burstCharged_ && c.burstTimer_ > 0.0f); // 連射の待ちが残ってる
+		(c.burstCharged_) ||
+		(c.missileRequestCount_ > 0); // まだチャージ中、または連射の待ちが残っている
 	// スラッシュはチャージ中だけ忙しいとみなす（発射要求を出したらもう忙しくない＝次の攻撃に移ってもいいとみなす）
 	const bool slashBusy_ =
 		(c.slashCharging_); // まだ溜め中
 
-	// （安全）ミサイルが終わったら後始末しておく
+	// 攻撃が完全に終わっている場合は、次の攻撃に移るための準備をする
 	if (!missileBusy_) {
-		c.burstCharged_ = false; // 連射が可能な状態フラグを下ろす
-		c.burstTimer_ = 0.0f; // タイマーをリセットしておく
+		c.burstCharged_ = false;
+		c.missileRequestCount_ = 0;
+		c.missileRequestConsumeIndex_ = 0;
 	}
 
 	if (c.timer_ >= c.recoverDuration_ && !missileBusy_ && !slashBusy_) { // 回復状態の経過時間が一定を超えていて、かつミサイルもスラッシュも忙しくない（攻撃が完全に終わっている）場合
