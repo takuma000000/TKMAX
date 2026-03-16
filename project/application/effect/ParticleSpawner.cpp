@@ -1706,11 +1706,11 @@ namespace TKM {
 			p.lifeTime_ = frand(0.08f, 0.16f);
 			p.currentTime_ = 0.0f;
 
-			// 白金
+			// ミント系の粒
 			float t = frand(0.0f, 1.0f);
-			float r = 1.0f;
-			float g = 0.92f + 0.08f * t;
-			float b = 0.72f + 0.24f * t;
+			float r = 0.25f + 0.10f * t;
+			float g = 0.95f;
+			float b = 0.45f + 0.20f * t;
 			p.color_ = { r, g, b, 1.0f };
 		} else if (groupName == "trail_lb_bolt_main") {
 			auto frand = [&rng](float a, float b) {
@@ -1741,11 +1741,11 @@ namespace TKM {
 			p.lifeTime_ = frand(0.05f, 0.10f);
 			p.currentTime_ = 0.0f;
 
-			// 黄白の本体
+			// メインの緑エネルギー
 			float t = frand(0.0f, 1.0f);
-			float r = 1.0f;
-			float g = 0.86f + 0.10f * t;
-			float b = 0.38f + 0.18f * t;
+			float r = 0.15f + 0.10f * t;
+			float g = 0.95f;
+			float b = 0.25f + 0.15f * t;
 			p.color_ = { r, g, b, 1.0f };
 		} else if (groupName == "trail_lb_bolt_core") {
 			auto frand = [&rng](float a, float b) {
@@ -1774,11 +1774,11 @@ namespace TKM {
 			p.lifeTime_ = frand(0.035f, 0.075f);
 			p.currentTime_ = 0.0f;
 
-			// 白芯
+			// 白ライムコア（トレイルより明るい）
 			float t = frand(0.0f, 1.0f);
-			float r = 1.0f;
-			float g = 0.95f + 0.05f * t;
-			float b = 0.82f + 0.12f * t;
+			float r = 0.85f + 0.10f * t;
+			float g = 1.0f;
+			float b = 0.55f + 0.10f * t;
 			p.color_ = { r, g, b, 1.0f };
 		} else if (groupName == "bossIntro_core") {
 
