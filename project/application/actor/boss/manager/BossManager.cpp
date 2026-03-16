@@ -189,9 +189,12 @@ void BossManager::Update(float dt) {
 			Vector3 dir_{ mTarget_.x - mPos_.x, mTarget_.y - mPos_.y, mTarget_.z - mPos_.z };
 			dir_ = MyMath::SafeNormalize(dir_, { 0.0f, 0.0f, 1.0f });
 
+			// ミサイルエフェクトは当たり判定も兼ねるので、ダメージと生存フレーム数をしっかり設定する
 			bullet_->Initialize(TKM::Object3dCommon::GetInstance(), dx_, camera_, mPos_, dir_, spPerFrame_, mDmg_, mLife_);
 			// ミサイルエフェクトは見た目と当たり判定を合わせるために、曲線移動モードで出現位置からターゲット位置に向かって移動させる
 			bullet_->EnableCurveToTargetWithControlOffset(mPos_, mTarget_, mControlOffset_, spPerFrame_);
+			// ミサイルエフェクトは、bossEvil_シリーズのモデルを使用する想定
+			bullet_->SetFxType(BossBullet::FxType::MissileEvil);
 
 			bossBullets_.push_back(std::move(bullet_));
 		}
@@ -261,9 +264,14 @@ void BossManager::Update(float dt) {
 }
 
 void BossManager::Draw(TKM::DirectXCommon* dxCommon) {
-	if (!bossBattle_ || !boss_) { return; } // ボス戦未開始またはボス不在
+	if (!bossBattle_ || !boss_) { return; }
 
-	boss_->Draw(dxCommon); // ボス本体描画
+	// ボス
+	boss_->Draw(dxCommon);
+	// トレイル
+	for (auto& b : bossBullets_) {
+		b->DrawTrail(dxCommon);
+	}
 }
 
 void BossManager::DrawUI() {

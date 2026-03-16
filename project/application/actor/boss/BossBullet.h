@@ -7,6 +7,8 @@
 #include "MyMath.h"
 #include "ParticleManager.h"
 #include "LineRenderer.h"
+#include "TrailRibbonRenderer.h"
+#include <vector>
 #include "AABB.h"
 
 //=============================================================
@@ -42,7 +44,6 @@ public:
 		int damage,
 		int lifeFrame
 	);
-
 	/// <summary>
 	/// 弾を更新します。
 	/// </summary>
@@ -52,6 +53,11 @@ public:
 	/// </summary>
 	/// <param name="dx">DirectX 共通管理クラス</param>
 	void Draw(TKM::DirectXCommon* dx);
+	/// <summary>
+	/// 弾の軌跡エフェクトを描画します。
+	/// </summary>
+	/// <param name="dx">DirectX 共通管理クラス</param>
+	void DrawTrail(TKM::DirectXCommon* dx);
 
 	/// <summary>
 	/// ターゲットへの曲線移動を有効にします。
@@ -76,7 +82,7 @@ public:
 	/// <summary>
 	/// 弾を強制的に死亡状態にします。
 	/// </summary>
-	void Kill() { dead_ = true; }
+	void Kill();
 	/// <summary>
 	/// ダメージ値を返します。
 	/// </summary>
@@ -161,14 +167,16 @@ private:
 	float   speed_ = 0.8f;    // 移動速度
 	int     damage_;      // 与えるダメージ
 	int     life_ = 180;      // 寿命フレーム
-	bool    dead_ = false;    // 死亡フラグ（消去判定に使用）
+	bool    dead_ = false;          // 完全削除フラグ（Managerが消す用）
+	bool    bodyHidden_ = false;    // 本体非表示フラグ
+	bool    isTrailFading_ = false; // トレイル後処理中フラグ
 	//======================================================================
 	// 定数（マジックナンバー解消）
 	//======================================================================
 	static constexpr float kDefaultScale_ = 0.6f;  // 見た目の大きさ
-	// ======================================================================
+	//======================================================================
 	// 曲線移動用
-	// ======================================================================
+	//======================================================================
 	bool   useCurve_ = false; // 曲線移動有効フラグ
 	float  curveYawRad_ = 0.0f; // 毎フレームのY回転量（ラジアン）
 	int    curveTotalFrames_ = 0; // 曲線到達までの総フレーム数
@@ -185,4 +193,25 @@ private:
 	static constexpr int kSlashHitActiveFrames_ = 18; // 斬撃の判定が生きるフレーム
 	int attackId_ = 0; // 斬撃の攻撃ID（連続ヒット防止用）
 	Vector3 curveControlOffset_{ 0.0f, 0.0f, 0.0f }; // 曲線制御点のオフセット（開始位置からの相対座標）
+	//======================================================================
+	// 軌跡エフェクト用
+	//======================================================================
+	std::vector<Vector3> trailPts_{}; // 軌跡ポイントのワールド座標リスト
+	Vector3 prevPos_{ 0.0f, 0.0f, 0.0f }; // 前フレームの位置（軌跡生成用）
+	float trailDistAcc_ = 0.0f; // 軌跡生成の距離蓄積値
+	// 軌跡エフェクトのパラメータ
+	static constexpr float kTrailStep_ = 0.55f; // 軌跡ポイント生成の距離ステップ
+	static constexpr size_t kTrailHardCap_ = 18; // 軌跡ポイントの最大数（古いポイントから削除していく）
+	// 軌跡の見た目パラメータ
+	float trailHeadWidth_ = 2.55f; // 軌跡の頭の幅
+	float trailTailWidth_ = 1.35f; // 軌跡の尻尾の幅
+	float trailIntensity_ = 100.0f; // 軌跡の明るさ
+	Vector3 trailColor_ = { 1.0f, 0.0f, 1.0f }; // 軌跡の色（RGB、0〜1の範囲）
+	float trailUvTiling_ = 1.15f; // 軌跡のUVタイルリング（テクスチャの繰り返し回数）
+	float trailUvScroll_ = 2.2f; // 軌跡のUVスクロール速度
+	/// <summary>
+	/// 軌跡エフェクト用のポイントを更新します。弾の移動距離が一定以上になるたびにポイントを追加し、古いポイントは削除していきます。
+	/// </summary>
+	/// <param name="p">弾の現在位置</param>
+	void UpdateTrail(const Vector3& p);
 };

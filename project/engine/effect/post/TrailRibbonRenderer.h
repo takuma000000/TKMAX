@@ -34,7 +34,7 @@ namespace TKM {
 			float intensity = 30.0f;
 
 			// 色(真紫)
-			Vector3 color = { 0.0f, 0.0157f, 1.0f }; // RGB(0,4,255)
+			Vector3 color = { 0.01f, 1.0f, 0.07f }; // RGB(0,4,255)
 
 			// UV
 			float uvTiling = 0.0f;   // リボン長さ方向の繰り返し
@@ -148,7 +148,6 @@ namespace TKM {
 			std::vector<Vertex>& outVerts,
 			std::vector<uint16_t>& outIndices
 		);
-
 		
 		//==============================================
 		// D3D12リソース

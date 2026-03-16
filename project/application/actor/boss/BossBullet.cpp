@@ -17,6 +17,13 @@ void BossBullet::Initialize(
 	obj_->SetScale({ kDefaultScale_, kDefaultScale_, kDefaultScale_ }); // スケール
 	obj_->SetTranslate(pos); // 初期位置設定
 	if (cam) obj_->SetCamera(cam); // カメラ設定（nullptr でなければ）
+
+	cam_ = cam;
+	prevPos_ = pos;
+	trailPts_.clear();
+	trailPts_.push_back(pos);
+	trailDistAcc_ = 0.0f;
+
 	// 進行方向は正規化して保存
 	dir_ = dir;
 	speed_ = speed;
@@ -25,7 +32,22 @@ void BossBullet::Initialize(
 }
 
 void BossBullet::Update() {
-	if (dead_) return;
+	if (dead_) {
+		return;
+	}
+
+	if (isTrailFading_) {
+		if (!trailPts_.empty()) {
+			trailPts_.erase(trailPts_.begin()); // 先頭から少しずつ削る
+		}
+
+		if (trailPts_.size() <= 1) {
+			trailPts_.clear();
+			dead_ = true; // トレイルが消え切ったら完全削除
+		}
+
+		return;
+	}
 
 	// フレームカウント
 	++ageFrame_;
@@ -57,7 +79,15 @@ void BossBullet::Update() {
 		newPos_.z = p_.z + dir_.z * speed_; // 前フレームの位置 + 進行方向 * 速度
 	}
 
+	prevPos_ = obj_->GetTranslate(); // 前フレームの位置を保存
+
 	obj_->SetTranslate(newPos_); // 位置更新
+
+	// 軌跡エフェクト更新（ミサイルのみ）
+	if (fxType_ == FxType::MissileEvil) { // ミサイルエフェクトなら軌跡も更新
+		UpdateTrail(newPos_);
+	}
+
 	obj_->Update(); // Object3d の更新（ワールド行列再計算など）
 
 #ifdef USE_IMGUI
@@ -133,15 +163,7 @@ void BossBullet::Update() {
 			Vector3 fxPos_ = newPos_; // FX の位置は弾の現在位置（newPos_）を使う
 			// フレームカウントを元に、弾の種類ごとに異なる FX を出す
 			if (fxType_ == FxType::MissileEvil) {
-				// === ミサイル（今のまま）===
-				pm_->Emit("bossEvil_core", fxPos_, 1);
-				// 発光/残りは間引き（重い＋変にデカく見えるのを防ぐ）
-				if ((fxFrame_ % 2) == 0) { pm_->Emit("bossEvil_smoke", fxPos_, 2); }
-				if ((fxFrame_ % 4) == 0) { pm_->Emit("bossEvil_spark", fxPos_, 2); }
-				if ((fxFrame_ % 6) == 0) { pm_->Emit("bossEvil_ring", fxPos_, 1); }
-				// さらに間引き（重い＋変にデカく見えるのを防ぐ）
-				pm_->Emit("bossEvil_trail", fxPos_, 2);
-
+				// 何も入れない (パーティクルではなくトレイルに変更のため)
 			} else {
 				// === 斬撃（X字スラッシュ：2本を交差させる）===
 				auto Cross_ = [](const Vector3& a, const Vector3& b) {
@@ -267,7 +289,53 @@ void BossBullet::Update() {
 }
 
 void BossBullet::Draw(TKM::DirectXCommon* dx) {
-	if (!dead_) obj_->Draw(dx); // 死亡していなければ描画
+	if (!bodyHidden_ && !dead_) {
+		obj_->Draw(dx);
+	}
+}
+
+void BossBullet::DrawTrail(TKM::DirectXCommon* dx) {
+	// ミサイルエフェクトのときだけトレイルを描画する
+	if (!cam_ || fxType_ != FxType::MissileEvil) {
+		return;
+	}
+	// トレイルは、弾の位置を trailPts_ に一定間隔で追加していき、描画時にその点列を使ってリボンを描く方式
+	if (trailPts_.empty()) {
+		return;
+	}
+	// 死亡している場合はトレイルも消す（描画しない）ようにする
+	if (dead_) {
+		return;
+	}
+
+	std::vector<Vector3> drawPts_ = trailPts_;
+	Vector3 currentPos_ = obj_->GetTranslate();
+
+	if (drawPts_.empty() || MyMath::Length(currentPos_ - drawPts_.back()) > 0.0001f) {
+		drawPts_.push_back(currentPos_);
+	}
+
+	if (drawPts_.size() < 2) {
+		return;
+	}
+
+	auto* rr_ = TKM::TrailRibbonRenderer::GetInstance();
+	const auto& dbg_ = rr_->GetDebugParams();
+	if (!dbg_.enable) {
+		return;
+	}
+
+	rr_->DrawRibbon(
+		dx,
+		*cam_,
+		drawPts_,
+		trailHeadWidth_,
+		trailTailWidth_,
+		trailIntensity_,
+		trailColor_,
+		trailUvTiling_,
+		trailUvScroll_
+	);
 }
 
 void BossBullet::EnableCurveToTarget(const Vector3& start, const Vector3& end, float curveHeight, float speedPerFrame) {
@@ -383,6 +451,11 @@ bool BossBullet::HitTestSlashX(const Vector3& targetCenter, const Vector3& targe
 	return false; // どのセグメントとも当たっていなければ false を返す
 }
 
+void BossBullet::Kill() {
+	bodyHidden_ = true; // 本体を非表示にするフラグを立てる（描画処理で obj_ を描かなくするため）
+	isTrailFading_ = true; // 軌跡をフェードアウトさせるフラグを立てる（DrawTrail で trailPts_ を徐々に減らしていくため）
+}
+
 void BossBullet::EnableCurveToTargetWithControlOffset(const Vector3& start, const Vector3& target, const Vector3& controlOffset, float speed) {
 	useCurve_ = true;
 	curveStart_ = start;
@@ -417,7 +490,8 @@ void BossBullet::EnableCurveToTargetWithControlOffset(const Vector3& start, cons
 }
 
 void BossBullet::SetCamera(TKM::Camera* cam) {
-	if (obj_) { obj_->SetCamera(cam); } // カメラを変更するためのセッター（描画に使用するカメラを差し替える際などに使う）
+	cam_ = cam;
+	if (obj_) { obj_->SetCamera(cam); }
 }
 
 void BossBullet::SetCurveYaw(float yawRadPerFrame) {
@@ -438,4 +512,24 @@ void BossBullet::SetFxType(FxType t) {
 
 void BossBullet::SetAttackId(int id) {
 	attackId_ = id; // 攻撃IDをセット（斬撃の攻撃判定などで使用）
+}
+
+void BossBullet::UpdateTrail(const Vector3& p) {
+	if (trailPts_.empty()) {
+		trailPts_.push_back(p);
+		trailDistAcc_ = 0.0f;
+		return;
+	}
+
+	const float moveDist_ = MyMath::Length(p - prevPos_);
+	trailDistAcc_ += moveDist_;
+
+	if (trailDistAcc_ >= kTrailStep_) {
+		trailPts_.push_back(p);
+		trailDistAcc_ = 0.0f;
+
+		while (trailPts_.size() > kTrailHardCap_) {
+			trailPts_.erase(trailPts_.begin());
+		}
+	}
 }

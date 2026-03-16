@@ -497,8 +497,8 @@ namespace TKM {
 		auto& rt = blend.RenderTarget[0];
 		rt.BlendEnable = TRUE;
 		rt.LogicOpEnable = FALSE;
-		rt.SrcBlend = D3D12_BLEND_ONE;
-		rt.DestBlend = D3D12_BLEND_ONE;
+		rt.SrcBlend = D3D12_BLEND_SRC_ALPHA;
+		rt.DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
 		rt.BlendOp = D3D12_BLEND_OP_ADD;
 		rt.SrcBlendAlpha = D3D12_BLEND_ONE;
 		rt.DestBlendAlpha = D3D12_BLEND_ONE;
