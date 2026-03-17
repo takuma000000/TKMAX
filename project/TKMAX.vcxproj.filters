@@ -210,6 +210,7 @@
     <ClCompile Include="application\actor\boss\BossConfigLoader.cpp" />
     <ClCompile Include="application\scene\controller\TitleShowdownController.cpp" />
     <ClCompile Include="application\actor\boss\BossEntranceSequence.cpp" />
+    <ClCompile Include="application\actor\enemy\EnemyBullet.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -461,6 +462,7 @@
     <ClInclude Include="application\actor\boss\BossConfigLoader.h" />
     <ClInclude Include="application\scene\controller\TitleShowdownController.h" />
     <ClInclude Include="application\actor\boss\BossEntranceSequence.h" />
+    <ClInclude Include="application\actor\enemy\EnemyBullet.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

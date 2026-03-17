@@ -20,6 +20,7 @@ enum class EnemyBehavior {
 	ChasePlayer,     // プレイヤー方向にじわっと追尾
 	PounceFromAbove, // 上空から急降下してくる
 	FreeRoam,        // 自由に動き回る
+	FormationMove,   // 指定された隊列位置へ移動する
 };
 // 死亡リアクションパターン
 enum class EnemyDeathReaction {
@@ -93,6 +94,11 @@ public:
 	/// </summary>
 	/// <returns>怒り状態の場合 true、それ以外は false</returns>
 	bool IsAngry() const { return isAngry_; }
+	/// <summary>
+	/// 隊列位置に到達したかどうかを取得します。
+	/// </summary>
+	/// <returns></returns>
+	bool IsInFormation() const { return isInFormation_; }
 	/// <summary>
 	/// ボスの最終死亡リアクションを開始します。
 	/// </summary>
@@ -321,6 +327,16 @@ public:
 	/// <param name="normal">通常時の移動速度</param>
 	///　<param name="angry">怒り時の移動速度</param>
 	void SetRoamSpeed(float normal, float angry);
+	/// <summary>
+	/// 隊列目標位置を設定します。
+	/// </summary>
+	/// <param name="target">目標位置（ワールド座標）</param>
+	void SetFormationTarget(const Vector3& target);
+	/// <summary>
+	/// 隊列移動速度を設定します。
+	/// </summary>
+	/// <param name="speed">移動速度</param>
+	void SetFormationMoveSpeed(float speed);
 	// =========================================
 private:
 	//--------------------------------------------------------------
@@ -436,4 +452,11 @@ private:
 	float angryTimer_ = 0.0f; // 怒り状態の経過時間
 	float angryDuration_ = 0.0f; // 怒り状態の継続時間
 	bool  freezeMove_ = false; // 移動凍結フラグ（怒り状態でも移動しないようにするためのフラグ）
+	//--------------------------------------------------------------
+	//  隊列移動（FormationMove / 新Wave1）
+	//--------------------------------------------------------------
+	Vector3 formationTarget_ = { 0.0f, 0.0f, 0.0f }; // 隊列時の目標位置
+	float formationMoveSpeed_ = 0.18f;               // 隊列位置への移動速度
+	float formationArriveEpsilon_ = 0.35f;           // 到達判定距離
+	bool  isInFormation_ = false;                    // 隊列位置に到達したか
 };

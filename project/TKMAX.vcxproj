@@ -122,6 +122,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\actor\BattleActorManagerBase.cpp" />
     <ClCompile Include="application\actor\boss\BossConfigLoader.cpp" />
     <ClCompile Include="application\actor\boss\BossEntranceSequence.cpp" />
+    <ClCompile Include="application\actor\enemy\EnemyBullet.cpp" />
     <ClCompile Include="engine\3d\camera\manager\CameraManager.cpp" />
     <ClCompile Include="engine\csv\CsvReader.cpp" />
     <ClCompile Include="application\actor\enemy\EnemyWaveConfig.cpp" />
@@ -237,6 +238,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\actor\boss\BossConfig.h" />
     <ClInclude Include="application\actor\boss\BossConfigLoader.h" />
     <ClInclude Include="application\actor\boss\BossEntranceSequence.h" />
+    <ClInclude Include="application\actor\enemy\EnemyBullet.h" />
     <ClInclude Include="engine\3d\camera\manager\CameraManager.h" />
     <ClInclude Include="engine\csv\CsvReader.h" />
     <ClInclude Include="application\actor\enemy\EnemyWaveConfig.h" />

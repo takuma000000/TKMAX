@@ -3,15 +3,17 @@
 #include <memory>
 #include <vector>
 
-#include "Enemy.h"          // 敵そのもの
-#include "EnemyFactory.h"   // 敵スポーンユーティリティ
-#include "Player.h"        // プレイヤー
+#include "Enemy.h"
+#include "EnemyFactory.h"
+#include "Player.h"
 #include "Camera.h"
 #include "DirectXCommon.h"
 #include "BaseScene.h"
 #include "MidBossCore.h"
 #include "EnemyWaveConfig.h"
 #include "BattleActorManagerBase.h"
+#include <array>
+#include "EnemyBullet.h"
 
 // =============================================================
 // EnemyManagerクラス
@@ -24,6 +26,14 @@ public:
 
 	// --- Wave 管理周りを追加 ---
 	enum class WavePhase { W1, W2, W3, Done };
+	// Wave1 の中の細かいフェーズ（編隊行動の段階）を定義
+	enum class Wave1Phase {
+		Scatter, // 散開して待つ
+		FormUp,  // 隊列位置へ移動
+		Hold,    // 隊列完成後に少し止まる
+		Attack,  // 隊列状態で一斉攻撃
+		Break,   // 解散して散開位置へ戻る
+	};
 
 	/// <summary>
 	/// 敵全体の初期化を行います。
@@ -153,19 +163,41 @@ private:
 	// Wave1 関連
 	//======================================================================
 	// ───────── Wave1 用パラメータ ─────────
-	float wave1SpawnTimer_ = 0.0f;   // 次の出現までのタイマー
-	float wave1SpawnInterval_ = 1.5f;   // 出現間隔（秒相当）
-	int   wave1MaxSimultaneous_ = 2;    // 同時に存在してよい敵の数
 	int   wave1DefeatTarget_ = 5;    // このWaveで「倒すべき敵の数」
 	/// <summary>
 	/// Wave1 の更新処理を行います。
 	/// </summary>
 	/// <param name="dt">前フレームからの経過時間（秒）</param>
 	void UpdateWave1(float dt);
-	/// <summary>
-	/// Wave1の敵を1体スポーンします
-	/// </summary>
-	void SpawnWave1Enemy();     // Wave1敵1体スポーン
+	//==============================================================
+	// Wave1（新仕様：散開 → 隊列 → ホールド → 解散）
+	//==============================================================
+	static constexpr int kWave1EnemyCount_ = 5;
+
+	Wave1Phase wave1Phase_ = Wave1Phase::Scatter;
+	float wave1PhaseTimer_ = 0.0f;
+
+	float wave1ScatterDuration_ = 2.0f;     // 散開している時間
+	float wave1HoldDuration_ = 1.0f;        // 隊列完成後の静止時間
+	float wave1BreakDuration_ = 1.5f;       // 解散移動の猶予時間
+	float wave1FormationMoveSpeed_ = 0.22f; // 隊列移動速度
+	float wave1BreakMoveSpeed_ = 0.18f;     // 解散時の移動速度
+	float wave1AttackDuration_ = 0.5f;      // 攻撃演出時間
+	float wave1BulletSpeed_ = 0.65f;        // 敵弾速度
+	float wave1BulletForwardBiasZ_ = 8.0f;  // プレイヤーを少し先読みするZ補正
+	bool  wave1AttackFired_ = false;        // このAttackフェーズで発射済みか
+
+	Vector3 wave1FormationCenter_ = { 0.0f, 6.0f, 62.0f };
+
+	std::array<Vector3, kWave1EnemyCount_> wave1ScatterPositions_{};
+	std::array<Vector3, kWave1EnemyCount_> wave1FormationPositions_{};
+
+	void SpawnWave1Group();
+	void BuildWave1ScatterPositions_();
+	void BuildWave1FormationPositions_();
+	void ApplyWave1FormationTargets_();
+	void ApplyWave1ScatterTargets_();
+	bool AreAllWave1EnemiesInFormation_() const;
 	//======================================================================
 	// Wave2 関連
 	//======================================================================

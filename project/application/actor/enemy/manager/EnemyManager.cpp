@@ -24,10 +24,8 @@ void EnemyManager::Initialize(TKM::DirectXCommon* dx, TKM::Camera* camera, TKM::
 
 	// Wave1の設定
 	{
-		const auto& w1_ = waveConfig_.GetWave1(); // Wave1の設定をCSVから取得
-		wave1SpawnInterval_ = w1_.spawnInterval_; // 敵スポーン間隔
-		wave1MaxSimultaneous_ = w1_.maxSimultaneous_; // 同時に出現する敵の最大数
-		wave1DefeatTarget_ = w1_.defeatTarget_; // Wave1クリアのための撃破目標数
+		const auto& w1_ = waveConfig_.GetWave1();
+		wave1DefeatTarget_ = w1_.defeatTarget_;
 	}
 
 	wave2WaitDuration_ = waveConfig_.GetWave2WaitDuration(); // Wave2開始前の待機時間
@@ -138,9 +136,11 @@ void EnemyManager::InitializeWaves() {
 
 	wavePhase_ = WavePhase::W1; // 最初のWaveはW1から
 
-	// Wave1用のタイマー初期化 ＆ 最初の1体だけ出しておく
-	wave1SpawnTimer_ = 0.0f;
-	SpawnWave1Enemy(); // 最初の敵をスポーンしておく
+	wave1Phase_ = Wave1Phase::Scatter;
+	wave1PhaseTimer_ = 0.0f;
+	BuildWave1ScatterPositions_();
+	BuildWave1FormationPositions_();
+	SpawnWave1Group();
 
 	wave2SubWave_ = 0; // Wave2のサブWaveカウンタリセット
 
@@ -224,98 +224,160 @@ void EnemyManager::NotifyPlayerBeforeClearEnemies_() {
 }
 
 void EnemyManager::UpdateWave1(float dt) {
-	if (!&enemies_ || !dx_ || !camera_ || !parent_) {
+	if (!dx_ || !camera_ || !parent_) {
 		return;
 	}
 
-	// Wave1の目標撃破数に達したら次のWaveへ
-	if (defeatedEnemyCount_ && defeatedEnemyCount_ >= wave1DefeatTarget_) {
-		// Wave2に移るときWave1の残敵が邪魔なら消す（混ざるの防止）
+	// 目標撃破数に達したら次のWaveへ
+	if (defeatedEnemyCount_ >= wave1DefeatTarget_) {
 		NotifyPlayerBeforeClearEnemies_();
 		enemies_.clear();
-		// 次のWaveへ
 		GoToNextWave();
 		return;
 	}
 
-	// 現在生存している敵の数（死亡演出中も含めるかどうかは好みだが、ここでは「まだ画面に居るやつ」を数える）
-	int aliveCount_ = 0;
-	for (auto& e : enemies_) {
-		if (!e->IsDead()) {
-			++aliveCount_;
+	wave1PhaseTimer_ += dt;
+
+	switch (wave1Phase_) {
+	case Wave1Phase::Scatter:
+		if (wave1PhaseTimer_ >= wave1ScatterDuration_) {
+			wave1Phase_ = Wave1Phase::FormUp;
+			wave1PhaseTimer_ = 0.0f;
+			ApplyWave1FormationTargets_();
 		}
-	}
+		break;
 
-	// 同時出現数が上限ならスポーンしない
-	if (aliveCount_ >= wave1MaxSimultaneous_) {
-		return;
-	}
+	case Wave1Phase::FormUp:
+		if (AreAllWave1EnemiesInFormation_()) {
+			wave1Phase_ = Wave1Phase::Hold;
+			wave1PhaseTimer_ = 0.0f;
+		}
+		break;
 
-	// タイマーを進めて、一定間隔で敵を出す
-	wave1SpawnTimer_ += dt;
+	case Wave1Phase::Hold:
+		if (wave1PhaseTimer_ >= wave1HoldDuration_) {
+			wave1Phase_ = Wave1Phase::Break;
+			wave1PhaseTimer_ = 0.0f;
 
-	// タイマーがスポーン間隔を超えたら敵を出す
-	if (wave1SpawnTimer_ >= wave1SpawnInterval_) {
-		wave1SpawnTimer_ = 0.0f; // タイマーリセット
-		SpawnWave1Enemy(); // 敵スポーン
+			BuildWave1ScatterPositions_();
+			ApplyWave1ScatterTargets_();
+		}
+		break;
+
+	case Wave1Phase::Break:
+		if (AreAllWave1EnemiesInFormation_() || wave1PhaseTimer_ >= wave1BreakDuration_) {
+			wave1Phase_ = Wave1Phase::Scatter;
+			wave1PhaseTimer_ = 0.0f;
+		}
+		break;
 	}
 }
 
-void EnemyManager::SpawnWave1Enemy() {
-	if (!&enemies_ || !dx_ || !camera_ || !parent_) {
+void EnemyManager::SpawnWave1Group() {
+	if (!dx_ || !camera_ || !parent_) {
 		return;
 	}
 
-	// Wave1のスポーン設定をCSVから取得
-	const auto& w1_ = waveConfig_.GetWave1();
-	float y_ = w1_.baseY_; // スポーンする敵のY座標は固定
-	float z_ = w1_.baseZ_; // スポーンする敵のZ座標は固定
-	// X座標はランダム（min〜maxの範囲でランダムに決める）
-	float rx_ = MyMath::Rand01();
-	float x_ = w1_.randXMin_ + rx_ * (w1_.randXMax_ - w1_.randXMin_); // min + ランダム値 * (max - min) で、min〜maxの範囲でランダムに決める
+	NotifyPlayerBeforeClearEnemies_();
+	enemies_.clear();
 
-	// 以降、スポーン関数に渡すためのローカル変数に、クラスメンバのポインタをコピーしておく（ラムダ内でキャプチャするため）
-	TKM::DirectXCommon* dxPtr_ = dx_;
-	TKM::Camera* camPtr_ = camera_;
-	TKM::BaseScene* parentPtr_ = parent_;
+	const auto& p1_ = waveConfig_.GetWave1EnemyParams();
 
-	EnemyFactory::SpawnLine( // 敵を1体スポーンさせる
-		enemies_,
-		1,
-		y_,
-		z_,
-		x_,
-		0.0f,
-		dxPtr_,
-		camPtr_,
-		parentPtr_,
-		[this, x_, z_](Enemy& e) {
-			// Wave1の敵のパラメータをCSVから取得
-			const auto& p1_ = waveConfig_.GetWave1EnemyParams();
+	for (int i = 0; i < kWave1EnemyCount_; ++i) {
+		auto e_ = std::make_unique<Enemy>();
+		e_->Initialize(TKM::Object3dCommon::GetInstance(), dx_);
+		e_->SetCamera(camera_);
+		e_->SetParentScene(parent_);
 
-			e.SetModel(p1_.model_); // モデルセット
-			e.SetBehavior(p1_.behavior_); // 振る舞いセット
+		e_->SetModel(p1_.model_);
+		e_->SetHP(p1_.hp_);
+		e_->SetScale({ 1.0f, 1.0f, 1.0f });
+		e_->SetType(EnemyType::Normal);
 
-			// モデルによっては触手もセットする（例：jerryfish.objならtentacle.objもセットして触手表示）
-			if (p1_.model_ == "jerryfish.obj") {
-				e.SetTentacleModel("tentacle.obj"); // 触手モデルセット
-				e.SetTentacleLocal({ 0.0f, 0.0f, 0.0f }, { 0.0f,0.0f,0.0f }, { 1.0f,1.0f,1.0f }); // 触手のローカル位置・回転・スケールセット（例ではモデル原点に配置して等倍スケール）
-			}
-
-			// スポーン位置と、プレイヤーの位置から見たスポーン位置の前方にターゲットを置いて、そこを頂点とする放物線で飛んでくるようにする
-			Vector3 start_ = { x_, p1_.startY_, z_ };
-			Vector3 playerPos_ = player_->GetPosition();
-			Vector3 target_ = { playerPos_.x, playerPos_.y, playerPos_.z + p1_.targetForwardZ_ };
-			Vector3 apex = { (start_.x + target_.x) * 0.5f, p1_.apexY_, (start_.z + target_.z) * 0.5f };
-
-			e.SetPosition(start_); // スポーン位置セット
-			e.SetPounceParameters(start_, apex, target_, p1_.pounceTime_); // ジャンプの開始位置・頂点・終了位置と、ジャンプにかける時間をセットして、放物線で飛んでくるようにする
-			e.SetHP(p1_.hp_); // HPセット
-			e.SetScale({ 1.0f,1.0f,1.0f }); // スケールセット（例では等倍）
-			// その他のパラメータもセット
-			SetupEnemyForPlayer(e);
+		if (p1_.model_ == "jerryfish.obj") {
+			e_->SetTentacleModel("tentacle.obj");
+			e_->SetTentacleLocal(
+				{ 0.0f, 0.0f, 0.0f },
+				{ 0.0f, 0.0f, 0.0f },
+				{ 1.0f, 1.0f, 1.0f }
+			);
 		}
-	);
+
+		e_->SetBehavior(EnemyBehavior::FormationMove);
+		e_->SetFormationMoveSpeed(wave1FormationMoveSpeed_);
+		e_->SetPosition(wave1ScatterPositions_[i]);
+		e_->SetFormationTarget(wave1ScatterPositions_[i]);
+
+		SetupEnemyForPlayer(*e_);
+		e_->SyncTransform();
+
+		enemies_.push_back(std::move(e_));
+	}
+
+	if (!enemies_.empty() && player_) {
+		player_->SetEnemy(enemies_.front().get());
+		player_->SetAllEnemies(&enemies_);
+	}
+}
+
+void EnemyManager::BuildWave1ScatterPositions_() {
+	wave1ScatterPositions_[0] = { -16.0f, 8.0f, 78.0f };
+	wave1ScatterPositions_[1] = { -7.0f,  4.5f, 70.0f };
+	wave1ScatterPositions_[2] = { 0.0f,  9.0f, 86.0f };
+	wave1ScatterPositions_[3] = { 9.0f,  5.0f, 73.0f };
+	wave1ScatterPositions_[4] = { 17.0f,  7.5f, 80.0f };
+}
+void EnemyManager::BuildWave1FormationPositions_() {
+	const Vector3 c_ = wave1FormationCenter_;
+
+	wave1FormationPositions_[0] = c_ + Vector3{ 0.0f,  2.0f,  0.0f };
+	wave1FormationPositions_[1] = c_ + Vector3{ -6.0f,  0.0f,  2.5f };
+	wave1FormationPositions_[2] = c_ + Vector3{ 6.0f,  0.0f,  2.5f };
+	wave1FormationPositions_[3] = c_ + Vector3{ -11.0f, -2.0f, 5.0f };
+	wave1FormationPositions_[4] = c_ + Vector3{ 11.0f, -2.0f, 5.0f };
+}
+void EnemyManager::ApplyWave1FormationTargets_() {
+	for (size_t i = 0; i < enemies_.size() && i < wave1FormationPositions_.size(); ++i) {
+		if (!enemies_[i] || enemies_[i]->IsDead()) {
+			continue;
+		}
+
+		enemies_[i]->SetBehavior(EnemyBehavior::FormationMove);
+		enemies_[i]->SetFormationMoveSpeed(wave1FormationMoveSpeed_);
+		enemies_[i]->SetFormationTarget(wave1FormationPositions_[i]);
+	}
+}
+bool EnemyManager::AreAllWave1EnemiesInFormation_() const {
+	int aliveCount_ = 0;
+	int formedCount_ = 0;
+
+	for (const auto& e : enemies_) {
+		if (!e || e->IsDead()) {
+			continue;
+		}
+
+		++aliveCount_;
+		if (e->IsInFormation()) {
+			++formedCount_;
+		}
+	}
+
+	if (aliveCount_ == 0) {
+		return false;
+	}
+
+	return aliveCount_ == formedCount_;
+}
+void EnemyManager::ApplyWave1ScatterTargets_() {
+	for (size_t i = 0; i < enemies_.size() && i < wave1ScatterPositions_.size(); ++i) {
+		if (!enemies_[i] || enemies_[i]->IsDead()) {
+			continue;
+		}
+
+		enemies_[i]->SetBehavior(EnemyBehavior::FormationMove);
+		enemies_[i]->SetFormationMoveSpeed(wave1BreakMoveSpeed_);
+		enemies_[i]->SetFormationTarget(wave1ScatterPositions_[i]);
+	}
 }
 
 void EnemyManager::UpdateWave2(float dt) {
@@ -777,13 +839,16 @@ void EnemyManager::SpawnWave3ExtraMidBoss() {
 }
 
 void EnemyManager::BeginWave1() {
-	wave1SpawnTimer_ = 0.0f; // スポーンタイマーリセット
+	wave1Phase_ = Wave1Phase::Scatter;
+	wave1PhaseTimer_ = 0.0f;
 
-	// 同時出現数の上限を、最初は1体だけにしておく（必要なら後で更新）
 	if (maxEnemyCount_) {
 		maxEnemyCount_ = wave1DefeatTarget_;
 	}
-	SpawnWave1Enemy(); // 最初の1体だけ出す（元のまま）
+
+	BuildWave1ScatterPositions_();
+	BuildWave1FormationPositions_();
+	SpawnWave1Group();
 }
 
 void EnemyManager::BeginWave2() {

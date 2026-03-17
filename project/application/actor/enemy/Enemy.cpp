@@ -335,6 +335,37 @@ void Enemy::Update(float dt) {
 			c.pos_.y = std::max(self->roamMin_.y, std::min(self->roamMax_.y, c.pos_.y));
 			c.pos_.z = std::max(self->roamMin_.z, std::min(self->roamMax_.z, c.pos_.z));
 		}
+		// 行動関数の例：指定された隊列位置へ移動する
+		static void Move_FormationMove(Enemy* self, MoveCtx& c) {
+			Vector3 toTarget_ = self->formationTarget_ - c.pos_;
+			float dist_ = MyMath::Length(toTarget_);
+
+			// 近ければ到達扱い
+			if (dist_ <= self->formationArriveEpsilon_) {
+				c.pos_ = self->formationTarget_;
+				self->isInFormation_ = true;
+				return;
+			}
+
+			self->isInFormation_ = false;
+
+			// 正規化
+			if (dist_ > 0.0001f) {
+				toTarget_ = toTarget_ / dist_;
+			}
+
+			// 隊列位置へ向かって移動
+			c.pos_ += toTarget_ * self->formationMoveSpeed_ * c.factor_;
+
+			// 向きも少しだけ進行方向へ倒す
+			if (self->object_) {
+				Vector3 rot_ = self->object_->GetRotate();
+
+				// X/Zの向きは大きく崩さず、Yだけ軽く向ける
+				rot_.y = atan2f(toTarget_.x, -toTarget_.z);
+				self->object_->SetRotate(rot_);
+			}
+		}
 	};
 
 	// 死亡リアクションテーブル（enum順：BlowAway, RiseAbsorb, Collapse, BossFinal）
@@ -347,7 +378,7 @@ void Enemy::Update(float dt) {
 		&Local::Death_BossFinal,
 	};
 
-	// 行動テーブル（enum順：StraightStop, SineX, StrafeLtoR, ChasePlayer, PounceFromAbove, FreeRoam）
+	// 行動テーブル（enum順：StraightStop, SineX, StrafeLtoR, ChasePlayer, PounceFromAbove, FreeRoam, FormationMove）
 	using MoveFn = void(*)(Enemy*, MoveCtx&);
 	// 行動テーブルは、EnemyBehaviorのenum値をインデックスにして、対応する関数を呼び出せるようにする
 	static const MoveFn kMoveTable_[] = {
@@ -357,6 +388,7 @@ void Enemy::Update(float dt) {
 		&Local::Move_ChasePlayer,
 		&Local::Move_PounceFromAbove,
 		&Local::Move_FreeRoam,
+		&Local::Move_FormationMove,
 	};
 
 	// =========================================================
@@ -571,21 +603,17 @@ void Enemy::SetHP(int hp) {
 	hp_ = hp;
 	maxHP_ = hp;
 }
-
 void Enemy::SetModel(const std::string& modelName) {
 	if (object_) object_->SetModel(modelName);
 }
-
 void Enemy::SetScale(const Vector3& scale) {
 	baseScale_ = scale; // 元のスケールを更新
 	if (object_) object_->SetScale(scale); // Object3d にも反映
 }
-
 void Enemy::SetRotate(const Vector3& rot) {
 	if (!object_) { return; }
 	object_->SetRotate(rot);
 }
-
 void Enemy::SetCamera(TKM::Camera* camera) {
 	camera_ = camera;
 	if (object_) { object_->SetCamera(camera); } // カメラ設定（既存に合わせる）
@@ -679,6 +707,17 @@ void Enemy::SetRoamArea(const Vector3& min, const Vector3& max) {
 void Enemy::SetRoamSpeed(float normal, float angry) {
 	roamSpeedNormal_ = normal;
 	roamSpeedAngry_ = angry;
+}
+void Enemy::SetFormationTarget(const Vector3& target) {
+	formationTarget_ = target;
+	isInFormation_ = false; // 目標が変わったので、編隊移動開始フラグをリセットして、再度編隊移動するようにする
+}
+void Enemy::SetFormationMoveSpeed(float speed) {
+	// 速度があまりに遅くならないように最低値を設定
+	if (speed < 0.001f) {
+		speed = 0.001f;
+	}
+	formationMoveSpeed_ = speed;
 }
 Vector3 Enemy::GetWorldPosition() const {
 	if (!object_) {
