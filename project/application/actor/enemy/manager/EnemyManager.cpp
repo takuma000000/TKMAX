@@ -100,6 +100,8 @@ void EnemyManager::Update(float dt) {
 	if (ops_.update_) {
 		(this->*ops_.update_)(dt); // メンバ関数ポインタ呼び出し
 	}
+	// 敵弾の更新はWaveに関係なく行う
+	UpdateEnemyBullets_(dt);
 }
 
 void EnemyManager::UpdateClosestEnemy() {
@@ -130,6 +132,7 @@ void EnemyManager::InitializeWaves() {
 
 	NotifyPlayerBeforeClearEnemies_(); // プレイヤーに敵全削除を通知（ロックオン解除などのため）
 	enemies_.clear(); // 敵リストクリア
+	enemyBullets_.clear(); // 敵弾リストもクリア
 
 	defeatedEnemyCount_ = 0; // 撃破数リセット
 	maxEnemyCount_ = wave1DefeatTarget_; // 最大敵数は最初のWaveの撃破目標数に合わせておく（必要なら後で更新）
@@ -158,6 +161,7 @@ void EnemyManager::SpawnCurrentWave() {
 
 	NotifyPlayerBeforeClearEnemies_(); // プレイヤーに敵全削除を通知（ロックオン解除などのため）
 	enemies_.clear(); // 敵リストクリア（前のWaveの敵を消す）
+	enemyBullets_.clear(); // 敵弾リストもクリア
 
 	// WavePhase に対応したスポーン関数があれば呼び出す（Done ならスポーン関数は nullptr なので何もしない）
 	const auto ops_ = kWaveOps_[static_cast<int>(wavePhase_)];
@@ -189,7 +193,8 @@ void EnemyManager::GoToNextWave() {
 void EnemyManager::SkipToBossWave() {
 	// いま居るザコ敵は全部消す
 	NotifyPlayerBeforeClearEnemies_();
-	enemies_.clear();
+	enemies_.clear(); // 敵を全部消す
+	enemyBullets_.clear(); // 敵弾も全部消す
 
 	// 撃破数・最大数もリセット（ゲージを空にしておく）
 	if (defeatedEnemyCount_) {
@@ -217,7 +222,7 @@ void EnemyManager::NotifyPlayerBeforeClearEnemies_() {
 	}
 
 	// これから敵が全滅することをプレイヤーに通知して、ロックオン解除などの処理をさせる
-	for(auto & e : enemies_) {
+	for (auto& e : enemies_) {
 		if (!e) { continue; } // 念のためヌルチェック
 		player_->OnEnemyDestroyed(e.get()); // プレイヤーに敵が消えることを通知（ロックオン解除などのため）
 	}
@@ -256,6 +261,19 @@ void EnemyManager::UpdateWave1(float dt) {
 
 	case Wave1Phase::Hold:
 		if (wave1PhaseTimer_ >= wave1HoldDuration_) {
+			wave1Phase_ = Wave1Phase::Attack;
+			wave1PhaseTimer_ = 0.0f;
+			wave1AttackFired_ = false;
+		}
+		break;
+
+	case Wave1Phase::Attack:
+		if (!wave1AttackFired_) {
+			SpawnWave1SpecialVolley_();
+			wave1AttackFired_ = true;
+		}
+
+		if (wave1PhaseTimer_ >= wave1AttackDuration_) {
 			wave1Phase_ = Wave1Phase::Break;
 			wave1PhaseTimer_ = 0.0f;
 
@@ -377,6 +395,74 @@ void EnemyManager::ApplyWave1ScatterTargets_() {
 		enemies_[i]->SetBehavior(EnemyBehavior::FormationMove);
 		enemies_[i]->SetFormationMoveSpeed(wave1BreakMoveSpeed_);
 		enemies_[i]->SetFormationTarget(wave1ScatterPositions_[i]);
+	}
+}
+void EnemyManager::SpawnWave1SpecialVolley_() {
+	if (!camera_) {
+		return;
+	}
+
+	auto* common_ = TKM::Object3dCommon::GetInstance();
+	if (!common_) {
+		return;
+	}
+
+	for (auto& e : enemies_) {
+		if (!e || e->IsDead() || e->IsDying()) {
+			continue;
+		}
+
+		Vector3 start_ = e->GetWorldPosition();
+
+		Vector3 target_;
+		if (player_) {
+			target_ = player_->GetPosition();
+			target_.z += wave1BulletForwardBiasZ_;
+		} else {
+			target_ = start_ + Vector3{ 0.0f, 0.0f, -30.0f };
+		}
+
+		Vector3 dir_ = target_ - start_;
+		float len_ = MyMath::Length(dir_);
+		if (len_ <= 0.0001f) {
+			continue;
+		}
+		dir_ = dir_ / len_;
+
+		auto bullet_ = std::make_unique<EnemyBullet>();
+		bullet_->Initialize(
+			common_,
+			dx_,
+			camera_,
+			start_,
+			dir_ * wave1BulletSpeed_
+		);
+
+		enemyBullets_.push_back(std::move(bullet_));
+	}
+}
+void EnemyManager::UpdateEnemyBullets_(float dt) {
+	for (auto it = enemyBullets_.begin(); it != enemyBullets_.end();) {
+		if (!(*it)) {
+			it = enemyBullets_.erase(it);
+			continue;
+		}
+
+		(*it)->Update(dt);
+
+		if ((*it)->IsDead()) {
+			it = enemyBullets_.erase(it);
+		} else {
+			++it;
+		}
+	}
+}
+void EnemyManager::DrawEnemyBullets_(TKM::DirectXCommon* dx) {
+	for (auto& bullet : enemyBullets_) {
+		if (!bullet) {
+			continue;
+		}
+		bullet->Draw(dx);
 	}
 }
 
@@ -839,8 +925,9 @@ void EnemyManager::SpawnWave3ExtraMidBoss() {
 }
 
 void EnemyManager::BeginWave1() {
-	wave1Phase_ = Wave1Phase::Scatter;
-	wave1PhaseTimer_ = 0.0f;
+	wave1Phase_ = Wave1Phase::Scatter; // 最初は散開フェーズから
+	wave1PhaseTimer_ = 0.0f; // Wave1の状態をリセット
+	wave1AttackFired_ = false; // 敵が攻撃を撃ったかどうかのフラグリセット
 
 	if (maxEnemyCount_) {
 		maxEnemyCount_ = wave1DefeatTarget_;
@@ -873,6 +960,9 @@ void EnemyManager::Draw(TKM::DirectXCommon* dx) {
 	for (auto& enemy : enemies_) { // 敵を全部描画
 		enemy->Draw(dx);
 	}
+
+	DrawEnemyBullets_(dx); // 敵の弾を全部描画
+
 	if (midBossCore_) { // 核が居れば描画
 		midBossCore_->Draw(dx);
 	}

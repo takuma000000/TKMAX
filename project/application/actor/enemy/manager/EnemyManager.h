@@ -198,6 +198,9 @@ private:
 	void ApplyWave1FormationTargets_();
 	void ApplyWave1ScatterTargets_();
 	bool AreAllWave1EnemiesInFormation_() const;
+	void SpawnWave1SpecialVolley_();
+	void UpdateEnemyBullets_(float dt);
+	void DrawEnemyBullets_(TKM::DirectXCommon* dx);
 	//======================================================================
 	// Wave2 関連
 	//======================================================================
@@ -284,6 +287,7 @@ private:
 	// 敵リスト（直持ち版、BindEnemies 未使用時用）
 	// =====================================================================
 	std::vector<std::unique_ptr<Enemy>> enemies_; // 敵リスト（直持ち版）
+	std::vector<std::unique_ptr<EnemyBullet>> enemyBullets_; // 敵弾リスト
 	int defeatedEnemyCount_ = 0; // 撃破数カウンタ
 	int maxEnemyCount_ = 0; // 最大敵数カウンタ
 	bool initializedWaves_ = false; // Wave 初期化済みフラグ
