@@ -186,6 +186,10 @@ private:
 	float wave1BulletSpeed_ = 0.65f;        // 敵弾速度
 	float wave1BulletForwardBiasZ_ = 8.0f;  // プレイヤーを少し先読みするZ補正
 	bool  wave1AttackFired_ = false;        // このAttackフェーズで発射済みか
+	float wave1ChargeDuration_ = 0.45f;     // 発射前の溜め時間
+	float wave1ShotInterval_ = 0.12f;       // 順番撃ちの間隔
+	float wave1SpreadAngleDeg_ = 8.0f;      // 左右の弾の開き角
+	int   wave1ShotCursor_ = 0;             // 何発目まで撃ったか
 
 	Vector3 wave1FormationCenter_ = { 0.0f, 6.0f, 62.0f };
 
@@ -198,7 +202,8 @@ private:
 	void ApplyWave1FormationTargets_();
 	void ApplyWave1ScatterTargets_();
 	bool AreAllWave1EnemiesInFormation_() const;
-	void SpawnWave1SpecialVolley_();
+	void SpawnWave1SpecialShotByIndex_(int shotIndex);
+	int GetWave1AttackShotCount_() const;
 	void UpdateEnemyBullets_(float dt);
 	void DrawEnemyBullets_(TKM::DirectXCommon* dx);
 	//======================================================================

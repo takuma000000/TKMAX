@@ -268,19 +268,31 @@ void EnemyManager::UpdateWave1(float dt) {
 		break;
 
 	case Wave1Phase::Attack:
-		if (!wave1AttackFired_) {
-			SpawnWave1SpecialVolley_();
-			wave1AttackFired_ = true;
+	{
+		const int shotCount_ = GetWave1AttackShotCount_();
+
+		// 一定間隔ごとに 1 発ずつ撃つ
+		while (wave1ShotCursor_ < shotCount_) {
+			const float nextShotTime_ = wave1ShotInterval_ * static_cast<float>(wave1ShotCursor_);
+			if (wave1PhaseTimer_ < nextShotTime_) {
+				break;
+			}
+
+			SpawnWave1SpecialShotByIndex_(wave1ShotCursor_);
+			++wave1ShotCursor_;
 		}
 
-		if (wave1PhaseTimer_ >= wave1AttackDuration_) {
+		// 全部撃ち終わったら解散へ
+		const float attackEndTime_ = wave1ShotInterval_ * static_cast<float>(shotCount_);
+		if (wave1PhaseTimer_ >= attackEndTime_) {
 			wave1Phase_ = Wave1Phase::Break;
 			wave1PhaseTimer_ = 0.0f;
 
 			BuildWave1ScatterPositions_();
 			ApplyWave1ScatterTargets_();
 		}
-		break;
+	}
+	break;
 
 	case Wave1Phase::Break:
 		if (AreAllWave1EnemiesInFormation_() || wave1PhaseTimer_ >= wave1BreakDuration_) {
@@ -397,7 +409,14 @@ void EnemyManager::ApplyWave1ScatterTargets_() {
 		enemies_[i]->SetFormationTarget(wave1ScatterPositions_[i]);
 	}
 }
-void EnemyManager::SpawnWave1SpecialVolley_() {
+int EnemyManager::GetWave1AttackShotCount_() const {
+	// 5体前提
+	// 0: 中央
+	// 1: 左右内側
+	// 2: 左右外側
+	return 3;
+}
+void EnemyManager::SpawnWave1SpecialShotByIndex_(int shotIndex) {
 	if (!camera_) {
 		return;
 	}
@@ -407,12 +426,48 @@ void EnemyManager::SpawnWave1SpecialVolley_() {
 		return;
 	}
 
-	for (auto& e : enemies_) {
-		if (!e || e->IsDead() || e->IsDying()) {
+	// 5体を三角形で使う前提
+	// formation index:
+	// 0 = 頂点（中央）
+	// 1,2 = 中段左右
+	// 3,4 = 下段左右
+	int fireIndices_[2] = { -1, -1 };
+	int fireCount_ = 0;
+
+	switch (shotIndex) {
+	case 0:
+		fireIndices_[0] = 0;
+		fireCount_ = 1;
+		break;
+
+	case 1:
+		fireIndices_[0] = 1;
+		fireIndices_[1] = 2;
+		fireCount_ = 2;
+		break;
+
+	case 2:
+		fireIndices_[0] = 3;
+		fireIndices_[1] = 4;
+		fireCount_ = 2;
+		break;
+
+	default:
+		return;
+	}
+
+	for (int i = 0; i < fireCount_; ++i) {
+		const int enemyIndex_ = fireIndices_[i];
+		if (enemyIndex_ < 0 || enemyIndex_ >= static_cast<int>(enemies_.size())) {
 			continue;
 		}
 
-		Vector3 start_ = e->GetWorldPosition();
+		auto& e_ = enemies_[enemyIndex_];
+		if (!e_ || e_->IsDead() || e_->IsDying()) {
+			continue;
+		}
+
+		Vector3 start_ = e_->GetWorldPosition();
 
 		Vector3 target_;
 		if (player_) {
@@ -429,13 +484,31 @@ void EnemyManager::SpawnWave1SpecialVolley_() {
 		}
 		dir_ = dir_ / len_;
 
+		// 左右のペア射撃だけ少し開く
+		float angleDeg_ = 0.0f;
+		if (shotIndex == 1) {
+			angleDeg_ = (i == 0) ? -wave1SpreadAngleDeg_ : wave1SpreadAngleDeg_;
+		} else if (shotIndex == 2) {
+			angleDeg_ = (i == 0) ? -wave1SpreadAngleDeg_ * 1.4f : wave1SpreadAngleDeg_ * 1.4f;
+		}
+
+		const float angleRad_ = angleDeg_ * 3.14159265f / 180.0f;
+		const float cosA_ = cosf(angleRad_);
+		const float sinA_ = sinf(angleRad_);
+
+		Vector3 rotatedDir_ = {
+			dir_.x * cosA_ - dir_.z * sinA_,
+			dir_.y,
+			dir_.x * sinA_ + dir_.z * cosA_
+		};
+
 		auto bullet_ = std::make_unique<EnemyBullet>();
 		bullet_->Initialize(
 			common_,
 			dx_,
 			camera_,
 			start_,
-			dir_ * wave1BulletSpeed_
+			rotatedDir_ * wave1BulletSpeed_
 		);
 
 		enemyBullets_.push_back(std::move(bullet_));
@@ -928,6 +1001,7 @@ void EnemyManager::BeginWave1() {
 	wave1Phase_ = Wave1Phase::Scatter; // 最初は散開フェーズから
 	wave1PhaseTimer_ = 0.0f; // Wave1の状態をリセット
 	wave1AttackFired_ = false; // 敵が攻撃を撃ったかどうかのフラグリセット
+	wave1ShotCursor_ = 0;
 
 	if (maxEnemyCount_) {
 		maxEnemyCount_ = wave1DefeatTarget_;
