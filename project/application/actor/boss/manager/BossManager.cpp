@@ -240,7 +240,7 @@ void BossManager::Draw(TKM::DirectXCommon* dxCommon) {
 	}
 
 	// ボス戦中でなければ、ボスは描画せず弾だけ描画する
-	if (!bossBattle_) {
+	if (!bossBattle_ && !isEntranceDrawing_) {
 		UpdateBossBullets();
 		return;
 	}
@@ -290,12 +290,12 @@ void BossManager::SpawnForEntrance() {
 		bossConfig_.bossBattle_.arenaMin_,
 		bossConfig_.bossBattle_.arenaMax_
 	);
-
+	// 撃破シーケンス状態リセット
 	killSeq_.Reset();
-
-	if (hpUI_) {
-		hpUI_->SetVisible(false);
-	}
+	// HPバーUIはまだ表示しない
+	hpUI_->SetVisible(false);
+	// ボス登場演出用のスポーンなので、ここではまだHPバーUIは表示しないし、プレイヤーも撃てない状態のままにする
+	isEntranceDrawing_ = true;
 }
 
 void BossManager::BeginBattle() {
@@ -316,6 +316,9 @@ void BossManager::BeginBattle() {
 		player_->SetShootingEnabled(true);
 		player_->SetRumbleEnabled(true);
 	}
+
+	// ボス登場演出が終わって本戦開始したので、以降は通常の描画更新処理に移行する
+	isEntranceDrawing_ = false;
 }
 
 void BossManager::SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float speed, int damage, int lifeFrame) {
@@ -346,6 +349,7 @@ void BossManager::OnClearSequenceStart() {
 	boss_.reset(); // ボスオブジェクト破棄
 	bossController_.reset(); // ボス挙動コントローラ破棄
 	bossP2BgmPlayed_ = false; // P2BGM再生フラグリセット
+	isEntranceDrawing_ = false; // 登場演出中フラグリセット
 }
 
 void BossManager::SetTimeScaleController(TKM::TimeScaleController* t) {

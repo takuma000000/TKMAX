@@ -2123,36 +2123,33 @@ namespace TKM {
 
 			p.color_ = { 1.0f, 0.18f, 0.12f, 1.0f };
 		} else if (groupName == "bossEntrance_smoke") {
-
 			auto frand = [&rng](float a, float b) {
 				return std::uniform_real_distribution<float>(a, b)(rng);
 				};
 
-			// 出現範囲をかなり広げる（画面を覆うため）
+			// 出現位置のまわりに広く、特にZ方向へ厚みを持たせる
 			p.transform_.translate_ = center + Vector3{
-				frand(-9.0f, 9.0f),
-				frand(-4.0f, 4.0f),
-				frand(-9.0f, 9.0f)
+				frand(-6.5f, 6.5f),
+				frand(-3.0f, 3.0f),
+				frand(-10.0f, 10.0f)
 			};
 
-			// ゆっくり拡散する煙
+			// ゆっくり広がる
 			p.velocity_ = {
-				frand(-0.35f, 0.35f),
-				frand(0.05f, 0.25f),
-				frand(-0.35f, 0.35f)
+				frand(-0.24f, 0.24f),
+				frand(0.03f, 0.18f),
+				frand(-0.20f, 0.20f)
 			};
 
-			// 粒をかなり大きくする
-			float sc = frand(6.0f, 11.0f);
+			// 大きめ
+			float sc = frand(5.5f, 9.5f);
 			p.transform_.scale_ = { sc, sc, sc };
 
-			// 長めに残す
-			p.lifeTime_ = frand(1.0f, 1.6f);
+			// 少し長めに残す
+			p.lifeTime_ = frand(0.90f, 1.40f);
 			p.currentTime_ = 0.0f;
 
 			float t = frand(0.0f, 1.0f);
-
-			// 少し濃い煙
 			p.color_ = {
 				0.15f + 0.10f * t,
 				0.03f + 0.03f * t,

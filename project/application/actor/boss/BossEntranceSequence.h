@@ -94,7 +94,7 @@ private:
 	static constexpr float kCoverEmitInterval_ = 0.05f;
 	static constexpr float kPushEmitInterval_ = 0.06f;
 
-	static constexpr float kBurstSec_ = 0.35f;
+	static constexpr float kBurstSec_ = 0.48f;
 	static constexpr int kCoverSpawnEmitCount_ = 4;
 
 	const Vector4 kBaseSkyColor_{ 1.0f, 1.0f, 1.0f, 1.0f }; // 最初の空色（白）

@@ -176,6 +176,7 @@ private:
 	bool bossBattle_ = false; // ボス戦フラグ
 	bool bossP2BgmPlayed_ = false; // P2BGMを1回だけ再生したか
 	KillSequenceState killSeq_; // 撃破シーケンス状態
+	bool isEntranceDrawing_ = false; // ボス登場演出中の描画フラグ
 	//==============================
 	// ボス本体・制御
 	//==============================

@@ -87,7 +87,7 @@ void BossEntranceSequence::EmitCover_() {
 		return;
 	}
 	// かなり多めに出して、覆いを作る
-	pm->Emit("bossEntrance_smoke", spawnPos_, 180);
+	pm->Emit("bossEntrance_smoke", spawnPos_, 240);
 	pm->Emit("bossEntrance_streak", spawnPos_, 60);
 	pm->Emit("bossEntrance_ringThin", spawnPos_, 3);
 }
@@ -167,9 +167,9 @@ void BossEntranceSequence::Update(float dt, BossManager* bossManager) {
 					bossManager->SpawnForEntrance();
 
 					if (BossEnemy* boss = bossManager->GetBoss()) {
-						burstStartPos_ = spawnPos_ + Vector3{ 0.0f, 1.8f, 8.0f };
+						burstStartPos_ = spawnPos_ + Vector3{ 0.0f, 2.2f, -10.0f };
 						burstEndPos_ = spawnPos_;
-						burstStartScale_ = { 0.9f, 0.9f, 0.9f };
+						burstStartScale_ = { 1.6f, 1.6f, 1.6f };
 						burstEndScale_ = { 5.0f, 5.0f, 5.0f };
 
 						boss->SetPosition(burstStartPos_);
