@@ -206,5 +206,49 @@ namespace TKM {
 		pm->CreateParticleGroup("bossEntrance_spark", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
 		// スパーク：コアから飛び散る火花
 		pm->CreateParticleGroup("bossEntrance_gather", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);	
+
+		/// === Wave1Special用エフェクト ===
+		// 送るライン上の粒
+		pm->CreateParticleGroup("w1sp_stream", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
+		// 発射元の火花
+		pm->CreateParticleGroup("w1sp_sender_glow", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
+		// コア本体の見た目
+		pm->CreateParticleGroup("w1sp_core_body", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
+		// コアの周りのリング
+		pm->CreateParticleGroup("w1sp_core_ring", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
+		// コアの周りの煙
+		pm->CreateParticleGroup("w1sp_core_smoke", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
+		// 発射時のド派手フラッシュ
+		pm->CreateParticleGroup("w1sp_core_flash", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
+		// 発射時のド派手フラッシュ
+		pm->CreateParticleGroup("w1sp_core_spark", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
+		// 敵からコアへ送るライン上の粒
+		pm->CreateParticleGroup("w1sp_fly_body", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
+		// 敵からコアへ送るライン上の粒
+		pm->CreateParticleGroup("w1sp_fly_ring", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
+		// 敵からコアへ送るライン上の粒
+		pm->CreateParticleGroup("w1sp_fly_tail", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
+		// 敵からコアへ送るライン上の粒
+		pm->CreateParticleGroup("w1sp_fly_spark", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
+		// 集束線の芯
+		pm->CreateParticleGroup("w1sp_stream_streak", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
+		// コア内部の乱流粒
+		pm->CreateParticleGroup("w1sp_core_inner", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
+		// コアの外殻ショック
+		pm->CreateParticleGroup("w1sp_core_shell", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
+		// コア周辺の放電
+		pm->CreateParticleGroup("w1sp_core_arc", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
+		// 発射時の破裂片
+		pm->CreateParticleGroup("w1sp_core_burst", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
+		// 飛翔中コア本体
+		pm->CreateParticleGroup("w1sp_fly_body", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
+		// 飛翔中の外殻リング
+		pm->CreateParticleGroup("w1sp_fly_shell", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
+		// 飛翔中の放電
+		pm->CreateParticleGroup("w1sp_fly_arc", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
+		// 飛翔中の後尾
+		pm->CreateParticleGroup("w1sp_fly_tail", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
+		// 飛翔中の火花
+		pm->CreateParticleGroup("w1sp_fly_spark", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
 	}
 }

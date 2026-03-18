@@ -121,6 +121,11 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	const std::vector<std::unique_ptr<Enemy>>& GetEnemies() const { return enemies_; }
+	/// <summary>
+	/// Wave1の三角隊列の中心位置を取得します
+	/// </summary>
+	/// <returns></returns>
+	Vector3 GetWave1SpecialCorePosition_() const;
 	// ================================================================================
 	// Setter==========================================================================
 	/// <summary>
@@ -182,16 +187,20 @@ private:
 	float wave1BreakDuration_ = 1.5f;       // 解散移動の猶予時間
 	float wave1FormationMoveSpeed_ = 0.22f; // 隊列移動速度
 	float wave1BreakMoveSpeed_ = 0.18f;     // 解散時の移動速度
-	float wave1AttackDuration_ = 0.5f;      // 攻撃演出時間
-	float wave1BulletSpeed_ = 0.65f;        // 敵弾速度
-	float wave1BulletForwardBiasZ_ = 8.0f;  // プレイヤーを少し先読みするZ補正
-	bool  wave1AttackFired_ = false;        // このAttackフェーズで発射済みか
-	float wave1ChargeDuration_ = 0.45f;     // 発射前の溜め時間
-	float wave1ShotInterval_ = 0.12f;       // 順番撃ちの間隔
-	float wave1SpreadAngleDeg_ = 8.0f;      // 左右の弾の開き角
-	int   wave1ShotCursor_ = 0;             // 何発目まで撃ったか
 
 	Vector3 wave1FormationCenter_ = { 0.0f, 6.0f, 62.0f };
+
+	Vector3 wave1SpecialCoreOffset_ = { 0.0f, 8.5f, -2.0f }; // 三角隊列のさらに上
+	float wave1SpecialChargeDuration_ = 1.15f;               // 溜め時間
+	float wave1SpecialCoreStartScale_ = 0.8f;                // 生成時の小ささ
+	float wave1SpecialCoreEndScale_ = 4.6f;                  // 最大サイズ
+	float wave1SpecialCoreShotSpeed_ = 1.6f;                // 発射速度
+	float wave1SpecialCoreRadius_ = 2.8f;                    // 当たり判定半径
+	int   wave1SpecialCoreDamage_ = 2;                       // SP弾ダメージ
+
+	float wave1NormalShotInterval_ = 1.05f;                  // 散開中の通常攻撃間隔
+	float wave1NormalShotTimer_ = 0.0f;                      // 散開中通常攻撃タイマー
+	float wave1NormalBulletSpeed_ = 0.42f;                   // 散開中通常弾速度
 
 	std::array<Vector3, kWave1EnemyCount_> wave1ScatterPositions_{};
 	std::array<Vector3, kWave1EnemyCount_> wave1FormationPositions_{};
@@ -201,15 +210,20 @@ private:
 	float playerHitCooldownDuration_ = 0.45f;  // 被弾後の猶予時間
 	int   enemyBulletDamage_ = 1;              // 敵弾ダメージ
 
+	EnemyBullet* wave1SpecialCoreBullet_ = nullptr;
+
 	void SpawnWave1Group();
 	void BuildWave1ScatterPositions_();
 	void BuildWave1FormationPositions_();
 	void ApplyWave1FormationTargets_();
 	void ApplyWave1ScatterTargets_();
 	bool AreAllWave1EnemiesInFormation_() const;
-	void SpawnWave1SpecialShotByIndex_(int shotIndex);
-	int GetWave1AttackShotCount_() const;
 	void UpdateEnemyBullets_(float dt);
+	void UpdateWave1ScatterAttack_(float dt);
+	void BeginWave1SpecialCharge_();
+	void UpdateWave1SpecialCharge_(float dt);
+	void FireWave1SpecialCore_();
+	void EmitWave1SpecialChargeParticles_();
 	/// <summary>
 	/// 敵弾を描画します。プレイヤーに近いほど明るく、遠いほど暗くなるように、距離に応じた色変化も加えます。
 	/// </summary>
@@ -307,6 +321,7 @@ private:
 	// =====================================================================
 	std::vector<std::unique_ptr<Enemy>> enemies_; // 敵リスト（直持ち版）
 	std::vector<std::unique_ptr<EnemyBullet>> enemyBullets_; // 敵弾リスト
+	bool wave1SpecialCharging_ = false;             // 現在SP溜め中か
 	int defeatedEnemyCount_ = 0; // 撃破数カウンタ
 	int maxEnemyCount_ = 0; // 最大敵数カウンタ
 	bool initializedWaves_ = false; // Wave 初期化済みフラグ
