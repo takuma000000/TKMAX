@@ -2223,12 +2223,12 @@ namespace TKM {
 			p.lifeTime_ = std::uniform_real_distribution<float>(0.18f, 0.35f)(rng);
 			p.currentTime_ = 0.0f;
 
-			// 青紫～シアン寄り
+			// 色は赤紫系で、少し明るさにばらつきを持たせる
 			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
-			float r = 0.20f + 0.15f * t;
-			float g = 0.55f + 0.25f * t;
-			float b = 1.00f;
-			p.color_ = { r, g, b, 0.9f };
+			float r = 0.75f + 0.18f * t;
+			float g = 0.03f + 0.05f * t;
+			float b = 0.03f + 0.04f * t;
+			p.color_ = { r, g, b, 0.92f };
 
 		} else if (groupName == "w1sp_sender_glow") {
 			// 発射元の小さな発光
@@ -2241,26 +2241,28 @@ namespace TKM {
 			p.currentTime_ = 0.0f;
 
 			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
-			float r = 0.45f + 0.15f * t;
-			float g = 0.75f + 0.20f * t;
-			float b = 1.00f;
-			p.color_ = { r, g, b, 0.85f };
+			float r = 0.55f + 0.20f * t;
+			float g = 0.02f + 0.04f * t;
+			float b = 0.02f + 0.03f * t;
+			p.color_ = { r, g, b, 0.82f };
 
 		} else if (groupName == "w1sp_core_body") {
 			// コア本体の発光
 			p.velocity_ = { 0.0f, 0.0f, 0.0f };
 
-			float sc = std::uniform_real_distribution<float>(1.2f, 2.0f)(rng);
+			float sc = std::uniform_real_distribution<float>(2.0f, 3.2f)(rng);
 			p.transform_.scale_ = { sc, sc, sc };
 
 			p.lifeTime_ = std::uniform_real_distribution<float>(0.12f, 0.20f)(rng);
 			p.currentTime_ = 0.0f;
 
+			// 色は暗い赤系で、明るさにばらつきを持たせる
 			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
-			float r = 0.70f + 0.20f * t;
-			float g = 0.85f + 0.10f * t;
-			float b = 1.00f;
-			p.color_ = { r, g, b, 0.95f };
+			// 暗い本体 + 赤い割れ目のイメージ
+			float r = 0.20f + 0.45f * t;
+			float g = 0.01f + 0.03f * t;
+			float b = 0.01f + 0.03f * t;
+			p.color_ = { r, g, b, 0.96f };
 
 		} else if (groupName == "w1sp_core_ring") {
 			// コア周囲のリング
@@ -2269,10 +2271,10 @@ namespace TKM {
 			float sc = std::uniform_real_distribution<float>(1.6f, 2.8f)(rng);
 			p.transform_.scale_ = { sc, sc, sc };
 
-			p.lifeTime_ = std::uniform_real_distribution<float>(0.20f, 0.35f)(rng);
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.10f, 0.18f)(rng);
 			p.currentTime_ = 0.0f;
 
-			p.color_ = { 0.50f, 0.85f, 1.00f, 0.85f };
+			p.color_ = { 0.75f, 0.08f, 0.05f, 0.78f };
 
 		} else if (groupName == "w1sp_core_smoke") {
 			// コア周りのエネルギーもや
@@ -2303,7 +2305,7 @@ namespace TKM {
 			p.lifeTime_ = std::uniform_real_distribution<float>(0.08f, 0.14f)(rng);
 			p.currentTime_ = 0.0f;
 
-			p.color_ = { 0.95f, 0.98f, 1.00f, 1.00f };
+			p.color_ = { 1.00f, 0.20f, 0.08f, 1.0f };
 
 		} else if (groupName == "w1sp_core_spark") {
 			// 発射時に飛び散る火花
@@ -2324,25 +2326,28 @@ namespace TKM {
 			p.currentTime_ = 0.0f;
 
 			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
-			float r = 0.70f + 0.25f * t;
-			float g = 0.90f + 0.08f * t;
-			float b = 1.00f;
+			float r = 1.00f;
+			float g = 0.22f + 0.25f * t;
+			float b = 0.03f + 0.06f * t;
 			p.color_ = { r, g, b, 1.0f };
 		} else if (groupName == "w1sp_fly_body") {
 			// 飛翔中コア本体の発光
 			p.velocity_ = { 0.0f, 0.0f, 0.0f };
 
-			float sc = std::uniform_real_distribution<float>(1.6f, 2.6f)(rng);
+			float sc = std::uniform_real_distribution<float>(2.4f, 3.8f)(rng);
 			p.transform_.scale_ = { sc, sc, sc };
 
 			p.lifeTime_ = std::uniform_real_distribution<float>(0.08f, 0.14f)(rng);
 			p.currentTime_ = 0.0f;
 
+			// 色は暗い赤紫系で、明るさにばらつきを持たせる
 			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
-			float r = 0.72f + 0.18f * t;
-			float g = 0.88f + 0.08f * t;
-			float b = 1.00f;
-			p.color_ = { r, g, b, 0.95f };
+			// 黒ベース + 赤い割れ目
+			float r = 0.35f + 0.45f * t;
+			float g = 0.01f + 0.03f * t;
+			float b = 0.01f + 0.02f * t;
+
+			p.color_ = { r, g, b, 0.98f };
 
 		} else if (groupName == "w1sp_fly_ring") {
 			// 飛翔中の周囲リング
@@ -2394,6 +2399,179 @@ namespace TKM {
 			p.currentTime_ = 0.0f;
 
 			p.color_ = { 0.75f, 0.95f, 1.00f, 0.95f };
+		} else if (groupName == "w1sp_stream_streak") {
+			// 敵→コアへ走る細い収束線
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+
+			float len = std::uniform_real_distribution<float>(0.9f, 1.8f)(rng);
+			float thin = std::uniform_real_distribution<float>(0.04f, 0.10f)(rng);
+			p.transform_.scale_ = { thin, thin, len };
+
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.08f, 0.16f)(rng);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { 0.55f, 0.85f, 1.00f, 0.95f };
+
+		} else if (groupName == "w1sp_core_inner") {
+			// コア内部で暴れる高密度粒
+			std::uniform_real_distribution<float> vel(-0.08f, 0.08f);
+			p.velocity_ = { vel(rng), vel(rng), vel(rng) };
+
+			float sc = std::uniform_real_distribution<float>(0.18f, 0.42f)(rng);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.10f, 0.18f)(rng);
+			p.currentTime_ = 0.0f;
+
+			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+			p.color_ = {
+				0.80f + 0.15f * t,
+				0.55f + 0.18f * t,
+				1.00f,
+				0.95f
+			};
+
+		} else if (groupName == "w1sp_core_shell") {
+			// コアの外殻リング
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+
+			float sc = std::uniform_real_distribution<float>(2.2f, 3.8f)(rng);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.14f, 0.24f)(rng);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { 0.10f, 0.01f, 0.01f, 0.88f };
+
+		} else if (groupName == "w1sp_core_arc") {
+			// コアの周囲を暴れる放電
+			std::uniform_real_distribution<float> dir(-1.0f, 1.0f);
+			Vector3 v = { dir(rng), dir(rng), dir(rng) };
+			if (MyMath::Length(v) > 0.001f) {
+				v = MyMath::Normalize(v);
+			} else {
+				v = { 1.0f, 0.0f, 0.0f };
+			}
+			float spd = std::uniform_real_distribution<float>(0.10f, 0.30f)(rng);
+			p.velocity_ = v * spd;
+
+			float len = std::uniform_real_distribution<float>(0.8f, 1.8f)(rng);
+			float thin = std::uniform_real_distribution<float>(0.03f, 0.08f)(rng);
+			p.transform_.scale_ = { thin, thin, len };
+
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.06f, 0.12f)(rng);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { 0.95f, 0.10f, 0.04f, 0.95f };
+
+		} else if (groupName == "w1sp_core_burst") {
+			// 発射時の破裂片
+			std::uniform_real_distribution<float> dir(-1.0f, 1.0f);
+			Vector3 v = { dir(rng), dir(rng), dir(rng) };
+			if (MyMath::Length(v) > 0.001f) {
+				v = MyMath::Normalize(v);
+			} else {
+				v = { 0.0f, 1.0f, 0.0f };
+			}
+			float spd = std::uniform_real_distribution<float>(0.45f, 1.40f)(rng);
+			p.velocity_ = v * spd;
+
+			float sc = std::uniform_real_distribution<float>(0.14f, 0.28f)(rng);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.14f, 0.24f)(rng);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { 0.95f, 0.18f, 0.05f, 1.0f };
+
+		} else if (groupName == "w1sp_fly_body") {
+			// 飛翔中の核
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+
+			float sc = std::uniform_real_distribution<float>(2.2f, 3.4f)(rng);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.06f, 0.10f)(rng);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { 0.45f, 0.03f, 0.02f, 0.98f };
+
+		} else if (groupName == "w1sp_fly_shell") {
+			// 飛翔中の外殻
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+
+			float sc = std::uniform_real_distribution<float>(2.4f, 3.6f)(rng);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.08f, 0.14f)(rng);
+			p.currentTime_ = 0.0f;
+
+			// ほぼ黒 + ほんのり赤
+			p.color_ = { 0.06f, 0.01f, 0.01f, 0.85f };
+
+		} else if (groupName == "w1sp_fly_arc") {
+			// 飛翔中の放電
+			std::uniform_real_distribution<float> dir(-1.0f, 1.0f);
+			Vector3 v = { dir(rng), dir(rng), dir(rng) };
+			if (MyMath::Length(v) > 0.001f) {
+				v = MyMath::Normalize(v);
+			} else {
+				v = { 1.0f, 0.0f, 0.0f };
+			}
+			float spd = std::uniform_real_distribution<float>(0.08f, 0.22f)(rng);
+			p.velocity_ = v * spd;
+
+			float len = std::uniform_real_distribution<float>(1.2f, 2.2f)(rng);
+			float thin = std::uniform_real_distribution<float>(0.03f, 0.08f)(rng);
+			p.transform_.scale_ = { thin, thin, len };
+
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.05f, 0.10f)(rng);
+			p.currentTime_ = 0.0f;
+
+			// 灼熱の赤電撃
+			p.color_ = { 1.00f, 0.12f, 0.04f, 0.95f };
+
+		} else if (groupName == "w1sp_fly_tail") {
+			// 飛翔後尾
+			std::uniform_real_distribution<float> vx(-0.02f, 0.02f);
+			std::uniform_real_distribution<float> vy(-0.02f, 0.02f);
+			std::uniform_real_distribution<float> vz(0.15f, 0.35f);
+			p.velocity_ = { vx(rng), vy(rng), vz(rng) };
+
+			float sc = std::uniform_real_distribution<float>(0.65f, 1.40f)(rng);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.10f, 0.18f)(rng);
+			p.currentTime_ = 0.0f;
+
+			// 燃えカスみたいな暗い赤
+			p.color_ = { 0.20f, 0.01f, 0.01f, 0.55f };
+
+		} else if (groupName == "w1sp_fly_spark") {
+			// 飛翔火花
+			std::uniform_real_distribution<float> dir(-1.0f, 1.0f);
+			Vector3 v = { dir(rng), dir(rng), dir(rng) };
+			if (MyMath::Length(v) > 0.001f) {
+				v = MyMath::Normalize(v);
+			} else {
+				v = { 0.0f, 1.0f, 0.0f };
+			}
+			float spd = std::uniform_real_distribution<float>(0.55f, 1.50f)(rng);
+			p.velocity_ = v * spd;
+
+			float sc = std::uniform_real_distribution<float>(0.08f, 0.20f)(rng);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.08f, 0.16f)(rng);
+			p.currentTime_ = 0.0f;
+
+			// 灼熱の赤系火花
+			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+			float r = 1.00f;
+			float g = 0.20f + 0.30f * t;
+			float b = 0.02f + 0.05f * t;
+
+			p.color_ = { r, g, b, 1.0f };
 		} else { // 上記意外
 			// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 			std::uniform_real_distribution<float> velX(-0.15f, 0.15f);

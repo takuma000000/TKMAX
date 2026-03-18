@@ -13,7 +13,6 @@ void EnemyBullet::Initialize(
 	object_->SetModel("sphere.obj");
 	object_->SetTranslate(position);
 	object_->SetScale({ 0.6f, 0.6f, 0.6f });
-	object_->SetColor({ 1.0f, 0.35f, 0.35f, 1.0f });
 
 	camera_ = camera;
 	if (camera_) {
@@ -97,7 +96,6 @@ void EnemyBullet::InitializeFormationCore(
 	object_->SetModel("sphere.obj");
 	object_->SetTranslate(position);
 	object_->SetScale({ startScale, startScale, startScale });
-	object_->SetColor({ 1.0f, 1.0f, 1.0f, 0.0f }); // 実体は見せない
 
 	camera_ = camera;
 	if (camera_) {

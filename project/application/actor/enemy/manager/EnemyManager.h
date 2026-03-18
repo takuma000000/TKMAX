@@ -190,10 +190,10 @@ private:
 
 	Vector3 wave1FormationCenter_ = { 0.0f, 6.0f, 62.0f };
 
-	Vector3 wave1SpecialCoreOffset_ = { 0.0f, 8.5f, -2.0f }; // 三角隊列のさらに上
-	float wave1SpecialChargeDuration_ = 1.15f;               // 溜め時間
-	float wave1SpecialCoreStartScale_ = 0.8f;                // 生成時の小ささ
-	float wave1SpecialCoreEndScale_ = 4.6f;                  // 最大サイズ
+	Vector3 wave1SpecialCoreOffset_ = { 0.0f, 14.0f, -2.0f }; // 三角隊列の中心から見た特殊攻撃コアの位置オフセット
+	float wave1SpecialChargeDuration_ = 2.2f;               // 溜め時間
+	float wave1SpecialCoreStartScale_ = 0.55f;                // 生成時の小ささ
+	float wave1SpecialCoreEndScale_ = 5.2f;                  // 最大サイズ
 	float wave1SpecialCoreShotSpeed_ = 1.6f;                // 発射速度
 	float wave1SpecialCoreRadius_ = 2.8f;                    // 当たり判定半径
 	int   wave1SpecialCoreDamage_ = 2;                       // SP弾ダメージ

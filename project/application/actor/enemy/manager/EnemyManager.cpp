@@ -285,8 +285,10 @@ void EnemyManager::UpdateWave1(float dt) {
 	case Wave1Phase::Attack:
 		UpdateWave1SpecialCharge_(dt);
 
-		// 共有玉のチャージが終わって発射されたら、次の段階へ
-		if (!wave1SpecialCharging_ && wave1SpecialCoreBullet_ == nullptr) {
+		// 発射後に少し余韻を見せてから解散
+		if (!wave1SpecialCharging_ &&
+			wave1SpecialCoreBullet_ == nullptr &&
+			wave1PhaseTimer_ >= wave1SpecialChargeDuration_ + 0.35f) {
 			wave1Phase_ = Wave1Phase::Break;
 			wave1PhaseTimer_ = 0.0f;
 
@@ -409,6 +411,13 @@ void EnemyManager::FireWave1SpecialCore_() {
 		pm_->Emit("w1sp_core_ring", start_, 2);
 		pm_->Emit("w1sp_core_spark", start_, 12);
 		pm_->Emit("w1sp_core_body", start_, 3);
+		pm_->Emit("w1sp_core_flash", start_, 4);
+		pm_->Emit("w1sp_core_ring", start_, 3);
+		pm_->Emit("w1sp_core_shell", start_, 2);
+		pm_->Emit("w1sp_core_spark", start_, 18);
+		pm_->Emit("w1sp_core_burst", start_, 14);
+		pm_->Emit("w1sp_core_arc", start_, 6);
+		pm_->Emit("w1sp_core_body", start_, 4);
 	}
 
 	wave1SpecialCoreBullet_ = nullptr;
@@ -441,6 +450,7 @@ void EnemyManager::EmitWave1SpecialChargeParticles_() {
 			float t_ = static_cast<float>(i) / 4.0f;
 			Vector3 p_ = src_ + dir_ * (len_ * t_);
 			pm_->Emit("w1sp_stream", p_, 1);
+			pm_->Emit("w1sp_stream_streak", p_, 1);
 		}
 
 		// 発射元の火花
@@ -448,14 +458,18 @@ void EnemyManager::EmitWave1SpecialChargeParticles_() {
 	}
 
 	// コア本体の見た目
-	pm_->Emit("w1sp_core_body", corePos_, 2);
-	pm_->Emit("w1sp_core_ring", corePos_, 1);
+	pm_->Emit("w1sp_core_body", corePos_, 3);
+	pm_->Emit("w1sp_core_inner", corePos_, 5);
+	pm_->Emit("w1sp_core_ring", corePos_, 2);
+	pm_->Emit("w1sp_core_shell", corePos_, 1);
 	pm_->Emit("w1sp_core_smoke", corePos_, 1);
+	pm_->Emit("w1sp_core_arc", corePos_, 3);
 
-	// 終盤はもっと強く
-	if (wave1PhaseTimer_ >= wave1SpecialChargeDuration_ * 0.75f) {
-		pm_->Emit("w1sp_core_flash", corePos_, 1);
-		pm_->Emit("w1sp_core_spark", corePos_, 4);
+	// チャージが75%を超えたら、コア周りのエフェクトをさらに派手にする
+	if (wave1PhaseTimer_ >= wave1SpecialChargeDuration_ * 0.55f) {
+		pm_->Emit("w1sp_core_flash", corePos_, 2);
+		pm_->Emit("w1sp_core_spark", corePos_, 8);
+		pm_->Emit("w1sp_core_arc", corePos_, 4);
 	}
 }
 
@@ -580,10 +594,11 @@ void EnemyManager::UpdateEnemyBullets_(float dt) {
 			if (pm_) {
 				const Vector3 p_ = (*it)->GetWorldPosition();
 
-				pm_->Emit("w1sp_fly_body", p_, 2);
-				pm_->Emit("w1sp_fly_ring", p_, 1);
-				pm_->Emit("w1sp_fly_tail", p_, 2);
-				pm_->Emit("w1sp_fly_spark", p_, 3);
+				pm_->Emit("w1sp_fly_body", p_, 3);
+				pm_->Emit("w1sp_fly_shell", p_, 1);
+				pm_->Emit("w1sp_fly_arc", p_, 3);
+				pm_->Emit("w1sp_fly_tail", p_, 3);
+				pm_->Emit("w1sp_fly_spark", p_, 5);
 			}
 		}
 
