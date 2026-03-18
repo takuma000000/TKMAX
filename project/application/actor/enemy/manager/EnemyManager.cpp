@@ -102,6 +102,8 @@ void EnemyManager::Update(float dt) {
 	}
 	// 敵弾の更新はWaveに関係なく行う
 	UpdateEnemyBullets_(dt);
+	// 敵弾とプレイヤーの当たり判定もWaveに関係なく行う
+	CheckEnemyBulletPlayerCollision_(dt);
 }
 
 void EnemyManager::UpdateClosestEnemy() {
@@ -133,6 +135,7 @@ void EnemyManager::InitializeWaves() {
 	NotifyPlayerBeforeClearEnemies_(); // プレイヤーに敵全削除を通知（ロックオン解除などのため）
 	enemies_.clear(); // 敵リストクリア
 	enemyBullets_.clear(); // 敵弾リストもクリア
+	playerHitCooldown_ = 0.0f; // プレイヤー被弾クールダウンリセット
 
 	defeatedEnemyCount_ = 0; // 撃破数リセット
 	maxEnemyCount_ = wave1DefeatTarget_; // 最大敵数は最初のWaveの撃破目標数に合わせておく（必要なら後で更新）
@@ -162,6 +165,7 @@ void EnemyManager::SpawnCurrentWave() {
 	NotifyPlayerBeforeClearEnemies_(); // プレイヤーに敵全削除を通知（ロックオン解除などのため）
 	enemies_.clear(); // 敵リストクリア（前のWaveの敵を消す）
 	enemyBullets_.clear(); // 敵弾リストもクリア
+	playerHitCooldown_ = 0.0f; // プレイヤー被弾クールダウンリセット
 
 	// WavePhase に対応したスポーン関数があれば呼び出す（Done ならスポーン関数は nullptr なので何もしない）
 	const auto ops_ = kWaveOps_[static_cast<int>(wavePhase_)];
@@ -195,6 +199,7 @@ void EnemyManager::SkipToBossWave() {
 	NotifyPlayerBeforeClearEnemies_();
 	enemies_.clear(); // 敵を全部消す
 	enemyBullets_.clear(); // 敵弾も全部消す
+	playerHitCooldown_ = 0.0f; // プレイヤー被弾クールダウンリセット
 
 	// 撃破数・最大数もリセット（ゲージを空にしておく）
 	if (defeatedEnemyCount_) {
@@ -536,6 +541,51 @@ void EnemyManager::DrawEnemyBullets_(TKM::DirectXCommon* dx) {
 			continue;
 		}
 		bullet->Draw(dx);
+	}
+}
+
+void EnemyManager::CheckEnemyBulletPlayerCollision_(float dt) {
+	if (!player_) {
+		return;
+	}
+
+	// 被弾クールタイム更新
+	if (playerHitCooldown_ > 0.0f) {
+		playerHitCooldown_ -= dt;
+		if (playerHitCooldown_ < 0.0f) {
+			playerHitCooldown_ = 0.0f;
+		}
+	}
+
+	// クールタイム中は当たり判定しない
+	if (playerHitCooldown_ > 0.0f) {
+		return;
+	}
+
+	const Vector3 playerPos_ = player_->GetPosition();
+
+	for (auto& bullet : enemyBullets_) {
+		if (!bullet || bullet->IsDead()) {
+			continue;
+		}
+
+		const Vector3 bulletPos_ = bullet->GetWorldPosition();
+		const float hitDist_ = playerHitRadius_ + bullet->GetRadius();
+		const float dist_ = MyMath::Length(bulletPos_ - playerPos_);
+
+		if (dist_ <= hitDist_) {
+			// 弾を消す
+			bullet->Kill();
+
+			// プレイヤーへダメージ
+			player_->Damage(enemyBulletDamage_);
+
+			// 連続ヒット防止
+			playerHitCooldown_ = playerHitCooldownDuration_;
+
+			// 1フレーム1ヒットだけ
+			break;
+		}
 	}
 }
 

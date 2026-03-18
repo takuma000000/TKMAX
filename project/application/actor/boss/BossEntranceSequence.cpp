@@ -87,7 +87,7 @@ void BossEntranceSequence::EmitCover_() {
 		return;
 	}
 	// かなり多めに出して、覆いを作る
-	pm->Emit("bossEntrance_smoke", spawnPos_, 240);
+	pm->Emit("bossEntrance_smoke", spawnPos_, 100);
 	pm->Emit("bossEntrance_streak", spawnPos_, 60);
 	pm->Emit("bossEntrance_ringThin", spawnPos_, 3);
 }

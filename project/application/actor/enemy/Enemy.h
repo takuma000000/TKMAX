@@ -104,10 +104,6 @@ public:
 	/// </summary>
 	/// <param name="hitDir">被弾方向（正規化ベクトル）</param>
 	void StartBossDeathReaction(const Vector3& hitDir);
-	/// <summary>
-	/// 敵弾を死亡状態にします。
-	/// </summary>
-	void Kill() { isDead_ = true; }
 
 	// Getter===================================
 	/// <summary>

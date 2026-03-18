@@ -38,6 +38,10 @@ public:
 	/// 敵弾が死亡しているかを返します。
 	/// </summary>
 	bool IsDead() const { return isDead_; }
+	/// <summary>
+	/// 敵弾を死亡状態にします。
+	/// </summary>
+	void Kill() { isDead_ = true; }
 
 	// Getter===================================
 	/// <summary>

@@ -196,6 +196,11 @@ private:
 	std::array<Vector3, kWave1EnemyCount_> wave1ScatterPositions_{};
 	std::array<Vector3, kWave1EnemyCount_> wave1FormationPositions_{};
 
+	float playerHitRadius_ = 2.2f;             // プレイヤーの簡易当たり判定半径
+	float playerHitCooldown_ = 0.0f;           // 連続ヒット防止タイマー
+	float playerHitCooldownDuration_ = 0.45f;  // 被弾後の猶予時間
+	int   enemyBulletDamage_ = 1;              // 敵弾ダメージ
+
 	void SpawnWave1Group();
 	void BuildWave1ScatterPositions_();
 	void BuildWave1FormationPositions_();
@@ -205,7 +210,16 @@ private:
 	void SpawnWave1SpecialShotByIndex_(int shotIndex);
 	int GetWave1AttackShotCount_() const;
 	void UpdateEnemyBullets_(float dt);
+	/// <summary>
+	/// 敵弾を描画します。プレイヤーに近いほど明るく、遠いほど暗くなるように、距離に応じた色変化も加えます。
+	/// </summary>
+	/// <param name="dx">DirectX 共通管理クラス</param>
 	void DrawEnemyBullets_(TKM::DirectXCommon* dx);
+	/// <summary>
+	/// 敵弾とプレイヤーの当たり判定を行います。衝突していたらプレイヤーにダメージを与え、必要なら無敵時間も開始します。
+	/// </summary>
+	/// <param name="dt">前フレームからの経過時間（秒）</param>
+	void CheckEnemyBulletPlayerCollision_(float dt);
 	//======================================================================
 	// Wave2 関連
 	//======================================================================
