@@ -740,4 +740,71 @@ namespace TKM {
 		ribbonModelData_.vertices_.push_back({ .position_ = {0.0f,  halfH, -halfL, 1.0f}, .texcoord_ = {1.0f, 0.0f}, .normal_ = n });
 		ribbonModelData_.vertices_.push_back({ .position_ = {0.0f, -halfH, -halfL, 1.0f}, .texcoord_ = {1.0f, 1.0f}, .normal_ = n });
 	}
+
+	size_t ParticleManager::GetActiveParticleCount() const {
+		size_t total_ = 0;
+
+		for (const auto& [name_, group_] : particleGroups_) {
+			total_ += group_.particles_.size();
+		}
+
+		return total_;
+	}
+
+	ParticleManager::LoadLevel ParticleManager::GetLoadLevel() const {
+		const size_t active_ = GetActiveParticleCount();
+
+		if (active_ >= loadThresholdCritical_) {
+			return LoadLevel::Critical;
+		}
+		if (active_ >= loadThresholdHigh_) {
+			return LoadLevel::High;
+		}
+		if (active_ >= loadThresholdMedium_) {
+			return LoadLevel::Medium;
+		}
+		return LoadLevel::Low;
+	}
+
+	uint32_t ParticleManager::GetEmitCountScaled(uint32_t baseCount, bool isPriorityEffect) const {
+		if (baseCount == 0) {
+			return 0;
+		}
+
+		const LoadLevel level_ = GetLoadLevel();
+
+		// 主役演出も少し早めに抑える
+		if (isPriorityEffect) {
+			switch (level_) {
+			case LoadLevel::Low:
+				return baseCount;
+
+			case LoadLevel::Medium:
+				return std::max<uint32_t>(1, baseCount * 2 / 3);
+
+			case LoadLevel::High:
+				return std::max<uint32_t>(1, baseCount / 2);
+
+			case LoadLevel::Critical:
+				return std::max<uint32_t>(1, baseCount / 3);
+			}
+		}
+
+		// 背景・補助演出はかなり早めに減らす
+		switch (level_) {
+		case LoadLevel::Low:
+			return baseCount;
+
+		case LoadLevel::Medium:
+			return std::max<uint32_t>(1, baseCount / 2);
+
+		case LoadLevel::High:
+			return std::max<uint32_t>(1, baseCount / 3);
+
+		case LoadLevel::Critical:
+			return std::max<uint32_t>(1, baseCount / 5);
+		}
+
+		return baseCount;
+	}
 }

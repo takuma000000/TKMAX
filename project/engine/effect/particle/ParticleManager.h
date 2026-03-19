@@ -22,6 +22,13 @@ namespace TKM {
 			RIBBON, // リボンパーティクル
 		};
 
+		enum class LoadLevel {
+			Low, // 負荷低
+			Medium, // 負荷中
+			High, // 負荷高
+			Critical, // 負荷非常に高
+		};
+
 		// Transformクラスのエイリアス
 		using Transform = TKM::Transform;
 
@@ -175,6 +182,25 @@ namespace TKM {
 		/// <param name="cam"></param>
 		void SetCamera(TKM::Camera* cam) { camera_ = cam; }
 		// =========================================
+		// Getter===================================
+		/// <summary>
+		/// <summary>アクティブなパーティクルの数を取得します。</summary>
+		/// </summary>
+		/// <returns></returns>
+		size_t GetActiveParticleCount() const;
+		/// <summary>
+		/// <summary>現在の負荷レベルを取得します。</summary>
+		/// </summary>
+		/// <returns></returns>
+		LoadLevel GetLoadLevel() const;
+		/// <summary>
+		/// <summary>放出数を負荷レベルに応じてスケーリングして取得します。</summary>
+		/// </summary>
+		/// <param name="baseCount"></param>
+		/// <param name="isPriorityEffect"></param>
+		/// <returns></returns>
+		uint32_t GetEmitCountScaled(uint32_t baseCount, bool isPriorityEffect = false) const;
+		// =========================================
 
 	private:
 
@@ -225,6 +251,11 @@ namespace TKM {
 		Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
 
 		std::mt19937 randomEngine_;
+
+		// 負荷レベルの閾値
+		size_t loadThresholdMedium_ = 400; // 負荷中の閾値
+		size_t loadThresholdHigh_ = 550; // 負荷高の閾値
+		size_t loadThresholdCritical_ = 650; // 負荷非常に高の閾値
 
 		//Ring
 		const uint32_t kRingDivide_ = 32;

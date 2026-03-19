@@ -404,20 +404,23 @@ void EnemyManager::FireWave1SpecialCore_() {
 
 	wave1SpecialCoreBullet_->LaunchFormationCore(dir_ * wave1SpecialCoreShotSpeed_);
 
-	// 発射時のド派手フラッシュ
+	// 発射時の主役演出
 	auto* pm_ = TKM::ParticleManager::GetInstance();
 	if (pm_) {
-		pm_->Emit("w1sp_core_flash", start_, 2);
-		pm_->Emit("w1sp_core_ring", start_, 2);
-		pm_->Emit("w1sp_core_spark", start_, 12);
-		pm_->Emit("w1sp_core_body", start_, 3);
-		pm_->Emit("w1sp_core_flash", start_, 4);
-		pm_->Emit("w1sp_core_ring", start_, 3);
-		pm_->Emit("w1sp_core_shell", start_, 2);
-		pm_->Emit("w1sp_core_spark", start_, 18);
-		pm_->Emit("w1sp_core_burst", start_, 14);
-		pm_->Emit("w1sp_core_arc", start_, 6);
-		pm_->Emit("w1sp_core_body", start_, 4);
+		const bool priority_ = true;
+
+		pm_->Emit("w1sp_core_flash", start_, pm_->GetEmitCountScaled(2, priority_));
+		pm_->Emit("w1sp_core_ring", start_, pm_->GetEmitCountScaled(2, priority_));
+		pm_->Emit("w1sp_core_spark", start_, pm_->GetEmitCountScaled(12, priority_));
+		pm_->Emit("w1sp_core_body", start_, pm_->GetEmitCountScaled(3, priority_));
+
+		pm_->Emit("w1sp_core_flash", start_, pm_->GetEmitCountScaled(4, priority_));
+		pm_->Emit("w1sp_core_ring", start_, pm_->GetEmitCountScaled(3, priority_));
+		pm_->Emit("w1sp_core_shell", start_, pm_->GetEmitCountScaled(2, priority_));
+		pm_->Emit("w1sp_core_spark", start_, pm_->GetEmitCountScaled(18, priority_));
+		pm_->Emit("w1sp_core_burst", start_, pm_->GetEmitCountScaled(14, priority_));
+		pm_->Emit("w1sp_core_arc", start_, pm_->GetEmitCountScaled(6, priority_));
+		pm_->Emit("w1sp_core_body", start_, pm_->GetEmitCountScaled(4, priority_));
 	}
 
 	wave1SpecialCoreBullet_ = nullptr;
@@ -430,6 +433,27 @@ void EnemyManager::EmitWave1SpecialChargeParticles_() {
 	}
 
 	const Vector3 corePos_ = GetWave1SpecialCorePosition_();
+	const auto loadLevel_ = pm_->GetLoadLevel();
+
+	// 継続演出なので、重い時は線の分割数自体を落とす
+	int segmentCount_ = 10;
+	switch (loadLevel_) {
+	case TKM::ParticleManager::LoadLevel::Low:
+		segmentCount_ = 10;
+		break;
+
+	case TKM::ParticleManager::LoadLevel::Medium:
+		segmentCount_ = 8;
+		break;
+
+	case TKM::ParticleManager::LoadLevel::High:
+		segmentCount_ = 6;
+		break;
+
+	case TKM::ParticleManager::LoadLevel::Critical:
+		segmentCount_ = 4;
+		break;
+	}
 
 	// 各敵からコアへ送る
 	for (auto& e : enemies_) {
@@ -445,16 +469,13 @@ void EnemyManager::EmitWave1SpecialChargeParticles_() {
 		}
 		dir_ = dir_ / len_;
 
-		// 右ベクトルっぽいものを作って、少しだけ帯の幅を持たせる
+		// 軽く横ブレを入れて点列感を減らす
 		Vector3 side_ = { -dir_.z, 0.0f, dir_.x };
 		if (MyMath::Length(side_) <= 0.0001f) {
 			side_ = { 1.0f, 0.0f, 0.0f };
 		} else {
 			side_ = MyMath::Normalize(side_);
 		}
-
-		// 点列感を消すためにかなり密に置く
-		const int segmentCount_ = 20;
 
 		for (int i = 1; i <= segmentCount_; ++i) {
 			const float u_ = static_cast<float>(i) / static_cast<float>(segmentCount_ + 1);
@@ -464,7 +485,6 @@ void EnemyManager::EmitWave1SpecialChargeParticles_() {
 
 			Vector3 p_ = src_ + dir_ * (len_ * t_);
 
-			// 真っすぐすぎると棒の点列感が出るので、少しだけ横揺れ
 			const float sideJitter_ = (0.16f - 0.10f * t_);
 			if ((i % 2) == 0) {
 				p_ += side_ * sideJitter_;
@@ -472,40 +492,40 @@ void EnemyManager::EmitWave1SpecialChargeParticles_() {
 				p_ -= side_ * sideJitter_;
 			}
 
-			// 芯は毎点
-			pm_->Emit("w1sp_stream_core", p_, 1);
+			// 芯はなるべく残す
+			pm_->Emit("w1sp_stream_core", p_, pm_->GetEmitCountScaled(1, true));
 
-			// 外側グローも毎点
-			pm_->Emit("w1sp_stream_glow", p_, 1);
+			// 外側グローは補助なので負荷時は減らす
+			pm_->Emit("w1sp_stream_glow", p_, pm_->GetEmitCountScaled(1, false));
 
-			// 筋は2個に1回
+			// 細線は2個に1回
 			if ((i % 2) == 0) {
-				pm_->Emit("w1sp_stream_streak", p_, 1);
+				pm_->Emit("w1sp_stream_streak", p_, pm_->GetEmitCountScaled(1, false));
 			}
 
-			// 丸粒は少なめに散らして情報量だけ足す
+			// 丸粒はかなり補助なので少なめ
 			if ((i % 4) == 0) {
-				pm_->Emit("w1sp_stream", p_, 1);
+				pm_->Emit("w1sp_stream", p_, pm_->GetEmitCountScaled(1, false));
 			}
 		}
 
-		// 発射元の火花
-		pm_->Emit("w1sp_sender_glow", src_, 2);
+		// 発射元の火花は補助
+		pm_->Emit("w1sp_sender_glow", src_, pm_->GetEmitCountScaled(2, false));
 	}
 
-	// コア本体の見た目
-	pm_->Emit("w1sp_core_body", corePos_, 3);
-	pm_->Emit("w1sp_core_inner", corePos_, 5);
-	pm_->Emit("w1sp_core_ring", corePos_, 2);
-	pm_->Emit("w1sp_core_shell", corePos_, 1);
-	pm_->Emit("w1sp_core_smoke", corePos_, 1);
-	pm_->Emit("w1sp_core_arc", corePos_, 3);
+	// コア本体は見せ場側なので残し気味
+	pm_->Emit("w1sp_core_body", corePos_, pm_->GetEmitCountScaled(3, true));
+	pm_->Emit("w1sp_core_inner", corePos_, pm_->GetEmitCountScaled(5, true));
+	pm_->Emit("w1sp_core_ring", corePos_, pm_->GetEmitCountScaled(2, true));
+	pm_->Emit("w1sp_core_shell", corePos_, pm_->GetEmitCountScaled(1, true));
+	pm_->Emit("w1sp_core_smoke", corePos_, pm_->GetEmitCountScaled(1, false));
+	pm_->Emit("w1sp_core_arc", corePos_, pm_->GetEmitCountScaled(3, false));
 
-	// チャージが75%を超えたら、コア周りのエフェクトをさらに派手にする
+	// チャージ終盤の加速演出
 	if (wave1PhaseTimer_ >= wave1SpecialChargeDuration_ * 0.55f) {
-		pm_->Emit("w1sp_core_flash", corePos_, 2);
-		pm_->Emit("w1sp_core_spark", corePos_, 8);
-		pm_->Emit("w1sp_core_arc", corePos_, 4);
+		pm_->Emit("w1sp_core_flash", corePos_, pm_->GetEmitCountScaled(2, true));
+		pm_->Emit("w1sp_core_spark", corePos_, pm_->GetEmitCountScaled(8, false));
+		pm_->Emit("w1sp_core_arc", corePos_, pm_->GetEmitCountScaled(4, false));
 	}
 }
 
