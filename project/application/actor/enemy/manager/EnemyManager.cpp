@@ -445,32 +445,52 @@ void EnemyManager::EmitWave1SpecialChargeParticles_() {
 		}
 		dir_ = dir_ / len_;
 
-		// 線として見せるために分割数を増やす
-		const int segmentCount_ = 8;
+		// 右ベクトルっぽいものを作って、少しだけ帯の幅を持たせる
+		Vector3 side_ = { -dir_.z, 0.0f, dir_.x };
+		if (MyMath::Length(side_) <= 0.0001f) {
+			side_ = { 1.0f, 0.0f, 0.0f };
+		} else {
+			side_ = MyMath::Normalize(side_);
+		}
+
+		// 点列感を消すためにかなり密に置く
+		const int segmentCount_ = 20;
 
 		for (int i = 1; i <= segmentCount_; ++i) {
-			float t_ = static_cast<float>(i) / static_cast<float>(segmentCount_ + 1);
+			const float u_ = static_cast<float>(i) / static_cast<float>(segmentCount_ + 1);
+
+			// コアに近いほど密になるように後半へ寄せる
+			const float t_ = 1.0f - (1.0f - u_) * (1.0f - u_);
+
 			Vector3 p_ = src_ + dir_ * (len_ * t_);
 
-			// 芯
+			// 真っすぐすぎると棒の点列感が出るので、少しだけ横揺れ
+			const float sideJitter_ = (0.16f - 0.10f * t_);
+			if ((i % 2) == 0) {
+				p_ += side_ * sideJitter_;
+			} else {
+				p_ -= side_ * sideJitter_;
+			}
+
+			// 芯は毎点
 			pm_->Emit("w1sp_stream_core", p_, 1);
 
-			// 外側のグロー
+			// 外側グローも毎点
 			pm_->Emit("w1sp_stream_glow", p_, 1);
 
-			// 補助の細線
+			// 筋は2個に1回
 			if ((i % 2) == 0) {
 				pm_->Emit("w1sp_stream_streak", p_, 1);
 			}
 
-			// 粒は控えめに
-			if ((i % 3) == 0) {
+			// 丸粒は少なめに散らして情報量だけ足す
+			if ((i % 4) == 0) {
 				pm_->Emit("w1sp_stream", p_, 1);
 			}
 		}
 
 		// 発射元の火花
-		pm_->Emit("w1sp_sender_glow", src_, 1);
+		pm_->Emit("w1sp_sender_glow", src_, 2);
 	}
 
 	// コア本体の見た目

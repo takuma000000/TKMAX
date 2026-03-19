@@ -2213,22 +2213,21 @@ namespace TKM {
 
 			p.color_ = { 1.0f, 0.35f, 0.12f, 1.0f };
 		} else if (groupName == "w1sp_stream") {
-			// 各敵 → コアに送られるエネルギー粒
-			std::uniform_real_distribution<float> vel(-0.01f, 0.01f);
+			// 帯の中に混ざる補助粒
+			std::uniform_real_distribution<float> vel(-0.006f, 0.006f);
 			p.velocity_ = { vel(rng), vel(rng), vel(rng) };
 
-			float sc = std::uniform_real_distribution<float>(0.18f, 0.34f)(rng);
+			float sc = std::uniform_real_distribution<float>(0.10f, 0.18f)(rng);
 			p.transform_.scale_ = { sc, sc, sc };
 
-			p.lifeTime_ = std::uniform_real_distribution<float>(0.18f, 0.35f)(rng);
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.10f, 0.18f)(rng);
 			p.currentTime_ = 0.0f;
 
-			// 赤系の粒で、明るさにばらつきを持たせる
 			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
-			float r = 0.55f + 0.20f * t;
-			float g = 0.02f + 0.03f * t;
-			float b = 0.12f + 0.20f * t;
-			p.color_ = { r, g, b, 0.92f };
+			float r = 0.78f + 0.18f * t;
+			float g = 0.03f + 0.03f * t;
+			float b = 0.38f + 0.24f * t;
+			p.color_ = { r, g, b, 0.72f };
 
 		} else if (groupName == "w1sp_sender_glow") {
 			// 発射元の小さな発光
@@ -2405,12 +2404,20 @@ namespace TKM {
 			// 敵→コアへ走る補助の細線
 			p.velocity_ = { 0.0f, 0.0f, 0.0f };
 
-			float len = std::uniform_real_distribution<float>(1.4f, 2.6f)(rng);
-			float thin = std::uniform_real_distribution<float>(0.03f, 0.07f)(rng);
+			float len = std::uniform_real_distribution<float>(2.4f, 4.2f)(rng);
+			float thin = std::uniform_real_distribution<float>(0.05f, 0.10f)(rng);
 			p.transform_.scale_ = { thin, thin, len };
 
-			p.lifeTime_ = std::uniform_real_distribution<float>(0.06f, 0.12f)(rng);
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.10f, 0.18f)(rng);
 			p.currentTime_ = 0.0f;
+
+			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+			p.color_ = {
+				0.92f + 0.08f * t,
+				0.08f + 0.03f * t,
+				0.58f + 0.20f * t,
+				0.90f
+			};
 
 			p.color_ = { 0.90f, 0.12f, 0.55f, 0.85f };
 		} else if (groupName == "w1sp_core_inner") {
@@ -2594,35 +2601,35 @@ namespace TKM {
 			// 敵→コアへ送るエネルギー線の芯
 			p.velocity_ = { 0.0f, 0.0f, 0.0f };
 
-			// 細長い線にする
-			float thin = std::uniform_real_distribution<float>(0.05f, 0.09f)(rng);
-			float len = std::uniform_real_distribution<float>(1.8f, 3.2f)(rng);
+			float thin = std::uniform_real_distribution<float>(0.07f, 0.12f)(rng);
+			float len = std::uniform_real_distribution<float>(2.8f, 4.8f)(rng);
 			p.transform_.scale_ = { thin, thin, len };
 
-			p.lifeTime_ = std::uniform_real_distribution<float>(0.08f, 0.14f)(rng);
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.12f, 0.22f)(rng);
 			p.currentTime_ = 0.0f;
 
-			// チャージ中だと分かる紫赤
 			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
-			float r = 0.70f + 0.18f * t;
-			float g = 0.03f + 0.04f * t;
-			float b = 0.25f + 0.22f * t;
-			p.color_ = { r, g, b, 0.95f };
+			float r = 0.86f + 0.12f * t;
+			float g = 0.03f + 0.03f * t;
+			float b = 0.46f + 0.24f * t;
+			p.color_ = { r, g, b, 0.96f };
+
 		} else if (groupName == "w1sp_stream_glow") {
 			// 敵→コアへ送るエネルギー線の外側グロー
 			p.velocity_ = { 0.0f, 0.0f, 0.0f };
 
-			float thin = std::uniform_real_distribution<float>(0.10f, 0.18f)(rng);
-			float len = std::uniform_real_distribution<float>(2.2f, 3.8f)(rng);
+			float thin = std::uniform_real_distribution<float>(0.16f, 0.28f)(rng);
+			float len = std::uniform_real_distribution<float>(3.4f, 5.8f)(rng);
 			p.transform_.scale_ = { thin, thin, len };
 
-			p.lifeTime_ = std::uniform_real_distribution<float>(0.10f, 0.18f)(rng);
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.16f, 0.28f)(rng);
 			p.currentTime_ = 0.0f;
 
 			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
-			float r = 0.55f + 0.18f * t;
-			float g = 0.02f + 0.03f * t;
-			float b = 0.18f + 0.18f * t;
+			float r = 0.58f + 0.18f * t;
+			float g = 0.02f + 0.02f * t;
+			float b = 0.34f + 0.22f * t;
+			p.color_ = { r, g, b, 0.42f };
 			p.color_ = { r, g, b, 0.55f };
 		} else { // 上記意外
 			// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──

@@ -52,11 +52,12 @@ struct Vector3 final {
 		return Vector3(-x, -y, -z);
 	}
 
+	// 加算代入演算子
 	Vector3& operator+=(const Vector3& other) {
 		this->x += other.x;
 		this->y += other.y;
 		this->z += other.z;
-		return *this; // 自分自身を返す
+		return *this;
 	}
 
 	// スカラー乗算代入演算子
@@ -72,6 +73,13 @@ struct Vector3 final {
 		this->x /= scalar;
 		this->y /= scalar;
 		this->z /= scalar;
+		return *this;
+	}
+
+	Vector3& operator-=(const Vector3& other) {
+		this->x -= other.x;
+		this->y -= other.y;
+		this->z -= other.z;
 		return *this;
 	}
 };
