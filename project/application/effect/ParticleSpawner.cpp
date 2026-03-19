@@ -2612,6 +2612,7 @@ namespace TKM {
 			float r = 0.86f + 0.12f * t;
 			float g = 0.03f + 0.03f * t;
 			float b = 0.46f + 0.24f * t;
+			// アルファはやや強めで、全体的に明るい赤紫系
 			p.color_ = { r, g, b, 0.96f };
 
 		} else if (groupName == "w1sp_stream_glow") {
