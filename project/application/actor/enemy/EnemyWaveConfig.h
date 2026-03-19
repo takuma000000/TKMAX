@@ -20,7 +20,7 @@ public:
 	struct Wave1 {
 		float spawnInterval_ = 1.5f; // 敵の出現間隔（秒）
 		int   maxSimultaneous_ = 2; // 同時に存在してよい敵の数
-		int defeatTarget_ = 5; // この Wave で「倒すべき敵の数」
+		int defeatTarget_ = 10; // この Wave で「倒すべき敵の数」
 
 		// SpawnPos(base): a(未使用), b=y, c=z
 		float baseY_ = 5.0f; // 敵の生成高さ（ワールド座標）

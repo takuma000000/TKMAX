@@ -760,8 +760,8 @@ void Enemy::ImGuiDebug() {
 }
 
 void Enemy::OnHitWithDamage(int damage) {
-	// すでに死んでる or 死亡演出中なら無視
-	if (isDead_ || isDying_) {
+	// すでに死んでる / 死亡演出中 / 無敵中 なら無視
+	if (isDead_ || isDying_ || damageInvincible_) {
 		return;
 	}
 
@@ -778,7 +778,7 @@ void Enemy::OnHitWithDamage(int damage) {
 }
 
 void Enemy::StartDeathReaction(const Vector3& hitDir) {
-	if (isDying_) {
+	if (isDying_ || damageInvincible_) {
 		return;
 	}
 
@@ -838,6 +838,9 @@ void Enemy::SyncTransform() {
 
 void Enemy::StartBossDeathReaction(const Vector3& hitDir) {
 	if (isDying_) { // すでに死亡演出中なら無視
+		return;
+	}
+	if (damageInvincible_) {
 		return;
 	}
 

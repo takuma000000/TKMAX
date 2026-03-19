@@ -168,7 +168,7 @@ private:
 	// Wave1 関連
 	//======================================================================
 	// ───────── Wave1 用パラメータ ─────────
-	int   wave1DefeatTarget_ = 5;    // このWaveで「倒すべき敵の数」
+	int   wave1DefeatTarget_ = 10;    // このWaveで「倒すべき敵の数」
 	/// <summary>
 	/// Wave1 の更新処理を行います。
 	/// </summary>
@@ -177,10 +177,11 @@ private:
 	//==============================================================
 	// Wave1（新仕様：散開 → 隊列 → ホールド → 解散）
 	//==============================================================
-	static constexpr int kWave1EnemyCount_ = 5;
+	static constexpr int kWave1EnemyCount_ = 10; // Wave1の敵数
+	static constexpr int kWave1SpecialParticipantCount_ = 5; // Wave1の特殊攻撃に参加する敵の数（隊列の中心を除いた数）
 
-	Wave1Phase wave1Phase_ = Wave1Phase::Scatter;
-	float wave1PhaseTimer_ = 0.0f;
+	Wave1Phase wave1Phase_ = Wave1Phase::Scatter; // 現在のフェーズ
+	float wave1PhaseTimer_ = 0.0f; // 現在のフェーズの経過時間
 
 	float wave1ScatterDuration_ = 2.0f;     // 散開している時間
 	float wave1HoldDuration_ = 1.0f;        // 隊列完成後の静止時間
@@ -202,9 +203,6 @@ private:
 	float wave1NormalShotTimer_ = 0.0f;                      // 散開中通常攻撃タイマー
 	float wave1NormalBulletSpeed_ = 0.42f;                   // 散開中通常弾速度
 
-	std::array<Vector3, kWave1EnemyCount_> wave1ScatterPositions_{};
-	std::array<Vector3, kWave1EnemyCount_> wave1FormationPositions_{};
-
 	float playerHitRadius_ = 2.2f;             // プレイヤーの簡易当たり判定半径
 	float playerHitCooldown_ = 0.0f;           // 連続ヒット防止タイマー
 	float playerHitCooldownDuration_ = 0.45f;  // 被弾後の猶予時間
@@ -219,11 +217,21 @@ private:
 	void ApplyWave1ScatterTargets_();
 	bool AreAllWave1EnemiesInFormation_() const;
 	void UpdateEnemyBullets_(float dt);
-	void UpdateWave1ScatterAttack_(float dt);
+	void UpdateWave1ScatterAttack_(float dt, bool excludeSpecialSelected);
 	void BeginWave1SpecialCharge_();
 	void UpdateWave1SpecialCharge_(float dt);
 	void FireWave1SpecialCore_();
 	void EmitWave1SpecialChargeParticles_();
+
+	std::array<Vector3, kWave1EnemyCount_> wave1ScatterPositions_{};
+	std::array<Vector3, kWave1SpecialParticipantCount_> wave1FormationPositions_{};
+	std::array<Enemy*, kWave1SpecialParticipantCount_> wave1SpecialMembers_{};
+
+	void SelectWave1SpecialParticipants_();
+	void ClearWave1SpecialParticipants_();
+	bool IsWave1SpecialSelected_(const Enemy* enemy) const;
+	void ApplyWave1ScatterTargetsToNonSelected_();
+	void SetWave1SpecialInvincible_(bool enable);
 	/// <summary>
 	/// 敵弾を描画します。プレイヤーに近いほど明るく、遠いほど暗くなるように、距離に応じた色変化も加えます。
 	/// </summary>

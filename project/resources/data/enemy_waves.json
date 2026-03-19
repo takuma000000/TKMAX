@@ -8,7 +8,7 @@
       "_comment": "WAVE1全体の進行設定。",
       "spawnInterval": 1.5,
       "maxSimultaneous": 2,
-      "defeatTarget": 5
+      "defeatTarget": 10
     },
 
     "spawn": {

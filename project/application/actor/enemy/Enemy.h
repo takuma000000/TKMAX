@@ -100,6 +100,11 @@ public:
 	/// <returns></returns>
 	bool IsInFormation() const { return isInFormation_; }
 	/// <summary>
+	/// 敵がダメージ無敵状態かどうかを取得します。
+	/// </summary>
+	/// <returns></returns>
+	bool IsDamageInvincible() const { return damageInvincible_; }
+	/// <summary>
 	/// ボスの最終死亡リアクションを開始します。
 	/// </summary>
 	/// <param name="hitDir">被弾方向（正規化ベクトル）</param>
@@ -337,6 +342,11 @@ public:
 	/// </summary>
 	/// <param name="speed">移動速度</param>
 	void SetFormationMoveSpeed(float speed);
+	/// <summary>
+	/// ダメージ無敵フラグを設定します。
+	/// </summary>
+	/// <param name="v">無敵にする場合 true、それ以外は false</param>
+	void SetDamageInvincible(bool v) { damageInvincible_ = v; }
 	// =========================================
 private:
 	//--------------------------------------------------------------
@@ -359,6 +369,7 @@ private:
 	bool  isDead_ = false;  // 完全に死亡（描画/更新停止）
 	bool  defeated_ = false; // プレイヤーに倒された
 	bool  escaped_ = false; // 逃走扱い
+	bool damageInvincible_ = false; // SP攻撃演出中などに被ダメージを無効化する(無敵化)
 	//--------------------------------------------------------------
 	//  基本行動タイプ
 	//--------------------------------------------------------------
