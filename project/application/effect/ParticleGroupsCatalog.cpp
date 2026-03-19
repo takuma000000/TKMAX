@@ -87,10 +87,6 @@ namespace TKM {
 		// 中心の強いフラッシュ
 		pm->CreateParticleGroup("core_charge_flash", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
 
-		/// === LT弾のチャージエフェクト ===
-		// 軌道ライン
-		pm->CreateParticleGroup("trail_lt_path", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-
 		/// === Boss Windup FX（予備動作）===
 		// 外側を覆うリング状エネルギー
 		pm->CreateParticleGroup("boss_windup_shell", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
@@ -107,33 +103,9 @@ namespace TKM {
 		// 斬撃のアーク状エネルギー
 		pm->CreateParticleGroup("boss_slash_windup_arc", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
 
-		/// === Boss Evil Bullet（邪悪弾) ===
-		// コア：強い光（中心の発光）
-		pm->CreateParticleGroup("bossEvil_core", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// モアモア：黒紫の煙
-		pm->CreateParticleGroup("bossEvil_smoke", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
-		// スパーク：バチバチの欠片
-		pm->CreateParticleGroup("bossEvil_spark", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// オーラ輪：うっすらリング（邪悪な気配）
-		pm->CreateParticleGroup("bossEvil_ring", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
-		// 軌道トレイル：尾を引く粒
-		pm->CreateParticleGroup("bossEvil_trail", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
-		// ボディ：メインの球体部分
-		pm->CreateParticleGroup("bossEvil_glow", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// ボディ：メインの球体部分
-		pm->CreateParticleGroup("bossEvil_body", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
-		// コロナ：外側の光輪
-		pm->CreateParticleGroup("bossEvil_corona", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// 軌道トレイル：尾を引く粒
-		pm->CreateParticleGroup("bossEvil_trail", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
-
 		/// === Boss Slash Trail（斬撃の軌道）===
-		// 切れ味のあるストリーク（毎フレ）
-		pm->CreateParticleGroup("bossSlash_cut", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
 		// 火花（間引き）
 		pm->CreateParticleGroup("bossSlash_spark", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// 斬撃の弧（たまに）
-		pm->CreateParticleGroup("bossSlash_arc", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
 
 		/// === Boss Slash Trail (3レイヤー) ===
 		// 斬撃のメイン
@@ -166,14 +138,6 @@ namespace TKM {
 		pm->CreateParticleGroup("titleBeamClash_ring", "./resources/texture/gradationLine.png", TKM::ParticleManager::ParticleType::RING);
 
 		/// === スタート演出のボス用エフェクト ===
-		// コア：中心の光の塊
-		pm->CreateParticleGroup("bossIntro_core", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// 渦巻き：コアを包むように渦巻くエネルギー
-		pm->CreateParticleGroup("bossIntro_swirl", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
-		// スパーク：コアから飛び散る火花
-		pm->CreateParticleGroup("bossIntro_spark", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// トレイル：コアから引きずるように伸びる粒
-		pm->CreateParticleGroup("bossEscape_trail", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
 		// ワープエフェクト：コア
 		pm->CreateParticleGroup("bossWarp_core", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
 		// ワープエフェクト：渦巻き
@@ -192,8 +156,6 @@ namespace TKM {
 		pm->CreateParticleGroup("bossEscape_warpRing", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
 
 		/// === ボス登場用エフェクト ===
-		// コア：中心の光の塊
-		pm->CreateParticleGroup("bossEntrance_core", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
 		// 渦巻き：コアを包むように渦巻くエネルギー
 		pm->CreateParticleGroup("bossEntrance_ringShock", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
 		// 細いリング：コアの周りを高速で回る細いリング
@@ -225,8 +187,6 @@ namespace TKM {
 		// 敵からコアへ送るライン上の粒
 		pm->CreateParticleGroup("w1sp_fly_body", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
 		// 敵からコアへ送るライン上の粒
-		pm->CreateParticleGroup("w1sp_fly_ring", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
-		// 敵からコアへ送るライン上の粒
 		pm->CreateParticleGroup("w1sp_fly_tail", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
 		// 敵からコアへ送るライン上の粒
 		pm->CreateParticleGroup("w1sp_fly_spark", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
@@ -240,16 +200,10 @@ namespace TKM {
 		pm->CreateParticleGroup("w1sp_core_arc", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
 		// 発射時の破裂片
 		pm->CreateParticleGroup("w1sp_core_burst", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// 飛翔中コア本体
-		pm->CreateParticleGroup("w1sp_fly_body", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
 		// 飛翔中の外殻リング
 		pm->CreateParticleGroup("w1sp_fly_shell", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
 		// 飛翔中の放電
 		pm->CreateParticleGroup("w1sp_fly_arc", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
-		// 飛翔中の後尾
-		pm->CreateParticleGroup("w1sp_fly_tail", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
-		// 飛翔中の火花
-		pm->CreateParticleGroup("w1sp_fly_spark", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
 		// 飛翔中のコロナ
 		pm->CreateParticleGroup("w1sp_fly_corona", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
 		// 集束線の芯

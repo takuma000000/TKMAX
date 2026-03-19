@@ -161,12 +161,6 @@ namespace TKM {
 						(*particleIterator).transform_.scale_.y *= grow;
 						(*particleIterator).transform_.scale_.z *= grow;
 					}
-					if (g == "bossEntrance_core") {
-						float grow = 1.0f + 10.0f * kDeltaTime_;
-						(*particleIterator).transform_.scale_.x *= grow;
-						(*particleIterator).transform_.scale_.y *= grow;
-						(*particleIterator).transform_.scale_.z *= grow;
-					}
 					if (g == "bossEntrance_smoke") {
 						float grow = 1.0f + 4.8f * kDeltaTime_;
 						(*particleIterator).transform_.scale_.x *= grow;
