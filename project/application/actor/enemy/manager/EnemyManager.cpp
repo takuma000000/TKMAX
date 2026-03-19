@@ -445,12 +445,28 @@ void EnemyManager::EmitWave1SpecialChargeParticles_() {
 		}
 		dir_ = dir_ / len_;
 
-		// 送ってるライン上に粒を打つ
-		for (int i = 1; i <= 3; ++i) {
-			float t_ = static_cast<float>(i) / 4.0f;
+		// 線として見せるために分割数を増やす
+		const int segmentCount_ = 8;
+
+		for (int i = 1; i <= segmentCount_; ++i) {
+			float t_ = static_cast<float>(i) / static_cast<float>(segmentCount_ + 1);
 			Vector3 p_ = src_ + dir_ * (len_ * t_);
-			pm_->Emit("w1sp_stream", p_, 1);
-			pm_->Emit("w1sp_stream_streak", p_, 1);
+
+			// 芯
+			pm_->Emit("w1sp_stream_core", p_, 1);
+
+			// 外側のグロー
+			pm_->Emit("w1sp_stream_glow", p_, 1);
+
+			// 補助の細線
+			if ((i % 2) == 0) {
+				pm_->Emit("w1sp_stream_streak", p_, 1);
+			}
+
+			// 粒は控えめに
+			if ((i % 3) == 0) {
+				pm_->Emit("w1sp_stream", p_, 1);
+			}
 		}
 
 		// 発射元の火花
@@ -594,8 +610,9 @@ void EnemyManager::UpdateEnemyBullets_(float dt) {
 			if (pm_) {
 				const Vector3 p_ = (*it)->GetWorldPosition();
 
-				pm_->Emit("w1sp_fly_body", p_, 3);
-				pm_->Emit("w1sp_fly_shell", p_, 1);
+				pm_->Emit("w1sp_fly_body", p_, 4);
+				pm_->Emit("w1sp_fly_shell", p_, 2);
+				pm_->Emit("w1sp_fly_corona", p_, 3);
 				pm_->Emit("w1sp_fly_arc", p_, 3);
 				pm_->Emit("w1sp_fly_tail", p_, 3);
 				pm_->Emit("w1sp_fly_spark", p_, 5);
