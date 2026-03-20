@@ -300,6 +300,14 @@ void EnemyManager::UpdateWave1(float dt) {
 }
 
 void EnemyManager::UpdateWave1ScatterAttack_(float dt) {
+
+
+	/// ====================================
+	/// 一時的に通常攻撃を止める
+	return;
+	/// ====================================
+
+
 	wave1NormalShotTimer_ += dt;
 	if (wave1NormalShotTimer_ < wave1NormalShotInterval_) {
 		return;

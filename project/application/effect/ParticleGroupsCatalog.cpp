@@ -207,7 +207,7 @@ namespace TKM {
 		// 飛翔中のコロナ
 		pm->CreateParticleGroup("w1sp_fly_corona", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
 		// 集束線の芯
-		pm->CreateParticleGroup("w1sp_stream_core", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
+		pm->CreateParticleGroup("w1sp_stream_core", "./resources/texture/firework_star.png", ParticleManager::ParticleType::NORMAL);
 		// 集束線のグロー
 		pm->CreateParticleGroup("w1sp_stream_glow", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
 	}
