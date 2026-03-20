@@ -2,6 +2,7 @@
 #include <limits>
 #include "MyMath.h"
 #include "manager/BossManager.h"
+#include <cmath>
 
 #ifdef USE_IMGUI
 #include "imgui.h"
@@ -145,12 +146,9 @@ void EnemyManager::InitializeWaves() {
 
 	wavePhase_ = WavePhase::W1; // 最初のWaveはW1から
 
-	wave1Phase_ = Wave1Phase::Scatter;
+	wave1Phase_ = Wave1Phase::Rotate; // Wave1の最初のフェーズは Rotate から
 	wave1PhaseTimer_ = 0.0f;
-	BuildWave1ScatterPositions_();
-	BuildWave1FormationPositions_();
 	SpawnWave1Group();
-	ClearWave1SpecialParticipants_();
 
 	wave2SubWave_ = 0; // Wave2のサブWaveカウンタリセット
 
@@ -173,8 +171,6 @@ void EnemyManager::SpawnCurrentWave() {
 	wave1SpecialCharging_ = false;
 	wave1SpecialCoreBullet_ = nullptr;
 	wave1NormalShotTimer_ = 0.0f;
-
-	ClearWave1SpecialParticipants_();
 
 	// WavePhase に対応したスポーン関数があれば呼び出す（Done ならスポーン関数は nullptr なので何もしない）
 	const auto ops_ = kWaveOps_[static_cast<int>(wavePhase_)];
@@ -206,7 +202,6 @@ void EnemyManager::GoToNextWave() {
 void EnemyManager::SkipToBossWave() {
 	// いま居るザコ敵は全部消す
 	NotifyPlayerBeforeClearEnemies_();
-	ClearWave1SpecialParticipants_();
 	enemies_.clear(); // 敵を全部消す
 	enemyBullets_.clear(); // 敵弾も全部消す
 	playerHitCooldown_ = 0.0f; // プレイヤー被弾クールダウンリセット
@@ -247,11 +242,15 @@ void EnemyManager::NotifyPlayerBeforeClearEnemies_() {
 }
 
 void EnemyManager::UpdateWave1(float dt) {
-	if (!dx_ || !camera_ || !parent_) {
-		return;
+	UpdateEnemyBullets_(dt);
+
+	if (playerHitCooldown_ > 0.0f) {
+		playerHitCooldown_ -= dt;
+		if (playerHitCooldown_ < 0.0f) {
+			playerHitCooldown_ = 0.0f;
+		}
 	}
 
-	// 目標撃破数に達したら次のWaveへ
 	if (defeatedEnemyCount_ >= wave1DefeatTarget_) {
 		NotifyPlayerBeforeClearEnemies_();
 		enemies_.clear();
@@ -262,29 +261,22 @@ void EnemyManager::UpdateWave1(float dt) {
 	wave1PhaseTimer_ += dt;
 
 	switch (wave1Phase_) {
-	case Wave1Phase::Scatter:
-		UpdateWave1ScatterAttack_(dt, false);
+	case Wave1Phase::Rotate:
+		UpdateWave1CircleFormation_(dt);
+		UpdateWave1ScatterAttack_(dt);
+
 		if (wave1PhaseTimer_ >= wave1ScatterDuration_) {
-			wave1Phase_ = Wave1Phase::FormUp;
-			wave1PhaseTimer_ = 0.0f;
-
-			SelectWave1SpecialParticipants_();
-			ApplyWave1FormationTargets_();
-			ApplyWave1ScatterTargetsToNonSelected_();
-			SetWave1SpecialInvincible_(true);
-		}
-		break;
-
-	case Wave1Phase::FormUp:
-		UpdateWave1ScatterAttack_(dt, true);
-		if (AreAllWave1EnemiesInFormation_()) {
 			wave1Phase_ = Wave1Phase::Hold;
 			wave1PhaseTimer_ = 0.0f;
+
+			SetWave1AllInvincible_(true);
+			ApplyWave1CircleTargets_();
 		}
 		break;
 
 	case Wave1Phase::Hold:
-		UpdateWave1ScatterAttack_(dt, true);
+		ApplyWave1CircleTargets_();
+
 		if (wave1PhaseTimer_ >= wave1HoldDuration_) {
 			wave1Phase_ = Wave1Phase::Attack;
 			wave1PhaseTimer_ = 0.0f;
@@ -293,35 +285,21 @@ void EnemyManager::UpdateWave1(float dt) {
 		break;
 
 	case Wave1Phase::Attack:
-		UpdateWave1ScatterAttack_(dt, true);
+		ApplyWave1CircleTargets_();
 		UpdateWave1SpecialCharge_(dt);
 
-		// 発射後に少し余韻を見せてから解散
 		if (!wave1SpecialCharging_ &&
 			wave1SpecialCoreBullet_ == nullptr &&
 			wave1PhaseTimer_ >= wave1SpecialChargeDuration_ + 0.35f) {
-			// 散開して待つ → 隊列へ移動 → 少し止まる → 一斉攻撃 → 解散して散開位置へ戻る
-			wave1Phase_ = Wave1Phase::Break;
+			SetWave1AllInvincible_(false);
+			wave1Phase_ = Wave1Phase::Rotate;
 			wave1PhaseTimer_ = 0.0f;
-
-			SetWave1SpecialInvincible_(false);
-			BuildWave1ScatterPositions_();
-			ApplyWave1ScatterTargets_();
-		}
-		break;
-
-	case Wave1Phase::Break:
-		UpdateWave1ScatterAttack_(dt, false);
-		if (AreAllWave1EnemiesInFormation_() || wave1PhaseTimer_ >= wave1BreakDuration_) {
-			wave1Phase_ = Wave1Phase::Scatter;
-			wave1PhaseTimer_ = 0.0f;
-			ClearWave1SpecialParticipants_();
 		}
 		break;
 	}
 }
 
-void EnemyManager::UpdateWave1ScatterAttack_(float dt, bool excludeSpecialSelected) {
+void EnemyManager::UpdateWave1ScatterAttack_(float dt) {
 	wave1NormalShotTimer_ += dt;
 	if (wave1NormalShotTimer_ < wave1NormalShotInterval_) {
 		return;
@@ -335,10 +313,6 @@ void EnemyManager::UpdateWave1ScatterAttack_(float dt, bool excludeSpecialSelect
 
 	for (auto& e : enemies_) {
 		if (!e || e->IsDead() || e->IsDying()) {
-			continue;
-		}
-
-		if (excludeSpecialSelected && IsWave1SpecialSelected_(e.get())) {
 			continue;
 		}
 
@@ -473,13 +447,15 @@ void EnemyManager::EmitWave1SpecialChargeParticles_() {
 		break;
 	}
 
-	// 選出された敵だけがコアへ送る
-	for (Enemy* e_ : wave1SpecialMembers_) {
-		if (!e_ || e_->IsDead() || e_->IsDying()) {
+	// 生存している敵全員がコアへ送る
+	for (auto& e : enemies_) {
+		if (!e || e->IsDead() || e->IsDying()) {
 			continue;
 		}
 
+		Enemy* e_ = e.get();
 		const Vector3 src_ = e_->GetWorldPosition();
+
 		Vector3 dir_ = corePos_ - src_;
 		float len_ = MyMath::Length(dir_);
 		if (len_ <= 0.0001f) {
@@ -552,7 +528,6 @@ void EnemyManager::SpawnWave1Group() {
 		return;
 	}
 
-	ClearWave1SpecialParticipants_();
 	NotifyPlayerBeforeClearEnemies_();
 	enemies_.clear();
 
@@ -580,8 +555,16 @@ void EnemyManager::SpawnWave1Group() {
 
 		e_->SetBehavior(EnemyBehavior::FormationMove);
 		e_->SetFormationMoveSpeed(wave1FormationMoveSpeed_);
-		e_->SetPosition(wave1ScatterPositions_[i]);
-		e_->SetFormationTarget(wave1ScatterPositions_[i]);
+
+		const float step_ = 6.28318530718f / static_cast<float>(kWave1EnemyCount_);
+		const float ang_ = wave1CircleAngle_ + step_ * static_cast<float>(i);
+
+		Vector3 pos_ = wave1CircleCenter_;
+		pos_.x += std::cos(ang_) * wave1CircleRadius_;
+		pos_.y += std::sin(ang_) * wave1CircleRadius_;
+
+		e_->SetPosition(pos_);
+		e_->SetFormationTarget(pos_);
 
 		SetupEnemyForPlayer(*e_);
 		e_->SyncTransform();
@@ -595,74 +578,6 @@ void EnemyManager::SpawnWave1Group() {
 	}
 }
 
-void EnemyManager::BuildWave1ScatterPositions_() {
-	wave1ScatterPositions_[0] = { -20.0f,  8.5f, 82.0f };
-	wave1ScatterPositions_[1] = { -13.5f,  4.0f, 71.0f };
-	wave1ScatterPositions_[2] = { -6.0f, 10.0f, 88.0f };
-	wave1ScatterPositions_[3] = { 2.5f,  5.5f, 74.0f };
-	wave1ScatterPositions_[4] = { 10.5f,  9.0f, 85.0f };
-	wave1ScatterPositions_[5] = { 18.5f,  4.5f, 69.0f };
-	wave1ScatterPositions_[6] = { -17.0f, 11.5f, 92.0f };
-	wave1ScatterPositions_[7] = { -2.0f,  2.8f, 66.0f };
-	wave1ScatterPositions_[8] = { 8.0f, 12.0f, 91.0f };
-	wave1ScatterPositions_[9] = { 21.0f,  7.0f, 78.0f };
-}
-void EnemyManager::BuildWave1FormationPositions_() {
-	const Vector3 c_ = wave1FormationCenter_;
-
-	wave1FormationPositions_[0] = c_ + Vector3{ 0.0f,  2.0f, 0.0f };
-	wave1FormationPositions_[1] = c_ + Vector3{ -6.0f,  0.0f, 2.5f };
-	wave1FormationPositions_[2] = c_ + Vector3{ 6.0f,  0.0f, 2.5f };
-	wave1FormationPositions_[3] = c_ + Vector3{ -11.0f, -2.0f, 5.0f };
-	wave1FormationPositions_[4] = c_ + Vector3{ 11.0f, -2.0f, 5.0f };
-}
-void EnemyManager::ApplyWave1FormationTargets_() {
-	for (size_t i = 0; i < wave1SpecialMembers_.size(); ++i) {
-		Enemy* e_ = wave1SpecialMembers_[i];
-		if (!e_ || e_->IsDead()) {
-			continue;
-		}
-		if (i >= wave1FormationPositions_.size()) {
-			break;
-		}
-
-		e_->SetBehavior(EnemyBehavior::FormationMove);
-		e_->SetFormationMoveSpeed(wave1FormationMoveSpeed_);
-		e_->SetFormationTarget(wave1FormationPositions_[i]);
-	}
-}
-bool EnemyManager::AreAllWave1EnemiesInFormation_() const {
-	int selectedAliveCount_ = 0;
-	int selectedFormedCount_ = 0;
-
-	for (Enemy* e_ : wave1SpecialMembers_) {
-		if (!e_ || e_->IsDead()) {
-			continue;
-		}
-
-		++selectedAliveCount_;
-		if (e_->IsInFormation()) {
-			++selectedFormedCount_;
-		}
-	}
-
-	if (selectedAliveCount_ == 0) {
-		return false;
-	}
-
-	return selectedAliveCount_ == selectedFormedCount_;
-}
-void EnemyManager::ApplyWave1ScatterTargets_() {
-	for (size_t i = 0; i < enemies_.size() && i < wave1ScatterPositions_.size(); ++i) {
-		if (!enemies_[i] || enemies_[i]->IsDead()) {
-			continue;
-		}
-
-		enemies_[i]->SetBehavior(EnemyBehavior::FormationMove);
-		enemies_[i]->SetFormationMoveSpeed(wave1BreakMoveSpeed_);
-		enemies_[i]->SetFormationTarget(wave1ScatterPositions_[i]);
-	}
-}
 void EnemyManager::UpdateEnemyBullets_(float dt) {
 	for (auto it = enemyBullets_.begin(); it != enemyBullets_.end();) {
 		if (!(*it)) {
@@ -808,23 +723,7 @@ void EnemyManager::SpawnWave2SubWave(int id) {
 }
 
 Vector3 EnemyManager::GetWave1SpecialCorePosition_() const {
-	Vector3 sum_ = { 0.0f, 0.0f, 0.0f };
-	int count_ = 0;
-
-	for (Enemy* e_ : wave1SpecialMembers_) {
-		if (!e_ || e_->IsDead() || e_->IsDying()) {
-			continue;
-		}
-
-		sum_ += e_->GetWorldPosition();
-		++count_;
-	}
-
-	if (count_ <= 0) {
-		return wave1FormationCenter_ + wave1SpecialCoreOffset_;
-	}
-
-	return (sum_ / static_cast<float>(count_)) + wave1SpecialCoreOffset_;
+	return wave1CircleCenter_ + wave1SpecialCoreOffset_;
 }
 
 void EnemyManager::SetCamera(TKM::Camera* camera) {
@@ -1228,7 +1127,7 @@ void EnemyManager::SpawnWave3ExtraMidBoss() {
 }
 
 void EnemyManager::BeginWave1() {
-	wave1Phase_ = Wave1Phase::Scatter; // 最初は散開フェーズから
+	wave1Phase_ = Wave1Phase::Rotate; // Wave1の最初の状態は「回転」
 	wave1PhaseTimer_ = 0.0f; // Wave1の状態をリセット
 	wave1NormalShotTimer_ = 0.0f;
 	wave1SpecialCharging_ = false;
@@ -1238,8 +1137,6 @@ void EnemyManager::BeginWave1() {
 		maxEnemyCount_ = wave1DefeatTarget_;
 	}
 
-	BuildWave1ScatterPositions_();
-	BuildWave1FormationPositions_();
 	SpawnWave1Group();
 }
 
@@ -1258,83 +1155,38 @@ void EnemyManager::BeginWave3() {
 	SpawnWave3MidBossStage();
 }
 
-bool EnemyManager::IsWave1SpecialSelected_(const Enemy* enemy) const {
-	if (!enemy) {
-		return false;
-	}
+void EnemyManager::ApplyWave1CircleTargets_() {
+	const float step_ = 6.28318530718f / static_cast<float>(kWave1EnemyCount_);
 
-	for (Enemy* member_ : wave1SpecialMembers_) {
-		if (member_ == enemy) {
-			return true;
-		}
-	}
-	return false;
-}
-
-void EnemyManager::ClearWave1SpecialParticipants_() {
-	SetWave1SpecialInvincible_(false);
-
-	for (Enemy*& member_ : wave1SpecialMembers_) {
-		member_ = nullptr;
-	}
-}
-
-void EnemyManager::SetWave1SpecialInvincible_(bool enable) {
-	for (Enemy* member_ : wave1SpecialMembers_) {
-		if (!member_) {
-			continue;
-		}
-		if (member_->IsDead() || member_->IsDying()) {
-			continue;
-		}
-
-		member_->SetDamageInvincible(enable);
-	}
-}
-
-void EnemyManager::SelectWave1SpecialParticipants_() {
-	ClearWave1SpecialParticipants_();
-
-	std::vector<Enemy*> aliveEnemies_;
-	aliveEnemies_.reserve(enemies_.size());
-
+	int aliveIndex_ = 0;
 	for (auto& e : enemies_) {
 		if (!e || e->IsDead() || e->IsDying()) {
 			continue;
 		}
-		aliveEnemies_.push_back(e.get());
-	}
 
-	if (aliveEnemies_.empty()) {
-		return;
-	}
+		const float ang_ = wave1CircleAngle_ + step_ * static_cast<float>(aliveIndex_);
 
-	for (size_t i = 0; i < aliveEnemies_.size(); ++i) {
-		const size_t swapIndex_ = i + (std::rand() % static_cast<int>(aliveEnemies_.size() - i));
-		std::swap(aliveEnemies_[i], aliveEnemies_[swapIndex_]);
-	}
+		Vector3 pos_ = wave1CircleCenter_;
+		pos_.x += std::cos(ang_) * wave1CircleRadius_;
+		pos_.y += std::sin(ang_) * wave1CircleRadius_;
 
-	const size_t selectCount_ = std::min<size_t>(kWave1SpecialParticipantCount_, aliveEnemies_.size());
-	for (size_t i = 0; i < selectCount_; ++i) {
-		wave1SpecialMembers_[i] = aliveEnemies_[i];
+		e->SetBehavior(EnemyBehavior::FormationMove);
+		e->SetFormationMoveSpeed(wave1FormationMoveSpeed_);
+		e->SetFormationTarget(pos_);
+
+		++aliveIndex_;
 	}
 }
-
-void EnemyManager::ApplyWave1ScatterTargetsToNonSelected_() {
-	for (size_t i = 0; i < enemies_.size() && i < wave1ScatterPositions_.size(); ++i) {
-		Enemy* e_ = enemies_[i].get();
-		if (!e_ || e_->IsDead()) {
+void EnemyManager::UpdateWave1CircleFormation_(float dt) {
+	wave1CircleAngle_ -= wave1CircleAngularSpeed_ * dt; // 右回転
+	ApplyWave1CircleTargets_();
+}
+void EnemyManager::SetWave1AllInvincible_(bool enable) {
+	for (auto& e : enemies_) {
+		if (!e || e->IsDead() || e->IsDying()) {
 			continue;
 		}
-
-		if (IsWave1SpecialSelected_(e_)) {
-			continue;
-		}
-
-		e_->SetDamageInvincible(false);
-		e_->SetBehavior(EnemyBehavior::FormationMove);
-		e_->SetFormationMoveSpeed(wave1BreakMoveSpeed_);
-		e_->SetFormationTarget(wave1ScatterPositions_[i]);
+		e->SetDamageInvincible(enable);
 	}
 }
 

@@ -26,13 +26,11 @@ public:
 
 	// --- Wave 管理周りを追加 ---
 	enum class WavePhase { W1, W2, W3, Done };
-	// Wave1 の中の細かいフェーズ（編隊行動の段階）を定義
+	// Wave1 内の細かいフェーズ（回転→ホールド→攻撃）を管理するための列挙型
 	enum class Wave1Phase {
-		Scatter, // 散開して待つ
-		FormUp,  // 隊列位置へ移動
-		Hold,    // 隊列完成後に少し止まる
-		Attack,  // 隊列状態で一斉攻撃
-		Break,   // 解散して散開位置へ戻る
+		Rotate, // 敵が三角隊列の中心位置を回転しながら移動するフェーズ
+		Hold, // 敵が三角隊列の中心位置でホールドするフェーズ
+		Attack, // 敵がプレイヤーに向かって攻撃するフェーズ
 	};
 
 	/// <summary>
@@ -178,20 +176,15 @@ private:
 	// Wave1（新仕様：散開 → 隊列 → ホールド → 解散）
 	//==============================================================
 	static constexpr int kWave1EnemyCount_ = 10; // Wave1の敵数
-	static constexpr int kWave1SpecialParticipantCount_ = 5; // Wave1の特殊攻撃に参加する敵の数（隊列の中心を除いた数）
 
-	Wave1Phase wave1Phase_ = Wave1Phase::Scatter; // 現在のフェーズ
+	Wave1Phase wave1Phase_ = Wave1Phase::Rotate; // 現在のフェーズ
 	float wave1PhaseTimer_ = 0.0f; // 現在のフェーズの経過時間
 
 	float wave1ScatterDuration_ = 2.0f;     // 散開している時間
 	float wave1HoldDuration_ = 1.0f;        // 隊列完成後の静止時間
-	float wave1BreakDuration_ = 1.5f;       // 解散移動の猶予時間
 	float wave1FormationMoveSpeed_ = 0.22f; // 隊列移動速度
-	float wave1BreakMoveSpeed_ = 0.18f;     // 解散時の移動速度
 
-	Vector3 wave1FormationCenter_ = { 0.0f, 6.0f, 62.0f };
-
-	Vector3 wave1SpecialCoreOffset_ = { 0.0f, 14.0f, -2.0f }; // 三角隊列の中心から見た特殊攻撃コアの位置オフセット
+	Vector3 wave1SpecialCoreOffset_ = { 0.0f, 0.0f, 0.0f }; // 三角隊列の中心から見た特殊攻撃コアの位置オフセット
 	float wave1SpecialChargeDuration_ = 2.2f;               // 溜め時間
 	float wave1SpecialCoreStartScale_ = 0.55f;                // 生成時の小ささ
 	float wave1SpecialCoreEndScale_ = 5.2f;                  // 最大サイズ
@@ -211,27 +204,22 @@ private:
 	EnemyBullet* wave1SpecialCoreBullet_ = nullptr;
 
 	void SpawnWave1Group();
-	void BuildWave1ScatterPositions_();
-	void BuildWave1FormationPositions_();
-	void ApplyWave1FormationTargets_();
-	void ApplyWave1ScatterTargets_();
-	bool AreAllWave1EnemiesInFormation_() const;
 	void UpdateEnemyBullets_(float dt);
-	void UpdateWave1ScatterAttack_(float dt, bool excludeSpecialSelected);
+	void UpdateWave1ScatterAttack_(float dt);
 	void BeginWave1SpecialCharge_();
 	void UpdateWave1SpecialCharge_(float dt);
 	void FireWave1SpecialCore_();
 	void EmitWave1SpecialChargeParticles_();
 
-	std::array<Vector3, kWave1EnemyCount_> wave1ScatterPositions_{};
-	std::array<Vector3, kWave1SpecialParticipantCount_> wave1FormationPositions_{};
-	std::array<Enemy*, kWave1SpecialParticipantCount_> wave1SpecialMembers_{};
+	float wave1CircleRadius_ = 18.0f;
+	float wave1CircleAngularSpeed_ = 0.75f; // 右回転用（rad/sec）
+	float wave1CircleAngle_ = 0.0f;         // 現在の回転角
+	Vector3 wave1CircleCenter_ = { 0.0f, -3.0f, 80.0f };
 
-	void SelectWave1SpecialParticipants_();
-	void ClearWave1SpecialParticipants_();
-	bool IsWave1SpecialSelected_(const Enemy* enemy) const;
-	void ApplyWave1ScatterTargetsToNonSelected_();
-	void SetWave1SpecialInvincible_(bool enable);
+	void UpdateWave1CircleFormation_(float dt);
+	void ApplyWave1CircleTargets_();
+	void SetWave1AllInvincible_(bool enable);
+
 	/// <summary>
 	/// 敵弾を描画します。プレイヤーに近いほど明るく、遠いほど暗くなるように、距離に応じた色変化も加えます。
 	/// </summary>
