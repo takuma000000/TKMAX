@@ -7,6 +7,7 @@
 #include "EnemyFactory.h"
 #include "Player.h"
 #include "Camera.h"
+#include "Object3d.h"
 #include "DirectXCommon.h"
 #include "BaseScene.h"
 #include "MidBossCore.h"
@@ -26,11 +27,11 @@ public:
 
 	// --- Wave 管理周りを追加 ---
 	enum class WavePhase { W1, W2, W3, Done };
-	// Wave1 内の細かいフェーズ（回転→ホールド→攻撃）を管理するための列挙型
+	// Wave1の段階をさらに細分化（W1-1: バリア戦、W1-2: コア出現、W1-3: バリア破壊後の戦い）
 	enum class Wave1Phase {
-		Rotate, // 敵が三角隊列の中心位置を回転しながら移動するフェーズ
-		Hold, // 敵が三角隊列の中心位置でホールドするフェーズ
-		Attack, // 敵がプレイヤーに向かって攻撃するフェーズ
+		BarrierBattle,  // 本隊は無敵、増援を倒す段階
+		CoreChance,     // コア出現中。本隊停止
+		ExposedBattle,  // バリア破壊後。本隊を倒す段階
 	};
 
 	/// <summary>
@@ -175,13 +176,10 @@ private:
 	//==============================================================
 	// Wave1（新仕様：散開 → 隊列 → ホールド → 解散）
 	//==============================================================
-	static constexpr int kWave1EnemyCount_ = 10; // Wave1の敵数
 
-	Wave1Phase wave1Phase_ = Wave1Phase::Rotate; // 現在のフェーズ
+	Wave1Phase wave1Phase_ = Wave1Phase::BarrierBattle; // 現在のフェーズ
 	float wave1PhaseTimer_ = 0.0f; // 現在のフェーズの経過時間
 
-	float wave1ScatterDuration_ = 2.0f;     // 散開している時間
-	float wave1HoldDuration_ = 1.0f;        // 隊列完成後の静止時間
 	float wave1FormationMoveSpeed_ = 0.22f; // 隊列移動速度
 
 	Vector3 wave1SpecialCoreOffset_ = { 0.0f, 0.0f, 0.0f }; // 三角隊列の中心から見た特殊攻撃コアの位置オフセット
@@ -219,6 +217,38 @@ private:
 	void UpdateWave1CircleFormation_(float dt);
 	void ApplyWave1CircleTargets_();
 	void SetWave1AllInvincible_(bool enable);
+
+	std::unique_ptr<TKM::Object3d> wave1BarrierObject_ = nullptr; // Wave1用バリア見た目
+	bool wave1BarrierActive_ = false;                              // バリア有効中か
+	Vector3 wave1BarrierOffset_ = { 0.0f, 0.0f, 0.0f };            // 中心位置の微調整
+	float wave1BarrierScale_ = 18.0f;                              // 球の大きさ
+	Vector4 wave1BarrierColor_ = { 0.65f, 0.9f, 1.0f, 0.2f };      // 仮の色と透明度
+	void InitializeWave1Barrier_();
+	void UpdateWave1Barrier_();
+	void SetWave1BarrierActive_(bool active);
+
+
+	static constexpr int kWave1EnemyCount_ = 10;     // 本隊数
+	static constexpr int kWave1SupportCount_ = 5;    // 増援数
+
+	float wave1CoreChanceDuration_ = 5.0f;           // コア制限時間
+	float wave1CoreChanceTimer_ = 0.0f;              // コア経過時間
+
+	bool wave1BarrierBroken_ = false;                // バリア破壊済みか
+	bool wave1MainStopped_ = false;                  // 本隊を停止中か
+
+	int wave1MainDefeatedCount_ = 0;                 // 本隊撃破数
+	int wave1SupportDefeatedCount_ = 0;              // 増援撃破数
+
+	void SpawnWave1SupportEnemies_();
+	void StartWave1CoreChance_();
+	void BreakWave1Barrier_();
+	void ResetWave1BarrierLoop_();
+	void UpdateWave1SpecialAttackCycle_(float dt);
+
+	int CountAliveWave1Main_() const;
+	int CountAliveWave1Support_() const;
+	void SetWave1MainFreeze_(bool enable);
 
 	/// <summary>
 	/// 敵弾を描画します。プレイヤーに近いほど明るく、遠いほど暗くなるように、距離に応じた色変化も加えます。

@@ -29,12 +29,14 @@ enum class EnemyDeathReaction {
 	Collapse,       // 崩れ落ちて潰れて消える
 	BossFinal,      // その場で揺れながら爆散
 };
-// 敵の役割（通常 / Wave3中ボス / Wave3蘇生核）
+// 敵の種類（主に見た目や挙動の違いを分けるためのもの。ゲーム進行の段階も兼ねている）
 enum class EnemyType {
-	Normal,      // 通常ザコ
-	Wave3MidBoss,// Wave3 中ボス
-	Wave3Core,   // Wave3 蘇生用の「核」
-	Boss,        // ボス
+	Normal,        // 通常ザコ
+	Wave1Main,     // Wave1 本隊10体
+	Wave1Support,  // Wave1 増援
+	Wave3MidBoss,  // Wave3 中ボス
+	Wave3Core,     // Wave3 蘇生用の核
+	Boss,          // ボス
 };
 
 class Enemy {
