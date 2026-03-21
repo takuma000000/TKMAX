@@ -619,6 +619,12 @@ void Player::SetYaw(float yawRad) {
 	object_->SetRotate(r); // ヨー角だけ更新
 }
 
+void Player::SetWave1BarrierInfo(bool active, const Vector3& center, const Vector3& size) {
+	wave1BarrierActive_ = active;
+	wave1BarrierCenter_ = center;
+	wave1BarrierSize_ = size;
+}
+
 void Player::UpdateTitleIdle(float dt) {
 	// タイトル専用：入力/射撃/移動/ロックオン等は一切触らない
 	// ただし Draw に必要な行列更新だけは行う

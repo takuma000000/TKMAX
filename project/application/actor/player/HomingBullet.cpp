@@ -285,6 +285,44 @@ void HomingBullet::Update() {
 		// トレイルの更新
 		UpdateTrail_(pos);
 
+		// =========================================
+		// Wave1バリアとの当たり判定
+		// =========================================
+		if (player_ && player_->IsWave1BarrierActive()) {
+
+			const Vector3 bulletPos_ = object_->GetTranslate();
+			const Vector3 bulletScale_ = object_->GetScale();
+
+			AABB bulletBox_(bulletPos_, bulletScale_);
+			AABB barrierBox_(player_->GetWave1BarrierCenter(), player_->GetWave1BarrierSize());
+
+			bool barrierHit_ = false;
+
+			if (barrierBox_.IsIntersectSegment(prevPos_, bulletPos_)) {
+				barrierHit_ = true;
+			}
+			if (!barrierHit_ && bulletBox_.IsCollidingWithAABB(barrierBox_)) {
+				barrierHit_ = true;
+			}
+
+			if (barrierHit_) {
+				isHit_ = true;
+				isDead_ = true;
+
+				TKM::ParticleManager* pm = TKM::ParticleManager::GetInstance();
+				if (pm) {
+					pm->Emit("enemyHit_flash", bulletPos_, 1);
+					pm->Emit("enemyHit_ring", bulletPos_, 1);
+					pm->Emit("enemyHit_spark", bulletPos_, 12);
+				}
+
+				if (player_) {
+					player_->StartCameraShake(6);
+				}
+				return;
+			}
+		}
+
 		Vector3 bulletPos = object_->GetTranslate(); // ホーミング弾の現在位置
 		Vector3 bulletScale = object_->GetScale(); // ホーミング弾のスケール（当たり判定の大きさに使用）
 

@@ -110,6 +110,37 @@ void PlayerBullet::Update() {
 		};
 
 	// =========================================
+	// Wave1バリアとの当たり判定
+	// =========================================
+	if (player_ && player_->IsWave1BarrierActive()) {
+
+		const Vector3 barrierPos_ = player_->GetWave1BarrierCenter();
+		const Vector3 barrierSize_ = player_->GetWave1BarrierSize();
+
+		const bool barrierHit_ = CheckSweptHitAABB(barrierPos_, barrierSize_);
+
+		if (barrierHit_) {
+			isHit_ = true;
+			isDead_ = true;
+
+			TKM::ParticleManager* pm = TKM::ParticleManager::GetInstance();
+			Vector3 hitPos = bulletPos;
+
+			if (pm) {
+				pm->Emit("enemyHit_flash", hitPos, 1);
+				pm->Emit("enemyHit_ring", hitPos, 1);
+				pm->Emit("enemyHit_spark", hitPos, 12);
+			}
+
+			if (player_) {
+				player_->StartCameraShake(6);
+			}
+
+			return;
+		}
+	}
+
+	// =========================================
 	// 敵が存在するなら当たり判定チェック
 	// =========================================
 	if (enemy_ && !enemy_->IsDead()) { // 敵が存在していて生きているなら
@@ -345,7 +376,7 @@ void PlayerBullet::StartSpawnBezier(const Vector3& p0, const Vector3& p1, const 
 		ltRingDistAcc_ = 0.0f;
 		ltTrailDistAcc_ = 0.0f;
 	}
-	
+
 	// ベジェ曲線の制御点を保存
 	bezP0_ = p0; bezP1_ = p1; bezP2_ = p2; bezP3_ = p3;
 	spawnDuration_ = std::max(0.001f, duration);

@@ -99,6 +99,12 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	bool IsWavesInitialized() const { return initializedWaves_; }
+	/// <summary>
+	/// Wave1のバリアがアクティブかどうかを取得します。
+	/// </summary>
+	/// <returns></returns>
+	bool IsWave1BarrierActive() const { return wave1BarrierActive_; }
+
 	// Getter==========================================================================
 	/// <summary>
 	/// 現在の WavePhase を取得します
@@ -125,6 +131,16 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	Vector3 GetWave1SpecialCorePosition_() const;
+	/// <summary>
+	/// Wave1のバリアの中心位置とサイズを取得します
+	/// </summary>
+	/// <returns></returns>
+	Vector3 GetWave1BarrierCenter() const { return GetWave1SpecialCorePosition_() + wave1BarrierOffset_; }
+	/// <summary>
+	/// Wave1のバリアのサイズを取得します
+	/// </summary>
+	/// <returns></returns>
+	Vector3 GetWave1BarrierSize() const { return { wave1BarrierScale_ * 2.0f, wave1BarrierScale_ * 2.0f, wave1BarrierScale_ * 2.0f }; }
 	// ================================================================================
 	// Setter==========================================================================
 	/// <summary>
@@ -226,6 +242,7 @@ private:
 	void InitializeWave1Barrier_();
 	void UpdateWave1Barrier_();
 	void SetWave1BarrierActive_(bool active);
+	void SyncWave1BarrierInfoToPlayer_();
 
 
 	static constexpr int kWave1EnemyCount_ = 10;     // 本隊数

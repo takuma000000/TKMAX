@@ -94,6 +94,11 @@ public:
 	/// </summary>
 	bool IsRbRefilling() const { return rbRefilling_; }
 	/// <summary>
+	/// LB弾が回復中かどうか。
+	/// </summary>
+	/// <returns></returns>
+	bool IsWave1BarrierActive() const { return wave1BarrierActive_; }
+	/// <summary>
 	/// 攻撃ID付きでダメージを受ける処理を行います。
 	/// 同一攻撃IDによる重複ダメージは無効化されます。
 	/// </summary>
@@ -187,6 +192,14 @@ public:
 	/// LB弾の最大数を取得します。
 	/// </summary>
 	int GetLbAmmoMax() const { return kLbAmmoMax_; }
+	/// <summary>
+	/// ワンウェイバリア（LB弾）に関する情報を取得します。
+	/// </summary>
+	Vector3 GetWave1BarrierCenter() const { return wave1BarrierCenter_; }
+	/// <summary>
+	/// ワンウェイバリア（LB弾）に関する情報を取得します。
+	/// </summary>
+	Vector3 GetWave1BarrierSize() const { return wave1BarrierSize_; }
 	// =========================================
 	// Setter===================================
 	/// <summary>
@@ -273,6 +286,13 @@ public:
 	/// Yaw（Y回転）だけ設定します（ラジアン）。
 	/// </summary>
 	void SetYaw(float yawRad);
+	/// <summary>
+	/// ワンウェイバリア（LB弾）に関する情報を設定します。
+	/// </summary>
+	/// <param name="active">バリアがアクティブかどうか</param>
+	/// <param name="center">バリアの中心位置（ワールド座標）</param>
+	/// <param name="size">バリアのサイズ（幅・高さ・奥行）</param>
+	void SetWave1BarrierInfo(bool active, const Vector3& center, const Vector3& size);
 	// =========================================
 
 	enum class DeathPhase { None, FaultSparks, FlyAway }; // 撃墜演出フェーズ
@@ -519,4 +539,10 @@ private:
 	bool debugUnlimitedLB_ = false;             // デバッグで無限（必要なら）
 	static constexpr float kLbRefillWaitSec_ = 3.0f; // 最後にLB撃ってから満タンまでの待ち秒数
 	float lbNoFireTimer_ = 0.0f;                // 最後にLBを撃ってからの経過秒
+	//======================================================================
+	// ワンウェイバリア
+	//======================================================================
+	bool wave1BarrierActive_ = false; // ワンウェイバリアがアクティブかどうか
+	Vector3 wave1BarrierCenter_ = { 0.0f, 0.0f, 0.0f }; // ワンウェイバリアの中心位置（ワールド座標）
+	Vector3 wave1BarrierSize_ = { 0.0f, 0.0f, 0.0f }; // ワンウェイバリアのサイズ（幅・高さ・奥行）
 };

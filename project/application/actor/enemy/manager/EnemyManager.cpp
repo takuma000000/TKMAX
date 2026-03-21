@@ -50,6 +50,7 @@ void EnemyManager::Update(float dt) {
 	if (wave1BarrierActive_) {
 		UpdateWave1Barrier_();
 	}
+	SyncWave1BarrierInfoToPlayer_();
 
 	// ───────────────────────────────
 	/// ● Wave3 の核が居れば更新
@@ -185,6 +186,7 @@ void EnemyManager::SpawnCurrentWave() {
 	wave1SpecialCoreBullet_ = nullptr;
 	wave1NormalShotTimer_ = 0.0f;
 	SetWave1BarrierActive_(false);
+	SyncWave1BarrierInfoToPlayer_();
 
 	// WavePhase に対応したスポーン関数があれば呼び出す（Done ならスポーン関数は nullptr なので何もしない）
 	const auto ops_ = kWaveOps_[static_cast<int>(wavePhase_)];
@@ -223,6 +225,7 @@ void EnemyManager::SkipToBossWave() {
 	wave1SpecialCoreBullet_ = nullptr;
 	wave1NormalShotTimer_ = 0.0f;
 	SetWave1BarrierActive_(false);
+	SyncWave1BarrierInfoToPlayer_();
 
 	// 撃破数・最大数もリセット（ゲージを空にしておく）
 	if (defeatedEnemyCount_) {
@@ -718,6 +721,7 @@ void EnemyManager::BreakWave1Barrier_() {
 	SetWave1AllInvincible_(false);
 	SetWave1MainFreeze_(false);
 	SetWave1BarrierActive_(false);
+	SyncWave1BarrierInfoToPlayer_();
 
 	midBossCore_.reset();
 	if (player_) {
@@ -737,6 +741,7 @@ void EnemyManager::ResetWave1BarrierLoop_() {
 	SetWave1AllInvincible_(true);
 	SetWave1BarrierActive_(true);
 	UpdateWave1Barrier_();
+	SyncWave1BarrierInfoToPlayer_();
 	SetWave1MainFreeze_(false);
 
 	wave1BarrierBroken_ = false;
@@ -1313,6 +1318,7 @@ void EnemyManager::BeginWave1() {
 	InitializeWave1Barrier_();
 	SetWave1BarrierActive_(true);
 	UpdateWave1Barrier_();
+	SyncWave1BarrierInfoToPlayer_();
 }
 
 void EnemyManager::BeginWave2() {
@@ -1421,6 +1427,18 @@ void EnemyManager::SetWave1BarrierActive_(bool active) {
 	}
 }
 
+void EnemyManager::SyncWave1BarrierInfoToPlayer_() {
+	if (!player_) {
+		return;
+	}
+
+	player_->SetWave1BarrierInfo(
+		wave1BarrierActive_,
+		GetWave1BarrierCenter(),
+		GetWave1BarrierSize()
+	);
+}
+
 void EnemyManager::Draw(TKM::DirectXCommon* dx) {
 	if (!&enemies_) { // enemies_ がまだ紐付いてなかったら何もしない
 		return;
@@ -1429,9 +1447,9 @@ void EnemyManager::Draw(TKM::DirectXCommon* dx) {
 		enemy->Draw(dx);
 	}
 
-	if (wave1BarrierActive_ && wave1BarrierObject_) {
+	/*if (wave1BarrierActive_ && wave1BarrierObject_) {
 		wave1BarrierObject_->Draw(dx);
-	}
+	}*/
 
 	DrawEnemyBullets_(dx);
 
