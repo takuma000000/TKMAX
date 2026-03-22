@@ -78,6 +78,9 @@ void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommo
 	// LB弾
 	lbAmmo_ = kLbAmmoMax_; // LB弾初期弾数
 	lbNoFireTimer_ = 0.0f; // LB弾発射不可タイマー初期化
+
+	// ワンウェイバリア
+	wave1BarrierHits_.clear(); // ワンウェイバリアヒット情報リスト初期化
 }
 
 void Player::Update(float dt) {
@@ -115,6 +118,17 @@ void Player::Update(float dt) {
 	}
 
 	if (reticle_) reticle_->Update(dt);
+
+	// Wave1バリアのヒット情報を更新
+	for (auto it = wave1BarrierHits_.begin(); it != wave1BarrierHits_.end();) {
+		it->age_ += dt;
+		// 寿命が尽きてたら削除
+		if (it->age_ >= it->life_) {
+			it = wave1BarrierHits_.erase(it);
+		} else { // 生存してたら次へ
+			++it;
+		}
+	}
 
 	HandleFollowCamera(); // カメラの追従処理
 	RemoveEnemyIfDead(); // 敵が死んでたら参照をクリア
@@ -234,6 +248,8 @@ void Player::ImGuiDebug() {
 	//---------------- プレイヤー本体 ----------------
 	ImGui::Begin("プレイヤー");
 
+	ImGui::Text("バリア状態: %s", wave1BarrierActive_ ? "ON" : "OFF");
+	ImGui::Text("ヒット数: %d", static_cast<int>(wave1BarrierHits_.size()));
 
 	ImGui::Text("直前に当たった攻撃ID: %d", lastHitAttackId_);
 
@@ -623,6 +639,10 @@ void Player::SetWave1BarrierInfo(bool active, const Vector3& center, const Vecto
 	wave1BarrierActive_ = active;
 	wave1BarrierCenter_ = center;
 	wave1BarrierSize_ = size;
+
+	if (!wave1BarrierActive_) {
+		wave1BarrierHits_.clear();
+	}
 }
 
 void Player::UpdateTitleIdle(float dt) {
@@ -635,6 +655,22 @@ void Player::UpdateTitleIdle(float dt) {
 	// 行列更新（これをしないと描画が古いままになることがある）
 	if (object_) { object_->Update(); }
 	if (flipper_) { flipper_->Update(); }
+}
+
+void Player::AddWave1BarrierHit(const Vector3& worldPos) {
+	// ワンウェイバリアに当たった位置を記録（エフェクト描画用）
+	Wave1BarrierHit hit_;
+	hit_.worldPos_ = worldPos;
+	hit_.age_ = 0.0f;
+	hit_.life_ = 0.35f;
+
+	// 古いヒット情報を消しつつ追加
+	wave1BarrierHits_.push_back(hit_);
+
+	// 上限を超えたら古いのから消す
+	if (wave1BarrierHits_.size() > kWave1BarrierHitMax_) {
+		wave1BarrierHits_.erase(wave1BarrierHits_.begin()); // 最初の要素を削除
+	}
 }
 
 void Player::SetShootingEnabled(bool enabled) {

@@ -27,6 +27,13 @@ namespace TKM {
 //=============================================================
 class Player {
 public:
+	// Wave1のバリアヒット情報構造体
+	struct Wave1BarrierHit {
+		Vector3 worldPos_ = { 0.0f, 0.0f, 0.0f }; // ヒットしたワールド座標
+		float age_ = 0.0f; // ヒットしてからの経過時間
+		float life_ = 0.35f; // エフェクトの寿命（秒）
+	};
+
 	/// <summary>
 	/// プレイヤーオブジェクトを初期化します。
 	/// </summary>
@@ -119,6 +126,11 @@ public:
 	/// タイトルなど、入力/弾/移動を一切行わず「見た目だけ」動かす更新。
 	/// </summary>
 	void UpdateTitleIdle(float dt);
+	/// <summary>
+	/// ワンウェイバリア（LB弾）が敵の攻撃にヒットしたときの処理を追加します。
+	/// </summary>
+	/// <param name="worldPos">ヒットしたワールド座標</param>
+	void AddWave1BarrierHit(const Vector3& worldPos);
 
 	// Getter===================================
 	/// <summary>
@@ -200,6 +212,12 @@ public:
 	/// ワンウェイバリア（LB弾）に関する情報を取得します。
 	/// </summary>
 	Vector3 GetWave1BarrierSize() const { return wave1BarrierSize_; }
+	/// <summary>
+	/// ワンウェイバリア（LB弾）に関する情報を取得します。
+	/// </summary>
+	const std::vector<Wave1BarrierHit>& GetWave1BarrierHits() const {
+		return wave1BarrierHits_;
+	}
 	// =========================================
 	// Setter===================================
 	/// <summary>
@@ -545,4 +563,6 @@ private:
 	bool wave1BarrierActive_ = false; // ワンウェイバリアがアクティブかどうか
 	Vector3 wave1BarrierCenter_ = { 0.0f, 0.0f, 0.0f }; // ワンウェイバリアの中心位置（ワールド座標）
 	Vector3 wave1BarrierSize_ = { 0.0f, 0.0f, 0.0f }; // ワンウェイバリアのサイズ（幅・高さ・奥行）
+	static constexpr size_t kWave1BarrierHitMax_ = 8; // ワンウェイバリアヒットエフェクトの最大数
+	std::vector<Wave1BarrierHit> wave1BarrierHits_; // ワンウェイバリアヒットエフェクトの情報リスト
 };
