@@ -47,7 +47,7 @@ void EnemyManager::Update(float dt) {
 	if (!initializedWaves_) { return; } // Wave未初期化なら何もしない
 
 	// Wave1のバリア更新
-	if (wave1BarrierActive_) {
+	if (wave1Barrier_) {
 		UpdateWave1Barrier_();
 	}
 	SyncWave1BarrierInfoToPlayer_();
@@ -890,6 +890,14 @@ Vector3 EnemyManager::GetWave1SpecialCorePosition_() const {
 	return wave1CircleCenter_ + wave1SpecialCoreOffset_;
 }
 
+Vector3 EnemyManager::GetWave1BarrierCenter() const {
+	return wave1Barrier_ ? wave1Barrier_->GetCenter() : Vector3{ 0.0f, 0.0f, 0.0f };
+}
+
+Vector3 EnemyManager::GetWave1BarrierSize() const {
+	return wave1Barrier_ ? wave1Barrier_->GetAABBSize() : Vector3{ 0.0f, 0.0f, 0.0f };
+}
+
 void EnemyManager::SetCamera(TKM::Camera* camera) {
 	BattleActorManagerBase::SetCamera(camera);
 }
@@ -902,6 +910,10 @@ void EnemyManager::OnCameraChanged() {
 	// 中ボスの核もカメラ参照を更新しておく（存在すれば）
 	if (midBossCore_) {
 		midBossCore_->SetCamera(camera_);
+	}
+	// バリアもカメラ参照を更新しておく（存在すれば）
+	if (wave1Barrier_) {
+		wave1Barrier_->SetCamera(camera_);
 	}
 }
 
@@ -1322,6 +1334,9 @@ void EnemyManager::BeginWave1() {
 	InitializeWave1Barrier_();
 	SetWave1BarrierActive_(true);
 	UpdateWave1Barrier_();
+	if (wave1Barrier_) {
+		wave1Barrier_->SetVisible(false);
+	}
 	SyncWave1BarrierInfoToPlayer_();
 }
 
@@ -1387,7 +1402,7 @@ void EnemyManager::SetWave1AllInvincible_(bool enable) {
 }
 
 void EnemyManager::InitializeWave1Barrier_() {
-	if (wave1BarrierObject_) {
+	if (wave1Barrier_) {
 		return;
 	}
 
@@ -1396,51 +1411,43 @@ void EnemyManager::InitializeWave1Barrier_() {
 		return;
 	}
 
-	wave1BarrierObject_ = std::make_unique<TKM::Object3d>();
-	wave1BarrierObject_->Initialize(common_, dx_);
-	wave1BarrierObject_->SetModel("sphere.obj");
-
-	if (camera_) {
-		wave1BarrierObject_->SetCamera(camera_);
-	}
-
-	const Vector3 center_ = GetWave1SpecialCorePosition_() + wave1BarrierOffset_;
-	wave1BarrierObject_->SetTranslate(center_);
-	wave1BarrierObject_->SetScale({ wave1BarrierScale_, wave1BarrierScale_, wave1BarrierScale_ });
-	wave1BarrierObject_->SetColor(wave1BarrierColor_);
-	wave1BarrierObject_->Update();
+	wave1Barrier_ = std::make_unique<EnemyBarrier>();
+	wave1Barrier_->SetCamera(camera_);
+	wave1Barrier_->SetPlayer(player_);
+	wave1Barrier_->Initialize(common_, dx_);
+	wave1Barrier_->SetCenter(GetWave1SpecialCorePosition_() + wave1BarrierOffset_);
+	wave1Barrier_->SetRadius(wave1BarrierRadius_);
+	wave1Barrier_->SetVisible(false); // 今はでかい玉を常時見せない
+	wave1Barrier_->SetActive(false);
 }
 void EnemyManager::UpdateWave1Barrier_() {
-	if (!wave1BarrierObject_) {
+	if (!wave1Barrier_) {
 		return;
 	}
 
-	const Vector3 center_ = GetWave1SpecialCorePosition_() + wave1BarrierOffset_;
-	wave1BarrierObject_->SetTranslate(center_);
-	wave1BarrierObject_->SetScale({ wave1BarrierScale_, wave1BarrierScale_, wave1BarrierScale_ });
-	wave1BarrierObject_->SetColor(wave1BarrierColor_);
-	wave1BarrierObject_->Update();
+	wave1Barrier_->SetCenter(GetWave1SpecialCorePosition_() + wave1BarrierOffset_);
+	wave1Barrier_->SetRadius(wave1BarrierRadius_);
+	wave1Barrier_->Update();
 }
 void EnemyManager::SetWave1BarrierActive_(bool active) {
-	wave1BarrierActive_ = active;
-
-	if (wave1BarrierActive_) {
-		if (!wave1BarrierObject_) {
-			InitializeWave1Barrier_();
-		}
+	if (!wave1Barrier_) {
+		InitializeWave1Barrier_();
 	}
-}
-
-void EnemyManager::SyncWave1BarrierInfoToPlayer_() {
-	if (!player_) {
+	if (!wave1Barrier_) {
 		return;
 	}
 
-	player_->SetWave1BarrierInfo(
-		wave1BarrierActive_,
-		GetWave1BarrierCenter(),
-		GetWave1BarrierSize()
-	);
+	wave1Barrier_->SetActive(active);
+}
+void EnemyManager::SyncWave1BarrierInfoToPlayer_() {
+	if (!wave1Barrier_) {
+		if (player_) {
+			player_->SetWave1BarrierInfo(false, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f });
+		}
+		return;
+	}
+
+	wave1Barrier_->SyncToPlayer();
 }
 
 void EnemyManager::Draw(TKM::DirectXCommon* dx) {
@@ -1451,9 +1458,9 @@ void EnemyManager::Draw(TKM::DirectXCommon* dx) {
 		enemy->Draw(dx);
 	}
 
-	/*if (wave1BarrierActive_ && wave1BarrierObject_) {
-		wave1BarrierObject_->Draw(dx);
-	}*/
+	if (wave1Barrier_) {
+		wave1Barrier_->Draw(dx);
+	}
 
 	DrawEnemyBullets_(dx);
 

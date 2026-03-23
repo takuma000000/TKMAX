@@ -15,6 +15,7 @@
 #include "BattleActorManagerBase.h"
 #include <array>
 #include "EnemyBullet.h"
+#include "EnemyBarrier.h"
 
 // =============================================================
 // EnemyManagerクラス
@@ -103,7 +104,7 @@ public:
 	/// Wave1のバリアがアクティブかどうかを取得します。
 	/// </summary>
 	/// <returns></returns>
-	bool IsWave1BarrierActive() const { return wave1BarrierActive_; }
+	bool IsWave1BarrierActive() const { return wave1Barrier_ && wave1Barrier_->IsActive(); }
 
 	// Getter==========================================================================
 	/// <summary>
@@ -132,15 +133,15 @@ public:
 	/// <returns></returns>
 	Vector3 GetWave1SpecialCorePosition_() const;
 	/// <summary>
-	/// Wave1のバリアの中心位置とサイズを取得します
+	/// Wave1のバリアの中心位置を取得します
 	/// </summary>
 	/// <returns></returns>
-	Vector3 GetWave1BarrierCenter() const { return GetWave1SpecialCorePosition_() + wave1BarrierOffset_; }
+	Vector3 GetWave1BarrierCenter() const;
 	/// <summary>
-	/// Wave1のバリアのサイズを取得します
+	/// Wave1のバリアのサイズを取得します（AABBの半分のサイズ）。バリアが存在しない場合はゼロベクトルを返します。
 	/// </summary>
 	/// <returns></returns>
-	Vector3 GetWave1BarrierSize() const { return { wave1BarrierScale_ * 2.0f, wave1BarrierScale_ * 2.0f, wave1BarrierScale_ * 2.0f }; }
+	Vector3 GetWave1BarrierSize() const;
 	// ================================================================================
 	// Setter==========================================================================
 	/// <summary>
@@ -234,11 +235,9 @@ private:
 	void ApplyWave1CircleTargets_();
 	void SetWave1AllInvincible_(bool enable);
 
-	std::unique_ptr<TKM::Object3d> wave1BarrierObject_ = nullptr; // Wave1用バリア見た目
-	bool wave1BarrierActive_ = false;                              // バリア有効中か
-	Vector3 wave1BarrierOffset_ = { 0.0f, 0.0f, 0.0f };            // 中心位置の微調整
-	float wave1BarrierScale_ = 18.0f;                              // 球の大きさ
-	Vector4 wave1BarrierColor_ = { 0.65f, 0.9f, 1.0f, 0.2f };      // 仮の色と透明度
+	std::unique_ptr<EnemyBarrier> wave1Barrier_ = nullptr; // バリアオブジェクト
+	Vector3 wave1BarrierOffset_ = { 0.0f, 0.0f, 0.0f }; // 三角隊列の中心から見たバリアの位置オフセット
+	float wave1BarrierRadius_ = 18.0f; // バリアの半径（球体として扱うため、サイズは半径の2倍になる）
 	void InitializeWave1Barrier_();
 	void UpdateWave1Barrier_();
 	void SetWave1BarrierActive_(bool active);

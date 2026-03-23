@@ -309,7 +309,7 @@ void HomingBullet::Update() {
 				isHit_ = true;
 				isDead_ = true;
 
-				TKM::ParticleManager* pm = TKM::ParticleManager::GetInstance();
+				/*TKM::ParticleManager* pm = TKM::ParticleManager::GetInstance();
 				if (pm) {
 					pm->Emit("enemyHit_flash", bulletPos_, 1);
 					pm->Emit("enemyHit_ring", bulletPos_, 1);
@@ -319,7 +319,7 @@ void HomingBullet::Update() {
 				if (player_) {
 					player_->AddWave1BarrierHit(bulletPos_);
 					player_->StartCameraShake(6);
-				}
+				}*/
 				return;
 			}
 		}

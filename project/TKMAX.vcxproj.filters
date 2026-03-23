@@ -211,6 +211,7 @@
     <ClCompile Include="application\scene\controller\TitleShowdownController.cpp" />
     <ClCompile Include="application\actor\boss\BossEntranceSequence.cpp" />
     <ClCompile Include="application\actor\enemy\EnemyBullet.cpp" />
+    <ClCompile Include="application\actor\enemy\EnemyBarrier.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -463,6 +464,7 @@
     <ClInclude Include="application\scene\controller\TitleShowdownController.h" />
     <ClInclude Include="application\actor\boss\BossEntranceSequence.h" />
     <ClInclude Include="application\actor\enemy\EnemyBullet.h" />
+    <ClInclude Include="application\actor\enemy\EnemyBarrier.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
