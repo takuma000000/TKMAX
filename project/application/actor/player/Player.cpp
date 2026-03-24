@@ -843,7 +843,7 @@ void Player::RBShoot() {
 
 	// ▼ RB：通常弾
 	const bool padRB = input->PushButton(XINPUT_GAMEPAD_RIGHT_SHOULDER);
-	const bool keyK = input->PushKey(DIK_K);
+	const bool keyK = input->TriggerKey(DIK_K);
 
 	if (!padRB && !keyK) {
 		return;

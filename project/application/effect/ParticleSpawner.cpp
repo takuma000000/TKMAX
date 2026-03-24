@@ -2043,12 +2043,10 @@ namespace TKM {
 			p.lifeTime_ = std::uniform_real_distribution<float>(0.12f, 0.20f)(rng);
 			p.currentTime_ = 0.0f;
 
-			// 色は暗い赤系で、明るさにばらつきを持たせる
 			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
-			// 暗い本体 + 赤い割れ目のイメージ
-			float r = 0.20f + 0.45f * t;
-			float g = 0.01f + 0.03f * t;
-			float b = 0.01f + 0.03f * t;
+			float r = 0.08f + 0.10f * t;
+			float g = 0.00f + 0.03f * t;
+			float b = 0.28f + 0.18f * t;
 			p.color_ = { r, g, b, 0.96f };
 
 		} else if (groupName == "w1sp_core_ring") {
@@ -2180,8 +2178,11 @@ namespace TKM {
 			p.lifeTime_ = std::uniform_real_distribution<float>(0.10f, 0.18f)(rng);
 			p.currentTime_ = 0.0f;
 
-			// 真っ赤
-			p.color_ = { 1.0f, 0.0f, 0.0f, 1.0f };
+			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+			float r = 0.12f + 0.10f * t;
+			float g = 0.05f + 0.05f * t;
+			float b = 0.55f + 0.20f * t;
+			p.color_ = { r, g, b, 1.0f };
 
 		} else if (groupName == "w1sp_core_shell") {
 			// コアの外殻リング
@@ -2214,7 +2215,11 @@ namespace TKM {
 			p.lifeTime_ = std::uniform_real_distribution<float>(0.06f, 0.12f)(rng);
 			p.currentTime_ = 0.0f;
 
-			p.color_ = { 0.95f, 0.08f, 0.65f, 0.95f };
+			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+			float r = 0.05f + 0.05f * t;
+			float g = 0.75f + 0.20f * t;
+			float b = 0.45f + 0.20f * t;
+			p.color_ = { r, g, b, 0.95f };
 
 		} else if (groupName == "w1sp_core_burst") {
 			// 発射時の破裂片
@@ -2247,9 +2252,9 @@ namespace TKM {
 			p.currentTime_ = 0.0f;
 
 			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
-			float r = 0.28f + 0.42f * t;
+			float r = 0.08f + 0.10f * t;
 			float g = 0.01f + 0.03f * t;
-			float b = 0.01f + 0.02f * t;
+			float b = 0.32f + 0.20f * t;
 			p.color_ = { r, g, b, 0.98f };
 
 		} else if (groupName == "w1sp_fly_shell") {
@@ -2283,7 +2288,7 @@ namespace TKM {
 			p.lifeTime_ = std::uniform_real_distribution<float>(0.05f, 0.09f)(rng);
 			p.currentTime_ = 0.0f;
 
-			p.color_ = { 1.00f, 0.12f, 0.04f, 0.98f };
+			p.color_ = { 0.06f, 0.95f, 0.62f, 0.98f };
 
 		} else if (groupName == "w1sp_fly_tail") {
 			// 飛翔中の暗赤い残滓
@@ -2298,7 +2303,11 @@ namespace TKM {
 			p.lifeTime_ = std::uniform_real_distribution<float>(0.10f, 0.16f)(rng);
 			p.currentTime_ = 0.0f;
 
-			p.color_ = { 0.20f, 0.01f, 0.01f, 0.58f };
+			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+			float r = 0.04f + 0.05f * t;
+			float g = 0.00f + 0.02f * t;
+			float b = 0.18f + 0.14f * t;
+			p.color_ = { r, g, b, 0.72f };
 
 		} else if (groupName == "w1sp_fly_spark") {
 			// 飛翔中の赤橙火花
@@ -2352,12 +2361,12 @@ namespace TKM {
 			p.lifeTime_ = std::uniform_real_distribution<float>(0.12f, 0.22f)(rng);
 			p.currentTime_ = 0.0f;
 
-			// 赤寄せ
+			// 赤白ベースに少しピンクを混ぜる
 			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
-			float r = 0.92f + 0.08f * t;
-			float g = 0.02f + 0.04f * t;
-			float b = 0.03f + 0.05f * t;
-			p.color_ = { r, g, b, 0.82f };
+			float r = 0.10f + 0.08f * t;
+			float g = 0.02f + 0.05f * t;
+			float b = 0.42f + 0.22f * t;
+			p.color_ = { r, g, b, 0.88f };
 
 		} else if (groupName == "w1sp_stream_glow") {
 			// 敵→コアへ送るエネルギー線の外側グロー

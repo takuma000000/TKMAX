@@ -434,18 +434,14 @@ void EnemyManager::FireWave1SpecialCore_() {
 	if (pm_) {
 		const bool priority_ = true;
 
-		pm_->Emit("w1sp_core_flash", start_, pm_->GetEmitCountScaled(2, priority_));
-		pm_->Emit("w1sp_core_ring", start_, pm_->GetEmitCountScaled(2, priority_));
-		pm_->Emit("w1sp_core_spark", start_, pm_->GetEmitCountScaled(12, priority_));
-		pm_->Emit("w1sp_core_body", start_, pm_->GetEmitCountScaled(3, priority_));
+		pm_->Emit("w1sp_core_flash", start_, pm_->GetEmitCountScaled(1, priority_));
+		pm_->Emit("w1sp_core_spark", start_, pm_->GetEmitCountScaled(3, priority_));
+		pm_->Emit("w1sp_core_body", start_, pm_->GetEmitCountScaled(2, priority_));
 
-		pm_->Emit("w1sp_core_flash", start_, pm_->GetEmitCountScaled(4, priority_));
-		pm_->Emit("w1sp_core_ring", start_, pm_->GetEmitCountScaled(3, priority_));
-		pm_->Emit("w1sp_core_shell", start_, pm_->GetEmitCountScaled(2, priority_));
-		pm_->Emit("w1sp_core_spark", start_, pm_->GetEmitCountScaled(18, priority_));
-		pm_->Emit("w1sp_core_burst", start_, pm_->GetEmitCountScaled(14, priority_));
-		pm_->Emit("w1sp_core_arc", start_, pm_->GetEmitCountScaled(6, priority_));
-		pm_->Emit("w1sp_core_body", start_, pm_->GetEmitCountScaled(4, priority_));
+		pm_->Emit("w1sp_core_flash", start_, pm_->GetEmitCountScaled(2, priority_));
+		pm_->Emit("w1sp_core_shell", start_, pm_->GetEmitCountScaled(1, priority_));
+		pm_->Emit("w1sp_core_burst", start_, pm_->GetEmitCountScaled(6, priority_));
+		pm_->Emit("w1sp_core_arc", start_, pm_->GetEmitCountScaled(3, priority_));
 	}
 
 	wave1SpecialCoreBullet_ = nullptr;
@@ -461,22 +457,22 @@ void EnemyManager::EmitWave1SpecialChargeParticles_() {
 	const auto loadLevel_ = pm_->GetLoadLevel();
 
 	// 継続演出なので、重い時は線の分割数自体を落とす
-	int segmentCount_ = 10;
+	int segmentCount_ = 6;
 	switch (loadLevel_) {
 	case TKM::ParticleManager::LoadLevel::Low:
-		segmentCount_ = 10;
-		break;
-
-	case TKM::ParticleManager::LoadLevel::Medium:
-		segmentCount_ = 8;
-		break;
-
-	case TKM::ParticleManager::LoadLevel::High:
 		segmentCount_ = 6;
 		break;
 
-	case TKM::ParticleManager::LoadLevel::Critical:
+	case TKM::ParticleManager::LoadLevel::Medium:
+		segmentCount_ = 5;
+		break;
+
+	case TKM::ParticleManager::LoadLevel::High:
 		segmentCount_ = 4;
+		break;
+
+	case TKM::ParticleManager::LoadLevel::Critical:
+		segmentCount_ = 3;
 		break;
 	}
 
@@ -523,36 +519,36 @@ void EnemyManager::EmitWave1SpecialChargeParticles_() {
 			pm_->Emit("w1sp_stream_core", p_, pm_->GetEmitCountScaled(1, true));
 
 			// 外側グローは補助
-			pm_->Emit("w1sp_stream_glow", p_, pm_->GetEmitCountScaled(1, false));
+			//pm_->Emit("w1sp_stream_glow", p_, pm_->GetEmitCountScaled(1, false));
 
 			// 細線は2個に1回
-			if ((seg_ % 2) == 0) {
-				pm_->Emit("w1sp_stream_streak", p_, pm_->GetEmitCountScaled(1, false));
-			}
+			//if ((seg_ % 2) == 0) {
+			//	pm_->Emit("w1sp_stream_streak", p_, pm_->GetEmitCountScaled(1, false));
+			//}
 
-			// 丸粒はかなり補助
-			if ((seg_ % 4) == 0) {
-				pm_->Emit("w1sp_stream", p_, pm_->GetEmitCountScaled(1, false));
-			}
+			//// 丸粒はかなり補助
+			//if ((seg_ % 4) == 0) {
+			//	pm_->Emit("w1sp_stream", p_, pm_->GetEmitCountScaled(1, false));
+			//}
 		}
 
 		// 発射元の火花
-		pm_->Emit("w1sp_sender_glow", src_, pm_->GetEmitCountScaled(2, false));
+		//pm_->Emit("w1sp_sender_glow", src_, pm_->GetEmitCountScaled(1, false));
 	}
 
 	// コア本体の見た目
-	pm_->Emit("w1sp_core_body", corePos_, pm_->GetEmitCountScaled(3, true));
-	pm_->Emit("w1sp_core_inner", corePos_, pm_->GetEmitCountScaled(5, true));
-	pm_->Emit("w1sp_core_ring", corePos_, pm_->GetEmitCountScaled(2, true));
-	pm_->Emit("w1sp_core_shell", corePos_, pm_->GetEmitCountScaled(1, true));
-	pm_->Emit("w1sp_core_smoke", corePos_, pm_->GetEmitCountScaled(1, false));
-	pm_->Emit("w1sp_core_arc", corePos_, pm_->GetEmitCountScaled(3, false));
+	pm_->Emit("w1sp_core_body", corePos_, pm_->GetEmitCountScaled(2, true));
+	pm_->Emit("w1sp_core_inner", corePos_, pm_->GetEmitCountScaled(2, true));
+	//pm_->Emit("w1sp_core_ring", corePos_, pm_->GetEmitCountScaled(1, true));
+	//pm_->Emit("w1sp_core_shell", corePos_, pm_->GetEmitCountScaled(1, true));
+	//pm_->Emit("w1sp_core_smoke", corePos_, pm_->GetEmitCountScaled(0, false));
+	pm_->Emit("w1sp_core_arc", corePos_, pm_->GetEmitCountScaled(1, false));
 
 	// チャージ終盤の加速演出
 	if (wave1PhaseTimer_ >= wave1SpecialChargeDuration_ * 0.55f) {
-		pm_->Emit("w1sp_core_flash", corePos_, pm_->GetEmitCountScaled(2, true));
-		pm_->Emit("w1sp_core_spark", corePos_, pm_->GetEmitCountScaled(8, false));
-		pm_->Emit("w1sp_core_arc", corePos_, pm_->GetEmitCountScaled(4, false));
+		//pm_->Emit("w1sp_core_flash", corePos_, pm_->GetEmitCountScaled(1, true));
+		//pm_->Emit("w1sp_core_spark", corePos_, pm_->GetEmitCountScaled(3, false));
+		//pm_->Emit("w1sp_core_arc", corePos_, pm_->GetEmitCountScaled(1, false));
 	}
 }
 
@@ -626,12 +622,12 @@ void EnemyManager::UpdateEnemyBullets_(float dt) {
 			if (pm_) {
 				const Vector3 p_ = (*it)->GetWorldPosition();
 
-				pm_->Emit("w1sp_fly_body", p_, 4);
-				pm_->Emit("w1sp_fly_shell", p_, 2);
-				pm_->Emit("w1sp_fly_corona", p_, 3);
-				pm_->Emit("w1sp_fly_arc", p_, 3);
-				pm_->Emit("w1sp_fly_tail", p_, 3);
-				pm_->Emit("w1sp_fly_spark", p_, 5);
+				pm_->Emit("w1sp_fly_body", p_, 2);
+				//pm_->Emit("w1sp_fly_shell", p_, 1);
+				//pm_->Emit("w1sp_fly_corona", p_, 1);
+				pm_->Emit("w1sp_fly_arc", p_, 1);
+				pm_->Emit("w1sp_fly_tail", p_, 2);
+				pm_->Emit("w1sp_fly_spark", p_, 2);
 			}
 		}
 
