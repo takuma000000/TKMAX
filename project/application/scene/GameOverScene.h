@@ -4,7 +4,6 @@
 #include "DirectXCommon.h"
 #include "srvManager.h"
 #include "Camera.h"
-#include "Player.h"
 #include "Object3dCommon.h"
 #include "SpriteCommon.h"
 #include "Sprite.h"
@@ -17,6 +16,7 @@
 #include <Easing.h>
 #include "IrisUtil.h"
 #include "GameResultMenuController.h"
+#include "BossEnemy.h"
 
 //=============================================================
 // GameOverScene
@@ -54,9 +54,9 @@ private:
 	// シーン構成（カメラ / ライト / 自機 / 背景）
 	//======================================================================
 	std::unique_ptr<TKM::Camera> camera_;
-	std::unique_ptr<Player> player_;
+	std::unique_ptr<BossEnemy> boss_;
 	std::unique_ptr<TKM::DirectionalLight> dirLight_;
-	std::unique_ptr<TKM::Skybox> skybox_; // 背景スカイボックス
+	std::unique_ptr<TKM::Skybox> skybox_;
 	float skyPitch_ = 0.0f;        // X軸回転量
 	float skyRotSpeedX_ = 0.002f;  // X軸回転速度
 	//======================================================================
@@ -71,22 +71,31 @@ private:
 	Ease::Tween irisCloseTween_;   // 閉じ用（InBack, 0.8s）
 	static constexpr float kIrisDuration_ = 0.8f; // 虹彩絞り演出時間
 	//======================================================================
-	// 墜落演出（炎 / 火花 / 失速スピン）
+	// ゲームオーバー用ボス演出
 	//======================================================================
-	// 墜落演出（発生位置 & タイマー）
-	Vector3 crashOffset_ = { -0.6f, -0.9f, 0.2f }; // 機体原点からの出火ポイント
-	float   flameTimer_ = 0.0f; // 炎バースト用のタイマー
-	float   flameInterval_ = 0.6f; // 炎バースト間隔（秒）可変
-	// 失速スピン用の角速度（ラジアン/秒）
-	Vector3 tumbleSpeed_ = { 0.8f, 1.2f, 0.6f }; // x,y,z の回転速度
-	bool tumbleActive_ = true; // 失速スピン中かどうか
-	// 故障スポット（ローカル座標）と各スポットのクールダウン
-	std::vector<Vector3> faultLocal_;       // 機体ローカル（翼/エンジン/尾など）
-	std::vector<float>   faultCD_;          // 秒
-	std::vector<float>   faultNext_;        // 次に噴くまでの残り秒
-	// 1フレの炎/火花 発生総量の上限
-	int perFrameFlameBudget_ = 40; // 墜落演出の炎は多めに
-	int perFrameSparkBudget_ = 25; // 火花は炎より少なめに
+	Vector3 bossBasePos_{ 0.0f, 2.0f, 42.0f };   // ボスの基準位置
+	Vector3 bossPos_{ 0.0f, 2.0f, 42.0f };       // 現在位置
+	Vector3 bossRot_{ 0.0f, 3.14f, 0.0f }; // 現在回転
+
+	float bossAnimTimer_ = 0.0f;          // 常時アニメ用タイマー
+	float bossJumpTimer_ = 0.0f;          // ジャンプ周期タイマー
+	float bossJumpInterval_ = 2.4f;       // 次のジャンプまでの秒数
+	float bossJumpDuration_ = 0.78f;      // 1回のジャンプ全体時間
+	float bossJumpElapsed_ = 0.0f;        // ジャンプ開始からの経過
+	float bossJumpHeight_ = 4.2f;         // ジャンプ高さ
+	bool  bossJumping_ = false;           // ジャンプ中か
+	bool  bossLandingShakeTriggered_ = false; // 着地シェイクを1回だけ出す
+
+	Vector3 cameraBaseTranslate_{ 0.0f, 2.2f, -13.5f }; // シェイク前の基準カメラ位置
+	float cameraShakeTimer_ = 0.0f;       // シェイク残り時間
+	float cameraShakeDuration_ = 0.18f;   // シェイク継続時間
+	float cameraShakeAmp_ = 0.45f;        // シェイク振幅
+	//======================================================================
+	// ジャンプ連動：上から崩れ落ちるストリーク
+	//======================================================================
+	float fallEmitTimer_ = 0.0f;          // 落下パーティクル発生タイマー
+	float fallEmitInterval_ = 0.03f;      // 発生間隔
+	int   fallFrameToggle_ = 0;           // 毎フレーム出しすぎ防止
 	//======================================================================
 	// 「GAME OVER」表示（フェード/スケール）
 	//======================================================================
@@ -100,8 +109,6 @@ private:
 	float overScale_ = 1.0f;    // 現スケール
 	// --- 演出用（Update内 static を排除してカプセル化） ---
 	float overGlowTimer_ = 0.0f; // 「GAME OVER」表示のグローエフェクト用タイマー
-	int fallFrameToggle_ = 0; // 落下中の炎/火花の発生を抑制するため、フレごとに交互に発生させるトグル
-	int riseFrameToggle_ = 0; // 上昇中の炎/火花の発生を抑制するため、フレごとに交互に発生させるトグル
 	//======================================================================
 	// タイムステップ
 	//======================================================================
