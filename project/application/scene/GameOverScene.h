@@ -17,12 +17,13 @@
 #include "IrisUtil.h"
 #include "GameResultMenuController.h"
 #include "BossEnemy.h"
+#include "NoiseEffect.h"
 
 //=============================================================
 // GameOverScene
 // ゲームオーバー画面を管理するシーンクラス。
 //=============================================================
-class GameOverScene : public TKM::BaseScene{
+class GameOverScene : public TKM::BaseScene {
 public:
 	GameOverScene(TKM::DirectXCommon* dxCommon, TKM::SrvManager* srvManager)
 		: dxCommon_(dxCommon), srvManager_(srvManager) {
@@ -120,4 +121,11 @@ private:
 	std::unique_ptr<GameResultMenuController> overMenu_; // ゲームオーバーメニューコントローラー
 	enum class NextAction { None, Restart, ReturnToTitle }; // 次のアクション（何もなし / リスタート / タイトルへ）
 	NextAction nextAction_ = NextAction::None; // --- タイトルへ戻るためのフェードアウト ---
+	//======================================================================
+	// ノイズエフェクト
+	//======================================================================
+	std::unique_ptr<TKM::NoiseEffect> noiseEffect_; // ノイズエフェクト
+	float noiseIntervalTimer_ = 0.0f;               // 次のノイズ発生までの経過
+	float noiseDurationTimer_ = 0.0f;               // ノイズ発生中の経過
+	bool isNoisePlaying_ = false;                   // 今ノイズ中か
 };

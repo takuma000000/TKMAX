@@ -15,6 +15,7 @@
 #include "WaterRippleEffect.h"
 #include "FogEffect.h"
 #include "AuraEffect.h"
+#include "NoiseEffect.h"
 
 #define ALIGN256(size) ((size + 255) & ~255)
 
@@ -2061,6 +2062,16 @@ namespace TKM {
 			std::swap(srcSrv, dstSrv);
 		}
 
+		// 6. Noise
+		if (noiseEffect_ && noiseEffect_->IsActive()) {
+			if (!noiseInitialized_) {
+				InitializeNoisePipeline();
+			}
+			ApplyNoise(srcTex, srcSrv, dstTex, getRtvFor(dstTex));
+			std::swap(srcTex, dstTex);
+			std::swap(srcSrv, dstSrv);
+		}
+
 		// 最後は srcTex を Swapchain へ
 		DrawTextureToSwapchain(srcTex, srcSrv);
 	}
@@ -2289,6 +2300,155 @@ namespace TKM {
 		scissorRect_.bottom = WindowsAPI::kClientHeight_;
 	}
 
+	void DirectXCommon::InitializeNoisePipeline() {
+		if (noiseInitialized_) { return; }
+
+		Microsoft::WRL::ComPtr<IDxcBlob> vsBlob =
+			CompileShader(L"resources/shaders/CopyImage.VS.hlsl", L"vs_6_0");
+		Microsoft::WRL::ComPtr<IDxcBlob> psBlob =
+			CompileShader(L"resources/shaders/Noise.PS.hlsl", L"ps_6_0");
+
+		// t0 : 入力テクスチャ
+		CD3DX12_DESCRIPTOR_RANGE range{};
+		range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+
+		CD3DX12_ROOT_PARAMETER rootParams[2]{};
+		rootParams[0].InitAsDescriptorTable(1, &range, D3D12_SHADER_VISIBILITY_PIXEL);
+		rootParams[1].InitAsConstantBufferView(0);
+
+		D3D12_STATIC_SAMPLER_DESC sampler{};
+		sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+		sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+		sampler.MaxLOD = D3D12_FLOAT32_MAX;
+		sampler.MinLOD = 0.0f;
+		sampler.MipLODBias = 0.0f;
+		sampler.MaxAnisotropy = 1;
+		sampler.ShaderRegister = 0;
+		sampler.RegisterSpace = 0;
+		sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+		CD3DX12_ROOT_SIGNATURE_DESC rsDesc{};
+		rsDesc.Init(
+			2,
+			rootParams,
+			1,
+			&sampler,
+			D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
+		);
+
+		Microsoft::WRL::ComPtr<ID3DBlob> rsBlob;
+		Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
+		HRESULT hr = D3D12SerializeRootSignature(
+			&rsDesc,
+			D3D_ROOT_SIGNATURE_VERSION_1,
+			&rsBlob,
+			&errorBlob
+		);
+		assert(SUCCEEDED(hr));
+
+		hr = device_->CreateRootSignature(
+			0,
+			rsBlob->GetBufferPointer(),
+			rsBlob->GetBufferSize(),
+			IID_PPV_ARGS(&noiseRootSignature_)
+		);
+		assert(SUCCEEDED(hr));
+
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
+		psoDesc.pRootSignature = noiseRootSignature_.Get();
+		psoDesc.VS = { vsBlob->GetBufferPointer(), vsBlob->GetBufferSize() };
+		psoDesc.PS = { psBlob->GetBufferPointer(), psBlob->GetBufferSize() };
+		psoDesc.InputLayout = { nullptr, 0 };
+		psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+		psoDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
+		psoDesc.NumRenderTargets = 1;
+		psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+		psoDesc.SampleDesc.Count = 1;
+		psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+		psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+
+		D3D12_DEPTH_STENCIL_DESC dsDesc{};
+		dsDesc.DepthEnable = FALSE;
+		dsDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+		dsDesc.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+		dsDesc.StencilEnable = FALSE;
+		psoDesc.DepthStencilState = dsDesc;
+		psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
+		hr = device_->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&noisePipelineState_));
+		assert(SUCCEEDED(hr));
+
+		noiseConstantBuffer_ = CreateBufferResource(ALIGN256(sizeof(NoiseCB)));
+		assert(noiseConstantBuffer_);
+
+		hr = noiseConstantBuffer_->Map(0, nullptr, &noiseMappedData_);
+		assert(SUCCEEDED(hr));
+
+		auto* cb = reinterpret_cast<NoiseCB*>(noiseMappedData_);
+		cb->Time = 0.0f;
+		cb->Intensity = 0.0f;
+		cb->LineDensity = 180.0f;
+		cb->LineSpeed = 8.0f;
+		cb->BlockScale = 32.0f;
+		cb->BlockShift = 0.03f;
+		cb->RGBShift = 0.006f;
+		cb->Flash = 0.08f;
+		cb->Resolution = {
+			static_cast<float>(WindowsAPI::kClientWidth_),
+			static_cast<float>(WindowsAPI::kClientHeight_)
+		};
+
+		noiseInitialized_ = true;
+	}
+
+	void DirectXCommon::ApplyNoise(
+		ID3D12Resource* inputTex,
+		uint32_t        inputSrvIndex,
+		ID3D12Resource* outputTex,
+		D3D12_CPU_DESCRIPTOR_HANDLE outputRtv) {
+
+		if (!noiseInitialized_ || !inputTex || !outputTex) {
+			return;
+		}
+
+		D3D12_RESOURCE_BARRIER barrier{};
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrier.Transition.pResource = inputTex;
+		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+		commandList_->ResourceBarrier(1, &barrier);
+
+		commandList_->OMSetRenderTargets(1, &outputRtv, false, nullptr);
+
+		commandList_->SetGraphicsRootSignature(noiseRootSignature_.Get());
+		commandList_->SetPipelineState(noisePipelineState_.Get());
+		commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+		if (srvManager_) {
+			ID3D12DescriptorHeap* heaps[] = { srvManager_->GetSrvDescriptorHeap().Get() };
+			commandList_->SetDescriptorHeaps(1, heaps);
+			srvManager_->SetGraphicsRootDescriptorTable(0, inputSrvIndex);
+		}
+
+		if (noiseConstantBuffer_) {
+			commandList_->SetGraphicsRootConstantBufferView(
+				1,
+				noiseConstantBuffer_->GetGPUVirtualAddress()
+			);
+		}
+
+		commandList_->DrawInstanced(3, 1, 0, 0);
+
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		commandList_->ResourceBarrier(1, &barrier);
+	}
+
 	void DirectXCommon::SetVignettingParam(
 		const Vector4& color, float intensity, float radius, float softness) {
 		if (!vignettingMappedData_) { return; }
@@ -2387,6 +2547,31 @@ namespace TKM {
 		cb->FlameStrength = flameStrength;
 		cb->EdgePower = edgePower;
 		cb->VerticalFade = verticalFade;
+	}
+
+	void DirectXCommon::SetNoiseParam(
+		float time,
+		float intensity,
+		float lineDensity,
+		float lineSpeed,
+		float blockScale,
+		float blockShift,
+		float rgbShift,
+		float flash,
+		const Vector2& resolution) {
+
+		if (!noiseMappedData_) { return; }
+
+		auto* cb = reinterpret_cast<NoiseCB*>(noiseMappedData_);
+		cb->Time = time;
+		cb->Intensity = intensity;
+		cb->LineDensity = lineDensity;
+		cb->LineSpeed = lineSpeed;
+		cb->BlockScale = blockScale;
+		cb->BlockShift = blockShift;
+		cb->RGBShift = rgbShift;
+		cb->Flash = flash;
+		cb->Resolution = resolution;
 	}
 
 	void DirectXCommon::InitializeFixFPS() {

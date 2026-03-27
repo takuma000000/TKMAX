@@ -99,6 +99,7 @@ void GameOverScene::Initialize() {
 
 	overActive_ = true; // アニメ進行フラグON
 
+	// --- ゲームオーバー後のメニュー ---
 	overMenu_ = std::make_unique<GameResultMenuController>();
 	overMenu_->Initialize(
 		TKM::SpriteCommon::GetInstance(),
@@ -107,6 +108,13 @@ void GameOverScene::Initialize() {
 		WindowsAPI::kClientWidth_,
 		WindowsAPI::kClientHeight_
 	);
+
+	// ノイズ
+	noiseEffect_ = std::make_unique<TKM::NoiseEffect>();
+	noiseEffect_->Initialize(dxCommon_);
+	noiseEffect_->SetActive(true);
+	noiseEffect_->SetIntensity(0.55f);
+	noiseEffect_->SetFlash(0.04f);
 }
 
 void GameOverScene::Finalize() {}
@@ -279,7 +287,8 @@ void GameOverScene::Update() {
 			nextAction_ = NextAction::Restart;
 			irisClosing_ = true;
 			irisCloseTween_.Reset(0.0f, irisMaxScale_, kIrisDuration_, Ease::Type::InBack);
-		} else if (cmd == GameResultMenuController::Command::ReturnToTitle) { // タイトルに戻る
+		}
+		else if (cmd == GameResultMenuController::Command::ReturnToTitle) { // タイトルに戻る
 			nextAction_ = NextAction::ReturnToTitle;
 			irisClosing_ = true;
 			irisCloseTween_.Reset(0.0f, irisMaxScale_, kIrisDuration_, Ease::Type::InBack);
@@ -342,6 +351,37 @@ void GameOverScene::Update() {
 
 		overSprite_->Update();
 	}
+
+	//=========================================================
+	// 定期的なノイズ発生
+	//=========================================================
+	const float kNoiseInterval_ = 2.2f;   // 次の発生までの間隔
+	const float kNoiseDuration_ = 0.15f;  // 1回のノイズ継続時間
+
+	if (!isNoisePlaying_) {
+		noiseIntervalTimer_ += dt_;
+
+		if (noiseIntervalTimer_ >= kNoiseInterval_) {
+			noiseIntervalTimer_ = 0.0f;
+			noiseDurationTimer_ = 0.0f;
+			isNoisePlaying_ = true;
+
+			noiseEffect_->SetActive(true);
+			noiseEffect_->SetIntensity(0.95f);
+			noiseEffect_->SetFlash(0.10f);
+		}
+	} else {
+		noiseDurationTimer_ += dt_;
+
+		if (noiseDurationTimer_ >= kNoiseDuration_) {
+			noiseDurationTimer_ = 0.0f;
+			isNoisePlaying_ = false;
+
+			noiseEffect_->SetActive(false);
+		}
+	}
+
+	noiseEffect_->Update(dt_);
 }
 
 void GameOverScene::Draw() {

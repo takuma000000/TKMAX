@@ -19,6 +19,7 @@ namespace TKM {
 	class WaterRippleEffect;
 	class FogEffect;
 	class AuraEffect;
+	class NoiseEffect;
 }
 
 //=============================================================
@@ -195,6 +196,22 @@ namespace TKM {
 			uint32_t Telegraph;
 			float _pad3;
 			float _pad4;
+		};
+		// NoiseCB構造体
+		struct NoiseCB {
+			float   Time;
+			float   Intensity;
+			float   LineDensity;
+			float   LineSpeed;
+
+			float   BlockScale;
+			float   BlockShift;
+			float   RGBShift;
+			float   Flash;
+
+			Vector2 Resolution;
+			float   _pad0;
+			float   _pad1;
 		};
 
 		// -------------------- 初期化 --------------------
@@ -570,6 +587,22 @@ namespace TKM {
 		/// </summary>
 		void DrawPostEffectToSwapchain();
 		/// <summary>
+		/// 
+		/// </summary>
+		void InitializeNoisePipeline();
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="inputTex"></param>
+		/// <param name="inputSrvIndex"></param>
+		/// <param name="outputTex"></param>
+		/// <param name="outputRtv"></param>
+		void ApplyNoise(
+			ID3D12Resource* inputTex,
+			uint32_t        inputSrvIndex,
+			ID3D12Resource* outputTex,
+			D3D12_CPU_DESCRIPTOR_HANDLE outputRtv);
+		/// <summary>
 		/// シェーダのコンパイルを行う関数
 		/// </summary>
 		/// <param name="filePath"></param>
@@ -751,6 +784,33 @@ namespace TKM {
 		/// </summary>
 		/// <param name="effect"></param>
 		void SetAuraEffect(TKM::AuraEffect* effect) { auraEffect_ = effect; }
+		/// <summary>
+		/// NoiseEffect をセット（必要なら）
+		/// </summary>
+		/// <param name="effect"></param>
+		void SetNoiseEffect(TKM::NoiseEffect* effect) { noiseEffect_ = effect; }
+		/// <summary>
+		/// Noise 用 パラメータセット
+		/// </summary>
+		/// <param name="time"></param>
+		/// <param name="intensity"></param>
+		/// <param name="lineDensity"></param>
+		/// <param name="lineSpeed"></param>
+		/// <param name="blockScale"></param>
+		/// <param name="blockShift"></param>
+		/// <param name="rgbShift"></param>
+		/// <param name="flash"></param>
+		/// <param name="resolution"></param>
+		void SetNoiseParam(
+			float time,
+			float intensity,
+			float lineDensity,
+			float lineSpeed,
+			float blockScale,
+			float blockShift,
+			float rgbShift,
+			float flash,
+			const Vector2& resolution);
 		// ========================================================================
 	private:
 		//======================================================================
@@ -889,6 +949,14 @@ namespace TKM {
 
 		Microsoft::WRL::ComPtr<ID3D12Resource> smokeVolumeConstantBuffer_;
 		SmokeVolumeCB* smokeVolumeCB_ = nullptr;
+
+		// Noise 用 PSO
+		Microsoft::WRL::ComPtr<ID3D12RootSignature> noiseRootSignature_;
+		Microsoft::WRL::ComPtr<ID3D12PipelineState> noisePipelineState_;
+		bool noiseInitialized_ = false;
+		TKM::NoiseEffect* noiseEffect_ = nullptr;
+		Microsoft::WRL::ComPtr<ID3D12Resource> noiseConstantBuffer_;
+		void* noiseMappedData_ = nullptr;
 
 		// LaserBeamVolume 用 PSO
 		bool laserBeamInitialized_ = false;

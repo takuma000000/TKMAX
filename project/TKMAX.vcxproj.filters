@@ -212,6 +212,7 @@
     <ClCompile Include="application\actor\boss\BossEntranceSequence.cpp" />
     <ClCompile Include="application\actor\enemy\EnemyBullet.cpp" />
     <ClCompile Include="application\actor\enemy\EnemyBarrier.cpp" />
+    <ClCompile Include="engine\effect\post\NoiseEffect.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -465,6 +466,7 @@
     <ClInclude Include="application\actor\boss\BossEntranceSequence.h" />
     <ClInclude Include="application\actor\enemy\EnemyBullet.h" />
     <ClInclude Include="application\actor\enemy\EnemyBarrier.h" />
+    <ClInclude Include="engine\effect\post\NoiseEffect.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
@@ -566,6 +568,7 @@
     <FxCompile Include="resources\shaders\LaserBeam.PS.hlsl" />
     <FxCompile Include="resources\shaders\TrailRibbon.VS.hlsl" />
     <FxCompile Include="resources\shaders\TrailRibbon.PS.hlsl" />
+    <FxCompile Include="resources\shaders\Noise.PS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="TKMAX.rc" />

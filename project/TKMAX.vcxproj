@@ -228,6 +228,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\ui\OperationGuideUI.cpp" />
     <ClCompile Include="application\ui\PlayerHudUI.cpp" />
     <ClCompile Include="application\scene\controller\TitleShowdownController.cpp" />
+    <ClCompile Include="engine\effect\post\NoiseEffect.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\actor\enemy\manager\EnemyManager.h" />
@@ -337,6 +338,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\effect\IntroStartBanner.h" />
     <ClInclude Include="application\effect\IntroBossActor.h" />
     <ClInclude Include="externals\nlohmann\json.hpp" />
+    <ClInclude Include="engine\effect\post\NoiseEffect.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="application\scene\controller\TitleMenuController.h" />
     <ClInclude Include="application\catalog\TextureCatalog.h" />
@@ -355,6 +357,12 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="resources\shaders\Noise.PS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="resources\shaders\LaserBeam.PS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
