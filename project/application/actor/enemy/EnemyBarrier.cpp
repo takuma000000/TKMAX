@@ -1,8 +1,11 @@
 #include "EnemyBarrier.h"
 #include "Player.h"
+#include "TextureManager.h"
+#include "Model.h"
 
 void EnemyBarrier::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon) {
 	dxCommon_ = dxCommon;
+	barrierCommon_ = TKM::BarrierCommon::GetInstance();
 
 	object_ = std::make_unique<TKM::Object3d>();
 	object_->Initialize(common, dxCommon_);
@@ -12,8 +15,33 @@ void EnemyBarrier::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* d
 		object_->SetCamera(camera_);
 	}
 
-	// 初期状態をPlayerに同期させる
+	// ===== Material =====
+	materialResource_ = dxCommon_->CreateBufferResource(sizeof(Vector4));
+	materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
+
+	// ===== WVP =====
+	wvpResource_ = dxCommon_->CreateBufferResource(sizeof(Matrix4x4));
+	wvpResource_->Map(0, nullptr, reinterpret_cast<void**>(&wvpData_));
+
 	UpdateVisual_();
+
+	barrierShaderParamResource_ = dxCommon_->CreateBufferResource(sizeof(BarrierShaderParam));
+	barrierShaderParamResource_->Map(0, nullptr, reinterpret_cast<void**>(&barrierShaderParamData_));
+
+	barrierShaderParamData_->fresnelPower = shaderFresnelPower_;
+	barrierShaderParamData_->baseStrength = shaderBaseStrength_;
+	barrierShaderParamData_->rimStrength = shaderRimStrength_;
+	barrierShaderParamData_->alphaBase = shaderAlphaBase_;
+	barrierShaderParamData_->alphaRim = shaderAlphaRim_;
+	barrierShaderParamData_->tint = shaderTint_;
+	barrierShaderParamData_->hexScale = shaderHexScale_;
+	barrierShaderParamData_->hexLineWidth = shaderHexLineWidth_;
+	barrierShaderParamData_->hexGlowStrength = shaderHexGlowStrength_;
+	barrierShaderParamData_->hexAlpha = shaderHexAlpha_;
+	barrierShaderParamData_->padding0[0] = 0.0f;
+	barrierShaderParamData_->padding0[1] = 0.0f;
+	barrierShaderParamData_->padding0[2] = 0.0f;
+	barrierShaderParamData_->padding1 = 0.0f;
 }
 
 void EnemyBarrier::Update() {
@@ -22,13 +50,39 @@ void EnemyBarrier::Update() {
 }
 
 void EnemyBarrier::Draw(TKM::DirectXCommon* dxCommon) {
-	/*if (!active_ || !visible_ || !object_ || !barrierCommon_) {
+	if (!active_ || !visible_ || !object_ || !barrierCommon_) {
+		return;
+	}
+
+	auto* model = object_->GetModel();
+	if (!model) {
 		return;
 	}
 
 	barrierCommon_->DrawSetCommon();
-	object_->Draw(dxCommon);*/
-	return;
+
+	auto* cmd = dxCommon->GetCommandList();
+
+	// Object3d 側の CBV をそのまま使う
+	cmd->SetGraphicsRootConstantBufferView(0, object_->GetMaterialGPUVirtualAddress());
+	cmd->SetGraphicsRootConstantBufferView(1, object_->GetWVPGPUVirtualAddress());
+
+	// テクスチャ
+	cmd->SetGraphicsRootDescriptorTable(
+		2,
+		TKM::TextureManager::GetInstance()->GetSrvHandleGPU(model->GetTexturePath())
+	);
+
+	// ライト類
+	cmd->SetGraphicsRootConstantBufferView(3, object_->GetDirectionalLightGPUVirtualAddress());
+	cmd->SetGraphicsRootConstantBufferView(4, object_->GetCameraGPUVirtualAddress());
+	cmd->SetGraphicsRootConstantBufferView(5, object_->GetPointLightGPUVirtualAddress());
+	cmd->SetGraphicsRootConstantBufferView(6, object_->GetSpotLightGPUVirtualAddress());
+	cmd->SetGraphicsRootConstantBufferView(8, object_->GetEnvironmentGPUVirtualAddress());
+	cmd->SetGraphicsRootConstantBufferView(9, barrierShaderParamResource_->GetGPUVirtualAddress());
+
+	// Geometryだけ描く（Model 側の白マテリアル上書きなし）
+	model->DrawWithoutMaterialOverride();
 }
 
 void EnemyBarrier::SetCamera(TKM::Camera* camera) {
@@ -51,10 +105,22 @@ void EnemyBarrier::SetActive(bool active) {
 
 void EnemyBarrier::SetCenter(const Vector3& center) {
 	center_ = center;
+	UpdateVisual_();
 }
 
 void EnemyBarrier::SetRadius(float radius) {
 	radius_ = radius;
+	UpdateVisual_();
+}
+
+void EnemyBarrier::SetColor(const Vector4& color) {
+	color_ = color;
+	UpdateVisual_();
+}
+
+void EnemyBarrier::SetShapeScale(const Vector3& shapeScale) {
+	shapeScale_ = shapeScale;
+	UpdateVisual_();
 }
 
 void EnemyBarrier::SyncToPlayer() {
@@ -75,7 +141,24 @@ void EnemyBarrier::UpdateVisual_() {
 	}
 
 	object_->SetTranslate(center_);
-	object_->SetScale({ radius_, radius_, radius_ });
+	object_->SetScale({
+		radius_ * shapeScale_.x,
+		radius_ * shapeScale_.y,
+		radius_ * shapeScale_.z
+		});
 	object_->SetColor(color_);
 	object_->Update();
+
+	if (barrierShaderParamData_) {
+		barrierShaderParamData_->fresnelPower = shaderFresnelPower_;
+		barrierShaderParamData_->baseStrength = shaderBaseStrength_;
+		barrierShaderParamData_->rimStrength = shaderRimStrength_;
+		barrierShaderParamData_->alphaBase = shaderAlphaBase_;
+		barrierShaderParamData_->alphaRim = shaderAlphaRim_;
+		barrierShaderParamData_->tint = shaderTint_;
+		barrierShaderParamData_->hexScale = shaderHexScale_;
+		barrierShaderParamData_->hexLineWidth = shaderHexLineWidth_;
+		barrierShaderParamData_->hexGlowStrength = shaderHexGlowStrength_;
+		barrierShaderParamData_->hexAlpha = shaderHexAlpha_;
+	}
 }

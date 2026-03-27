@@ -213,6 +213,7 @@
     <ClCompile Include="application\actor\enemy\EnemyBullet.cpp" />
     <ClCompile Include="application\actor\enemy\EnemyBarrier.cpp" />
     <ClCompile Include="engine\effect\post\NoiseEffect.cpp" />
+    <ClCompile Include="engine\3d\BarrierCommon.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -467,6 +468,7 @@
     <ClInclude Include="application\actor\enemy\EnemyBullet.h" />
     <ClInclude Include="application\actor\enemy\EnemyBarrier.h" />
     <ClInclude Include="engine\effect\post\NoiseEffect.h" />
+    <ClInclude Include="engine\3d\BarrierCommon.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
@@ -569,6 +571,7 @@
     <FxCompile Include="resources\shaders\TrailRibbon.VS.hlsl" />
     <FxCompile Include="resources\shaders\TrailRibbon.PS.hlsl" />
     <FxCompile Include="resources\shaders\Noise.PS.hlsl" />
+    <FxCompile Include="resources\shaders\Barrier.PS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="TKMAX.rc" />

@@ -2,6 +2,7 @@
 #include <limits>
 #include "MyMath.h"
 #include "manager/BossManager.h"
+#include "BarrierCommon.h"
 #include <cmath>
 
 #ifdef USE_IMGUI
@@ -19,6 +20,8 @@ const EnemyManager::WaveOps EnemyManager::kWaveOps_[4] = {
 void EnemyManager::Initialize(TKM::DirectXCommon* dx, TKM::Camera* camera, TKM::BaseScene* parent, Player* player) {
 	// 共通初期化
 	InitializeCommon(dx, camera, parent, player);
+	// BarrierCommon初期化
+	TKM::BarrierCommon::GetInstance()->Initialize(dx);
 
 	// CSV読み込み（resources/data に置く運用）
 	waveConfig_.Load("./resources/data/enemy_waves.json");
@@ -289,7 +292,7 @@ void EnemyManager::UpdateWave1(float dt) {
 	case Wave1Phase::BarrierBattle:
 		UpdateWave1CircleFormation_(dt);
 		UpdateWave1ScatterAttack_(dt);
-		UpdateWave1SpecialAttackCycle_(dt);
+		//UpdateWave1SpecialAttackCycle_(dt);
 
 		if (CountAliveWave1Support_() <= 0) {
 			StartWave1CoreChance_();
@@ -301,6 +304,7 @@ void EnemyManager::UpdateWave1(float dt) {
 		wave1CoreChanceTimer_ += dt;
 
 		// 本隊は完全停止のまま維持
+		SetWave1MainFreeze_(true);
 		SetWave1MainFreeze_(true);
 
 		// コア破壊成功
@@ -1330,9 +1334,7 @@ void EnemyManager::BeginWave1() {
 	InitializeWave1Barrier_();
 	SetWave1BarrierActive_(true);
 	UpdateWave1Barrier_();
-	if (wave1Barrier_) {
-		wave1Barrier_->SetVisible(false);
-	}
+	wave1Barrier_->SetVisible(true);
 	SyncWave1BarrierInfoToPlayer_();
 }
 
@@ -1413,7 +1415,9 @@ void EnemyManager::InitializeWave1Barrier_() {
 	wave1Barrier_->Initialize(common_, dx_);
 	wave1Barrier_->SetCenter(GetWave1SpecialCorePosition_() + wave1BarrierOffset_);
 	wave1Barrier_->SetRadius(wave1BarrierRadius_);
-	wave1Barrier_->SetVisible(false); // 今はでかい玉を常時見せない
+	wave1Barrier_->SetShapeScale(wave1BarrierShapeScale_);
+	wave1Barrier_->SetColor(wave1BarrierColor_);
+	wave1Barrier_->SetVisible(false);
 	wave1Barrier_->SetActive(false);
 }
 void EnemyManager::UpdateWave1Barrier_() {
@@ -1421,8 +1425,30 @@ void EnemyManager::UpdateWave1Barrier_() {
 		return;
 	}
 
-	wave1Barrier_->SetCenter(GetWave1SpecialCorePosition_() + wave1BarrierOffset_);
+	if (wave1BarrierFollowCore_) {
+		wave1Barrier_->SetCenter(GetWave1SpecialCorePosition_() + wave1BarrierOffset_);
+	}
+
 	wave1Barrier_->SetRadius(wave1BarrierRadius_);
+	wave1Barrier_->SetShapeScale(wave1BarrierShapeScale_);
+
+	Vector4 color_ = wave1BarrierColor_;
+	color_.x *= wave1BarrierColorStrength_;
+	color_.y *= wave1BarrierColorStrength_;
+	color_.z *= wave1BarrierColorStrength_;
+	if (color_.x > 1.0f) color_.x = 1.0f;
+	if (color_.y > 1.0f) color_.y = 1.0f;
+	if (color_.z > 1.0f) color_.z = 1.0f;
+
+	wave1Barrier_->SetColor(color_);
+
+	wave1Barrier_->SetShaderFresnelPower(wave1BarrierShaderFresnelPower_);
+	wave1Barrier_->SetShaderBaseStrength(wave1BarrierShaderBaseStrength_);
+	wave1Barrier_->SetShaderRimStrength(wave1BarrierShaderRimStrength_);
+	wave1Barrier_->SetShaderAlphaBase(wave1BarrierShaderAlphaBase_);
+	wave1Barrier_->SetShaderAlphaRim(wave1BarrierShaderAlphaRim_);
+	wave1Barrier_->SetShaderTint(wave1BarrierShaderTint_);
+
 	wave1Barrier_->Update();
 }
 void EnemyManager::SetWave1BarrierActive_(bool active) {
@@ -1490,6 +1516,45 @@ void EnemyManager::ImGuiDebug() {
 	// 「ボスWaveへ」ボタン
 	if (ImGui::Button("ボスWaveへ")) {
 		SkipToBossWave();
+	}
+
+	if (ImGui::CollapsingHeader("Wave1バリア")) {
+		ImGui::Checkbox("中心追従", &wave1BarrierFollowCore_);
+		ImGui::DragFloat3("バリアオフセット", &wave1BarrierOffset_.x, 0.1f);
+		ImGui::DragFloat("バリア半径", &wave1BarrierRadius_, 0.1f, 0.1f, 500.0f);
+		ImGui::DragFloat3("バリア形状XYZ", &wave1BarrierShapeScale_.x, 0.01f, 0.1f, 10.0f);
+		ImGui::ColorEdit4("バリア色RGBA", &wave1BarrierColor_.x);
+		ImGui::DragFloat("色強度", &wave1BarrierColorStrength_, 0.01f, 0.0f, 5.0f);
+
+		if (wave1Barrier_) {
+
+			ImGui::Separator();
+			ImGui::Text("バリアシェーダ");
+
+			ImGui::DragFloat("フレネル強さ", &wave1BarrierShaderFresnelPower_, 0.01f, 0.1f, 10.0f);
+			ImGui::DragFloat("ベース明るさ", &wave1BarrierShaderBaseStrength_, 0.01f, 0.0f, 5.0f);
+			ImGui::DragFloat("縁の強さ", &wave1BarrierShaderRimStrength_, 0.01f, 0.0f, 5.0f);
+			ImGui::DragFloat("中央の濃さ", &wave1BarrierShaderAlphaBase_, 0.01f, 0.0f, 1.0f);
+			ImGui::DragFloat("縁の濃さ", &wave1BarrierShaderAlphaRim_, 0.01f, 0.0f, 1.0f);
+			ImGui::DragFloat3("色補正RGB", &wave1BarrierShaderTint_.x, 0.01f, 0.0f, 2.0f);
+
+			bool active = wave1Barrier_->IsActive();
+			bool visible = wave1Barrier_->IsVisible();
+
+			if (ImGui::Checkbox("バリア有効", &active)) {
+				wave1Barrier_->SetActive(active);
+			}
+			if (ImGui::Checkbox("バリア表示", &visible)) {
+				wave1Barrier_->SetVisible(visible);
+			}
+
+			ImGui::Text("現在Center : %.2f, %.2f, %.2f",
+				wave1Barrier_->GetCenter().x,
+				wave1Barrier_->GetCenter().y,
+				wave1Barrier_->GetCenter().z);
+
+			ImGui::Text("現在Radius : %.2f", wave1Barrier_->GetRadius());
+		}
 	}
 
 	ImGui::End();

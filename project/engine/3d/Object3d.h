@@ -110,6 +110,60 @@ namespace TKM {
 		/// </summary>
 		/// <returns></returns>
 		const Matrix4x4& GetWorldMatrix() const { return worldMatrix_; }
+		/// <summary>
+		/// モデルの取得。
+		/// </summary>
+		/// <returns></returns>
+		TKM::Model* GetModel() const { return model_; }
+		/// <summary>
+		/// カメラの取得。
+		/// </summary>
+		/// <returns></returns>
+		D3D12_GPU_VIRTUAL_ADDRESS GetMaterialGPUVirtualAddress() const {
+			return materialResource_ ? materialResource_->GetGPUVirtualAddress() : 0;
+		}
+		/// <summary>
+		/// ワールドビュー射影行列の取得。
+		/// </summary>
+		/// <returns></returns>
+		D3D12_GPU_VIRTUAL_ADDRESS GetWVPGPUVirtualAddress() const {
+			return wvpResource_ ? wvpResource_->GetGPUVirtualAddress() : 0;
+		}
+		/// <summary>
+		/// ライトの取得。
+		/// </summary>
+		/// <returns></returns>
+		D3D12_GPU_VIRTUAL_ADDRESS GetDirectionalLightGPUVirtualAddress() const {
+			return materialResourceLight_ ? materialResourceLight_->GetGPUVirtualAddress() : 0;
+		}
+		/// <summary>
+		/// カメラの取得。
+		/// </summary>
+		/// <returns></returns>
+		D3D12_GPU_VIRTUAL_ADDRESS GetCameraGPUVirtualAddress() const {
+			return cameraResource_ ? cameraResource_->GetGPUVirtualAddress() : 0;
+		}
+		/// <summary>
+		/// ポイントライトの取得。
+		/// </summary>
+		/// <returns></returns>
+		D3D12_GPU_VIRTUAL_ADDRESS GetPointLightGPUVirtualAddress() const {
+			return pointLightResource_ ? pointLightResource_->GetGPUVirtualAddress() : 0;
+		}
+		/// <summary>
+		/// スポットライトの取得。
+		/// </summary>
+		/// <returns></returns>
+		D3D12_GPU_VIRTUAL_ADDRESS GetSpotLightGPUVirtualAddress() const {
+			return spotLightResource_ ? spotLightResource_->GetGPUVirtualAddress() : 0;
+		}
+		/// <summary>
+		/// 環境マップの取得。
+		/// </summary>
+		/// <returns></returns>
+		D3D12_GPU_VIRTUAL_ADDRESS GetEnvironmentGPUVirtualAddress() const {
+			return environment_ ? environment_->GetGPUVirtualAddress() : 0;
+		}
 		// =========================================
 		// Setter===================================
 		/// <summary>

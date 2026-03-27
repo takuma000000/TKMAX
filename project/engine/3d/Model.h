@@ -120,6 +120,10 @@ namespace TKM {
 		/// モデルを描画します。
 		/// </summary>
 		void Draw();
+		/// <summary>
+		/// マテリアルをオーバーライドせずにモデルを描画します。
+		/// </summary>
+		void DrawWithoutMaterialOverride();
 
 		/// <summary>
 		/// マルチマテリアルかどうかを返します。

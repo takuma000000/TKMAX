@@ -6,6 +6,7 @@
 #include "DirectXCommon.h"
 #include "Object3dCommon.h"
 #include "MyMath.h"
+#include "BarrierCommon.h"
 
 class Player;
 
@@ -65,6 +66,28 @@ public:
 	/// </summary>
 	/// <param name="radius"></param>
 	void SetRadius(float radius);
+	/// <summary>
+	/// バリアの色の設定。描画処理で使用される色を設定します。通常は半透明な色が使用され、バリアの存在を視覚的に示すために利用されます。
+	/// </summary>
+	/// <param name="color"></param>
+	void SetColor(const Vector4& color);
+	/// <summary>
+	/// バリアの形状スケールの設定。バリアは球体として描画されますが、形状スケールを設定することで、球体の見た目を変形させることができます。例えば、特定の軸方向に伸ばすことで楕円体のような見た目にすることができます。
+	/// </summary>
+	/// <param name="shapeScale"></param>
+	void SetShapeScale(const Vector3& shapeScale);
+
+	void SetShaderFresnelPower(float value) { shaderFresnelPower_ = value; }
+	void SetShaderBaseStrength(float value) { shaderBaseStrength_ = value; }
+	void SetShaderRimStrength(float value) { shaderRimStrength_ = value; }
+	void SetShaderAlphaBase(float value) { shaderAlphaBase_ = value; }
+	void SetShaderAlphaRim(float value) { shaderAlphaRim_ = value; }
+	void SetShaderTint(const Vector3& value) { shaderTint_ = value; }
+
+	void SetShaderHexScale(float value) { shaderHexScale_ = value; }
+	void SetShaderHexLineWidth(float value) { shaderHexLineWidth_ = value; }
+	void SetShaderHexGlowStrength(float value) { shaderHexGlowStrength_ = value; }
+	void SetShaderHexAlpha(float value) { shaderHexAlpha_ = value; }
 	// ==================================================
 	// Getter============================================
 	/// <summary>
@@ -87,6 +110,23 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	Player* GetPlayer() const { return player_; }
+	/// <summary>
+	/// バリアの形状スケールの取得。バリアは球体として描画されますが、形状スケールを取得することで、球体の見た目の変形具合を知ることができます。
+	/// </summary>
+	/// <returns></returns>
+	const Vector4& GetColor() const { return color_; }
+	/// <summary>
+	/// バリアの形状スケールの取得。バリアは球体として描画されますが、形状スケールを取得することで、球体の見た目の変形具合を知ることができます。
+	/// </summary>
+	/// <returns></returns>
+	const Vector3& GetShapeScale() const { return shapeScale_; }
+
+	float GetShaderFresnelPower() const { return shaderFresnelPower_; }
+	float GetShaderBaseStrength() const { return shaderBaseStrength_; }
+	float GetShaderRimStrength() const { return shaderRimStrength_; }
+	float GetShaderAlphaBase() const { return shaderAlphaBase_; }
+	float GetShaderAlphaRim() const { return shaderAlphaRim_; }
+	const Vector3& GetShaderTint() const { return shaderTint_; }
 	// ==================================================
 
 	/// <summary>
@@ -122,10 +162,52 @@ private:
 
 	Vector3 center_ = { 0.0f, 0.0f, 0.0f };
 	float radius_ = 18.0f;
-
-	Vector4 color_ = { 0.2f, 0.8f, 1.0f, 0.35f };
+	Vector3 shapeScale_ = { 1.0f, 1.0f, 1.0f };
 
 	float time_ = 0.0f;
 
 	float dt_ = 0.016f; // 仮のフレーム時間（秒）。実際のゲームループでは、前フレームからの経過時間を計算して使用することが想定されます。
+
+	TKM::BarrierCommon* barrierCommon_ = nullptr; // バリア
+
+	Vector4 color_ = { 0.0f, 0.0f, 0.0f, 1.0f };
+
+	float shaderFresnelPower_ = 2.2f;
+	float shaderBaseStrength_ = 0.02f;
+	float shaderRimStrength_ = 1.0f;
+	float shaderAlphaBase_ = 0.08f;
+	float shaderAlphaRim_ = 0.35f;
+	Vector3 shaderTint_ = { 1.0f, 0.72f, 0.95f };
+
+	float shaderHexScale_ = 8.0f;
+	float shaderHexLineWidth_ = 0.030f;
+	float shaderHexGlowStrength_ = 2.4f;
+	float shaderHexAlpha_ = 0.85f;
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
+	Vector4* materialData_ = nullptr;
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource_;
+	Matrix4x4* wvpData_ = nullptr;
+
+	struct BarrierShaderParam {
+		float fresnelPower;
+		float baseStrength;
+		float rimStrength;
+		float alphaBase;
+
+		float alphaRim;
+		float hexScale;
+		float hexLineWidth;
+		float hexGlowStrength;
+
+		float hexAlpha;
+		float padding0[3];
+
+		Vector3 tint;
+		float padding1;
+	};
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> barrierShaderParamResource_;
+	BarrierShaderParam* barrierShaderParamData_ = nullptr;
 };

@@ -244,4 +244,33 @@ namespace TKM {
 		dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
 		dxCommon_->GetCommandList()->DrawInstanced(UINT(modelData_.vertices_.size()), 1, 0, 0);
 	}
+
+	void Model::DrawWithoutMaterialOverride() {
+		if (!dxCommon_) {
+			return;
+		}
+
+		dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);
+
+		// マルチマテリアル
+		if (modelData_.submeshes_.size() > 1) {
+			for (auto& sm : modelData_.submeshes_) {
+				// テクスチャだけは差し替える
+				if (!sm.material_.textureFilePath_.empty()) {
+					dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(
+						2,
+						TextureManager::GetInstance()->GetSrvHandleGPU(sm.material_.textureFilePath_)
+					);
+				}
+
+				// ここでは RootParam0 の Material を上書きしない
+				dxCommon_->GetCommandList()->DrawInstanced(sm.vertexCount_, 1, sm.startVertex_, 0);
+			}
+			return;
+		}
+
+		// 単一
+		// ここでも RootParam0 の Material を上書きしない
+		dxCommon_->GetCommandList()->DrawInstanced(UINT(modelData_.vertices_.size()), 1, 0, 0);
+	}
 }
