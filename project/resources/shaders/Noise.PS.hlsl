@@ -98,33 +98,35 @@ float4 main(PSInput input) : SV_TARGET
     // 4. 色バグブロック
     // 派手に色を乗せず、局所的に少しだけ色を壊す
     //=========================================================
-    float2 colorBlockUV = floor(uv * (gBlockScale * 0.85)) / (gBlockScale * 0.85);
-    float colorBlockNoise = Hash21(colorBlockUV + floor(gTime * 4.0) * 1.31);
-    float colorBlockMask = step(0.82, colorBlockNoise) * gIntensity;
+    float2 colorBlockUV = floor(uv * (gBlockScale * 0.95)) / (gBlockScale * 0.95);
+    float colorBlockNoise = Hash21(colorBlockUV + floor(gTime * 3.0) * 1.17);
+    float colorBlockMask = step(0.90, colorBlockNoise) * gIntensity;
 
     if (colorBlockMask > 0.0)
     {
         float3 hsv = RGBToHSV(color);
 
-        // 色相は少しだけズラす
-        float hueShift = (Hash21(colorBlockUV + 3.21) * 2.0 - 1.0) * 0.06;
+    // 色相はかなり弱く、ほんの少しだけズラす
+        float hueShift = (Hash21(colorBlockUV + 3.21) * 2.0 - 1.0) * 0.015;
         hsv.x = frac(hsv.x + hueShift);
 
-        // 彩度は少しだけ上下させる
-        float satMul = lerp(0.85, 1.15, Hash21(colorBlockUV + 7.13));
+    // 彩度は上げず、少し抜ける方向に寄せる
+        float satMul = lerp(0.90, 1.00, Hash21(colorBlockUV + 7.13));
         hsv.y = saturate(hsv.y * satMul);
 
-        // 明るさも少しだけ壊す
-        float valueMul = lerp(0.88, 1.12, Hash21(colorBlockUV + 9.41));
+    // 明るさは上げず、少しだけ沈む方向を中心にする
+        float valueMul = lerp(0.88, 1.00, Hash21(colorBlockUV + 9.41));
         hsv.z = saturate(hsv.z * valueMul);
 
         color = HSVToRGB(hsv);
 
-        // ごく一部だけ、軽いRGBチャンネル異常
-        float channelGlitch = step(0.90, Hash21(colorBlockUV + 12.77));
-        if (channelGlitch > 0.0)
+    // ごく一部だけ、わずかに色チャンネルのバランスを崩す
+        float channelDrift = step(0.95, Hash21(colorBlockUV + 12.77));
+        if (channelDrift > 0.0)
         {
-            color.rg = color.gr;
+            color.r *= 0.97;
+            color.g *= 1.01;
+            color.b *= 1.02;
         }
     }
 

@@ -8,8 +8,16 @@
 #include <SkyBox.h>
 #include "GameScene.h"
 #include <cmath>
+#include <cstdlib>
 
 using namespace TKM;
+
+namespace {
+	float RandomRange(float minValue, float maxValue) {
+		const float t = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+		return minValue + (maxValue - minValue) * t;
+	}
+}
 
 void GameOverScene::Initialize() {
 	ModelManager::GetInstance()->LoadModel("turtle.obj", dxCommon_);
@@ -113,8 +121,10 @@ void GameOverScene::Initialize() {
 	noiseEffect_ = std::make_unique<TKM::NoiseEffect>();
 	noiseEffect_->Initialize(dxCommon_);
 	noiseEffect_->SetActive(true);
-	noiseEffect_->SetIntensity(0.55f);
+	noiseEffect_->SetIntensity(0.20f);
 	noiseEffect_->SetFlash(0.04f);
+	// 1回目も少しランダムにする
+	noiseNextInterval_ = RandomRange(0.02f, 0.8f); // 次のノイズ発生までの時間
 }
 
 void GameOverScene::Finalize() {}
@@ -190,8 +200,7 @@ void GameOverScene::Update() {
 			bossJumpElapsed_ = 0.0f;
 			boss_->SetIntroPanic(false, 0.0f);
 		}
-	}
-	else {
+	} else {
 		boss_->SetIntroPanic(false, 0.0f);
 	}
 
@@ -239,8 +248,7 @@ void GameOverScene::Update() {
 				}
 			}
 		}
-	}
-	else {
+	} else {
 		fallEmitTimer_ = 0.0f;
 	}
 
@@ -287,8 +295,7 @@ void GameOverScene::Update() {
 			nextAction_ = NextAction::Restart;
 			irisClosing_ = true;
 			irisCloseTween_.Reset(0.0f, irisMaxScale_, kIrisDuration_, Ease::Type::InBack);
-		}
-		else if (cmd == GameResultMenuController::Command::ReturnToTitle) { // タイトルに戻る
+		} else if (cmd == GameResultMenuController::Command::ReturnToTitle) { // タイトルに戻る
 			nextAction_ = NextAction::ReturnToTitle;
 			irisClosing_ = true;
 			irisCloseTween_.Reset(0.0f, irisMaxScale_, kIrisDuration_, Ease::Type::InBack);
@@ -353,31 +360,43 @@ void GameOverScene::Update() {
 	}
 
 	//=========================================================
-	// 定期的なノイズ発生
+	// 不定期なノイズ発生
+	// 毎回、次に来るまでの時間・継続時間・強さをランダム化する
 	//=========================================================
-	const float kNoiseInterval_ = 2.2f;   // 次の発生までの間隔
-	const float kNoiseDuration_ = 0.15f;  // 1回のノイズ継続時間
-
 	if (!isNoisePlaying_) {
 		noiseIntervalTimer_ += dt_;
 
-		if (noiseIntervalTimer_ >= kNoiseInterval_) {
+		if (noiseIntervalTimer_ >= noiseNextInterval_) {
 			noiseIntervalTimer_ = 0.0f;
 			noiseDurationTimer_ = 0.0f;
 			isNoisePlaying_ = true;
 
+			// 今回のノイズの長さと見た目を毎回変える
+			noiseCurrentDuration_ = RandomRange(0.1f, 0.4f); // 現在のノイズ継続時間
+
+			const float intensity = RandomRange(0.72f, 1.02f);
+			const float flash = RandomRange(0.02f, 0.08f);
+
 			noiseEffect_->SetActive(true);
-			noiseEffect_->SetIntensity(0.95f);
-			noiseEffect_->SetFlash(0.10f);
+			noiseEffect_->SetIntensity(intensity);
+			noiseEffect_->SetFlash(flash);
 		}
 	} else {
 		noiseDurationTimer_ += dt_;
 
-		if (noiseDurationTimer_ >= kNoiseDuration_) {
+		if (noiseDurationTimer_ >= noiseCurrentDuration_) {
 			noiseDurationTimer_ = 0.0f;
 			isNoisePlaying_ = false;
 
 			noiseEffect_->SetActive(false);
+			noiseEffect_->SetIntensity(0.0f);
+			noiseEffect_->SetFlash(0.0f);
+
+			// 次に来るまでの時間も毎回変える
+			// 短めに来るときもあれば、しばらく来ないときもある
+			float nextInterval = RandomRange(0.05f, 1.2f);
+
+			noiseNextInterval_ = nextInterval;
 		}
 	}
 

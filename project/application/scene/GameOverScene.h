@@ -126,6 +126,8 @@ private:
 	//======================================================================
 	std::unique_ptr<TKM::NoiseEffect> noiseEffect_; // ノイズエフェクト
 	float noiseIntervalTimer_ = 0.0f;               // 次のノイズ発生までの経過
+	float noiseNextInterval_ = 2.2f;                // 次にノイズが来るまでの時間
 	float noiseDurationTimer_ = 0.0f;               // ノイズ発生中の経過
+	float noiseCurrentDuration_ = 0.15f;            // 今回のノイズ継続時間
 	bool isNoisePlaying_ = false;                   // 今ノイズ中か
 };
