@@ -38,19 +38,35 @@ void EnemyBarrier::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* d
 	barrierShaderParamData_->hexLineWidth = shaderHexLineWidth_;
 	barrierShaderParamData_->hexGlowStrength = shaderHexGlowStrength_;
 	barrierShaderParamData_->hexAlpha = shaderHexAlpha_;
-	barrierShaderParamData_->padding0[0] = 0.0f;
-	barrierShaderParamData_->padding0[1] = 0.0f;
-	barrierShaderParamData_->padding0[2] = 0.0f;
+	barrierShaderParamData_->breakProgress = 0.0f;
+	barrierShaderParamData_->breakEdgeWidth = shaderBreakEdgeWidth_;
+	barrierShaderParamData_->breakGlowStrength = shaderBreakGlowStrength_;
+	barrierShaderParamData_->breakNoiseScale = shaderBreakNoiseScale_;
+	barrierShaderParamData_->breakOrigin = shaderBreakOrigin_;
 	barrierShaderParamData_->padding1 = 0.0f;
 }
 
-void EnemyBarrier::Update() {
+void EnemyBarrier::Update(float dt) {
+	if (isBreaking_) {
+		breakTimer_ += dt;
+		float t = breakTimer_ / breakDuration_;
+		if (t < 0.0f) { t = 0.0f; }
+		if (t > 1.0f) { t = 1.0f; }
+
+		shaderBreakProgress_ = t;
+
+		if (breakTimer_ >= breakDuration_) {
+			isBreaking_ = false;
+			visible_ = false;
+		}
+	}
+
 	UpdateVisual_();
 	SyncToPlayer();
 }
 
 void EnemyBarrier::Draw(TKM::DirectXCommon* dxCommon) {
-	if (!active_ || !visible_ || !object_ || !barrierCommon_) {
+	if ((!active_ && !isBreaking_) || !visible_ || !object_ || !barrierCommon_) {
 		return;
 	}
 
@@ -125,9 +141,9 @@ void EnemyBarrier::SetShapeScale(const Vector3& shapeScale) {
 
 Vector3 EnemyBarrier::GetAABBSize() const {
 	return {
-			radius_ * 2.0f * shapeScale_.x,
-			radius_ * 2.0f * shapeScale_.y,
-			radius_ * 2.0f * shapeScale_.z
+		radius_ * 2.0f * shapeScale_.x,
+		radius_ * 2.0f * shapeScale_.y,
+		radius_ * 2.0f * shapeScale_.z
 	};
 }
 
@@ -141,6 +157,21 @@ void EnemyBarrier::SyncToPlayer() {
 		center_,
 		GetAABBSize()
 	);
+}
+
+void EnemyBarrier::StartBreak() {
+	active_ = false;
+	isBreaking_ = true;
+	breakTimer_ = 0.0f;
+	shaderBreakProgress_ = 0.0f;
+	shaderBreakOrigin_ = center_;
+	visible_ = true;
+
+	shaderBreakEdgeWidth_ = 0.035f;
+	shaderBreakGlowStrength_ = 3.3f;
+	shaderBreakNoiseScale_ = 16.0f;
+
+	SyncToPlayer();
 }
 
 void EnemyBarrier::UpdateVisual_() {
@@ -168,5 +199,10 @@ void EnemyBarrier::UpdateVisual_() {
 		barrierShaderParamData_->hexLineWidth = shaderHexLineWidth_;
 		barrierShaderParamData_->hexGlowStrength = shaderHexGlowStrength_;
 		barrierShaderParamData_->hexAlpha = shaderHexAlpha_;
+		barrierShaderParamData_->breakProgress = shaderBreakProgress_;
+		barrierShaderParamData_->breakEdgeWidth = shaderBreakEdgeWidth_;
+		barrierShaderParamData_->breakGlowStrength = shaderBreakGlowStrength_;
+		barrierShaderParamData_->breakNoiseScale = shaderBreakNoiseScale_;
+		barrierShaderParamData_->breakOrigin = shaderBreakOrigin_;
 	}
 }

@@ -28,7 +28,7 @@ public:
 	/// <summary>
 	/// バリアを更新します。
 	/// </summary>
-	void Update();
+	void Update(float dt);
 	/// <summary>
 	/// バリアを描画します。
 	/// </summary>
@@ -76,18 +76,11 @@ public:
 	/// </summary>
 	/// <param name="shapeScale"></param>
 	void SetShapeScale(const Vector3& shapeScale);
-
-	void SetShaderFresnelPower(float value) { shaderFresnelPower_ = value; }
-	void SetShaderBaseStrength(float value) { shaderBaseStrength_ = value; }
-	void SetShaderRimStrength(float value) { shaderRimStrength_ = value; }
-	void SetShaderAlphaBase(float value) { shaderAlphaBase_ = value; }
-	void SetShaderAlphaRim(float value) { shaderAlphaRim_ = value; }
-	void SetShaderTint(const Vector3& value) { shaderTint_ = value; }
-
-	void SetShaderHexScale(float value) { shaderHexScale_ = value; }
-	void SetShaderHexLineWidth(float value) { shaderHexLineWidth_ = value; }
-	void SetShaderHexGlowStrength(float value) { shaderHexGlowStrength_ = value; }
-	void SetShaderHexAlpha(float value) { shaderHexAlpha_ = value; }
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <param name="value"></param>
+	void SetCollisionScaleZ(float value) { collisionScaleZ_ = value; }
 	// ==================================================
 	// Getter============================================
 	/// <summary>
@@ -144,6 +137,16 @@ public:
 	/// バリアの状態をPlayerの位置に同期させます。通常はPlayerの座標をバリアの中心位置に設定することで、バリアがPlayerを包むようにします。
 	/// </summary>
 	void SyncToPlayer();
+
+	/// <summary>
+	/// バリアの破壊を開始します。破壊開始後、バリアは徐々に消えていくなどのエフェクトが発生し、最終的には無効になります。
+	/// </summary>
+	void StartBreak();
+	/// <summary>
+	/// バリアが破壊中かどうかを取得します。破壊中の場合、バリアは徐々に消えていくなどのエフェクトが発生し、最終的には無効になります。
+	/// </summary>
+	/// <returns></returns>
+	bool IsBreaking() const { return isBreaking_; }
 
 private:
 	/// <summary>
@@ -202,12 +205,28 @@ private:
 		float hexGlowStrength;
 
 		float hexAlpha;
-		float padding0[3];
+		float breakProgress;
+		float breakEdgeWidth;
+		float breakGlowStrength;
 
 		Vector3 tint;
+		float breakNoiseScale;
+
+		Vector3 breakOrigin;
 		float padding1;
 	};
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> barrierShaderParamResource_;
 	BarrierShaderParam* barrierShaderParamData_ = nullptr;
+
+	bool isBreaking_ = false;
+	float breakTimer_ = 0.0f;
+	float breakDuration_ = 2.0f;
+
+	float shaderBreakProgress_ = 0.0f;
+	float shaderBreakEdgeWidth_ = 0.08f;
+	float shaderBreakGlowStrength_ = 2.8f;
+	float shaderBreakNoiseScale_ = 14.0f;
+	Vector3 shaderBreakOrigin_ = { 0.0f, 0.0f, 0.0f };
+	float collisionScaleZ_ = 1.0f;
 };

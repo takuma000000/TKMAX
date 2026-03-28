@@ -237,8 +237,7 @@ private:
 
 	std::unique_ptr<EnemyBarrier> wave1Barrier_ = nullptr; // バリアオブジェクト
 	Vector3 wave1BarrierOffset_ = { 0.0f, 0.0f, 0.0f }; // 三角隊列の中心から見たバリアの位置オフセット
-	float wave1BarrierRadius_ = 23.0f;// バリアの半径（球体として扱うため、サイズは半径の2倍になる）
-	Vector3 wave1BarrierShapeScale_ = { 1.0f, 1.0f, 1.0f };
+	Vector3 wave1BarrierSize_ = { 23.0f, 23.0f, 11.0f }; // 
 	Vector4 wave1BarrierColor_ = { 0.0f, 0.0f, 0.0f, 1.0f }; // バリアの色（半透明なピンク色）
 	bool wave1BarrierFollowCore_ = true;
 	float wave1BarrierColorStrength_ = 5.0f; // バリアの色の強さ（0.0f で完全に透明、1.0f で通常の色、2.0f でより鮮やかになる）
@@ -377,6 +376,10 @@ private:
 	int defeatedEnemyCount_ = 0; // 撃破数カウンタ
 	int maxEnemyCount_ = 0; // 最大敵数カウンタ
 	bool initializedWaves_ = false; // Wave 初期化済みフラグ
+	// =====================================================================
+	// デルタタイム
+	// =====================================================================
+	float dt_ = 0.016f;
 
 protected:
 	/// <summary>

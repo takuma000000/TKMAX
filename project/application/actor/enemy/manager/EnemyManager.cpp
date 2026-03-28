@@ -49,9 +49,9 @@ void EnemyManager::Initialize(TKM::DirectXCommon* dx, TKM::Camera* camera, TKM::
 void EnemyManager::Update(float dt) {
 	if (!initializedWaves_) { return; } // Wave未初期化なら何もしない
 
-	// Wave1のバリア更新
 	if (wave1Barrier_) {
 		UpdateWave1Barrier_();
+		wave1Barrier_->Update(dt);
 	}
 	SyncWave1BarrierInfoToPlayer_();
 
@@ -722,8 +722,9 @@ void EnemyManager::BreakWave1Barrier_() {
 
 	SetWave1AllInvincible_(false);
 	SetWave1MainFreeze_(false);
-	SetWave1BarrierActive_(false);
-	SyncWave1BarrierInfoToPlayer_();
+	if (wave1Barrier_) {
+		wave1Barrier_->StartBreak();
+	}
 
 	midBossCore_.reset();
 	if (player_) {
@@ -1412,8 +1413,8 @@ void EnemyManager::InitializeWave1Barrier_() {
 	wave1Barrier_->SetPlayer(player_);
 	wave1Barrier_->Initialize(common_, dx_);
 	wave1Barrier_->SetCenter(GetWave1SpecialCorePosition_() + wave1BarrierOffset_);
-	wave1Barrier_->SetRadius(wave1BarrierRadius_);
-	wave1Barrier_->SetShapeScale(wave1BarrierShapeScale_);
+	wave1Barrier_->SetRadius(1.0f);
+	wave1Barrier_->SetShapeScale(wave1BarrierSize_);
 	wave1Barrier_->SetColor(wave1BarrierColor_);
 	wave1Barrier_->SetVisible(false);
 	wave1Barrier_->SetActive(false);
@@ -1427,8 +1428,8 @@ void EnemyManager::UpdateWave1Barrier_() {
 		wave1Barrier_->SetCenter(GetWave1SpecialCorePosition_() + wave1BarrierOffset_);
 	}
 
-	wave1Barrier_->SetRadius(wave1BarrierRadius_);
-	wave1Barrier_->SetShapeScale(wave1BarrierShapeScale_);
+	wave1Barrier_->SetRadius(1.0f);
+	wave1Barrier_->SetShapeScale(wave1BarrierSize_);
 
 	Vector4 color_ = wave1BarrierColor_;
 	color_.x *= wave1BarrierColorStrength_;
@@ -1439,15 +1440,6 @@ void EnemyManager::UpdateWave1Barrier_() {
 	if (color_.z > 1.0f) color_.z = 1.0f;
 
 	wave1Barrier_->SetColor(color_);
-
-	wave1Barrier_->SetShaderFresnelPower(wave1BarrierShaderFresnelPower_);
-	wave1Barrier_->SetShaderBaseStrength(wave1BarrierShaderBaseStrength_);
-	wave1Barrier_->SetShaderRimStrength(wave1BarrierShaderRimStrength_);
-	wave1Barrier_->SetShaderAlphaBase(wave1BarrierShaderAlphaBase_);
-	wave1Barrier_->SetShaderAlphaRim(wave1BarrierShaderAlphaRim_);
-	wave1Barrier_->SetShaderTint(wave1BarrierShaderTint_);
-
-	wave1Barrier_->Update();
 }
 void EnemyManager::SetWave1BarrierActive_(bool active) {
 	if (!wave1Barrier_) {
@@ -1519,8 +1511,7 @@ void EnemyManager::ImGuiDebug() {
 	if (ImGui::CollapsingHeader("Wave1バリア")) {
 		ImGui::Checkbox("中心追従", &wave1BarrierFollowCore_);
 		ImGui::DragFloat3("バリアオフセット", &wave1BarrierOffset_.x, 0.1f);
-		ImGui::DragFloat("バリア半径", &wave1BarrierRadius_, 0.1f, 0.1f, 500.0f);
-		ImGui::DragFloat3("バリア形状XYZ", &wave1BarrierShapeScale_.x, 0.01f, 0.1f, 10.0f);
+		ImGui::DragFloat3("バリアサイズXYZ", &wave1BarrierSize_.x, 0.1f, 0.1f, 200.0f);
 		ImGui::ColorEdit4("バリア色RGBA", &wave1BarrierColor_.x);
 		ImGui::DragFloat("色強度", &wave1BarrierColorStrength_, 0.01f, 0.0f, 5.0f);
 
