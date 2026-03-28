@@ -165,10 +165,13 @@ float4 main(PSInput input) : SV_TARGET
     finalColor += crackGlow.xxx;
     finalColor += shatterFlash;
 
-    // 割れている最中は白く寄せる
-    float whitenPhase = smoothstep(0.48f, 0.62f, breakT) * (1.0f - smoothstep(0.78f, 0.92f, breakT));
+    // 割れてる瞬間だけ「色そのもの」を白に置き換える
+    float whitenPhase = smoothstep(0.50f, 0.60f, breakT) * (1.0f - smoothstep(0.72f, 0.84f, breakT));
     float whitenMask = saturate(max(crackVisible, shardGone));
-    finalColor = lerp(finalColor, float3(1.0f, 1.0f, 1.0f), whitenPhase * whitenMask);
+    float whiteAmount = saturate(whitenPhase * whitenMask * 1.35f);
+
+    // 足すんじゃなくて、白へ強制的に寄せる
+    finalColor = lerp(finalColor, float3(1.0f, 1.0f, 1.0f), whiteAmount);
 
     finalColor = saturate(finalColor);
 
@@ -184,11 +187,14 @@ float4 main(PSInput input) : SV_TARGET
 
     float alpha = saturate(alphaInner + alphaRimVal + alphaHex + alphaHighlight);
 
+    // 白化中は少し見えやすくする
+    alpha = max(alpha, whiteAmount * 0.95f);
+
     // ヒビ入った後も本体はしばらく残す
     alpha *= (1.0f - removed);
 
     // 破壊終盤だけ、残骸を少しだけまとめて落とす
-    float endKill = smoothstep(0.88f, 1.0f, breakT);
+    float endKill = smoothstep(0.90f, 1.0f, breakT);
     alpha *= (1.0f - endKill);
 
     // 完全に飛んだ破片は描かない
