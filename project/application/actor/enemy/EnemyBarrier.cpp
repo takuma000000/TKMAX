@@ -123,6 +123,14 @@ void EnemyBarrier::SetShapeScale(const Vector3& shapeScale) {
 	UpdateVisual_();
 }
 
+Vector3 EnemyBarrier::GetAABBSize() const {
+	return {
+			radius_ * 2.0f * shapeScale_.x,
+			radius_ * 2.0f * shapeScale_.y,
+			radius_ * 2.0f * shapeScale_.z
+	};
+}
+
 void EnemyBarrier::SyncToPlayer() {
 	if (!player_) {
 		return;

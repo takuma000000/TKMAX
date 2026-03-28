@@ -237,7 +237,7 @@ private:
 
 	std::unique_ptr<EnemyBarrier> wave1Barrier_ = nullptr; // バリアオブジェクト
 	Vector3 wave1BarrierOffset_ = { 0.0f, 0.0f, 0.0f }; // 三角隊列の中心から見たバリアの位置オフセット
-	float wave1BarrierRadius_ = 18.0f;// バリアの半径（球体として扱うため、サイズは半径の2倍になる）
+	float wave1BarrierRadius_ = 23.0f;// バリアの半径（球体として扱うため、サイズは半径の2倍になる）
 	Vector3 wave1BarrierShapeScale_ = { 1.0f, 1.0f, 1.0f };
 	Vector4 wave1BarrierColor_ = { 0.0f, 0.0f, 0.0f, 1.0f }; // バリアの色（半透明なピンク色）
 	bool wave1BarrierFollowCore_ = true;

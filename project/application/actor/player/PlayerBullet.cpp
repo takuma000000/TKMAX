@@ -123,7 +123,7 @@ void PlayerBullet::Update() {
 			isHit_ = true;
 			isDead_ = true;
 
-			/*TKM::ParticleManager* pm = TKM::ParticleManager::GetInstance();
+			TKM::ParticleManager* pm = TKM::ParticleManager::GetInstance();
 			Vector3 hitPos = bulletPos;
 
 			if (pm) {
@@ -135,7 +135,7 @@ void PlayerBullet::Update() {
 			if (player_) {
 				player_->AddWave1BarrierHit(hitPos);
 				player_->StartCameraShake(6);
-			}*/
+			}
 
 			return;
 		}

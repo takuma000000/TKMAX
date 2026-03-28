@@ -696,16 +696,14 @@ void EnemyManager::StartWave1CoreChance_() {
 	midBossCore_->SetHP(8);
 	midBossCore_->SetReticle(player_ ? player_->GetReticle() : nullptr);
 	midBossCore_->SetPlayer([this]() { return player_ ? player_->GetPosition() : Vector3{ 0.0f,0.0f,0.0f }; });
-	midBossCore_->SyncTransform();
-
 	if (player_) {
 		player_->SetMidBossCore(midBossCore_.get());
 	}
 
 	Vector3 pos_ = GetWave1SpecialCorePosition_();
-	pos_.z -= 22.0f; // ← ここで手前に出す
-	// コアは最初からバリアの中に居るように見せるため、スポーン位置はバリア中心と同じにしておく
+	pos_.z -= 22.0f;
 	midBossCore_->SetPosition(pos_);
+	midBossCore_->SyncTransform();
 
 	wave1CoreChanceTimer_ = 0.0f;
 	wave1Phase_ = Wave1Phase::CoreChance;

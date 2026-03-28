@@ -104,7 +104,7 @@ public:
 	/// バリアのAABBサイズの取得。バリアは球体として扱われるため、AABBサイズは半径の2倍になります。
 	/// </summary>
 	/// <returns></returns>
-	Vector3 GetAABBSize() const { return { radius_ * 2.0f, radius_ * 2.0f, radius_ * 2.0f }; }
+	Vector3 GetAABBSize() const;
 	/// <summary>
 	/// バリアの色の取得。描画処理で使用される色を取得します。
 	/// </summary>
