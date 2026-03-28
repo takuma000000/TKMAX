@@ -1,14 +1,22 @@
+// =============================================================
+// Barrier Pixel Shader
+// バリアの描画 + 破壊演出（ヒビ → パリン）
+// =============================================================
+
 struct PSInput
 {
     float4 pos : SV_POSITION;
     float2 texcoord : TEXCOORD0;
     float3 normal : NORMAL;
-    float3 worldPos : POSITION0;
+    float3 worldPos : POSITION0; // ワールド座標（破壊中心との距離計算に使用）
 };
 
+// =============================================================
+// マテリアル
+// =============================================================
 cbuffer Material : register(b0)
 {
-    float4 color_;
+    float4 color_; // ベースカラー
     int enableLighting_;
     float3 padding_;
     float4x4 uvTransform_;
@@ -16,30 +24,36 @@ cbuffer Material : register(b0)
     float3 padding2_;
 };
 
+// =============================================================
+// バリア専用パラメータ
+// =============================================================
 cbuffer BarrierParam : register(b6)
 {
-    float fresnelPower;
-    float baseStrength;
-    float rimStrength;
+    float fresnelPower; // フレネル強さ
+    float baseStrength; // 中心強度
+    float rimStrength; // 縁の強さ
     float alphaBase;
 
     float alphaRim;
-    float hexScale;
-    float hexLineWidth;
-    float hexGlowStrength;
+    float hexScale; // 六角形のスケール
+    float hexLineWidth; // 六角形の線幅
+    float hexGlowStrength; // 六角形の発光強度
 
     float hexAlpha;
-    float breakProgress;
-    float breakEdgeWidth;
-    float breakGlowStrength;
+    float breakProgress; // 破壊進行（0→1）
+    float breakEdgeWidth; // ヒビの太さ
+    float breakGlowStrength; // ヒビの発光
 
     float3 tint;
-    float breakNoiseScale;
+    float breakNoiseScale; // ノイズ密度（ヒビ・破片用）
 
-    float3 breakOrigin;
+    float3 breakOrigin; // 破壊の中心
     float _pad1;
 };
 
+// =============================================================
+// ノイズ関数（破片・ヒビ生成用）
+// =============================================================
 float Hash21(float2 p)
 {
     p = frac(p * float2(123.34f, 456.21f));
@@ -47,12 +61,18 @@ float Hash21(float2 p)
     return frac(p.x * p.y);
 }
 
+// =============================================================
+// 六角形距離関数
+// =============================================================
 float HexDist(float2 p)
 {
     p = abs(p);
     return max(dot(p, normalize(float2(1.0f, 1.7320508f))), p.x);
 }
 
+// =============================================================
+// 六角形の線マスク
+// =============================================================
 float HexLineMask(float2 uv, float scale, float lineWidth)
 {
     uv *= scale;
@@ -72,6 +92,9 @@ float HexLineMask(float2 uv, float scale, float lineWidth)
     return lineMask;
 }
 
+// =============================================================
+// ヒビノイズ（ランダム方向の割れ線）
+// =============================================================
 float CrackNoise(float2 uv, float scale, float width)
 {
     float2 p = uv * scale;
@@ -87,33 +110,45 @@ float CrackNoise(float2 uv, float scale, float width)
     return crack;
 }
 
+// =============================================================
+// メイン
+// =============================================================
 float4 main(PSInput input) : SV_TARGET
 {
     float3 n = normalize(input.normal);
+
+    // 視線方向（簡易）
     float3 viewDir = normalize(float3(0.0f, 0.0f, -1.0f));
 
+    // フレネル（縁の発光）
     float fresnel = 1.0f - saturate(dot(n, -viewDir));
     float rim = pow(fresnel, max(fresnelPower, 0.001f));
 
     float2 uv = input.texcoord;
+
+    // 六角形ライン
     float hexMask = HexLineMask(uv, hexScale, hexLineWidth);
 
+    // ベース色
     float3 baseColor = color_.rgb * tint;
+
     float3 innerColor = baseColor * 0.015f;
     float3 rimColor = baseColor * (rim * 0.65f);
 
+    // 六角形発光
     float3 hexLineColor = lerp(baseColor, float3(1.0f, 0.95f, 1.0f), 0.35f);
     float3 hexColor = hexLineColor * (hexMask * hexGlowStrength * 2.8f);
 
+    // ハイライト
     float highlightBand = 1.0f - abs(uv.x - 0.30f);
     highlightBand = saturate((highlightBand - 0.86f) * 12.0f);
     float3 highlightColor = float3(1.0f, 0.95f, 1.0f) * highlightBand * 0.55f;
 
     float breakT = saturate(breakProgress);
 
-// --------------------------------------------------
-// ヒビ生成
-// --------------------------------------------------
+    // =============================================================
+    // ヒビ生成
+    // =============================================================
     float crackA = CrackNoise(uv, breakNoiseScale, breakEdgeWidth);
     float crackB = CrackNoise(uv + float2(3.17f, 1.91f), breakNoiseScale * 1.37f, breakEdgeWidth * 0.7f);
     float crackC = HexLineMask(uv, hexScale * 0.8f, hexLineWidth * 1.6f);
@@ -121,65 +156,53 @@ float4 main(PSInput input) : SV_TARGET
     float crackMask = saturate(max(crackA, crackB * 0.75f));
     crackMask = saturate(max(crackMask, crackC * 0.9f));
 
-// ヒビが入るタイミングは前半に寄せる
     float crackPhase = smoothstep(0.00f, 0.28f, breakT);
     float crackVisible = crackMask * crackPhase;
 
-// ヒビの白発光
     float crackGlow = crackVisible * breakGlowStrength * (1.0f - smoothstep(0.22f, 0.55f, breakT));
 
-    // --------------------------------------------------
-    // ガラスの破片っぽい「面」単位の割れ
-    // ※ フェードではなく、後半で一気に抜く
-    // --------------------------------------------------
+    // =============================================================
+    // 破片分離（パリン）
+    // =============================================================
     float2 shardUV = uv * (breakNoiseScale * 0.42f);
     float2 shardCell = floor(shardUV);
     float shardRnd = Hash21(shardCell);
 
-    // 破片ごとに少し順番をずらす
     float shatterStart = 0.56f + shardRnd * 0.12f;
     float shatterEnd = shatterStart + 0.10f;
 
-    // 0→1で「その破片が飛んだ」判定
     float shardGone = smoothstep(shatterStart, shatterEnd, breakT);
-
-    // ただのフェード感を消すため、しきい値でかなり硬めに抜く
     shardGone = step(0.55f, shardGone);
 
-    // ヒビ周辺は少し先に欠け始める
     float crackChipped = step(0.30f, crackVisible) * smoothstep(0.42f, 0.62f, breakT);
 
-    // 最終的な「消える面」
     float removed = saturate(max(shardGone, crackChipped));
 
-    // --------------------------------------------------
-    // パリン瞬間のフラッシュ
-    // --------------------------------------------------
+    // =============================================================
+    // パリン瞬間フラッシュ
+    // =============================================================
     float shatterBurst = smoothstep(0.52f, 0.60f, breakT) * (1.0f - smoothstep(0.60f, 0.72f, breakT));
     float3 shatterFlash = crackVisible.xxx * shatterBurst * 2.0f;
 
-    // --------------------------------------------------
+    // =============================================================
     // 色
-    // --------------------------------------------------
+    // =============================================================
     float3 finalColor = innerColor + rimColor + hexColor + highlightColor;
     finalColor += crackGlow.xxx;
     finalColor += shatterFlash;
 
-    // 割れてる瞬間だけ「色そのもの」を白に置き換える
+    // 割れ中は白へ寄せる（ガラス感）
     float whitenPhase = smoothstep(0.50f, 0.60f, breakT) * (1.0f - smoothstep(0.72f, 0.84f, breakT));
     float whitenMask = saturate(max(crackVisible, shardGone));
     float whiteAmount = saturate(whitenPhase * whitenMask * 1.35f);
 
-    // 足すんじゃなくて、白へ強制的に寄せる
     finalColor = lerp(finalColor, float3(1.0f, 1.0f, 1.0f), whiteAmount);
 
     finalColor = saturate(finalColor);
 
-    // --------------------------------------------------
-    // α
-    // 「徐々に薄くする」のをやめる
-    // 基本は残して、破片が飛んだところだけ急に消す
-    // --------------------------------------------------
+    // =============================================================
+    // α（透明度）
+    // =============================================================
     float alphaInner = color_.a * 0.06f;
     float alphaRimVal = color_.a * (rim * 0.35f);
     float alphaHex = hexMask * hexAlpha * 1.6f;
@@ -187,17 +210,16 @@ float4 main(PSInput input) : SV_TARGET
 
     float alpha = saturate(alphaInner + alphaRimVal + alphaHex + alphaHighlight);
 
-    // 白化中は少し見えやすくする
+    // 白い瞬間を見やすくする
     alpha = max(alpha, whiteAmount * 0.95f);
 
-    // ヒビ入った後も本体はしばらく残す
+    // 破片が飛んだ部分は削除
     alpha *= (1.0f - removed);
 
-    // 破壊終盤だけ、残骸を少しだけまとめて落とす
+    // 最後にまとめて消す
     float endKill = smoothstep(0.90f, 1.0f, breakT);
     alpha *= (1.0f - endKill);
 
-    // 完全に飛んだ破片は描かない
     if (alpha <= 0.01f)
     {
         discard;

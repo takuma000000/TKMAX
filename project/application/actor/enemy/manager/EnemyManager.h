@@ -238,9 +238,7 @@ private:
 	std::unique_ptr<EnemyBarrier> wave1Barrier_ = nullptr; // バリアオブジェクト
 	Vector3 wave1BarrierOffset_ = { 0.0f, 0.0f, 0.0f }; // 三角隊列の中心から見たバリアの位置オフセット
 	Vector3 wave1BarrierSize_ = { 23.0f, 23.0f, 11.0f }; // 
-	Vector4 wave1BarrierColor_ = { 0.0f, 0.0f, 0.0f, 1.0f }; // バリアの色（半透明なピンク色）
 	bool wave1BarrierFollowCore_ = true;
-	float wave1BarrierColorStrength_ = 5.0f; // バリアの色の強さ（0.0f で完全に透明、1.0f で通常の色、2.0f でより鮮やかになる）
 	float wave1BarrierShaderFresnelPower_ = 2.0f; // バリアのフレネル効果の強さ。値が大きいほど、エッジがより明るくなります。
 	float wave1BarrierShaderBaseStrength_ = 0.55f; // バリアの中心付近の明るさ
 	float wave1BarrierShaderRimStrength_ = 1.35f;

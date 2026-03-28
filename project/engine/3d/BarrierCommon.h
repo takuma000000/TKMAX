@@ -12,26 +12,9 @@ namespace TKM {
 		/// <param name="dxCommon"></param>
 		void Initialize(DirectXCommon* dxCommon);
 		/// <summary>
-		/// 終了処理
-		/// </summary>
-		void Finalize();
-		/// <summary>
 		/// 描画前の共通セット
 		/// </summary>
 		void DrawSetCommon();
-
-		// Getter==========================================================
-		/// <summary>
-		/// DirectXCommonのゲッター
-		/// </summary>
-		/// <returns></returns>
-		DirectXCommon* GetDxCommon() { return dxCommon_; }
-		/// <summary>
-		/// DirectXCommonのゲッター (const版)
-		/// </summary>
-		/// <returns></returns>
-		const DirectXCommon* GetDxCommon() const { return dxCommon_; }
-		// ================================================================
 
 	private:
 		DirectXCommon* dxCommon_ = nullptr;

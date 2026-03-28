@@ -1415,7 +1415,6 @@ void EnemyManager::InitializeWave1Barrier_() {
 	wave1Barrier_->SetCenter(GetWave1SpecialCorePosition_() + wave1BarrierOffset_);
 	wave1Barrier_->SetRadius(1.0f);
 	wave1Barrier_->SetShapeScale(wave1BarrierSize_);
-	wave1Barrier_->SetColor(wave1BarrierColor_);
 	wave1Barrier_->SetVisible(false);
 	wave1Barrier_->SetActive(false);
 }
@@ -1430,16 +1429,6 @@ void EnemyManager::UpdateWave1Barrier_() {
 
 	wave1Barrier_->SetRadius(1.0f);
 	wave1Barrier_->SetShapeScale(wave1BarrierSize_);
-
-	Vector4 color_ = wave1BarrierColor_;
-	color_.x *= wave1BarrierColorStrength_;
-	color_.y *= wave1BarrierColorStrength_;
-	color_.z *= wave1BarrierColorStrength_;
-	if (color_.x > 1.0f) color_.x = 1.0f;
-	if (color_.y > 1.0f) color_.y = 1.0f;
-	if (color_.z > 1.0f) color_.z = 1.0f;
-
-	wave1Barrier_->SetColor(color_);
 }
 void EnemyManager::SetWave1BarrierActive_(bool active) {
 	if (!wave1Barrier_) {
@@ -1512,8 +1501,6 @@ void EnemyManager::ImGuiDebug() {
 		ImGui::Checkbox("中心追従", &wave1BarrierFollowCore_);
 		ImGui::DragFloat3("バリアオフセット", &wave1BarrierOffset_.x, 0.1f);
 		ImGui::DragFloat3("バリアサイズXYZ", &wave1BarrierSize_.x, 0.1f, 0.1f, 200.0f);
-		ImGui::ColorEdit4("バリア色RGBA", &wave1BarrierColor_.x);
-		ImGui::DragFloat("色強度", &wave1BarrierColorStrength_, 0.01f, 0.0f, 5.0f);
 
 		if (wave1Barrier_) {
 

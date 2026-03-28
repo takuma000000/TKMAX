@@ -76,11 +76,6 @@ public:
 	/// </summary>
 	/// <param name="shapeScale"></param>
 	void SetShapeScale(const Vector3& shapeScale);
-	/// <summary>
-	/// 
-	/// </summary>
-	/// <param name="value"></param>
-	void SetCollisionScaleZ(float value) { collisionScaleZ_ = value; }
 	// ==================================================
 	// Getter============================================
 	/// <summary>
@@ -166,10 +161,6 @@ private:
 	Vector3 center_ = { 0.0f, 0.0f, 0.0f };
 	float radius_ = 18.0f;
 	Vector3 shapeScale_ = { 1.0f, 1.0f, 1.0f };
-
-	float time_ = 0.0f;
-
-	float dt_ = 0.016f; // 仮のフレーム時間（秒）。実際のゲームループでは、前フレームからの経過時間を計算して使用することが想定されます。
 
 	TKM::BarrierCommon* barrierCommon_ = nullptr; // バリア
 

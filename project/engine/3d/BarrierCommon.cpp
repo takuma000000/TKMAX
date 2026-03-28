@@ -13,9 +13,6 @@ namespace TKM {
 		GenerateGraphicsPipeline();
 	}
 
-	void BarrierCommon::Finalize() {
-	}
-
 	void BarrierCommon::DrawSetCommon() {
 		dxCommon_->GetCommandList()->SetGraphicsRootSignature(rootSignature_.Get());
 		dxCommon_->GetCommandList()->SetPipelineState(graphicsPipelineState_.Get());
