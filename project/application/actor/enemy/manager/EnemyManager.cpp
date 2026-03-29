@@ -282,7 +282,7 @@ void EnemyManager::UpdateWave1(float dt) {
 		}
 	}
 
-	// 本隊10体を全部倒したらWAVE1クリア
+	// 本隊10体を全部倒したらWAVE1クリア → そのままボス戦へ
 	if (CountAliveWave1Main_() <= 0) {
 		NotifyPlayerBeforeClearEnemies_();
 		enemies_.clear();
@@ -294,7 +294,7 @@ void EnemyManager::UpdateWave1(float dt) {
 			}
 		}
 
-		GoToNextWave();
+		SkipToBossWave();
 		return;
 	}
 
@@ -302,7 +302,7 @@ void EnemyManager::UpdateWave1(float dt) {
 	case Wave1Phase::BarrierBattle:
 		UpdateWave1CircleFormation_(dt);
 		UpdateWave1ScatterAttack_(dt);
-		//UpdateWave1SpecialAttackCycle_(dt);
+		UpdateWave1SpecialAttackCycle_(dt);
 
 		if (CountAliveWave1Support_() <= 0) {
 			StartWave1CoreChance_();
