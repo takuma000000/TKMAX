@@ -673,6 +673,23 @@ void Player::AddWave1BarrierHit(const Vector3& worldPos) {
 	}
 }
 
+void Player::OnMidBossCoreDestroyed(MidBossCore* core) {
+	if (!core) {
+		return;
+	}
+
+	for (auto& b : bullets_) {
+		if (!b) { continue; }
+		// PlayerBullet に GetCore() が無いなら、SetCore(nullptr) を無条件で入れてもいい
+		b->SetCore(nullptr);
+	}
+
+	for (auto& b : homingBullets_) {
+		if (!b) { continue; }
+		b->SetCore(nullptr);
+	}
+}
+
 void Player::SetShootingEnabled(bool enabled) {
 	shootingEnabled_ = enabled; // シューティングの有効 / 無効を切り替えるフラグ
 	if (!enabled) { // 無効にするなら、関連する状態もリセットしておく

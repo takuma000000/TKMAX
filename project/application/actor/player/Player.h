@@ -131,6 +131,11 @@ public:
 	/// </summary>
 	/// <param name="worldPos">ヒットしたワールド座標</param>
 	void AddWave1BarrierHit(const Vector3& worldPos);
+	/// <summary>
+	/// ミッドボスコアが破壊されたときの処理を行います。
+	/// </summary>
+	/// <param name="core"></param>
+	void OnMidBossCoreDestroyed(MidBossCore* core);
 
 	// Getter===================================
 	/// <summary>

@@ -66,6 +66,9 @@ void EnemyManager::Update(float dt) {
 			if (player_) {
 				player_->SetMidBossCore(nullptr); // Playerの参照も切る（nullptrセット）
 			}
+			if (player_ && midBossCore_) {
+				player_->OnMidBossCoreDestroyed(midBossCore_.get());
+			}
 			midBossCore_.reset(); // 核オブジェクト破棄
 		}
 	}
@@ -726,6 +729,9 @@ void EnemyManager::BreakWave1Barrier_() {
 		wave1Barrier_->StartBreak();
 	}
 
+	if (player_ && midBossCore_) {
+		player_->OnMidBossCoreDestroyed(midBossCore_.get());
+	}
 	midBossCore_.reset();
 	if (player_) {
 		player_->SetMidBossCore(nullptr);
@@ -736,6 +742,9 @@ void EnemyManager::BreakWave1Barrier_() {
 }
 
 void EnemyManager::ResetWave1BarrierLoop_() {
+	if (player_ && midBossCore_) {
+		player_->OnMidBossCoreDestroyed(midBossCore_.get());
+	}
 	midBossCore_.reset();
 	if (player_) {
 		player_->SetMidBossCore(nullptr);
