@@ -1468,22 +1468,23 @@ void EnemyManager::SyncWave1BarrierInfoToPlayer_() {
 }
 
 void EnemyManager::Draw(TKM::DirectXCommon* dx) {
+
+	if (wave1Barrier_) {
+		wave1Barrier_->Draw(dx);
+	}
+
+	TKM::Object3dCommon::GetInstance()->DrawSetCommon();
+	if (midBossCore_) {
+		midBossCore_->Draw(dx);
+	}
 	if (!&enemies_) { // enemies_ がまだ紐付いてなかったら何もしない
 		return;
 	}
 	for (auto& enemy : enemies_) {
 		enemy->Draw(dx);
 	}
-
-	if (wave1Barrier_) {
-		wave1Barrier_->Draw(dx);
-	}
-
+	// 敵の弾は敵が描画された後に描く（手前に来るように）
 	DrawEnemyBullets_(dx);
-
-	if (midBossCore_) {
-		midBossCore_->Draw(dx);
-	}
 }
 
 void EnemyManager::ImGuiDebug() {
