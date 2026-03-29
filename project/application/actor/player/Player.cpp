@@ -690,6 +690,21 @@ void Player::OnMidBossCoreDestroyed(MidBossCore* core) {
 	}
 }
 
+void Player::RequestWave1BarrierFlash(const Vector3& worldPos) {
+	wave1BarrierFlashRequested_ = true;
+	wave1BarrierFlashPos_ = worldPos;
+}
+
+bool Player::ConsumeWave1BarrierFlashRequest(Vector3& outWorldPos) {
+	if (!wave1BarrierFlashRequested_) {
+		return false;
+	}
+
+	outWorldPos = wave1BarrierFlashPos_;
+	wave1BarrierFlashRequested_ = false;
+	return true;
+}
+
 void Player::SetShootingEnabled(bool enabled) {
 	shootingEnabled_ = enabled; // シューティングの有効 / 無効を切り替えるフラグ
 	if (!enabled) { // 無効にするなら、関連する状態もリセットしておく

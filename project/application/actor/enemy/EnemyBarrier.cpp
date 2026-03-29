@@ -61,6 +61,14 @@ void EnemyBarrier::Update(float dt) {
 		}
 	}
 
+	// キランタイマー更新
+	if (hitFlashTimer_ >= 0.0f) {
+		hitFlashTimer_ += dt;
+		if (hitFlashTimer_ > 0.3f) { // 0.3秒で消える
+			hitFlashTimer_ = -1.0f;
+		}
+	}
+
 	UpdateVisual_();
 	SyncToPlayer();
 }
@@ -159,6 +167,11 @@ void EnemyBarrier::SyncToPlayer() {
 	);
 }
 
+void EnemyBarrier::OnHit(const Vector3& pos) {
+	hitFlashTimer_ = 0.0f;
+	hitFlashPos_ = pos;
+}
+
 void EnemyBarrier::StartBreak() {
 	active_ = false;
 	isBreaking_ = true;
@@ -204,5 +217,7 @@ void EnemyBarrier::UpdateVisual_() {
 		barrierShaderParamData_->breakGlowStrength = shaderBreakGlowStrength_;
 		barrierShaderParamData_->breakNoiseScale = shaderBreakNoiseScale_;
 		barrierShaderParamData_->breakOrigin = shaderBreakOrigin_;
+		barrierShaderParamData_->hitFlashTime = hitFlashTimer_;
+		barrierShaderParamData_->hitFlashPos = hitFlashPos_;
 	}
 }

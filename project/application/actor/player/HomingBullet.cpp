@@ -318,6 +318,7 @@ void HomingBullet::Update() {
 
 				if (player_) {
 					player_->AddWave1BarrierHit(bulletPos_);
+					player_->RequestWave1BarrierFlash(bulletPos_);
 					player_->StartCameraShake(6);
 				}
 				return;

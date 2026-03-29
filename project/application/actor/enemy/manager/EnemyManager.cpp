@@ -50,6 +50,13 @@ void EnemyManager::Update(float dt) {
 	if (!initializedWaves_) { return; } // Wave未初期化なら何もしない
 
 	if (wave1Barrier_) {
+		if (player_) {
+			Vector3 flashPos;
+			if (player_->ConsumeWave1BarrierFlashRequest(flashPos)) {
+				wave1Barrier_->OnHit(flashPos);
+			}
+		}
+
 		UpdateWave1Barrier_();
 		wave1Barrier_->Update(dt);
 	}

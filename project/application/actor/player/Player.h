@@ -136,6 +136,17 @@ public:
 	/// </summary>
 	/// <param name="core"></param>
 	void OnMidBossCoreDestroyed(MidBossCore* core);
+	/// <summary>
+	/// ワンウェイバリア（LB弾）が敵の攻撃にヒットしたときのフラッシュエフェクトをリクエストします。
+	/// </summary>
+	/// <param name="worldPos"></param>
+	void RequestWave1BarrierFlash(const Vector3& worldPos);
+	/// <summary>
+	/// ワンウェイバリア（LB弾）が敵の攻撃にヒットしたときのフラッシュエフェクトのリクエストを消費します。
+	/// </summary>
+	/// <param name="outWorldPos"></param>
+	/// <returns></returns>
+	bool ConsumeWave1BarrierFlashRequest(Vector3& outWorldPos);
 
 	// Getter===================================
 	/// <summary>
@@ -570,4 +581,6 @@ private:
 	Vector3 wave1BarrierSize_ = { 0.0f, 0.0f, 0.0f }; // ワンウェイバリアのサイズ（幅・高さ・奥行）
 	static constexpr size_t kWave1BarrierHitMax_ = 8; // ワンウェイバリアヒットエフェクトの最大数
 	std::vector<Wave1BarrierHit> wave1BarrierHits_; // ワンウェイバリアヒットエフェクトの情報リスト
+	bool wave1BarrierFlashRequested_ = false; // ワンウェイバリアヒットフラッシュエフェクトのリクエストフラグ
+	Vector3 wave1BarrierFlashPos_ = { 0.0f, 0.0f, 0.0f }; // ワンウェイバリアヒットフラッシュエフェクトのリクエスト情報q
 };

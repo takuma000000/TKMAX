@@ -134,6 +134,7 @@ void PlayerBullet::Update() {
 
 			if (player_) {
 				player_->AddWave1BarrierHit(hitPos);
+				player_->RequestWave1BarrierFlash(hitPos);
 				player_->StartCameraShake(6);
 			}
 

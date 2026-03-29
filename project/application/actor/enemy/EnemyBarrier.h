@@ -134,6 +134,11 @@ public:
 	void SyncToPlayer();
 
 	/// <summary>
+	/// バリアが攻撃にヒットしたときの処理を行います。ヒットした位置を引数で受け取り、ヒットエフェクトの発生やバリアの状態変化などを行います。
+	/// </summary>
+	void OnHit(const Vector3& pos);
+
+	/// <summary>
 	/// バリアの破壊を開始します。破壊開始後、バリアは徐々に消えていくなどのエフェクトが発生し、最終的には無効になります。
 	/// </summary>
 	void StartBreak();
@@ -161,6 +166,10 @@ private:
 	Vector3 center_ = { 0.0f, 0.0f, 0.0f };
 	float radius_ = 18.0f;
 	Vector3 shapeScale_ = { 1.0f, 1.0f, 1.0f };
+
+	// キラン用
+	float hitFlashTimer_ = 0.0f;
+	Vector3 hitFlashPos_ = { 0,0,0 };
 
 	TKM::BarrierCommon* barrierCommon_ = nullptr; // バリア
 
@@ -205,6 +214,9 @@ private:
 
 		Vector3 breakOrigin;
 		float padding1;
+
+		float hitFlashTime;
+		Vector3 hitFlashPos;
 	};
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> barrierShaderParamResource_;

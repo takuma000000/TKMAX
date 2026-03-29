@@ -49,6 +49,9 @@ cbuffer BarrierParam : register(b6)
 
     float3 breakOrigin; // 破壊の中心
     float _pad1;
+    
+    float hitFlashTime;
+    float3 hitFlashPos;
 };
 
 // =============================================================
@@ -145,7 +148,31 @@ float4 main(PSInput input) : SV_TARGET
     float3 highlightColor = float3(1.0f, 0.95f, 1.0f) * highlightBand * 0.55f;
 
     float breakT = saturate(breakProgress);
+    
+    // =============================================================
+    // ヒットフラッシュ（全体発光）
+    // =============================================================
+    float hitFlash = 0.0f;
+    float hitFlashAlpha = 0.0f;
 
+    if (hitFlashTime >= 0.0f)
+    {
+    // 最初に強く光って、すぐ減衰
+        float t = saturate(hitFlashTime / 0.20f);
+        float timeFade = 1.0f - t;
+        timeFade = timeFade * timeFade;
+
+    // 全体を白く持ち上げる
+        float fullFlash = 1.35f * timeFade;
+
+    // 縁と六角形ラインは少し強め
+        float rimBoost = rim * 1.1f * timeFade;
+        float hexBoost = hexMask * 0.9f * timeFade;
+
+        hitFlash = fullFlash + rimBoost + hexBoost;
+        hitFlashAlpha = 0.30f * timeFade + hexMask * 0.18f * timeFade;
+    }
+    
     // =============================================================
     // ヒビ生成
     // =============================================================
@@ -191,6 +218,9 @@ float4 main(PSInput input) : SV_TARGET
     finalColor += crackGlow.xxx;
     finalColor += shatterFlash;
 
+    // キラン追加
+    finalColor += float3(1.0f, 1.0f, 1.0f) * hitFlash * 1.2f;
+
     // 割れ中は白へ寄せる（ガラス感）
     float whitenPhase = smoothstep(0.50f, 0.60f, breakT) * (1.0f - smoothstep(0.72f, 0.84f, breakT));
     float whitenMask = saturate(max(crackVisible, shardGone));
@@ -219,6 +249,7 @@ float4 main(PSInput input) : SV_TARGET
     // 最後にまとめて消す
     float endKill = smoothstep(0.90f, 1.0f, breakT);
     alpha *= (1.0f - endKill);
+    alpha += hitFlashAlpha;
 
     if (alpha <= 0.01f)
     {
