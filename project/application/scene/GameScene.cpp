@@ -69,9 +69,10 @@ void GameScene::Finalize() {
 	// ラインレンダラーの終了
 	postFx_->Finalize();
 
-	ParticleManager::GetInstance()->ClearGroup("fw_launch");
-	ParticleManager::GetInstance()->ClearGroup("fw_flash");
-	ParticleManager::GetInstance()->ClearGroup("fw_burst");
+	// パーティクルの終了
+	ParticleManager::GetInstance()->ClearGroup("fw_launch"); // 花火打ち上げ
+	ParticleManager::GetInstance()->ClearGroup("fw_flash"); // 花火閃光
+	ParticleManager::GetInstance()->ClearGroup("fw_burst"); // 花火爆発
 }
 
 void GameScene::Update() {
