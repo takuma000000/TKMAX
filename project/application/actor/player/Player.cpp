@@ -551,9 +551,9 @@ void Player::Draw(TKM::DirectXCommon* dxCommon) {
 		reticle_->Draw(dxCommon);
 	}
 
-	//for (auto& bullet : bullets_) {
-	//	bullet->Draw(dxCommon); // 弾の描画はしない(今後も予定なし)
-	//}
+	for (auto& bullet : bullets_) {
+		bullet->Draw(dxCommon); // 弾の描画はしない(今後も予定なし)
+	}
 
 	/*for (auto& bullet : homingBullets_) {
 		bullet->Draw(dxCommon);
@@ -864,6 +864,16 @@ void Player::HandleShooting() {
 		}
 	}
 
+	//====================
+	// RB弾 クールダウンタイマー更新（撃ってから一定時間は撃てない）
+	// ====================
+	if (rbShotCooldownTimer_ > 0.0f) {
+		rbShotCooldownTimer_ -= dt;
+		if (rbShotCooldownTimer_ < 0.0f) {
+			rbShotCooldownTimer_ = 0.0f;
+		}
+	}
+
 	RBShoot(); // RB弾処理
 	RTShoot(); // RT弾処理
 	LBShoot(); // LB弾処理
@@ -875,12 +885,14 @@ void Player::RBShoot() {
 
 	// ▼ RB：通常弾
 	const bool padRB = input->PushButton(XINPUT_GAMEPAD_RIGHT_SHOULDER);
-	const bool keyK = input->TriggerKey(DIK_K);
+	const bool keyK = input->PushKey(DIK_K);
 
 	if (!padRB && !keyK) {
 		return;
 	}
-
+	if (rbShotCooldownTimer_ > 0.0f) {
+		return;
+	}
 	if (rbAmmo_ <= 0 || rbRefilling_) { // 弾切れ中は発射不可
 		return;
 	}
@@ -952,6 +964,9 @@ void Player::RBShoot() {
 
 	bullet->SetEnemy(targetEnemy);
 	bullets_.push_back(std::move(bullet));
+
+	// クールダウン開始
+	rbShotCooldownTimer_ = kRbShotCooldownSec_;
 
 	//  発射成功したら消費
 	rbAmmo_ = std::max(0, rbAmmo_ - 1);

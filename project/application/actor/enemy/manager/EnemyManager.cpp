@@ -702,8 +702,9 @@ void EnemyManager::StartWave1CoreChance_() {
 	midBossCore_->Initialize(common_, dx_);
 	midBossCore_->SetCamera(camera_);
 	midBossCore_->SetParentScene(parent_);
-	midBossCore_->SetScale({ 1.2f, 1.2f, 1.2f });
-	midBossCore_->SetHP(8);
+	midBossCore_->SetScale({ 1.8f, 1.8f, 1.8f });
+	midBossCore_->SetColliderScale({ 3.1f, 3.1f, 3.1f });
+	midBossCore_->SetHP(3);
 	midBossCore_->SetReticle(player_ ? player_->GetReticle() : nullptr);
 	midBossCore_->SetPlayer([this]() { return player_ ? player_->GetPosition() : Vector3{ 0.0f,0.0f,0.0f }; });
 	if (player_) {
