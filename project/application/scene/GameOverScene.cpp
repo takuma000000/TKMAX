@@ -127,7 +127,9 @@ void GameOverScene::Initialize() {
 	noiseNextInterval_ = RandomRange(0.02f, 0.8f); // 次のノイズ発生までの時間
 }
 
-void GameOverScene::Finalize() {}
+void GameOverScene::Finalize() {
+	TKM::ParticleManager::GetInstance()->ClearGroup("fallStreak");
+}
 
 void GameOverScene::Update() {
 	Input::GetInstance()->Update();

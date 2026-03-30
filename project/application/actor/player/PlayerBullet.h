@@ -124,6 +124,11 @@ public:
 	/// </summary>
 	/// <param name="core">中ボスコア（nullptr 可）</param>
 	void SetCore(MidBossCore* core);
+	/// <summary>
+	/// 発射時の出現演出としてベジェ曲線移動を開始します。
+	/// </summary>
+	/// <param name="p0">開始位置</param>
+	void SetUseTrail(bool use);
 	// =========================================
 
 private:
@@ -173,6 +178,7 @@ private:
 	//======================================================================
 	ParticleEmitter trailEmitter_;               // 弾の軌跡パーティクル
 	std::string     trailGroup_ = "bulletTrail"; // デフォルトのパーティクルグループ名
+	bool useTrail_ = true; // トレイルを使うかどうか
 	//======================================================================
 	// 共通パラメータ（マジックナンバー解消）
 	//======================================================================

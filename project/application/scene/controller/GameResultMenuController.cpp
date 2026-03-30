@@ -24,13 +24,6 @@ void GameResultMenuController::Initialize(
 	screenH_ = screenH;
 	desc_ = desc;
 
-	// パネル
-	panel_ = std::make_unique<TKM::Sprite>();
-	panel_->Initialize(spriteCommon_, dxCommon_, desc_.panelTex);
-	panel_->SetParentScene(parentScene_);
-	panel_->SetAnchorPoint({ 0.0f, 0.0f }); // タイトル/ポーズと同じ基準
-	panel_->SetAutoAdjustTextureSize(false);
-
 	// 項目
 	for (int i = 0; i < (int)Item::Count; ++i) {
 		items_[i] = std::make_unique<TKM::Sprite>();
@@ -87,14 +80,6 @@ GameResultMenuController::Command GameResultMenuController::Update(float dt) {
 	pulseTime_ += dt;
 	float pulse = 1.0f + 0.06f * std::sin(pulseTime_ * 6.0f);
 
-	// パネル
-	if (panel_) {
-		panel_->SetPosition(panelPos_);
-		panel_->SetSize(panelSize_);
-		panel_->SetColor({ 0.08f, 0.08f, 0.10f, 0.75f }); // タイトル/ポーズと同じ基準で、選択されていない状態の色にしておく
-		panel_->Update();
-	}
-
 	// 項目
 	for (int i = 0; i < (int)Item::Count; ++i) {
 		if (!items_[i]) { continue; }
@@ -130,7 +115,6 @@ GameResultMenuController::Command GameResultMenuController::Update(float dt) {
 }
 
 void GameResultMenuController::Draw() {
-	if (panel_) panel_->Draw();
 
 	// 項目
 	for (int i = 0; i < (int)Item::Count; ++i) {

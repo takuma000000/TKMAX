@@ -919,7 +919,7 @@ void Player::RBShoot() {
 	bullet->SetVelocity(dir * normalBulletSpeed_);
 	bullet->SetCamera(camera_);
 	bullet->SetPlayer(this);
-	bullet->SetTrailGroup("trail_rb");
+	bullet->SetUseTrail(false);
 	bullet->SetCore(core_);
 
 	// ==============================

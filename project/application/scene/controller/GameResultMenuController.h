@@ -21,7 +21,6 @@ public:
 	};
 
 	struct Desc {
-		std::string panelTex = "./resources/texture/gradationLine.png"; // パネル
 		std::array<std::string, 2> itemTex = { //
 			"./resources/texture/restart_pause.png",       // リスタート
 			"./resources/texture/title_pause.png",     // タイトルに戻る
@@ -98,8 +97,8 @@ private:
 	static float Clamp01_(float v);
 
 	//======================================================================
-// 設定 / 参照
-//======================================================================
+	// 設定 / 参照
+	//======================================================================
 	Desc desc_{}; // メニュー設定情報
 	TKM::SpriteCommon* spriteCommon_ = nullptr;
 	TKM::DirectXCommon* dxCommon_ = nullptr;
@@ -119,7 +118,6 @@ private:
 	//======================================================================
 	// スプライト
 	//======================================================================
-	std::unique_ptr<TKM::Sprite> panel_; // パネル
 	std::array<std::unique_ptr<TKM::Sprite>, (int)Item::Count> items_; // 項目
 	std::unique_ptr<TKM::Sprite> cursor_; // カーソル
 	//======================================================================

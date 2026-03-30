@@ -25,7 +25,7 @@ void PlayerBullet::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* d
 	// 3Dオブジェクト作成
 	object_ = std::make_unique<TKM::Object3d>();
 	object_->Initialize(common, dxCommon);
-	object_->SetModel("sphere.obj");
+	object_->SetModel("normalBullet.obj");
 	object_->SetScale({ kDefaultScale_, kDefaultScale_, kDefaultScale_ });
 
 	prevPos_ = object_->GetTranslate(); // 初期座標を保存
@@ -84,7 +84,7 @@ void PlayerBullet::Update() {
 
 		UpdateLTTrail_(trailPos);
 	}
-	if (trailGroup_ != "trail_lt") {
+	if (useTrail_ && trailGroup_ != "trail_lt") {
 		trailEmitter_.Update();
 	}
 
@@ -316,8 +316,10 @@ void PlayerBullet::SetPosition(const Vector3& pos) {
 	object_->SetTranslate(pos); // 座標設定
 	prevPos_ = pos;
 
-	// トレイルの「開始点」を必ず発射位置に揃える
-	trailEmitter_.SetPosition(pos);
+	// トレイルの位置も更新
+	if (useTrail_) {
+		trailEmitter_.SetPosition(pos);
+	}
 
 	// LTならリボン点列も初期化して「今の位置」から開始
 	if (trailGroup_ == "trail_lt") {
@@ -368,6 +370,10 @@ void PlayerBullet::SetSpecialAttack(bool flag) {
 
 void PlayerBullet::SetCore(MidBossCore* core) {
 	core_ = core; // ヒット対象の核を設定
+}
+
+void PlayerBullet::SetUseTrail(bool use) {
+	useTrail_ = use;
 }
 
 void PlayerBullet::StartSpawnBezier(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float duration, const Vector3& velocityAfter) {

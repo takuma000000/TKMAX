@@ -68,6 +68,10 @@ void GameScene::Finalize() {
 	ModelManager::GetInstance()->Finalize();
 	// ラインレンダラーの終了
 	postFx_->Finalize();
+
+	ParticleManager::GetInstance()->ClearGroup("fw_launch");
+	ParticleManager::GetInstance()->ClearGroup("fw_flash");
+	ParticleManager::GetInstance()->ClearGroup("fw_burst");
 }
 
 void GameScene::Update() {
