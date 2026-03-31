@@ -360,12 +360,12 @@ void GameScene::UpdateEnemyAndWaveLogic(float scaledDeltaTime) {
 	if (!locked && enemiesInitialized_) {
 
 		// 敵の更新（敵ロジックは EnemyManager に完全委譲）
-
 		enemyManager_->Update(scaledDeltaTime);
 
-		// 全Waveクリア → ボス戦開始 or クリア演出へ
+		// ----------------------------------------
+		// 全Waveクリア → ボス登場開始
+		// ----------------------------------------
 		if (enemyManager_->IsAllWavesCleared()) {
-			// まだボス戦始まっていないなら、即開始ではなく専用登場演出を挟む
 			if (!bossManager_->IsBattleActive() && !bossManager_->IsBossDead()) {
 				if (bossEntranceSeq_) {
 					if (!bossEntranceSeq_->IsActive()) {
@@ -375,14 +375,17 @@ void GameScene::UpdateEnemyAndWaveLogic(float scaledDeltaTime) {
 					// 念のためのフォールバック
 					bossManager_->StartBattle();
 				}
-			} else {
-				// ボス撃破 → クリア演出へ
-				if (bossManager_->IsBossDead()) {
-					if (!isClear) {
-						flow_->RequestStartClear();
-						return;
-					}
-				}
+			}
+		}
+
+		// ----------------------------------------
+		// ボス撃破 → クリア演出開始
+		// Wave状態とは独立して判定する
+		// ----------------------------------------
+		if (bossManager_->IsBossDead()) {
+			if (!isClear) {
+				flow_->RequestStartClear();
+				return;
 			}
 		}
 
