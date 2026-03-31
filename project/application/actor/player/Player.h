@@ -501,7 +501,7 @@ private:
 	float rbRefillValue_ = 0.0f;     // 回復中の弾数（floatで滑らかに）
 	bool  rbRefilling_ = false;      // 回復中フラグ
 	float rbNoFireTimer_ = 0.0f; // 最後にRBを撃ってからの経過秒数
-	static constexpr float kRbShotCooldownSec_ = 0.50f; // RB弾の発射間隔
+	static constexpr float kRbShotCooldownSec_ = 0.25f; // RB弾の発射間隔
 	float rbShotCooldownTimer_ = 0.0f; // 次にRB弾を撃てるまでの残り時間
 	//======================================================================
 	// 振動（Rumble）

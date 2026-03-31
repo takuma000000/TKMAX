@@ -4,6 +4,7 @@
 #include "AABB.h"
 #include <limits>
 #include "RadialBlurEffect.h"
+#include "MidBossCore.h"
 
 #ifdef USE_IMGUI
 #include "imgui.h"
@@ -1039,8 +1040,13 @@ void Player::LBShoot() {
 		// 終点
 		Vector3 end = start + Vector3{ 0.0f, 0.0f, 28.0f };
 
-		// ロック中の敵（ボス含む）を終点にする
-		if (enemy_ && !enemy_->IsDead()) {
+		// 優先順位：
+		// 1. コア
+		// 2. ロック中の敵
+		// 3. 前方固定
+		if (core_ && !core_->IsDead()) {
+			end = core_->GetWorldPosition();
+		} else if (enemy_ && !enemy_->IsDead()) {
 			end = enemy_->GetWorldPosition();
 		}
 

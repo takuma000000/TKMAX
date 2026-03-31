@@ -156,16 +156,25 @@ void HomingBullet::Update() {
 		// ベジェ曲線上の位置を計算
 		Vector3 pos = MyMath::Bezier3(p0_, p1_, p2_, p3_, t);
 
-		// 終盤だけ敵の現在位置へ少しずつ寄せる
-		if (enemy_ && !enemy_->IsDead() && t >= 0.65f) {
-			float followT = (t - 0.65f) / (1.0f - 0.65f); // 0.65～1の範囲を0～1に正規化
-			followT = std::clamp(followT, 0.0f, 1.0f); // クランプして0～1の範囲に収める
-			// 敵の現在位置を取得
-			Vector3 enemyPos = enemy_->GetWorldPosition();
-			// そのままだと敵の中心へ刺さりすぎるなら少し上を狙う
-			enemyPos.y += 1.5f;
-			// 現在位置から敵の位置へ線形補間で寄せる
-			pos = pos + (enemyPos - pos) * followT;
+		// 終盤だけ現在のターゲット位置へ少しずつ寄せる
+		if (t >= 0.65f) {
+			bool hasTarget = false;
+			Vector3 targetPos = pos;
+
+			if (core_ && !core_->IsDead()) {
+				targetPos = core_->GetWorldPosition();
+				hasTarget = true;
+			} else if (enemy_ && !enemy_->IsDead()) {
+				targetPos = enemy_->GetWorldPosition();
+				targetPos.y += 1.5f; // 敵は少し上を狙う
+				hasTarget = true;
+			}
+
+			if (hasTarget) {
+				float followT = (t - 0.65f) / (1.0f - 0.65f);
+				followT = std::clamp(followT, 0.0f, 1.0f);
+				pos = pos + (targetPos - pos) * followT;
+			}
 		}
 		object_->SetTranslate(pos); // ホーミング弾の位置を更新
 
@@ -264,15 +273,25 @@ void HomingBullet::Update() {
 		float t2 = std::min(1.0f, t + 0.01f);
 		Vector3 nextPos = MyMath::Bezier3(p0_, p1_, p2_, p3_, t2);
 
-		// 終盤だけ敵の現在位置へ少しずつ寄せる
-		if (enemy_ && !enemy_->IsDead() && t2 >= 0.65f) {
-			float followT2 = (t2 - 0.65f) / (1.0f - 0.65f); // 0.65～1の範囲を0～1に正規化
-			followT2 = std::clamp(followT2, 0.0f, 1.0f); // クランプして0～1の範囲に収める
+		// 終盤だけ現在のターゲット位置へ少しずつ寄せる
+		if (t2 >= 0.65f) {
+			bool hasTarget2 = false;
+			Vector3 targetPos2 = nextPos;
 
-			Vector3 enemyPos2 = enemy_->GetWorldPosition(); // そのままだと敵の中心へ刺さりすぎるなら少し上を狙う
-			enemyPos2.y += 1.5f; // 現在位置から敵の位置へ線形補間で寄せる
-			// 次の位置を、弾道上の位置から敵の位置へ線形補間で寄せる
-			nextPos = nextPos + (enemyPos2 - nextPos) * followT2;
+			if (core_ && !core_->IsDead()) {
+				targetPos2 = core_->GetWorldPosition();
+				hasTarget2 = true;
+			} else if (enemy_ && !enemy_->IsDead()) {
+				targetPos2 = enemy_->GetWorldPosition();
+				targetPos2.y += 1.5f; // 敵は少し上を狙う
+				hasTarget2 = true;
+			}
+
+			if (hasTarget2) {
+				float followT2 = (t2 - 0.65f) / (1.0f - 0.65f);
+				followT2 = std::clamp(followT2, 0.0f, 1.0f);
+				nextPos = nextPos + (targetPos2 - nextPos) * followT2;
+			}
 		}
 		
 		Vector3 dir = nextPos - pos; // 次の位置と現在位置の差分から向きを計算
