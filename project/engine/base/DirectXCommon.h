@@ -676,6 +676,11 @@ namespace TKM {
 		/// </summary>
 		/// <returns></returns>
 		TKM::AuraEffect* GetAuraEffect() const { return auraEffect_; }
+		/// <summary>
+		/// WaterRippleEffect を取得
+		/// </summary>
+		/// <returns></returns>
+		TKM::WaterRippleEffect* GetWaterRippleEffect() const { return rippleEffect_; }
 		// ========================================================================
 		// Setter==================================================================
 		/// <summary>

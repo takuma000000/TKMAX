@@ -463,6 +463,11 @@ void GameScene::UpdateTransitionsAndSceneChange(float rawDeltaTime) {
 		sceneManager_->SetNextScene(std::make_unique<GameClearScene>(dxCommon_, srvManager_)); // ゲームクリアシーンをセット
 		return;
 	}
+
+	if (req == TKM::GameFlowController::TransitionRequest::ToRestart) { // リスタートリクエスト
+		sceneManager_->SetNextScene(std::make_unique<GameScene>(dxCommon_, srvManager_)); // 新しいゲームシーンをセット（これでリスタート扱い）
+		return;
+	}
 }
 
 void GameScene::HandleDebugKeysAndRequests() {
@@ -498,8 +503,7 @@ bool GameScene::TryUpdatePauseAndMaybeEarlyReturn_(float rawDeltaTime, bool allo
 	if (cmd == TKM::PauseMenuController::Command::ReturnToTitle) {
 		flow_->RequestToTitleByIris();
 	} else if (cmd == TKM::PauseMenuController::Command::Restart) {
-		sceneManager_->SetNextScene(std::make_unique<GameScene>(dxCommon_, srvManager_));
-		return true; // シーン差し替え要求（このフレームは終了）
+		flow_->RequestRestartByIris();
 	}
 
 	// ポーズ中はゲーム本体を止める。ただし「遷移（タイトル戻り等）」は回す

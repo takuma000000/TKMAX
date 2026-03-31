@@ -30,19 +30,13 @@ namespace TKM {
 	GameFlowController::TransitionRequest GameFlowController::UpdateTransitions(float rawDeltaTime, Player* player) {
 		(void)rawDeltaTime; // 現状：固定dt（kFixedDeltaTime_）で進行
 
-		// 1) 保留中リクエストがあれば最優先で返す
-		{
-			const auto req = ConsumePendingRequest_();
-			if (req != TransitionRequest::None) { return req; }
-		}
-
-		// 2) 死亡 →（4秒後）GameOver 遷移のため Iris 閉じ開始
+		// 1) 死亡 →（4秒後）GameOver 遷移のため Iris 閉じ開始
 		HandlePlayerDeathTransition_(player);
 
-		// 3) Tキーでタイトルへ（Iris閉じ開始）
+		// 2) Tキーでタイトルへ（Iris閉じ開始）
 		TryStartTitleTransitionByKey_();
 
-		// 4) Iris閉じ進行（閉じ終わったら遷移要求を返す）
+		// 3) Iris閉じ進行（閉じ終わったら遷移要求を返す）
 		{
 			const auto req = StepIrisClosing_();
 			if (req != TransitionRequest::None) { return req; }
@@ -179,15 +173,34 @@ namespace TKM {
 		);
 	}
 
+	void GameFlowController::RequestRestartByIris() {
+		if (irisClosing_) { return; }
+
+		irisClosing_ = true; // アイリス閉じ開始
+		irisToTitle_ = false; // GameOver へ遷移するようにセット
+		pendingRequest_ = TransitionRequest::ToRestart; // 閉じ終わったら再スタートへ遷移要求
+
+		irisCloseTween_.Reset(
+			0.0f,
+			intro_ ? intro_->GetIrisMaxScale() : 0.0f,
+			kIrisDurationSec_,
+			Ease::Type::InBack
+		);
+	}
+
 	GameFlowController::TransitionRequest GameFlowController::StepIrisClosing_() {
 		if (!irisClosing_) { return TransitionRequest::None; }
 
 		// アイリスのスケールを更新
 		UpdateIrisScale(intro_ ? intro_->GetIrisSprite() : nullptr, irisCloseTween_, kFixedDeltaTime_);
 
-		// 閉じ終わってなければ遷移要求はまだ出さない
-		if (!irisCloseTween_.Finished()) { return TransitionRequest::None; }
+		if (!irisCloseTween_.Finished()) { return TransitionRequest::None; } // 閉じ終わってない
 
-		return irisToTitle_ ? TransitionRequest::ToTitle : TransitionRequest::ToGameOver; // 閉じ終わったらタイトルへ or ゲームオーバーへ遷移要求
+		// 閉じ終わったので遷移要求を返す（リクエストセットされていればそちら優先）
+		if (pendingRequest_ != TransitionRequest::None) {
+			return ConsumePendingRequest_();
+		}
+
+		return irisToTitle_ ? TransitionRequest::ToTitle : TransitionRequest::ToGameOver; // デフォルト遷移
 	}
 } // namespace TKM

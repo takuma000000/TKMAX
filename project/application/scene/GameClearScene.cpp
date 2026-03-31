@@ -99,14 +99,26 @@ void GameClearScene::Initialize() {
 		WindowsAPI::kClientWidth_,
 		WindowsAPI::kClientHeight_
 	);
+
+	// ─────────────────────
+	// 決定時の水面波紋エフェクト
+	// ─────────────────────
+	rippleEffect_ = std::make_unique<TKM::WaterRippleEffect>();
+	rippleEffect_->Initialize(dxCommon_);
+	dxCommon_->SetWaterRippleEffect(rippleEffect_.get());
 }
 
 void GameClearScene::Finalize() {
-	// 今は特に何もしない
+	dxCommon_->SetWaterRippleEffect(nullptr);
 }
 
 void GameClearScene::Update() {
 	Input::GetInstance()->Update();
+
+	// ─────────────────────
+	// 水面波紋エフェクト更新（決定時に呼ばれる）
+	// ─────────────────────
+	rippleEffect_->Update(dt_);
 
 	// ─────────────────────
 	// アイリス開き（入場）

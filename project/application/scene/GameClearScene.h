@@ -17,6 +17,7 @@
 #include <Easing.h>
 #include "IrisUtil.h"
 #include "GameResultMenuController.h"
+#include "PostEffectController.h"
 
 //=============================================================
 // GameClearSceneクラス
@@ -110,4 +111,8 @@ private:
 		ReturnToTitle  // タイトルへ戻る
 	};
 	NextAction nextAction_ = NextAction::None; // 次のアクション
+	//======================================================================
+	// ポストエフェクト
+	//======================================================================
+	std::unique_ptr<TKM::WaterRippleEffect> rippleEffect_ = nullptr; // 決定時の波紋
 };

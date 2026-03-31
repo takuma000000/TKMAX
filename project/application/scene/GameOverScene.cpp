@@ -125,10 +125,16 @@ void GameOverScene::Initialize() {
 	noiseEffect_->SetFlash(0.04f);
 	// 1回目も少しランダムにする
 	noiseNextInterval_ = RandomRange(0.02f, 0.8f); // 次のノイズ発生までの時間
+
+	// --- 決定時の水面波紋エフェクト ---
+	rippleEffect_ = std::make_unique<TKM::WaterRippleEffect>();
+	rippleEffect_->Initialize(dxCommon_);
+	dxCommon_->SetWaterRippleEffect(rippleEffect_.get());
 }
 
 void GameOverScene::Finalize() {
 	TKM::ParticleManager::GetInstance()->ClearGroup("fallStreak");
+	dxCommon_->SetWaterRippleEffect(nullptr);
 }
 
 void GameOverScene::Update() {
@@ -359,6 +365,11 @@ void GameOverScene::Update() {
 		overSprite_->SetSize({ baseW * overScale_, baseH * overScale_ });
 
 		overSprite_->Update();
+
+		//=======================
+		// 波紋
+		//=======================
+		rippleEffect_->Update(dt_);
 	}
 
 	//=========================================================

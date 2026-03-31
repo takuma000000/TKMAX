@@ -7,6 +7,7 @@
 #include "SpriteCommon.h"
 #include "Input.h"
 #include "MyMath.h"
+#include "PostEffectController.h"
 
 //=============================================================
 // GameResultMenuControllerクラス

@@ -18,6 +18,7 @@
 #include "GameResultMenuController.h"
 #include "BossEnemy.h"
 #include "NoiseEffect.h"
+#include "PostEffectController.h"
 
 //=============================================================
 // GameOverScene
@@ -130,4 +131,8 @@ private:
 	float noiseDurationTimer_ = 0.0f;               // ノイズ発生中の経過
 	float noiseCurrentDuration_ = 0.15f;            // 今回のノイズ継続時間
 	bool isNoisePlaying_ = false;                   // 今ノイズ中か
+	//======================================================================
+	// 決定時の波紋エフェクト
+	//======================================================================
+	std::unique_ptr<TKM::WaterRippleEffect> rippleEffect_ = nullptr; // 決定時の波紋
 };

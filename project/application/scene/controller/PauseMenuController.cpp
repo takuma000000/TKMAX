@@ -217,6 +217,23 @@ namespace TKM {
 			}
 			// A で決定
 			if (TriggerA_()) {
+
+				// 波紋発生（画面中央）
+				if (dxCommon_) {
+					auto* ripple = dxCommon_->GetWaterRippleEffect();
+					if (ripple) {
+						TKM::WaterRippleEffect::RippleDesc desc{};
+						desc.duration_ = 0.6f;
+						desc.radiusMax_ = 0.85f;
+						desc.amplitude_ = 0.1f;
+						desc.frequency_ = 80.0f;
+						desc.width_ = 10.0f;
+						desc.color_ = { 1.0f,1.0f,1.0f };
+
+						ripple->Trigger({ 0.5f, 0.5f }, desc);
+					}
+				}
+
 				// どの項目が選ばれているかでコマンドを返す
 				if (index_ == (int)Item::Resume) {
 					Close_();

@@ -30,6 +30,7 @@ namespace TKM {
 			ToTitle, // タイトルへ戻る
 			ToGameOver, // ゲームオーバーへ
 			ToGameClear, // ゲームクリアへ
+			ToRestart, // ゲーム再スタート（リトライ）
 		};
 
 		/// <summary>
@@ -96,6 +97,10 @@ namespace TKM {
 		/// クリアシーケンス開始のリクエストを出します。
 		/// </summary>
 		void RequestStartClear();
+		/// <summary>
+		/// アイリスクローズによってゲーム再スタートのリクエストを出します。
+		/// </summary>
+		void RequestRestartByIris();
 		/// <summary>
 		/// クリアシーケンスコントローラをバインドします。
 		/// </summary>
