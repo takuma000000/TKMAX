@@ -44,7 +44,28 @@ namespace TKM {
 		currentEnemiesInitialized_ = enemiesInitialized;
 		currentOutRequestInitEnemies_ = &outRequestInitEnemies;
 
-		flowSM_.Update(kFixedDt_);
+		flowSM_.Update(kFixedDt_); // 状態の更新
+
+		// 状態の更新後に、スキップ入力の処理やカメラブレンドの更新を行う
+		if (CanSkipBossIntro()) {
+
+			const bool isSkipPressed =
+				Input::GetInstance()->PushKey(DIK_SPACE) ||
+				Input::GetInstance()->PushButton(XINPUT_GAMEPAD_A);
+
+			if (isSkipPressed) {
+				skipHoldTimer_ += kFixedDt_;
+
+				if (skipHoldTimer_ >= kSkipHoldSec_) {
+					SkipBossIntroToShowStart();
+					skipHoldTimer_ = 0.0f;
+				}
+			} else {
+				skipHoldTimer_ = 0.0f;
+			}
+		} else {
+			skipHoldTimer_ = 0.0f;
+		}
 
 		// --- Boss camera blend in ---
 		if (camBlendToBossActive_) {
@@ -119,6 +140,37 @@ namespace TKM {
 
 	void IntroSequence::DrawIntroBoss3D(DirectXCommon* dxCommon) const {
 		introBossActor_.Draw(dxCommon); // ボスが存在するフェーズのみ描画
+	}
+
+	bool IntroSequence::CanSkipBossIntro() const {
+		return
+			phase_ == Phase::BossPreSpawn ||
+			phase_ == Phase::BossAppear ||
+			phase_ == Phase::BossPause ||
+			phase_ == Phase::BossNoticeHop ||
+			phase_ == Phase::BossPanic ||
+			phase_ == Phase::BossEscape;
+	}
+
+	void IntroSequence::SkipBossIntroToShowStart() {
+		if (!CanSkipBossIntro()) {
+			return;
+		}
+
+		// イントロ用ボスを消す
+		introBossActor_.Reset();
+
+		// カメラを通常側へ戻す
+		camBlendToBossActive_ = false;
+		camBlendBackActive_ = false;
+
+		if (currentCamera_) {
+			currentCamera_->SetRotate(camSavedRot_);
+		}
+
+		// 「ゲームスタート」へ進める
+		phase_ = Phase::ShowStart;
+		flowSM_.Change(std::make_unique<IntroShowStartState>());
 	}
 
 	bool IntroSequence::IsBossSkyRedPhase() const {

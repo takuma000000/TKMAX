@@ -50,6 +50,16 @@ namespace TKM {
 		void DrawIntroBoss3D(DirectXCommon* dxCommon) const;
 
 		/// <summary>
+		/// はじめのボス演出をスキップ可能な状態かどうかを返します。
+		/// </summary>
+		/// <returns>スキップ可能なら true</returns>
+		bool CanSkipBossIntro() const;
+		/// <summary>
+		/// はじめのボス演出をスキップして「ゲームスタート」表示へ進めます。
+		/// </summary>
+		void SkipBossIntroToShowStart();
+
+		/// <summary>
 		/// ゲームプレイがロックされているかを取得します。
 		/// </summary>
 		/// <returns>ゲームプレイがロック中の場合 true、それ以外は false</returns>
@@ -180,6 +190,11 @@ namespace TKM {
 		// カメラブレンドの時間
 		float camBlendToBossSec_ = 0.45f; // 入り補間時間
 		float camBlendBackSec_ = 0.55f;   // 戻り補間時間
+		//======================================================================
+		// ボス演出のうち、スキップ可能なフェーズに入っているかどうかを管理する変数
+		// ======================================================================
+		float skipHoldTimer_ = 0.0f; // スキップ用の長押し時間
+		static constexpr float kSkipHoldSec_ = 2.0f; // 何秒でスキップするか
 		//======================================================================
 		// StateMachine
 		//======================================================================

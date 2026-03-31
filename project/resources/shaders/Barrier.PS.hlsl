@@ -253,7 +253,7 @@ float4 main(PSInput input) : SV_TARGET
 
     if (alpha <= 0.01f)
     {
-        discard;
+        discard; // ほとんど見えないピクセルは描画しない（パフォーマンス向上のため）
     }
 
     return float4(finalColor, saturate(alpha));
