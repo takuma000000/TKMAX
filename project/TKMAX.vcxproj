@@ -230,6 +230,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\ui\PlayerHudUI.cpp" />
     <ClCompile Include="application\scene\controller\TitleShowdownController.cpp" />
     <ClCompile Include="engine\effect\post\NoiseEffect.cpp" />
+    <ClCompile Include="application\ui\SkipGuideUI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\actor\enemy\manager\EnemyManager.h" />
@@ -349,6 +350,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\state\TitleFlowStates.h" />
     <ClInclude Include="engine\effect\post\TrailRibbonRenderer.h" />
     <ClInclude Include="application\scene\controller\TitleShowdownController.h" />
+    <ClInclude Include="application\ui\SkipGuideUI.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

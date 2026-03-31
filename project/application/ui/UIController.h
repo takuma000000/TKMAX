@@ -6,6 +6,7 @@
 #include "Player.h"
 #include "OperationGuideUI.h"
 #include "PlayerHudUI.h"
+#include "SkipGuideUI.h"
 
 namespace TKM {
 
@@ -57,6 +58,16 @@ namespace TKM {
 		/// 右側操作UIの縦間隔を設定します。
 		/// </summary>
 		void SetRightUiSpacing(float px);
+		/// <summary>
+		/// 開幕ボス演出中かどうかを設定します。
+		/// true の間は SkipGuideUI だけを表示し、
+		/// false になったら通常HUDを表示します。
+		/// </summary>
+		void SetIntroSkipUiActive(bool active);
+		/// <summary>
+		/// 通常HUD（操作UI / HP / RB / LB）を表示するかを設定します。
+		/// </summary>
+		void SetGameplayHudVisible(bool visible);
 		// ==============================================
 
 	private:
@@ -72,11 +83,14 @@ namespace TKM {
 		// HUD全体の透明度
 		//=============================================================
 		float hudAlpha_ = 1.0f; // HUD全体の透明度（0.0f〜1.0f）
+		bool introSkipUiActive_ = false; // 開幕ボス演出中だけ true
+		bool gameplayHudVisible_ = true; // ゲームスタート後だけ true
 		//=============================================================
 		// 各UIの実体
 		//=============================================================
 		std::unique_ptr<OperationGuideUI> operationGuideUI_; // 右側の操作UI（ボタンアイコンと説明テキスト）
 		std::unique_ptr<PlayerHudUI> playerHudUI_; // プレイヤーのHPや残弾数などを表示するHUD
+		std::unique_ptr<SkipGuideUI> skipGuideUI_; // イントロのボススタートムービーをスキップするためのUI
 	};
 
 } // namespace TKM

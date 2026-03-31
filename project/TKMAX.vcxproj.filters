@@ -214,6 +214,7 @@
     <ClCompile Include="application\actor\enemy\EnemyBarrier.cpp" />
     <ClCompile Include="engine\effect\post\NoiseEffect.cpp" />
     <ClCompile Include="engine\3d\BarrierCommon.cpp" />
+    <ClCompile Include="application\ui\SkipGuideUI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -469,6 +470,7 @@
     <ClInclude Include="application\actor\enemy\EnemyBarrier.h" />
     <ClInclude Include="engine\effect\post\NoiseEffect.h" />
     <ClInclude Include="engine\3d\BarrierCommon.h" />
+    <ClInclude Include="application\ui\SkipGuideUI.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

@@ -40,6 +40,7 @@ void TextureCatalog::LoadTextureCatalogs() {
 		"player_hp_frame.jpg",
 		"player_hp.png",
 		"start_title.png",
+		"skip.png",
 		"end_title.png",
 		"uvChecker.dds",
 		"title_kuraran.dds",

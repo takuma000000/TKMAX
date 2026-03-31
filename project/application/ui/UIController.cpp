@@ -6,7 +6,6 @@
 #endif
 
 namespace TKM {
-
 	void UIController::Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, BaseScene* parentScene, float screenW, float screenH) {
 		spriteCommon_ = spriteCommon;
 		dxCommon_ = dxCommon;
@@ -23,6 +22,9 @@ namespace TKM {
 		// プレイヤーHUDを初期化します。
 		playerHudUI_ = std::make_unique<PlayerHudUI>();
 		playerHudUI_->Initialize(spriteCommon_, dxCommon_, parentScene_, screenW_, screenH_);
+		// イントロのスキップガイドUIを初期化します。
+		skipGuideUI_ = std::make_unique<SkipGuideUI>();
+		skipGuideUI_->Initialize(spriteCommon_, dxCommon_, screenW_, screenH_);
 	}
 
 	void UIController::SetHudAlpha(float a) {
@@ -37,6 +39,14 @@ namespace TKM {
 		operationGuideUI_->SetRightUiSpacing(px); // 右側UI全体の縦間隔を設定
 	}
 
+	void UIController::SetIntroSkipUiActive(bool active) {
+		introSkipUiActive_ = active;
+	}
+
+	void UIController::SetGameplayHudVisible(bool visible) {
+		gameplayHudVisible_ = visible;
+	}
+
 	void UIController::UpdateLayout(float screenW, float screenH) {
 		screenW_ = screenW;
 		screenH_ = screenH;
@@ -47,18 +57,38 @@ namespace TKM {
 	}
 
 	void UIController::Update(float dt, Player* player) {
-		// 各UIを更新します。
-		operationGuideUI_->Update(dt); // 右側UIを更新
-		playerHudUI_->Update(dt, player); // プレイヤーHUDを更新
+		// 開幕ボス演出中は SkipUI だけ更新
+		if (introSkipUiActive_) {
+			skipGuideUI_->Update(dt, true);
+		}
+		// それ以外のとき
+		else {
+			// ゲームスタート後だけ通常HUDを更新
+			if (gameplayHudVisible_) {
+				operationGuideUI_->Update(dt);
+				playerHudUI_->Update(dt, player);
+			}
+
+			// SkipUI は非アクティブ状態で更新しておく
+			skipGuideUI_->Update(dt, false);
+		}
 
 		// ImGui表示
 		DrawImGui();
 	}
 
 	void UIController::Draw() {
-		// 各UIを描画します。HUD全体の透明度を引数で渡します。
-		playerHudUI_->Draw(hudAlpha_); // プレイヤーHUDを描画
-		operationGuideUI_->Draw(hudAlpha_); // 右側UIを描画
+		// 開幕ボス演出中は SkipUI だけ表示
+		if (introSkipUiActive_) {
+			skipGuideUI_->Draw(hudAlpha_);
+			return;
+		}
+
+		// ゲームスタート後だけ通常HUDを表示
+		if (gameplayHudVisible_) {
+			playerHudUI_->Draw(hudAlpha_);
+			operationGuideUI_->Draw(hudAlpha_);
+		}
 	}
 
 	void UIController::DrawImGui() {
@@ -83,8 +113,12 @@ namespace TKM {
 		// プレイヤーHUDのImGui表示
 		playerHudUI_->DrawImGui();
 
+		ImGui::Separator(); // 区切り線
+
+		// イントロのスキップガイドUIのImGui表示
+		skipGuideUI_->DrawImGui();
+
 		ImGui::End();
 #endif
 	}
-
 } // namespace TKM

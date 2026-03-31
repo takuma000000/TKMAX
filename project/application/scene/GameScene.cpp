@@ -413,6 +413,16 @@ void GameScene::UpdateGameplaySystems(float rawDeltaTime, float scaledDeltaTime)
 	// プレイヤーの更新
 	player_->Update(scaledDeltaTime);
 
+	// ゲーム開始前かどうか（ゲーム開始前は通常HUDを表示せず、開幕ボス演出のSkipUIだけ表示する）
+	const bool isBeforeGameStart =
+		(flow_ && flow_->IsGameplayLocked());
+	// 開幕ボス演出中かどうか
+	const bool isOpeningBossIntro =
+		(flow_ && flow_->GetIntro() && flow_->GetIntro()->CanSkipBossIntro());
+	// 開幕ボス演出中だけ SkipUI を表示
+	ui_->SetIntroSkipUiActive(isOpeningBossIntro);
+	// ゲームスタート後だけ通常HUDを表示
+	ui_->SetGameplayHudVisible(!isBeforeGameStart);
 	// UIの更新
 	ui_->Update(scaledDeltaTime, player_.get());
 
