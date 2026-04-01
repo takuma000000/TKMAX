@@ -306,8 +306,12 @@ void Player::ImGuiDebug() {
 }
 
 void Player::RemoveEnemyIfDead() {
-	if (enemy_ && enemy_->IsDead()) { // 敵が死んでたら参照をクリア
+	if (enemy_ && enemy_->IsDead()) {
 		enemy_ = nullptr;
+	}
+
+	if (core_ && core_->IsDead()) {
+		core_ = nullptr;
 	}
 }
 

@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <vector>
+#include <array>
 
 #include "Enemy.h"
 #include "EnemyFactory.h"
@@ -13,26 +14,41 @@
 #include "MidBossCore.h"
 #include "EnemyWaveConfig.h"
 #include "BattleActorManagerBase.h"
-#include <array>
 #include "EnemyBullet.h"
 #include "EnemyBarrier.h"
+#include "BarrierCoreManager.h"
 
-// =============================================================
+//=============================================================
 // EnemyManagerクラス
-// 敵全体の管理を行うクラス。
-// =============================================================
+// 敵全体の管理を担当するクラス。
+// 敵の生成、更新、描画、Wave進行、敵弾管理、
+// バリア戦や中ボス戦の進行管理などをまとめて扱います。
+//=============================================================
 class EnemyManager : public BattleActorManagerBase {
 public:
 	EnemyManager() = default;
 	~EnemyManager() = default;
 
-	// --- Wave 管理周りを追加 ---
-	enum class WavePhase { W1, W2, W3, Done };
-	// Wave1の段階をさらに細分化（W1-1: バリア戦、W1-2: コア出現、W1-3: バリア破壊後の戦い）
+	//=============================================================
+	// Waveの大まかな進行段階
+	//=============================================================
+	enum class WavePhase {
+		W1,   // Wave1
+		W2,   // Wave2
+		W3,   // Wave3（中ボスステージ）
+		Done  // 全Wave終了
+	};
+
+	//=============================================================
+	// Wave1の詳細段階
+	//=============================================================
+	// Wave1はさらに段階を分けて進行します。
+	// BarrierBattle : 本隊が無敵の状態で、バリア戦を行う段階
+	// ExposedBattle : バリア破壊後、本隊を撃破する段階
+	//=============================================================
 	enum class Wave1Phase {
-		BarrierBattle,  // 本隊は無敵、増援を倒す段階
-		CoreChance,     // コア出現中。本隊停止
-		ExposedBattle,  // バリア破壊後。本隊を倒す段階
+		BarrierBattle, // 本隊は無敵、増援やコア対応を行う段階
+		ExposedBattle, // バリア破壊後。本隊を倒す段階
 	};
 
 	/// <summary>
@@ -45,11 +61,13 @@ public:
 	void Initialize(TKM::DirectXCommon* dx, TKM::Camera* camera, TKM::BaseScene* parent, Player* player);
 	/// <summary>
 	/// 敵全体の更新処理を行います。
+	/// 敵本体、敵弾、Wave進行、中ボス核などもここで更新します。
 	/// </summary>
 	/// <param name="dt">前フレームからの経過時間（秒）</param>
 	void Update(float dt) override;
 	/// <summary>
 	/// 敵全体の描画処理を行います。
+	/// 敵本体、敵弾、バリア、コア類などの描画を行います。
 	/// </summary>
 	/// <param name="dx">DirectX 共通管理クラス</param>
 	void Draw(TKM::DirectXCommon* dx) override;
@@ -60,18 +78,20 @@ public:
 
 	/// <summary>
 	/// プレイヤーに最も近い敵情報を更新します。
+	/// ロックオンや追尾系の補助情報更新に使用します。
 	/// </summary>
 	void UpdateClosestEnemy();
 	/// <summary>
-	/// Wave を初期化します（GameScene::InitializeWaves 相当）。
+	/// Wave を初期化します。
+	/// 各Waveの初期状態や管理値をセットアップします。
 	/// </summary>
 	void InitializeWaves();
 	/// <summary>
-	/// 現在の wavePhase_ に応じて敵をスポーンします（GameScene::SpawnCurrentWave 相当）。
+	/// 現在の wavePhase_ に応じて敵をスポーンします。
 	/// </summary>
 	void SpawnCurrentWave();
 	/// <summary>
-	/// wavePhase_ を次へ進めます（GameScene::GoToNextWave 相当）。
+	/// wavePhase_ を次へ進めます。
 	/// </summary>
 	void GoToNextWave();
 	/// <summary>
@@ -80,13 +100,13 @@ public:
 	/// <returns>生存している敵が1体以上いる場合は true、それ以外は false</returns>
 	bool HasAliveEnemies() const { return !enemies_.empty(); }
 	/// <summary>
-	/// デバッグ用：即座にボス Wave（Done）へスキップします。
+	/// デバッグ用：即座にボスWave相当の完了状態へスキップします。
 	/// </summary>
 	void SkipToBossWave();
 	/// <summary>
 	/// 全ての Wave がクリアされているかどうかを取得します。
 	/// </summary>
-	/// <returns></returns>
+	/// <returns>最終Waveまで完了し、かつ敵が残っていなければ true</returns>
 	bool IsAllWavesCleared() const {
 		return (wavePhase_ == WavePhase::Done) && enemies_.empty();
 	}
@@ -98,49 +118,51 @@ public:
 	/// <summary>
 	/// Wave が初期化されているかどうかを取得します。
 	/// </summary>
-	/// <returns></returns>
+	/// <returns>初期化済みなら true</returns>
 	bool IsWavesInitialized() const { return initializedWaves_; }
 	/// <summary>
 	/// Wave1のバリアがアクティブかどうかを取得します。
 	/// </summary>
-	/// <returns></returns>
+	/// <returns>バリアが存在し、かつ有効なら true</returns>
 	bool IsWave1BarrierActive() const { return wave1Barrier_ && wave1Barrier_->IsActive(); }
 
 	// Getter==========================================================================
 	/// <summary>
-	/// 現在の WavePhase を取得します
+	/// 現在の WavePhase を取得します。
 	/// </summary>
-	/// <returns></returns>
+	/// <returns>現在のWave段階</returns>
 	WavePhase GetWavePhase() const { return wavePhase_; }
 	/// <summary>
-	/// 撃破した敵の数を取得します
+	/// 撃破した敵の数を取得します。
 	/// </summary>
-	/// <returns></returns>
+	/// <returns>現在の撃破数</returns>
 	int GetDefeatedEnemyCount() const { return defeatedEnemyCount_; }
 	/// <summary>
-	/// 最大敵数を取得します
+	/// 最大敵数を取得します。
 	/// </summary>
-	/// <returns></returns>
+	/// <returns>この管理対象で想定している最大敵数</returns>
 	int GetMaxEnemyCount() const { return maxEnemyCount_; }
 	/// <summary>
-	/// 敵リストを取得します
+	/// 敵リストを取得します。
 	/// </summary>
-	/// <returns></returns>
+	/// <returns>敵オブジェクトの配列</returns>
 	const std::vector<std::unique_ptr<Enemy>>& GetEnemies() const { return enemies_; }
 	/// <summary>
-	/// Wave1の三角隊列の中心位置を取得します
+	/// Wave1の特殊攻撃コア位置を取得します。
 	/// </summary>
-	/// <returns></returns>
+	/// <returns>Wave1特殊コアのワールド座標</returns>
 	Vector3 GetWave1SpecialCorePosition_() const;
 	/// <summary>
-	/// Wave1のバリアの中心位置を取得します
+	/// Wave1のバリア中心位置を取得します。
 	/// </summary>
-	/// <returns></returns>
+	/// <returns>バリア中心のワールド座標</returns>
 	Vector3 GetWave1BarrierCenter() const;
 	/// <summary>
-	/// Wave1のバリアのサイズを取得します（AABBの半分のサイズ）。バリアが存在しない場合はゼロベクトルを返します。
+	/// Wave1のバリアのサイズを取得します。
+	/// AABBの半分サイズを返します。
+	/// バリアが存在しない場合はゼロベクトルを返します。
 	/// </summary>
-	/// <returns></returns>
+	/// <returns>バリアの半サイズ</returns>
 	Vector3 GetWave1BarrierSize() const;
 	// ================================================================================
 	// Setter==========================================================================
@@ -153,235 +175,332 @@ public:
 	// ================================================================================
 
 	/// <summary>
-	/// Wave2の三角形編隊をスポーンします
+	/// Wave2の三角形編隊をスポーンします。
 	/// </summary>
 	void SpawnWave2_Triangle();
 	/// <summary>
-	/// Wave2のライン編隊をスポーンします
+	/// Wave2のライン編隊をスポーンします。
 	/// </summary>
 	void SpawnWave2_Line();
 	/// <summary>
-	/// Wave2のファストカラム編隊をスポーンします
+	/// Wave2の高速カラム編隊をスポーンします。
 	/// </summary>
 	void SpawnWave2_FastColumn();
+
 private:
 	/// <summary>
-	/// 敵をプレイヤーを対象とした挙動用にセットアップします。
+	/// 敵をプレイヤー対象の挙動向けにセットアップします。
+	/// 追尾・攻撃対象・参照先などの設定に使います。
 	/// </summary>
 	/// <param name="e">セットアップ対象となる敵</param>
 	void SetupEnemyForPlayer(Enemy& e);
 	/// <summary>
-	/// プレイヤーに対して、これから敵が全滅することを通知します。
+	/// プレイヤーに対して、
+	/// これから敵が全滅することを通知します。
 	/// </summary>
 	void NotifyPlayerBeforeClearEnemies_();
 
-	//======================================================================
+	//=============================================================
 	// 基本参照・共通情報
-	//======================================================================
-	// Wave 状態は EnemyManager が持つようにする
-	WavePhase wavePhase_ = WavePhase::W1;
-	//======================================================================
+	//=============================================================
+	WavePhase wavePhase_ = WavePhase::W1; // 現在のWave進行状態
+	//=============================================================
 	// Wave1 関連
-	//======================================================================
-	// ───────── Wave1 用パラメータ ─────────
-	int   wave1DefeatTarget_ = 10;    // このWaveで「倒すべき敵の数」
+	//=============================================================
+	int wave1DefeatTarget_ = 10; // Wave1で撃破対象となる敵数
 	/// <summary>
 	/// Wave1 の更新処理を行います。
 	/// </summary>
 	/// <param name="dt">前フレームからの経過時間（秒）</param>
 	void UpdateWave1(float dt);
-	//==============================================================
-	// Wave1（新仕様：散開 → 隊列 → ホールド → 解散）
-	//==============================================================
-
-	Wave1Phase wave1Phase_ = Wave1Phase::BarrierBattle; // 現在のフェーズ
-	float wave1PhaseTimer_ = 0.0f; // 現在のフェーズの経過時間
+	//=============================================================
+	// Wave1（新仕様：バリア戦 + 本隊戦）
+	//=============================================================
+	Wave1Phase wave1Phase_ = Wave1Phase::BarrierBattle; // Wave1内の現在フェーズ
+	float wave1PhaseTimer_ = 0.0f; // 現在フェーズに入ってからの経過時間
 
 	float wave1FormationMoveSpeed_ = 0.22f; // 隊列移動速度
 
-	Vector3 wave1SpecialCoreOffset_ = { 0.0f, 0.0f, 0.0f }; // 三角隊列の中心から見た特殊攻撃コアの位置オフセット
-	float wave1SpecialChargeDuration_ = 2.2f;               // 溜め時間
-	float wave1SpecialCoreStartScale_ = 0.55f;                // 生成時の小ささ
-	float wave1SpecialCoreEndScale_ = 5.2f;                  // 最大サイズ
-	float wave1SpecialCoreShotSpeed_ = 1.6f;                // 発射速度
-	float wave1SpecialCoreRadius_ = 2.8f;                    // 当たり判定半径
-	int   wave1SpecialCoreDamage_ = 2;                       // SP弾ダメージ
+	Vector3 wave1SpecialCoreOffset_ = { 0.0f, 0.0f, 0.0f }; // 隊列中心から見た特殊攻撃コアの位置オフセット
+	float wave1SpecialChargeDuration_ = 2.2f;                // 特殊攻撃コアの溜め時間
+	float wave1SpecialCoreStartScale_ = 0.55f;               // 特殊攻撃コアの初期スケール
+	float wave1SpecialCoreEndScale_ = 5.2f;                  // 特殊攻撃コアの最大スケール
+	float wave1SpecialCoreShotSpeed_ = 1.6f;                 // 特殊攻撃コア弾の発射速度
+	float wave1SpecialCoreRadius_ = 2.8f;                    // 特殊攻撃コア弾の当たり判定半径
+	int   wave1SpecialCoreDamage_ = 2;                       // 特殊攻撃コア弾のダメージ量
 
-	float wave1NormalShotInterval_ = 1.05f;                  // 散開中の通常攻撃間隔
-	float wave1NormalShotTimer_ = 0.0f;                      // 散開中通常攻撃タイマー
-	float wave1NormalBulletSpeed_ = 0.42f;                   // 散開中通常弾速度
+	float wave1NormalShotInterval_ = 1.05f; // 通常攻撃の発射間隔
+	float wave1NormalShotTimer_ = 0.0f;     // 通常攻撃の経過タイマー
+	float wave1NormalBulletSpeed_ = 0.42f;  // 通常弾の速度
 
-	float playerHitRadius_ = 2.2f;             // プレイヤーの簡易当たり判定半径
-	float playerHitCooldown_ = 0.0f;           // 連続ヒット防止タイマー
-	float playerHitCooldownDuration_ = 0.45f;  // 被弾後の猶予時間
-	int   enemyBulletDamage_ = 1;              // 敵弾ダメージ
+	float playerHitRadius_ = 2.2f;            // プレイヤーの簡易当たり判定半径
+	float playerHitCooldown_ = 0.0f;          // 被弾直後の連続ヒット防止タイマー
+	float playerHitCooldownDuration_ = 0.45f; // 被弾後の猶予時間
+	int   enemyBulletDamage_ = 1;             // 通常敵弾のダメージ量
 
-	EnemyBullet* wave1SpecialCoreBullet_ = nullptr;
-
-	void SpawnWave1Group();
-	void UpdateEnemyBullets_(float dt);
-	void UpdateWave1ScatterAttack_(float dt);
-	void BeginWave1SpecialCharge_();
-	void UpdateWave1SpecialCharge_(float dt);
-	void FireWave1SpecialCore_();
-	void EmitWave1SpecialChargeParticles_();
-
-	float wave1CircleRadius_ = 18.0f;
-	float wave1CircleAngularSpeed_ = 0.75f; // 右回転用（rad/sec）
-	float wave1CircleAngle_ = 0.0f;         // 現在の回転角
-	Vector3 wave1CircleCenter_ = { 0.0f, -3.0f, 80.0f };
-
-	void UpdateWave1CircleFormation_(float dt);
-	void ApplyWave1CircleTargets_();
-	void SetWave1AllInvincible_(bool enable);
-
-	std::unique_ptr<EnemyBarrier> wave1Barrier_ = nullptr; // バリアオブジェクト
-	Vector3 wave1BarrierOffset_ = { 0.0f, 0.0f, 0.0f }; // 三角隊列の中心から見たバリアの位置オフセット
-	Vector3 wave1BarrierSize_ = { 23.0f, 23.0f, 11.0f }; // 
-	bool wave1BarrierFollowCore_ = true;
-	float wave1BarrierShaderFresnelPower_ = 2.0f; // バリアのフレネル効果の強さ。値が大きいほど、エッジがより明るくなります。
-	float wave1BarrierShaderBaseStrength_ = 0.55f; // バリアの中心付近の明るさ
-	float wave1BarrierShaderRimStrength_ = 1.35f;
-	float wave1BarrierShaderAlphaBase_ = 0.42f;
-	float wave1BarrierShaderAlphaRim_ = 0.95f;
-	Vector3 wave1BarrierShaderTint_ = { 1.0f, 1.0f, 1.0f };
-	void InitializeWave1Barrier_();
-	void UpdateWave1Barrier_();
-	void SetWave1BarrierActive_(bool active);
-	void SyncWave1BarrierInfoToPlayer_();
-
-
-	static constexpr int kWave1EnemyCount_ = 10;     // 本隊数
-	static constexpr int kWave1SupportCount_ = 5;    // 増援数
-
-	float wave1CoreChanceDuration_ = 5.0f;           // コア制限時間
-	float wave1CoreChanceTimer_ = 0.0f;              // コア経過時間
-
-	bool wave1BarrierBroken_ = false;                // バリア破壊済みか
-	bool wave1MainStopped_ = false;                  // 本隊を停止中か
-
-	int wave1MainDefeatedCount_ = 0;                 // 本隊撃破数
-	int wave1SupportDefeatedCount_ = 0;              // 増援撃破数
-
-	void SpawnWave1SupportEnemies_();
-	void StartWave1CoreChance_();
-	void BreakWave1Barrier_();
-	void ResetWave1BarrierLoop_();
-	void UpdateWave1SpecialAttackCycle_(float dt);
-
-	int CountAliveWave1Main_() const;
-	int CountAliveWave1Support_() const;
-	void SetWave1MainFreeze_(bool enable);
+	EnemyBullet* wave1SpecialCoreBullet_ = nullptr; // Wave1特殊攻撃コア弾への参照
 
 	/// <summary>
-	/// 敵弾を描画します。プレイヤーに近いほど明るく、遠いほど暗くなるように、距離に応じた色変化も加えます。
+	/// Wave1の本隊グループをスポーンします。
+	/// </summary>
+	void SpawnWave1Group();
+	/// <summary>
+	/// 敵弾全体の更新を行います。
+	/// </summary>
+	/// <param name="dt">前フレームからの経過時間（秒）</param>
+	void UpdateEnemyBullets_(float dt);
+	/// <summary>
+	/// Wave1の散開攻撃を更新します。
+	/// </summary>
+	/// <param name="dt">前フレームからの経過時間（秒）</param>
+	void UpdateWave1ScatterAttack_(float dt);
+	/// <summary>
+	/// Wave1の特殊攻撃コアの溜め開始処理を行います。
+	/// </summary>
+	void BeginWave1SpecialCharge_();
+	/// <summary>
+	/// Wave1の特殊攻撃コアの溜め更新を行います。
+	/// </summary>
+	/// <param name="dt">前フレームからの経過時間（秒）</param>
+	void UpdateWave1SpecialCharge_(float dt);
+	/// <summary>
+	/// Wave1の特殊攻撃コアを発射します。
+	/// </summary>
+	void FireWave1SpecialCore_();
+	/// <summary>
+	/// Wave1の特殊攻撃コア溜め中パーティクルを発生させます。
+	/// </summary>
+	void EmitWave1SpecialChargeParticles_();
+
+	float wave1CircleRadius_ = 18.0f;          // 円隊列の半径
+	float wave1CircleAngularSpeed_ = 0.75f;    // 円隊列の回転速度（rad/sec）
+	float wave1CircleAngle_ = 0.0f;            // 現在の円回転角
+	Vector3 wave1CircleCenter_ = { 0.0f, -3.0f, 80.0f }; // 円隊列の中心座標
+
+	/// <summary>
+	/// Wave1の円形隊列を更新します。
+	/// </summary>
+	/// <param name="dt">前フレームからの経過時間（秒）</param>
+	void UpdateWave1CircleFormation_(float dt);
+	/// <summary>
+	/// Wave1本隊に対して円隊列の目標位置を適用します。
+	/// </summary>
+	void ApplyWave1CircleTargets_();
+	/// <summary>
+	/// Wave1本隊全体の無敵状態を切り替えます。
+	/// </summary>
+	/// <param name="enable">trueで無敵、falseで解除</param>
+	void SetWave1AllInvincible_(bool enable);
+
+	std::unique_ptr<EnemyBarrier> wave1Barrier_ = nullptr; // Wave1用バリア本体
+	Vector3 wave1BarrierOffset_ = { 0.0f, 0.0f, 0.0f };   // 隊列中心から見たバリア位置オフセット
+	Vector3 wave1BarrierSize_ = { 23.0f, 23.0f, 11.0f };  // バリアのサイズ
+	bool wave1BarrierFollowCore_ = true;                  // バリアを中心対象へ追従させるかどうか
+
+	float wave1BarrierShaderFresnelPower_ = 2.0f;  // バリアのフレネル強度
+	float wave1BarrierShaderBaseStrength_ = 0.55f; // バリア中心付近の明るさ
+	float wave1BarrierShaderRimStrength_ = 1.35f;  // バリア縁の明るさ
+	float wave1BarrierShaderAlphaBase_ = 0.42f;    // バリア中心付近の透明度
+	float wave1BarrierShaderAlphaRim_ = 0.95f;     // バリア縁の透明度
+	Vector3 wave1BarrierShaderTint_ = { 1.0f, 1.0f, 1.0f }; // バリアの色味
+
+	/// <summary>
+	/// Wave1用バリアを初期化します。
+	/// </summary>
+	void InitializeWave1Barrier_();
+	/// <summary>
+	/// Wave1用バリアの位置や状態を更新します。
+	/// </summary>
+	void UpdateWave1Barrier_();
+	/// <summary>
+	/// Wave1用バリアの有効状態を切り替えます。
+	/// </summary>
+	/// <param name="active">trueで有効、falseで無効</param>
+	void SetWave1BarrierActive_(bool active);
+	/// <summary>
+	/// Wave1バリア情報をプレイヤー側へ同期します。
+	/// プレイヤー弾との判定や演出連携に使います。
+	/// </summary>
+	void SyncWave1BarrierInfoToPlayer_();
+
+	static constexpr int kWave1EnemyCount_ = 10; // Wave1本隊の敵数
+	static constexpr int kBarrierCoreCount_ = 5; // バリア破壊用コア数
+
+	bool wave1BarrierBroken_ = false; // バリア破壊済みかどうか
+	bool wave1MainStopped_ = false;   // 本隊を停止中かどうか
+
+	int wave1MainDefeatedCount_ = 0;  // Wave1本隊の撃破数
+
+	std::unique_ptr<BarrierCoreManager> barrierCoreManager_ = nullptr; // バリア破壊用コア群の管理クラス
+
+	/// <summary>
+	/// Wave1のバリア破壊処理を行います。
+	/// </summary>
+	void BreakWave1Barrier_();
+	/// <summary>
+	/// Wave1の特殊攻撃サイクル全体を更新します。
+	/// </summary>
+	/// <param name="dt">前フレームからの経過時間（秒）</param>
+	void UpdateWave1SpecialAttackCycle_(float dt);
+	/// <summary>
+	/// Wave1本隊の生存数を数えます。
+	/// </summary>
+	/// <returns>生存中の本隊数</returns>
+	int CountAliveWave1Main_() const;
+	/// <summary>
+	/// Wave1本隊の行動停止状態を切り替えます。
+	/// </summary>
+	/// <param name="enable">trueで停止、falseで解除</param>
+	void SetWave1MainFreeze_(bool enable);
+	/// <summary>
+	/// バリア破壊用コア管理クラスを初期化します。
+	/// </summary>
+	void InitializeBarrierCoreManager_();
+	/// <summary>
+	/// バリア破壊用コアをスポーンします。
+	/// </summary>
+	void SpawnBarrierCores_();
+	/// <summary>
+	/// バリア破壊用コアを全消去します。
+	/// </summary>
+	void ClearBarrierCores_();
+	/// <summary>
+	/// バリア破壊用コアが全て破壊されたかどうかを判定します。
+	/// </summary>
+	/// <returns>全破壊済みなら true</returns>
+	bool AreAllBarrierCoresDestroyed_() const;
+	/// <summary>
+	/// 敵弾を描画します。
+	/// プレイヤーに近いほど明るく、遠いほど暗くなるような距離補正も加えます。
 	/// </summary>
 	/// <param name="dx">DirectX 共通管理クラス</param>
 	void DrawEnemyBullets_(TKM::DirectXCommon* dx);
 	/// <summary>
-	/// 敵弾とプレイヤーの当たり判定を行います。衝突していたらプレイヤーにダメージを与え、必要なら無敵時間も開始します。
+	/// 敵弾とプレイヤーの当たり判定を行います。
+	/// 衝突時はダメージ処理と無敵時間処理を行います。
 	/// </summary>
 	/// <param name="dt">前フレームからの経過時間（秒）</param>
 	void CheckEnemyBulletPlayerCollision_(float dt);
-	//======================================================================
+
+	//=============================================================
 	// Wave2 関連
-	//======================================================================
-	// ───────── Wave2 用パラメータ ─────────
-	int   wave2SubWave_ = 0;      // 0,1,2... の隊列番号
-	float wave2WaitTimer_ = 0.0f;   // 待機タイマー
-	float wave2WaitDuration_ = 1.5f;   // 好きな秒数にできる
-	bool  wave2Waiting_ = false;  // 待機中フラグ
-	int   wave2SubWaveCount_ = 3; // サブウェーブ数
+	//=============================================================
+	int   wave2SubWave_ = 0;         // 現在のサブWave番号
+	float wave2WaitTimer_ = 0.0f;    // サブWave間の待機タイマー
+	float wave2WaitDuration_ = 1.5f; // 待機時間
+	bool  wave2Waiting_ = false;     // 待機中フラグ
+	int   wave2SubWaveCount_ = 3;    // サブWave総数
+
 	/// <summary>
 	/// Wave2 の更新処理を行います。
 	/// </summary>
 	/// <param name="dt">前フレームからの経過時間（秒）</param>
 	void UpdateWave2(float dt);
 	/// <summary>
-	/// Wave2 のサブウェーブをスポーンします。
+	/// Wave2 の指定サブWaveをスポーンします。
 	/// </summary>
-	/// <param name="id">スポーンするサブウェーブの識別子</param>
+	/// <param name="id">スポーンするサブWaveの識別子</param>
 	void SpawnWave2SubWave(int id);
-	//======================================================================
+
+//=============================================================
 	// Wave3（中ボスステージ） 関連
-	//======================================================================
-	// ───────── Wave3（中ボスステージ） 用パラメータ ─────────
-	// 中ボスが片方落ちたときに「蘇生核」を出して 5 秒間猶予を与える
+	//=============================================================
 	bool  wave3ReviveInProgress_ = false; // 蘇生フェーズ中かどうか
-	float wave3CoreTimer_ = 0.0f;  // 核の経過時間
-	float wave3CoreLifetime_ = 5.0f;  // 核が生きていれば蘇生成立（秒）
-	int   wave3CoreHP_ = 5;     // 核のHP（あとで調整用）
-	int   wave3PrevAliveMidBossCount_ = 0; // 前フレームの生存中中ボス数
-	float wave3AngryDuration_ = 8.0f; // 中ボス怒り時間
-	// 中ボスの定位置（左右 2 体）※必要ならあとで ImGui 化
-	Vector3 wave3LeftPos_ = { -12.0f, 6.0f, 80.0f }; // 中ボスの定位置（右）
-	Vector3 wave3RightPos_ = { 12.0f, 6.0f, 80.0f }; // 中ボスの定位置（左）
+	float wave3CoreTimer_ = 0.0f;         // 蘇生核の経過時間
+	float wave3CoreLifetime_ = 5.0f;      // 蘇生核の存続時間
+	int   wave3CoreHP_ = 5;               // 蘇生核のHP
+	int   wave3PrevAliveMidBossCount_ = 0; // 前フレームの中ボス生存数
+	float wave3AngryDuration_ = 8.0f;     // 中ボス怒り状態の継続時間
+
+	Vector3 wave3LeftPos_ = { -12.0f, 6.0f, 80.0f };  // 左側中ボスの定位置
+	Vector3 wave3RightPos_ = { 12.0f, 6.0f, 80.0f };  // 右側中ボスの定位置
+
 	/// <summary>
 	/// Wave3 の更新処理を行います。
 	/// </summary>
 	/// <param name="dt">前フレームからの経過時間（秒）</param>
 	void UpdateWave3(float dt);
+
 	/// <summary>
-	/// Wave3の中ボスステージ用の中ボスをスポーンします
+	/// Wave3の中ボスステージ用の中ボスをスポーンします。
 	/// </summary>
 	void SpawnWave3MidBossStage();
+
 	/// <summary>
-	/// Wave3の蘇生核をスポーンします
+	/// Wave3の蘇生核をスポーンします。
 	/// </summary>
 	void SpawnWave3Core();
+
 	/// <summary>
-	/// Wave3の追加中ボス（左右どちらか）をスポーンします
+	/// Wave3の追加中ボスをスポーンします。
 	/// </summary>
 	void SpawnWave3ExtraMidBoss();
 
-	std::unique_ptr<MidBossCore> midBossCore_ = nullptr; // 蘇生核
-	//======================================================================
+	std::unique_ptr<MidBossCore> midBossCore_ = nullptr; // Wave3の蘇生核
+
+	//=============================================================
 	// デバッグ系フラグ
-	//======================================================================
+	//=============================================================
 	bool freezeEnemies_ = false; // デバッグ用：敵移動停止フラグ
 
-	using SpawnFn = void (EnemyManager::*)(); // スポーン関数のメンバ関数ポインタ型
-	using UpdateFn = void (EnemyManager::*)(float); // 更新関数のメンバ関数ポインタ型
+	//=============================================================
+	// Wave処理の関数テーブル
+	//=============================================================
+	using SpawnFn = void (EnemyManager::*)();        // Wave開始時のスポーン関数型
+	using UpdateFn = void (EnemyManager::*)(float);  // Wave更新関数型
 
-	struct WaveOps { // 各 Wave のスポーン関数と更新関数をまとめた構造体
-		SpawnFn spawn_ = nullptr; // スポーン関数
+	/// <summary>
+	/// 各Waveに対応するスポーン関数と更新関数をまとめた構造体です。
+	/// </summary>
+	struct WaveOps {
+		SpawnFn spawn_ = nullptr;   // スポーン関数
 		UpdateFn update_ = nullptr; // 更新関数
 	};
-	// WaveOps 配列のインデックスは WavePhase と対応させる（例: kWaveOps_[0] は WavePhase::W1 用）
-	static const WaveOps kWaveOps_[4]; // W1,W2,W3,Done(=nullptr)
+
+	// WaveOps配列のインデックスはWavePhaseと対応
+	// [0]=W1, [1]=W2, [2]=W3, [3]=Done
+	static const WaveOps kWaveOps_[4];
+
 	/// <summary>
-	/// Wave1の開始
+	/// Wave1を開始します。
 	/// </summary>
 	void BeginWave1();
+
 	/// <summary>
-	/// Wave2の開始
+	/// Wave2を開始します。
 	/// </summary>
 	void BeginWave2();
+
 	/// <summary>
-	/// Wave3の開始
+	/// Wave3を開始します。
 	/// </summary>
 	void BeginWave3();
-	// =====================================================================
+
+	//=============================================================
 	// 敵ウェーブ設定データ
-	// =====================================================================
-	EnemyWaveConfig waveConfig_{}; // 敵ウェーブ設定データ
-	// =====================================================================
-	// 敵リスト（直持ち版、BindEnemies 未使用時用）
-	// =====================================================================
-	std::vector<std::unique_ptr<Enemy>> enemies_; // 敵リスト（直持ち版）
-	std::vector<std::unique_ptr<EnemyBullet>> enemyBullets_; // 敵弾リスト
-	bool wave1SpecialCharging_ = false;             // 現在SP溜め中か
-	int defeatedEnemyCount_ = 0; // 撃破数カウンタ
-	int maxEnemyCount_ = 0; // 最大敵数カウンタ
-	bool initializedWaves_ = false; // Wave 初期化済みフラグ
-	// =====================================================================
+	//=============================================================
+	EnemyWaveConfig waveConfig_{}; // 敵Wave設定データ
+
+	//=============================================================
+	// 敵リスト・敵弾リスト
+	//=============================================================
+	std::vector<std::unique_ptr<Enemy>> enemies_;             // 敵本体のリスト
+	std::vector<std::unique_ptr<EnemyBullet>> enemyBullets_;  // 敵弾のリスト
+
+	bool wave1SpecialCharging_ = false; // Wave1特殊攻撃コアの溜め中フラグ
+	int defeatedEnemyCount_ = 0;        // 累計撃破数
+	int maxEnemyCount_ = 0;             // 想定最大敵数
+	bool initializedWaves_ = false;     // Wave初期化済みフラグ
+
+	//=============================================================
 	// デルタタイム
-	// =====================================================================
-	float dt_ = 0.016f;
+	//=============================================================
+	float dt_ = 0.016f; // 前回更新時の経過時間保持用
 
 protected:
 	/// <summary>
-	/// カメラが変更されたときの処理を行います。EnemyManager と MidBossCore に新しいカメラを適用します。
+	/// カメラが変更されたときの処理を行います。
+	/// EnemyManager配下の敵や核にも新しいカメラを適用します。
 	/// </summary>
 	void OnCameraChanged() override;
 };

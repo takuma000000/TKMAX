@@ -33,7 +33,6 @@ enum class EnemyDeathReaction {
 enum class EnemyType {
 	Normal,        // 通常ザコ
 	Wave1Main,     // Wave1 本隊10体
-	Wave1Support,  // Wave1 増援
 	Wave3MidBoss,  // Wave3 中ボス
 	Wave3Core,     // Wave3 蘇生用の核
 	Boss,          // ボス
