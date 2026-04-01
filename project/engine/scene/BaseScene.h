@@ -1,7 +1,11 @@
 #pragma once
 #include <array>
+#include <string>
+#include <vector>
 #include <Windows.h>
 #include <Psapi.h>
+#include <pdh.h>
+#include <pdhmsg.h>
 #include "Sprite.h"
 #include "Object3d.h"
 #include "ParticleManager.h"
@@ -19,7 +23,7 @@ namespace TKM {
 namespace TKM {
 	class BaseScene {
 	public:
-		virtual ~BaseScene() = default;
+		virtual ~BaseScene();
 		/// <summary>
 		/// </summary>シーンを初期化します。
 		/// </summary>
@@ -73,10 +77,27 @@ namespace TKM {
 
 		int drawCallCount_ = 0;  // DrawCall数カウント用
 
-		// 情報ウィンドウ用（メモリ履歴）をここに移す
+		// メモリ履歴
 		static constexpr int kMemoryHistorySize_ = 100; // 履歴サイズ
 		std::array<float, kMemoryHistorySize_> memoryHistory_{}; // 過去のメモリ使用履歴（MB）
 		int memoryHistoryIndex_ = 0; // 履歴インデックス
+
+		// CPU / GPU履歴
+		static constexpr int kUsageHistorySize_ = 100; // CPU/GPU履歴サイズ
+		std::array<float, kUsageHistorySize_> cpuHistory_{}; // CPU使用率履歴（%）
+		std::array<float, kUsageHistorySize_> gpuHistory_{}; // GPU使用率履歴（%）
+		int usageHistoryIndex_ = 0; // CPU/GPU履歴インデックス
+
+		float cpuUsagePercent_ = 0.0f; // このプロセスのCPU使用率（%）
+		float gpuUsagePercent_ = 0.0f; // このプロセスのGPU使用率（%）
+		bool gpuCounterAvailable_ = false; // GPUカウンタが使えるか
+
+		ULONGLONG lastCpuCheckTime100ns_ = 0; // 前回CPU計測時刻（100ns）
+		ULONGLONG lastCpuKernel100ns_ = 0;    // 前回CPUカーネル時間（100ns）
+		ULONGLONG lastCpuUser100ns_ = 0;      // 前回CPUユーザー時間（100ns）
+
+		PDH_HQUERY gpuQuery_ = nullptr; // GPU使用率取得用クエリ
+		std::vector<PDH_HCOUNTER> gpuCounters_; // 対象プロセスのGPUエンジンカウンタ一覧
 
 		/// <summary>
 		/// </summary>パフォーマンス情報を更新します。</summary>
@@ -98,5 +119,21 @@ namespace TKM {
 		/// </summary>ImGuiでデバッグ情報を表示します。</summary>
 		/// </summary>
 		void ImGuiDebugInfo();
+		/// <summary>
+		/// CPU使用率を更新します。
+		/// </summary>
+		void UpdateCpuUsage_();
+		/// <summary>
+		/// GPU使用率を更新します。
+		/// </summary>
+		void UpdateGpuUsage_();
+		/// <summary>
+		/// GPUカウンタを初期化します。
+		/// </summary>
+		void InitializeGpuCounters_();
+		/// <summary>
+		/// GPUカウンタを解放します。
+		/// </summary>
+		void FinalizeGpuCounters_();
 	};
 }

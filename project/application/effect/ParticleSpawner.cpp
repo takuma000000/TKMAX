@@ -344,7 +344,7 @@ namespace TKM {
 			// 濃い砂埃の色
 			p.color_ = { 0.9f * c, 0.9f * c, 1.0f * c, 0.6f }; // 少し透明感あり
 
-			p.lifeTime_ = 6.0f;   // だいたい3秒くらい生きる
+			p.lifeTime_ = 1.8f;   // だいたい3秒くらい生きる
 			p.currentTime_ = 0.0f; // 初期化
 
 		} else if (groupName == "ribbonTest") {

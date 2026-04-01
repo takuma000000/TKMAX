@@ -268,7 +268,7 @@ void GameScene::UpdateAirStreak(float rawDeltaTime) {
 	// プレイヤーの速度を取得
 	airStreakTimer_ += rawDeltaTime;
 	// どれくらいの密度で出すか（小さいほど密度↑）
-	const float emitInterval = 0.02f; // 0.02秒ごと ≒ 1秒あたり50個
+	const float emitInterval = 0.035f; // 0.02秒ごと ≒ 1秒あたり50個
 	// アクティブなカメラを取得
 	auto* cam = TKM::CameraManager::GetInstance()->GetActiveCamera();
 	if (!cam) { return; } // 万が一カメラが存在しない場合は出さない（通常はありえないはず）

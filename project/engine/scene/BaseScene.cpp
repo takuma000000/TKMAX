@@ -1,4 +1,9 @@
 #include "BaseScene.h"
+#include <string>
+#include <vector>
+#include <cwchar>
+
+#pragma comment(lib, "pdh.lib")
 
 #ifdef USE_IMGUI
 #include <imgui.h>
@@ -7,31 +12,28 @@
 using TKM::Sprite;
 
 namespace TKM {
-	void BaseScene::Initialize() {
+	BaseScene::~BaseScene() {
+		FinalizeGpuCounters_();
 	}
 
-	void BaseScene::Finalize() {
-	}
+	void BaseScene::Initialize() {}
 
-	void BaseScene::Update() {
-	}
+	void BaseScene::Finalize() {}
 
-	void BaseScene::Draw() {
-	}
+	void BaseScene::Update() {}
+
+	void BaseScene::Draw() {}
 
 	void BaseScene::Draw3D() {
 		Draw(); // デフォルトではDraw3DはDrawを呼び出すだけ。必要に応じて派生クラスでオーバーライドして3D描画処理を実装。
 	}
 
-	void BaseScene::DrawSprite() {
-	}
+	void BaseScene::DrawSprite() {}
 
-	void BaseScene::DrawBack() {
-	}
+	void BaseScene::DrawBack() {}
 
 	void BaseScene::UpdatePerformanceInfo() {
 #ifdef USE_IMGUI
-
 		frameCount_++; // フレーム数カウント
 		float deltaTime = ImGui::GetIO().DeltaTime; // 経過時間取得(秒)
 		timeCount_ += deltaTime; // 経過時間加算
@@ -46,6 +48,12 @@ namespace TKM {
 			timeCount_ = 0.0f; // 経過時間リセット
 		}
 
+		UpdateCpuUsage_();
+		UpdateGpuUsage_();
+
+		cpuHistory_[usageHistoryIndex_] = cpuUsagePercent_;
+		gpuHistory_[usageHistoryIndex_] = gpuUsagePercent_;
+		usageHistoryIndex_ = (usageHistoryIndex_ + 1) % kUsageHistorySize_;
 #endif
 	}
 
@@ -70,6 +78,14 @@ namespace TKM {
 		ImGui::Text("FPS : %.2f", fps_);
 		ImGui::Separator();
 		ImGui::Text("フレーム時間 : %.2f ms", frameTimeMs_);
+		ImGui::Text("CPU使用率 : %.2f %%", cpuUsagePercent_);
+
+		if (gpuCounterAvailable_) {
+			ImGui::Text("GPU使用率 : %.2f %%", gpuUsagePercent_);
+		} else {
+			ImGui::Text("GPU使用率 : 取得不可");
+		}
+
 		ImGui::Separator();
 		ImGui::Text("DrawCall 回数 : %d", drawCallCount_);
 		ImGui::Separator();
@@ -77,8 +93,8 @@ namespace TKM {
 		// メモリ使用量（KB/MB表記）
 		PROCESS_MEMORY_COUNTERS pmc{};
 		if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
-			size_t memoryUsageKB = pmc.WorkingSetSize / 1024;      // KB
-			size_t memoryUsageMB = memoryUsageKB / 1024;           // MB
+			size_t memoryUsageKB = pmc.WorkingSetSize / 1024; // KB
+			size_t memoryUsageMB = memoryUsageKB / 1024;      // MB
 			ImGui::Text("メモリ使用量 : %zu KB / %zu MB", memoryUsageKB, memoryUsageMB);
 		}
 
@@ -95,8 +111,36 @@ namespace TKM {
 			ImVec2(0, 150)
 		);
 		ImGui::PopStyleColor();
-		ImGui::Separator();
 
+		ImGui::Text("CPU使用率推移 (%%)");
+		ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.2f, 0.9f, 0.2f, 1.0f));
+		ImGui::PlotLines(
+			"CPU推移",
+			cpuHistory_.data(),
+			kUsageHistorySize_,
+			usageHistoryIndex_,
+			nullptr,
+			0.0f,
+			100.0f,
+			ImVec2(0, 100)
+		);
+		ImGui::PopStyleColor();
+
+		ImGui::Text("GPU使用率推移 (%%)");
+		ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.2f, 0.7f, 1.0f, 1.0f));
+		ImGui::PlotLines(
+			"GPU推移",
+			gpuHistory_.data(),
+			kUsageHistorySize_,
+			usageHistoryIndex_,
+			nullptr,
+			0.0f,
+			100.0f,
+			ImVec2(0, 100)
+		);
+		ImGui::PopStyleColor();
+
+		ImGui::Separator();
 		ImGui::Text("アクティブ Sprite 数 : %d", Sprite::GetActiveCount());
 		ImGui::Text("アクティブ Object3D 数 : %d", TKM::Object3d::GetActiveCount());
 		ImGui::Separator();
@@ -105,8 +149,8 @@ namespace TKM {
 		for (const auto& pair : TKM::ParticleManager::GetInstance()->GetParticleGroups()) {
 			totalParticles += static_cast<int>(pair.second.particles_.size());
 		}
-		ImGui::Text("アクティブ Particles: %d", totalParticles);
-		ImGui::Text("パーティクルグループ数: %d", TKM::ParticleManager::GetInstance()->GetParticleGroups().size());
+		ImGui::Text("アクティブ Particles : %d", totalParticles);
+		ImGui::Text("パーティクルグループ数 : %d", static_cast<int>(TKM::ParticleManager::GetInstance()->GetParticleGroups().size()));
 		ImGui::End();
 #endif
 	}
@@ -153,6 +197,206 @@ namespace TKM {
 		ImGui::PopStyleColor();
 
 		ImGui::End();
+#endif
+	}
+
+	void BaseScene::UpdateCpuUsage_() {
+#ifdef USE_IMGUI
+		FILETIME createTime{};
+		FILETIME exitTime{};
+		FILETIME kernelTime{};
+		FILETIME userTime{};
+
+		if (!GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &kernelTime, &userTime)) {
+			cpuUsagePercent_ = 0.0f;
+			return;
+		}
+
+		FILETIME nowFileTime{};
+		GetSystemTimeAsFileTime(&nowFileTime);
+
+		ULARGE_INTEGER now{};
+		now.LowPart = nowFileTime.dwLowDateTime;
+		now.HighPart = nowFileTime.dwHighDateTime;
+
+		ULARGE_INTEGER kernel{};
+		kernel.LowPart = kernelTime.dwLowDateTime;
+		kernel.HighPart = kernelTime.dwHighDateTime;
+
+		ULARGE_INTEGER user{};
+		user.LowPart = userTime.dwLowDateTime;
+		user.HighPart = userTime.dwHighDateTime;
+
+		if (lastCpuCheckTime100ns_ == 0) {
+			lastCpuCheckTime100ns_ = now.QuadPart;
+			lastCpuKernel100ns_ = kernel.QuadPart;
+			lastCpuUser100ns_ = user.QuadPart;
+			cpuUsagePercent_ = 0.0f;
+			return;
+		}
+
+		const ULONGLONG elapsedTime = now.QuadPart - lastCpuCheckTime100ns_;
+		const ULONGLONG elapsedKernel = kernel.QuadPart - lastCpuKernel100ns_;
+		const ULONGLONG elapsedUser = user.QuadPart - lastCpuUser100ns_;
+		const ULONGLONG elapsedCpu = elapsedKernel + elapsedUser;
+
+		lastCpuCheckTime100ns_ = now.QuadPart;
+		lastCpuKernel100ns_ = kernel.QuadPart;
+		lastCpuUser100ns_ = user.QuadPart;
+
+		if (elapsedTime == 0) {
+			return;
+		}
+
+		SYSTEM_INFO sysInfo{};
+		GetSystemInfo(&sysInfo);
+
+		DWORD cpuCount = sysInfo.dwNumberOfProcessors;
+		if (cpuCount == 0) {
+			cpuCount = 1;
+		}
+
+		double usage = (static_cast<double>(elapsedCpu) / static_cast<double>(elapsedTime))
+			/ static_cast<double>(cpuCount) * 100.0;
+
+		if (usage < 0.0) {
+			usage = 0.0;
+		}
+		if (usage > 100.0) {
+			usage = 100.0;
+		}
+
+		cpuUsagePercent_ = static_cast<float>(usage);
+#endif
+	}
+
+	void BaseScene::InitializeGpuCounters_() {
+#ifdef USE_IMGUI
+		FinalizeGpuCounters_();
+
+		if (PdhOpenQuery(nullptr, 0, &gpuQuery_) != ERROR_SUCCESS) {
+			gpuQuery_ = nullptr;
+			gpuCounterAvailable_ = false;
+			return;
+		}
+
+		const DWORD pid = GetCurrentProcessId();
+
+		DWORD counterListSize = 0;
+		DWORD instanceListSize = 0;
+		PDH_STATUS status = PdhEnumObjectItemsW(
+			nullptr,
+			nullptr,
+			L"GPU Engine",
+			nullptr,
+			&counterListSize,
+			nullptr,
+			&instanceListSize,
+			PERF_DETAIL_WIZARD,
+			0
+		);
+
+		if (instanceListSize == 0) {
+			FinalizeGpuCounters_();
+			return;
+		}
+
+		std::vector<wchar_t> counterList(counterListSize);
+		std::vector<wchar_t> instanceList(instanceListSize);
+
+		status = PdhEnumObjectItemsW(
+			nullptr,
+			nullptr,
+			L"GPU Engine",
+			counterList.data(),
+			&counterListSize,
+			instanceList.data(),
+			&instanceListSize,
+			PERF_DETAIL_WIZARD,
+			0
+		);
+
+		if (status != ERROR_SUCCESS) {
+			FinalizeGpuCounters_();
+			return;
+		}
+
+		const std::wstring pidText = L"pid_" + std::to_wstring(pid);
+
+		for (const wchar_t* instance = instanceList.data(); *instance != L'\0'; instance += std::wcslen(instance) + 1) {
+			std::wstring instanceName = instance;
+
+			if (instanceName.find(pidText) == std::wstring::npos) {
+				continue;
+			}
+
+			std::wstring counterPath = L"\\GPU Engine(" + instanceName + L")\\Utilization Percentage";
+
+			PDH_HCOUNTER counter = nullptr;
+			if (PdhAddEnglishCounterW(gpuQuery_, counterPath.c_str(), 0, &counter) == ERROR_SUCCESS) {
+				gpuCounters_.push_back(counter);
+			}
+		}
+
+		if (gpuCounters_.empty()) {
+			FinalizeGpuCounters_();
+			return;
+		}
+
+		PdhCollectQueryData(gpuQuery_);
+		gpuCounterAvailable_ = true;
+#endif
+	}
+
+	void BaseScene::FinalizeGpuCounters_() {
+#ifdef USE_IMGUI
+		gpuCounters_.clear();
+
+		if (gpuQuery_) {
+			PdhCloseQuery(gpuQuery_);
+			gpuQuery_ = nullptr;
+		}
+
+		gpuCounterAvailable_ = false;
+		gpuUsagePercent_ = 0.0f;
+#endif
+	}
+
+	void BaseScene::UpdateGpuUsage_() {
+#ifdef USE_IMGUI
+		if (!gpuQuery_ && !gpuCounterAvailable_) {
+			InitializeGpuCounters_();
+		}
+
+		if (!gpuCounterAvailable_ || !gpuQuery_) {
+			gpuUsagePercent_ = 0.0f;
+			return;
+		}
+
+		if (PdhCollectQueryData(gpuQuery_) != ERROR_SUCCESS) {
+			gpuUsagePercent_ = 0.0f;
+			return;
+		}
+
+		double totalUsage = 0.0;
+
+		for (PDH_HCOUNTER counter : gpuCounters_) {
+			PDH_FMT_COUNTERVALUE value{};
+			if (PdhGetFormattedCounterValue(counter, PDH_FMT_DOUBLE, nullptr, &value) == ERROR_SUCCESS) {
+				if (value.CStatus == ERROR_SUCCESS) {
+					totalUsage += value.doubleValue;
+				}
+			}
+		}
+
+		if (totalUsage < 0.0) {
+			totalUsage = 0.0;
+		}
+		if (totalUsage > 100.0) {
+			totalUsage = 100.0;
+		}
+
+		gpuUsagePercent_ = static_cast<float>(totalUsage);
 #endif
 	}
 }

@@ -49,8 +49,8 @@ namespace TKM {
 		{
 			auto d = fogVolume3D_->GetDesc();   // コピーで受ける
 			d.centerWS_ = { 0.0f, 6.0f, 20.0f }; // 中心位置
-			d.halfSizeWS_ = { 900.0f, 220.0f, 900.0f }; // 半サイズ
-			d.sliceCount_ = 80; // スライス数
+			d.halfSizeWS_ = { 520.0f, 160.0f, 520.0f }; // 半サイズ
+			d.sliceCount_ = 40; // スライス数
 			d.density_ = 0.19f; // 密度
 			fogVolume3D_->SetDesc(d);           // まとめて反映
 		}
@@ -79,11 +79,11 @@ namespace TKM {
 		vignetting_->SetLowHP(lowHp);
 		vignetting_->Update(dt);
 
-		fog_->Update(dt);
+		//fog_->Update(dt);
 
 		waterRipple_->Update(dt);
 
-		fogVolume3D_->Update(dt);
+		//fogVolume3D_->Update(dt);
 
 		smokeVolume3D_->Update(dt);
 		// ==================================================
@@ -116,10 +116,10 @@ namespace TKM {
 		// カメラのビュー射影行列を取得
 		Matrix4x4 vp = activeCamera->GetViewProjectionMatrix();
 
-		// FogVolume（空間霧）
-		if (fogVolume3D_) {
-			fogVolume3D_->Draw(vp, right, up, fwd);
-		}
+		//// FogVolume（空間霧）
+		//if (fogVolume3D_) {
+		//	fogVolume3D_->Draw(vp, right, up, fwd);
+		//}
 		// SmokeVolume（空間スモーク）
 		if (smokeVolume3D_) {
 			smokeVolume3D_->Draw(vp, right, up, fwd);
