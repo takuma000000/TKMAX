@@ -51,6 +51,22 @@ namespace TKM {
 			const Color& normalColor,
 			const Color& hitColor
 		);
+
+		/// <summary>
+		/// 楕円体ワイヤーを追加する。
+		/// center を中心に、radius を各軸半径として
+		/// XY / XZ / YZ の3つの円を描いて楕円体を可視化する。
+		/// </summary>
+		/// <param name="center"></param>
+		/// <param name="radius"></param>
+		/// <param name="color"></param>
+		/// <param name="segments"></param>
+		void AddEllipsoid(
+			const Vector3& center,
+			const Vector3& radius,
+			const Color& color,
+			int segments = 32
+		);
 	private:
 		LineRenderer() = default;
 		~LineRenderer() = default;

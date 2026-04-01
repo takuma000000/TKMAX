@@ -6,6 +6,7 @@
 #include "Enemy.h"
 #include "MidBossCore.h"
 #include "MyMath.h"
+#include "BarrierCoreManager.h"
 #include "TrailRibbonRenderer.h"
 
 // 弾の初期スケール
@@ -109,15 +110,54 @@ void PlayerBullet::Update() {
 		return false;
 		};
 
+	auto CheckSweptHitEllipsoid = [&](const Vector3& center, const Vector3& radius) -> bool {
+		// 半径0防止
+		const float rx = std::max(radius.x, 0.0001f);
+		const float ry = std::max(radius.y, 0.0001f);
+		const float rz = std::max(radius.z, 0.0001f);
+
+		// 線分を楕円体ローカル空間へ変換（単位球に正規化）
+		Vector3 p0 = prevPos_ - center;
+		Vector3 p1 = bulletPos - center;
+
+		p0.x /= rx; p0.y /= ry; p0.z /= rz;
+		p1.x /= rx; p1.y /= ry; p1.z /= rz;
+
+		Vector3 d = p1 - p0;
+
+		// |p0 + t d|^2 = 1 を解く
+		float a = MyMath::Dot(d, d);
+		float b = 2.0f * MyMath::Dot(p0, d);
+		float c = MyMath::Dot(p0, p0) - 1.0f;
+
+		// 開始点がすでに内側
+		if (c <= 0.0f) {
+			return true;
+		}
+
+		float discriminant = b * b - 4.0f * a * c;
+		if (discriminant < 0.0f) {
+			return false;
+		}
+
+		float sqrtD = std::sqrt(discriminant);
+		float inv2A = 1.0f / (2.0f * a);
+
+		float t1 = (-b - sqrtD) * inv2A;
+		float t2 = (-b + sqrtD) * inv2A;
+
+		return (t1 >= 0.0f && t1 <= 1.0f) || (t2 >= 0.0f && t2 <= 1.0f);
+		};
+
 	// =========================================
 	// Wave1バリアとの当たり判定
 	// =========================================
 	if (player_ && player_->IsWave1BarrierActive()) {
 
 		const Vector3 barrierPos_ = player_->GetWave1BarrierCenter();
-		const Vector3 barrierSize_ = player_->GetWave1BarrierSize();
+		const Vector3 barrierRadius_ = player_->GetWave1BarrierSize();
 
-		const bool barrierHit_ = CheckSweptHitAABB(barrierPos_, barrierSize_);
+		const bool barrierHit_ = CheckSweptHitEllipsoid(barrierPos_, barrierRadius_);
 
 		if (barrierHit_) {
 			isHit_ = true;
@@ -201,63 +241,60 @@ void PlayerBullet::Update() {
 	}
 
 	// =========================================
-	// 核（MidBossCore）との当たり判定
+	// バリアコア群との当たり判定
 	// =========================================
-	if (core_ && !core_->IsDead()) {
-		Vector3 corePos = core_->GetWorldPosition();
-		Vector3 coreSize = core_->GetColliderScale();
+	if (barrierCoreManager_) {
+		const auto aliveCores_ = barrierCoreManager_->GetAliveCores();
 
-		bool hit = CheckSweptHitAABB(corePos, coreSize); // 当たり判定
+		for (MidBossCore* core : aliveCores_) {
+			if (!core) {
+				continue;
+			}
 
-		// 当たったとき
-		if (hit) {
+			Vector3 corePos = core->GetWorldPosition();
+			Vector3 coreSize = core->GetColliderScale();
+
+			bool hit = CheckSweptHitAABB(corePos, coreSize);
+			if (!hit) {
+				continue;
+			}
+
 			isHit_ = true;
 			isDead_ = true;
 
 			TKM::ParticleManager* pm = TKM::ParticleManager::GetInstance();
 			Vector3 hitPos = bulletPos;
-			// LT弾かどうかでエフェクトの種類や量を変える
+
 			bool isLTBullet = (trailGroup_ == "trail_lt");
 			int  damage = isSpecialAttack_ ? 100 : 1;
-			bool willDie = (core_ && core_->GetHP() <= damage);
+			bool willDie = (core->GetHP() <= damage);
 
-			// ▼ エフェクト（元のまま）
 			if (isLTBullet) {
-				damage = 10;
+				damage = 50;
 				pm->Emit("lt_nova_core", hitPos, 1);
 				pm->Emit("lt_nova_wave", hitPos, 3);
 				pm->Emit("lt_nova_burst", hitPos, 40);
 				pm->Emit("lt_nova_debris", hitPos, 120);
 				pm->Emit("lt_nova_crack", hitPos, 80);
-			} else { // 通常弾はエフェクト控えめ
+			} else {
 				pm->Emit("enemyHit_flash", hitPos, 1);
 				pm->Emit("enemyHit_ring", hitPos, 1);
 				pm->Emit("enemyHit_rays", hitPos, 18);
 				pm->Emit("enemyHit_spark", hitPos, 32);
 			}
 
-			// ダメージ処理
-			if (core_ && !core_->IsDead()) {
-				core_->OnHitWithDamage(damage); // ダメージを与える
+			core->OnHitWithDamage(damage);
 
-				// 死亡リアクション開始（このタイミングでいいのかは微妙。ダメージ処理の中でHP減らしてからの方が自然かも？）
-				if (willDie) {
-					Vector3 knockDir = velocity_;
-
-					// もし速度がほとんどないなら、弾→核の方向をノックバック方向にする
-					if (MyMath::Length(knockDir) < 0.001f) {
-						knockDir = corePos - bulletPos; // 弾から核への方向
-					}
-					core_->StartDeathReaction(knockDir);
+			if (willDie) {
+				Vector3 knockDir = velocity_;
+				if (MyMath::Length(knockDir) < 0.001f) {
+					knockDir = corePos - bulletPos;
 				}
+				core->StartDeathReaction(knockDir);
 			}
 
-			// カメラシェイク
 			if (player_) {
-
-				// LT弾なら大きく、通常弾なら小さくシェイクする
 				if (isLTBullet) player_->StartCameraShake(40);
-				// 通常弾は控えめに
 				else            player_->StartCameraShake(10);
 			}
 
@@ -374,6 +411,10 @@ void PlayerBullet::SetCore(MidBossCore* core) {
 
 void PlayerBullet::SetUseTrail(bool use) {
 	useTrail_ = use;
+}
+
+void PlayerBullet::SetBarrierCoreManager(BarrierCoreManager* manager) {
+	barrierCoreManager_ = manager;
 }
 
 void PlayerBullet::StartSpawnBezier(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float duration, const Vector3& velocityAfter) {

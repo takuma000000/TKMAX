@@ -650,6 +650,10 @@ void Player::SetWave1BarrierInfo(bool active, const Vector3& center, const Vecto
 	}
 }
 
+void Player::SetBarrierCoreManager(BarrierCoreManager* manager) {
+	barrierCoreManager_ = manager;
+}
+
 void Player::UpdateTitleIdle(float dt) {
 	// タイトル専用：入力/射撃/移動/ロックオン等は一切触らない
 	// ただし Draw に必要な行列更新だけは行う
@@ -925,7 +929,7 @@ void Player::RBShoot() {
 	bullet->SetCamera(camera_);
 	bullet->SetPlayer(this);
 	bullet->SetUseTrail(false);
-	bullet->SetCore(core_);
+	bullet->SetBarrierCoreManager(barrierCoreManager_);
 
 	// ==============================
 	// ターゲット決定

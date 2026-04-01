@@ -667,6 +667,11 @@ void EnemyManager::SpawnBarrierCores_() {
 	barrierCoreManager_->SetCamera(camera_);
 	barrierCoreManager_->SetParentScene(parent_);
 	barrierCoreManager_->SetPlayer(player_);
+
+	if (player_) {
+		player_->SetBarrierCoreManager(barrierCoreManager_.get());
+	}
+
 	barrierCoreManager_->Spawn(GetWave1BarrierCenter());
 }
 
@@ -679,6 +684,10 @@ void EnemyManager::ClearBarrierCores_() {
 	}
 
 	barrierCoreManager_->Clear();
+
+	if (player_) {
+		player_->SetBarrierCoreManager(nullptr);
+	}
 }
 
 bool EnemyManager::AreAllBarrierCoresDestroyed_() const {

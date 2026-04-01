@@ -17,6 +17,8 @@
 
 class MidBossCore;
 class Enemy;
+class BarrierCoreManager;
+
 namespace TKM {
 	class RadialBlurEffect;
 }
@@ -327,6 +329,11 @@ public:
 	/// <param name="center">バリアの中心位置（ワールド座標）</param>
 	/// <param name="size">バリアのサイズ（幅・高さ・奥行）</param>
 	void SetWave1BarrierInfo(bool active, const Vector3& center, const Vector3& size);
+	/// <summary>
+	/// BarrierCoreManager 参照を設定します。
+	/// </summary>
+	/// <param name="manager">BarrierCoreManager オブジェクト（nullptr 可）</param>
+	void SetBarrierCoreManager(BarrierCoreManager* manager);
 	// =========================================
 
 	enum class DeathPhase { None, FaultSparks, FlyAway }; // 撃墜演出フェーズ
@@ -389,6 +396,7 @@ private:
 	Enemy* enemy_ = nullptr;
 	MidBossCore* core_ = nullptr;
 	TKM::RadialBlurEffect* radialBlur_ = nullptr;
+	BarrierCoreManager* barrierCoreManager_ = nullptr;
 
 	TKM::BaseScene* parentScene_ = nullptr;
 	std::unique_ptr<TKM::Object3d> object_; // プレイヤー本体の3Dオブジェクト

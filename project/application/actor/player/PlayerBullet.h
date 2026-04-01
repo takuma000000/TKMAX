@@ -14,6 +14,7 @@
 
 class Player;
 class Enemy;
+class BarrierCoreManager;
 class MidBossCore;
 
 //=============================================================
@@ -129,6 +130,11 @@ public:
 	/// </summary>
 	/// <param name="p0">開始位置</param>
 	void SetUseTrail(bool use);
+	/// <summary>
+	/// バリアコアマネージャー参照を設定します。
+	/// </summary>
+	/// <param name="manager">バリアコアマネージャー（nullptr 可）</param>
+	void SetBarrierCoreManager(BarrierCoreManager* manager);
 	// =========================================
 
 private:
@@ -141,6 +147,7 @@ private:
 	Vector3 prevPos_{}; // 前フレームの位置（トンネリング対策用）
 	Enemy* enemy_ = nullptr;
 	MidBossCore* core_ = nullptr;
+	BarrierCoreManager* barrierCoreManager_ = nullptr;
 	TKM::Camera* camera_ = nullptr;
 	//======================================================================
 	// 生存状態・ヒットフラグ

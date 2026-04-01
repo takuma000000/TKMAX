@@ -2,6 +2,7 @@
 #include "Player.h"
 #include "TextureManager.h"
 #include "Model.h"
+#include "LineRenderer.h"
 
 void EnemyBarrier::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon) {
 	dxCommon_ = dxCommon;
@@ -71,6 +72,21 @@ void EnemyBarrier::Update(float dt) {
 
 	UpdateVisual_();
 	SyncToPlayer();
+
+#ifdef USE_IMGUI
+	if ((active_ || isBreaking_) && visible_) {
+		TKM::LineRenderer::GetInstance()->AddEllipsoid(
+			center_,
+			{
+				radius_ * shapeScale_.x,
+				radius_ * shapeScale_.y,
+				radius_ * shapeScale_.z
+			},
+			TKM::LineRenderer::Color{ 0.0f, 0.0f, 1.0f, 1.0f },
+			32
+		);
+	}
+#endif
 }
 
 void EnemyBarrier::Draw(TKM::DirectXCommon* dxCommon) {
@@ -155,6 +171,14 @@ Vector3 EnemyBarrier::GetAABBSize() const {
 	};
 }
 
+Vector3 EnemyBarrier::GetEllipsoidRadius() const {
+	return {
+		radius_ * shapeScale_.x,
+		radius_ * shapeScale_.y,
+		radius_ * shapeScale_.z
+	};
+}
+
 void EnemyBarrier::SyncToPlayer() {
 	if (!player_) {
 		return;
@@ -163,7 +187,7 @@ void EnemyBarrier::SyncToPlayer() {
 	player_->SetWave1BarrierInfo(
 		active_,
 		center_,
-		GetAABBSize()
+		GetEllipsoidRadius()
 	);
 }
 

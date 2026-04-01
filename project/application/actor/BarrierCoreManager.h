@@ -63,7 +63,7 @@ private:
 	const int kCoreHP_ = 3;
 
 	static constexpr float kBarrierOuterRadius_ = 18.0f; // バリアのおおよその半径
-	static constexpr float kCoreOuterMargin_ = 7.0f; // バリア外周からさらに外へ出す距離
+	static constexpr float kCoreOuterMargin_ = 6.0f; // バリア外周からさらに外へ出す距離
 	static constexpr float kCoreRingStartAngleDeg_ = -90.0f; // 上から配置開始
-	static constexpr float kCoreZOffset_ = -12.0f;       // 全体を少し手前へ出す量
+	static constexpr float kCoreZOffset_ = -13.0f;       // 全体を少し手前へ出す量
 };

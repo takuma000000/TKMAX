@@ -48,7 +48,7 @@ namespace TKM {
 		Vector2 offset_{ -137.0f, -49.0f }; // 右下基準の位置オフセット
 
 		float holdTimer_ = 0.0f;
-		static constexpr float kHoldTime_ = 2.0f;
+		static constexpr float kHoldTime_ = 2.0f; // 押し続ける必要のある時間（秒）
 
 		float normalScale_ = 0.90f;
 		float pressScale_ = 1.10f;

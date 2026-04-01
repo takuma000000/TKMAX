@@ -94,6 +94,11 @@ public:
 	/// <returns></returns>
 	Vector3 GetAABBSize() const;
 	/// <summary>
+	/// バリアの楕円体半径の取得。バリアは球体として描画されますが、形状スケールを取得することで、球体の見た目の変形具合を知ることができます。楕円体半径は、半径に形状スケールを掛けた値になります。
+	/// </summary>
+	/// <returns></returns>
+	Vector3 GetEllipsoidRadius() const;
+	/// <summary>
 	/// バリアの色の取得。描画処理で使用される色を取得します。
 	/// </summary>
 	/// <returns></returns>

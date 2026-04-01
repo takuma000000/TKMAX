@@ -1,6 +1,7 @@
 #include "LineRenderer.h"
 #include "d3dx12.h"
 #include "MyMath.h"
+#include <cmath>
 
 using Microsoft::WRL::ComPtr;
 
@@ -112,6 +113,64 @@ namespace TKM {
 
 		const Color& col = hit ? hitColor : normalColor;
 		AddAABB(center, size, col);
+	}
+
+	void LineRenderer::AddEllipsoid(
+		const Vector3& center,
+		const Vector3& radius,
+		const Color& color,
+		int segments
+	) {
+		if (segments < 3) {
+			segments = 3;
+		}
+
+		const float kPi = 3.1415926535f;
+		const float step = (2.0f * kPi) / static_cast<float>(segments);
+
+		for (int i = 0; i < segments; ++i) {
+			const float t0 = step * static_cast<float>(i);
+			const float t1 = step * static_cast<float>(i + 1);
+
+			// XY平面
+			Vector3 xy0 = {
+				center.x + std::cos(t0) * radius.x,
+				center.y + std::sin(t0) * radius.y,
+				center.z
+			};
+			Vector3 xy1 = {
+				center.x + std::cos(t1) * radius.x,
+				center.y + std::sin(t1) * radius.y,
+				center.z
+			};
+			AddLine(xy0, xy1, color);
+
+			// XZ平面
+			Vector3 xz0 = {
+				center.x + std::cos(t0) * radius.x,
+				center.y,
+				center.z + std::sin(t0) * radius.z
+			};
+			Vector3 xz1 = {
+				center.x + std::cos(t1) * radius.x,
+				center.y,
+				center.z + std::sin(t1) * radius.z
+			};
+			AddLine(xz0, xz1, color);
+
+			// YZ平面
+			Vector3 yz0 = {
+				center.x,
+				center.y + std::cos(t0) * radius.y,
+				center.z + std::sin(t0) * radius.z
+			};
+			Vector3 yz1 = {
+				center.x,
+				center.y + std::cos(t1) * radius.y,
+				center.z + std::sin(t1) * radius.z
+			};
+			AddLine(yz0, yz1, color);
+		}
 	}
 
 	void LineRenderer::CreatePipeline() {
