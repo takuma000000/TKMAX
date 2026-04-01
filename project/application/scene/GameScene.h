@@ -123,6 +123,7 @@ private:
 	std::unique_ptr<BossManager>  bossManager_ = nullptr; // ボス管理
 	bool enemiesInitialized_ = false; // 敵初期化済みフラグ
 	bool requestInitEnemies_ = false; // 敵再初期化リクエスト
+	bool clearSequenceTriggered_ = false; // ボス撃破後、クリア開始を一度でも要求したら true
 	//======================================================================
 	// パーティクル / 風エフェクト
 	//======================================================================

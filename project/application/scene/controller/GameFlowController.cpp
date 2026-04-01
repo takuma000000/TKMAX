@@ -36,7 +36,12 @@ namespace TKM {
 		// 2) Tキーでタイトルへ（Iris閉じ開始）
 		TryStartTitleTransitionByKey_();
 
-		// 3) Iris閉じ進行（閉じ終わったら遷移要求を返す）
+		// 3) クリア演出などで保留された遷移要求を最優先で返す
+		if (pendingRequest_ != TransitionRequest::None && !irisClosing_) {
+			return ConsumePendingRequest_();
+		}
+
+		// 4) Iris閉じ進行（閉じ終わったら遷移要求を返す）
 		{
 			const auto req = StepIrisClosing_();
 			if (req != TransitionRequest::None) { return req; }

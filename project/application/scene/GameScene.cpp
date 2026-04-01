@@ -83,6 +83,7 @@ void GameScene::Update() {
 
 	// クリアシーケンス中は他の更新をスキップ
 	if (flow_->UpdateClear(rawDeltaTime, scaledDeltaTime, postFx_.get(), ui_.get(), bossManager_.get(), TKM::CameraManager::GetInstance()->GetMainCamera(), player_.get())) {
+		EndFrameUpdate();
 		return;
 	}
 
@@ -138,8 +139,8 @@ void GameScene::Draw3D() {
 	player_->Draw(dxCommon_);
 	enemyManager_->Draw(dxCommon_);
 	flow_->DrawIntroBoss3D(dxCommon_);
-	const bool isClear = (flow_->IsInClear());
-	// クリアシーケンス中はボスを描画しない（撃破後の演出で、ボスが残っていると見栄えが悪いため）
+	const bool isClear = (flow_->IsInClear()) || clearSequenceTriggered_;
+	// クリアシーケンス中はボスを描画しない
 	if (!isClear) {
 		bossManager_->Draw(dxCommon_);
 	}
@@ -352,57 +353,61 @@ void GameScene::UpdateFlow() {
 }
 
 void GameScene::UpdateEnemyAndWaveLogic(float scaledDeltaTime) {
-	const bool isClear = (flow_->IsInClear()); // クリア演出中かどうか
+	const bool isClear = (flow_->IsInClear());
 	const bool bossEntranceActive = (bossEntranceSeq_ && bossEntranceSeq_->IsActive());
-	const bool locked = (flow_->IsGameplayLocked()) || isClear || bossEntranceActive;
+	const bool locked = (flow_->IsGameplayLocked()) || isClear || bossEntranceActive || clearSequenceTriggered_;
 
-	// --- 敵とWaveは「ゲーム開始後」だけ動かす ---
-	if (!locked && enemiesInitialized_) {
+	// クリア中・クリア開始済み・演出ロック中は何もしない
+	if (locked || !enemiesInitialized_) {
+		return;
+	}
 
-		// 敵の更新（敵ロジックは EnemyManager に完全委譲）
-		enemyManager_->Update(scaledDeltaTime);
+	// 敵Wave更新
+	enemyManager_->Update(scaledDeltaTime);
 
-		// ----------------------------------------
-		// 全Waveクリア → ボス登場開始
-		// ----------------------------------------
-		if (enemyManager_->IsAllWavesCleared()) {
-			if (!bossManager_->IsBattleActive() && !bossManager_->IsBossDead()) {
-				if (bossEntranceSeq_) {
-					if (!bossEntranceSeq_->IsActive()) {
-						bossEntranceSeq_->Start(bossManager_->GetSpawnPos());
-					}
-				} else {
-					// 念のためのフォールバック
-					bossManager_->StartBattle();
+	// ----------------------------------------
+	// ボス撃破 → クリア演出開始
+	// これを最優先にする
+	// ----------------------------------------
+	if (bossManager_ && bossManager_->IsBossDead()) {
+		clearSequenceTriggered_ = true;
+		flow_->RequestStartClear();
+		return;
+	}
+
+	// ----------------------------------------
+	// 全Waveクリア → ボス登場開始
+	// ただし、クリア開始済みなら絶対に入らない
+	// ----------------------------------------
+	if (!clearSequenceTriggered_ && enemyManager_->IsAllWavesCleared()) {
+		if (bossManager_ && bossManager_->GetBoss() == nullptr) {
+			if (bossEntranceSeq_) {
+				if (!bossEntranceSeq_->IsActive()) {
+					bossEntranceSeq_->Start(bossManager_->GetSpawnPos());
 				}
+			} else {
+				bossManager_->StartBattle();
 			}
 		}
+	}
 
-		// ----------------------------------------
-		// ボス撃破 → クリア演出開始
-		// Wave状態とは独立して判定する
-		// ----------------------------------------
-		if (bossManager_->IsBossDead()) {
-			if (!isClear) {
-				flow_->RequestStartClear();
-				return;
-			}
-		}
-
-		// ロックオン対象の更新
-		if (bossManager_->IsBossAlive()) {
-			player_->SetEnemy(bossManager_->GetBoss());
-		} else {
-			enemyManager_->UpdateClosestEnemy();
-		}
+	// ロックオン対象更新
+	if (bossManager_->IsBossAlive()) {
+		player_->SetEnemy(bossManager_->GetBoss());
+	} else {
+		enemyManager_->UpdateClosestEnemy();
 	}
 }
 
 void GameScene::UpdateGameplaySystems(float rawDeltaTime, float scaledDeltaTime) {
+	if (flow_ && flow_->IsInClear()) {
+		return;
+	}
+
 	const bool isClear = (flow_->IsInClear()); // クリア演出中かどうか
 	const bool bossEntranceActive = (bossEntranceSeq_ && bossEntranceSeq_->IsActive());
 	const bool bossEntranceSpawned = (bossEntranceSeq_ && bossEntranceSeq_->HasSpawnedBoss());
-	const bool locked = (flow_->IsGameplayLocked()) || isClear || bossEntranceActive; // ゲームプレイがロックされているかどうか
+	const bool locked = (flow_->IsGameplayLocked()) || isClear || bossEntranceActive || clearSequenceTriggered_; // ゲームプレイがロックされているかどうか
 
 	player_->SetControlEnabled(!locked);
 
@@ -530,14 +535,26 @@ void GameScene::UpdatePausedOnly_(float rawDeltaTime) {
 void GameScene::UpdateNormalGameplay_(float rawDeltaTime, float scaledDeltaTime) {
 	// アクティブカメラの更新
 	UpdateActiveCamera();
+
 	// 敵やウェーブのロジック更新（タイムスケール適用）
 	UpdateEnemyAndWaveLogic(scaledDeltaTime);
+
+	// クリア要求が入ったら、そのフレームでも通常ゲーム更新を打ち切る
+	if (flow_ && flow_->IsInClear()) {
+		UpdateTransitionsAndSceneChange(rawDeltaTime);
+		HandleDebugKeysAndRequests();
+		return;
+	}
+
 	// デバッグ表示更新
 	ImGuiDebug();
+
 	// ゲームプレイシステムの更新
 	UpdateGameplaySystems(rawDeltaTime, scaledDeltaTime);
+
 	// シーン遷移＆タイトル戻り等の更新（rawDeltaTime）
 	UpdateTransitionsAndSceneChange(rawDeltaTime);
+
 	// デバッグキー＆リクエスト処理
 	HandleDebugKeysAndRequests();
 }
