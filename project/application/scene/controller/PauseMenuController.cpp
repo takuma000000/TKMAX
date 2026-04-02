@@ -1,5 +1,6 @@
 #define NOMINMAX
 #include "PauseMenuController.h"
+#include "AudioManager.h"
 #include "TextureManager.h"
 #include <algorithm>
 #include <cmath>
@@ -153,6 +154,8 @@ namespace TKM {
 	void PauseMenuController::MoveIndex_(int delta) {
 		int count = (int)Item::Count;
 		index_ = (index_ + delta + count) % count;
+
+		TKM::AudioManager::GetInstance()->PlaySound("cursor", 0.3f);
 	}
 
 	PauseMenuController::Command PauseMenuController::Update(float dt, bool allowOpen) {
@@ -212,11 +215,14 @@ namespace TKM {
 			if (TriggerPadDown_()) { MoveIndex_(+1); }
 			// B で閉じる（Resume と同じ扱いで、項目選択は無し）
 			if (TriggerB_()) {
+				TKM::AudioManager::GetInstance()->PlaySound("decision", 0.2f);
+
 				Close_();
 				return Command::None;
 			}
 			// A で決定
 			if (TriggerA_()) {
+				TKM::AudioManager::GetInstance()->PlaySound("decision", 0.2f);
 
 				// 波紋発生（画面中央）
 				if (dxCommon_) {

@@ -1,6 +1,7 @@
 #include "TitleMenuController.h"
 #include "DirectXCommon.h"
 #include "BaseScene.h"
+#include "AudioManager.h"
 
 void TitleMenuController::Initialize(TKM::SpriteCommon* spriteCommon, TKM::DirectXCommon* dxCommon, TKM::BaseScene* parentScene, float screenW, float screenH, const Desc& desc) {
 	spriteCommon_ = spriteCommon;
@@ -38,9 +39,15 @@ void TitleMenuController::Initialize(TKM::SpriteCommon* spriteCommon, TKM::Direc
 TitleMenuController::Command TitleMenuController::Update(float dt) {
 	if (!visible_) { return Command::None; } // 非表示のときは入力も見た目も更新しない
 
+	// ==========================
 	// 入力
-	if (TriggerPadUp_()) { MoveIndex_(-1); }
-	if (TriggerPadDown_()) { MoveIndex_(+1); }
+	// ==========================
+	if (TriggerPadUp_()) {
+		MoveIndex_(-1);
+	}
+	if (TriggerPadDown_()) {
+		MoveIndex_(+1);
+	}
 
 	// ==========================
 	// 見た目：ポーズ画面と同じ脈動
@@ -89,6 +96,7 @@ TitleMenuController::Command TitleMenuController::Update(float dt) {
 
 	// 決定
 	if (TriggerA_()) {
+		TKM::AudioManager::GetInstance()->PlaySound("decision", 0.2f);
 		return (index_ == (int)Item::Start) ? Command::Start : Command::Exit;
 	}
 
@@ -161,4 +169,6 @@ bool TitleMenuController::TriggerA_() {
 void TitleMenuController::MoveIndex_(int delta) {
 	const int count = (int)Item::Count;
 	index_ = (index_ + delta + count) % count;
+
+	TKM::AudioManager::GetInstance()->PlaySound("cursor", 0.3f);
 }

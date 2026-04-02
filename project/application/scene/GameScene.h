@@ -55,10 +55,6 @@ public:
 	void ImGuiDebug();
 
 	/// <summary>
-	/// オーディオを初期化します。
-	/// </summary>
-	void InitializeAudio();
-	/// <summary>
 	/// スプライトを初期化します。
 	/// </summary>
 	void InitializeSprite();

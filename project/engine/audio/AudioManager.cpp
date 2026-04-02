@@ -25,20 +25,9 @@ namespace TKM {
 	// Finalize（※deleteは絶対しない）
 	//============================
 	void AudioManager::Finalize() {
-		// 登録されている音声データを解放
-		for (auto& [key, soundData] : soundMap_) {
-			soundData.buffer_.clear();
-			soundData.bufferSize_ = 0;
-		}
-		soundMap_.clear();
-
-		// マスターボイス破棄
-		if (masterVoice_) {
-			masterVoice_->DestroyVoice();
-			masterVoice_ = nullptr;
-		}
-
-		// 再生中の SourceVoice を停止・破棄
+		// ============================
+		// 1. まず再生中の SourceVoice を停止・破棄
+		// ============================
 		for (auto& pv : playingVoices_) {
 			if (pv.voice_) {
 				pv.voice_->Stop();
@@ -49,7 +38,26 @@ namespace TKM {
 		}
 		playingVoices_.clear();
 
-		// XAudio2解放
+		// ============================
+		// 2. 次にマスターボイスを破棄
+		// ============================
+		if (masterVoice_) {
+			masterVoice_->DestroyVoice();
+			masterVoice_ = nullptr;
+		}
+
+		// ============================
+		// 3. そのあと音声データを解放
+		// ============================
+		for (auto& [key, soundData] : soundMap_) {
+			soundData.buffer_.clear();
+			soundData.bufferSize_ = 0;
+		}
+		soundMap_.clear();
+
+		// ============================
+		// 4. 最後に XAudio2 を解放
+		// ============================
 		xAudio2_.Reset();
 
 		initialized_ = false;

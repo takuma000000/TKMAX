@@ -216,6 +216,7 @@
     <ClCompile Include="engine\3d\BarrierCommon.cpp" />
     <ClCompile Include="application\ui\SkipGuideUI.cpp" />
     <ClCompile Include="application\actor\BarrierCoreManager.cpp" />
+    <ClCompile Include="application\catalog\AudioCatalog.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -473,6 +474,7 @@
     <ClInclude Include="engine\3d\BarrierCommon.h" />
     <ClInclude Include="application\ui\SkipGuideUI.h" />
     <ClInclude Include="application\actor\BarrierCoreManager.h" />
+    <ClInclude Include="application\catalog\AudioCatalog.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

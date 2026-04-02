@@ -1,5 +1,6 @@
 #include "GameOverScene.h"
 #include "TextureManager.h"
+#include "AudioCatalog.h"
 #include "Input.h"
 #include "SceneManager.h"
 #include "SpriteCommon.h"
@@ -20,6 +21,7 @@ namespace {
 }
 
 void GameOverScene::Initialize() {
+	AudioCatalog::LoadResultAudios();
 	ModelManager::GetInstance()->LoadModel("turtle.obj", dxCommon_);
 	ModelManager::GetInstance()->LoadModel("turtle_flipper.obj", dxCommon_);
 	TextureManager::GetInstance()->LoadTexture("./resources/texture/kloofendal_48d_partly_cloudy_puresky_1k.dds");
@@ -135,6 +137,8 @@ void GameOverScene::Initialize() {
 void GameOverScene::Finalize() {
 	TKM::ParticleManager::GetInstance()->ClearGroup("fallStreak");
 	dxCommon_->SetWaterRippleEffect(nullptr);
+
+	AudioManager::GetInstance()->Finalize(); // オーディオマネージャの終了処理
 }
 
 void GameOverScene::Update() {

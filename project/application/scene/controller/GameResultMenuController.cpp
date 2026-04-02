@@ -2,6 +2,7 @@
 #include "DirectXCommon.h"
 #include "BaseScene.h"
 #include "TextureManager.h"
+#include "AudioCatalog.h"
 
 float GameResultMenuController::Clamp01_(float v) {
 	if (v < 0.0f) return 0.0f;
@@ -69,6 +70,7 @@ GameResultMenuController::Command GameResultMenuController::Update(float dt) {
 	}
 	// A ボタンで決定
 	if (TriggerA_()) {
+		TKM::AudioManager::GetInstance()->PlaySound("decision", 0.2f);
 
 		// 波紋発生（画面中央）
 		if (dxCommon_) {
@@ -189,4 +191,6 @@ bool GameResultMenuController::TriggerA_() {
 void GameResultMenuController::MoveIndex_(int delta) {
 	const int count = (int)Item::Count;
 	index_ = (index_ + delta + count) % count;
+
+	TKM::AudioManager::GetInstance()->PlaySound("cursor", 0.3f);
 }

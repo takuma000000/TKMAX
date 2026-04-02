@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <Windows.h>
 #include <cmath>
-#include "AudioManager.h"
+#include "AudioCatalog.h"
 #include "TextureCatalog.h"
 #include "ModelCatalog.h"
 #include "ParticleGroupsCatalog.h"
@@ -105,10 +105,9 @@ void TitleScene::Initialize() {
 	dxCommon_->SetWaterRippleEffect(rippleEffect_.get());
 
 	// ---------------BGMロード・再生----------------
-	// タイトルBGMロード
-	//TKM::AudioManager::GetInstance()->LoadSound("title", "kuraran.wav");
+	AudioCatalog::LoadTitleAudios();
 	// タイトルBGM再生
-	//TKM::AudioManager::GetInstance()->PlaySound("title", 0.05f, true); // 音量少し下げめでループ
+	TKM::AudioManager::GetInstance()->PlaySound("title", 0.05f, true); // 音量少し下げめでループ
 
 	// タイトルメニューコントローラ初期化
 	titleMenu_ = std::make_unique<TitleMenuController>();
@@ -140,7 +139,7 @@ void TitleScene::Initialize() {
 }
 
 void TitleScene::Finalize() {
-	//TKM::AudioManager::GetInstance()->StopSound("title"); // タイトルBGM停止
+	TKM::AudioManager::GetInstance()->Finalize(); // オーディオマネージャー終了
 }
 
 void TitleScene::Update() {

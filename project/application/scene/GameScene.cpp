@@ -1,8 +1,10 @@
 #define NOMINMAX
 #include "GameScene.h"
+#include "AudioCatalog.h"
 #include <limits>
 #include <algorithm>
 #include <psapi.h>
+
 
 #ifdef USE_IMGUI
 #include "imgui.h"
@@ -15,7 +17,7 @@ void GameScene::Initialize() {
 	assert(this != nullptr && "this is nullptr in GameScene::Initialize");
 	assert(dxCommon_ != nullptr && "dxCommon is nullptr in GameScene::Initialize");
 	/// ──────────────── 各種初期化処理 ───────────────
-	InitializeAudio();   // サウンドのロード＆再生
+	AudioCatalog::LoadGameAudios(); // オーディオのロード
 	TextureCatalog::LoadTextureCatalogs(); // テクスチャカタログのロード
 	InitializeSprite();  // スプライトの作成＆初期化
 	ModelCatalog::LoadModelCatalogs(dxCommon_); // モデルカタログのロード
@@ -62,7 +64,7 @@ void GameScene::Initialize() {
 void GameScene::Finalize() {
 	// テクスチャマネージャーの終了
 	TextureManager::GetInstance()->Finalize();
-	// 終了処理
+	// 音声終了処理
 	AudioManager::GetInstance()->Finalize();
 	// 3Dモデルマネージャーの終了
 	ModelManager::GetInstance()->Finalize();
@@ -187,12 +189,6 @@ TKM::Camera* GameScene::UpdateActiveCamera() {
 	postFx_->OnCameraUpdated(activeCamera); // カメラ更新通知
 
 	return activeCamera; // 呼び出し元にも返す
-}
-
-// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-// ゲーム内のサウンドをロード＆再生する
-// *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-void GameScene::InitializeAudio() {
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*

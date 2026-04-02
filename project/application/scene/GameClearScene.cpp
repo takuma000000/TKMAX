@@ -3,6 +3,7 @@
 #include "TitleScene.h"
 #include "ImGuiManager.h"
 #include "SceneManager.h"
+#include "AudioCatalog.h"
 
 #include "ModelManager.h"
 #include "Object3dCommon.h"
@@ -14,10 +15,16 @@ using namespace TKM;
 
 void GameClearScene::Initialize() {
 	// ─────────────────────
+	// 音声読み込み
+	// ─────────────────────
+	AudioCatalog::LoadResultAudios();
+
+	// ─────────────────────
 	// モデル・テクスチャ読み込み
 	// ─────────────────────
 	ModelManager::GetInstance()->LoadModel("turtle.obj", dxCommon_);
 	ModelManager::GetInstance()->LoadModel("turtle_flipper.obj", dxCommon_);
+
 	TextureManager::GetInstance()->LoadTexture("./resources/texture/kloofendal_48d_partly_cloudy_puresky_1k.dds");
 	TextureManager::GetInstance()->LoadTexture("./resources/texture/clear.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/texture/circle2.png");
@@ -110,6 +117,8 @@ void GameClearScene::Initialize() {
 
 void GameClearScene::Finalize() {
 	dxCommon_->SetWaterRippleEffect(nullptr);
+
+	AudioManager::GetInstance()->Finalize(); // オーディオマネージャの終了処理（全シーン共通）
 }
 
 void GameClearScene::Update() {
