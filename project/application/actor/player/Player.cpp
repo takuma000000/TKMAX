@@ -38,6 +38,7 @@ void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommo
 		[this]() { return object_->GetTranslate(); },
 		[this]() { return object_->GetRotate().y; }
 	);
+	reticle_->SetMoveRange(moveMin_, moveMax_); // レティクルの移動範囲を指定
 	reticle_->GetCenterWorldPos(); // 中心位置取得用
 
 	// パーティクルグループ作成
@@ -589,7 +590,11 @@ void Player::SetAllEnemies(std::vector<std::unique_ptr<Enemy>>* enemies) {
 }
 
 void Player::SetControlEnabled(bool enabled) {
-	controlEnabled_ = enabled; // プレイヤー操作の有効 / 無効を切り替えるフラグ
+	controlEnabled_ = enabled;
+
+	if (reticle_) {
+		reticle_->SetInputEnabled(enabled);
+	}
 }
 
 void Player::SetReticleVisible(bool visible) {

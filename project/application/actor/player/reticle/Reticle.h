@@ -91,6 +91,18 @@ public:
 	/// </summary>
 	/// <param name="cam">描画に使用するカメラ</param>
 	void SetCamera(TKM::Camera* cam);
+	/// <summary>
+	/// レティクル入力を有効/無効にします。
+	/// false のときも見た目更新やカメラ反映は行います。
+	/// </summary>
+	void SetInputEnabled(bool enabled) { inputEnabled_ = enabled; }	
+	/// <summary>
+	/// レティクルの移動可能範囲を設定します。
+	/// </summary>
+	void SetMoveRange(const Vector3& minPos, const Vector3& maxPos) {
+		moveMin_ = minPos;
+		moveMax_ = maxPos;
+	}
 	// ==============================================
 private:
 	//--------------------------------------------------
@@ -135,8 +147,10 @@ private:
 	float curY_ = 0.0f; // スティック入力をオフセットに変換するための係数
 	float stickMovePerSec_ = 50.0f;  // スティックで動かす速度
 	float stickDeadZone_ = 8000.0f; // スティックのデッドゾーン（この値以下の入力は無視）
-	// 右スティック制御
 	bool stickControl_ = true; // 右スティックでレティクルを動かすかどうか
+	bool inputEnabled_ = true; // 入力だけを受け付けるか
+	Vector3 moveMin_ = { -100.0f, -20.0f, 0.0f }; // レティクル移動範囲の最小
+	Vector3 moveMax_ = { 100.0f,  20.0f, 0.0f }; // レティクル移動範囲の最大
 	//--------------------------------------------------
 	// エイム / レイ情報
 	//--------------------------------------------------

@@ -52,7 +52,7 @@ void Reticle::Update(float dt) {
 	//--------------------------------------------------
 	// 2) ゲームパッド左スティック + キーボードWASDで center_ を直接動かす
 	//--------------------------------------------------
-	if (stickControl_) {
+	if (stickControl_ && inputEnabled_) {
 		auto* in = TKM::Input::GetInstance();
 
 		//==============================
@@ -117,6 +117,8 @@ void Reticle::Update(float dt) {
 			center_ += camRight * (moveX * moveSpeed * dt)
 				+ camUp * (moveY * moveSpeed * dt);
 		}
+		center_.x = std::clamp(center_.x, moveMin_.x, moveMax_.x);
+		center_.y = std::clamp(center_.y, moveMin_.y, moveMax_.y);
 	}
 	//--------------------------------------------------
 	// 3) プレイヤー → レティクルへの方向ベクトル
