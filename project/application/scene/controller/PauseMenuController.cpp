@@ -180,6 +180,7 @@ namespace TKM {
 		if (state_ == State::Closed) {
 			if (allowOpen && trigStart) {
 				Open_();
+				TKM::AudioManager::GetInstance()->PlaySound("pause", 0.4f);
 			}
 			return Command::None;
 		}
@@ -215,7 +216,7 @@ namespace TKM {
 			if (TriggerPadDown_()) { MoveIndex_(+1); }
 			// B で閉じる（Resume と同じ扱いで、項目選択は無し）
 			if (TriggerB_()) {
-				TKM::AudioManager::GetInstance()->PlaySound("decision", 0.2f);
+				TKM::AudioManager::GetInstance()->PlaySound("pause", 0.4f);
 
 				Close_();
 				return Command::None;
