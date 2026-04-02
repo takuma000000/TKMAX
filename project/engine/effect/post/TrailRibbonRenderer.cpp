@@ -76,14 +76,22 @@ namespace TKM {
 		assert(dxCommon);
 		CreatePipeline_(dxCommon); // パイプラインステートとルートシグネチャの作成
 
-		// CB
 		auto device = dxCommon->GetDevice();
-		cb_ = CreateUploadBuffer_(device, sizeof(CB)); // 定数バッファを作成します。サイズはCB構造体のサイズに基づいています。
-		cb_->Map(0, nullptr, (void**)&cbMapped_); // 定数バッファをCPUアドレス空間にマップして、cbMapped_ポインタにアクセスできるようにします。これにより、CPUから定数バッファにデータを書き込むことができます。
-		assert(cbMapped_);
+		(void)device;
 
-		// まず小さめ確保（必要に応じて拡張）
-		EnsureBuffers_(device, 2048, 4096);
+		drawCount_ = 0;
+		for (int i = 0; i < kFrameRing_; ++i) {
+			drawVB_[i].clear();
+			drawIB_[i].clear();
+			drawCB_[i].clear();
+
+			drawVBMapped_[i].clear();
+			drawIBMapped_[i].clear();
+			drawCBMapped_[i].clear();
+
+			drawVBCapacity_[i].clear();
+			drawIBCapacity_[i].clear();
+		}
 	}
 
 	void TrailRibbonRenderer::Update(float dt) {
@@ -91,19 +99,10 @@ namespace TKM {
 
 		// フレームごとにリングバッファを回す
 		frameIndex_ = (frameIndex_ + 1) % kFrameRing_;
-		drawVB_[frameIndex_].clear(); // 描画用の頂点バッファとインデックスバッファをクリアします。これにより、次のフレームで新しい頂点とインデックスを追加できるようになります。
-		drawIB_[frameIndex_].clear(); // 描画用のインデックスバッファをクリアします。これにより、次のフレームで新しいインデックスを追加できるようになります。
-		drawCB_[frameIndex_].clear(); // 描画用の定数バッファをクリアします。これにより、次のフレームで新しい定数データを追加できるようになります。
+		drawCount_ = 0;
 
-		// 定数バッファに時間をセット
-		if (cbMapped_) {
-			cbMapped_->time = time_; // 定数バッファに現在の時間をセットします。これにより、シェーダーで時間に基づくエフェクトを実装することができます。
-		}
-
-#ifdef USE_IMGUI
 		// デバッグ表示
 		ImGuiDebug();
-#endif
 	}
 
 	void TrailRibbonRenderer::EnsureBuffers_(ID3D12Device* device, uint32_t maxVerts, uint32_t maxIndices) {
@@ -140,7 +139,6 @@ namespace TKM {
 		float uvScroll
 	) {
 		if (!dxCommon) { return; }
-		if (!cbMapped_) { return; }
 		if (points.size() < 2) { return; }
 
 		// メッシュ生成
@@ -150,125 +148,92 @@ namespace TKM {
 		if (tmpVerts_.empty() || tmpIndices_.empty()) { return; }
 
 		auto device = dxCommon->GetDevice();
+		const uint32_t needVerts = static_cast<uint32_t>(tmpVerts_.size());
+		const uint32_t needIndices = static_cast<uint32_t>(tmpIndices_.size());
 
-		// ---- このDraw専用のVB/IB/CBを作る（Upload） ----
-		Microsoft::WRL::ComPtr<ID3D12Resource> vb;
-		Microsoft::WRL::ComPtr<ID3D12Resource> ib;
-		Microsoft::WRL::ComPtr<ID3D12Resource> cb;
+		// 今フレームで使うスロット番号
+		const uint32_t slot = drawCount_++;
+		const int fi = frameIndex_;
 
-		// VB
-		{
-			const UINT vbSize = (UINT)(sizeof(Vertex) * tmpVerts_.size());
-			D3D12_HEAP_PROPERTIES heap{};
-			heap.Type = D3D12_HEAP_TYPE_UPLOAD;
+		// スロット数を必要数まで拡張
+		if (drawVB_[fi].size() <= slot) {
+			drawVB_[fi].resize(slot + 1);
+			drawIB_[fi].resize(slot + 1);
+			drawCB_[fi].resize(slot + 1);
 
-			// 頂点バッファのリソース記述を設定します。ここでは、バッファリソースを作成するための説明を指定しています。
-			D3D12_RESOURCE_DESC desc{};
-			desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER; // リソースの次元をバッファに設定します。
-			desc.Width = vbSize; // バッファのサイズをバイト単位で指定します。vbSizeは、作成する頂点バッファのサイズを表す変数です。
-			desc.Height = 1; // バッファは1行のデータとして扱うため、高さを1に設定します。
-			desc.DepthOrArraySize = 1; // バッファは3Dテクスチャや配列ではないため、深さまたは配列サイズを1に設定します。
-			desc.MipLevels = 1; // バッファはミップマップを使用しないため、ミップレベル数を1に設定します。
-			desc.SampleDesc.Count = 1; // バッファはマルチサンプリングを使用しないため、サンプル数を1に設定します。
-			desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR; // バッファは行優先のレイアウトであるため、テクスチャレイアウトを行優先に設定します。
+			drawVBMapped_[fi].resize(slot + 1, nullptr);
+			drawIBMapped_[fi].resize(slot + 1, nullptr);
+			drawCBMapped_[fi].resize(slot + 1, nullptr);
 
-			// CreateCommittedResource関数を呼び出して、指定されたヒーププロパティとリソース説明に基づいて、コミットされたリソースを作成します。
-			HRESULT hr = device->CreateCommittedResource(
-				&heap, D3D12_HEAP_FLAG_NONE, &desc,
-				D3D12_RESOURCE_STATE_GENERIC_READ,
-				nullptr, IID_PPV_ARGS(&vb)
-			);
-			assert(SUCCEEDED(hr));
-
-			void* map = nullptr; // 頂点バッファをCPUアドレス空間にマップして、mapポインタにアクセスできるようにします。これにより、CPUから頂点バッファにデータを書き込むことができます。
-			vb->Map(0, nullptr, &map); // 頂点バッファをマップします。最初の引数は、マップするサブリソースのインデックスを指定します。ここでは、0を指定して、最初のサブリソースをマップしています。2番目の引数は、マップのオプションを指定します。ここでは、nullptrを指定して、デフォルトのオプションを使用しています。3番目の引数は、マップされたメモリへのポインタを受け取るためのポインタへのポインタです。
-			memcpy(map, tmpVerts_.data(), vbSize); // マップされたメモリに頂点データをコピーします。mapは、マップされた頂点バッファへのポインタです。tmpVerts_.data()は、頂点データが格納されているstd::vectorのデータへのポインタです。vbSizeは、コピーするデータのサイズをバイト単位で指定します。
-			vb->Unmap(0, nullptr); // 頂点バッファのマッピングを解除します。最初の引数は、アンマップするサブリソースのインデックスを指定します。ここでは、0を指定して、最初のサブリソースをアンマップしています。2番目の引数は、アンマップのオプションを指定します。ここでは、nullptrを指定して、デフォルトのオプションを使用しています。
+			drawVBCapacity_[fi].resize(slot + 1, 0);
+			drawIBCapacity_[fi].resize(slot + 1, 0);
 		}
 
-		// IB
-		{
-			const UINT ibSize = (UINT)(sizeof(uint16_t) * tmpIndices_.size());
-			D3D12_HEAP_PROPERTIES heap{};
-			heap.Type = D3D12_HEAP_TYPE_UPLOAD;
+		// =========================
+		// VB を必要なら再作成
+		// =========================
+		if (!drawVB_[fi][slot] || drawVBCapacity_[fi][slot] < needVerts) {
+			uint32_t newCapacity = needVerts;
+			if (drawVBCapacity_[fi][slot] > 0) {
+				newCapacity = (std::max)(needVerts, drawVBCapacity_[fi][slot] * 2);
+			}
 
-			// インデックスバッファのリソース記述を設定します。ここでは、バッファリソースを作成するための説明を指定しています。
-			D3D12_RESOURCE_DESC desc{};
-			desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER; // リソースの次元をバッファに設定します。
-			desc.Width = ibSize; // バッファのサイズをバイト単位で指定します。ibSizeは、作成するインデックスバッファのサイズを表す変数です。
-			desc.Height = 1; // バッファは1行のデータとして扱うため、高さを1に設定します。
-			desc.DepthOrArraySize = 1; // バッファは3Dテクスチャや配列ではないため、深さまたは配列サイズを1に設定します。
-			desc.MipLevels = 1; // バッファはミップマップを使用しないため、ミップレベル数を1に設定します。
-			desc.SampleDesc.Count = 1; // バッファはマルチサンプリングを使用しないため、サンプル数を1に設定します。
-			desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR; // バッファは行優先のレイアウトであるため、テクスチャレイアウトを行優先に設定します。
-
-			// CreateCommittedResource関数を呼び出して、指定されたヒーププロパティとリソース説明に基づいて、コミットされたリソースを作成します。
-			HRESULT hr = device->CreateCommittedResource(
-				&heap, D3D12_HEAP_FLAG_NONE, &desc,
-				D3D12_RESOURCE_STATE_GENERIC_READ,
-				nullptr, IID_PPV_ARGS(&ib)
-			);
-			assert(SUCCEEDED(hr));
-
-			void* map = nullptr;
-			ib->Map(0, nullptr, &map);
-			memcpy(map, tmpIndices_.data(), ibSize);
-			ib->Unmap(0, nullptr);
+			drawVB_[fi][slot] = CreateUploadBuffer_(device, sizeof(Vertex) * static_cast<size_t>(newCapacity));
+			drawVBMapped_[fi][slot] = nullptr;
+			drawVB_[fi][slot]->Map(0, nullptr, reinterpret_cast<void**>(&drawVBMapped_[fi][slot]));
+			drawVBCapacity_[fi][slot] = newCapacity;
 		}
 
-		// CB
-		CB cbData{};
-		cbData.viewProj = camera.GetViewProjectionMatrix();
-		cbData.time = time_;
-		cbData.uvScroll = uvScroll;
-		cbData.intensity = intensity;
+		// =========================
+		// IB を必要なら再作成
+		// =========================
+		if (!drawIB_[fi][slot] || drawIBCapacity_[fi][slot] < needIndices) {
+			uint32_t newCapacity = needIndices;
+			if (drawIBCapacity_[fi][slot] > 0) {
+				newCapacity = (std::max)(needIndices, drawIBCapacity_[fi][slot] * 2);
+			}
 
-		{
-			UINT cbSize = (UINT)sizeof(CB);
+			drawIB_[fi][slot] = CreateUploadBuffer_(device, sizeof(uint16_t) * static_cast<size_t>(newCapacity));
+			drawIBMapped_[fi][slot] = nullptr;
+			drawIB_[fi][slot]->Map(0, nullptr, reinterpret_cast<void**>(&drawIBMapped_[fi][slot]));
+			drawIBCapacity_[fi][slot] = newCapacity;
+		}
+
+		// =========================
+		// CB は1スロット1個を使い回す
+		// =========================
+		if (!drawCB_[fi][slot]) {
+			UINT cbSize = static_cast<UINT>(sizeof(CB));
 			cbSize = (cbSize + 255) & ~255u;
 
-			D3D12_HEAP_PROPERTIES heap{};
-			heap.Type = D3D12_HEAP_TYPE_UPLOAD;
-
-			// 定数バッファのリソース記述を設定します。ここでは、バッファリソースを作成するための説明を指定しています。
-			D3D12_RESOURCE_DESC desc{};
-			desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER; // リソースの次元をバッファに設定します。
-			desc.Width = cbSize; // バッファのサイズをバイト単位で指定します。cbSizeは、作成する定数バッファのサイズを表す変数です。定数バッファは、256バイトの倍数である必要があるため、cbSizeはsizeof(CB)を256の倍数に切り上げた値になります。
-			desc.Height = 1; // バッファは1行のデータとして扱うため、高さを1に設定します。
-			desc.DepthOrArraySize = 1; // バッファは3Dテクスチャや配列ではないため、深さまたは配列サイズを1に設定します。
-			desc.MipLevels = 1; // バッファはミップマップを使用しないため、ミップレベル数を1に設定します。
-			desc.SampleDesc.Count = 1; // バッファはマルチサンプリングを使用しないため、サンプル数を1に設定します。
-			desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR; // バッファは行優先のレイアウトであるため、テクスチャレイアウトを行優先に設定します。
-
-			// CreateCommittedResource関数を呼び出して、指定されたヒーププロパティとリソース説明に基づいて、コミットされたリソースを作成します。
-			HRESULT hr = device->CreateCommittedResource(
-				&heap, D3D12_HEAP_FLAG_NONE, &desc,
-				D3D12_RESOURCE_STATE_GENERIC_READ,
-				nullptr, IID_PPV_ARGS(&cb)
-			);
-			assert(SUCCEEDED(hr));
-
-			void* map = nullptr;
-			cb->Map(0, nullptr, &map);
-			memcpy(map, &cbData, sizeof(CB));
-			cb->Unmap(0, nullptr);
+			drawCB_[fi][slot] = CreateUploadBuffer_(device, cbSize);
+			drawCBMapped_[fi][slot] = nullptr;
+			drawCB_[fi][slot]->Map(0, nullptr, reinterpret_cast<void**>(&drawCBMapped_[fi][slot]));
 		}
 
-		// ---- このフレーム枠に保持して解放されないようにする ----
-		drawVB_[frameIndex_].push_back(vb);
-		drawIB_[frameIndex_].push_back(ib);
-		drawCB_[frameIndex_].push_back(cb);
+		// =========================
+		// データ書き込み
+		// =========================
+		memcpy(drawVBMapped_[fi][slot], tmpVerts_.data(), sizeof(Vertex) * tmpVerts_.size());
+		memcpy(drawIBMapped_[fi][slot], tmpIndices_.data(), sizeof(uint16_t) * tmpIndices_.size());
 
-		// Viewはローカルで作る（このDraw専用）
+		CB* cbPtr = drawCBMapped_[fi][slot];
+		cbPtr->viewProj = camera.GetViewProjectionMatrix();
+		cbPtr->time = time_;
+		cbPtr->uvScroll = uvScroll;
+		cbPtr->intensity = intensity;
+		cbPtr->pad0 = 0.0f;
+
+		// この draw で使うビューを作成
 		D3D12_VERTEX_BUFFER_VIEW vbView{};
-		vbView.BufferLocation = vb->GetGPUVirtualAddress();
+		vbView.BufferLocation = drawVB_[fi][slot]->GetGPUVirtualAddress();
 		vbView.StrideInBytes = sizeof(Vertex);
-		vbView.SizeInBytes = (UINT)(sizeof(Vertex) * tmpVerts_.size());
+		vbView.SizeInBytes = static_cast<UINT>(sizeof(Vertex) * tmpVerts_.size());
 
 		D3D12_INDEX_BUFFER_VIEW ibView{};
-		ibView.BufferLocation = ib->GetGPUVirtualAddress();
+		ibView.BufferLocation = drawIB_[fi][slot]->GetGPUVirtualAddress();
 		ibView.Format = DXGI_FORMAT_R16_UINT;
-		ibView.SizeInBytes = (UINT)(sizeof(uint16_t) * tmpIndices_.size());
+		ibView.SizeInBytes = static_cast<UINT>(sizeof(uint16_t) * tmpIndices_.size());
 
 		// 描画
 		auto cmd = dxCommon->GetCommandList();
@@ -277,10 +242,8 @@ namespace TKM {
 		cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		cmd->IASetVertexBuffers(0, 1, &vbView);
 		cmd->IASetIndexBuffer(&ibView);
-
-		// RootParam0 = CBV（このDraw専用CB）
-		cmd->SetGraphicsRootConstantBufferView(0, cb->GetGPUVirtualAddress());
-		cmd->DrawIndexedInstanced((UINT)tmpIndices_.size(), 1, 0, 0, 0);
+		cmd->SetGraphicsRootConstantBufferView(0, drawCB_[fi][slot]->GetGPUVirtualAddress());
+		cmd->DrawIndexedInstanced(static_cast<UINT>(tmpIndices_.size()), 1, 0, 0, 0);
 	}
 
 	void TrailRibbonRenderer::ImGuiDebug() {

@@ -148,7 +148,7 @@ namespace TKM {
 			std::vector<Vertex>& outVerts,
 			std::vector<uint16_t>& outIndices
 		);
-		
+
 		//==============================================
 		// D3D12リソース
 		//==============================================
@@ -182,6 +182,14 @@ namespace TKM {
 		std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> drawVB_[kFrameRing_]; // 描画用頂点バッファのフレームリング。描画ごとにframeIndex_を進めていき、GPUがまだ使用中のバッファを上書きしないようにする。
 		std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> drawIB_[kFrameRing_]; // 描画用インデックスバッファのフレームリング。描画ごとにframeIndex_を進めていき、GPUがまだ使用中のバッファを上書きしないようにする。
 		std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> drawCB_[kFrameRing_]; // 描画用定数バッファのフレームリング。描画ごとにframeIndex_を進めていき、GPUがまだ使用中のバッファを上書きしないようにする。
+		uint32_t drawCount_ = 0; // 今フレームで何本目のリボン描画か
+
+		std::vector<Vertex*> drawVBMapped_[kFrameRing_];   // 各スロットのVBマップ先
+		std::vector<uint16_t*> drawIBMapped_[kFrameRing_]; // 各スロットのIBマップ先
+		std::vector<CB*> drawCBMapped_[kFrameRing_];       // 各スロットのCBマップ先
+
+		std::vector<uint32_t> drawVBCapacity_[kFrameRing_]; // 各スロットのVB頂点容量
+		std::vector<uint32_t> drawIBCapacity_[kFrameRing_]; // 各スロットのIB index容量
 		//==============================================
 		// デバッグ
 		//==============================================
