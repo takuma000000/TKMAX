@@ -71,6 +71,17 @@ namespace TKM {
 		void StopAllSounds();
 
 		/// <summary>
+		/// 音声データを一時停止します。
+		/// </summary>
+		/// <param name="key"></param>
+		void PauseSound(const std::string& key);
+		/// <summary>
+		/// 一時停止中の音声データを再開します。
+		/// </summary>
+		/// <param name="key"></param>
+		void ResumeSound(const std::string& key);
+
+		/// <summary>
 		/// 音声データを解放します。
 		/// </summary>
 		/// <param name="key"></param>

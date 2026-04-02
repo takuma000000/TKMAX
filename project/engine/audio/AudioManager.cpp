@@ -239,4 +239,26 @@ namespace TKM {
 		}
 		playingVoices_.clear();
 	}
+
+	//============================
+	// PauseSound
+	//============================
+	void AudioManager::PauseSound(const std::string& key) {
+		for (auto& pv : playingVoices_) {
+			if (pv.key_ == key && pv.voice_) {
+				pv.voice_->Stop();
+			}
+		}
+	}
+
+	//============================
+	// ResumeSound
+	//============================
+	void AudioManager::ResumeSound(const std::string& key) {
+		for (auto& pv : playingVoices_) {
+			if (pv.key_ == key && pv.voice_) {
+				pv.voice_->Start();
+			}
+		}
+	}
 }

@@ -419,6 +419,14 @@ void GameScene::UpdateGameplaySystems(float rawDeltaTime, float scaledDeltaTime)
 	// ゲーム開始前かどうか（ゲーム開始前は通常HUDを表示せず、開幕ボス演出のSkipUIだけ表示する）
 	const bool isBeforeGameStart =
 		(flow_ && flow_->IsGameplayLocked());
+	// 「GAME START」が表示されているかどうか
+	const bool isStartVisible =
+		(flow_ && flow_->GetIntro() && flow_->GetIntro()->IsStartVisible());
+	// 「GAME START」が表示された瞬間にBGM
+	if (isStartVisible && !gameStartedBGMPlayed_) {
+		TKM::AudioManager::GetInstance()->PlaySound("playBGM", 0.2f, true);
+		gameStartedBGMPlayed_ = true;
+	}
 	// 開幕ボス演出中かどうか
 	const bool isOpeningBossIntro =
 		(flow_ && flow_->GetIntro() && flow_->GetIntro()->CanSkipBossIntro());
@@ -498,8 +506,18 @@ bool GameScene::TryUpdatePauseAndMaybeEarlyReturn_(float rawDeltaTime, bool allo
 	// ポーズメニュー更新
 	const auto cmd = pause_->Update(rawDeltaTime, allowPauseOpen);
 
+	const bool isPausedNow = pause_->IsPaused();
+
+	// playBGM のポーズ/再開
+	if (isPausedNow && !wasPausedLastFrame_) {
+		TKM::AudioManager::GetInstance()->PauseSound("playBGM"); // ポーズされた瞬間にBGMを一時停止
+	} else if (!isPausedNow && wasPausedLastFrame_) {
+		TKM::AudioManager::GetInstance()->ResumeSound("playBGM"); // ポーズが解除された瞬間にBGMを再開
+	}
+	wasPausedLastFrame_ = isPausedNow;
+
 	// HUD透明度調整
-	const float hudAlpha = pause_->IsPaused() ? 0.25f : 1.0f;
+	const float hudAlpha = isPausedNow ? 0.25f : 1.0f;
 	ui_->SetHudAlpha(hudAlpha);
 
 	// ポーズメニューのコマンド処理
@@ -510,7 +528,7 @@ bool GameScene::TryUpdatePauseAndMaybeEarlyReturn_(float rawDeltaTime, bool allo
 	}
 
 	// ポーズ中はゲーム本体を止める。ただし「遷移（タイトル戻り等）」は回す
-	if (!pause_->IsPaused()) { return false; }
+	if (!isPausedNow) { return false; }
 
 	UpdatePausedOnly_(rawDeltaTime);
 	return true;

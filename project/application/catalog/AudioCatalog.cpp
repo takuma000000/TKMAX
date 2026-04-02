@@ -29,6 +29,7 @@ void AudioCatalog::LoadTitleAudios() {
 void AudioCatalog::LoadGameAudios() {
 	LoadCommonAudios();
 	LoadAudioIfNeeded_("pause", "pause.wav");
+	LoadAudioIfNeeded_("playBGM", "playBGM.wav");
 }
 
 //=============================================================

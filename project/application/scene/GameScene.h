@@ -140,6 +140,9 @@ private:
 	std::unique_ptr<TKM::ClearSequenceController> clearSeq_ = nullptr; // クリア演出シーケンス
 	std::unique_ptr<TKM::PauseMenuController>     pause_ = nullptr;
 	std::unique_ptr<BossEntranceSequence>         bossEntranceSeq_ = nullptr; // WAVE3後のボス登場演出
+	// BGM管理
+	bool gameStartedBGMPlayed_ = false; // ゲーム開始BGMを一度でも再生したら true
+	bool wasPausedLastFrame_ = false; // 前フレームでポーズ中だったか
 	//======================================================================
 	// 内部処理
 	//======================================================================
