@@ -30,6 +30,7 @@ void AudioCatalog::LoadGameAudios() {
 	LoadCommonAudios();
 	LoadAudioIfNeeded_("pause", "pause.wav");
 	LoadAudioIfNeeded_("playBGM", "playBGM.wav");
+	LoadAudioIfNeeded_("surprise", "surprise.wav");
 }
 
 //=============================================================

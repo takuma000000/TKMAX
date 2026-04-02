@@ -1,6 +1,7 @@
 #include "IntroFlowStates.h"
 #include "IntroSequence.h"
 #include "ParticleManager.h"
+#include "AudioManager.h"
 #include <algorithm>
 
 namespace {
@@ -230,6 +231,8 @@ namespace TKM {
 			ParticleManager::GetInstance()->Emit("bossNoticeMark", center + Vector3{ -9.0f,  0.0f, 0.0f }, 1);
 			ParticleManager::GetInstance()->Emit("bossNoticeMark", center + Vector3{ 9.0f,  0.0f, 0.0f }, 1);
 			ParticleManager::GetInstance()->Emit("bossNoticeMark", center + Vector3{ 6.0f, -2.5f, 0.0f }, 1);
+
+			AudioManager::GetInstance()->PlaySound("surprise", 0.4f);
 		}
 
 		bool finished = s.introBossActor_.UpdateNoticeHop(IntroSequence::kFixedDt_);
