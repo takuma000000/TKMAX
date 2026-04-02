@@ -10,7 +10,7 @@
 void MidBossCore::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon) {
 	object_ = std::make_unique<TKM::Object3d>();
 	object_->Initialize(common, dxCommon);
-	object_->SetModel("sphere.obj"); // 核用の見た目
+	object_->SetModel("barrierCore.obj"); // 核用の見た目
 
 	if (camera_) {
 		object_->SetCamera(camera_);
@@ -68,6 +68,7 @@ void MidBossCore::SetScale(const Vector3& s) {
 
 void MidBossCore::Update(float dt) {
 	if (!object_) return;
+	time_ += dt;
 
 	// 死亡演出中
 	if (isDying_) {
@@ -109,7 +110,51 @@ void MidBossCore::Update(float dt) {
 		return;
 	}
 
-	// 通常時（今は動かない核なのでロジックほぼ無し）
+	// =========================================
+	// 常時Y軸回転
+	// =========================================
+	{
+		Vector3 rot_ = object_->GetRotate();
+
+		const float kRotateSpeedY_ = -2.0f; // ラジアン/秒
+
+		rot_.y += kRotateSpeedY_ * dt;
+
+		object_->SetRotate(rot_);
+	}
+	// =========================================
+	// 脈動（ドクンっ）
+	// 一瞬で膨らんで、すぐ戻って、少し止まる
+	// =========================================
+	{
+		const float kBeatCycle_ = 0.85f;     // 1拍の周期（秒）
+		const float kBeatAmplitude_ = 0.22f; // 膨らむ強さ
+		const float kAttackTime_ = 0.06f;    // 一気に膨らむ時間
+		const float kReleaseTime_ = 0.08f;   // 戻る時間
+
+		float phase = std::fmod(time_, kBeatCycle_);
+		float pulseAdd = 0.0f;
+
+		if (phase < kAttackTime_) {
+			// 一瞬で膨らむ
+			float t = phase / kAttackTime_; // 0 -> 1
+			pulseAdd = kBeatAmplitude_ * t;
+		} else if (phase < (kAttackTime_ + kReleaseTime_)) {
+			// すぐ戻る
+			float t = (phase - kAttackTime_) / kReleaseTime_; // 0 -> 1
+			float inv = 1.0f - t;
+			pulseAdd = kBeatAmplitude_ * (inv * inv); // 急に戻る感じ
+		}
+
+		float pulse = 1.0f + pulseAdd;
+
+		Vector3 scale_;
+		scale_.x = baseScale_.x * pulse;
+		scale_.y = baseScale_.y * pulse;
+		scale_.z = baseScale_.z * pulse;
+
+		object_->SetScale(scale_);
+	}
 	object_->Update();
 
 #ifdef USE_IMGUI

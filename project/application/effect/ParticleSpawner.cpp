@@ -908,7 +908,7 @@ namespace TKM {
 			float speed = std::uniform_real_distribution<float>(2.0f, 5.0f)(rng);
 			p.velocity_ = dirToCenter * speed;
 
-			p.transform_.scale_ = { 0.15f, 0.15f, 0.15f };
+			p.transform_.scale_ = { 0.25f, 0.25f, 0.25f };
 
 			// 怪しい血のような禍々しく濃い赤
 			p.color_ = { 0.8f, 0.05f, 0.1f, 0.9f };

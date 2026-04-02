@@ -17,6 +17,7 @@ void ModelCatalog::LoadModelCatalogs(TKM::DirectXCommon* dxCommon) {
 		"reticle_normal.obj",
 		"reticle_small.obj",
 		"normalBullet.obj",
+		"barrierCore.obj",
 	};
 
 	auto* mm = TKM::ModelManager::GetInstance();
