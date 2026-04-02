@@ -1,6 +1,7 @@
 #include "BaseScene.h"
 #include <string>
 #include <vector>
+#include <algorithm>
 #include <cwchar>
 
 #pragma comment(lib, "pdh.lib")
@@ -51,6 +52,24 @@ namespace TKM {
 		UpdateCpuUsage_();
 		UpdateGpuUsage_();
 
+		if (fps_ > 0.0f && fps_ < minFps_) {
+			minFps_ = fps_;
+		}
+		if (frameTimeMs_ > maxFrameTimeMs_) {
+			maxFrameTimeMs_ = frameTimeMs_;
+		}
+		if (gpuUsagePercent_ > maxGpuUsagePercent_) {
+			maxGpuUsagePercent_ = gpuUsagePercent_;
+		}
+
+		int totalParticles = 0;
+		for (const auto& pair : TKM::ParticleManager::GetInstance()->GetParticleGroups()) {
+			totalParticles += static_cast<int>(pair.second.particles_.size());
+		}
+		if (totalParticles > maxParticles_) {
+			maxParticles_ = totalParticles;
+		}
+
 		cpuHistory_[usageHistoryIndex_] = cpuUsagePercent_;
 		gpuHistory_[usageHistoryIndex_] = gpuUsagePercent_;
 		usageHistoryIndex_ = (usageHistoryIndex_ + 1) % kUsageHistorySize_;
@@ -68,89 +87,164 @@ namespace TKM {
 #endif
 	}
 
-	void BaseScene::ResetDrawCallCount() {
-		drawCallCount_ = 0; // DrawCall数リセット
-	}
-
 	void BaseScene::ImGuiDebugInfo() {
 #ifdef USE_IMGUI
 		ImGui::Begin("情報");
+
+		// =========================================================
+		// 現在の重要情報
+		// =========================================================
+		ImGui::SeparatorText("現在の状態");
+
 		ImGui::Text("FPS : %.2f", fps_);
-		ImGui::Separator();
-		ImGui::Text("フレーム時間 : %.2f ms", frameTimeMs_);
+
+		if (frameTimeMs_ >= 25.0f) {
+			ImGui::TextColored(ImVec4(1.0f, 0.2f, 0.2f, 1.0f), "フレーム時間 : %.2f ms", frameTimeMs_);
+		} else if (frameTimeMs_ >= 20.0f) {
+			ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f), "フレーム時間 : %.2f ms", frameTimeMs_);
+		} else {
+			ImGui::Text("フレーム時間 : %.2f ms", frameTimeMs_);
+		}
+
 		ImGui::Text("CPU使用率 : %.2f %%", cpuUsagePercent_);
 
 		if (gpuCounterAvailable_) {
-			ImGui::Text("GPU使用率 : %.2f %%", gpuUsagePercent_);
+			if (gpuUsagePercent_ >= 90.0f) {
+				ImGui::TextColored(ImVec4(1.0f, 0.2f, 0.2f, 1.0f), "GPU使用率 : %.2f %%", gpuUsagePercent_);
+			} else if (gpuUsagePercent_ >= 80.0f) {
+				ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f), "GPU使用率 : %.2f %%", gpuUsagePercent_);
+			} else {
+				ImGui::Text("GPU使用率 : %.2f %%", gpuUsagePercent_);
+			}
 		} else {
 			ImGui::Text("GPU使用率 : 取得不可");
 		}
 
-		ImGui::Separator();
-		ImGui::Text("DrawCall 回数 : %d", drawCallCount_);
-		ImGui::Separator();
-
-		// メモリ使用量（KB/MB表記）
 		PROCESS_MEMORY_COUNTERS pmc{};
 		if (GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
-			size_t memoryUsageKB = pmc.WorkingSetSize / 1024; // KB
-			size_t memoryUsageMB = memoryUsageKB / 1024;      // MB
+			size_t memoryUsageKB = pmc.WorkingSetSize / 1024;
+			size_t memoryUsageMB = memoryUsageKB / 1024;
 			ImGui::Text("メモリ使用量 : %zu KB / %zu MB", memoryUsageKB, memoryUsageMB);
 		}
 
-		ImGui::Text("MB");
-		ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(1.0f, 0.0f, 0.0f, 1.0f)); // 赤色
+		// =========================================================
+		// ピーク値
+		// =========================================================
+		ImGui::SeparatorText("ピーク値");
+
+		ImGui::Text("最低FPS : %.2f", (minFps_ == 9999.0f) ? 0.0f : minFps_);
+		ImGui::Text("最大フレーム時間 : %.2f ms", maxFrameTimeMs_);
+		ImGui::Text("最大GPU使用率 : %.2f %%", maxGpuUsagePercent_);
+		ImGui::Text("最大Particles : %d", maxParticles_);
+
+		if (ImGui::Button("ピーク値リセット")) {
+			minFps_ = 9999.0f;
+			maxFrameTimeMs_ = 0.0f;
+			maxGpuUsagePercent_ = 0.0f;
+			maxParticles_ = 0;
+		}
+
+		// =========================================================
+		// 履歴グラフ
+		// =========================================================
+		ImGui::SeparatorText("履歴");
+
+		ImGui::Text("メモリ推移 (MB)");
+		ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
 		ImGui::PlotLines(
-			"メモリ推移",
+			"##MemoryHistory",
 			memoryHistory_.data(),
 			kMemoryHistorySize_,
 			memoryHistoryIndex_,
 			nullptr,
 			0.0f,
 			500.0f,
-			ImVec2(0, 150)
+			ImVec2(0, 100)
 		);
 		ImGui::PopStyleColor();
 
 		ImGui::Text("CPU使用率推移 (%%)");
 		ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.2f, 0.9f, 0.2f, 1.0f));
 		ImGui::PlotLines(
-			"CPU推移",
+			"##CpuHistory",
 			cpuHistory_.data(),
 			kUsageHistorySize_,
 			usageHistoryIndex_,
 			nullptr,
 			0.0f,
 			100.0f,
-			ImVec2(0, 100)
+			ImVec2(0, 80)
 		);
 		ImGui::PopStyleColor();
 
 		ImGui::Text("GPU使用率推移 (%%)");
 		ImGui::PushStyleColor(ImGuiCol_PlotLines, ImVec4(0.2f, 0.7f, 1.0f, 1.0f));
 		ImGui::PlotLines(
-			"GPU推移",
+			"##GpuHistory",
 			gpuHistory_.data(),
 			kUsageHistorySize_,
 			usageHistoryIndex_,
 			nullptr,
 			0.0f,
 			100.0f,
-			ImVec2(0, 100)
+			ImVec2(0, 80)
 		);
 		ImGui::PopStyleColor();
 
-		ImGui::Separator();
+		// =========================================================
+		// 現在数
+		// =========================================================
+		ImGui::SeparatorText("現在数");
+
 		ImGui::Text("アクティブ Sprite 数 : %d", Sprite::GetActiveCount());
 		ImGui::Text("アクティブ Object3D 数 : %d", TKM::Object3d::GetActiveCount());
-		ImGui::Separator();
 
 		int totalParticles = 0;
+		std::vector<std::pair<std::string, int>> particleCounts;
+		particleCounts.reserve(TKM::ParticleManager::GetInstance()->GetParticleGroups().size());
+
 		for (const auto& pair : TKM::ParticleManager::GetInstance()->GetParticleGroups()) {
-			totalParticles += static_cast<int>(pair.second.particles_.size());
+			int count = static_cast<int>(pair.second.particles_.size());
+			totalParticles += count;
+			if (count > 0) {
+				particleCounts.emplace_back(pair.first, count);
+			}
 		}
-		ImGui::Text("アクティブ Particles : %d", totalParticles);
+
+		if (totalParticles >= 800) {
+			ImGui::TextColored(ImVec4(1.0f, 0.2f, 0.2f, 1.0f), "アクティブ Particles : %d", totalParticles);
+		} else if (totalParticles >= 600) {
+			ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.2f, 1.0f), "アクティブ Particles : %d", totalParticles);
+		} else {
+			ImGui::Text("アクティブ Particles : %d", totalParticles);
+		}
+
 		ImGui::Text("パーティクルグループ数 : %d", static_cast<int>(TKM::ParticleManager::GetInstance()->GetParticleGroups().size()));
+
+		// =========================================================
+		// パーティクル内訳 上位
+		// =========================================================
+		ImGui::SeparatorText("Particles内訳 上位");
+
+		std::sort(
+			particleCounts.begin(),
+			particleCounts.end(),
+			[](const auto& a, const auto& b) {
+				return a.second > b.second;
+			}
+		);
+
+		if (particleCounts.empty()) {
+			ImGui::Text("生きているパーティクルはありません");
+		} else {
+			const int maxShow = 8;
+			int showCount = (std::min)(maxShow, static_cast<int>(particleCounts.size()));
+
+			for (int i = 0; i < showCount; ++i) {
+				ImGui::Text("%s : %d", particleCounts[i].first.c_str(), particleCounts[i].second);
+			}
+		}
+
 		ImGui::End();
 #endif
 	}

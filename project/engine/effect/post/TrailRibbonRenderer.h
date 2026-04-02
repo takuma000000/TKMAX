@@ -121,13 +121,6 @@ namespace TKM {
 		/// <param name="dxCommon">DirectX 共通管理クラス</param>
 		void CreatePipeline_(DirectXCommon* dxCommon);
 		/// <summary>
-		/// リボン描画に必要な頂点バッファとインデックスバッファを、指定した最大頂点数・最大インデックス数で作成します。
-		/// </summary>
-		/// <param name="device">D3D12デバイス</param>
-		/// <param name="maxVerts">最大頂点数</param>
-		/// <param name="maxIndices">最大インデックス数</param>
-		void EnsureBuffers_(ID3D12Device* device, uint32_t maxVerts, uint32_t maxIndices);
-		/// <summary>
 		/// リボンの中心点のリストから、カメラに対して常に面が向くようなリボンの頂点とインデックスを生成します。
 		/// </summary>
 		/// <param name="camera">カメラ</param>
@@ -154,17 +147,6 @@ namespace TKM {
 		//==============================================
 		Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSig_; // ルートシグネチャ
 		Microsoft::WRL::ComPtr<ID3D12PipelineState> pso_; // パイプラインステートオブジェクト
-		Microsoft::WRL::ComPtr<ID3D12Resource> vb_; // 頂点バッファ
-		Microsoft::WRL::ComPtr<ID3D12Resource> ib_; // インデックスバッファ
-		D3D12_VERTEX_BUFFER_VIEW vbView_{}; // 頂点バッファビュー
-		D3D12_INDEX_BUFFER_VIEW ibView_{}; // インデックスバッファビュー
-		uint32_t vbCapacity_ = 0; // 頂点バッファの容量（頂点数）
-		uint32_t ibCapacity_ = 0; // インデックスバッファの容量（インデックス数）
-		//==============================================
-		// 定数バッファ
-		//==============================================
-		Microsoft::WRL::ComPtr<ID3D12Resource> cb_; // 定数バッファ
-		CB* cbMapped_ = nullptr; // 定数バッファにマップされたポインタ
 		//==============================================
 		// タイマー
 		//==============================================

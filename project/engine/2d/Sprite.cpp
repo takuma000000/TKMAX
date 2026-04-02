@@ -191,9 +191,6 @@ namespace TKM {
 	}
 
 	void Sprite::Draw() {
-		if (parentScene_) { //親シーンが設定されていれば
-			parentScene_->AddDrawCallCount(); //DrawCall数を加算
-		}
 
 		//VertexBufferViewを設定
 		//Spriteの描画。変更が必要なものだけ変更する

@@ -144,7 +144,6 @@ void TitleScene::Finalize() {
 }
 
 void TitleScene::Update() {
-	ResetDrawCallCount();
 	UpdatePerformanceInfo();
 
 	TKM::Input::GetInstance()->Update();
@@ -174,6 +173,12 @@ void TitleScene::Update() {
 #ifdef USE_IMGUI
 
 	ImGui::Begin("タイトルシーン デバッグ");
+
+	// =========================================================
+	// ① パフォーマンス情報
+	// =========================================================
+	ImGuiDebugInfo();
+
 	// =========================================================
 	// ② タイトル敵情報（折りたたみ）
 	// =========================================================

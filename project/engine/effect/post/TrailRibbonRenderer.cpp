@@ -105,28 +105,6 @@ namespace TKM {
 		ImGuiDebug();
 	}
 
-	void TrailRibbonRenderer::EnsureBuffers_(ID3D12Device* device, uint32_t maxVerts, uint32_t maxIndices) {
-		if (vb_ && vbCapacity_ >= maxVerts && ib_ && ibCapacity_ >= maxIndices) { return; } // 既に十分な容量のバッファがある場合は、何もしません。これにより、不要なバッファの再作成を避けることができます。
-		// 必要に応じてバッファを拡張します。新しい容量は、現在の容量と要求された最大容量のうち大きい方になります。これにより、将来の描画で同じサイズのバッファを再利用できるようになります。
-		vbCapacity_ = std::max(vbCapacity_, maxVerts);
-		// インデックスバッファの容量を更新します。新しい容量は、現在の容量と要求された最大容量のうち大きい方になります。これにより、将来の描画で同じサイズのバッファを再利用できるようになります。
-		ibCapacity_ = std::max(ibCapacity_, maxIndices);
-
-		// 新しいバッファを作成します。頂点バッファとインデックスバッファの両方を作成します。これらのバッファは、指定された最大頂点数と最大インデックス数に基づいてサイズが決定されます。
-		vb_ = CreateUploadBuffer_(device, sizeof(Vertex) * (size_t)vbCapacity_);
-		// 頂点バッファを作成します。サイズは、Vertex構造体のサイズに基づいて、要求された最大頂点数に応じて決定されます。
-		ib_ = CreateUploadBuffer_(device, sizeof(uint16_t) * (size_t)ibCapacity_);
-
-		// 頂点バッファビューとインデックスバッファビューを設定します。これらのビューは、描画コマンドで使用されるバッファの場所とサイズを指定します。
-		vbView_.BufferLocation = vb_->GetGPUVirtualAddress();
-		vbView_.StrideInBytes = sizeof(Vertex);
-		vbView_.SizeInBytes = (UINT)(sizeof(Vertex) * vbCapacity_);
-		// 頂点バッファビューを設定します。BufferLocationは、頂点バッファのGPU仮想アドレスを指定します。StrideInBytesは、各頂点のサイズをバイト単位で指定します。SizeInBytesは、頂点バッファ全体のサイズをバイト単位で指定します。
-		ibView_.BufferLocation = ib_->GetGPUVirtualAddress();
-		ibView_.Format = DXGI_FORMAT_R16_UINT;
-		ibView_.SizeInBytes = (UINT)(sizeof(uint16_t) * ibCapacity_);
-	}
-
 	void TrailRibbonRenderer::DrawRibbon(
 		DirectXCommon* dxCommon,
 		const Camera& camera,

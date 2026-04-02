@@ -343,8 +343,7 @@ void GameScene::BeginFrameUpdate(float& outRawDeltaTime, float& outScaledDeltaTi
 	timeScale_.Update(outRawDeltaTime); // タイムスケールコントローラーの更新
 	outScaledDeltaTime = outRawDeltaTime * timeScale_.GetScale(); /// スローデルタタイム
 
-	// 描画コール・メモリの初期化
-	ResetDrawCallCount();
+	// メモリの初期化
 	UpdateMemory();
 }
 

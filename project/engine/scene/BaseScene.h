@@ -52,10 +52,6 @@ namespace TKM {
 		/// </summary>背景Spriteを描画します（3Dより先に描かれる）。</summary>
 		/// </summary>
 		virtual void DrawBack();
-		/// <summary>
-		/// </summary>DrawCall数を加算します。</summary>
-		/// </summary>
-		void AddDrawCallCount() { drawCallCount_++; }
 
 		// Setter========================================
 		/// <summary>
@@ -75,8 +71,6 @@ namespace TKM {
 		int frameCount_ = 0;        // フレーム数
 		float frameTimeMs_ = 0.0f;  // フレームタイム(ms)
 
-		int drawCallCount_ = 0;  // DrawCall数カウント用
-
 		// メモリ履歴
 		static constexpr int kMemoryHistorySize_ = 100; // 履歴サイズ
 		std::array<float, kMemoryHistorySize_> memoryHistory_{}; // 過去のメモリ使用履歴（MB）
@@ -92,6 +86,11 @@ namespace TKM {
 		float gpuUsagePercent_ = 0.0f; // このプロセスのGPU使用率（%）
 		bool gpuCounterAvailable_ = false; // GPUカウンタが使えるか
 
+		float minFps_ = 9999.0f;               // 最低FPS
+		float maxFrameTimeMs_ = 0.0f;         // 最大フレーム時間
+		float maxGpuUsagePercent_ = 0.0f;     // 最大GPU使用率
+		int maxParticles_ = 0;                // 最大パーティクル数
+
 		ULONGLONG lastCpuCheckTime100ns_ = 0; // 前回CPU計測時刻（100ns）
 		ULONGLONG lastCpuKernel100ns_ = 0;    // 前回CPUカーネル時間（100ns）
 		ULONGLONG lastCpuUser100ns_ = 0;      // 前回CPUユーザー時間（100ns）
@@ -103,10 +102,6 @@ namespace TKM {
 		/// </summary>パフォーマンス情報を更新します。</summary>
 		/// </summary>
 		void UpdatePerformanceInfo();// TKMAXパフォーマンス可視化
-		/// <summary>
-		/// </summary>DrawCall数をリセットします。</summary>
-		/// </summary>
-		void ResetDrawCallCount(); // カウントリセット
 		/// <summary>
 		/// </summary>ImGuiでゲームパッド情報を表示します。</summary>
 		/// </summary>

@@ -90,9 +90,6 @@ namespace TKM {
 	}
 
 	void Object3d::Draw(TKM::DirectXCommon* dxCommon) {
-		if (parentScene_) { // 親シーンが設定されている場合
-			parentScene_->AddDrawCallCount(); // 描画コール数をカウント
-		}
 
 		dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);// VBVを設定
 		dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress()); // マテリアルをセット
