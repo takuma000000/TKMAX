@@ -781,27 +781,48 @@ void Player::HandleGamePadMove() {
 
 	// ---- バンク処理は今のロジックを流用 ----
 	float vx = newPos.x - pos.x;
+	float vy = newPos.y - pos.y;
 
 	if (movingThisFrame) {
-		float targetBank = -vx * 0.8f;
-		float k = 0.25f;
-		float d = 0.45f;
-		bankVel_ += (targetBank - bankAngle_) * k - bankVel_ * d;
+		const float kBankStrength_ = 0.8f;
+		const float kPitchStrength_ = 0.45f;
+		const float kSpring_ = 0.25f;
+		const float kDamping_ = 0.45f;
+
+		float targetBank = -vx * kBankStrength_;
+		float targetPitch = -vy * kPitchStrength_;
+
+		bankVel_ += (targetBank - bankAngle_) * kSpring_ - bankVel_ * kDamping_;
 		bankAngle_ += bankVel_;
+
+		pitchVel_ += (targetPitch - pitchAngle_) * kSpring_ - pitchVel_ * kDamping_;
+		pitchAngle_ += pitchVel_;
 	} else {
-		float resetK = 0.25f;
-		float resetD = 0.5f;
-		bankVel_ += (0.0f - bankAngle_) * resetK - bankVel_ * resetD;
+		const float kResetSpring_ = 0.25f;
+		const float kResetDamping_ = 0.5f;
+
+		bankVel_ += (0.0f - bankAngle_) * kResetSpring_ - bankVel_ * kResetDamping_;
 		bankAngle_ += bankVel_;
+
+		pitchVel_ += (0.0f - pitchAngle_) * kResetSpring_ - pitchVel_ * kResetDamping_;
+		pitchAngle_ += pitchVel_;
+
 		if (std::fabs(bankAngle_) < 0.001f && std::fabs(bankVel_) < 0.001f) {
 			bankAngle_ = 0.0f;
 			bankVel_ = 0.0f;
 		}
+
+		if (std::fabs(pitchAngle_) < 0.001f && std::fabs(pitchVel_) < 0.001f) {
+			pitchAngle_ = 0.0f;
+			pitchVel_ = 0.0f;
+		}
 	}
 
+	// 傾き
 	object_->SetTranslate(newPos);
 	Vector3 rot = object_->GetRotate();
-	rot.z = bankAngle_;
+	rot.x = pitchAngle_; // X軸回転(上下)
+	rot.z = bankAngle_; // Z軸回転(左右)
 	object_->SetRotate(rot);
 }
 void Player::HandleFollowCamera() {

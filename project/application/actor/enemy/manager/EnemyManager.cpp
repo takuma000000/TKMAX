@@ -3,6 +3,7 @@
 #include "MyMath.h"
 #include "manager/BossManager.h"
 #include "BarrierCommon.h"
+#include "AudioManager.h"
 #include <cmath>
 
 #ifdef USE_IMGUI
@@ -250,6 +251,8 @@ void EnemyManager::SkipToBossWave() {
 
 	// Wave を Done（＝ボスフェーズ）にする
 	wavePhase_ = WavePhase::Done;
+	// 雑魚戦が終わったらplayBGMを止める
+	TKM::AudioManager::GetInstance()->StopSound("playBGM");
 }
 
 void EnemyManager::SetupEnemyForPlayer(Enemy& e) {

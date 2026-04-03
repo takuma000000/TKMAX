@@ -20,7 +20,7 @@ void AudioCatalog::LoadCommonAudios() {
 //=============================================================
 void AudioCatalog::LoadTitleAudios() {
 	LoadCommonAudios();
-	LoadAudioIfNeeded_("title", "kuraran.wav");
+	LoadAudioIfNeeded_("title", "title.wav");
 }
 
 //=============================================================
@@ -31,6 +31,7 @@ void AudioCatalog::LoadGameAudios() {
 	LoadAudioIfNeeded_("pause", "pause.wav");
 	LoadAudioIfNeeded_("playBGM", "playBGM.wav");
 	LoadAudioIfNeeded_("surprise", "surprise.wav");
+	LoadAudioIfNeeded_("bossPhaseBGM", "bossPhaseBGM.wav");
 }
 
 //=============================================================

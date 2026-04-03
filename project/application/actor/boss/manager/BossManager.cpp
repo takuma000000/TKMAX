@@ -3,6 +3,7 @@
 #include <algorithm>
 #include "MyMath.h"
 #include "BossConfigLoader.h"
+#include "AudioManager.h"
 
 // ワールド座標をスクリーンUV座標に変換する
 static Vector2 WorldToUV(const Vector3& world, const Matrix4x4& vp) {
@@ -106,6 +107,10 @@ void BossManager::Update(float dt) {
 		player_->SetShootingEnabled(false);
 		// 撃破シーケンス中はコントローラー振動も止める
 		player_->SetRumbleEnabled(false);
+
+		// ボス戦のBGMを止める
+		TKM::AudioManager::GetInstance()->StopSound("bossPhaseBGM");
+
 		// 1回だけ：残ってる弾を消して、以降当たり判定も出さない
 		if (!killSeq_.attacksStopped_) {
 			bossBullets_.clear(); // 既に出てる弾も全消し

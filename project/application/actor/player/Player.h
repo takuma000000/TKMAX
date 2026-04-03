@@ -413,10 +413,12 @@ private:
 	int     cameraShakeFrame_ = 0; // シェイク残りフレーム数
 	float   shakeBaseStrength_ = 1.8f;   // 基本のシェイク強度
 	float   shakeZoomBoost_ = 8.0f;   // ズーム時の追加倍率
-	float  bankAngle_ = 0.0f;                 // 現在の傾き（ロール）
-	float  bankVel_ = 0.0f;                 // 補間用
-	Vector3 moveMin_ = { -100.0f, -20.0f, 0.0f }; // 移動範囲（Zは固定）
-	Vector3 moveMax_ = { 100.0f,  20.0f, 0.0f }; // 移動範囲（Zは固定）
+	float  bankAngle_ = 0.0f;                 // 現在の左右傾き（ロール）
+	float  bankVel_ = 0.0f;                 // 左右傾き補間用
+	float  pitchAngle_ = 0.0f; // 現在の上下傾き（ピッチ）
+	float  pitchVel_ = 0.0f;   // 上下傾き補間用
+	Vector3 moveMin_ = { -100.0f, -60.0f, 0.0f }; // 移動範囲（Zは固定）
+	Vector3 moveMax_ = { 100.0f,  60.0f, 0.0f }; // 移動範囲（Zは固定）
 	//======================================================================
 	// 入力ラッチ / ジェット煙 / デバッグフラグ
 	//======================================================================

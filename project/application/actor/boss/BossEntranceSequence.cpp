@@ -1,6 +1,7 @@
 #include "BossEntranceSequence.h"
 #include "manager/BossManager.h"
 #include "ParticleManager.h"
+#include "AudioManager.h"
 #include <algorithm>
 
 Vector4 BossEntranceSequence::LerpColor_(const Vector4& a, const Vector4& b, float t) {
@@ -47,6 +48,8 @@ void BossEntranceSequence::Start(const Vector3& spawnPos) {
 	phase_ = Phase::Wait;
 	spawnPos_ = spawnPos;
 	currentSkyColor_ = kBaseSkyColor_;
+
+	TKM::AudioManager::GetInstance()->PlaySound("bossPhaseBGM", 0.2f, true);
 }
 
 void BossEntranceSequence::EmitGather_() {
@@ -112,7 +115,8 @@ void BossEntranceSequence::Update(float dt, BossManager* bossManager) {
 		}
 		break;
 
-	case Phase::SkyFadeIn: {
+	case Phase::SkyFadeIn:
+	{
 		const float t = std::clamp(phaseTimer_ / kSkyFadeInSec_, 0.0f, 1.0f);
 		currentSkyColor_ = LerpColor_(kBaseSkyColor_, kRedSkyColor_, t);
 

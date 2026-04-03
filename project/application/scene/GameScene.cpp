@@ -510,9 +510,13 @@ bool GameScene::TryUpdatePauseAndMaybeEarlyReturn_(float rawDeltaTime, bool allo
 
 	// playBGM のポーズ/再開
 	if (isPausedNow && !wasPausedLastFrame_) {
-		TKM::AudioManager::GetInstance()->PauseSound("playBGM"); // ポーズされた瞬間にBGMを一時停止
+		// ポーズされた瞬間にBGMを一時停止
+		TKM::AudioManager::GetInstance()->PauseSound("playBGM");
+		TKM::AudioManager::GetInstance()->PauseSound("bossPhaseBGM");
 	} else if (!isPausedNow && wasPausedLastFrame_) {
-		TKM::AudioManager::GetInstance()->ResumeSound("playBGM"); // ポーズが解除された瞬間にBGMを再開
+		// ポーズが解除された瞬間にBGMを再開
+		TKM::AudioManager::GetInstance()->ResumeSound("playBGM");
+		TKM::AudioManager::GetInstance()->ResumeSound("bossPhaseBGM");
 	}
 	wasPausedLastFrame_ = isPausedNow;
 
