@@ -11,7 +11,6 @@
 #include "Object3d.h"
 #include "DirectXCommon.h"
 #include "BaseScene.h"
-#include "MidBossCore.h"
 #include "EnemyWaveConfig.h"
 #include "BattleActorManagerBase.h"
 #include "EnemyBullet.h"
@@ -34,8 +33,6 @@ public:
 	//=============================================================
 	enum class WavePhase {
 		W1,   // Wave1
-		W2,   // Wave2
-		W3,   // Wave3（中ボスステージ）
 		Done  // 全Wave終了
 	};
 
@@ -168,24 +165,11 @@ public:
 	// Setter==========================================================================
 	/// <summary>
 	/// 使用するカメラを設定します。
-	/// 敵およびミッドボス核にも同じカメラを適用します。
+	/// 敵と関連オブジェクトに同じカメラを適用します。
 	/// </summary>
 	/// <param name="camera">描画および判定に使用するカメラ</param>
 	void SetCamera(TKM::Camera* camera) override;
 	// ================================================================================
-
-	/// <summary>
-	/// Wave2の三角形編隊をスポーンします。
-	/// </summary>
-	void SpawnWave2_Triangle();
-	/// <summary>
-	/// Wave2のライン編隊をスポーンします。
-	/// </summary>
-	void SpawnWave2_Line();
-	/// <summary>
-	/// Wave2の高速カラム編隊をスポーンします。
-	/// </summary>
-	void SpawnWave2_FastColumn();
 
 private:
 	/// <summary>
@@ -381,63 +365,6 @@ private:
 	/// </summary>
 	/// <param name="dt">前フレームからの経過時間（秒）</param>
 	void CheckEnemyBulletPlayerCollision_(float dt);
-
-	//=============================================================
-	// Wave2 関連
-	//=============================================================
-	int   wave2SubWave_ = 0;         // 現在のサブWave番号
-	float wave2WaitTimer_ = 0.0f;    // サブWave間の待機タイマー
-	float wave2WaitDuration_ = 1.5f; // 待機時間
-	bool  wave2Waiting_ = false;     // 待機中フラグ
-	int   wave2SubWaveCount_ = 3;    // サブWave総数
-
-	/// <summary>
-	/// Wave2 の更新処理を行います。
-	/// </summary>
-	/// <param name="dt">前フレームからの経過時間（秒）</param>
-	void UpdateWave2(float dt);
-	/// <summary>
-	/// Wave2 の指定サブWaveをスポーンします。
-	/// </summary>
-	/// <param name="id">スポーンするサブWaveの識別子</param>
-	void SpawnWave2SubWave(int id);
-
-//=============================================================
-	// Wave3（中ボスステージ） 関連
-	//=============================================================
-	bool  wave3ReviveInProgress_ = false; // 蘇生フェーズ中かどうか
-	float wave3CoreTimer_ = 0.0f;         // 蘇生核の経過時間
-	float wave3CoreLifetime_ = 5.0f;      // 蘇生核の存続時間
-	int   wave3CoreHP_ = 5;               // 蘇生核のHP
-	int   wave3PrevAliveMidBossCount_ = 0; // 前フレームの中ボス生存数
-	float wave3AngryDuration_ = 8.0f;     // 中ボス怒り状態の継続時間
-
-	Vector3 wave3LeftPos_ = { -12.0f, 6.0f, 80.0f };  // 左側中ボスの定位置
-	Vector3 wave3RightPos_ = { 12.0f, 6.0f, 80.0f };  // 右側中ボスの定位置
-
-	/// <summary>
-	/// Wave3 の更新処理を行います。
-	/// </summary>
-	/// <param name="dt">前フレームからの経過時間（秒）</param>
-	void UpdateWave3(float dt);
-
-	/// <summary>
-	/// Wave3の中ボスステージ用の中ボスをスポーンします。
-	/// </summary>
-	void SpawnWave3MidBossStage();
-
-	/// <summary>
-	/// Wave3の蘇生核をスポーンします。
-	/// </summary>
-	void SpawnWave3Core();
-
-	/// <summary>
-	/// Wave3の追加中ボスをスポーンします。
-	/// </summary>
-	void SpawnWave3ExtraMidBoss();
-
-	std::unique_ptr<MidBossCore> midBossCore_ = nullptr; // Wave3の蘇生核
-
 	//=============================================================
 	// デバッグ系フラグ
 	//=============================================================
@@ -446,35 +373,10 @@ private:
 	//=============================================================
 	// Wave処理の関数テーブル
 	//=============================================================
-	using SpawnFn = void (EnemyManager::*)();        // Wave開始時のスポーン関数型
-	using UpdateFn = void (EnemyManager::*)(float);  // Wave更新関数型
-
-	/// <summary>
-	/// 各Waveに対応するスポーン関数と更新関数をまとめた構造体です。
-	/// </summary>
-	struct WaveOps {
-		SpawnFn spawn_ = nullptr;   // スポーン関数
-		UpdateFn update_ = nullptr; // 更新関数
-	};
-
-	// WaveOps配列のインデックスはWavePhaseと対応
-	// [0]=W1, [1]=W2, [2]=W3, [3]=Done
-	static const WaveOps kWaveOps_[4];
-
 	/// <summary>
 	/// Wave1を開始します。
 	/// </summary>
 	void BeginWave1();
-
-	/// <summary>
-	/// Wave2を開始します。
-	/// </summary>
-	void BeginWave2();
-
-	/// <summary>
-	/// Wave3を開始します。
-	/// </summary>
-	void BeginWave3();
 
 	//=============================================================
 	// 敵ウェーブ設定データ

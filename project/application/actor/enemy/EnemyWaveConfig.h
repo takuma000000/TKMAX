@@ -31,47 +31,6 @@ public:
 		float randXMax_ = 20.0f; // 敵の生成 X 座標の最大値（ワールド座標）
 	};
 
-	struct Wave2SubWave {
-		Wave2Pattern pattern_ = Wave2Pattern::Triangle; // 編隊パターン
-
-		// Triangle: id, a=Triangle, b=段(=countPerSide), c=y, d=z, e=xCenter, f=xStep, g=zStep
-		int   triCountPerSide_ = 1; // 片側あたりの敵の数（中央を除く）
-		float triY_ = 6.0f; // 生成高さ（ワールド座標）
-		float triZ_ = 80.0f; // 先頭の Z 座標（ワールド座標）
-		float triXCenter_ = 0.0f; // 中心となる X 座標（ワールド座標）
-		float triXStep_ = 7.0f; // 左右方向の X 間隔
-		float triZStep_ = 5.0f; // 後列との Z 間隔
-
-		// Line: b=count, c=y, d=z, e=xStart, f=xStep
-		int   lineCount_ = 4; // 生成する敵の数
-		float lineY_ = 4.5f; // 生成高さ（ワールド座標）
-		float lineZ_ = 90.0f; // 生成 Z 座標（ワールド座標）
-		float lineXStart_ = -12.0f; // 開始 X 座標（ワールド座標）
-		float lineXStep_ = 8.0f; // X 方向の間隔
-
-		// Column: b=count, c=x, d=zStart, e=zStep, f=yStart, g=yStep
-		int   colCount_ = 3; // 生成する敵の数
-		float colX_ = 18.0f; // 生成 X 座標（ワールド座標）
-		float colZStart_ = 100.0f; // 開始 Z 座標（ワールド座標）
-		float colZStep_ = 10.0f; // Z 方向の間隔
-		float colYStart_ = 5.0f; // 開始 Y 座標（ワールド座標）
-		float colYStep_ = 0.0f; // Y 方向の間隔（0なら高さ固定）
-	};
-
-	struct Wave3 {
-		Vector3 midBossLeft_ = { -12.0f, 6.0f, 80.0f }; // 中ボスの定位置（左）
-		Vector3 midBossRight_ = { 12.0f, 6.0f, 80.0f }; // 中ボスの定位置（右）
-
-		// CoreRand(params): a=xRange, b=zMin, c=zMax, d=y
-		float coreXRange_ = 18.0f; // 核の生成 X 座標の範囲（中心からの距離、ワールド座標）
-		float coreZMin_ = 35.0f; // 核の生成 Z 座標の最小値（ワールド座標）
-		float coreZMax_ = 75.0f; // 核の生成 Z 座標の最大値（ワールド座標）
-		float coreY_ = 6.0f; // 核の生成 Y 座標（ワールド座標）
-		float coreLifetime_ = 5.0f; // 核が生きていれば蘇生成立（秒）
-		int   coreHP_ = 5; // 核のHP（あとで調整用）
-		float angryDuration_ = 8.0f; // 中ボス怒り時間（秒）
-	};
-
 	/// <summary>
 	/// 設定ファイルを読み込みます。
 	/// 拡張子に応じて CSV / JSON の読込関数へ振り分けます。
@@ -98,27 +57,6 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	const Wave1& GetWave1() const { return wave1_; }
-	/// <summary>
-	/// Wave2の待機時間を取得します。
-	/// </summary>
-	/// <returns></returns>
-	float GetWave2WaitDuration() const { return wave2WaitDuration_; }
-	/// <summary>
-	/// Wave2のサブウェーブ数を取得します。
-	/// </summary>
-	/// <returns></returns>
-	int GetWave2SubWaveCount() const { return wave2SubWaveCount_; }
-	/// <summary>
-	/// Wave2のサブウェーブ設定を取得します。
-	/// </summary>
-	/// <param name="id"></param>
-	/// <returns></returns>
-	const Wave2SubWave& GetWave2SubWave(int id) const { return wave2SubWaves_[id]; }
-	/// <summary>
-	/// Wave3設定を取得します。
-	/// </summary>
-	/// <returns></returns>
-	const Wave3& GetWave3() const { return wave3_; }
 	// ================================================
 
 private:
@@ -153,10 +91,6 @@ private:
 	// Waveごとの設定データ
 	//===================================================
 	Wave1 wave1_{}; // Wave1の設定
-	float wave2WaitDuration_ = 1.5f; // Wave2の待機時間
-	std::array<Wave2SubWave, 3> wave2SubWaves_{}; // Wave2のサブウェーブ設定（最大3つまで）
-	Wave3 wave3_{}; // Wave3の設定
-	int wave2SubWaveCount_ = 3; // Wave2のサブウェーブ数（実際に使用するサブウェーブの数、0〜3の範囲で wave2SubWaves_ の先頭から使用）
 
 public:
 	// Enemy Params ==========================================
@@ -170,88 +104,12 @@ public:
 		EnemyBehavior behavior_ = EnemyBehavior::PounceFromAbove; // 敵の行動パターン
 	};
 
-	struct Wave2EnemyParamsTriangle {
-		std::string model_ = "jerryfish.obj"; // 敵のモデルファイル名
-		int hp_ = 3; // 敵のHP
-		Vector3 vel_ = { 0.0f, 0.0f, -0.30f }; // 敵の基本移動速度（ワールド座標、Z方向が前進）
-		float sineAmp_ = 4.0f; // サイン波移動の振幅（ワールド座標、X方向の揺れ幅）
-		float sineFreq_ = 1.4f; // サイン波移動の周波数（Hz）
-		float phaseStep_ = 0.6f; // 同一ウェーブ内の敵同士の位相差（ラジアン、0.6f なら約34度の位相差で生成される）
-		EnemyBehavior behavior_ = EnemyBehavior::SineX; // 敵の行動パターン
-	};
-
-	struct Wave2EnemyParamsLine {
-		std::string model_ = "jerryfish.obj"; // 敵のモデルファイル名
-		int hp_ = 2; // 敵のHP
-		Vector3 vel_ = { 0.0f, 0.0f, -0.32f }; // 敵の基本移動速度（ワールド座標、Z方向が前進）
-		float stopZ_ = 52.0f; // 敵が前進して止まる Z 座標（ワールド座標）
-		EnemyBehavior behavior_ = EnemyBehavior::StraightStop; // 敵の行動パターン
-	};
-
-	struct Wave2EnemyParamsColumn {
-		std::string model_ = "jerryfish.obj"; // 敵のモデルファイル名
-		int hp_ = 1; // 敵のHP
-		Vector3 vel_ = { -0.20f, 0.0f, -0.75f }; // 敵の基本移動速度（ワールド座標、Z方向が前進、X方向が左移動）
-		float stopZ_ = -50.0f; // 敵が前進して止まる Z 座標（ワールド座標）
-		EnemyBehavior behavior_ = EnemyBehavior::StraightStop; // 敵の行動パターン
-	};
-
-	struct Wave3MidBossParams {
-		std::string model_ = "jerryfish.obj"; // 敵のモデルファイル名
-		int hp_ = 12; // 敵のHP
-		Vector3 areaMin_ = { -18.0f, 4.0f, 40.0f }; // 行動範囲の最小座標（ワールド座標）
-		Vector3 areaMax_ = { 18.0f, 10.0f, 62.0f }; // 行動範囲の最大座標（ワールド座標）
-		float normalSpeed_ = 0.10f; // 通常時の移動速度
-		float rageSpeed_ = 0.24f; // 怒り時の移動速度
-		float scale_ = 1.5f; // 敵のスケール（倍率）
-		EnemyBehavior behavior_ = EnemyBehavior::FreeRoam; // 敵の行動パターン
-	};
-
-	struct Wave3ExtraMidBossParams {
-		std::string model_ = "jerryfish.obj"; // 敵のモデルファイル名
-		int hp_ = 12; // 敵のHP
-		Vector3 vel_ = { 0.0f, 0.0f, -0.2f }; // 敵の基本移動速度（ワールド座標、Z方向が前進）
-		float stopZ_ = 40.0f; // 敵が前進して止まる Z 座標（ワールド座標）
-		float scale_ = 1.5f; // 敵のスケール（倍率）
-		EnemyBehavior behavior_ = EnemyBehavior::StraightStop; // 敵の行動パターン
-	};
-
 	/// <summary>
 	/// Wave1 用の敵パラメータを取得します。
 	/// </summary>
 	/// <returns>Wave1 敵パラメータ</returns>
 	const Wave1EnemyParams& GetWave1EnemyParams() const { return wave1EnemyParams_; }
-	/// <summary>
-	/// Wave2（三角形配置）用の敵パラメータを取得します。
-	/// </summary>
-	/// <returns>Wave2 三角形配置用敵パラメータ</returns>
-	const Wave2EnemyParamsTriangle& GetWave2TriEnemyParams() const { return wave2TriEnemyParams_; }
-	/// <summary>
-	/// Wave2（直線配置）用の敵パラメータを取得します。
-	/// </summary>
-	/// <returns>Wave2 直線配置用敵パラメータ</returns>
-	const Wave2EnemyParamsLine& GetWave2LineEnemyParams() const { return wave2LineEnemyParams_; }
-	/// <summary>
-	/// Wave2（縦列配置）用の敵パラメータを取得します。
-	/// </summary>
-	/// <returns>Wave2 縦列配置用敵パラメータ</returns>
-	const Wave2EnemyParamsColumn& GetWave2ColEnemyParams() const { return wave2ColEnemyParams_; }
-	/// <summary>
-	/// Wave3（ミッドボス）用のパラメータを取得します。
-	/// </summary>
-	/// <returns>Wave3 ミッドボス用パラメータ</returns>
-	const Wave3MidBossParams& GetWave3MidBossParams() const { return wave3MidBossParams_; }
-	/// <summary>
-	/// Wave3（追加ミッドボス）用のパラメータを取得します。
-	/// </summary>
-	/// <returns>Wave3 追加ミッドボス用パラメータ</returns>
-	const Wave3ExtraMidBossParams& GetWave3ExtraMidBossParams() const { return wave3ExtraMidBossParams_; }
 private:
 	// Enemy Params 内部データ
 	Wave1EnemyParams wave1EnemyParams_{};
-	Wave2EnemyParamsTriangle wave2TriEnemyParams_{};
-	Wave2EnemyParamsLine wave2LineEnemyParams_{};
-	Wave2EnemyParamsColumn wave2ColEnemyParams_{};
-	Wave3MidBossParams wave3MidBossParams_{};
-	Wave3ExtraMidBossParams wave3ExtraMidBossParams_{};
 };

@@ -1759,7 +1759,7 @@ namespace TKM {
 			p.currentTime_ = 0.0f;
 
 			// アニメっぽく黄色寄り。白でもいいけどまずは見やすさ優先
-			p.color_ = { 1.0f, 0.95f, 0.25f, 1.0f };
+			p.color_ = { 0.0f, 1.0f, 1.0f, 1.0f };
 		} else if (groupName == "bossEscape_warpCore") {
 
 			p.transform_.translate_ = center;
