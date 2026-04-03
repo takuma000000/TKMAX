@@ -5,6 +5,7 @@
 #include <limits>
 #include "RadialBlurEffect.h"
 #include "MidBossCore.h"
+#include "AudioManager.h"
 
 #ifdef USE_IMGUI
 #include "imgui.h"
@@ -1424,6 +1425,9 @@ void Player::StartDodge() {
 	dodgeT_ = 0.0f;
 	dodgeStartPos_ = object_->GetTranslate();
 	dodgeDir_ = dir;
+
+	// 回避の音
+	TKM::AudioManager::GetInstance()->PlaySound("avoid", 0.2f);
 
 	dodgeBaseRot_ = object_->GetRotate();
 	{

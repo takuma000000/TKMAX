@@ -28,10 +28,11 @@ void AudioCatalog::LoadTitleAudios() {
 //=============================================================
 void AudioCatalog::LoadGameAudios() {
 	LoadCommonAudios();
-	LoadAudioIfNeeded_("pause", "pause.wav");
-	LoadAudioIfNeeded_("playBGM", "playBGM.wav");
-	LoadAudioIfNeeded_("surprise", "surprise.wav");
-	LoadAudioIfNeeded_("bossPhaseBGM", "bossPhaseBGM.wav");
+	LoadAudioIfNeeded_("pause", "pause.wav"); // ポーズ
+	LoadAudioIfNeeded_("playBGM", "playBGM.wav"); // ゲーム本編BGM
+	LoadAudioIfNeeded_("surprise", "surprise.wav"); // !マーク
+	LoadAudioIfNeeded_("avoid", "avoid.wav"); // 回避
+	LoadAudioIfNeeded_("bossPhaseBGM", "bossPhaseBGM.wav"); // ボスフェーズBGM
 }
 
 //=============================================================
