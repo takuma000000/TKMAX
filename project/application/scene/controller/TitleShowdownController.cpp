@@ -126,6 +126,7 @@ void TitleShowdownController::CreateActors_() {
 	boss_->Initialize(TKM::Object3dCommon::GetInstance(), dxCommon_);
 	boss_->SetPosition(bossPos_); // ボスの初期位置を設定する
 	boss_->SetTentacleCharge(true, 0.35f); // ボスの触手チャージを有効にしてチャージ量を設定する
+	boss_->SyncTransform();
 
 	// プレイヤーとボスの回転を、見つめ合いの角度で設定する
 	const float py = LookAtYaw_(playerPos_, bossPos_);
