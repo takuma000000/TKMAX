@@ -135,8 +135,9 @@ void GameOverScene::Initialize() {
 }
 
 void GameOverScene::Finalize() {
-	TKM::ParticleManager::GetInstance()->ClearGroup("fallStreak");
+	TKM::ParticleManager::GetInstance()->ClearAllGroups();
 	dxCommon_->SetWaterRippleEffect(nullptr);
+	dxCommon_->SetNoiseEffect(nullptr);
 
 	AudioManager::GetInstance()->Finalize(); // オーディオマネージャの終了処理
 }

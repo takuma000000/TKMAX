@@ -56,6 +56,7 @@ void TitleScene::Initialize() {
 	ModelCatalog::LoadModelCatalogs(dxCommon_); // タイトルシーンで使うモデルをまとめてロード
 	///---------------パーティクル----------------
 	TKM::ParticleManager::GetInstance()->Initialize(dxCommon_, srvManager_, TKM::CameraManager::GetInstance()->GetMainCamera());
+	TKM::ParticleManager::GetInstance()->ClearAllGroups(); // 念のため全グループの粒子を消しておく
 	TKM::ParticleGroupsCatalog::RegisterScene(TKM::ParticleManager::GetInstance()); // タイトルシーン用のパーティクルグループを登録
 	///-----------------------------------------
 	// シーケンス開始（StateMachine）
@@ -140,6 +141,7 @@ void TitleScene::Initialize() {
 
 void TitleScene::Finalize() {
 	TKM::AudioManager::GetInstance()->Finalize(); // オーディオマネージャー終了
+	TKM::ParticleManager::GetInstance()->ClearAllGroups(); // パーティクル全グループの粒子を消す
 }
 
 void TitleScene::Update() {

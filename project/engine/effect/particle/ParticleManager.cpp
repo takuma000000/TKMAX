@@ -471,6 +471,9 @@ namespace TKM {
 	}
 
 	void ParticleManager::InitializeVD() {
+		modelData_.vertices_.clear();
+		modelData_.vertices_.reserve(6);
+
 		//四角形の頂点データ
 		modelData_.vertices_.push_back({ .position_ = {1.0f,1.0f,0.0f,1.0f},.texcoord_ = {0.0f,0.0f},.normal_ = {0.0f,0.0f,1.0f} });
 		modelData_.vertices_.push_back({ .position_ = {-1.0f,1.0f,0.0f,1.0f},.texcoord_ = {1.0f,0.0f},.normal_ = {0.0f,0.0f,1.0f} });
@@ -547,6 +550,14 @@ namespace TKM {
 		ribbonVertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&ribbonVertexData));
 		std::memcpy(ribbonVertexData, ribbonModelData_.vertices_.data(), sizeof(VertexData) * ribbonModelData_.vertices_.size());
 
+	}
+
+	void ParticleManager::ClearAllGroups() {
+		// 全グループのパーティクルを消す
+		for (auto& it : particleGroups_) {
+			it.second.particles_.clear(); // パーティクルコンテナをクリア
+			it.second.kNumInstance_ = 0; // インスタンス数もリセット
+		}
 	}
 
 	void ParticleManager::CreateParticleGroup(const std::string& name, const std::string& textureFilePath, ParticleType type) {

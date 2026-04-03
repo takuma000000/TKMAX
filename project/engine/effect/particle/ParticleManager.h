@@ -113,6 +113,11 @@ namespace TKM {
 		void WriteResource();
 
 		/// <summary>
+		/// すべてのパーティクルグループの生存粒子を消します。
+		/// </summary>
+		void ClearAllGroups();
+
+		/// <summary>
 		/// <summary>パーティクルグループを作成します。</summary>
 		/// </summary>
 		/// <param name="name"></param>
