@@ -11,23 +11,27 @@ namespace {
 // 共通音声
 //=============================================================
 void AudioCatalog::LoadCommonAudios() {
-	LoadAudioIfNeeded_("cursor", "cursor.wav");
-	LoadAudioIfNeeded_("decision", "decision.wav");
+	LoadAudioIfNeeded_("cursor", "cursor.wav"); // カーソル
+	LoadAudioIfNeeded_("decision", "decision.wav"); // 決定
 }
 
 //=============================================================
 // タイトル音声
 //=============================================================
 void AudioCatalog::LoadTitleAudios() {
-	LoadCommonAudios();
-	LoadAudioIfNeeded_("title", "title.wav");
+	//////////////////////////////////////
+	LoadCommonAudios(); // 共通音声もロード
+	//////////////////////////////////////
+	LoadAudioIfNeeded_("title", "title.wav"); // タイトルBGM
 }
 
 //=============================================================
 // ゲーム本編音声
 //=============================================================
 void AudioCatalog::LoadGameAudios() {
-	LoadCommonAudios();
+	//////////////////////////////////////
+	LoadCommonAudios(); // 共通音声もロード
+	//////////////////////////////////////
 	LoadAudioIfNeeded_("pause", "pause.wav"); // ポーズ
 	LoadAudioIfNeeded_("playBGM", "playBGM.wav"); // ゲーム本編BGM
 	LoadAudioIfNeeded_("surprise", "surprise.wav"); // !マーク
@@ -39,5 +43,7 @@ void AudioCatalog::LoadGameAudios() {
 // リザルト音声
 //=============================================================
 void AudioCatalog::LoadResultAudios() {
-	LoadCommonAudios();
+	//////////////////////////////////////
+	LoadCommonAudios(); // 共通音声もロード
+	//////////////////////////////////////
 }
