@@ -88,29 +88,51 @@ float fbm(float3 p)
 
 float4 main(PSIn i) : SV_TARGET
 {
-    // ===== ノイズ座標 =====
+    // =========================================================
+    // カメラ前後方向に対する位置を使って、
+    // 「奥で生まれて手前へ流れてくる」見え方を作る
+    // =========================================================
+
+    float3 toPoint = i.worldPos - CenterWS;
+    float depthAlongView = dot(toPoint, CamFwdWS); // カメラ前後方向の相対距離
+    float sideAmount = length(toPoint - CamFwdWS * depthAlongView);
+
+    // ノイズ座標
     float3 p = i.worldPos;
 
-    // 画面手前へ流す（-CamFwd） + ちょい上昇
-    float3 flow = (-CamFwdWS) * FlowSpeed + float3(0, 1, 0) * RiseSpeed;
+    // 手前方向へ流す
+    float3 flow = (-CamFwdWS) * FlowSpeed + float3(0.0f, 1.0f, 0.0f) * RiseSpeed;
     p += flow * Time;
 
-    // モクモク：大きい塊 + 細部
+    // ベースノイズ
     float baseN = fbm(p * BaseScale);
     float detailN = fbm(p * DetailScale);
 
-    // 雲化（閾値 + ぼかし）
+    // 雲化
     float cloud = smoothstep(Threshold - Softness, Threshold + Softness, baseN);
 
-    // ディテール混ぜ
-    float detail = smoothstep(0.35, 0.85, detailN);
-    cloud *= lerp(1.0, detail, saturate(DetailStrength));
+    // ディテール
+    float detail = smoothstep(0.35f, 0.85f, detailN);
+    cloud *= lerp(1.0f, detail, saturate(DetailStrength));
 
-    // スライス端の寄与を少し落とす（薄くなる）
-    float sliceFade = smoothstep(0.0, 0.12, i.sliceT) * (1.0 - smoothstep(0.88, 1.0, i.sliceT));
+    // =========================================================
+    // 奥側を濃く、手前へ来るほど少し薄くして
+    // 「奥から流れてくる」印象を強める
+    // =========================================================
+    float frontFade = 1.0f - smoothstep(-HalfSizeWS.z * 0.2f, HalfSizeWS.z, depthAlongView);
+    cloud *= lerp(0.65f, 1.0f, frontFade);
+
+    // =========================================================
+    // 横に広がりすぎると“停滞”っぽく見えるので、
+    // 外側を少し落として流線感を出す
+    // =========================================================
+    float sideFade = 1.0f - smoothstep(HalfSizeWS.x * 0.35f, HalfSizeWS.x, sideAmount);
+    cloud *= lerp(0.55f, 1.0f, sideFade);
+
+    // スライス端フェード
+    float sliceFade = smoothstep(0.0f, 0.12f, i.sliceT) * (1.0f - smoothstep(0.88f, 1.0f, i.sliceT));
     cloud *= sliceFade;
 
     float a = saturate(cloud * Density) * AlphaMax;
-
     return float4(SmokeColor, a);
 }

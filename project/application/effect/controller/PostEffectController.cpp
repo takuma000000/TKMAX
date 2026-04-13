@@ -125,6 +125,11 @@ namespace TKM {
 		Vector3 right{ camW.m[0][0], camW.m[0][1], camW.m[0][2] };
 		Vector3 up{ camW.m[1][0], camW.m[1][1], camW.m[1][2] };
 		Vector3 fwd{ camW.m[2][0], camW.m[2][1], camW.m[2][2] };
+		Vector3 camPos{
+			camW.m[3][0],
+			camW.m[3][1],
+			camW.m[3][2]
+		};
 		// カメラのビュー射影行列を取得
 		Matrix4x4 vp = activeCamera->GetViewProjectionMatrix();
 
@@ -132,10 +137,10 @@ namespace TKM {
 		//if (fogVolume3D_) {
 		//	fogVolume3D_->Draw(vp, right, up, fwd);
 		//}
+		// 
 		// SmokeVolume（空間スモーク）
-		if (smokeVolume3D_) {
-			smokeVolume3D_->Draw(vp, right, up, fwd);
-		}
+		smokeVolume3D_->Draw(vp, right, up, fwd);
+
 	}
 
 	void PostEffectController::ImGuiDebug() {

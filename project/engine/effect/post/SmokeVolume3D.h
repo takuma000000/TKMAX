@@ -17,12 +17,12 @@ namespace TKM {
 
 			// 見た目
 			Vector3 color_{ 0.92f, 0.92f, 0.92f };
-			float density_ = 0.12f;
+			float density_ = 0.30f;
 
 			uint32_t sliceCount_ = 57;
 
 			// ノイズ（モクモク）
-			float baseScale_ = 0.124f;        // 大きい塊
+			float baseScale_ = 0.073f;        // 大きい塊
 			float detailScale_ = 0.741f;      // 細かいディテール
 			float detailStrength_ = 0.33f;   // 0..1
 
@@ -39,6 +39,12 @@ namespace TKM {
 			// ノイズ座標の基準
 			float worldScale_ = 1.0f;
 			Vector3 worldPos_{ 0.0f, 0.0f, 0.0f }; // 基本 centerWS に同期
+
+			// 前方から手前へ流す
+			bool scrollForward_ = true;    // Z方向スクロールを有効にするか
+			float scrollSpeed_ = 40.0f;    // 手前へ流れる速度
+			float resetZ_ = 220.0f;        // 奥へ戻すZ位置
+			float frontLimitZ_ = -120.0f;  // 手前に来すぎたらリセットする位置
 		};
 
 		/// <summary>
@@ -81,6 +87,15 @@ namespace TKM {
 		/// </summary>
 		/// <param name="desc">設定するパラメータ</param>
 		void SetDesc(const Desc& desc) { desc_ = desc; }
+		/// <summary>
+		/// カメラ情報を設定
+		/// </summary>
+		/// <param name="cameraPos">カメラ位置</param>
+		/// <param name="cameraFwd">カメラ前方向</param>
+		void SetCameraTransform(const Vector3& cameraPos, const Vector3& cameraFwd) {
+			cameraPos_ = cameraPos;
+			cameraFwd_ = cameraFwd;
+		}
 		// =============================================
 		// Getter=======================================
 		/// <summary>
@@ -107,5 +122,10 @@ namespace TKM {
 		// タイマー
 		//==============================================
 		float time_ = 0.0f; // 経過時間。ノイズのアニメーションや流れの計算に使用します。
+		//==============================================
+		// カメラ情報（追従する場合に使用）
+		//==============================================
+		Vector3 cameraPos_{ 0.0f, 0.0f, 0.0f }; // カメラ位置
+		Vector3 cameraFwd_{ 0.0f, 0.0f, 1.0f }; // カメラ前方向（正面が0度、右が90度、左が-90度、後ろが180度/-180度）
 	};
 }

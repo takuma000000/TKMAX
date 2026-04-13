@@ -15,6 +15,14 @@ namespace TKM {
 
 	void SmokeVolume3D::Update(float dt) {
 		time_ += dt;
+
+		if (desc_.scrollForward_) {
+			desc_.centerWS_.z -= desc_.scrollSpeed_ * dt;
+
+			if (desc_.centerWS_.z < desc_.frontLimitZ_) {
+				desc_.centerWS_.z = desc_.resetZ_;
+			}
+		}
 	}
 
 	void SmokeVolume3D::Draw(const Matrix4x4& viewProj, const Vector3& camRightWS, const Vector3& camUpWS, const Vector3& camFwdWS) {
