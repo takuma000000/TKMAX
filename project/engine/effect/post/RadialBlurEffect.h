@@ -36,6 +36,20 @@ namespace TKM {
 		/// <returns></returns>
 		bool IsActive() const { return active_; }
 
+		/// <summary>
+		/// 手動制御を解除します。
+		/// </summary>
+		void ClearManualBlur();
+
+		// Setters===================================
+		/// <summary>
+		/// 手動で放射ブラーの有効・無効を設定します。
+		/// </summary>
+		/// <param name="enable"></param>
+		/// <param name="strength"></param>
+		void SetManualBlur(bool enable, float strength = 1.0f);
+		// ==========================================
+
 	private:	
 		//==============================================
 		// 状態
@@ -50,5 +64,10 @@ namespace TKM {
 		// 設定
 		//==============================================
 		float maxStrength_ = 1.0f; // エフェクトの最大強度
+		//==============================================
+		// 手動制御
+		//==============================================
+		bool manualControl_ = false;   // 手動制御中か
+		float manualStrength_ = 1.0f;  // 手動時の強度
 	};
 }

@@ -78,7 +78,7 @@ void GameClearScene::Initialize() {
 	clearSprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, "./resources/texture/clear.png");
 	clearSprite_->SetAnchorPoint({ 0.5f, 0.5f }); // 中心を基準にする
 	clearSprite_->SetPosition({ WindowsAPI::kClientWidth_ * 0.5f, WindowsAPI::kClientHeight_ * 0.5f }); // 画面中央に配置
-	clearSprite_->SetColor({ 1,1,1,1 }); // 白で表示
+	clearSprite_->SetColor({ 1.0f, 1.0f, 1.0f, 0.0f }); // 最初は透明
 
 	// ─────────────────────
 	// 画面遷移アイリス（他シーンと同じ仕様）
@@ -113,11 +113,19 @@ void GameClearScene::Initialize() {
 	rippleEffect_ = std::make_unique<TKM::WaterRippleEffect>();
 	rippleEffect_->Initialize(dxCommon_);
 	dxCommon_->SetWaterRippleEffect(rippleEffect_.get());
+
+	// ─────────────────────
+	// ポストエフェクト
+	// ─────────────────────
+	postFx_ = std::make_unique<TKM::PostEffectController>();
+	postFx_->Initialize(dxCommon_, player_.get(), nullptr);
+	// クリアシーンでは、放射ブラーを手動でONにしておく（決定時の一瞬だけ出す）
+	blurReleased_ = false;
 }
 
 void GameClearScene::Finalize() {
-	dxCommon_->SetWaterRippleEffect(nullptr);
-
+	dxCommon_->SetWaterRippleEffect(nullptr); // DirectXCommonから波紋エフェクトの参照を外す（安全のため）
+	postFx_->Finalize(); // ポストエフェクトの終了処理（全シーン共通）
 	AudioManager::GetInstance()->Finalize(); // オーディオマネージャの終了処理（全シーン共通）
 }
 
@@ -176,27 +184,68 @@ void GameClearScene::Update() {
 	// ─────────────────────
 	// カメラ
 	// ─────────────────────
-	if (enableCameraIntro_) { // ジェットコースター演出
-		cameraMoveTime_ += dt_; // 移動開始からの経過時間を更新
-		
-		// tは0〜1の範囲で、移動開始から終了までの割合を表す
+	if (enableCameraIntro_) {
+		cameraMoveTime_ += dt_;
+
 		float t = cameraMoveTime_ / cameraMoveDuration_;
-		// 念のため0〜1にクランプ（オーバーしたら最後まで行ったことにする）
 		t = std::clamp(t, 0.0f, 1.0f);
 
-		// 位置は OutBack で少し通り過ぎて戻る
+		// OutBackで一度終点に到達 → その後オーバーシュート
 		float posT = Ease::Eval(cameraPosEaseType_, t);
-		// 回転は OutSine で自然に止める
 		float rotT = Ease::Eval(cameraRotEaseType_, t);
 
-		Vector3 camPos = MyMath::Vector3Lerp(cameraStartPos_, cameraEndPos_, posT); // 線形補間でカメラ位置を計算
-		Vector3 camRot = MyMath::Vector3Lerp(cameraStartRot_, cameraEndRot_, rotT); // 線形補間でカメラ回転を計算
+		Vector3 camPos = MyMath::Vector3Lerp(cameraStartPos_, cameraEndPos_, posT);
+		Vector3 camRot = MyMath::Vector3Lerp(cameraStartRot_, cameraEndRot_, rotT);
 
-		camera_->SetTranslate(camPos); // カメラ位置を設定
-		camera_->SetRotate(camRot); // カメラ回転を設定
-	} else { // ジェットコースター演出オフなら最初から最後の位置・回転
+		camera_->SetTranslate(camPos);
+		camera_->SetRotate(camRot);
+
+		// ─────────────────────
+		// クリアスプライト表示OFF
+		// 「カメラが動いている間は」非表示
+		// ─────────────────────
+		isClearSpriteVisible_ = false;
+
+		// ─────────────────────
+		// ブラー制御
+		// 「終点に一度到達するまで」ずっとON
+		// posT が 1.0f に達した瞬間に解除
+		// ─────────────────────
+		if (postFx_) {
+			if (!blurReleased_) {
+				if (posT < 1.0f) {
+					postFx_->SetRadialBlurManual(true, cameraBlurStrength_);
+				} else {
+					postFx_->SetRadialBlurManual(false, 0.0f);
+					blurReleased_ = true;
+				}
+			} else {
+				postFx_->SetRadialBlurManual(false, 0.0f);
+			}
+		}
+
+		// ─────────────────────
+		// カメラ演出終了判定
+		// 「最後まで到達したら」通常状態へ
+		// ─────────────────────
+		if (t >= 1.0f) {
+			enableCameraIntro_ = false; // カメラ演出終了
+			isClearSpriteVisible_ = true; // カメラ演出が終わったらクリアスプライト表示ON
+			isClearSpriteFadePlaying_ = true; // 表示演出開始
+			clearSpriteFadeTime_ = 0.0f; // 演出時間リセット
+			clearSprite_->SetColor({ 1.0f, 1.0f, 1.0f, 0.0f }); // 演出開始時は透明
+		}
+	} else {
 		camera_->SetTranslate(cameraEndPos_); // カメラ位置
 		camera_->SetRotate(cameraEndRot_); // カメラ回転
+
+		// ブラーは常にOFF
+		if (postFx_) {
+			postFx_->SetRadialBlurManual(false, 0.0f);
+		}
+
+		// クリアスプライト表示ON（カメラ演出が終わったら表示する）
+		isClearSpriteVisible_ = true;
 	}
 	camera_->Update();
 
@@ -204,6 +253,11 @@ void GameClearScene::Update() {
 	// ライト更新
 	// ─────────────────────
 	dirLight_->Update();
+
+	// ─────────────────────
+	// ポストエフェクト更新
+	postFx_->Update(dt_, nullptr);
+	// ─────────────────────
 
 	// ─────────────────────
 	// Skybox回転（GameOverSceneと同じノリ）
@@ -223,7 +277,30 @@ void GameClearScene::Update() {
 	player_->SetRotation(playerDisplayRot_); // クリア画面での表示回転
 	player_->UpdateVisualOnly(dt_); // 入力やゲームプレイ処理は全部止めて、見た目用の更新だけ行う
 
-	// クリア表示はアイリス開閉中もずっと出てるので、スプライトも更新しておく
+	// ─────────────────────
+	// クリアスプライト表示演出
+	// サイズは触らず、アルファだけイージング
+	// ─────────────────────
+	if (isClearSpriteVisible_) { // カメラ演出が終わってから表示する
+		// 演出中はアルファをイージングで変化させる
+		if (isClearSpriteFadePlaying_) {
+			clearSpriteFadeTime_ += dt_; // 演出時間を進める
+
+			// 演出時間を0.0～1.0の範囲に正規化
+			float t = clearSpriteFadeTime_ / clearSpriteFadeDuration_;
+			t = std::clamp(t, 0.0f, 1.0f);
+			// イージングでアルファ値を計算
+			float alpha = Ease::Eval(clearSpriteFadeEaseType_, t);
+			clearSprite_->SetColor({ 1.0f, 1.0f, 1.0f, alpha });
+			// 演出終了判定
+			if (t >= 1.0f) {
+				isClearSpriteFadePlaying_ = false;
+				clearSprite_->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
+			}
+		} else {
+			clearSprite_->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f }); // 演出が終わったら完全に不透明
+		}
+	}
 	clearSprite_->Update();
 
 	// メニューはアイリス開閉中は更新しない（操作できないようにするため）
@@ -243,7 +320,11 @@ void GameClearScene::Draw() {
 
 	// --- 2Dスプライト（文字など）---
 	TKM::SpriteCommon::GetInstance()->DrawSetCommon();
-	clearSprite_->Draw();
+
+	if (isClearSpriteVisible_) {
+		clearSprite_->Draw(); // 「GAME CLEAR」スプライトは、カメラ演出が終わってから描画する
+	}
+
 	// アイリスは一番手前
 	if ((irisOpening_ || irisClosing_)) {
 		iris_->Draw();

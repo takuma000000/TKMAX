@@ -93,6 +93,13 @@ private:
 	//======================================================================
 	// 「GAME CLEAR」用スプライト
 	std::unique_ptr<TKM::Sprite> clearSprite_;
+	// クリアスプライト表示ON/OFFフラグ（カメラ演出が終わるまではOFF）
+	bool isClearSpriteVisible_ = false;
+	// クリアスプライト表示演出（アルファだけイージング）
+	bool isClearSpriteFadePlaying_ = false; // フェード演出中か
+	float clearSpriteFadeTime_ = 0.0f; // フェード演出経過時間
+	float clearSpriteFadeDuration_ = 0.35f; // フェード演出時間
+	Ease::Type clearSpriteFadeEaseType_ = Ease::Type::OutSine; // フェード演出のイージングタイプ
 	//======================================================================
 	// アイリス遷移
 	//======================================================================
@@ -121,6 +128,7 @@ private:
 	// ポストエフェクト
 	//======================================================================
 	std::unique_ptr<TKM::WaterRippleEffect> rippleEffect_ = nullptr; // 決定時の波紋
+	std::unique_ptr<TKM::PostEffectController> postFx_ = nullptr;    // クリア画面用ポストエフェクト
 	//======================================================================
 	// クリアシーン用カメラ演出
 	//======================================================================
@@ -135,4 +143,7 @@ private:
 
 	Ease::Type cameraPosEaseType_ = Ease::Type::OutBack; // 位置：少し通り過ぎて戻る
 	Ease::Type cameraRotEaseType_ = Ease::Type::OutSine; // 回転：自然に止める
+
+	bool blurReleased_ = false;          // 一度終点に到達してブラー解除済みか
+	float cameraBlurStrength_ = 0.85f;   // クリアシーン中の固定ブラー強度
 };

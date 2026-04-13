@@ -20,14 +20,37 @@ namespace TKM {
 		duration_ = duration; // エフェクトの持続時間を設定
 	}
 
+	void RadialBlurEffect::SetManualBlur(bool enable, float strength) {
+		// 手動制御を有効にして、エフェクトの状態を設定
+		manualControl_ = true;
+		active_ = enable;
+		manualStrength_ = strength;
+		maxStrength_ = strength;
+
+		if (!enable) {
+			timer_ = 0.0f; // エフェクトを無効にする場合はタイマーもリセット
+		}
+	}
+
+	void RadialBlurEffect::ClearManualBlur() {
+		manualControl_ = false; // 手動制御を解除
+		active_ = false; // エフェクトを無効にする
+		timer_ = 0.0f; // タイマーもリセット
+	}
+
 	void RadialBlurEffect::Update(float dt) {
+		// 手動制御中は timer_ で切らない
+		if (manualControl_) {
+			maxStrength_ = manualStrength_;
+			return;
+		}
+
 		if (!active_) { return; }
 
 		timer_ += dt;
 
-		// エフェクトの強度は、経過時間に応じて0からmaxStrength_まで変化させる（例: 線形に減衰させる）
 		if (timer_ >= duration_) {
-			active_ = false; // エフェクトの持続時間を超えたら無効にする
+			active_ = false;
 		}
 	}
 

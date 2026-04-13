@@ -103,6 +103,18 @@ namespace TKM {
 		fog_->SetWorldPos(camPos);
 	}
 
+	void PostEffectController::SetRadialBlurManual(bool enable, float strength) {
+		if (radialBlur_) {
+			radialBlur_->SetManualBlur(enable, strength); // 手動で放射ブラーの有効・無効を設定
+		}
+	}
+
+	void PostEffectController::ClearRadialBlurManual() {
+		if (radialBlur_) {
+			radialBlur_->ClearManualBlur(); // 手動制御を解除
+		}
+	}
+
 	void PostEffectController::DrawVolumes(TKM::Camera* activeCamera) {
 		if (!activeCamera) {
 			return;

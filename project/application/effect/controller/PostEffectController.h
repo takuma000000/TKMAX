@@ -59,6 +59,18 @@ namespace TKM {
 		/// <param name="activeCamera">現在有効なカメラ</param>
 		void OnCameraUpdated(TKM::Camera* activeCamera);
 
+		/// <summary>
+		/// 放射ブラーの手動制御を解除します。
+		/// </summary>
+		void ClearRadialBlurManual();
+
+		// Setters========================================
+		/// <summary>
+		/// 手動で放射ブラーをON/OFFします。
+		/// </summary>
+		void SetRadialBlurManual(bool enable, float strength = 1.0f);
+		// ===============================================
+
 	private:
 		//==============================
 		// 参照
