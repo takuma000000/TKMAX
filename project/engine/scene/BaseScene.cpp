@@ -3,6 +3,7 @@
 #include <vector>
 #include <algorithm>
 #include <cwchar>
+#include "SceneManager.h"
 
 #pragma comment(lib, "pdh.lib")
 
@@ -32,6 +33,38 @@ namespace TKM {
 	void BaseScene::DrawSprite() {}
 
 	void BaseScene::DrawBack() {}
+
+	void BaseScene::ImGuiSceneChanger() {
+#ifdef USE_IMGUI
+		if (!sceneManager_) {
+			return;
+		}
+
+		ImGui::Begin("シーン移動");
+
+		static int currentSceneIndex = 0;
+
+		const char* sceneNames[] = {
+			"TITLE",
+			"GAME",
+			"CLEAR",
+			"OVER"
+		};
+
+		ImGui::Combo(
+			"移動先",
+			&currentSceneIndex,
+			sceneNames,
+			IM_ARRAYSIZE(sceneNames)
+		);
+
+		if (ImGui::Button("シーン移動")) {
+			sceneManager_->ChangeScene(sceneNames[currentSceneIndex]);
+		}
+
+		ImGui::End();
+#endif
+	}
 
 	void BaseScene::UpdatePerformanceInfo() {
 #ifdef USE_IMGUI
@@ -246,6 +279,9 @@ namespace TKM {
 		}
 
 		ImGui::End();
+
+		// シーン遷移
+		ImGuiSceneChanger();
 #endif
 	}
 

@@ -43,4 +43,13 @@ namespace TKM {
 			scene_->Finalize(); // 現在のシーンの終了処理
 		}
 	}
+
+	void SceneManager::ChangeScene(const std::string& sceneName) {
+		if (!sceneFactory_) { // シーンファクトリーがセットされていない場合は切り替えできない
+			return;
+		}
+
+		// シーンファクトリーを使って新しいシーンを生成し、次のシーンとしてセット
+		SetNextScene(sceneFactory_->CreateScene(sceneName));
+	}
 }

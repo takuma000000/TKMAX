@@ -4,12 +4,14 @@
 #include "ImGuiManager.h"
 #include "SceneManager.h"
 #include "AudioCatalog.h"
-
+#include <cmath>
 #include "ModelManager.h"
 #include "Object3dCommon.h"
 #include "WindowsAPI.h"
 
-#include <cmath>
+#ifdef USE_IMGUI
+#include "imgui.h"
+#endif
 
 using namespace TKM;
 
@@ -62,12 +64,9 @@ void GameClearScene::Initialize() {
 	player_->SetCamera(camera_.get());
 	player_->SetControlEnabled(false);  // 入力&通常ゲーム処理を全部止める
 	player_->SetReticleVisible(false);  // レティクルは要らないので非表示
-	// 画面左外からスタート
-	player_->SetPosition(planeStart_);
-	// 正面(+Z)向きで開始
-	player_->SetRotation({ 0.0f, 0.0f, 0.0f });
-	// お祝いだからジェット噴射ON
-	player_->SetEnableJetSmoke(true);
+	player_->SetEnableJetSmoke(true); // ジェットスモークは出す？出さない？
+	player_->SetPosition(playerDisplayPos_); // クリア画面での表示位置
+	player_->SetRotation(playerDisplayRot_); // クリア画面での表示回転
 	// 時間リセット
 	planeTime_ = 0.0f;
 
@@ -191,50 +190,22 @@ void GameClearScene::Update() {
 	skybox_->SetRotation({ skyPitch_, 0.0f, 0.0f });
 
 	// ─────────────────────
-	// 自機ジェットコースター演出
+	// 自機クリア演出更新
 	// ─────────────────────
-	planeTime_ += dt_;
+	player_->SetPosition(playerDisplayPos_); // クリア画面での表示位置
+	player_->SetRotation(playerDisplayRot_); // クリア画面での表示回転
+	player_->UpdateVisualOnly(dt_); // 入力やゲームプレイ処理は全部止めて、見た目用の更新だけ行う
 
-	// 左画面外 → 右画面外 への進行度（0〜1）
-	float rawT = planeTime_ / planeDuration_;
-	float t = std::min(rawT, 1.0f);
-
-	// 少しイージング（0→1がヌルっとなる）：t^2(3-2t) = smoothstep
-	float tSmooth = t * t * (3.0f - 2.0f * t);
-
-	// 左から右へ：Xだけは一方通行でスーッと抜ける
-	Vector3 pos;
-	pos.x = MyMath::Lerp(planeStart_.x, planeEnd_.x, tSmooth);
-
-	// wave は 0〜1 をループさせて、何度も上下グルグルさせる
-	float wave = std::fmod(rawT, 1.0f);
-	if (wave < 0.0f) wave += 1.0f;
-
-	// 上下：ちょっと大きめに跳ねさせて「喜んでる」感じ
-	pos.y = 1.0f + std::sin(wave * MyMath::GetPI() * 4.0f) * 2.0f;
-	// 奥行き：手前/奥にふわっと
-	pos.z = planeStart_.z + std::cos(wave * MyMath::GetPI() * 2.0f) * 2.5f;
-
-	// 回転：ロールを大きめに、ピッチも加えてぐるぐる
-	float roll = std::sin(wave * MyMath::GetPI() * 6.0f) * 1.6f; // くるくる
-	float pitch = std::cos(wave * MyMath::GetPI() * 3.0f) * 0.5f; // ちょい前後
-	float yaw = std::sin(wave * MyMath::GetPI() * 2.0f) * 0.3f; // 少し左右にも振る
-
-	// t が 1 を超えたら、さらに少しだけ右方向へ飛び出して画面外へ消えていく
-	if (rawT > 1.0f) {
-		float extra = (rawT - 1.0f) * 15.0f; // 右へさらに移動
-		pos.x = planeEnd_.x + extra;
-	}
-
-	// GameClearScene が計算した「画面外→画面外」の軌道＆くるくる回転を反映
-	player_->SetPosition(pos);
-	player_->SetRotation({ pitch, yaw, roll });
-	// ゲームプレイ処理なしで行列だけ更新する
-	player_->UpdateVisualOnly(dt_);
+	// クリア表示はアイリス開閉中もずっと出てるので、スプライトも更新しておく
 	clearSprite_->Update();
 
 	// メニューはアイリス開閉中は更新しない（操作できないようにするため）
 	UpdatePerformanceInfo();
+
+	// ─────────────────────
+	// ImGuiデバッグ
+	// ─────────────────────
+	ImGuiDebug();
 }
 
 void GameClearScene::Draw() {
@@ -251,4 +222,18 @@ void GameClearScene::Draw() {
 		iris_->Draw();
 	}
 	clearMenu_->Draw();
+}
+
+void GameClearScene::ImGuiDebug() {
+#ifdef USE_IMGUI
+	ImGui::Begin("プレイヤー情報");
+
+	ImGui::Text("位置調整");
+	ImGui::DragFloat3("表示位置", &playerDisplayPos_.x, 0.05f);
+	ImGui::DragFloat3("表示回転", &playerDisplayRot_.x, 0.01f);
+
+	ImGui::End();
+
+	ImGuiDebugInfo(); // パフォーマンス情報デバッグ
+#endif
 }

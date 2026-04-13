@@ -3,6 +3,7 @@
 #include "DirectXCommon.h"
 #include "AbstractSceneFactory.h"
 #include <memory>
+#include <string>
 
 //=============================================================
 // SceneManagerクラス
@@ -41,6 +42,10 @@ namespace TKM {
 		/// 終了要求が出ているか
 		/// </summary>
 		bool IsQuitRequested() const { return quitRequested_; }
+		/// <summary>
+		/// シーン名を指定して次のシーンへ切り替えます
+		/// </summary>
+		void ChangeScene(const std::string& sceneName);
 
 		// Setter========================================
 		/// <summary>

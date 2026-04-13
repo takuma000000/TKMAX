@@ -53,6 +53,11 @@ namespace TKM {
 		/// </summary>
 		virtual void DrawBack();
 
+		/// <summary>
+		/// ImGuiでシーン遷移UIを表示します。
+		/// </summary>
+		void ImGuiSceneChanger();
+
 		// Setter========================================
 		/// <summary>
 		/// </summary>シーンマネージャを設定します。
