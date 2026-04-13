@@ -1222,75 +1222,153 @@ namespace TKM {
 			p.currentTime_ = 0.0f;
 
 			p.color_ = { frand(0.95f, 1.0f), frand(0.15f, 0.35f), frand(0.95f, 1.0f), 1.0f };
-		} else if (groupName == "boss_slash_windup_line") {
-			// 刃が形成される線エネルギー（前方に伸びる感じ）
-			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
-
-			// 生成位置：中心近くで細長くバラける
-			std::uniform_real_distribution<float> ox(-0.55f, 0.55f);
-			std::uniform_real_distribution<float> oy(-0.20f, 0.20f);
-			std::uniform_real_distribution<float> oz(-0.35f, 0.35f);
-			Vector3 o = { ox(rng), oy(rng), oz(rng) };
-			p.transform_.translate_ = center + o;
-
-			// ちょい前方へ流す（※向きはBossController側で center を“前に出す”とよりそれっぽい）
-			p.velocity_ = { frand(-0.05f, 0.05f), frand(-0.03f, 0.06f), frand(0.65f, 1.35f) };
-
-			// 細長い筋（gradationLine を想定）
-			float scX = frand(0.25f, 0.55f);
-			float scY = frand(0.25f, 0.55f);
-			float scZ = frand(3.5f, 7.5f);
-			p.transform_.scale_ = { scX, scY, scZ };
-
-			p.lifeTime_ = frand(0.18f, 0.32f);
-			p.currentTime_ = 0.0f;
-
-			// 邪悪：深紅〜黒紫（ミサイルの綺麗紫と差別化）
-			p.color_ = { frand(0.85f, 1.0f), frand(0.00f, 0.08f), frand(0.15f, 0.50f), 1.0f };
-		} else if (groupName == "boss_slash_windup_spark") {
-			// バチバチ：邪悪スパーク（短命）
-			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
-
-			std::uniform_real_distribution<float> off(-0.45f, 0.45f);
-			Vector3 o = { off(rng), off(rng) * 0.25f, off(rng) };
-			p.transform_.translate_ = center + o;
-
-			// 外へ散る
-			Vector3 dir = MyMath::Normalize(o);
-			float spd = frand(0.55f, 1.55f);
-			p.velocity_ = dir * spd;
-
-			float sc = frand(0.40f, 1.05f);
-			p.transform_.scale_ = { sc, sc, sc };
-
-			p.lifeTime_ = frand(0.08f, 0.15f);
-			p.currentTime_ = 0.0f;
-
-			// 8割：紅紫 / 2割：毒っぽい緑（邪悪感UP、不要なら消してOK）
-			float r = frand(0.0f, 1.0f);
-			if (r < 0.80f) {
-				p.color_ = { 1.0f, frand(0.03f, 0.12f), frand(0.25f, 0.75f), 1.0f };
-			} else {
-				p.color_ = { frand(0.15f, 0.35f), 1.0f, frand(0.10f, 0.25f), 1.0f };
-			}
-		} else if (groupName == "boss_slash_windup_arc") {
-			// 弧の輪郭（リングで一瞬だけ出す）
-			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
+		} else if (groupName == "boss_slash_omen_core") {
+			// 中心の邪核：暗い中心と、赤黒い縁の圧縮核
+			auto frand = [&rng](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
 
 			p.transform_.translate_ = center;
-
-			// 弧を大きめに（RINGなのでスケール大きめでも破綻しにくい）
-			float sc = frand(10.0f, 16.0f);
-			p.transform_.scale_ = { sc, sc, sc };
-
-			// ほぼ静止（輪郭なので）
 			p.velocity_ = { 0.0f, 0.0f, 0.0f };
 
-			p.lifeTime_ = frand(0.12f, 0.20f);
+			float sc = frand(5.5f, 8.5f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.10f, 0.16f);
 			p.currentTime_ = 0.0f;
 
-			// 血の結界っぽい色
-			p.color_ = { frand(0.90f, 1.0f), frand(0.00f, 0.06f), frand(0.10f, 0.28f), 1.0f };
+			float t = frand(0.0f, 1.0f);
+			p.color_ = {
+				0.16f + 0.12f * t,
+				0.01f + 0.02f * t,
+				0.08f + 0.18f * t,
+				0.98f
+			};
+
+		} else if (groupName == "boss_slash_omen_inward") {
+			// 周囲から核へ吸い込まれる瘴気粒
+			auto frand = [&rng](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			float ang = frand(0.0f, 6.2831853f);
+			float rad = frand(8.0f, 18.0f);
+
+			Vector3 start = center + Vector3{
+				std::cos(ang) * rad,
+				frand(-5.5f, 5.5f),
+				std::sin(ang) * rad
+			};
+
+			p.transform_.translate_ = start;
+
+			Vector3 toCenter = center - start;
+			if (MyMath::Length(toCenter) > 0.001f) {
+				toCenter = MyMath::Normalize(toCenter);
+			} else {
+				toCenter = { 0.0f, 0.0f, 1.0f };
+			}
+
+			Vector3 swirl = { -toCenter.z, frand(-0.18f, 0.18f), toCenter.x };
+			p.velocity_ =
+				toCenter * frand(1.00f, 1.90f) +
+				swirl * frand(0.18f, 0.40f);
+
+			float sc = frand(0.30f, 0.85f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.28f, 0.52f);
+			p.currentTime_ = 0.0f;
+
+			float c = frand(0.0f, 1.0f);
+			p.color_ = {
+				0.30f + 0.18f * c,
+				0.02f + 0.04f * c,
+				0.07f + 0.18f * c,
+				0.88f
+			};
+
+		} else if (groupName == "boss_slash_omen_ring") {
+			// 核を拘束する禍々しい輪
+			auto frand = [&rng](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			p.transform_.translate_ = center;
+			p.velocity_ = {
+				frand(-0.02f, 0.02f),
+				frand(-0.01f, 0.03f),
+				frand(-0.02f, 0.02f)
+			};
+
+			float sc = frand(8.0f, 16.0f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.28f, 0.48f);
+			p.currentTime_ = 0.0f;
+
+			float t = frand(0.0f, 1.0f);
+			p.color_ = {
+				0.68f + 0.22f * t,
+				0.01f + 0.03f * t,
+				0.12f + 0.22f * t,
+				0.95f
+			};
+
+		} else if (groupName == "boss_slash_omen_crack") {
+			// 空間の裂け目：細く長い、鋭い筋
+			auto frand = [&rng](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			std::uniform_real_distribution<float> off(-3.8f, 3.8f);
+			Vector3 o = {
+				off(rng),
+				frand(-0.55f, 0.55f),
+				off(rng)
+			};
+			p.transform_.translate_ = center + o;
+
+			Vector3 dir = { frand(-0.20f, 0.20f), frand(-0.08f, 0.12f), frand(0.70f, 1.20f) };
+			p.velocity_ = dir * frand(0.08f, 0.18f);
+
+			float thin = frand(0.06f, 0.16f);
+			float len = frand(6.0f, 13.5f);
+			p.transform_.scale_ = { thin, thin, len };
+
+			p.lifeTime_ = frand(0.10f, 0.18f);
+			p.currentTime_ = 0.0f;
+
+			float t = frand(0.0f, 1.0f);
+			p.color_ = {
+				0.90f + 0.10f * t,
+				0.02f + 0.04f * t,
+				0.10f + 0.22f * t,
+				1.0f
+			};
+
+		} else if (groupName == "boss_slash_omen_pulse") {
+			// 発射直前に核の外側で膨れる不穏な脈動
+			auto frand = [&rng](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			p.transform_.translate_ = center;
+			p.velocity_ = { 0.0f, frand(0.01f, 0.04f), 0.0f };
+
+			float sc = frand(4.0f, 7.5f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.07f, 0.12f);
+			p.currentTime_ = 0.0f;
+
+			float t = frand(0.0f, 1.0f);
+			p.color_ = {
+				1.00f,
+				0.10f + 0.10f * t,
+				0.18f + 0.16f * t,
+				0.96f
+			};
 		} else if (groupName == "bossSlash_cut") {
 			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
 

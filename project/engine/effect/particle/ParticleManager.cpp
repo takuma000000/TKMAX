@@ -197,6 +197,24 @@ namespace TKM {
 						(*particleIterator).transform_.scale_.y *= grow;
 						(*particleIterator).transform_.scale_.z *= grow;
 					}
+					if (g == "boss_slash_omen_core") {
+						float grow = 1.0f + 7.0f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.x *= grow;
+						(*particleIterator).transform_.scale_.y *= grow;
+						(*particleIterator).transform_.scale_.z *= grow;
+					}
+					if (g == "boss_slash_omen_ring") {
+						float grow = 1.0f + 11.0f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.x *= grow;
+						(*particleIterator).transform_.scale_.y *= grow;
+						(*particleIterator).transform_.scale_.z *= grow;
+					}
+					if (g == "boss_slash_omen_pulse") {
+						float grow = 1.0f + 16.0f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.x *= grow;
+						(*particleIterator).transform_.scale_.y *= grow;
+						(*particleIterator).transform_.scale_.z *= grow;
+					}
 
 					// アルファカーブ（“パァン”を作る）
 					float a = 1.0f - t;

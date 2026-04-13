@@ -272,16 +272,51 @@ void BossRecoverState::Update(TKM::IStateContext& ctx, float dt) {
 		}
 
 		if (auto* pm_ = TKM::ParticleManager::GetInstance()) { // パーティクルマネージャーが存在する場合は、チャージ中のエフェクトを出す
-			float t = 1.0f - (c.slashChargeTimer_ / c.slashChargeTime_); // チャージの進行度（0.0f～1.0f）
-			t = std::clamp(t, 0.0f, 1.0f); // チャージの進行度を0.0f～1.0fにクランプ
-			// チャージの進行度に応じて、エフェクトの量を増やす
-			int line_ = 2 + (int)(t * 8);
-			int spark_ = 1 + (int)(t * 4);
-			pm_->Emit("boss_slash_windup_line", p_, line_); // スラッシュの発射位置からプレイヤーに向かう線のエフェクト
-			pm_->Emit("boss_slash_windup_spark", p_, spark_); // スラッシュの発射位置で火花が散るエフェクト
+			float t = 1.0f - (c.slashChargeTimer_ / c.slashChargeTime_);
+			t = std::clamp(t, 0.0f, 1.0f);
 
-			if ((c.slashChargeFrame_ % 3) == 0) { // チャージのフレームカウンターが3の倍数のときに、チャージの進行度に応じたエフェクトを出す
-				pm_->Emit("boss_slash_windup_arc", p_, 1); // スラッシュの発射位置から周囲に向かうアーク状のエフェクト
+			// プレイヤー方向へ少し前に出した位置を、予兆の中心にする
+			Vector3 omenCenter_ = p_;
+			Vector3 toTarget_ = c.slashTarget_ - p_;
+			float lenSq_ =
+				(toTarget_.x * toTarget_.x) +
+				(toTarget_.y * toTarget_.y) +
+				(toTarget_.z * toTarget_.z);
+
+			if (lenSq_ > 0.0001f) {
+				float invLen_ = 1.0f / std::sqrt(lenSq_);
+				toTarget_.x *= invLen_;
+				toTarget_.y *= invLen_;
+				toTarget_.z *= invLen_;
+				omenCenter_ += toTarget_ * 6.5f;
+			}
+
+			// 中心核は常に出す。後半ほど少し密度を上げる
+			int coreCount_ = 2 + static_cast<int>(t * 4.0f);
+			pm_->Emit("boss_slash_omen_core", omenCenter_, coreCount_);
+
+			// 周囲一帯から大きく吸い込む
+			int inwardCount_ = 18 + static_cast<int>(t * 22.0f);
+			pm_->Emit("boss_slash_omen_inward", omenCenter_, inwardCount_);
+
+			// 巨大な殻。序盤から出すが、後半で頻度を上げる
+			if ((c.slashChargeFrame_ % 5) == 0) {
+				pm_->Emit("boss_slash_omen_ring", omenCenter_, 2);
+			}
+			if (t > 0.45f && (c.slashChargeFrame_ % 3) == 0) {
+				pm_->Emit("boss_slash_omen_ring", omenCenter_, 2);
+			}
+
+			// 殻に亀裂が走る。中盤以降かなり増やす
+			if (t > 0.20f) {
+				int crackCount_ = 3 + static_cast<int>((t - 0.20f) * 14.0f);
+				pm_->Emit("boss_slash_omen_crack", omenCenter_, crackCount_);
+			}
+
+			// 終盤は内側から殻が膨れて破れそうになる
+			if (t > 0.55f) {
+				int pulseCount_ = 3 + static_cast<int>((t - 0.55f) * 18.0f);
+				pm_->Emit("boss_slash_omen_pulse", omenCenter_, pulseCount_);
 			}
 		}
 

@@ -95,13 +95,17 @@ namespace TKM {
 		// 内向きに吸い込まれる粒子
 		pm->CreateParticleGroup("boss_windup_inward", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
 
-		/// === Boss Slash Windup FX（斬撃の予備動作) ===
-		// 斬撃の軌道ライン
-		pm->CreateParticleGroup("boss_slash_windup_line", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
-		// 火花の欠片
-		pm->CreateParticleGroup("boss_slash_windup_spark", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// 斬撃のアーク状エネルギー
-		pm->CreateParticleGroup("boss_slash_windup_arc", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
+		/// === Boss Slash Omen FX（斬撃前の邪悪な予兆） ===
+		// 中心の邪核
+		pm->CreateParticleGroup("boss_slash_omen_core", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
+		// 周囲から吸い込まれる瘴気粒
+		pm->CreateParticleGroup("boss_slash_omen_inward", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
+		// 核を拘束する禍々しいリング
+		pm->CreateParticleGroup("boss_slash_omen_ring", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
+		// 空間が裂けるような細い亀裂
+		pm->CreateParticleGroup("boss_slash_omen_crack", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
+		// 発射直前の不穏な脈動
+		pm->CreateParticleGroup("boss_slash_omen_pulse", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
 
 		/// === Boss Slash Trail（斬撃の軌道）===
 		// 火花（間引き）
