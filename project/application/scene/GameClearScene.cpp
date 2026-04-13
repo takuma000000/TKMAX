@@ -38,10 +38,11 @@ void GameClearScene::Initialize() {
 	// カメラ
 	// ─────────────────────
 	camera_ = std::make_unique<TKM::Camera>();
-	// ちょい見下ろしで中央を見る
-	camera_->SetRotate({ 0.1f, 0.0f, 0.0f });
-	camera_->SetTranslate({ 0.0f, 3.0f, -20.0f });
+	camera_->SetRotate(cameraStartRot_); // カメラ回転
+	camera_->SetTranslate(cameraStartPos_); // カメラ位置
 	camera_->Update();
+
+	cameraMoveTime_ = 0.0f; // カメラ移動開始からの経過時間
 
 	// ─────────────────────
 	// ライト
@@ -173,10 +174,36 @@ void GameClearScene::Update() {
 	}
 
 	// ─────────────────────
-	// カメラ・ライト更新
+	// カメラ
 	// ─────────────────────
-	camera_->Update(); // カメラは特に動かないけど、行列更新は必要
-	dirLight_->Update(); // ライトも特に動かないけど、行列更新は必要
+	if (enableCameraIntro_) { // ジェットコースター演出
+		cameraMoveTime_ += dt_; // 移動開始からの経過時間を更新
+		
+		// tは0〜1の範囲で、移動開始から終了までの割合を表す
+		float t = cameraMoveTime_ / cameraMoveDuration_;
+		// 念のため0〜1にクランプ（オーバーしたら最後まで行ったことにする）
+		t = std::clamp(t, 0.0f, 1.0f);
+
+		// 位置は OutBack で少し通り過ぎて戻る
+		float posT = Ease::Eval(cameraPosEaseType_, t);
+		// 回転は OutSine で自然に止める
+		float rotT = Ease::Eval(cameraRotEaseType_, t);
+
+		Vector3 camPos = MyMath::Vector3Lerp(cameraStartPos_, cameraEndPos_, posT); // 線形補間でカメラ位置を計算
+		Vector3 camRot = MyMath::Vector3Lerp(cameraStartRot_, cameraEndRot_, rotT); // 線形補間でカメラ回転を計算
+
+		camera_->SetTranslate(camPos); // カメラ位置を設定
+		camera_->SetRotate(camRot); // カメラ回転を設定
+	} else { // ジェットコースター演出オフなら最初から最後の位置・回転
+		camera_->SetTranslate(cameraEndPos_); // カメラ位置
+		camera_->SetRotate(cameraEndRot_); // カメラ回転
+	}
+	camera_->Update();
+
+	// ─────────────────────
+	// ライト更新
+	// ─────────────────────
+	dirLight_->Update();
 
 	// ─────────────────────
 	// Skybox回転（GameOverSceneと同じノリ）

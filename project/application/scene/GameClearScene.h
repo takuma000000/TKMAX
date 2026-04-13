@@ -121,4 +121,18 @@ private:
 	// ポストエフェクト
 	//======================================================================
 	std::unique_ptr<TKM::WaterRippleEffect> rippleEffect_ = nullptr; // 決定時の波紋
+	//======================================================================
+	// クリアシーン用カメラ演出
+	//======================================================================
+	Vector3 cameraStartPos_ = { 0.0f, 8.0f, -100.0f };   // 開始時：かなり引いた位置
+	Vector3 cameraEndPos_ = { 0.0f, 3.0f, -20.0f };     // 終了時：今見せたい位置
+	Vector3 cameraStartRot_ = { 0.28f, 0.0f, 0.0f };    // 開始時：少し見下ろし強め
+	Vector3 cameraEndRot_ = { 0.1f, 0.0f, 0.0f };       // 終了時：今の角度
+
+	float cameraMoveTime_ = 0.0f;                       // カメラ演出経過時間
+	float cameraMoveDuration_ = 3.5f;                   // カメラ移動時間
+	bool  enableCameraIntro_ = true;                    // カメラ導入演出ON/OFF
+
+	Ease::Type cameraPosEaseType_ = Ease::Type::OutBack; // 位置：少し通り過ぎて戻る
+	Ease::Type cameraRotEaseType_ = Ease::Type::OutSine; // 回転：自然に止める
 };
