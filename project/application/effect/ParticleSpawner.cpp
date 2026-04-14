@@ -2471,20 +2471,24 @@ namespace TKM {
 			p.transform_.translate_ = center;
 			p.velocity_ = { 0.0f, 0.0f, 0.0f };
 
-			float sc = std::uniform_real_distribution<float>(2.2f, 3.8f)(rng);
+			float sc = std::uniform_real_distribution<float>(3.0f, 5.6f)(rng);
 			p.transform_.scale_ = { sc, sc, sc };
 
 			p.lifeTime_ = std::uniform_real_distribution<float>(0.18f, 0.28f)(rng);
 			p.currentTime_ = 0.0f;
 
-			// 白〜薄シアン〜薄紫の祝福光
+			// 白・シアン・紫・ピンク・金をランダム
 			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
-			if (t < 0.40f) {
+			if (t < 0.20f) {
 				p.color_ = { 1.0f, 1.0f, 1.0f, 1.0f };
-			} else if (t < 0.75f) {
-				p.color_ = { 0.75f, 0.95f, 1.0f, 1.0f };
+			} else if (t < 0.40f) {
+				p.color_ = { 0.55f, 0.92f, 1.0f, 1.0f };
+			} else if (t < 0.60f) {
+				p.color_ = { 0.95f, 0.70f, 1.0f, 1.0f };
+			} else if (t < 0.80f) {
+				p.color_ = { 1.0f, 0.75f, 0.88f, 1.0f };
 			} else {
-				p.color_ = { 1.0f, 0.85f, 1.0f, 1.0f };
+				p.color_ = { 1.0f, 0.92f, 0.45f, 1.0f };
 			}
 
 		} else if (groupName == "clearCelebrate_spark") {
@@ -2504,23 +2508,27 @@ namespace TKM {
 			dir.z = std::sin(a) * std::sin(b);
 			dir = MyMath::Normalize(dir);
 
-			float spd = std::uniform_real_distribution<float>(6.0f, 16.0f)(rng);
+			float spd = std::uniform_real_distribution<float>(10.0f, 24.0f)(rng);
 			p.velocity_ = dir * spd;
 
-			float sc = std::uniform_real_distribution<float>(0.55f, 1.4f)(rng);
+			float sc = std::uniform_real_distribution<float>(0.8f, 2.1f)(rng);
 			p.transform_.scale_ = { sc, sc, sc };
 
-			p.lifeTime_ = std::uniform_real_distribution<float>(0.35f, 0.85f)(rng);
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.45f, 1.10f)(rng);
 			p.currentTime_ = 0.0f;
 
-			// 白・シアン・薄紫をランダム
+			// 白・シアン・紫・ピンク・金をランダム
 			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
-			if (t < 0.34f) {
+			if (t < 0.20f) {
 				p.color_ = { 1.0f, 1.0f, 1.0f, 1.0f };
-			} else if (t < 0.67f) {
-				p.color_ = { 0.60f, 0.92f, 1.0f, 1.0f };
+			} else if (t < 0.40f) {
+				p.color_ = { 0.50f, 0.90f, 1.0f, 1.0f };
+			} else if (t < 0.60f) {
+				p.color_ = { 0.85f, 0.65f, 1.0f, 1.0f };
+			} else if (t < 0.80f) {
+				p.color_ = { 1.0f, 0.65f, 0.85f, 1.0f };
 			} else {
-				p.color_ = { 0.95f, 0.72f, 1.0f, 1.0f };
+				p.color_ = { 1.0f, 0.88f, 0.35f, 1.0f };
 			}
 
 		} else if (groupName == "clearCelebrate_ray") {
@@ -2538,23 +2546,27 @@ namespace TKM {
 			};
 			dir = MyMath::Normalize(dir);
 
-			float spd = std::uniform_real_distribution<float>(10.0f, 20.0f)(rng);
+			float spd = std::uniform_real_distribution<float>(14.0f, 28.0f)(rng);
 			p.velocity_ = dir * spd;
 
-			// 線っぽく細長く
-			float thin = std::uniform_real_distribution<float>(0.18f, 0.30f)(rng);
-			float len = std::uniform_real_distribution<float>(1.8f, 3.2f)(rng);
+			float thin = std::uniform_real_distribution<float>(0.24f, 0.42f)(rng);
+			float len = std::uniform_real_distribution<float>(2.8f, 5.0f)(rng);
 			p.transform_.scale_ = { thin, thin, len };
 
-			p.lifeTime_ = std::uniform_real_distribution<float>(0.14f, 0.24f)(rng);
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.18f, 0.30f)(rng);
 			p.currentTime_ = 0.0f;
 
 			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
-			if (t < 0.5f) {
-				p.color_ = { 0.85f, 0.97f, 1.0f, 1.0f };
+			if (t < 0.25f) {
+				p.color_ = { 0.80f, 0.97f, 1.0f, 1.0f };
+			} else if (t < 0.50f) {
+				p.color_ = { 1.0f, 0.84f, 1.0f, 1.0f };
+			} else if (t < 0.75f) {
+				p.color_ = { 1.0f, 0.72f, 0.88f, 1.0f };
 			} else {
-				p.color_ = { 1.0f, 0.82f, 1.0f, 1.0f };
+				p.color_ = { 1.0f, 0.92f, 0.55f, 1.0f };
 			}
+
 		} else { // 上記意外
 			// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 			std::uniform_real_distribution<float> velX(-0.15f, 0.15f);

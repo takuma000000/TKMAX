@@ -7,7 +7,6 @@
 #include <cmath>
 #include "ModelManager.h"
 #include "Object3dCommon.h"
-#include "WindowsAPI.h"
 #include "ParticleManager.h"
 
 #ifdef USE_IMGUI
@@ -85,8 +84,8 @@ void GameClearScene::Initialize() {
 	clearSprite_ = std::make_unique<Sprite>();
 	clearSprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, "./resources/texture/clear.png");
 	clearSprite_->SetAnchorPoint({ 0.5f, 0.5f }); // 中心を基準にする
-	clearSprite_->SetPosition({ WindowsAPI::kClientWidth_ * 0.5f, WindowsAPI::kClientHeight_ * 0.5f }); // 画面中央に配置
-	clearSprite_->SetColor({ 1.0f, 1.0f, 1.0f, 0.0f }); // 最初は透明
+	clearSprite_->SetPosition(clearSpriteStartPos_); // 演出開始位置
+	clearSprite_->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f }); // 常に表示できる状態
 
 	// ─────────────────────
 	// 画面遷移アイリス（他シーンと同じ仕様）
@@ -310,10 +309,11 @@ void GameClearScene::Update() {
 		// ─────────────────────
 		if (t >= 1.0f) {
 			enableCameraIntro_ = false; // カメラ演出終了
-			isClearSpriteVisible_ = true; // カメラ演出が終わったらクリアスプライト表示ON
-			isClearSpriteFadePlaying_ = true; // 表示演出開始
-			clearSpriteFadeTime_ = 0.0f; // 演出時間リセット
-			clearSprite_->SetColor({ 1.0f, 1.0f, 1.0f, 0.0f }); // 演出開始時は透明
+			isClearSpriteVisible_ = true; // スプライト表示開始
+			isClearSpritePopPlaying_ = true; // 位置ポップ演出開始
+			clearSpritePopTime_ = 0.0f; // 演出時間リセット
+			clearSprite_->SetPosition(clearSpriteStartPos_); // 少し下からスタート
+			clearSprite_->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
 		}
 	} else {
 		camera_->SetTranslate(cameraEndPos_); // カメラ位置
@@ -363,27 +363,27 @@ void GameClearScene::Update() {
 	player_->UpdateVisualOnly(dt_); // 入力やゲームプレイ処理は全部止めて、見た目用の更新だけ行う
 
 	// ─────────────────────
-	// クリアスプライト表示演出
-	// サイズは触らず、アルファだけイージング
+	// 「GAME CLEAR」スプライトの表示演出更新
+	// アルファフェードとサイズポップの両方を同時に行う
 	// ─────────────────────
-	if (isClearSpriteVisible_) { // カメラ演出が終わってから表示する
-		// 演出中はアルファをイージングで変化させる
-		if (isClearSpriteFadePlaying_) {
-			clearSpriteFadeTime_ += dt_; // 演出時間を進める
+	if (isClearSpritePopPlaying_) {
+		clearSpritePopTime_ += dt_;
 
-			// 演出時間を0.0～1.0の範囲に正規化
-			float t = clearSpriteFadeTime_ / clearSpriteFadeDuration_;
-			t = std::clamp(t, 0.0f, 1.0f);
-			// イージングでアルファ値を計算
-			float alpha = Ease::Eval(clearSpriteFadeEaseType_, t);
-			clearSprite_->SetColor({ 1.0f, 1.0f, 1.0f, alpha });
-			// 演出終了判定
-			if (t >= 1.0f) {
-				isClearSpriteFadePlaying_ = false;
-				clearSprite_->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
-			}
-		} else {
-			clearSprite_->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f }); // 演出が終わったら完全に不透明
+		float t = clearSpritePopTime_ / clearSpritePopDuration_;
+		t = Ease::Clamp01(t);
+
+		float moveT = Ease::OutBack(t);
+
+		Vector2 pos = {
+			MyMath::Lerp(clearSpriteStartPos_.x, clearSpriteCenterPos_.x, moveT),
+			MyMath::Lerp(clearSpriteStartPos_.y, clearSpriteCenterPos_.y, moveT)
+		};
+
+		clearSprite_->SetPosition(pos);
+
+		if (t >= 1.0f) {
+			isClearSpritePopPlaying_ = false;
+			clearSprite_->SetPosition(clearSpriteCenterPos_);
 		}
 	}
 	clearSprite_->Update();

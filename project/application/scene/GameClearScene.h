@@ -2,6 +2,7 @@
 #include "BaseScene.h"
 
 #include <memory>
+#include "WindowsAPI.h"
 #include "DirectXCommon.h"
 #include "SrvManager.h"
 #include "Camera.h"
@@ -100,6 +101,21 @@ private:
 	float clearSpriteFadeTime_ = 0.0f; // フェード演出経過時間
 	float clearSpriteFadeDuration_ = 0.35f; // フェード演出時間
 	Ease::Type clearSpriteFadeEaseType_ = Ease::Type::OutSine; // フェード演出のイージングタイプ
+
+	// クリアスプライト位置ポップ演出
+	bool isClearSpritePopPlaying_ = false; // ポップ演出中か
+	float clearSpritePopTime_ = 0.0f; // 演出経過時間
+	float clearSpritePopDuration_ = 0.35f; // 演出時間
+
+	Vector2 clearSpriteCenterPos_ = {
+		static_cast<float>(TKM::WindowsAPI::kClientWidth_) * 0.5f,
+		static_cast<float>(TKM::WindowsAPI::kClientHeight_) * 0.5f
+	}; // 最終表示位置（画面中央）
+
+	Vector2 clearSpriteStartPos_ = {
+		static_cast<float>(TKM::WindowsAPI::kClientWidth_) * 0.5f,
+		static_cast<float>(TKM::WindowsAPI::kClientHeight_) * 0.5f + 70.0f
+	}; // 演出開始位置（少し下）
 	//======================================================================
 	// アイリス遷移
 	//======================================================================
