@@ -146,4 +146,11 @@ private:
 
 	bool blurReleased_ = false;          // 一度終点に到達してブラー解除済みか
 	float cameraBlurStrength_ = 0.85f;   // クリアシーン中の固定ブラー強度
+	//======================================================================
+	// クリア祝福パーティクル
+	//======================================================================
+	float celebrateCoreTimer_ = 0.0f; // 祝福の光の中心コア用タイマー
+	float celebrateSparkTimer_ = 0.0f; // 祝福の光の中心スパーク用タイマー
+	float celebrateRayTimer_ = 0.0f; // 祝福の光の線（レイ）用タイマー
+	bool celebrateFinalBurstDone_ = false; // 最後の大きな爆発エフェクトを出したかどうか
 };

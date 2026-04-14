@@ -171,7 +171,15 @@ namespace TKM {
 		// スパーク：コアから飛び散る火花
 		pm->CreateParticleGroup("bossEntrance_spark", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
 		// スパーク：コアから飛び散る火花
-		pm->CreateParticleGroup("bossEntrance_gather", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);	
+		pm->CreateParticleGroup("bossEntrance_gather", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
+
+		/// === クリア祝福専用エフェクト ===
+		// 中心でパァッと弾ける祝福コア
+		pm->CreateParticleGroup("clearCelebrate_core", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
+		// 周囲に大量に散る祝福スパーク
+		pm->CreateParticleGroup("clearCelebrate_spark", "./resources/texture/firework_star.png", ParticleManager::ParticleType::NORMAL);
+		// たまに走る強い祝福レイ
+		pm->CreateParticleGroup("clearCelebrate_ray", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
 
 		/// === Wave1Special用エフェクト ===
 		// 送るライン上の粒

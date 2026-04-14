@@ -2463,6 +2463,98 @@ namespace TKM {
 			float g = 0.08f + 0.10f * t;
 			float b = 0.02f + 0.04f * t;
 			p.color_ = { r, g, b, 0.55f };
+		} else if (groupName == "clearCelebrate_core") {
+			// ─────────────────────────────
+			// クリア祝福コア
+			// 中心でパァッと弾ける主役の光
+			// ─────────────────────────────
+			p.transform_.translate_ = center;
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+
+			float sc = std::uniform_real_distribution<float>(2.2f, 3.8f)(rng);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.18f, 0.28f)(rng);
+			p.currentTime_ = 0.0f;
+
+			// 白〜薄シアン〜薄紫の祝福光
+			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+			if (t < 0.40f) {
+				p.color_ = { 1.0f, 1.0f, 1.0f, 1.0f };
+			} else if (t < 0.75f) {
+				p.color_ = { 0.75f, 0.95f, 1.0f, 1.0f };
+			} else {
+				p.color_ = { 1.0f, 0.85f, 1.0f, 1.0f };
+			}
+
+		} else if (groupName == "clearCelebrate_spark") {
+			// ─────────────────────────────
+			// クリア祝福スパーク
+			// ド派手に散る小粒のパチパチ
+			// ─────────────────────────────
+			std::uniform_real_distribution<float> angleA(0.0f, 2.0f * std::numbers::pi_v<float>);
+			std::uniform_real_distribution<float> angleB(0.0f, std::numbers::pi_v<float>);
+
+			float a = angleA(rng);
+			float b = angleB(rng);
+
+			Vector3 dir;
+			dir.x = std::cos(a) * std::sin(b);
+			dir.y = std::cos(b) * 0.8f;
+			dir.z = std::sin(a) * std::sin(b);
+			dir = MyMath::Normalize(dir);
+
+			float spd = std::uniform_real_distribution<float>(6.0f, 16.0f)(rng);
+			p.velocity_ = dir * spd;
+
+			float sc = std::uniform_real_distribution<float>(0.55f, 1.4f)(rng);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.35f, 0.85f)(rng);
+			p.currentTime_ = 0.0f;
+
+			// 白・シアン・薄紫をランダム
+			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+			if (t < 0.34f) {
+				p.color_ = { 1.0f, 1.0f, 1.0f, 1.0f };
+			} else if (t < 0.67f) {
+				p.color_ = { 0.60f, 0.92f, 1.0f, 1.0f };
+			} else {
+				p.color_ = { 0.95f, 0.72f, 1.0f, 1.0f };
+			}
+
+		} else if (groupName == "clearCelebrate_ray") {
+			// ─────────────────────────────
+			// クリア祝福レイ
+			// たまに走る強い祝福線
+			// ─────────────────────────────
+			std::uniform_real_distribution<float> angle(0.0f, 2.0f * std::numbers::pi_v<float>);
+			float a = angle(rng);
+
+			Vector3 dir = {
+				std::cos(a),
+				std::uniform_real_distribution<float>(-0.25f, 0.45f)(rng),
+				std::sin(a)
+			};
+			dir = MyMath::Normalize(dir);
+
+			float spd = std::uniform_real_distribution<float>(10.0f, 20.0f)(rng);
+			p.velocity_ = dir * spd;
+
+			// 線っぽく細長く
+			float thin = std::uniform_real_distribution<float>(0.18f, 0.30f)(rng);
+			float len = std::uniform_real_distribution<float>(1.8f, 3.2f)(rng);
+			p.transform_.scale_ = { thin, thin, len };
+
+			p.lifeTime_ = std::uniform_real_distribution<float>(0.14f, 0.24f)(rng);
+			p.currentTime_ = 0.0f;
+
+			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+			if (t < 0.5f) {
+				p.color_ = { 0.85f, 0.97f, 1.0f, 1.0f };
+			} else {
+				p.color_ = { 1.0f, 0.82f, 1.0f, 1.0f };
+			}
 		} else { // 上記意外
 			// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 			std::uniform_real_distribution<float> velX(-0.15f, 0.15f);

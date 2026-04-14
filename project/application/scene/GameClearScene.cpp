@@ -8,6 +8,7 @@
 #include "ModelManager.h"
 #include "Object3dCommon.h"
 #include "WindowsAPI.h"
+#include "ParticleManager.h"
 
 #ifdef USE_IMGUI
 #include "imgui.h"
@@ -33,6 +34,13 @@ void GameClearScene::Initialize() {
 	TextureManager::GetInstance()->LoadTexture("./resources/texture/restart_pause.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/texture/title_pause.png");
 	TextureManager::GetInstance()->LoadTexture("./resources/texture/gradationLine.png");
+
+	// ─────────────────────
+	// パーティクルグループ
+	// ─────────────────────
+	ParticleManager::GetInstance()->Initialize(dxCommon_, srvManager_, TKM::CameraManager::GetInstance()->GetMainCamera());
+	// パーティクルグループの登録は ParticleGroupsCatalogクラス へ
+	ParticleGroupsCatalog::RegisterScene(ParticleManager::GetInstance());
 
 	// ─────────────────────
 	// カメラ
@@ -225,6 +233,78 @@ void GameClearScene::Update() {
 		}
 
 		// ─────────────────────
+		// クリア祝福パーティクル
+		// カメラが寄ってくる間、祝福の光をド派手に弾けさせる
+		// ─────────────────────
+		{
+			auto frand = [](float a, float b) {
+				return a + (b - a) * (static_cast<float>(rand()) / static_cast<float>(RAND_MAX));
+				};
+
+			// 中盤が最高潮になる山
+			float peak = std::sin(t * MyMath::GetPI());
+			peak = std::clamp(peak, 0.0f, 1.0f);
+
+			// 祝福の中心位置
+			Vector3 celebrateCenter = playerDisplayPos_ + Vector3{ 8.0f, 4.5f, 14.0f };
+
+			celebrateCoreTimer_ += dt_;
+			celebrateSparkTimer_ += dt_;
+			celebrateRayTimer_ += dt_;
+
+			float coreInterval = MyMath::Lerp(0.28f, 0.10f, peak);
+			float sparkInterval = MyMath::Lerp(0.08f, 0.015f, peak);
+			float rayInterval = MyMath::Lerp(0.22f, 0.07f, peak);
+
+			if (celebrateCoreTimer_ >= coreInterval) {
+				celebrateCoreTimer_ = 0.0f;
+
+				Vector3 p = celebrateCenter + Vector3{
+					frand(-8.0f, 8.0f),
+					frand(-2.0f, 6.0f),
+					frand(-6.0f, 6.0f)
+				};
+
+				TKM::ParticleManager::GetInstance()->Emit("clearCelebrate_core", p, 1);
+			}
+
+			if (celebrateSparkTimer_ >= sparkInterval) {
+				celebrateSparkTimer_ = 0.0f;
+
+				Vector3 p = celebrateCenter + Vector3{
+					frand(-16.0f, 16.0f),
+					frand(-6.0f, 10.0f),
+					frand(-12.0f, 12.0f)
+				};
+
+				int count = static_cast<int>(MyMath::Lerp(8.0f, 22.0f, peak));
+				TKM::ParticleManager::GetInstance()->Emit("clearCelebrate_spark", p, count);
+			}
+
+			if (celebrateRayTimer_ >= rayInterval) {
+				celebrateRayTimer_ = 0.0f;
+
+				Vector3 p = celebrateCenter + Vector3{
+					frand(-12.0f, 12.0f),
+					frand(-4.0f, 8.0f),
+					frand(-10.0f, 10.0f)
+				};
+
+				int count = static_cast<int>(MyMath::Lerp(1.0f, 3.0f, peak));
+				TKM::ParticleManager::GetInstance()->Emit("clearCelebrate_ray", p, count);
+			}
+
+			// 一度終点に到達した瞬間だけ、最大祝福バースト
+			if (!celebrateFinalBurstDone_ && posT >= 1.0f) {
+				celebrateFinalBurstDone_ = true;
+
+				TKM::ParticleManager::GetInstance()->Emit("clearCelebrate_core", celebrateCenter, 10);
+				TKM::ParticleManager::GetInstance()->Emit("clearCelebrate_spark", celebrateCenter, 70);
+				TKM::ParticleManager::GetInstance()->Emit("clearCelebrate_ray", celebrateCenter, 16);
+			}
+		}
+
+		// ─────────────────────
 		// カメラ演出終了判定
 		// 「最後まで到達したら」通常状態へ
 		// ─────────────────────
@@ -256,8 +336,13 @@ void GameClearScene::Update() {
 
 	// ─────────────────────
 	// ポストエフェクト更新
-	postFx_->Update(dt_, nullptr);
 	// ─────────────────────
+	postFx_->Update(dt_, nullptr);
+
+	// ─────────────────────
+	// ーティクル更新
+	// ─────────────────────
+	TKM::ParticleManager::GetInstance()->Update(dt_);
 
 	// ─────────────────────
 	// Skybox回転（GameOverSceneと同じノリ）
@@ -317,6 +402,9 @@ void GameClearScene::Draw() {
 	Object3dCommon::GetInstance()->DrawSetCommon();
 	player_->Draw(dxCommon_);
 	skybox_->Draw();
+
+	// --- パーティクル ---
+	TKM::ParticleManager::GetInstance()->Draw();
 
 	// --- 2Dスプライト（文字など）---
 	TKM::SpriteCommon::GetInstance()->DrawSetCommon();
