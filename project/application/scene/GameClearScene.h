@@ -19,6 +19,10 @@
 #include "IrisUtil.h"
 #include "GameResultMenuController.h"
 #include "PostEffectController.h"
+#include "Enemy.h"
+#include "BossEnemy.h"
+#include "TimeScaleController.h"
+#include "BossConfig.h"
 
 //=============================================================
 // GameClearSceneクラス
@@ -169,4 +173,68 @@ private:
 	float celebrateSparkTimer_ = 0.0f; // 祝福の光の中心スパーク用タイマー
 	float celebrateRayTimer_ = 0.0f; // 祝福の光の線（レイ）用タイマー
 	bool celebrateFinalBurstDone_ = false; // 最後の大きな爆発エフェクトを出したかどうか
+	//======================================================================
+	// クリア後コミカル逃走演出
+	//======================================================================
+	enum class ClearComedyPhase {
+		None, // 何もしてない
+		WaitAfterClear, // クリア後少し待つ
+		Spawn, // ボスとザコを出現させる
+		SlowNotice, // 逃走に気づいて時間がゆっくりになる
+		RunAway, // 逃走する
+		FallDown, // 逃走に失敗して転ぶ
+		RecoverRun, // 転んだ後なんとか立ち上がって逃げる
+		Done // 演出完了
+	};
+
+	ClearComedyPhase clearComedyPhase_ = ClearComedyPhase::None; // 現在のフェーズ
+	float clearComedyTimer_ = 0.0f; // 演出用タイマー（フェーズごとにリセットして使用）
+	bool clearComedyActorsSpawned_ = false; // ボスとザコを出現させたかどうか
+	bool clearComedySlowRequested_ = false; // 逃走に気づいて時間をゆっくりにする処理を開始したかどうか
+	// ボスと雑魚敵
+	std::unique_ptr<BossEnemy> clearComedyBoss_;
+	std::unique_ptr<Enemy> clearComedyMobA_;
+	std::unique_ptr<Enemy> clearComedyMobB_;
+	// 逃走演出用タイムスケールコントローラー
+	TKM::TimeScaleController clearComedyTimeScale_;
+
+	// ボス用設定
+	BossEnemyConfig clearComedyBossConfig_{};
+
+	// 出現位置
+	Vector3 clearComedyBossStartPos_ = { 0.0f, 6.2f, 38.0f };
+	Vector3 clearComedyMobAStartPos_ = { -10.0f, 2.8f, 34.0f };
+	Vector3 clearComedyMobBStartPos_ = { 10.0f, 2.8f, 35.5f };
+	// 逃走目標地点
+	Vector3 clearComedyBossEscapePos_ = { 20.0f, 7.2f, 60.0f };
+	Vector3 clearComedyMobAEscapePos_ = { 12.0f, 3.0f, 62.0f };
+	Vector3 clearComedyMobBEscapePos_ = { 26.0f, 2.5f, 58.0f };
+	// 転ぶ位置・回転
+	Vector3 clearComedyMobBFallPos_ = { 15.0f, 1.2f, 45.0f };
+	Vector3 clearComedyMobBFallRot_ = { 0.0f, -0.9f, 1.25f };
+	// 最後に画面外まで逃がすための退場先
+	Vector3 clearComedyBossExitPos_ = { 34.0f, 8.0f, 78.0f };
+	Vector3 clearComedyMobAExitPos_ = { 24.0f, 3.2f, 82.0f };
+	Vector3 clearComedyMobBExitPos_ = { 38.0f, 3.0f, 76.0f };
+	// フェーズ切り替え時の位置を保持して瞬間移動を防ぐ
+	Vector3 clearComedyBossRunStartPos_ = {};
+	Vector3 clearComedyMobARunStartPos_ = {};
+	Vector3 clearComedyMobBRunStartPos_ = {};
+	// 転ぶ前の位置を保持して瞬間移動を防ぐ
+	Vector3 clearComedyBossRecoverStartPos_ = {};
+	Vector3 clearComedyMobARecoverStartPos_ = {};
+	Vector3 clearComedyMobBRecoverStartPos_ = {};
+
+	/// <summary>
+	/// クリア後のコミカル逃走演出を更新します。
+	/// </summary>
+	void SetupClearComedyBossConfig_();
+	/// <summary>
+	/// クリア後のコミカル逃走演出でボスと雑魚敵を出現させます。
+	/// </summary>
+	void SpawnClearComedyActors_();
+	/// <summary>
+	/// クリア後のコミカル逃走演出で、逃走に気づいて時間をゆっくりにする処理を開始します。
+	/// </summary>
+	void UpdateClearComedy_();
 };

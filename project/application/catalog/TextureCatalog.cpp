@@ -42,6 +42,7 @@ void TextureCatalog::LoadTextureCatalogs() {
 		"start_title.png",
 		"skip.png",
 		"end_title.png",
+		"clear.png",
 		"uvChecker.dds",
 		"title_kuraran.dds",
 	};

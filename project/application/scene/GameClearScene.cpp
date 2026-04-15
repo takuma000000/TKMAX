@@ -24,15 +24,8 @@ void GameClearScene::Initialize() {
 	// ─────────────────────
 	// モデル・テクスチャ読み込み
 	// ─────────────────────
-	ModelManager::GetInstance()->LoadModel("turtle.obj", dxCommon_);
-	ModelManager::GetInstance()->LoadModel("turtle_flipper.obj", dxCommon_);
-
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/kloofendal_48d_partly_cloudy_puresky_1k.dds");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/clear.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/circle2.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/restart_pause.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/title_pause.png");
-	TextureManager::GetInstance()->LoadTexture("./resources/texture/gradationLine.png");
+	ModelCatalog::LoadModelCatalogs(dxCommon_); // モデルカタログのロード
+	TextureCatalog::LoadTextureCatalogs(); // テクスチャカタログのロード
 
 	// ─────────────────────
 	// パーティクルグループ
@@ -128,6 +121,13 @@ void GameClearScene::Initialize() {
 	postFx_->Initialize(dxCommon_, player_.get(), nullptr);
 	// クリアシーンでは、放射ブラーを手動でONにしておく（決定時の一瞬だけ出す）
 	blurReleased_ = false;
+
+	// ─────────────────────
+	// クリア後コミカル逃走演出
+	// ─────────────────────
+	clearComedyPhase_ = ClearComedyPhase::None; // 最初は何もしてない状態
+	clearComedyTimeScale_.Initialize(); // タイムスケール初期化
+	SetupClearComedyBossConfig_(); // コミカル逃走演出用のボス設定を行う
 }
 
 void GameClearScene::Finalize() {
@@ -363,6 +363,17 @@ void GameClearScene::Update() {
 	player_->UpdateVisualOnly(dt_); // 入力やゲームプレイ処理は全部止めて、見た目用の更新だけ行う
 
 	// ─────────────────────
+	// クリア後のコミカル逃走演出更新
+	// クリアスプライトの位置ポップ演出が終わったら、少し待ってから逃走演出開始
+	// ─────────────────────
+	if (isClearSpriteVisible_ &&
+		!isClearSpritePopPlaying_ &&
+		clearComedyPhase_ == ClearComedyPhase::None) {
+		clearComedyPhase_ = ClearComedyPhase::WaitAfterClear; // クリア後少し待つフェーズへ
+		clearComedyTimer_ = 0.0f; // フェーズ開始からの経過時間リセット
+	}
+
+	// ─────────────────────
 	// 「GAME CLEAR」スプライトの表示演出更新
 	// アルファフェードとサイズポップの両方を同時に行う
 	// ─────────────────────
@@ -388,9 +399,16 @@ void GameClearScene::Update() {
 	}
 	clearSprite_->Update();
 
-	// メニューはアイリス開閉中は更新しない（操作できないようにするため）
-	UpdatePerformanceInfo();
+	// ─────────────────────
+	// クリア後のコミカル逃走演出更新
+	// フェーズ管理して、ボスと雑魚を順番に出す
+	// ─────────────────────
+	UpdateClearComedy_();
 
+	// ─────────────────────
+	// パフォーマンス情報更新
+	// ─────────────────────
+	UpdatePerformanceInfo();
 	// ─────────────────────
 	// ImGuiデバッグ
 	// ─────────────────────
@@ -398,10 +416,17 @@ void GameClearScene::Update() {
 }
 
 void GameClearScene::Draw() {
+	// --- 背景 ---
+	skybox_->Draw(); // スカイボックス
+
 	// --- 3D ---
 	Object3dCommon::GetInstance()->DrawSetCommon();
-	player_->Draw(dxCommon_);
-	skybox_->Draw();
+	player_->Draw(dxCommon_); // プレイヤー
+
+	// クリア後のコミカル逃走演出の敵キャラは、カメラ演出が終わってから出す
+	if (clearComedyBoss_) { clearComedyBoss_->Draw(dxCommon_); } // ボス
+	if (clearComedyMobA_) { clearComedyMobA_->Draw(dxCommon_); } // 雑魚A
+	if (clearComedyMobB_) { clearComedyMobB_->Draw(dxCommon_); } // 雑魚B
 
 	// --- パーティクル ---
 	TKM::ParticleManager::GetInstance()->Draw();
@@ -432,4 +457,296 @@ void GameClearScene::ImGuiDebug() {
 
 	ImGuiDebugInfo(); // パフォーマンス情報デバッグ
 #endif
+}
+
+void GameClearScene::SetupClearComedyBossConfig_() {
+	clearComedyBossConfig_ = BossEnemyConfig{};
+
+	// ここは実際のボス設定に合わせる
+	clearComedyBossConfig_.model_ = "jerryfish_boss.obj";
+	clearComedyBossConfig_.tentacleModel_ = "tentacle_boss.obj";
+	clearComedyBossConfig_.hp_ = 1;
+	clearComedyBossConfig_.scale_ = { 1.35f, 1.35f, 1.35f };
+	clearComedyBossConfig_.colliderScale_ = { 8.0f, 8.0f, 8.0f };
+}
+
+void GameClearScene::SpawnClearComedyActors_() {
+	if (clearComedyActorsSpawned_) {
+		return;
+	}
+
+	// ---------------------
+	// ボス
+	// ---------------------
+	clearComedyBoss_ = std::make_unique<BossEnemy>();
+	clearComedyBoss_->SetConfig(&clearComedyBossConfig_);
+	clearComedyBoss_->Initialize(Object3dCommon::GetInstance(), dxCommon_);
+	clearComedyBoss_->SetCamera(camera_.get());
+	clearComedyBoss_->SetParentScene(this);
+	clearComedyBoss_->SetPosition(clearComedyBossStartPos_);
+	clearComedyBoss_->SetRotate({ 0.0f, 3.14159265f, 0.0f });
+	clearComedyBoss_->SetLocked(true);
+	clearComedyBoss_->SyncTransform();
+
+	// ---------------------
+	// 雑魚A
+	// ---------------------
+	clearComedyMobA_ = std::make_unique<Enemy>();
+	clearComedyMobA_->Initialize(Object3dCommon::GetInstance(), dxCommon_);
+	clearComedyMobA_->SetCamera(camera_.get());
+	clearComedyMobA_->SetParentScene(this);
+	clearComedyMobA_->SetModel("jerryfish.obj");
+	clearComedyMobA_->SetTentacleModel("tentacle.obj");
+	clearComedyMobA_->SetPosition(clearComedyMobAStartPos_);
+	clearComedyMobA_->SetRotate({ 0.0f, 3.14159265f, 0.0f });
+	clearComedyMobA_->SetScale({ 1.2f, 1.2f, 1.2f });
+	clearComedyMobA_->SetLocked(true);
+	clearComedyMobA_->SyncTransform();
+
+	// ---------------------
+	// 雑魚B（転ぶ役）
+	// ---------------------
+	clearComedyMobB_ = std::make_unique<Enemy>();
+	clearComedyMobB_->Initialize(Object3dCommon::GetInstance(), dxCommon_);
+	clearComedyMobB_->SetCamera(camera_.get());
+	clearComedyMobB_->SetParentScene(this);
+	clearComedyMobB_->SetModel("jerryfish.obj");
+	clearComedyMobB_->SetTentacleModel("tentacle.obj");
+	clearComedyMobB_->SetPosition(clearComedyMobBStartPos_);
+	clearComedyMobB_->SetRotate({ 0.0f, 3.14159265f, 0.0f });
+	clearComedyMobB_->SetScale({ 1.2f, 1.2f, 1.2f });
+	clearComedyMobB_->SetLocked(true);
+	clearComedyMobB_->SyncTransform();
+
+	// フラグを立てて、二度とスポーンしないようにする
+	clearComedyActorsSpawned_ = true;
+}
+
+void GameClearScene::UpdateClearComedy_() {
+	clearComedyTimeScale_.Update(dt_);
+	const float comedyDt = dt_ * clearComedyTimeScale_.GetScale();
+
+	if (clearComedyPhase_ == ClearComedyPhase::None || clearComedyPhase_ == ClearComedyPhase::Done) {
+		return;
+	}
+
+	clearComedyTimer_ += comedyDt;
+
+	switch (clearComedyPhase_) {
+	case ClearComedyPhase::WaitAfterClear:
+		if (clearComedyTimer_ >= 0.65f) {
+			SpawnClearComedyActors_();
+			clearComedyPhase_ = ClearComedyPhase::Spawn;
+			clearComedyTimer_ = 0.0f;
+		}
+		break;
+
+	case ClearComedyPhase::Spawn:
+		if (clearComedyBoss_) {
+			clearComedyBoss_->SetIntroPanic(true, 0.35f);
+			clearComedyBoss_->Update(comedyDt);
+		}
+		if (clearComedyMobA_) {
+			clearComedyMobA_->Update(comedyDt);
+		}
+		if (clearComedyMobB_) {
+			clearComedyMobB_->Update(comedyDt);
+		}
+
+		if (clearComedyTimer_ >= 0.65f) {
+			clearComedyPhase_ = ClearComedyPhase::SlowNotice;
+			clearComedyTimer_ = 0.0f;
+			clearComedySlowRequested_ = false;
+		}
+		break;
+
+	case ClearComedyPhase::SlowNotice:
+		if (!clearComedySlowRequested_) {
+			clearComedyTimeScale_.RequestSlowAdvanced(0.35f, 0.45f, 0.08f, 0.22f);
+			clearComedySlowRequested_ = true;
+		}
+
+		if (clearComedyBoss_) {
+			clearComedyBoss_->SetIntroPanic(true, 1.0f);
+			clearComedyBoss_->Update(comedyDt);
+		}
+		if (clearComedyMobA_) {
+			clearComedyMobA_->Update(comedyDt);
+		}
+		if (clearComedyMobB_) {
+			clearComedyMobB_->Update(comedyDt);
+		}
+
+		if (clearComedyTimer_ >= 0.75f) {
+			// RunAway の開始位置を、この瞬間の見た目位置で確定
+			if (clearComedyBoss_) {
+				clearComedyBossRunStartPos_ = clearComedyBoss_->GetWorldPosition();
+			}
+			if (clearComedyMobA_) {
+				clearComedyMobARunStartPos_ = clearComedyMobA_->GetWorldPosition();
+			}
+			if (clearComedyMobB_) {
+				clearComedyMobBRunStartPos_ = clearComedyMobB_->GetWorldPosition();
+			}
+
+			clearComedyPhase_ = ClearComedyPhase::RunAway;
+			clearComedyTimer_ = 0.0f;
+		}
+		break;
+
+	case ClearComedyPhase::RunAway:
+	{
+		float t = std::clamp(clearComedyTimer_ / 1.35f, 0.0f, 1.0f);
+		float bossMoveT = Ease::Eval(Ease::Type::InQuad, std::clamp(clearComedyTimer_ / 1.80f, 0.0f, 1.0f));
+		float mobMoveT = Ease::Eval(Ease::Type::InQuad, t);
+
+		if (clearComedyBoss_) {
+			Vector3 pos = MyMath::Vector3Lerp(clearComedyBossRunStartPos_, clearComedyBossEscapePos_, bossMoveT);
+			clearComedyBoss_->SetPosition(pos);
+			clearComedyBoss_->SetRotate({ 0.0f, -0.9f, 0.0f });
+			clearComedyBoss_->SetIntroPanic(true, 0.75f);
+			clearComedyBoss_->SyncTransform();
+			clearComedyBoss_->Update(comedyDt);
+		}
+
+		if (clearComedyMobA_) {
+			Vector3 pos = MyMath::Vector3Lerp(clearComedyMobARunStartPos_, clearComedyMobAEscapePos_, mobMoveT);
+			clearComedyMobA_->SetPosition(pos);
+			clearComedyMobA_->SetRotate({ 0.0f, -0.9f, 0.0f });
+			clearComedyMobA_->SyncTransform();
+			clearComedyMobA_->Update(comedyDt);
+		}
+
+		if (clearComedyMobB_) {
+			Vector3 pos = MyMath::Vector3Lerp(clearComedyMobBRunStartPos_, clearComedyMobBFallPos_, mobMoveT);
+			clearComedyMobB_->SetPosition(pos);
+			clearComedyMobB_->SetRotate({ 0.0f, -0.9f, 0.0f });
+			clearComedyMobB_->SyncTransform();
+			clearComedyMobB_->Update(comedyDt);
+		}
+
+		if (clearComedyTimer_ >= 1.35f) {
+			// 次フェーズ開始位置を「今いる位置」で確定
+			if (clearComedyBoss_) {
+				clearComedyBossRecoverStartPos_ = clearComedyBoss_->GetWorldPosition();
+			}
+			if (clearComedyMobA_) {
+				clearComedyMobARecoverStartPos_ = clearComedyMobA_->GetWorldPosition();
+			}
+			if (clearComedyMobB_) {
+				clearComedyMobBRecoverStartPos_ = clearComedyMobB_->GetWorldPosition();
+			}
+
+			clearComedyPhase_ = ClearComedyPhase::FallDown;
+			clearComedyTimer_ = 0.0f;
+		}
+	}
+	break;
+
+	case ClearComedyPhase::FallDown:
+	{
+		float t = std::clamp(clearComedyTimer_ / 0.70f, 0.0f, 1.0f);
+		float moveT = Ease::Eval(Ease::Type::InQuad, t);
+		float fallT = Ease::Eval(Ease::Type::OutCubic, t);
+
+		// ボスは待たずにそのまま退場方向へ進む
+		if (clearComedyBoss_) {
+			Vector3 bossPos = MyMath::Vector3Lerp(
+				clearComedyBossRecoverStartPos_,
+				clearComedyBossExitPos_,
+				moveT
+			);
+			clearComedyBoss_->SetPosition(bossPos);
+			clearComedyBoss_->SetRotate({ 0.0f, -1.00f, 0.0f });
+			clearComedyBoss_->SetIntroPanic(false, 0.0f);
+			clearComedyBoss_->SyncTransform();
+			clearComedyBoss_->Update(comedyDt);
+		}
+
+		// 雑魚Aも待たずにそのまま退場方向へ進む
+		if (clearComedyMobA_) {
+			Vector3 mobAPos = MyMath::Vector3Lerp(
+				clearComedyMobARecoverStartPos_,
+				clearComedyMobAExitPos_,
+				moveT
+			);
+			clearComedyMobA_->SetPosition(mobAPos);
+			clearComedyMobA_->SetRotate({ 0.0f, -1.00f, 0.0f });
+			clearComedyMobA_->SyncTransform();
+			clearComedyMobA_->Update(comedyDt);
+		}
+
+		// 転ぶ役だけこの場で転倒
+		if (clearComedyMobB_) {
+			// 転び開始地点をその場基準にする
+			Vector3 fallTarget = clearComedyMobBRecoverStartPos_ + Vector3{ 0.0f, -1.5f, 1.2f };
+			Vector3 pos = MyMath::Vector3Lerp(
+				clearComedyMobBRecoverStartPos_,
+				fallTarget,
+				fallT
+			);
+			Vector3 rot = {
+				0.0f,
+				MyMath::Lerp(-0.9f, clearComedyMobBFallRot_.y, fallT),
+				MyMath::Lerp(0.0f, clearComedyMobBFallRot_.z, fallT)
+			};
+			clearComedyMobB_->SetPosition(pos);
+			clearComedyMobB_->SetRotate(rot);
+			clearComedyMobB_->SyncTransform();
+			clearComedyMobB_->Update(comedyDt);
+		}
+
+		if (clearComedyTimer_ >= 0.70f) {
+			// ボスと雑魚Aはここで退場済みにする
+			clearComedyBoss_.reset();
+			clearComedyMobA_.reset();
+
+			// 転んだ雑魚だけ、ここから再逃走の開始位置を取る
+			if (clearComedyMobB_) {
+				clearComedyMobBRecoverStartPos_ = clearComedyMobB_->GetWorldPosition();
+			}
+
+			clearComedyPhase_ = ClearComedyPhase::RecoverRun;
+			clearComedyTimer_ = 0.0f;
+		}
+	}
+	break;
+
+	case ClearComedyPhase::RecoverRun:
+	{
+		float t = std::clamp(clearComedyTimer_ / 1.40f, 0.0f, 1.0f);
+		float moveT = Ease::Eval(Ease::Type::InCubic, t);
+
+		// 転んだ雑魚Bだけ再逃走
+		if (clearComedyMobB_) {
+			Vector3 pos = MyMath::Vector3Lerp(
+				clearComedyMobBRecoverStartPos_,
+				clearComedyMobBExitPos_,
+				moveT
+			);
+			Vector3 rot = {
+				0.0f,
+				MyMath::Lerp(clearComedyMobBFallRot_.y, -1.05f, moveT),
+				MyMath::Lerp(clearComedyMobBFallRot_.z, 0.0f, moveT)
+			};
+			clearComedyMobB_->SetPosition(pos);
+			clearComedyMobB_->SetRotate(rot);
+			clearComedyMobB_->SyncTransform();
+			clearComedyMobB_->Update(comedyDt);
+		}
+
+		if (clearComedyTimer_ >= 1.40f) {
+			clearComedyMobB_.reset();
+
+			clearComedyActorsSpawned_ = false;
+			clearComedyPhase_ = ClearComedyPhase::Done;
+			clearComedyTimer_ = 0.0f;
+		}
+	}
+	break;
+
+	case ClearComedyPhase::Done:
+	case ClearComedyPhase::None:
+		break;
+	}
 }
