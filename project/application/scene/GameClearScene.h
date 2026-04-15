@@ -196,6 +196,7 @@ private:
 	std::unique_ptr<BossEnemy> clearComedyBoss_;
 	std::unique_ptr<Enemy> clearComedyMobA_;
 	std::unique_ptr<Enemy> clearComedyMobB_;
+	bool clearComedyMobBFallEffectPlayed_ = false; // 雑魚敵Bの転ぶエフェクトを出したかどうか
 	// 逃走演出用タイムスケールコントローラー
 	TKM::TimeScaleController clearComedyTimeScale_;
 

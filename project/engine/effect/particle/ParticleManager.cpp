@@ -243,6 +243,28 @@ namespace TKM {
 						(*particleIterator).transform_.scale_.y *= grow;
 						(*particleIterator).transform_.scale_.z *= grow;
 					}
+					if (g == "clearComedyFall_dust") {
+						float grow = 1.0f + 4.5f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.x *= grow;
+						(*particleIterator).transform_.scale_.y *= grow;
+						(*particleIterator).transform_.scale_.z *= grow;
+					}
+					if (g == "clearComedyFall_star") {
+						float grow = 1.0f + 6.0f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.x *= grow;
+						(*particleIterator).transform_.scale_.y *= grow;
+						(*particleIterator).transform_.scale_.z *= grow;
+					}
+					if (g == "clearComedyFall_line") {
+						float stretch = 1.0f + 10.0f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.z *= stretch;
+					}
+					if (g == "clearComedyFall_puff") {
+						float grow = 1.0f + 2.8f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.x *= grow;
+						(*particleIterator).transform_.scale_.y *= grow;
+						(*particleIterator).transform_.scale_.z *= grow;
+					}
 
 					// アルファカーブ（“パァン”を作る）
 					float a = 1.0f - t;
@@ -312,6 +334,14 @@ namespace TKM {
 						a = a * a * a;
 					} else if (g == "clearComedyWarp_glitter") {
 						a = std::pow(a, 0.8f);
+					} else if (g == "clearComedyFall_dust") {
+						a = std::pow(a, 1.2f);
+					} else if (g == "clearComedyFall_star") {
+						a = a * a * a;
+					} else if (g == "clearComedyFall_line") {
+						a = a * a;
+					} else if (g == "clearComedyFall_puff") {
+						a = std::pow(a, 1.6f);
 					}
 
 					++particleGroupIterator->second.kNumInstance_;//生きているParticleの数を1つカウントする

@@ -534,6 +534,7 @@ void GameClearScene::SpawnClearComedyActors_() {
 
 	// フラグを立てて、二度とスポーンしないようにする
 	clearComedyActorsSpawned_ = true;
+	clearComedyMobBFallEffectPlayed_ = false; // 雑魚Bの転ぶエフェクトは一度だけ出すようにする
 }
 
 void GameClearScene::UpdateClearComedy_() {
@@ -739,6 +740,21 @@ void GameClearScene::UpdateClearComedy_() {
 			clearComedyMobB_->SetRotate(rot);
 			clearComedyMobB_->SyncTransform();
 			clearComedyMobB_->Update(comedyDt);
+
+			// 転ぶエフェクトは一度だけ出す
+			if (!clearComedyMobBFallEffectPlayed_ && t >= 1.0f) {
+
+				Vector3 slamPos = startPos + Vector3{ 0.0f, 1.0f, 2.8f }; // エフェクトはズコーーーっと落ちた位置に出す
+
+				auto* pm = TKM::ParticleManager::GetInstance();
+
+				pm->Emit("clearComedyFall_dust", slamPos, 24);
+				pm->Emit("clearComedyFall_star", slamPos + Vector3{ 0.0f, 0.7f, 0.0f }, 10);
+				pm->Emit("clearComedyFall_line", slamPos + Vector3{ 0.0f, 0.25f, 0.0f }, 14);
+				pm->Emit("clearComedyFall_puff", slamPos + Vector3{ 0.0f, 0.35f, 0.0f }, 12);
+
+				clearComedyMobBFallEffectPlayed_ = true;
+			}
 		}
 
 		if (clearComedyTimer_ >= 0.85f) {

@@ -234,5 +234,15 @@ namespace TKM {
 		pm->CreateParticleGroup("clearComedyWarp_spark", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
 		// 余韻のきらめき
 		pm->CreateParticleGroup("clearComedyWarp_glitter", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
+	
+		/// クリアコミカル逃走：雑魚B転倒
+		// 地面にぶつかった瞬間の土煙
+		pm->CreateParticleGroup("clearComedyFall_dust", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
+		// 漫画っぽい星
+		pm->CreateParticleGroup("clearComedyFall_star", "./resources/texture/flower.png", ParticleManager::ParticleType::NORMAL);
+		// 衝撃のシュッ線
+		pm->CreateParticleGroup("clearComedyFall_line", "./resources/texture/flower.png", ParticleManager::ParticleType::NORMAL);
+		// 余韻のくるくる・チラつき
+		pm->CreateParticleGroup("clearComedyFall_puff", "./resources/texture/flower.png", ParticleManager::ParticleType::NORMAL);
 	}
 }

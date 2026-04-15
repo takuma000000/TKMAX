@@ -2721,6 +2721,130 @@ namespace TKM {
 			} else {
 				p.color_ = { 0.55f, 0.90f, 1.20f, 1.0f };
 			}
+		} else if (groupName == "clearComedyFall_dust") {
+			auto frand = [&rng](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			float ang = frand(0.0f, 6.2831853f);
+			float rad = frand(0.1f, 1.3f);
+
+			Vector3 dir = {
+				std::cos(ang),
+				frand(0.15f, 0.55f),
+				std::sin(ang)
+			};
+			dir = MyMath::Normalize(dir);
+
+			p.transform_.translate_ = center + Vector3{
+				std::cos(ang) * rad,
+				frand(-0.08f, 0.08f),
+				std::sin(ang) * rad
+			};
+
+			float speed = frand(2.5f, 6.5f);
+			p.velocity_ = dir * speed;
+
+			float sc = frand(0.8f, 1.8f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.35f, 0.70f);
+			p.currentTime_ = 0.0f;
+
+			float c = frand(0.0f, 1.0f);
+			float base = 0.65f + 0.15f * c;
+			p.color_ = { base, base, base * 0.95f, 0.95f };
+		} else if (groupName == "clearComedyFall_star") {
+			auto frand = [&rng](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			float ang = frand(0.0f, 6.2831853f);
+			float rad = frand(0.2f, 1.1f);
+
+			Vector3 dir = {
+				std::cos(ang),
+				frand(0.45f, 1.10f),
+				std::sin(ang)
+			};
+			dir = MyMath::Normalize(dir);
+
+			p.transform_.translate_ = center + Vector3{
+				frand(-0.20f, 0.20f),
+				frand(0.05f, 0.35f),
+				frand(-0.20f, 0.20f)
+			};
+
+			float speed = frand(3.5f, 7.5f);
+			p.velocity_ = dir * speed;
+
+			float sc = frand(0.22f, 0.55f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.28f, 0.52f);
+			p.currentTime_ = 0.0f;
+
+			float t = frand(0.0f, 1.0f);
+			if (t < 0.65f) {
+				p.color_ = { 1.0f, 0.92f, 0.20f, 1.0f }; // 黄色星
+			} else {
+				p.color_ = { 1.0f, 0.55f, 0.25f, 1.0f }; // オレンジ星
+			}
+		} else if (groupName == "clearComedyFall_line") {
+			auto frand = [&rng](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			float ang = frand(0.0f, 6.2831853f);
+			Vector3 dir = {
+				std::cos(ang),
+				frand(0.10f, 0.45f),
+				std::sin(ang)
+			};
+			dir = MyMath::Normalize(dir);
+
+			p.transform_.translate_ = center + Vector3{
+				frand(-0.15f, 0.15f),
+				frand(0.00f, 0.18f),
+				frand(-0.15f, 0.15f)
+			};
+
+			float speed = frand(4.5f, 9.0f);
+			p.velocity_ = dir * speed;
+
+			float thin = frand(0.10f, 0.20f);
+			float len = frand(1.8f, 3.8f);
+			p.transform_.scale_ = { thin, thin, len };
+
+			p.lifeTime_ = frand(0.14f, 0.26f);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { 1.0f, 0.95f, 0.75f, 1.0f };
+		} else if (groupName == "clearComedyFall_puff") {
+			auto frand = [&rng](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			p.transform_.translate_ = center + Vector3{
+				frand(-0.9f, 0.9f),
+				frand(0.0f, 0.4f),
+				frand(-0.9f, 0.9f)
+			};
+
+			p.velocity_ = {
+				frand(-0.45f, 0.45f),
+				frand(0.10f, 0.55f),
+				frand(-0.45f, 0.45f)
+			};
+
+			float sc = frand(0.16f, 0.42f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.35f, 0.75f);
+			p.currentTime_ = 0.0f;
+
+			float c = frand(0.75f, 1.0f);
+			p.color_ = { c, c, c, 0.9f };
 		} else { // 上記意外
 			// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 			std::uniform_real_distribution<float> velX(-0.15f, 0.15f);
