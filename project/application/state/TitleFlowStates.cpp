@@ -3,7 +3,6 @@
 #include "WaterRippleEffect.h"
 #include "GameScene.h"
 #include <Windows.h>
-#include "GameClearScene.h"
 
 static TitleScene& AsTitle_(TKM::IStateContext& ctx) {
 	return static_cast<TitleScene&>(ctx); // 状態コンテキストをタイトルシーンにキャスト
@@ -79,17 +78,6 @@ void TitleFlowIdleState::Update(TKM::IStateContext& ctx, float dt) {
 		s.ScheduleVanish_(); // タイトル敵の消滅をスケジュール（遅延時間をランダムにセット）
 		// 消滅シーケンスへ遷移
 		s.flowSM_.Change(std::make_unique<TitleFlowVanishingState>());
-	}
-
-	// =====================================================
-	// デバッグ：Tキーでクリア画面へ
-	// =====================================================
-	if (TKM::Input::GetInstance()->TriggerKey(DIK_T)) {
-		s.sceneManager_->SetNextScene(
-			std::make_unique<GameClearScene>(s.dxCommon_, s.srvManager_)
-		);
-		s.earlyExitUpdate_ = true;
-		return;
 	}
 }
 

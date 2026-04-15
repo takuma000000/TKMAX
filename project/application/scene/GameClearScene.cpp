@@ -15,6 +15,16 @@
 
 using namespace TKM;
 
+static void EmitTitleExplodeLike_(const Vector3& pos) {
+	auto* pm = TKM::ParticleManager::GetInstance();
+	if (!pm) { return; }
+
+	pm->Emit("titleExplode_core", pos, 28);
+	pm->Emit("titleExplode_rays", pos, 140);
+	pm->Emit("titleExplode_debris", pos, 90);
+	pm->Emit("titleExplode_ring", pos, 2);
+}
+
 void GameClearScene::Initialize() {
 	// ─────────────────────
 	// 音声読み込み
@@ -278,6 +288,12 @@ void GameClearScene::Update() {
 
 				int count = static_cast<int>(MyMath::Lerp(8.0f, 22.0f, peak));
 				TKM::ParticleManager::GetInstance()->Emit("clearCelebrate_spark", p, count);
+
+				// タイトルの敵消滅っぽい爆発も混ぜる
+				float explodeChance = MyMath::Lerp(0.03f, 0.10f, peak);
+				if (frand(0.0f, 1.0f) < explodeChance) {
+					EmitTitleExplodeLike_(p);
+				}
 			}
 
 			if (celebrateRayTimer_ >= rayInterval) {
@@ -300,6 +316,8 @@ void GameClearScene::Update() {
 				TKM::ParticleManager::GetInstance()->Emit("clearCelebrate_core", celebrateCenter, 10);
 				TKM::ParticleManager::GetInstance()->Emit("clearCelebrate_spark", celebrateCenter, 70);
 				TKM::ParticleManager::GetInstance()->Emit("clearCelebrate_ray", celebrateCenter, 16);
+
+				EmitTitleExplodeLike_(celebrateCenter);
 			}
 		}
 
@@ -758,7 +776,7 @@ void GameClearScene::UpdateClearComedy_() {
 
 				if (!clearComedyMobBSlipEffectPlayed_) {
 
-					Vector3 slipPos = startPos + Vector3{ 1.0f, 0.25f, 0.35f };
+					Vector3 slipPos = startPos + Vector3{ 1.0f, 0.1f, 0.35f };
 
 					auto* pm = TKM::ParticleManager::GetInstance();
 					pm->Emit("clearComedySlip_streak", slipPos, 8);

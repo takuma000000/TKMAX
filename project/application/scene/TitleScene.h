@@ -23,6 +23,7 @@
 #include "StateMachine.h"
 #include "GameOverScene.h"
 #include "GameScene.h"
+#include "GameClearScene.h"
 #include "TitleShowdownController.h"
 
 //=============================================================

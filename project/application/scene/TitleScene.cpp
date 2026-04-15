@@ -162,7 +162,15 @@ void TitleScene::Update() {
 	if (earlyExitUpdate_) { return; }
 	// ------------------------------------------------
 
-
+	// =====================================================
+	// デバッグ：Tキーでクリア画面へ
+	// =====================================================
+	if (TKM::Input::GetInstance()->TriggerKey(DIK_T)) {
+		sceneManager_->SetNextScene(
+			std::make_unique<GameClearScene>(dxCommon_, srvManager_)
+		);
+		return;
+	}
 
 	// スカイボックス回転更新
 	constexpr float kTwoPi = 6.2831853f;

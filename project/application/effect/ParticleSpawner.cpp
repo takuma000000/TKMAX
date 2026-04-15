@@ -2886,7 +2886,7 @@ namespace TKM {
 				frand(0.4f, 1.2f)
 			};
 
-			float thin = frand(0.15f, 0.25f);
+			float thin = frand(0.3f, 0.5f);
 			float len = frand(1.2f, 2.8f);
 			p.transform_.scale_ = { thin, thin, len };
 
@@ -2917,7 +2917,7 @@ namespace TKM {
 
 			p.velocity_ = dir * frand(2.0f, 4.8f);
 
-			float sc = frand(0.10f, 0.24f);
+			float sc = frand(0.30f, 0.5f);
 			p.transform_.scale_ = { sc, sc, sc };
 
 			p.lifeTime_ = frand(0.10f, 0.20f);
@@ -2932,7 +2932,7 @@ namespace TKM {
 			p.transform_.translate_ = center + Vector3{ 0.0f, 0.05f, 0.0f };
 			p.velocity_ = { 0.0f, frand(0.02f, 0.10f), 0.0f };
 
-			float sc = frand(0.45f, 0.85f);
+			float sc = frand(0.6f, 1.0f);
 			p.transform_.scale_ = { sc, sc, sc };
 
 			p.lifeTime_ = frand(0.10f, 0.18f);
@@ -2956,7 +2956,7 @@ namespace TKM {
 				frand(-0.8f, 0.8f)
 			};
 
-			float sc = frand(0.10f, 0.22f);
+			float sc = frand(0.30f, 0.5f);
 			p.transform_.scale_ = { sc, sc, sc };
 
 			p.lifeTime_ = frand(0.16f, 0.28f);
