@@ -180,7 +180,7 @@ private:
 		None, // 何もしてない
 		WaitAfterClear, // クリア後少し待つ
 		Spawn, // ボスとザコを出現させる
-		SlowNotice, // 逃走に気づいて時間がゆっくりになる
+		SlowNotice,
 		RunAway, // 逃走する
 		FallDown, // 逃走に失敗して転ぶ
 		StandUp, // 起き上がり
@@ -197,6 +197,8 @@ private:
 	std::unique_ptr<Enemy> clearComedyMobA_;
 	std::unique_ptr<Enemy> clearComedyMobB_;
 	bool clearComedyMobBFallEffectPlayed_ = false; // 雑魚敵Bの転ぶエフェクトを出したかどうか
+	bool clearComedyMobBSlipEffectPlayed_ = false; // 雑魚敵Bの滑るエフェクトを出したかどうか
+	bool clearComedyNoticeMarkPlayed_ = false; // 気づきマークを出したかどうか
 	// 逃走演出用タイムスケールコントローラー
 	TKM::TimeScaleController clearComedyTimeScale_;
 

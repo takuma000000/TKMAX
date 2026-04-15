@@ -244,13 +244,13 @@ namespace TKM {
 						(*particleIterator).transform_.scale_.z *= grow;
 					}
 					if (g == "clearComedyFall_dust") {
-						float grow = 1.0f + 4.5f * kDeltaTime_;
+						float grow = 1.0f + 2.4f * kDeltaTime_;
 						(*particleIterator).transform_.scale_.x *= grow;
 						(*particleIterator).transform_.scale_.y *= grow;
 						(*particleIterator).transform_.scale_.z *= grow;
 					}
 					if (g == "clearComedyFall_star") {
-						float grow = 1.0f + 6.0f * kDeltaTime_;
+						float grow = 1.0f + 2.8f * kDeltaTime_;
 						(*particleIterator).transform_.scale_.x *= grow;
 						(*particleIterator).transform_.scale_.y *= grow;
 						(*particleIterator).transform_.scale_.z *= grow;
@@ -264,6 +264,44 @@ namespace TKM {
 						(*particleIterator).transform_.scale_.x *= grow;
 						(*particleIterator).transform_.scale_.y *= grow;
 						(*particleIterator).transform_.scale_.z *= grow;
+					}
+					if (g == "clearComedySlip_streak") {
+						float stretch = 1.0f + 12.0f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.z *= stretch;
+					}
+					if (g == "clearComedySlip_spark") {
+						float grow = 1.0f + 5.0f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.x *= grow;
+						(*particleIterator).transform_.scale_.y *= grow;
+						(*particleIterator).transform_.scale_.z *= grow;
+					}
+					if (g == "clearComedySlip_ring") {
+						float grow = 1.0f + 16.0f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.x *= grow;
+						(*particleIterator).transform_.scale_.y *= grow;
+						(*particleIterator).transform_.scale_.z *= grow;
+					}
+					if (g == "clearComedySlip_chip") {
+						float grow = 1.0f + 4.0f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.x *= grow;
+						(*particleIterator).transform_.scale_.y *= grow;
+						(*particleIterator).transform_.scale_.z *= grow;
+					}
+					if (g == "clearBannerBurst_core") {
+						float grow = 1.0f + 18.0f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.x *= grow;
+						(*particleIterator).transform_.scale_.y *= grow;
+						(*particleIterator).transform_.scale_.z *= grow;
+					}
+					if (g == "clearBannerBurst_confetti") {
+						float grow = 1.0f + 2.5f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.x *= grow;
+						(*particleIterator).transform_.scale_.y *= grow;
+						(*particleIterator).transform_.scale_.z *= grow;
+					}
+					if (g == "clearBannerBurst_ray") {
+						float stretch = 1.0f + 10.0f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.z *= stretch;
 					}
 
 					// アルファカーブ（“パァン”を作る）
@@ -335,13 +373,27 @@ namespace TKM {
 					} else if (g == "clearComedyWarp_glitter") {
 						a = std::pow(a, 0.8f);
 					} else if (g == "clearComedyFall_dust") {
-						a = std::pow(a, 1.2f);
+						a = a * a;
 					} else if (g == "clearComedyFall_star") {
-						a = a * a * a;
+						a = a * a;
 					} else if (g == "clearComedyFall_line") {
 						a = a * a;
 					} else if (g == "clearComedyFall_puff") {
 						a = std::pow(a, 1.6f);
+					} else if (g == "clearComedySlip_streak") {
+						a = a * a;
+					} else if (g == "clearComedySlip_spark") {
+						a = a * a * a;
+					} else if (g == "clearComedySlip_ring") {
+						a = a * a;
+					} else if (g == "clearComedySlip_chip") {
+						a = std::pow(a, 1.4f);
+					} else if (g == "clearBannerBurst_core") {
+						a = a * a * a;
+					} else if (g == "clearBannerBurst_confetti") {
+						a = std::pow(a, 1.2f);
+					} else if (g == "clearBannerBurst_ray") {
+						a = a * a;
 					}
 
 					++particleGroupIterator->second.kNumInstance_;//生きているParticleの数を1つカウントする

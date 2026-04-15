@@ -532,9 +532,10 @@ void GameClearScene::SpawnClearComedyActors_() {
 	pm->Emit("clearComedyWarp_spark", clearComedyMobBStartPos_, 28);
 	pm->Emit("clearComedyWarp_glitter", clearComedyMobBStartPos_, 18);
 
-	// フラグを立てて、二度とスポーンしないようにする
-	clearComedyActorsSpawned_ = true;
-	clearComedyMobBFallEffectPlayed_ = false; // 雑魚Bの転ぶエフェクトは一度だけ出すようにする
+	clearComedyActorsSpawned_ = true; // 二度とスポーンしないようにフラグを立てる
+	clearComedyMobBFallEffectPlayed_ = false; // 転ぶ役の落下エフェクトはまだ再生してない状態
+	clearComedyMobBSlipEffectPlayed_ = false; // 転ぶ役の滑るエフェクトはまだ再生してない状態
+	clearComedyNoticeMarkPlayed_ = false; // 気づきマークはまだ出してない状態
 }
 
 void GameClearScene::UpdateClearComedy_() {
@@ -570,6 +571,28 @@ void GameClearScene::UpdateClearComedy_() {
 		}
 
 		if (clearComedyTimer_ >= 0.65f) {
+
+			if (!clearComedyNoticeMarkPlayed_) {
+				auto* pm = TKM::ParticleManager::GetInstance();
+
+				if (clearComedyBoss_) {
+					Vector3 p = clearComedyBoss_->GetWorldPosition() + Vector3{ 0.0f, 6.0f, 0.0f };
+					pm->Emit("bossNoticeMark", p, 1);
+				}
+
+				if (clearComedyMobA_) {
+					Vector3 p = clearComedyMobA_->GetWorldPosition() + Vector3{ 0.0f, 3.0f, 0.0f };
+					pm->Emit("bossNoticeMark", p, 1);
+				}
+
+				if (clearComedyMobB_) {
+					Vector3 p = clearComedyMobB_->GetWorldPosition() + Vector3{ 0.0f, 3.0f, 0.0f };
+					pm->Emit("bossNoticeMark", p, 1);
+				}
+
+				clearComedyNoticeMarkPlayed_ = true;
+			}
+
 			clearComedyPhase_ = ClearComedyPhase::SlowNotice;
 			clearComedyTimer_ = 0.0f;
 		}
@@ -709,6 +732,19 @@ void GameClearScene::UpdateClearComedy_() {
 					clearComedyFallSlowRequested_ = true;
 				}
 
+				if (!clearComedyMobBSlipEffectPlayed_) {
+
+					Vector3 slipPos = startPos + Vector3{ 1.0f, 0.25f, 0.35f };
+
+					auto* pm = TKM::ParticleManager::GetInstance();
+					pm->Emit("clearComedySlip_streak", slipPos, 8);
+					pm->Emit("clearComedySlip_spark", slipPos, 10);
+					pm->Emit("clearComedySlip_ring", slipPos, 2);
+					pm->Emit("clearComedySlip_chip", slipPos, 8);
+
+					clearComedyMobBSlipEffectPlayed_ = true;
+				}
+
 				// -----------------------------
 				// 前半：一瞬ふわっと浮く
 				// -----------------------------
@@ -748,10 +784,8 @@ void GameClearScene::UpdateClearComedy_() {
 
 				auto* pm = TKM::ParticleManager::GetInstance();
 
-				pm->Emit("clearComedyFall_dust", slamPos, 24);
-				pm->Emit("clearComedyFall_star", slamPos + Vector3{ 0.0f, 0.7f, 0.0f }, 10);
-				pm->Emit("clearComedyFall_line", slamPos + Vector3{ 0.0f, 0.25f, 0.0f }, 14);
-				pm->Emit("clearComedyFall_puff", slamPos + Vector3{ 0.0f, 0.35f, 0.0f }, 12);
+				pm->Emit("clearComedyFall_dust", slamPos + Vector3{ 0.0f, -0.2f, 0.0f }, 14);
+				pm->Emit("clearComedyFall_star", slamPos + Vector3{ 0.0f, 0.0f, 0.0f }, 10);
 
 				clearComedyMobBFallEffectPlayed_ = true;
 			}
@@ -832,6 +866,18 @@ void GameClearScene::UpdateClearComedy_() {
 			clearComedyTimer_ = 0.0f;
 
 			// 3体が消えたあとに GAME CLEAR を表示開始
+			{
+				auto* pm = TKM::ParticleManager::GetInstance();
+
+				// 画面中央寄り。clearSpriteCenterPos_ をワールド寄せで使う代わりに、
+				// クリアシーン中央の見せたい位置に固定で出す
+				Vector3 burstPos = playerDisplayPos_ + Vector3{ 7.5f, 5.2f, 13.5f };
+
+				pm->Emit("clearBannerBurst_core", burstPos, 6);
+				pm->Emit("clearBannerBurst_confetti", burstPos, 70);
+				pm->Emit("clearBannerBurst_ray", burstPos, 30);
+			}
+
 			isClearSpriteVisible_ = true;
 			isClearSpritePopPlaying_ = true;
 			clearSpritePopTime_ = 0.0f;

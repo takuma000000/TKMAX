@@ -223,6 +223,14 @@ namespace TKM {
 		// 集束線のグロー
 		pm->CreateParticleGroup("w1sp_stream_glow", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
 
+		/// GAME CLEAR表示時：祝福クラッカー
+		// 爆心コア（中心の光の塊）
+		pm->CreateParticleGroup("clearBannerBurst_core", "./resources/texture/flower.png", ParticleManager::ParticleType::NORMAL);
+		// 放射状のレイ（光の筋）
+		pm->CreateParticleGroup("clearBannerBurst_confetti", "./resources/texture/flower.png", ParticleManager::ParticleType::NORMAL);
+		// 衝撃波リング（波紋のように広がるリング）
+		pm->CreateParticleGroup("clearBannerBurst_ray", "./resources/texture/firework_star.png", ParticleManager::ParticleType::NORMAL);
+
 		/// クリアコミカル逃走：三体のワープ出現
 		// 中心の白飛びコア
 		pm->CreateParticleGroup("clearComedyWarp_core", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
@@ -235,9 +243,19 @@ namespace TKM {
 		// 余韻のきらめき
 		pm->CreateParticleGroup("clearComedyWarp_glitter", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
 	
+		/// クリアコミカル逃走：雑魚Bの「ツルッ」
+		// 転倒の瞬間の衝撃で飛び散る細かい土煙
+		pm->CreateParticleGroup("clearComedySlip_streak", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
+		// 転倒の瞬間の衝撃で飛び散る細かい土煙
+		pm->CreateParticleGroup("clearComedySlip_spark", "./resources/texture/flower.png", ParticleManager::ParticleType::NORMAL);
+		// 転倒の瞬間の衝撃で飛び散る細かい土煙
+		pm->CreateParticleGroup("clearComedySlip_ring", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
+		// 転倒の瞬間の衝撃で飛び散る細かい土煙
+		pm->CreateParticleGroup("clearComedySlip_chip", "./resources/texture/flower.png", ParticleManager::ParticleType::NORMAL);
+
 		/// クリアコミカル逃走：雑魚B転倒
 		// 地面にぶつかった瞬間の土煙
-		pm->CreateParticleGroup("clearComedyFall_dust", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
+		pm->CreateParticleGroup("clearComedyFall_dust", "./resources/texture/firework_star.png", ParticleManager::ParticleType::NORMAL);
 		// 漫画っぽい星
 		pm->CreateParticleGroup("clearComedyFall_star", "./resources/texture/flower.png", ParticleManager::ParticleType::NORMAL);
 		// 衝撃のシュッ線

@@ -2726,69 +2726,94 @@ namespace TKM {
 				return std::uniform_real_distribution<float>(a, b)(rng);
 				};
 
-			float ang = frand(0.0f, 6.2831853f);
-			float rad = frand(0.1f, 1.3f);
+			// ------------------------------------
+			// 転倒時の補助バースト粒
+			// star に似せて放射状に散るが、
+			// 色は控えめ・サイズは少し大きめ
+			// ------------------------------------
+			float yaw = frand(0.0f, 6.2831853f);
+			float pitch = frand(0.20f, 1.20f);
 
-			Vector3 dir = {
-				std::cos(ang),
-				frand(0.15f, 0.55f),
-				std::sin(ang)
-			};
+			Vector3 dir{};
+			dir.x = std::cos(yaw) * std::sin(pitch);
+			dir.y = std::cos(pitch) * 0.75f;
+			dir.z = std::sin(yaw) * std::sin(pitch);
+
+			if (MyMath::Length(dir) < 0.001f) {
+				dir = { 0.0f, 1.0f, 0.0f };
+			}
 			dir = MyMath::Normalize(dir);
 
+			// 発生位置に少しだけ厚みを持たせる
 			p.transform_.translate_ = center + Vector3{
-				std::cos(ang) * rad,
-				frand(-0.08f, 0.08f),
-				std::sin(ang) * rad
+				frand(-0.22f, 0.22f),
+				frand(-0.12f, 0.12f),
+				frand(-0.22f, 0.22f)
 			};
 
-			float speed = frand(2.5f, 6.5f);
+			// 星より少し遅く、でもちゃんと弾ける
+			float speed = frand(3.5f, 7.0f);
 			p.velocity_ = dir * speed;
 
-			float sc = frand(0.8f, 1.8f);
+			// 星より少し大きめ
+			float sc = frand(0.22f, 0.48f);
 			p.transform_.scale_ = { sc, sc, sc };
 
-			p.lifeTime_ = frand(0.35f, 0.70f);
+			p.lifeTime_ = frand(0.24f, 0.42f);
 			p.currentTime_ = 0.0f;
 
-			float c = frand(0.0f, 1.0f);
-			float base = 0.65f + 0.15f * c;
-			p.color_ = { base, base, base * 0.95f, 0.95f };
+			// 白〜薄グレー寄りで、星を邪魔しない
+			float c = frand(0.78f, 0.96f);
+			p.color_ = { c, c, c, 1.0f };
 		} else if (groupName == "clearComedyFall_star") {
 			auto frand = [&rng](float a, float b) {
 				return std::uniform_real_distribution<float>(a, b)(rng);
 				};
 
-			float ang = frand(0.0f, 6.2831853f);
-			float rad = frand(0.2f, 1.1f);
+			// ------------------------------------
+			// 転倒時の「パッと弾ける星」
+			// 中心から四方八方へ放射状に散る
+			// ------------------------------------
+			float yaw = frand(0.0f, 6.2831853f);
+			float pitch = frand(0.15f, 1.15f); // 真横だけじゃなく少し上にも飛ばす
 
-			Vector3 dir = {
-				std::cos(ang),
-				frand(0.45f, 1.10f),
-				std::sin(ang)
-			};
+			Vector3 dir{};
+			dir.x = std::cos(yaw) * std::sin(pitch);
+			dir.y = std::cos(pitch) * 0.85f;
+			dir.z = std::sin(yaw) * std::sin(pitch);
+
+			if (MyMath::Length(dir) < 0.001f) {
+				dir = { 0.0f, 1.0f, 0.0f };
+			}
 			dir = MyMath::Normalize(dir);
 
+			// ほんの少しだけ中心に厚みを持たせる
 			p.transform_.translate_ = center + Vector3{
-				frand(-0.20f, 0.20f),
-				frand(0.05f, 0.35f),
-				frand(-0.20f, 0.20f)
+				frand(-0.18f, 0.18f),
+				frand(-0.10f, 0.18f),
+				frand(-0.18f, 0.18f)
 			};
 
-			float speed = frand(3.5f, 7.5f);
+			// 速めにバラッと散らす
+			float speed = frand(5.5f, 10.5f);
 			p.velocity_ = dir * speed;
 
-			float sc = frand(0.22f, 0.55f);
+			// 星自体もしっかり見えるサイズ
+			float sc = frand(0.28f, 0.60f);
 			p.transform_.scale_ = { sc, sc, sc };
 
-			p.lifeTime_ = frand(0.28f, 0.52f);
+			// 短すぎると見えないので少しだけ持たせる
+			p.lifeTime_ = frand(0.28f, 0.46f);
 			p.currentTime_ = 0.0f;
 
+			// 黄〜オレンジを中心に、少しだけ白寄りも混ぜる
 			float t = frand(0.0f, 1.0f);
-			if (t < 0.65f) {
-				p.color_ = { 1.0f, 0.92f, 0.20f, 1.0f }; // 黄色星
+			if (t < 0.55f) {
+				p.color_ = { 1.0f, 0.92f, 0.18f, 1.0f };
+			} else if (t < 0.90f) {
+				p.color_ = { 1.0f, 0.62f, 0.20f, 1.0f };
 			} else {
-				p.color_ = { 1.0f, 0.55f, 0.25f, 1.0f }; // オレンジ星
+				p.color_ = { 1.0f, 0.98f, 0.82f, 1.0f };
 			}
 		} else if (groupName == "clearComedyFall_line") {
 			auto frand = [&rng](float a, float b) {
@@ -2845,6 +2870,200 @@ namespace TKM {
 
 			float c = frand(0.75f, 1.0f);
 			p.color_ = { c, c, c, 0.9f };
+		} else if (groupName == "clearComedySlip_streak") {
+			auto frand = [&rng](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			p.transform_.translate_ = center + Vector3{
+				frand(-0.35f, 0.35f),
+				frand(-0.05f, 0.08f),
+				frand(-0.20f, 0.20f)
+			};
+
+			// 右前方向へスッと抜ける感じ
+			p.velocity_ = {
+				frand(2.5f, 5.0f),
+				frand(0.15f, 0.55f),
+				frand(0.4f, 1.2f)
+			};
+
+			float thin = frand(0.15f, 0.25f);
+			float len = frand(1.2f, 2.8f);
+			p.transform_.scale_ = { thin, thin, len };
+
+			p.lifeTime_ = frand(0.10f, 0.18f);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { 0.95f, 0.98f, 1.10f, 1.0f };
+		} else if (groupName == "clearComedySlip_spark") {
+			auto frand = [&rng](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			Vector3 dir = {
+				frand(-0.8f, 1.0f),
+				frand(0.1f, 0.9f),
+				frand(-0.6f, 0.6f)
+			};
+			if (MyMath::Length(dir) < 0.001f) {
+				dir = { 1.0f, 0.3f, 0.0f };
+			}
+			dir = MyMath::Normalize(dir);
+
+			p.transform_.translate_ = center + Vector3{
+				frand(-0.15f, 0.15f),
+				frand(-0.03f, 0.10f),
+				frand(-0.10f, 0.10f)
+			};
+
+			p.velocity_ = dir * frand(2.0f, 4.8f);
+
+			float sc = frand(0.10f, 0.24f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.10f, 0.20f);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { 1.0f, 1.0f, 0.85f, 1.0f };
+		} else if (groupName == "clearComedySlip_ring") {
+			auto frand = [&rng](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			p.transform_.translate_ = center + Vector3{ 0.0f, 0.05f, 0.0f };
+			p.velocity_ = { 0.0f, frand(0.02f, 0.10f), 0.0f };
+
+			float sc = frand(0.45f, 0.85f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.10f, 0.18f);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { 0.95f, 0.98f, 1.05f, 1.0f };
+		} else if (groupName == "clearComedySlip_chip") {
+			auto frand = [&rng](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			p.transform_.translate_ = center + Vector3{
+				frand(-0.20f, 0.20f),
+				frand(0.00f, 0.12f),
+				frand(-0.20f, 0.20f)
+			};
+
+			p.velocity_ = {
+				frand(0.8f, 2.2f),
+				frand(0.4f, 1.4f),
+				frand(-0.8f, 0.8f)
+			};
+
+			float sc = frand(0.10f, 0.22f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.16f, 0.28f);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { 0.95f, 0.95f, 0.95f, 1.0f };
+		} else if (groupName == "clearBannerBurst_core") {
+			auto frand = [&rng](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			p.transform_.translate_ = center + Vector3{
+				frand(-0.15f, 0.15f),
+				frand(-0.15f, 0.15f),
+				frand(-0.15f, 0.15f)
+			};
+
+			p.velocity_ = {
+				frand(-0.05f, 0.05f),
+				frand(-0.05f, 0.05f),
+				frand(-0.05f, 0.05f)
+			};
+
+			float sc = frand(2.2f, 3.8f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.10f, 0.18f);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { 1.0f, 0.95f, 0.85f, 1.0f };
+		} else if (groupName == "clearBannerBurst_confetti") {
+			auto frand = [&rng](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			// =========================================
+			// 画面全体にぶち撒けるクラッカー
+			// =========================================
+
+			// ここが一番重要（広がりの核）
+			std::uniform_real_distribution<float> offXY(-12.0f, 12.0f);
+			std::uniform_real_distribution<float> offZ(-12.0f, 12.0f);
+
+			Vector3 offset = {
+				offXY(rng),
+				offXY(rng) * 0.8f,
+				offZ(rng)
+			};
+
+			// 放射方向
+			Vector3 dir = MyMath::Normalize(offset);
+
+			if (MyMath::Length(dir) < 0.001f) {
+				dir = { 0.0f, 1.0f, 0.0f };
+			}
+
+			// 速度ぶち上げ
+			float speed = frand(12.0f, 24.0f);
+			p.velocity_ = dir * speed;
+
+			// サイズもちゃんと見えるように
+			float sc = frand(0.45f, 1.2f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			// 長めに残す（画面全体に散るから）
+			p.lifeTime_ = frand(0.8f, 1.4f);
+			p.currentTime_ = 0.0f;
+
+			// カラフル（祝福感MAX）
+			float c = frand(0.0f, 1.0f);
+			if (c < 0.2f) {
+				p.color_ = { 1.0f, 0.25f, 0.35f, 1.0f };
+			}
+
+			// 発生位置は中心固定（ここ重要）
+			p.transform_.translate_ = center;
+		} else if (groupName == "clearBannerBurst_ray") {
+			auto frand = [&rng](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			float yaw = frand(0.0f, 6.2831853f);
+			float pitch = frand(0.25f, 1.10f);
+
+			Vector3 dir{};
+			dir.x = std::cos(yaw) * std::sin(pitch);
+			dir.y = std::cos(pitch) * 0.75f;
+			dir.z = std::sin(yaw) * std::sin(pitch);
+
+			if (MyMath::Length(dir) < 0.001f) {
+				dir = { 1.0f, 0.0f, 0.0f };
+			}
+			dir = MyMath::Normalize(dir);
+
+			p.transform_.translate_ = center;
+			p.velocity_ = dir * frand(15.0f, 28.0f);
+
+			float thin = frand(0.08f, 0.16f);
+			float len = frand(1.8f, 3.8f);
+			p.transform_.scale_ = { thin, thin, len };
+
+			p.lifeTime_ = frand(0.16f, 0.28f);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { 1.0f, 0.92f, 0.65f, 1.0f };
 		} else { // 上記意外
 			// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 			std::uniform_real_distribution<float> velX(-0.15f, 0.15f);
