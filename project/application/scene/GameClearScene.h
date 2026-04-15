@@ -23,6 +23,7 @@
 #include "BossEnemy.h"
 #include "TimeScaleController.h"
 #include "BossConfig.h"
+#include <array>
 
 //=============================================================
 // GameClearSceneクラス
@@ -111,6 +112,8 @@ private:
 	float clearSpritePopTime_ = 0.0f; // 演出経過時間
 	float clearSpritePopDuration_ = 0.35f; // 演出時間
 
+	bool isClearMenuVisible_ = false; // GAME CLEAR と同時に出す
+
 	Vector2 clearSpriteCenterPos_ = {
 		static_cast<float>(TKM::WindowsAPI::kClientWidth_) * 0.5f,
 		static_cast<float>(TKM::WindowsAPI::kClientHeight_) * 0.5f
@@ -173,6 +176,18 @@ private:
 	float celebrateSparkTimer_ = 0.0f; // 祝福の光の中心スパーク用タイマー
 	float celebrateRayTimer_ = 0.0f; // 祝福の光の線（レイ）用タイマー
 	bool celebrateFinalBurstDone_ = false; // 最後の大きな爆発エフェクトを出したかどうか
+	float clearStageFireTimer_ = 0.0f; // クリアステージの火エフェクト用タイマー
+	bool clearStageFireActive_ = false; // クリアステージの火エフェクトを出すかどうか
+
+	// クリアステージの火エフェクトの位置（6箇所）
+	std::array<Vector3, 6> clearStageFirePositions_ = {
+		Vector3{ -18.0f, -6.5f, 18.0f },
+		Vector3{ -10.5f, -6.5f, 20.0f },
+		Vector3{ -3.0f,  -6.5f, 21.5f },
+		Vector3{  4.5f,  -6.5f, 21.0f },
+		Vector3{ 12.0f,  -6.5f, 19.5f },
+		Vector3{ 19.0f,  -6.5f, 17.5f }
+	};
 	//======================================================================
 	// クリア後コミカル逃走演出
 	//======================================================================

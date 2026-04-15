@@ -158,18 +158,17 @@ void GameClearScene::Update() {
 	// ─────────────────────
 	// クリアメニュー（リスタート/タイトル）
 	// ─────────────────────
-	if (!irisClosing_ && !irisOpening_) {
+	if (!irisClosing_ && !irisOpening_ && isClearMenuVisible_) {
 		const auto cmd = clearMenu_->Update(dt_);
 
-		// コマンドに応じてアイリス閉じ開始
 		if (cmd == GameResultMenuController::Command::Restart) {
-			nextAction_ = NextAction::Restart; // リスタート
-			irisClosing_ = true; // アイリス閉じ開始
-			irisCloseTween_.Reset(/*start*/ 0.0f, /*end*/ irisMaxScale_, /*sec*/ 0.8f, Ease::Type::InBack); // 閉じはInBackで
-		} else if (cmd == GameResultMenuController::Command::ReturnToTitle) { // タイトルに戻る
-			nextAction_ = NextAction::ReturnToTitle; // タイトルに戻る
-			irisClosing_ = true; // アイリス閉じ開始
-			irisCloseTween_.Reset(/*start*/ 0.0f, /*end*/ irisMaxScale_, /*sec*/ 0.8f, Ease::Type::InBack); // 閉じはInBackで
+			nextAction_ = NextAction::Restart;
+			irisClosing_ = true;
+			irisCloseTween_.Reset(/*start*/ 0.0f, /*end*/ irisMaxScale_, /*sec*/ 0.8f, Ease::Type::InBack);
+		} else if (cmd == GameResultMenuController::Command::ReturnToTitle) {
+			nextAction_ = NextAction::ReturnToTitle;
+			irisClosing_ = true;
+			irisCloseTween_.Reset(/*start*/ 0.0f, /*end*/ irisMaxScale_, /*sec*/ 0.8f, Ease::Type::InBack);
 		}
 	}
 
@@ -317,6 +316,7 @@ void GameClearScene::Update() {
 			clearSpritePopTime_ = 0.0f;
 			clearSprite_->SetPosition(clearSpriteStartPos_);
 			clearSprite_->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
+			isClearMenuVisible_ = false;
 
 			// 3体コントをここから開始
 			if (clearComedyPhase_ == ClearComedyPhase::None) {
@@ -346,7 +346,7 @@ void GameClearScene::Update() {
 	postFx_->Update(dt_, nullptr);
 
 	// ─────────────────────
-	// ーティクル更新
+	// パーティクル更新
 	// ─────────────────────
 	TKM::ParticleManager::GetInstance()->Update(dt_);
 
@@ -367,6 +367,27 @@ void GameClearScene::Update() {
 	player_->SetPosition(playerDisplayPos_); // クリア画面での表示位置
 	player_->SetRotation(playerDisplayRot_); // クリア画面での表示回転
 	player_->UpdateVisualOnly(dt_); // 入力やゲームプレイ処理は全部止めて、見た目用の更新だけ行う
+
+	// ─────────────────────
+	// クリアシーン：ライブ風ファイアー柱
+	// カメラ演出終了後に常時噴射
+	// ─────────────────────
+	if (clearStageFireActive_) {
+		clearStageFireTimer_ += dt_;
+
+		const float kFireInterval = 0.045f;
+
+		if (clearStageFireTimer_ >= kFireInterval) {
+			clearStageFireTimer_ = 0.0f;
+
+			auto* pm = TKM::ParticleManager::GetInstance();
+
+			for (const Vector3& firePos : clearStageFirePositions_) {
+				pm->Emit("clearStageFire_column", firePos, 3);
+				pm->Emit("clearStageFire_top", firePos, 2);
+			}
+		}
+	}
 
 	// ─────────────────────
 	// 「GAME CLEAR」スプライトの表示演出更新
@@ -437,7 +458,10 @@ void GameClearScene::Draw() {
 	if ((irisOpening_ || irisClosing_)) {
 		iris_->Draw();
 	}
-	clearMenu_->Draw();
+
+	if (isClearMenuVisible_) {
+		clearMenu_->Draw();
+	}
 }
 
 void GameClearScene::ImGuiDebug() {
@@ -878,10 +902,14 @@ void GameClearScene::UpdateClearComedy_() {
 				pm->Emit("clearBannerBurst_ray", burstPos, 30);
 			}
 
+			// 3体が消えたあとに GAME CLEAR を表示開始
 			isClearSpriteVisible_ = true;
+			isClearMenuVisible_ = true;
 			isClearSpritePopPlaying_ = true;
 			clearSpritePopTime_ = 0.0f;
 			clearSprite_->SetPosition(clearSpriteStartPos_);
+			clearStageFireActive_ = true;
+			clearStageFireTimer_ = 0.0f;
 		}
 	}
 	break;

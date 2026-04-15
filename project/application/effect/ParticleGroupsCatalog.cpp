@@ -262,5 +262,11 @@ namespace TKM {
 		pm->CreateParticleGroup("clearComedyFall_line", "./resources/texture/flower.png", ParticleManager::ParticleType::NORMAL);
 		// 余韻のくるくる・チラつき
 		pm->CreateParticleGroup("clearComedyFall_puff", "./resources/texture/flower.png", ParticleManager::ParticleType::NORMAL);
+
+		/// クリアシーン：ライブ風ファイアー柱
+		// 炎の柱のコア
+		pm->CreateParticleGroup("clearStageFire_column", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
+		// 炎の柱のグロー
+		pm->CreateParticleGroup("clearStageFire_top", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
 	}
 }

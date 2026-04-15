@@ -16,6 +16,10 @@ namespace TKM {
 		Vector3 offset{ offXY(rng), offXY(rng) * 0.6f, offZ(rng) };
 		p.transform_.translate_ = center + offset;
 
+		if (MakeClearStageFireParticle(rng, groupName, center, p)) {
+			return p;
+		}
+
 		if (groupName == "irisOpen") { //── 開幕用：中心から“放出”する粒 ──
 			// ── 開幕用：中心へ“吸い込む”柔らかい粒 ──
 			// 方向＝中心へ向かう（= -offset の方向）
@@ -2808,13 +2812,7 @@ namespace TKM {
 
 			// 黄〜オレンジを中心に、少しだけ白寄りも混ぜる
 			float t = frand(0.0f, 1.0f);
-			if (t < 0.55f) {
-				p.color_ = { 1.0f, 0.92f, 0.18f, 1.0f };
-			} else if (t < 0.90f) {
-				p.color_ = { 1.0f, 0.62f, 0.20f, 1.0f };
-			} else {
-				p.color_ = { 1.0f, 0.98f, 0.82f, 1.0f };
-			}
+			p.color_ = { 1.0f, 0.92f, 0.18f, 1.0f };
 		} else if (groupName == "clearComedyFall_line") {
 			auto frand = [&rng](float a, float b) {
 				return std::uniform_real_distribution<float>(a, b)(rng);
@@ -3029,9 +3027,7 @@ namespace TKM {
 
 			// カラフル（祝福感MAX）
 			float c = frand(0.0f, 1.0f);
-			if (c < 0.2f) {
-				p.color_ = { 1.0f, 0.25f, 0.35f, 1.0f };
-			}
+			p.color_ = { 1.0f, 0.25f, 0.35f, 1.0f };
 
 			// 発生位置は中心固定（ここ重要）
 			p.transform_.translate_ = center;
@@ -3080,6 +3076,108 @@ namespace TKM {
 			p.color_ = { base, base * 0.5f, base * 0.2f, 1.0f };
 		}
 		return p;
+	}
+
+	bool ParticleSpawner::MakeClearStageFireParticle(
+		std::mt19937& rng,
+		const std::string& groupName,
+		const Vector3& center,
+		ParticleManager::Particle& p
+	) {
+		auto frand = [&rng](float a, float b) {
+			return std::uniform_real_distribution<float>(a, b)(rng);
+		};
+
+		Vector3 fireBaseColor{};
+		Vector3 fireTipColor{};
+
+		// 発生位置ごとに炎のテーマカラーを変える
+		if (center.x < -14.0f) {
+			// 緑
+			fireBaseColor = { 0.35f, 1.00f, 0.25f };
+			fireTipColor = { 0.75f, 1.00f, 0.70f };
+		} else if (center.x < -7.0f) {
+			// 青
+			fireBaseColor = { 0.20f, 0.75f, 1.00f };
+			fireTipColor = { 0.75f, 0.95f, 1.00f };
+		} else if (center.x < 0.0f) {
+			// 黄
+			fireBaseColor = { 1.00f, 0.88f, 0.20f };
+			fireTipColor = { 1.00f, 0.98f, 0.70f };
+		} else if (center.x < 7.0f) {
+			// 赤
+			fireBaseColor = { 1.00f, 0.30f, 0.12f };
+			fireTipColor = { 1.00f, 0.72f, 0.38f };
+		} else if (center.x < 14.0f) {
+			// 水色
+			fireBaseColor = { 0.35f, 0.95f, 1.00f };
+			fireTipColor = { 0.82f, 1.00f, 1.00f };
+		} else {
+			// 紫
+			fireBaseColor = { 0.75f, 0.35f, 1.00f };
+			fireTipColor = { 0.95f, 0.75f, 1.00f };
+		}
+
+		if (groupName == "clearStageFire_column") {
+			p.transform_.translate_ = center + Vector3{
+				frand(-0.45f, 0.45f),
+				frand(-0.15f, 0.15f),
+				frand(-0.35f, 0.35f)
+			};
+
+			p.velocity_ = {
+				frand(-0.8f, 0.8f),
+				frand(10.0f, 17.0f),
+				frand(-0.6f, 0.6f)
+			};
+
+			float width = frand(0.45f, 0.95f);
+			float height = frand(1.8f, 3.8f);
+			p.transform_.scale_ = { width, height, width };
+
+			p.lifeTime_ = frand(0.20f, 0.35f);
+			p.currentTime_ = 0.0f;
+
+			float t = frand(0.80f, 1.15f);
+			p.color_ = {
+				fireBaseColor.x * t,
+				fireBaseColor.y * t,
+				fireBaseColor.z * t,
+				1.0f
+			};
+			return true;
+		}
+
+		if (groupName == "clearStageFire_top") {
+			p.transform_.translate_ = center + Vector3{
+				frand(-0.35f, 0.35f),
+				frand(1.2f, 2.4f),
+				frand(-0.35f, 0.35f)
+			};
+
+			p.velocity_ = {
+				frand(-0.9f, 0.9f),
+				frand(3.0f, 7.0f),
+				frand(-0.8f, 0.8f)
+			};
+
+			float sc = frand(0.9f, 1.8f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.18f, 0.32f);
+			p.currentTime_ = 0.0f;
+
+			float t = frand(0.85f, 1.20f);
+			p.color_ = {
+				fireTipColor.x * t,
+				fireTipColor.y * t,
+				fireTipColor.z * t,
+				1.0f
+			};
+			return true;
+		}
+
+		return false;
 	}
 
 }

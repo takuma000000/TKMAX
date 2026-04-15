@@ -303,6 +303,16 @@ namespace TKM {
 						float stretch = 1.0f + 10.0f * kDeltaTime_;
 						(*particleIterator).transform_.scale_.z *= stretch;
 					}
+					if (g == "clearStageFire_column") {
+						float growY = 1.0f + 7.5f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.y *= growY;
+					}
+					if (g == "clearStageFire_top") {
+						float grow = 1.0f + 4.0f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.x *= grow;
+						(*particleIterator).transform_.scale_.y *= grow;
+						(*particleIterator).transform_.scale_.z *= grow;
+					}
 
 					// アルファカーブ（“パァン”を作る）
 					float a = 1.0f - t;
@@ -394,6 +404,10 @@ namespace TKM {
 						a = std::pow(a, 1.2f);
 					} else if (g == "clearBannerBurst_ray") {
 						a = a * a;
+					} else if (g == "clearStageFire_column") {
+						a = a * a;
+					} else if (g == "clearStageFire_top") {
+						a = a * a * a;
 					}
 
 					++particleGroupIterator->second.kNumInstance_;//生きているParticleの数を1つカウントする
