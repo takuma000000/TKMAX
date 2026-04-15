@@ -162,6 +162,8 @@ void TitleScene::Update() {
 	if (earlyExitUpdate_) { return; }
 	// ------------------------------------------------
 
+
+
 	// スカイボックス回転更新
 	constexpr float kTwoPi = 6.2831853f;
 	skyPitch_ -= skyRotSpeedX_;
