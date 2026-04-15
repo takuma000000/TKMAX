@@ -222,5 +222,17 @@ namespace TKM {
 		pm->CreateParticleGroup("w1sp_stream_core", "./resources/texture/firework_star.png", ParticleManager::ParticleType::NORMAL);
 		// 集束線のグロー
 		pm->CreateParticleGroup("w1sp_stream_glow", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
+
+		/// クリアコミカル逃走：三体のワープ出現
+		// 中心の白飛びコア
+		pm->CreateParticleGroup("clearComedyWarp_core", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
+		// 空間が開くリング
+		pm->CreateParticleGroup("clearComedyWarp_ring", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
+		// 前後に突き抜けるワープストリーク
+		pm->CreateParticleGroup("clearComedyWarp_streak", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
+		// 破裂時の細かい火花
+		pm->CreateParticleGroup("clearComedyWarp_spark", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
+		// 余韻のきらめき
+		pm->CreateParticleGroup("clearComedyWarp_glitter", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
 	}
 }

@@ -2567,6 +2567,160 @@ namespace TKM {
 				p.color_ = { 1.0f, 0.92f, 0.55f, 1.0f };
 			}
 
+		} else if (groupName == "clearComedyWarp_core") {
+			auto frand = [&rng](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			p.transform_.translate_ = center + Vector3{
+				frand(-0.12f, 0.12f),
+				frand(-0.12f, 0.12f),
+				frand(-0.12f, 0.12f)
+			};
+
+			p.velocity_ = {
+				frand(-0.04f, 0.04f),
+				frand(-0.04f, 0.04f),
+				frand(-0.04f, 0.04f)
+			};
+
+			float sc = frand(2.8f, 4.8f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.10f, 0.18f);
+			p.currentTime_ = 0.0f;
+
+			float t = frand(0.0f, 1.0f);
+			p.color_ = {
+				0.75f + 0.15f * t,
+				0.95f + 0.10f * t,
+				1.25f,
+				1.0f
+			};
+		} else if (groupName == "clearComedyWarp_ring") {
+			auto frand = [&rng](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			p.transform_.translate_ = center;
+			p.velocity_ = { 0.0f, frand(-0.02f, 0.05f), 0.0f };
+
+			float sc = frand(1.8f, 3.4f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.20f, 0.34f);
+			p.currentTime_ = 0.0f;
+
+			float t = frand(0.0f, 1.0f);
+			p.color_ = {
+				0.40f + 0.10f * t,
+				0.95f + 0.05f * t,
+				1.20f,
+				0.95f
+			};
+		} else if (groupName == "clearComedyWarp_streak") {
+			auto frand = [&rng](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			std::uniform_real_distribution<float> ang(0.0f, 6.2831853f);
+			float a = ang(rng);
+
+			float radial = frand(0.0f, 1.4f);
+			float x = std::cos(a) * radial;
+			float y = std::sin(a) * radial * 0.55f;
+			float z = frand(-0.6f, 0.6f);
+
+			p.transform_.translate_ = center + Vector3{ x, y, z };
+
+			Vector3 dir = MyMath::Normalize(Vector3{
+				x + frand(-0.15f, 0.15f),
+				y * 0.35f + frand(-0.08f, 0.08f),
+				frand(-1.0f, 1.0f)
+				});
+
+			if (MyMath::Length(dir) < 0.001f) {
+				dir = { 0.0f, 0.0f, 1.0f };
+			}
+
+			float speed = frand(22.0f, 42.0f);
+			p.velocity_ = dir * (speed * 0.016f);
+
+			float thin = frand(0.10f, 0.24f);
+			float len = frand(3.8f, 9.5f);
+			p.transform_.scale_ = { thin, thin, len };
+
+			p.lifeTime_ = frand(0.16f, 0.32f);
+			p.currentTime_ = 0.0f;
+
+			float c = frand(0.0f, 1.0f);
+			p.color_ = {
+				0.35f + 0.15f * c,
+				0.85f + 0.15f * c,
+				1.25f,
+				1.0f
+			};
+		} else if (groupName == "clearComedyWarp_spark") {
+			auto frand = [&rng](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			Vector3 dir = {
+				frand(-1.0f, 1.0f),
+				frand(-0.7f, 1.1f),
+				frand(-1.0f, 1.0f)
+			};
+
+			if (MyMath::Length(dir) < 0.001f) {
+				dir = { 0.0f, 1.0f, 0.0f };
+			}
+			dir = MyMath::Normalize(dir);
+
+			p.transform_.translate_ = center + dir * frand(0.1f, 0.8f);
+			p.velocity_ = dir * (frand(10.0f, 24.0f) * 0.016f);
+
+			float sc = frand(0.22f, 0.60f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.20f, 0.42f);
+			p.currentTime_ = 0.0f;
+
+			float t = frand(0.0f, 1.0f);
+			p.color_ = {
+				0.45f + 0.15f * t,
+				0.95f,
+				1.20f,
+				1.0f
+			};
+		} else if (groupName == "clearComedyWarp_glitter") {
+			auto frand = [&rng](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			p.transform_.translate_ = center + Vector3{
+				frand(-2.2f, 2.2f),
+				frand(-1.6f, 1.8f),
+				frand(-2.2f, 2.2f)
+			};
+
+			p.velocity_ = {
+				frand(-0.10f, 0.10f),
+				frand(0.04f, 0.18f),
+				frand(-0.10f, 0.10f)
+			};
+
+			float sc = frand(0.10f, 0.28f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.45f, 0.85f);
+			p.currentTime_ = 0.0f;
+
+			float t = frand(0.0f, 1.0f);
+			if (t < 0.5f) {
+				p.color_ = { 0.80f, 0.98f, 1.15f, 1.0f };
+			} else {
+				p.color_ = { 0.55f, 0.90f, 1.20f, 1.0f };
+			}
 		} else { // 上記意外
 			// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 			std::uniform_real_distribution<float> velX(-0.15f, 0.15f);

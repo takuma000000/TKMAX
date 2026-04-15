@@ -310,11 +310,19 @@ void GameClearScene::Update() {
 		// ─────────────────────
 		if (t >= 1.0f) {
 			enableCameraIntro_ = false; // カメラ演出終了
-			isClearSpriteVisible_ = true; // スプライト表示開始
-			isClearSpritePopPlaying_ = true; // 位置ポップ演出開始
-			clearSpritePopTime_ = 0.0f; // 演出時間リセット
-			clearSprite_->SetPosition(clearSpriteStartPos_); // 少し下からスタート
+
+			// ここではまだ GAME CLEAR を出さない
+			isClearSpriteVisible_ = false;
+			isClearSpritePopPlaying_ = false;
+			clearSpritePopTime_ = 0.0f;
+			clearSprite_->SetPosition(clearSpriteStartPos_);
 			clearSprite_->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
+
+			// 3体コントをここから開始
+			if (clearComedyPhase_ == ClearComedyPhase::None) {
+				clearComedyPhase_ = ClearComedyPhase::WaitAfterClear;
+				clearComedyTimer_ = 0.0f;
+			}
 		}
 	} else {
 		camera_->SetTranslate(cameraEndPos_); // カメラ位置
@@ -324,9 +332,6 @@ void GameClearScene::Update() {
 		if (postFx_) {
 			postFx_->SetRadialBlurManual(false, 0.0f);
 		}
-
-		// クリアスプライト表示ON（カメラ演出が終わったら表示する）
-		isClearSpriteVisible_ = true;
 	}
 	camera_->Update();
 
@@ -362,17 +367,6 @@ void GameClearScene::Update() {
 	player_->SetPosition(playerDisplayPos_); // クリア画面での表示位置
 	player_->SetRotation(playerDisplayRot_); // クリア画面での表示回転
 	player_->UpdateVisualOnly(dt_); // 入力やゲームプレイ処理は全部止めて、見た目用の更新だけ行う
-
-	// ─────────────────────
-	// クリア後のコミカル逃走演出更新
-	// クリアスプライトの位置ポップ演出が終わったら、少し待ってから逃走演出開始
-	// ─────────────────────
-	if (isClearSpriteVisible_ &&
-		!isClearSpritePopPlaying_ &&
-		clearComedyPhase_ == ClearComedyPhase::None) {
-		clearComedyPhase_ = ClearComedyPhase::WaitAfterClear; // クリア後少し待つフェーズへ
-		clearComedyTimer_ = 0.0f; // フェーズ開始からの経過時間リセット
-	}
 
 	// ─────────────────────
 	// 「GAME CLEAR」スプライトの表示演出更新
@@ -475,6 +469,8 @@ void GameClearScene::SpawnClearComedyActors_() {
 		return;
 	}
 
+	auto* pm = TKM::ParticleManager::GetInstance();
+
 	// ---------------------
 	// ボス
 	// ---------------------
@@ -487,6 +483,12 @@ void GameClearScene::SpawnClearComedyActors_() {
 	clearComedyBoss_->SetRotate({ 0.0f, 3.14159265f, 0.0f });
 	clearComedyBoss_->SetLocked(true);
 	clearComedyBoss_->SyncTransform();
+
+	pm->Emit("clearComedyWarp_core", clearComedyBossStartPos_, 6);
+	pm->Emit("clearComedyWarp_ring", clearComedyBossStartPos_, 5);
+	pm->Emit("clearComedyWarp_streak", clearComedyBossStartPos_, 64);
+	pm->Emit("clearComedyWarp_spark", clearComedyBossStartPos_, 42);
+	pm->Emit("clearComedyWarp_glitter", clearComedyBossStartPos_, 28);
 
 	// ---------------------
 	// 雑魚A
@@ -503,6 +505,12 @@ void GameClearScene::SpawnClearComedyActors_() {
 	clearComedyMobA_->SetLocked(true);
 	clearComedyMobA_->SyncTransform();
 
+	pm->Emit("clearComedyWarp_core", clearComedyMobAStartPos_, 4);
+	pm->Emit("clearComedyWarp_ring", clearComedyMobAStartPos_, 4);
+	pm->Emit("clearComedyWarp_streak", clearComedyMobAStartPos_, 44);
+	pm->Emit("clearComedyWarp_spark", clearComedyMobAStartPos_, 28);
+	pm->Emit("clearComedyWarp_glitter", clearComedyMobAStartPos_, 18);
+
 	// ---------------------
 	// 雑魚B（転ぶ役）
 	// ---------------------
@@ -517,6 +525,12 @@ void GameClearScene::SpawnClearComedyActors_() {
 	clearComedyMobB_->SetScale({ 1.2f, 1.2f, 1.2f });
 	clearComedyMobB_->SetLocked(true);
 	clearComedyMobB_->SyncTransform();
+
+	pm->Emit("clearComedyWarp_core", clearComedyMobBStartPos_, 4);
+	pm->Emit("clearComedyWarp_ring", clearComedyMobBStartPos_, 4);
+	pm->Emit("clearComedyWarp_streak", clearComedyMobBStartPos_, 44);
+	pm->Emit("clearComedyWarp_spark", clearComedyMobBStartPos_, 28);
+	pm->Emit("clearComedyWarp_glitter", clearComedyMobBStartPos_, 18);
 
 	// フラグを立てて、二度とスポーンしないようにする
 	clearComedyActorsSpawned_ = true;
@@ -534,11 +548,12 @@ void GameClearScene::UpdateClearComedy_() {
 
 	switch (clearComedyPhase_) {
 	case ClearComedyPhase::WaitAfterClear:
-		if (clearComedyTimer_ >= 0.65f) {
+		if (clearComedyTimer_ >= 0.85f) {
 			SpawnClearComedyActors_();
 			clearComedyPhase_ = ClearComedyPhase::Spawn;
 			clearComedyTimer_ = 0.0f;
 		}
+
 		break;
 
 	case ClearComedyPhase::Spawn:
@@ -799,6 +814,12 @@ void GameClearScene::UpdateClearComedy_() {
 			clearComedyActorsSpawned_ = false;
 			clearComedyPhase_ = ClearComedyPhase::Done;
 			clearComedyTimer_ = 0.0f;
+
+			// 3体が消えたあとに GAME CLEAR を表示開始
+			isClearSpriteVisible_ = true;
+			isClearSpritePopPlaying_ = true;
+			clearSpritePopTime_ = 0.0f;
+			clearSprite_->SetPosition(clearSpriteStartPos_);
 		}
 	}
 	break;

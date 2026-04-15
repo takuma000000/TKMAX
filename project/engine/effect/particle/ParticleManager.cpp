@@ -215,6 +215,34 @@ namespace TKM {
 						(*particleIterator).transform_.scale_.y *= grow;
 						(*particleIterator).transform_.scale_.z *= grow;
 					}
+					if (g == "clearComedyWarp_core") {
+						float grow = 1.0f + 30.0f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.x *= grow;
+						(*particleIterator).transform_.scale_.y *= grow;
+						(*particleIterator).transform_.scale_.z *= grow;
+					}
+					if (g == "clearComedyWarp_ring") {
+						float grow = 1.0f + 22.0f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.x *= grow;
+						(*particleIterator).transform_.scale_.y *= grow;
+						(*particleIterator).transform_.scale_.z *= grow;
+					}
+					if (g == "clearComedyWarp_streak") {
+						float stretch = 1.0f + 16.0f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.z *= stretch;
+					}
+					if (g == "clearComedyWarp_spark") {
+						float grow = 1.0f + 6.0f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.x *= grow;
+						(*particleIterator).transform_.scale_.y *= grow;
+						(*particleIterator).transform_.scale_.z *= grow;
+					}
+					if (g == "clearComedyWarp_glitter") {
+						float grow = 1.0f + 2.5f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.x *= grow;
+						(*particleIterator).transform_.scale_.y *= grow;
+						(*particleIterator).transform_.scale_.z *= grow;
+					}
 
 					// アルファカーブ（“パァン”を作る）
 					float a = 1.0f - t;
@@ -274,6 +302,16 @@ namespace TKM {
 					if (g == "bossEscape_warpRing") {
 						a = std::pow(a, 1.1f);
 						particleGroup->instancingData_[particleGroupIterator->second.kNumInstance_].color_.w = a * 0.75f;
+					} else if (g == "clearComedyWarp_core") {
+						a = a * a * a * a;
+					} else if (g == "clearComedyWarp_ring") {
+						a = std::pow(a, 1.4f);
+					} else if (g == "clearComedyWarp_streak") {
+						a = a * a;
+					} else if (g == "clearComedyWarp_spark") {
+						a = a * a * a;
+					} else if (g == "clearComedyWarp_glitter") {
+						a = std::pow(a, 0.8f);
 					}
 
 					++particleGroupIterator->second.kNumInstance_;//生きているParticleの数を1つカウントする
