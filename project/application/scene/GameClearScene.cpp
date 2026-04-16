@@ -785,6 +785,8 @@ void GameClearScene::UpdateClearComedy_() {
 					pm->Emit("clearComedySlip_chip", slipPos, 8);
 
 					clearComedyMobBSlipEffectPlayed_ = true;
+
+					AudioManager::GetInstance()->PlaySound("slip", 0.3f);
 				}
 
 				// -----------------------------
@@ -830,6 +832,8 @@ void GameClearScene::UpdateClearComedy_() {
 				pm->Emit("clearComedyFall_star", slamPos + Vector3{ 0.0f, 0.0f, 0.0f }, 10);
 
 				clearComedyMobBFallEffectPlayed_ = true;
+
+				AudioManager::GetInstance()->PlaySound("comedy", 0.3f);
 			}
 		}
 
@@ -918,6 +922,8 @@ void GameClearScene::UpdateClearComedy_() {
 				pm->Emit("clearBannerBurst_core", burstPos, 6);
 				pm->Emit("clearBannerBurst_confetti", burstPos, 70);
 				pm->Emit("clearBannerBurst_ray", burstPos, 30);
+
+				AudioManager::GetInstance()->PlaySound("clear_display", 0.3f);
 			}
 
 			// 3体が消えたあとに GAME CLEAR を表示開始

@@ -46,4 +46,7 @@ void AudioCatalog::LoadResultAudios() {
 	//////////////////////////////////////
 	LoadCommonAudios(); // 共通音声もロード
 	//////////////////////////////////////
+	LoadAudioIfNeeded_("slip", "slip.wav"); // 滑る
+	LoadAudioIfNeeded_("comedy", "comedy.wav"); // コメディ
+	LoadAudioIfNeeded_("clear_display", "clear_display.wav"); // クリア表示
 }
