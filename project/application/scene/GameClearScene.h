@@ -81,7 +81,7 @@ private:
 	// --- スカイボックス ---
 	std::unique_ptr<TKM::Skybox> skybox_;
 	float skyPitch_ = 0.0f;        // X軸回転量
-	float skyRotSpeedX_ = 0.002f;  // X軸回転速度（GameOverSceneとほぼ同じ）
+	float skyRotSpeedX_ = 0.002f;  // X軸回転速度
 	//======================================================================
 	// 自機クリア演出
 	//======================================================================
@@ -94,6 +94,11 @@ private:
 	Vector3 planeEnd_ = { -7.45f, -2.5f, 7.7f }; // 初期値は同じ（Updateで計算して上書き）
 	Vector3 playerDisplayPos_ = { -7.45f, -2.5f, 7.7f }; // クリア画面でのプレイヤー表示位置（ImGui調整用）
 	Vector3 playerDisplayRot_ = { 0.0f, 2.48f, 0.0f };    // クリア画面でのプレイヤー表示回転（ImGui調整用）
+	Vector3 clearParticleGlobalOffset_ = { -0.45f, -6.45f, 8.5f }; // クリアシーン全体のパーティクル発生位置補正
+	Vector3 clearBannerBurstOffset_ = { 7.5f, 1.55f, 10.1f }; // GAME CLEARバースト位置補正
+	bool debugEmitClearBannerBurst_ = false;                  // デバッグ用：常時発生ON/OFF
+	float debugEmitClearBannerBurstTimer_ = 0.0f;             // デバッグ用：連続発生タイマー
+	float debugEmitClearBannerBurstInterval_ = 0.15f;         // デバッグ用：発生間隔
 	//======================================================================
 	// UI（クリア表示）
 	//======================================================================
@@ -178,6 +183,9 @@ private:
 	bool celebrateFinalBurstDone_ = false; // 最後の大きな爆発エフェクトを出したかどうか
 	float clearStageFireTimer_ = 0.0f; // クリアステージの火エフェクト用タイマー
 	bool clearStageFireActive_ = false; // クリアステージの火エフェクトを出すかどうか
+
+	Vector3 clearCelebrateOffset_ = { 0.0f, 2.8f, 6.0f };     // 祝福演出の基準位置
+	//Vector3 clearBannerBurstOffset_ = { 0.0f, 3.0f, 6.5f };   // GAME CLEAR表示時バースト
 
 	// クリアステージの火エフェクトの位置（6箇所）
 	std::array<Vector3, 6> clearStageFirePositions_ = {

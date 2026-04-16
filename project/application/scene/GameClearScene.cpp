@@ -38,21 +38,22 @@ void GameClearScene::Initialize() {
 	TextureCatalog::LoadTextureCatalogs(); // テクスチャカタログのロード
 
 	// ─────────────────────
-	// パーティクルグループ
-	// ─────────────────────
-	ParticleManager::GetInstance()->Initialize(dxCommon_, srvManager_, TKM::CameraManager::GetInstance()->GetMainCamera());
-	// パーティクルグループの登録は ParticleGroupsCatalogクラス へ
-	ParticleGroupsCatalog::RegisterScene(ParticleManager::GetInstance());
-
-	// ─────────────────────
 	// カメラ
 	// ─────────────────────
 	camera_ = std::make_unique<TKM::Camera>();
-	camera_->SetRotate(cameraStartRot_); // カメラ回転
-	camera_->SetTranslate(cameraStartPos_); // カメラ位置
+	camera_->SetRotate(cameraStartRot_);
+	camera_->SetTranslate(cameraStartPos_);
 	camera_->Update();
 
-	cameraMoveTime_ = 0.0f; // カメラ移動開始からの経過時間
+	cameraMoveTime_ = 0.0f;
+
+	// ─────────────────────
+	// パーティクルグループ
+	// ─────────────────────
+	ParticleManager::GetInstance()->ClearAllGroups();
+	ParticleManager::GetInstance()->Initialize(dxCommon_, srvManager_, camera_.get());
+	// パーティクルグループの登録は ParticleGroupsCatalogクラス へ
+	ParticleGroupsCatalog::RegisterScene(ParticleManager::GetInstance());
 
 	// ─────────────────────
 	// ライト
@@ -255,7 +256,7 @@ void GameClearScene::Update() {
 			peak = std::clamp(peak, 0.0f, 1.0f);
 
 			// 祝福の中心位置
-			Vector3 celebrateCenter = playerDisplayPos_ + Vector3{ 8.0f, 4.5f, 14.0f };
+			Vector3 celebrateCenter = playerDisplayPos_ + clearCelebrateOffset_ + clearParticleGlobalOffset_;
 
 			celebrateCoreTimer_ += dt_;
 			celebrateSparkTimer_ += dt_;
@@ -352,6 +353,7 @@ void GameClearScene::Update() {
 		}
 	}
 	camera_->Update();
+	ParticleManager::GetInstance()->SetCamera(camera_.get());
 
 	// ─────────────────────
 	// ライト更新
@@ -367,6 +369,24 @@ void GameClearScene::Update() {
 	// パーティクル更新
 	// ─────────────────────
 	TKM::ParticleManager::GetInstance()->Update(dt_);
+
+	// ─────────────────────
+	// デバッグ用：GAME CLEARバースト常時発生
+	// ─────────────────────
+	if (debugEmitClearBannerBurst_) {
+		debugEmitClearBannerBurstTimer_ += dt_;
+
+		if (debugEmitClearBannerBurstTimer_ >= debugEmitClearBannerBurstInterval_) {
+			debugEmitClearBannerBurstTimer_ = 0.0f;
+
+			Vector3 burstPos = playerDisplayPos_ + clearBannerBurstOffset_;
+			auto* pm = TKM::ParticleManager::GetInstance();
+
+			pm->Emit("clearBannerBurst_core", burstPos, 6);
+			pm->Emit("clearBannerBurst_confetti", burstPos, 70);
+			pm->Emit("clearBannerBurst_ray", burstPos, 30);
+		}
+	}
 
 	// ─────────────────────
 	// Skybox回転（GameOverSceneと同じノリ）
@@ -401,8 +421,9 @@ void GameClearScene::Update() {
 			auto* pm = TKM::ParticleManager::GetInstance();
 
 			for (const Vector3& firePos : clearStageFirePositions_) {
-				pm->Emit("clearStageFire_column", firePos, 3);
-				pm->Emit("clearStageFire_top", firePos, 2);
+				Vector3 emitPos = firePos + clearParticleGlobalOffset_;
+				pm->Emit("clearStageFire_column", emitPos, 3);
+				pm->Emit("clearStageFire_top", emitPos, 2);
 			}
 		}
 	}
@@ -490,6 +511,25 @@ void GameClearScene::ImGuiDebug() {
 	ImGui::DragFloat3("表示位置", &playerDisplayPos_.x, 0.05f);
 	ImGui::DragFloat3("表示回転", &playerDisplayRot_.x, 0.01f);
 
+	ImGui::Separator();
+	ImGui::Text("クリア演出パーティクル全体補正");
+	ImGui::DragFloat3("全体発生オフセット", &clearParticleGlobalOffset_.x, 0.05f);
+
+	ImGui::Separator();
+	ImGui::Text("GAME CLEARバースト調整");
+	ImGui::DragFloat3("バースト位置補正", &clearBannerBurstOffset_.x, 0.05f);
+	ImGui::DragFloat("常時発生間隔", &debugEmitClearBannerBurstInterval_, 0.01f, 0.01f, 5.0f);
+	ImGui::Checkbox("常時発生", &debugEmitClearBannerBurst_);
+
+	if (ImGui::Button("1回発生")) {
+		Vector3 burstPos = playerDisplayPos_ + clearBannerBurstOffset_;
+		auto* pm = TKM::ParticleManager::GetInstance();
+
+		pm->Emit("clearBannerBurst_core", burstPos, 6);
+		pm->Emit("clearBannerBurst_confetti", burstPos, 70);
+		pm->Emit("clearBannerBurst_ray", burstPos, 30);
+	}
+
 	ImGui::End();
 
 	ImGuiDebugInfo(); // パフォーマンス情報デバッグ
@@ -526,11 +566,13 @@ void GameClearScene::SpawnClearComedyActors_() {
 	clearComedyBoss_->SetLocked(true);
 	clearComedyBoss_->SyncTransform();
 
-	pm->Emit("clearComedyWarp_core", clearComedyBossStartPos_, 6);
-	pm->Emit("clearComedyWarp_ring", clearComedyBossStartPos_, 5);
-	pm->Emit("clearComedyWarp_streak", clearComedyBossStartPos_, 64);
-	pm->Emit("clearComedyWarp_spark", clearComedyBossStartPos_, 42);
-	pm->Emit("clearComedyWarp_glitter", clearComedyBossStartPos_, 28);
+	Vector3 bossWarpPos = clearComedyBossStartPos_ + clearParticleGlobalOffset_;
+
+	pm->Emit("clearComedyWarp_core", bossWarpPos, 6);
+	pm->Emit("clearComedyWarp_ring", bossWarpPos, 5);
+	pm->Emit("clearComedyWarp_streak", bossWarpPos, 64);
+	pm->Emit("clearComedyWarp_spark", bossWarpPos, 42);
+	pm->Emit("clearComedyWarp_glitter", bossWarpPos, 28);
 
 	// ---------------------
 	// 雑魚A
@@ -547,11 +589,13 @@ void GameClearScene::SpawnClearComedyActors_() {
 	clearComedyMobA_->SetLocked(true);
 	clearComedyMobA_->SyncTransform();
 
-	pm->Emit("clearComedyWarp_core", clearComedyMobAStartPos_, 4);
-	pm->Emit("clearComedyWarp_ring", clearComedyMobAStartPos_, 4);
-	pm->Emit("clearComedyWarp_streak", clearComedyMobAStartPos_, 44);
-	pm->Emit("clearComedyWarp_spark", clearComedyMobAStartPos_, 28);
-	pm->Emit("clearComedyWarp_glitter", clearComedyMobAStartPos_, 18);
+	Vector3 mobAWarpPos = clearComedyMobAStartPos_ + clearParticleGlobalOffset_;
+
+	pm->Emit("clearComedyWarp_core", mobAWarpPos, 4);
+	pm->Emit("clearComedyWarp_ring", mobAWarpPos, 4);
+	pm->Emit("clearComedyWarp_streak", mobAWarpPos, 44);
+	pm->Emit("clearComedyWarp_spark", mobAWarpPos, 28);
+	pm->Emit("clearComedyWarp_glitter", mobAWarpPos, 18);
 
 	// ---------------------
 	// 雑魚B（転ぶ役）
@@ -568,11 +612,13 @@ void GameClearScene::SpawnClearComedyActors_() {
 	clearComedyMobB_->SetLocked(true);
 	clearComedyMobB_->SyncTransform();
 
-	pm->Emit("clearComedyWarp_core", clearComedyMobBStartPos_, 4);
-	pm->Emit("clearComedyWarp_ring", clearComedyMobBStartPos_, 4);
-	pm->Emit("clearComedyWarp_streak", clearComedyMobBStartPos_, 44);
-	pm->Emit("clearComedyWarp_spark", clearComedyMobBStartPos_, 28);
-	pm->Emit("clearComedyWarp_glitter", clearComedyMobBStartPos_, 18);
+	Vector3 mobBWarpPos = clearComedyMobBStartPos_ + clearParticleGlobalOffset_;
+
+	pm->Emit("clearComedyWarp_core", mobBWarpPos, 4);
+	pm->Emit("clearComedyWarp_ring", mobBWarpPos, 4);
+	pm->Emit("clearComedyWarp_streak", mobBWarpPos, 44);
+	pm->Emit("clearComedyWarp_spark", mobBWarpPos, 28);
+	pm->Emit("clearComedyWarp_glitter", mobBWarpPos, 18);
 
 	clearComedyActorsSpawned_ = true; // 二度とスポーンしないようにフラグを立てる
 	clearComedyMobBFallEffectPlayed_ = false; // 転ぶ役の落下エフェクトはまだ再生してない状態
@@ -618,7 +664,7 @@ void GameClearScene::UpdateClearComedy_() {
 				auto* pm = TKM::ParticleManager::GetInstance();
 
 				if (clearComedyBoss_) {
-					Vector3 p = clearComedyBoss_->GetWorldPosition() + Vector3{ 0.0f, 6.0f, 0.0f };
+					Vector3 p = clearComedyBoss_->GetWorldPosition() + Vector3{ 0.0f, 6.0f, 0.0f } + clearParticleGlobalOffset_;
 					pm->Emit("bossNoticeMark", p, 1);
 				}
 
@@ -776,7 +822,7 @@ void GameClearScene::UpdateClearComedy_() {
 
 				if (!clearComedyMobBSlipEffectPlayed_) {
 
-					Vector3 slipPos = startPos + Vector3{ 1.0f, 0.1f, 0.35f };
+					Vector3 slipPos = startPos + Vector3{ 1.0f, 0.1f, 0.35f } + clearParticleGlobalOffset_;
 
 					auto* pm = TKM::ParticleManager::GetInstance();
 					pm->Emit("clearComedySlip_streak", slipPos, 8);
@@ -824,7 +870,7 @@ void GameClearScene::UpdateClearComedy_() {
 			// 転ぶエフェクトは一度だけ出す
 			if (!clearComedyMobBFallEffectPlayed_ && t >= 1.0f) {
 
-				Vector3 slamPos = startPos + Vector3{ 0.0f, 1.0f, 2.8f }; // エフェクトはズコーーーっと落ちた位置に出す
+				Vector3 slamPos = startPos + Vector3{ 0.0f, 1.0f, 2.8f } + clearParticleGlobalOffset_; // エフェクトはズコーーーっと落ちた位置に出す
 
 				auto* pm = TKM::ParticleManager::GetInstance();
 
@@ -917,7 +963,7 @@ void GameClearScene::UpdateClearComedy_() {
 
 				// 画面中央寄り。clearSpriteCenterPos_ をワールド寄せで使う代わりに、
 				// クリアシーン中央の見せたい位置に固定で出す
-				Vector3 burstPos = playerDisplayPos_ + Vector3{ 7.5f, 5.2f, 13.5f };
+				Vector3 burstPos = playerDisplayPos_ + clearBannerBurstOffset_;
 
 				pm->Emit("clearBannerBurst_core", burstPos, 6);
 				pm->Emit("clearBannerBurst_confetti", burstPos, 70);
