@@ -108,7 +108,7 @@ void TitleScene::Initialize() {
 	// ---------------BGMロード・再生----------------
 	AudioCatalog::LoadTitleAudios();
 	// タイトルBGM再生
-	TKM::AudioManager::GetInstance()->PlaySound("title", 0.1f, true); // 音量少し下げめでループ
+	TKM::AudioManager::GetInstance()->PlaySound("title", 0.3f, true); // 音量少し下げめでループ
 
 	// タイトルメニューコントローラ初期化
 	titleMenu_ = std::make_unique<TitleMenuController>();
