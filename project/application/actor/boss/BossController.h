@@ -321,11 +321,11 @@ private:
 	int slashLifeFrame_ = 90; // 寿命フレーム
 	// 予備動作（スラッシュ用：ミサイルとは別）
 	bool slashCharging_ = false; // 溜め中か
-	float slashChargeTime_ = 0.55f; // 溜め時間（秒）
+	float slashChargeTime_ = 1.5f; // 溜め時間（秒）
 	float slashChargeTimer_ = 0.0f; // 溜め残り
 	int slashChargeFrame_ = 0; // 間引き用
 	// クールタイム（連発防止）
-	float slashCooldown_ = 2.0f; // 何秒間隔で撃てるか
+	float slashCooldown_ = 0.0f; // 何秒間隔で撃てるか
 	float slashCooldownT_ = 0.0f; // クールタイム残り
 	// スラッシュ：発射時点のターゲット固定
 	Vector3 slashTargetSnap_{ 0.0f, 0.0f, 0.0f }; // 発射時点のplayer座標を固定
