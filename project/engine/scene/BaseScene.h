@@ -112,6 +112,10 @@ namespace TKM {
 		/// </summary>
 		void ImGuiDebugGamepad();
 		/// <summary>
+		/// 音量調節をImGuiで表示します。
+		/// </summary>
+		void ImGuiAudioControl();
+		/// <summary>
 		/// </summary>メモリ使用量を計測・履歴化します。</summary>
 		/// </summary>
 		void UpdateMemory();

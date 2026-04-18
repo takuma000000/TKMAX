@@ -111,11 +111,16 @@ namespace TKM {
 		HRESULT hr = xAudio2_->CreateSourceVoice(&sourceVoice, &soundData.wfex_);
 		assert(SUCCEEDED(hr));
 
-		// 音量クランプ（0.0f～1.0f）
+		// 音量設定
 		float v = volume;
 		if (v < 0.0f) { v = 0.0f; }
 		if (v > 1.0f) { v = 1.0f; }
-		hr = sourceVoice->SetVolume(v);
+		// ゲーム全体の音量を掛ける
+		float finalVolume = v * gameVolume_;
+		if (finalVolume < 0.0f) { finalVolume = 0.0f; }
+		if (finalVolume > 1.0f) { finalVolume = 1.0f; }
+		// XAudio2の音量は0.0f（無音）から1.0f（最大音量）までの範囲で指定
+		hr = sourceVoice->SetVolume(finalVolume);
 		assert(SUCCEEDED(hr));
 
 		// バッファ設定
@@ -135,7 +140,7 @@ namespace TKM {
 		hr = sourceVoice->Start();
 		assert(SUCCEEDED(hr));
 
-		playingVoices_.push_back({ key, sourceVoice });
+		playingVoices_.push_back({ key, sourceVoice, v });
 	}
 
 	//============================
@@ -162,6 +167,25 @@ namespace TKM {
 			instance.Initialize();
 		}
 		return &instance;
+	}
+
+	void AudioManager::SetGameVolume(float volume) {
+		gameVolume_ = volume;
+		if (gameVolume_ < 0.0f) { gameVolume_ = 0.0f; }
+		if (gameVolume_ > 1.0f) { gameVolume_ = 1.0f; }
+
+		for (auto& pv : playingVoices_) {
+			if (pv.voice_) {
+				float finalVolume = pv.baseVolume_ * gameVolume_;
+				if (finalVolume < 0.0f) { finalVolume = 0.0f; }
+				if (finalVolume > 1.0f) { finalVolume = 1.0f; }
+				pv.voice_->SetVolume(finalVolume);
+			}
+		}
+	}
+
+	float AudioManager::GetGameVolume() const {
+		return gameVolume_;
 	}
 
 	//============================

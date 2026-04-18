@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cwchar>
 #include "SceneManager.h"
+#include "AudioManager.h"
 
 #pragma comment(lib, "pdh.lib")
 
@@ -282,6 +283,8 @@ namespace TKM {
 
 		// シーン遷移
 		ImGuiSceneChanger();
+		// 音量調節
+		ImGuiAudioControl();
 #endif
 	}
 
@@ -325,6 +328,27 @@ namespace TKM {
 		ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(1.0f, 0.0f, 1.0f, 1.0f));
 		ImGui::ProgressBar(ltValue, ImVec2(200, 0), "LT");
 		ImGui::PopStyleColor();
+
+		ImGui::End();
+#endif
+	}
+
+	void BaseScene::ImGuiAudioControl() {
+#ifdef USE_IMGUI
+		ImGui::Begin("音量");
+
+		float gameVolume = TKM::AudioManager::GetInstance()->GetGameVolume();
+		if (ImGui::SliderFloat("ゲーム全体音量", &gameVolume, 0.0f, 1.0f, "%.2f")) {
+			TKM::AudioManager::GetInstance()->SetGameVolume(gameVolume);
+		}
+
+		if (ImGui::Button("ミュート")) {
+			TKM::AudioManager::GetInstance()->SetGameVolume(0.0f);
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("最大")) {
+			TKM::AudioManager::GetInstance()->SetGameVolume(1.0f);
+		}
 
 		ImGui::End();
 #endif

@@ -96,13 +96,31 @@ namespace TKM {
 		/// <summary>シングルトンインスタンスを取得します。</summary>
 		static AudioManager* GetInstance();
 
+		// Setter=================================
+	
+		/// <summary>
+		/// ゲーム全体の音量を設定します。0.0f（無音）から1.0f（最大音量）までの範囲で指定します。
+		/// </summary>
+		/// <param name="volume"></param>
+		void SetGameVolume(float volume);
+		// =======================================
+		// Getter=================================
+		/// <summary>
+		/// ゲーム全体の音量を取得します。0.0f（無音）から1.0f（最大音量）までの範囲で返します。
+		/// </summary>
+		/// <returns></returns>
+		float GetGameVolume() const;
+		// =======================================
+
 	private:
 		Microsoft::WRL::ComPtr<IXAudio2> xAudio2_;
 		IXAudio2MasteringVoice* masterVoice_ = nullptr;
 
-		struct PlayingVoice { // 再生中の音声を管理する構造体
-			std::string key_;
-			IXAudio2SourceVoice* voice_ = nullptr;
+		// 再生中の音声の管理構造体とリスト
+		struct PlayingVoice {
+			std::string key_; // 再生中の音声のキー
+			IXAudio2SourceVoice* voice_ = nullptr; // 再生中の音声のソースボイス
+			float baseVolume_ = 1.0f; // PlaySoundで指定された元の音量
 		};
 		std::vector<PlayingVoice> playingVoices_; // 再生中の音声のリスト
 
@@ -110,6 +128,8 @@ namespace TKM {
 		std::unordered_map<std::string, SoundData> soundMap_;
 
 		bool initialized_ = false; // 初期化済みフラグ
+
+		float gameVolume_ = 1.0f; // ゲーム全体音量
 
 		/// <summary>
 		///		
