@@ -8,6 +8,7 @@
 #include "ModelManager.h"
 #include "Object3dCommon.h"
 #include "ParticleManager.h"
+#include "ClearComedyStates.h"
 
 #ifdef USE_IMGUI
 #include "imgui.h"
@@ -134,12 +135,12 @@ void GameClearScene::Initialize() {
 	blurReleased_ = false;
 
 	// ─────────────────────
-	// クリア後コミカル逃走演出
+	// コミカル逃走演出用の状態管理クラス初期化
 	// ─────────────────────
-	clearComedyPhase_ = ClearComedyPhase::None; // 最初は何もしてない状態
 	clearComedyFallSlowRequested_ = false; // 転ぶ瞬間スロー未実行
 	clearComedyTimeScale_.Initialize(); // タイムスケール初期化
 	SetupClearComedyBossConfig_(); // コミカル逃走演出用のボス設定を行う
+	clearComedySM_.Initialize(this);
 }
 
 void GameClearScene::Finalize() {
@@ -337,10 +338,9 @@ void GameClearScene::Update() {
 			clearSprite_->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
 			isClearMenuVisible_ = false;
 
-			// 3体コントをここから開始
-			if (clearComedyPhase_ == ClearComedyPhase::None) {
-				clearComedyPhase_ = ClearComedyPhase::WaitAfterClear;
-				clearComedyTimer_ = 0.0f;
+			// コミカル逃走演出の待機状態へ
+			if (clearComedySM_.GetState() == nullptr) {
+				clearComedySM_.Change(std::make_unique<ClearComedyWaitAfterClearState>());
 			}
 		}
 	} else {
@@ -455,10 +455,9 @@ void GameClearScene::Update() {
 	clearSprite_->Update();
 
 	// ─────────────────────
-	// クリア後のコミカル逃走演出更新
-	// フェーズ管理して、ボスと雑魚を順番に出す
+	// コミカル逃走演出の状態更新
 	// ─────────────────────
-	UpdateClearComedy_();
+	clearComedySM_.Update(dt_);
 
 	// ─────────────────────
 	// パフォーマンス情報更新
@@ -624,368 +623,4 @@ void GameClearScene::SpawnClearComedyActors_() {
 	clearComedyMobBFallEffectPlayed_ = false; // 転ぶ役の落下エフェクトはまだ再生してない状態
 	clearComedyMobBSlipEffectPlayed_ = false; // 転ぶ役の滑るエフェクトはまだ再生してない状態
 	clearComedyNoticeMarkPlayed_ = false; // 気づきマークはまだ出してない状態
-}
-
-void GameClearScene::UpdateClearComedy_() {
-	clearComedyTimeScale_.Update(dt_);
-	const float comedyDt = dt_ * clearComedyTimeScale_.GetScale();
-
-	if (clearComedyPhase_ == ClearComedyPhase::None || clearComedyPhase_ == ClearComedyPhase::Done) {
-		return;
-	}
-
-	clearComedyTimer_ += comedyDt;
-
-	switch (clearComedyPhase_) {
-	case ClearComedyPhase::WaitAfterClear:
-		if (clearComedyTimer_ >= 0.85f) {
-			SpawnClearComedyActors_();
-			clearComedyPhase_ = ClearComedyPhase::Spawn;
-			clearComedyTimer_ = 0.0f;
-		}
-
-		break;
-
-	case ClearComedyPhase::Spawn:
-		if (clearComedyBoss_) {
-			clearComedyBoss_->SetIntroPanic(true, 0.35f);
-			clearComedyBoss_->Update(comedyDt);
-		}
-		if (clearComedyMobA_) {
-			clearComedyMobA_->Update(comedyDt);
-		}
-		if (clearComedyMobB_) {
-			clearComedyMobB_->Update(comedyDt);
-		}
-
-		if (clearComedyTimer_ >= 0.65f) {
-
-			if (!clearComedyNoticeMarkPlayed_) {
-				auto* pm = TKM::ParticleManager::GetInstance();
-
-				if (clearComedyBoss_) {
-					Vector3 p = clearComedyBoss_->GetWorldPosition() + Vector3{ 0.0f, 6.0f, 0.0f } + clearParticleGlobalOffset_;
-					pm->Emit("bossNoticeMark", p, 1);
-				}
-
-				if (clearComedyMobA_) {
-					Vector3 p = clearComedyMobA_->GetWorldPosition() + Vector3{ 0.0f, 3.0f, 0.0f };
-					pm->Emit("bossNoticeMark", p, 1);
-				}
-
-				if (clearComedyMobB_) {
-					Vector3 p = clearComedyMobB_->GetWorldPosition() + Vector3{ 0.0f, 3.0f, 0.0f };
-					pm->Emit("bossNoticeMark", p, 1);
-				}
-
-				clearComedyNoticeMarkPlayed_ = true;
-			}
-
-			clearComedyPhase_ = ClearComedyPhase::SlowNotice;
-			clearComedyTimer_ = 0.0f;
-		}
-		break;
-
-	case ClearComedyPhase::SlowNotice:
-
-		if (clearComedyBoss_) {
-			clearComedyBoss_->SetIntroPanic(true, 1.0f);
-			clearComedyBoss_->Update(comedyDt);
-		}
-		if (clearComedyMobA_) {
-			clearComedyMobA_->Update(comedyDt);
-		}
-		if (clearComedyMobB_) {
-			clearComedyMobB_->Update(comedyDt);
-		}
-
-		if (clearComedyTimer_ >= 0.75f) {
-			// RunAway の開始位置を、この瞬間の見た目位置で確定
-			if (clearComedyBoss_) {
-				clearComedyBossRunStartPos_ = clearComedyBoss_->GetWorldPosition();
-			}
-			if (clearComedyMobA_) {
-				clearComedyMobARunStartPos_ = clearComedyMobA_->GetWorldPosition();
-			}
-			if (clearComedyMobB_) {
-				clearComedyMobBRunStartPos_ = clearComedyMobB_->GetWorldPosition();
-			}
-
-			clearComedyFallSlowRequested_ = false; // 転ぶ瞬間スローを次フェーズで使う
-			clearComedyPhase_ = ClearComedyPhase::RunAway;
-			clearComedyTimer_ = 0.0f;
-		}
-		break;
-
-	case ClearComedyPhase::RunAway:
-	{
-		float t = std::clamp(clearComedyTimer_ / 1.35f, 0.0f, 1.0f);
-		float bossMoveT = Ease::Eval(Ease::Type::InQuad, std::clamp(clearComedyTimer_ / 1.80f, 0.0f, 1.0f));
-		float mobMoveT = Ease::Eval(Ease::Type::InQuad, t);
-
-		if (clearComedyBoss_) {
-			Vector3 pos = MyMath::Vector3Lerp(clearComedyBossRunStartPos_, clearComedyBossEscapePos_, bossMoveT);
-			clearComedyBoss_->SetPosition(pos);
-			clearComedyBoss_->SetRotate({ 0.0f, -0.9f, 0.0f });
-			clearComedyBoss_->SetIntroPanic(true, 0.75f);
-			clearComedyBoss_->SyncTransform();
-			clearComedyBoss_->Update(comedyDt);
-		}
-
-		if (clearComedyMobA_) {
-			Vector3 pos = MyMath::Vector3Lerp(clearComedyMobARunStartPos_, clearComedyMobAEscapePos_, mobMoveT);
-			clearComedyMobA_->SetPosition(pos);
-			clearComedyMobA_->SetRotate({ 0.0f, -0.9f, 0.0f });
-			clearComedyMobA_->SyncTransform();
-			clearComedyMobA_->Update(comedyDt);
-		}
-
-		if (clearComedyMobB_) {
-			Vector3 pos = MyMath::Vector3Lerp(clearComedyMobBRunStartPos_, clearComedyMobBFallPos_, mobMoveT);
-			clearComedyMobB_->SetPosition(pos);
-			clearComedyMobB_->SetRotate({ 0.0f, -0.9f, 0.0f });
-			clearComedyMobB_->SyncTransform();
-			clearComedyMobB_->Update(comedyDt);
-		}
-
-		if (clearComedyTimer_ >= 1.35f) {
-			// 次フェーズ開始位置を「今いる位置」で確定
-			if (clearComedyBoss_) {
-				clearComedyBossRecoverStartPos_ = clearComedyBoss_->GetWorldPosition();
-			}
-			if (clearComedyMobA_) {
-				clearComedyMobARecoverStartPos_ = clearComedyMobA_->GetWorldPosition();
-			}
-			if (clearComedyMobB_) {
-				clearComedyMobBRecoverStartPos_ = clearComedyMobB_->GetWorldPosition();
-			}
-
-			clearComedyPhase_ = ClearComedyPhase::FallDown;
-			clearComedyTimer_ = 0.0f;
-		}
-	}
-	break;
-
-	case ClearComedyPhase::FallDown:
-	{
-		float t = std::clamp(clearComedyTimer_ / 0.85f, 0.0f, 1.0f);
-
-		// ボスは待たずにそのまま退場方向へ進む
-		if (clearComedyBoss_) {
-			float bossMoveT = Ease::Eval(Ease::Type::InQuad, t);
-			Vector3 bossPos = MyMath::Vector3Lerp(
-				clearComedyBossRecoverStartPos_,
-				clearComedyBossExitPos_,
-				bossMoveT
-			);
-			clearComedyBoss_->SetPosition(bossPos);
-			clearComedyBoss_->SetRotate({ 0.0f, -1.00f, 0.0f });
-			clearComedyBoss_->SetIntroPanic(false, 0.0f);
-			clearComedyBoss_->SyncTransform();
-			clearComedyBoss_->Update(comedyDt);
-		}
-
-		// 雑魚Aも待たずにそのまま退場方向へ進む
-		if (clearComedyMobA_) {
-			float mobAMoveT = Ease::Eval(Ease::Type::InQuad, t);
-			Vector3 mobAPos = MyMath::Vector3Lerp(
-				clearComedyMobARecoverStartPos_,
-				clearComedyMobAExitPos_,
-				mobAMoveT
-			);
-			clearComedyMobA_->SetPosition(mobAPos);
-			clearComedyMobA_->SetRotate({ 0.0f, -1.00f, 0.0f });
-			clearComedyMobA_->SyncTransform();
-			clearComedyMobA_->Update(comedyDt);
-		}
-
-		// 転ぶ役だけ、漫画みたいに「ポン → ズコーーー」
-		if (clearComedyMobB_) {
-
-			Vector3 startPos = clearComedyMobBRecoverStartPos_;
-
-			// まず一瞬浮くターゲット
-			Vector3 popPos = startPos + Vector3{ 0.0f, 1.4f, 0.8f };
-
-			// 最終的な転倒位置
-			Vector3 slamPos = startPos + Vector3{ 0.0f, -1.8f, 2.8f };
-
-			Vector3 pos{};
-			Vector3 rot{};
-
-			if (t < 0.35f) {
-
-				if (!clearComedyFallSlowRequested_) {
-					clearComedyTimeScale_.RequestSlowAdvanced(0.20f, 1.7f, 0.05f, 0.25f);
-					clearComedyFallSlowRequested_ = true;
-				}
-
-				if (!clearComedyMobBSlipEffectPlayed_) {
-
-					Vector3 slipPos = startPos + Vector3{ 1.0f, 0.1f, 0.35f } + clearParticleGlobalOffset_;
-
-					auto* pm = TKM::ParticleManager::GetInstance();
-					pm->Emit("clearComedySlip_streak", slipPos, 8);
-					pm->Emit("clearComedySlip_spark", slipPos, 10);
-					pm->Emit("clearComedySlip_ring", slipPos, 2);
-					pm->Emit("clearComedySlip_chip", slipPos, 8);
-
-					clearComedyMobBSlipEffectPlayed_ = true;
-
-					AudioManager::GetInstance()->PlaySound("slip", 0.3f);
-				}
-
-				// -----------------------------
-				// 前半：一瞬ふわっと浮く
-				// -----------------------------
-				float u = t / 0.35f;
-				float jumpT = Ease::Eval(Ease::Type::OutQuad, u);
-
-				pos = MyMath::Vector3Lerp(startPos, popPos, jumpT);
-
-				// 少し前のめりになりながら浮く
-				rot.x = MyMath::Lerp(0.0f, -0.35f, jumpT);
-				rot.y = MyMath::Lerp(-0.9f, -0.75f, jumpT);
-				rot.z = MyMath::Lerp(0.0f, 0.35f, jumpT);
-			} else {
-				// -----------------------------
-				// 後半：ズコーーーーっと落ちる
-				// -----------------------------
-				float u = (t - 0.35f) / 0.65f;
-				float slamT = Ease::Eval(Ease::Type::InExpo, u);
-
-				pos = MyMath::Vector3Lerp(popPos, slamPos, slamT);
-
-				// 一気に横倒れ
-				rot.x = MyMath::Lerp(-0.35f, 0.15f, slamT);
-				rot.y = MyMath::Lerp(-0.75f, clearComedyMobBFallRot_.y, slamT);
-				rot.z = MyMath::Lerp(0.35f, 1.95f, slamT);
-			}
-
-			clearComedyMobB_->SetPosition(pos);
-			clearComedyMobB_->SetRotate(rot);
-			clearComedyMobB_->SyncTransform();
-			clearComedyMobB_->Update(comedyDt);
-
-			// 転ぶエフェクトは一度だけ出す
-			if (!clearComedyMobBFallEffectPlayed_ && t >= 1.0f) {
-
-				Vector3 slamPos = startPos + Vector3{ 0.0f, 1.0f, 2.8f } + clearParticleGlobalOffset_; // エフェクトはズコーーーっと落ちた位置に出す
-
-				auto* pm = TKM::ParticleManager::GetInstance();
-
-				pm->Emit("clearComedyFall_dust", slamPos + Vector3{ 0.0f, -0.2f, 0.0f }, 14);
-				pm->Emit("clearComedyFall_star", slamPos + Vector3{ 0.0f, 0.0f, 0.0f }, 10);
-
-				clearComedyMobBFallEffectPlayed_ = true;
-
-				AudioManager::GetInstance()->PlaySound("comedy", 0.3f);
-			}
-		}
-
-		if (clearComedyTimer_ >= 0.85f) {
-			// ボスと雑魚Aはここで退場済みにする
-			clearComedyBoss_.reset();
-			clearComedyMobA_.reset();
-
-			// 転んだ雑魚だけ、ここから起き上がり開始位置を取る
-			if (clearComedyMobB_) {
-				clearComedyMobBRecoverStartPos_ = clearComedyMobB_->GetWorldPosition();
-			}
-
-			clearComedyPhase_ = ClearComedyPhase::StandUp;
-			clearComedyTimer_ = 0.0f;
-		}
-	}
-	break;
-
-	case ClearComedyPhase::StandUp:
-	{
-		float t = std::clamp(clearComedyTimer_ / 1.0f, 0.0f, 1.0f);
-		float standT = Ease::Eval(Ease::Type::OutBack, t);
-
-		if (clearComedyMobB_) {
-			// 位置は動かさない。その場で起き上がる
-			clearComedyMobB_->SetPosition(clearComedyMobBRecoverStartPos_);
-
-			Vector3 rot = {
-				0.0f,
-				MyMath::Lerp(clearComedyMobBFallRot_.y, -1.05f, standT),
-				MyMath::Lerp(1.95f, 0.0f, standT)
-			};
-
-			clearComedyMobB_->SetRotate(rot);
-			clearComedyMobB_->SyncTransform();
-			clearComedyMobB_->Update(comedyDt);
-		}
-
-		if (clearComedyTimer_ >= 1.0f) {
-			// 起き上がり終わった地点を逃走開始位置にする
-			if (clearComedyMobB_) {
-				clearComedyMobBRecoverStartPos_ = clearComedyMobB_->GetWorldPosition();
-			}
-
-			clearComedyPhase_ = ClearComedyPhase::RecoverRun;
-			clearComedyTimer_ = 0.0f;
-		}
-	}
-	break;
-
-	case ClearComedyPhase::RecoverRun:
-	{
-		float t = std::clamp(clearComedyTimer_ / 1.00f, 0.0f, 1.0f);
-		float moveT = Ease::Eval(Ease::Type::InCubic, t);
-
-		// 起き上がった後に逃走
-		if (clearComedyMobB_) {
-			Vector3 pos = MyMath::Vector3Lerp(
-				clearComedyMobBRecoverStartPos_,
-				clearComedyMobBExitPos_,
-				moveT
-			);
-
-			clearComedyMobB_->SetPosition(pos);
-			clearComedyMobB_->SetRotate({ 0.0f, -1.05f, 0.0f });
-			clearComedyMobB_->SyncTransform();
-			clearComedyMobB_->Update(comedyDt);
-		}
-
-		if (clearComedyTimer_ >= 1.00f) {
-			clearComedyMobB_.reset();
-
-			clearComedyActorsSpawned_ = false;
-			clearComedyPhase_ = ClearComedyPhase::Done;
-			clearComedyTimer_ = 0.0f;
-
-			// 3体が消えたあとに GAME CLEAR を表示開始
-			{
-				auto* pm = TKM::ParticleManager::GetInstance();
-
-				// 画面中央寄り。clearSpriteCenterPos_ をワールド寄せで使う代わりに、
-				// クリアシーン中央の見せたい位置に固定で出す
-				Vector3 burstPos = playerDisplayPos_ + clearBannerBurstOffset_;
-
-				pm->Emit("clearBannerBurst_core", burstPos, 6);
-				pm->Emit("clearBannerBurst_confetti", burstPos, 70);
-				pm->Emit("clearBannerBurst_ray", burstPos, 30);
-
-				AudioManager::GetInstance()->PlaySound("clear_display", 0.3f);
-			}
-
-			// 3体が消えたあとに GAME CLEAR を表示開始
-			isClearSpriteVisible_ = true;
-			isClearMenuVisible_ = true;
-			isClearSpritePopPlaying_ = true;
-			clearSpritePopTime_ = 0.0f;
-			clearSprite_->SetPosition(clearSpriteStartPos_);
-			clearStageFireActive_ = true;
-			clearStageFireTimer_ = 0.0f;
-		}
-	}
-	break;
-
-	case ClearComedyPhase::Done:
-	case ClearComedyPhase::None:
-		break;
-	}
 }

@@ -126,6 +126,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\actor\enemy\EnemyBarrier.cpp" />
     <ClCompile Include="application\actor\BarrierCoreManager.cpp" />
     <ClCompile Include="application\catalog\AudioCatalog.cpp" />
+    <ClCompile Include="application\state\ClearComedyStates.cpp" />
     <ClCompile Include="engine\3d\BarrierCommon.cpp" />
     <ClCompile Include="engine\3d\camera\manager\CameraManager.cpp" />
     <ClCompile Include="engine\csv\CsvReader.cpp" />
@@ -248,6 +249,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\actor\enemy\EnemyBarrier.h" />
     <ClInclude Include="application\actor\BarrierCoreManager.h" />
     <ClInclude Include="application\catalog\AudioCatalog.h" />
+    <ClInclude Include="application\state\ClearComedyStates.h" />
     <ClInclude Include="engine\3d\BarrierCommon.h" />
     <ClInclude Include="engine\3d\camera\manager\CameraManager.h" />
     <ClInclude Include="engine\csv\CsvReader.h" />

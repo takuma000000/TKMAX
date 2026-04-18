@@ -23,6 +23,7 @@
 #include "BossEnemy.h"
 #include "TimeScaleController.h"
 #include "BossConfig.h"
+#include "StateMachine.h"
 #include <array>
 
 //=============================================================
@@ -30,7 +31,7 @@
 // ゲームクリア画面を管理するシーンクラス。
 // 背景スカイボックス回転＋自機のジェットコースター演出。
 //=============================================================
-class GameClearScene : public TKM::BaseScene {
+class GameClearScene : public TKM::BaseScene, public TKM::IStateContext {
 public:
 	GameClearScene(TKM::DirectXCommon* dxCommon, TKM::SrvManager* srvManager)
 		: dxCommon_(dxCommon), srvManager_(srvManager) {
@@ -199,20 +200,9 @@ private:
 	//======================================================================
 	// クリア後コミカル逃走演出
 	//======================================================================
-	enum class ClearComedyPhase {
-		None, // 何もしてない
-		WaitAfterClear, // クリア後少し待つ
-		Spawn, // ボスとザコを出現させる
-		SlowNotice,
-		RunAway, // 逃走する
-		FallDown, // 逃走に失敗して転ぶ
-		StandUp, // 起き上がり
-		RecoverRun, // 転んだ後なんとか立ち上がって逃げる
-		Done // 演出完了
-	};
+	TKM::StateMachine clearComedySM_; // クリア後のコミカル逃走演出の状態遷移マシン
+	float clearComedyTimer_ = 0.0f; // 演出の進行管理用タイマー
 
-	ClearComedyPhase clearComedyPhase_ = ClearComedyPhase::None; // 現在のフェーズ
-	float clearComedyTimer_ = 0.0f; // 演出用タイマー（フェーズごとにリセットして使用）
 	bool clearComedyActorsSpawned_ = false; // ボスとザコを出現させたかどうか
 	bool clearComedyFallSlowRequested_ = false; // 転ぶ瞬間のスローを開始したかどうか
 	// ボスと雑魚敵
@@ -260,8 +250,14 @@ private:
 	/// クリア後のコミカル逃走演出でボスと雑魚敵を出現させます。
 	/// </summary>
 	void SpawnClearComedyActors_();
-	/// <summary>
-	/// クリア後のコミカル逃走演出で、逃走に気づいて時間をゆっくりにする処理を開始します。
-	/// </summary>
-	void UpdateClearComedy_();
+
+	// StateMachineの状態クラスをフレンド宣言して、状態クラスからシーンのprivateメンバにアクセスできるようにする
+	friend class ClearComedyWaitAfterClearState;
+	friend class ClearComedySpawnState;
+	friend class ClearComedySlowNoticeState;
+	friend class ClearComedyRunAwayState;
+	friend class ClearComedyFallDownState;
+	friend class ClearComedyStandUpState;
+	friend class ClearComedyRecoverRunState;
+	friend class ClearComedyDoneState;
 };
