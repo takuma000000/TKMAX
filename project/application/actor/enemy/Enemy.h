@@ -48,12 +48,12 @@ public:
 	/// 敵の更新処理を行います。
 	/// </summary>
 	/// <param name="dt">前フレームからの経過時間（秒）</param>
-	void Update(float dt);
+	virtual void Update(float dt);
 	/// <summary>
 	/// 敵を描画します。
 	/// </summary>
 	/// <param name="dxCommon">DirectX 共通管理クラス</param>
-	void Draw(TKM::DirectXCommon* dxCommon);
+	virtual void Draw(TKM::DirectXCommon* dxCommon);
 	/// <summary>
 	/// ImGui によるデバッグ情報を表示します。
 	/// </summary>

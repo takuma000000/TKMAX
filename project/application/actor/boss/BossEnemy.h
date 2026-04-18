@@ -22,7 +22,7 @@ public:
 	/// 毎フレームの更新処理を行います。
 	/// </summary>
 	/// <param name="dt">前フレームからの経過時間（秒）</param>
-	void Update(float dt);
+	void Update(float dt) override;
 	/// <summary>
 	/// ImGuiデバッグ表示。
 	/// </summary>
