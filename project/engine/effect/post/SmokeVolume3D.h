@@ -71,6 +71,12 @@ namespace TKM {
 		void ImGuiDebug();
 
 		/// <summary>
+		/// クリア演出開始：中心から消すモードを開始する
+		/// </summary>
+		/// <param name="duration">中心から完全に消えるまでの時間（秒）</param>
+		void StartClearFromCenter(float duration);
+
+		/// <summary>
 		/// 有効かどうか
 		/// </summary>
 		/// <returns></returns>
@@ -127,5 +133,16 @@ namespace TKM {
 		//==============================================
 		Vector3 cameraPos_{ 0.0f, 0.0f, 0.0f }; // カメラ位置
 		Vector3 cameraFwd_{ 0.0f, 0.0f, 1.0f }; // カメラ前方向（正面が0度、右が90度、左が-90度、後ろが180度/-180度）
+		//==============================================
+		// クリア演出用
+		// クリア演出で、中心から煙が消えるようにするためのフラグとタイマー
+		// クリア演出開始時に、現在の半サイズや濃さを保存しておいて、そこから中心へ向かって減らしていく
+		//==============================================
+		bool clearFromCenterActive_ = false; // クリア演出で中心から消すモードが有効かどうか
+		float clearFromCenterT_ = 0.0f; // クリア演出で中心から消すモードの経過時間。0からclearFromCenterDuration_まで増加していく
+		float clearFromCenterDuration_ = 2.0f; // クリア演出で中心から消すモードの総時間（秒）
+		Vector3 clearStartHalfSizeWS_{}; // クリア演出開始時の半サイズ。これを基準に中心へ向かって減らしていく
+		float clearStartDensity_ = 0.0f; // クリア演出開始時の濃さ。これを基準に中心へ向かって減らしていく
+		float clearStartAlphaMax_ = 0.0f; // クリア演出開始時のアルファ上限。これを基準に中心へ向かって減らしていく
 	};
 }

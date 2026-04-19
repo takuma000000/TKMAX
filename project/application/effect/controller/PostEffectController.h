@@ -70,6 +70,13 @@ namespace TKM {
 		/// </summary>
 		void SetRadialBlurManual(bool enable, float strength = 1.0f);
 		// ===============================================
+		// Getters========================================
+		/// <summary>
+		/// 立体煙エフェクトの参照を取得します。
+		/// </summary>
+		/// <returns>立体煙エフェクトのポインタ</returns>
+		SmokeVolume3D* GetSmokeVolume() { return smokeVolume3D_.get(); }
+		// ===============================================
 
 	private:
 		//==============================

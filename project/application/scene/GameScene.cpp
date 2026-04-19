@@ -57,8 +57,8 @@ void GameScene::Initialize() {
 	postFx_->Initialize(dxCommon_, player_.get(), bossManager_.get());
 	/// ──────────────── ゲームフローの初期化 ───────────────
 	clearSeq_ = std::make_unique<TKM::ClearSequenceController>();
-	clearSeq_->Initialize(player_.get(), bossManager_.get(), flow_.get(), dxCommon_, skybox_.get(), fireworkController_.get());
-	flow_->BindClearSequence(clearSeq_.get()); // ゲームフローにクリアシーケンスをバインド
+	clearSeq_->Initialize(player_.get(), bossManager_.get(), flow_.get(), dxCommon_, skybox_.get(), fireworkController_.get(), postFx_->GetSmokeVolume());
+		flow_->BindClearSequence(clearSeq_.get()); // ゲームフローにクリアシーケンスをバインド
 }
 
 void GameScene::Finalize() {

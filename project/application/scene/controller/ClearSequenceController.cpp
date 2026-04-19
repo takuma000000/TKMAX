@@ -2,13 +2,14 @@
 #include "IntroStartBanner.h"
 
 namespace TKM {
-	void ClearSequenceController::Initialize(Player* player, BossManager* bossManager, GameFlowController* flow, DirectXCommon* dxCommon, Skybox* skybox, FireworkController* fireworkController) {
+	void ClearSequenceController::Initialize(Player* player, BossManager* bossManager, GameFlowController* flow, DirectXCommon* dxCommon, Skybox* skybox, FireworkController* fireworkController, SmokeVolume3D* smokeVolume) {
 		player_ = player;
 		bossManager_ = bossManager;
 		flow_ = flow;
 		dxCommon_ = dxCommon;
 		skybox_ = skybox;
 		fireworkController_ = fireworkController;
+		smokeVolume_ = smokeVolume;
 
 		active_ = false;
 		phase_ = Phase::None;
@@ -117,6 +118,10 @@ namespace TKM {
 		if (t >= 1.0f) { // 補間が完了したら次のフェーズへ
 			phase_ = Phase::PlayerFly; // 次のフェーズへ
 			timer_ = 0.0f; // タイマーをリセットして次のフェーズの時間計測を開始
+
+			if (smokeVolume_) {
+				smokeVolume_->StartClearFromCenter(2.3f);
+			}
 
 			if (fireworkController_) { // 花火コントローラーがある場合はリセットして開始
 				fireworkController_->Reset(); // 花火生成のリセット

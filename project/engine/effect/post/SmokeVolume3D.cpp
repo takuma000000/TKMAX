@@ -23,6 +23,53 @@ namespace TKM {
 				desc_.centerWS_.z = desc_.resetZ_;
 			}
 		}
+
+		//======================================
+		// クリア演出：中央から消す
+		//======================================
+		if (clearFromCenterActive_) {
+
+			clearFromCenterT_ += dt / clearFromCenterDuration_;
+			if (clearFromCenterT_ > 1.0f) {
+				clearFromCenterT_ = 1.0f;
+			}
+			if (clearFromCenterT_ < 0.0f) {
+				clearFromCenterT_ = 0.0f;
+			}
+
+			float t = clearFromCenterT_;
+
+			// イージング（OutQuad）
+			float e = 1.0f - (1.0f - t) * (1.0f - t);
+
+			// 高さを中央から縮める
+			desc_.halfSizeWS_.y = MyMath::Lerp(clearStartHalfSizeWS_.y, 0.0f, e);
+
+			// 見た目も薄く
+			desc_.density_ = MyMath::Lerp(clearStartDensity_, 0.0f, e);
+			desc_.alphaMax_ = MyMath::Lerp(clearStartAlphaMax_, 0.0f, e);
+
+			// 完了
+			if (t >= 1.0f) {
+				clearFromCenterActive_ = false;
+				active_ = false;
+			}
+		}
+	}
+
+	void SmokeVolume3D::StartClearFromCenter(float duration) {
+		clearFromCenterActive_ = true;
+		clearFromCenterT_ = 0.0f;
+
+		if (duration <= 0.0f) {
+			clearFromCenterDuration_ = 0.0001f;
+		} else {
+			clearFromCenterDuration_ = duration;
+		}
+
+		clearStartHalfSizeWS_ = desc_.halfSizeWS_;
+		clearStartDensity_ = desc_.density_;
+		clearStartAlphaMax_ = desc_.alphaMax_;
 	}
 
 	void SmokeVolume3D::Draw(const Matrix4x4& viewProj, const Vector3& camRightWS, const Vector3& camUpWS, const Vector3& camFwdWS) {

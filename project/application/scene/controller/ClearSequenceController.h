@@ -12,6 +12,7 @@
 #include "GameFlowController.h"
 #include "DirectXCommon.h"
 #include "FireworkController.h"
+#include "SmokeVolume3D.h"
 
 namespace TKM {
 
@@ -40,7 +41,8 @@ namespace TKM {
 			GameFlowController* flow,
 			DirectXCommon* dxCommon,
 			Skybox* skybox,
-			FireworkController* fireworkController
+			FireworkController* fireworkController,
+			SmokeVolume3D* smokeVolume
 		);
 		/// <summary>
 		/// 処理を開始します。
@@ -121,5 +123,9 @@ namespace TKM {
 		static constexpr float kIrisDurationSec_ = 0.8f; // アイリスクローズ演出時間
 		bool irisClosing_ = false; // アイリスクローズ中フラグ
 		Ease::Tween irisCloseTween_; // アイリスクローズ用イージング
+		//==============================
+		// 霧
+		//==============================
+		SmokeVolume3D* smokeVolume_ = nullptr;
 	};
 }
