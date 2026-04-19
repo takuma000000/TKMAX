@@ -335,8 +335,6 @@ public:
 	/// <param name="manager">BarrierCoreManager オブジェクト（nullptr 可）</param>
 	void SetBarrierCoreManager(BarrierCoreManager* manager);
 	// =========================================
-
-	enum class DeathPhase { None, FaultSparks, FlyAway }; // 撃墜演出フェーズ
 private:
 	//======================================================================
 	// 内部メソッド
@@ -431,28 +429,30 @@ private:
 	// プレイヤー状態 / 制御フラグ
 	//======================================================================
 	int  maxHp_ = 5; // 最大HP
-	int  hp_ = 5;    // 初期HP
+	int  hp_ = 1;    // 初期HP
 	bool canUseSpecial_ = false; // 一撃必殺が使用可能かどうか
 	bool controlEnabled_ = true;  // trueなら通常操作、falseなら入力系を全部無視
 	bool reticleVisible_ = true;  // trueならレティクル描画
 	bool shootingEnabled_ = true; // trueなら射撃可能、falseなら射撃禁止
 	bool rumbleEnabled_ = true; // true=振動OK / false=振動禁止
 	//======================================================================
-	// 撃墜演出（故障スパーク → 吹き飛び）
+	// 撃墜管理
 	//======================================================================
-	// 撃墜演出用
-	bool   isDead_ = false;         // 撃墜モード中
-	Vector3 deathVelocity_ = { 0,0,0 };     // 速度
-	Vector3 deathRotateSpeed_ = { 0,0,0 };   // 回転速度
-	float  deathTimer_ = 0.0f;          // 経過時間(秒想定)
-	float  deathDuration_ = 2.6f;          // 強制演出の長さ（好みで）
-	DeathPhase deathPhase_ = DeathPhase::None; // 現在の撃墜演出フェーズ
-	float faultTimer_ = 0.0f; // 故障スパークの経過時間
-	float faultDuration_ = 1.3f;   // 何秒間スパークさせるか（ImGuiで調整可）
-	int   faultBurstPerTick_ = 12;    // 1回あたり粒の発生数（ImGuiで調整可）
-	int   faultTickInterval_ = 2;     // 何フレームごとに出すか
-	int   faultFrameCounter_ = 0; // フレームカウンター（faultTickInterval_管理用）
-	bool  flyInit_ = false;  // FlyAway移行時の一度きり初期化フラグ
+	bool   isDead_ = false;                    // 死亡状態か
+	bool   deathStartHandled_ = false;         // 死亡開始時の一度きり処理用
+
+	Vector3 deathVelocity_ = { 0.0f, 0.0f, 0.0f };     // 故障落下中の速度
+	Vector3 deathAngularVelocity_ = { 0.0f, 0.0f, 0.0f }; // 故障落下中の角速度
+
+	static constexpr float kDeathBackwardSpeed_ = 0.55f;   // 弱める
+	static constexpr float kDeathFallStartSpeed_ = 0.01f;  // かなり弱く
+	static constexpr float kDeathGravity_ = 0.006f;        // 超重要：めっちゃ弱く
+	static constexpr float kDeathFallMaxSpeed_ = 0.25f;    // 落下速度を制限
+	static constexpr float kDeathBackwardDamping_ = 0.992f; // 空気抵抗：かなり残す
+	static constexpr float kDeathRotateDamping_ = 0.992f;   // 回転の慣性もゆっくり抜ける 
+	static constexpr float kDeathMaxPitch_ = 1.20f;         // ピッチ（上下回転）の最大値（ラジアン）
+	static constexpr float kDeathMaxRoll_ = 0.80f;          // ロール（左右回転）の最大値（ラジアン）
+	Vector3 deathBackwardDir_ = { 0.0f, 0.0f, 0.0f };       // 後ろ反動の方向
 	//======================================================================
 	// 時ズーム（カメラ演出）
 	//======================================================================

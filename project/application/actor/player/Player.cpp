@@ -133,12 +133,8 @@ void Player::Update(float dt) {
 		}
 	}
 
-	HandleFollowCamera(); // カメラの追従処理
-	RemoveEnemyIfDead(); // 敵が死んでたら参照をクリア
-	HandleFollowCamera(); // カメラの追従処理
-	RemoveEnemyIfDead(); // 敵が死んでたら参照をクリア
-
-	if (controlEnabled_) {
+	// 操作可能で、かつ生存してたらプレイヤーの操作を受け付ける
+	if (controlEnabled_ && !isDead_) {
 		HandleGamePadMove(); // ゲームパッドのスティック入力で移動
 		HandleDodge(dt); // 回避処理
 
@@ -218,8 +214,12 @@ void Player::Update(float dt) {
 		jetEmitter_.Update();
 	}
 
+	RemoveEnemyIfDead(); // 敵が死んでたら参照をクリア
 	UpdateFlipperAnim_(dt); // ヒレのアニメーション更新
-	UpdateFloatBob_(dt); // 浮遊のアニメーション更新
+	if (!isDead_) {
+		UpdateFloatBob_(dt); // 浮遊のアニメーション更新
+		HandleFollowCamera(); // 生存中だけカメラ追従
+	}
 
 	// TrailRibbonRendererの更新
 	TKM::TrailRibbonRenderer::GetInstance()->Update(dt);
@@ -361,139 +361,65 @@ void Player::Damage(int value) {
 }
 
 void Player::Death() {
-	// ---- HPが0になったら「故障スパーク → 撃墜」二段階 ----
-	if (hp_ <= 0) {
-
-		// まだ死亡演出に入ってなければ、故障スパークから開始
-		if (deathPhase_ == DeathPhase::None) {
-			deathPhase_ = DeathPhase::FaultSparks;
-			isDead_ = true;        // 以後の通常操作を停止
-			faultTimer_ = 0.0f;
-			faultFrameCounter_ = 0;
-			flyInit_ = false;
-		}
-
-		// === フェーズ1：故障スパーク（機体の周囲に複数スポット）===
-		if (deathPhase_ == DeathPhase::FaultSparks) {
-			faultTimer_ += dt;
-			++faultFrameCounter_;
-
-			// 調整用ローカル（必要なら後でImGui化）
-			const float kSpreadRadius = 2.0f; // 機体中心からどれくらい外側まで
-			const int   kSpotCount = 6;    // 同時に噴くスポット数
-
-			// 一定フレーム毎にスパーク発生 & カメラシェイク
-			if ((faultFrameCounter_ % std::max(1, faultTickInterval_)) == 0) {
-
-				// 1スポットあたりの粒数（全体の発生数を均等割）
-				const int perSpot = std::max(1, faultBurstPerTick_ / std::max(1, kSpotCount));
-
-				// 簡易乱数ユーティリティ
-				auto frand = [](float a, float b) {
-					return a + (b - a) * (static_cast<float>(rand()) / static_cast<float>(RAND_MAX));
-					};
-
-				Vector3 base = object_->GetTranslate(); // 機体中心
-
-				for (int i = 0; i < kSpotCount; ++i) {
-					// ランダムな方向ベクトル（球面上）＋半径ランダム
-					Vector3 dir = { frand(-1.f, 1.f), frand(-1.f, 1.f), frand(-1.f, 1.f) };
-					if (MyMath::Length(dir) < 0.001f) dir = { 0,0,1 };
-					dir = MyMath::Normalize(dir);
-
-					float r = kSpreadRadius * frand(0.25f, 1.0f); // 内側～外側へ散らす
-					Vector3 p = base + dir * r;                   // スポット位置
-
-					// Emitの第2引数は非const参照なのでローカル変数を渡す
-					TKM::ParticleManager::GetInstance()->Emit("damageSpark", p, perSpot);
-				}
-
-				// 激しさ”演出：軽めシェイクを継続
-				StartCameraShake(20);
-			}
-
-			// ほんの少しだけ姿勢が乱れる感じ（お好み）
-			Vector3 rot = object_->GetRotate();
-			rot.z += 0.02f; // バンク方向に微揺れ
-			object_->SetRotate(rot);
-
-			object_->Update(); // 故障中も更新
-
-			// 規定時間でフェーズ2へ
-			if (faultTimer_ >= faultDuration_) {
-				deathPhase_ = DeathPhase::FlyAway;
-			}
-			return; // 故障中は他処理停止
-		}
-
-		// === フェーズ2：緩やかな吹き飛び（穏やか版） ===
-		if (deathPhase_ == DeathPhase::FlyAway) {
-			if (!flyInit_) {
-				flyInit_ = true;
-
-				// 横ブレ・上向き控えめ、+Zへ
-				float side = (rand() % 200 - 100) / 100.0f;   // -1..1
-				float up = 0.15f + (rand() % 100) / 100.0f * 0.20f; // 0.15..0.35
-				Vector3 dir = MyMath::Normalize(Vector3{ side * 0.25f, up, 1.6f });
-
-				deathVelocity_ = dir * 0.55f;
-
-				deathRotateSpeed_.x = 0.03f + (rand() % 30) / 100.0f;
-				deathRotateSpeed_.y = 0.04f + (rand() % 30) / 100.0f;
-				deathRotateSpeed_.z = 0.05f + (rand() % 30) / 100.0f;
-
-				// スパーク直後は余韻の弱シェイク
-				StartCameraShake(60);
-
-				// パーティクル少なめの爆散
-				Vector3 pos = object_->GetTranslate();
-				TKM::ParticleManager::GetInstance()->Emit("uv", pos, 20);
-
-				deathTimer_ = 0.0f;
-			}
-
-			deathTimer_ += dt; // 経過時間更新
-
-			// ゆっくり減速しつつ、わずかに浮き
-			deathVelocity_ *= 0.992f;
-			deathVelocity_.y += 0.02f * dt;
-
-			// 速度上限
-			const float maxSpeed = 1.2f;
-			float sp = MyMath::Length(deathVelocity_);
-			if (sp > maxSpeed) {
-				deathVelocity_ = MyMath::Normalize(deathVelocity_) * maxSpeed;
-			}
-
-			// 位置
-			Vector3 pos = object_->GetTranslate();
-			pos += deathVelocity_;
-			object_->SetTranslate(pos);
-
-			// 緩いスピン
-			float t = std::clamp(deathTimer_ / deathDuration_, 0.0f, 1.0f);
-			Vector3 rot = object_->GetRotate();
-			float spinScale = 1.0f + 0.3f * (1.0f - std::cosf(t * MyMath::GetPI()));
-			rot.x += deathRotateSpeed_.x * spinScale;
-			rot.y += deathRotateSpeed_.y * spinScale;
-			rot.z += deathRotateSpeed_.z * spinScale;
-			object_->SetRotate(rot);
-
-			// ほんの少し縮小
-			Vector3 sc = object_->GetScale();
-			sc *= 0.999f;
-			object_->SetScale(sc);
-
-			// まばらなチリ
-			if (static_cast<int>(deathTimer_ * 60.0f) % 10 == 0) {
-				Vector3 ep = object_->GetTranslate();
-				TKM::ParticleManager::GetInstance()->Emit("uv", ep, 2);
-			}
-
-			object_->Update();
-			return; // 撃墜中は他処理停止
-		}
+	if (hp_ > 0) {
+		return;
 	}
+
+	// 死亡開始時に一度だけ行う処理
+	if (!deathStartHandled_) {
+		deathStartHandled_ = true;
+		isDead_ = true;
+
+		SetControlEnabled(false);   // 操作停止
+		SetShootingEnabled(false);  // 射撃停止
+		SetReticleVisible(false);   // レティクル非表示
+
+		// ロック表示解除
+		if (lastLockedEnemy_) {
+			lastLockedEnemy_->SetLocked(false);
+			lastLockedEnemy_ = nullptr;
+		}
+
+		// 画面手前(-Z)に一発だけ弾かれて、そのまま落ちる
+		deathBackwardDir_ = { 0.0f, 0.0f, -1.0f };
+		deathVelocity_ = { 0.0f, -kDeathFallStartSpeed_, -kDeathBackwardSpeed_ * 0.8f };
+
+		// 姿勢は少しだけ崩す
+		float rollSign = (rand() % 2 == 0) ? -1.0f : 1.0f;
+		deathAngularVelocity_.x = 0.012f;
+		deathAngularVelocity_.y = 0.0f;
+		deathAngularVelocity_.z = 0.020f * rollSign;
+
+		StartCameraShake(20);
+	}
+
+	// 下方向へ加速
+	deathVelocity_.y -= kDeathGravity_;
+	if (deathVelocity_.y < -kDeathFallMaxSpeed_) {
+		deathVelocity_.y = -kDeathFallMaxSpeed_;
+	}
+
+	// 手前方向(Z)の勢いは少しずつだけ抜ける
+	deathVelocity_.z *= kDeathBackwardDamping_;
+
+	// 位置反映
+	Vector3 pos = object_->GetTranslate();
+	pos += deathVelocity_;
+	object_->SetTranslate(pos);
+
+	// 姿勢更新
+	Vector3 newRot = object_->GetRotate();
+	newRot.x += deathAngularVelocity_.x;
+	newRot.z += deathAngularVelocity_.z;
+
+	if (newRot.x > kDeathMaxPitch_) {
+		newRot.x = kDeathMaxPitch_;
+	}
+
+	newRot.z = std::clamp(newRot.z, -kDeathMaxRoll_, kDeathMaxRoll_);
+	object_->SetRotate(newRot);
+
+	deathAngularVelocity_ *= kDeathRotateDamping_;
 }
 
 void Player::UpdateVisualOnly(float dt) {

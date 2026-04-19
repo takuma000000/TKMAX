@@ -129,7 +129,7 @@ namespace TKM {
 
 		bool initialized_ = false; // 初期化済みフラグ
 
-		float gameVolume_ = 1.0f; // ゲーム全体音量
+		float gameVolume_ = 0.0f; // ゲーム全体音量
 
 		/// <summary>
 		///		

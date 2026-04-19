@@ -402,7 +402,7 @@ void GameScene::UpdateGameplaySystems(float rawDeltaTime, float scaledDeltaTime)
 	const bool bossEntranceSpawned = (bossEntranceSeq_ && bossEntranceSeq_->HasSpawnedBoss());
 	const bool locked = (flow_->IsGameplayLocked()) || isClear || bossEntranceActive || clearSequenceTriggered_; // ゲームプレイがロックされているかどうか
 
-	player_->SetControlEnabled(!locked);
+	player_->SetControlEnabled(!locked && !player_->IsDead());
 
 	if (bossEntranceSeq_ && bossEntranceSeq_->IsActive()) {
 		bossEntranceSeq_->Update(rawDeltaTime, bossManager_.get());

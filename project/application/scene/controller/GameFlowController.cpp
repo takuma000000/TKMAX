@@ -152,8 +152,8 @@ namespace TKM {
 
 		playerDeathElapsed_ += kFixedDeltaTime_;
 
-		// 4秒経過したら GameOver 用 Iris 閉じ開始（1回だけ）
-		if (playerDeathElapsed_ < 4.0f) { return; }
+		// 2秒経過したら GameOver 用 Iris 閉じ開始（1回だけ）
+		if (playerDeathElapsed_ < 2.0f) { return; }
 		BeginIrisClosing_(false);
 	}
 
