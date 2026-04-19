@@ -1,5 +1,6 @@
 #pragma once
 #include "MyMath.h"
+#include "StateMachine.h"
 
 class BossManager;
 
@@ -9,7 +10,7 @@ class BossManager;
 // ・演出中はGameScene側でゲームプレイをロックし、
 //   演出の途中でBossManager::StartBattle()を呼ぶ。
 //=============================================================
-class BossEntranceSequence {
+class BossEntranceSequence : public TKM::IStateContext {
 public:
 	BossEntranceSequence() = default;
 	~BossEntranceSequence() = default;
@@ -43,16 +44,6 @@ public:
 	// ========================================================
 
 private:
-	enum class Phase {
-		Idle,       // 待機状態（非アクティブ）
-		Wait,       // 全滅後の一拍
-		SkyFadeIn,  // 空を赤へ染める
-		Gather,     // 吸い込み予兆
-		Cover,      // 赤空で全体を覆う
-		Burst,      // 巨大出現バースト + ボス生成
-		Push,       // 赤空の中で押し出し余韻
-		Done,       // 演出完了
-	};
 
 	/// <summary>
 	/// 2色のカラーを t (0.0f～1.0f) で線形補間します。
@@ -103,7 +94,6 @@ private:
 	bool isActive_ = false;
 	bool bossSpawned_ = false;
 
-	Phase phase_ = Phase::Idle;
 	float phaseTimer_ = 0.0f; // 現在のフェーズの経過時間を計測するタイマー
 	float convergeEmitTimer_ = 0.0f;
 	float glowEmitTimer_ = 0.0f;
@@ -120,4 +110,15 @@ private:
 	Vector3 burstEndPos_{ 0.0f, 0.0f, 0.0f };
 	Vector3 burstStartScale_{ 1.0f, 1.0f, 1.0f };
 	Vector3 burstEndScale_{ 1.0f, 1.0f, 1.0f };
+
+	TKM::StateMachine sm_;
+	BossManager* bossManager_ = nullptr;
+
+	friend class BossEntranceWaitState;
+	friend class BossEntranceSkyFadeInState;
+	friend class BossEntranceGatherState;
+	friend class BossEntranceCoverState;
+	friend class BossEntranceBurstState;
+	friend class BossEntrancePushState;
+	friend class BossEntranceDoneState;
 };

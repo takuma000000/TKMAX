@@ -218,6 +218,7 @@
     <ClCompile Include="application\actor\BarrierCoreManager.cpp" />
     <ClCompile Include="application\catalog\AudioCatalog.cpp" />
     <ClCompile Include="application\state\ClearComedyStates.cpp" />
+    <ClCompile Include="application\state\BossEntranceStates.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -477,6 +478,7 @@
     <ClInclude Include="application\actor\BarrierCoreManager.h" />
     <ClInclude Include="application\catalog\AudioCatalog.h" />
     <ClInclude Include="application\state\ClearComedyStates.h" />
+    <ClInclude Include="application\state\BossEntranceStates.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
