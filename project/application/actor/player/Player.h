@@ -429,7 +429,7 @@ private:
 	// プレイヤー状態 / 制御フラグ
 	//======================================================================
 	int  maxHp_ = 5; // 最大HP
-	int  hp_ = 1;    // 初期HP
+	int  hp_ = 5;    // 初期HP
 	bool canUseSpecial_ = false; // 一撃必殺が使用可能かどうか
 	bool controlEnabled_ = true;  // trueなら通常操作、falseなら入力系を全部無視
 	bool reticleVisible_ = true;  // trueならレティクル描画
