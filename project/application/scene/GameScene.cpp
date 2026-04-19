@@ -422,7 +422,7 @@ void GameScene::UpdateGameplaySystems(float rawDeltaTime, float scaledDeltaTime)
 		(flow_ && flow_->GetIntro() && flow_->GetIntro()->IsStartVisible());
 	// 「GAME START」が表示された瞬間にBGM
 	if (isStartVisible && !gameStartedBGMPlayed_) {
-		TKM::AudioManager::GetInstance()->PlaySound("playBGM", 0.2f, true);
+		TKM::AudioManager::GetInstance()->PlaySound("playBGM", 0.1f, true);
 		gameStartedBGMPlayed_ = true;
 	}
 	// 開幕ボス演出中かどうか

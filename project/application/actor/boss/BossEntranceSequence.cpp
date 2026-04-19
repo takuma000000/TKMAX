@@ -48,7 +48,7 @@ void BossEntranceSequence::Start(const Vector3& spawnPos) {
 	sm_.Initialize(this);
 	sm_.Change(std::make_unique<BossEntranceWaitState>());
 
-	TKM::AudioManager::GetInstance()->PlaySound("bossPhaseBGM", 0.2f, true);
+	TKM::AudioManager::GetInstance()->PlaySound("bossPhaseBGM", 0.1f, true);
 }
 
 void BossEntranceSequence::EmitGather_() {

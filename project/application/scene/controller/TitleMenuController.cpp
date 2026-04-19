@@ -96,7 +96,7 @@ TitleMenuController::Command TitleMenuController::Update(float dt) {
 
 	// 決定
 	if (TriggerA_()) {
-		TKM::AudioManager::GetInstance()->PlaySound("decision", 0.2f);
+		TKM::AudioManager::GetInstance()->PlaySound("decision", 0.1f);
 		return (index_ == (int)Item::Start) ? Command::Start : Command::Exit;
 	}
 
@@ -170,5 +170,5 @@ void TitleMenuController::MoveIndex_(int delta) {
 	const int count = (int)Item::Count;
 	index_ = (index_ + delta + count) % count;
 
-	TKM::AudioManager::GetInstance()->PlaySound("cursor", 0.3f);
+	TKM::AudioManager::GetInstance()->PlaySound("cursor", 0.2f);
 }

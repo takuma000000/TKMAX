@@ -1427,7 +1427,7 @@ void Player::StartDodge() {
 	dodgeDir_ = dir;
 
 	// 回避の音
-	TKM::AudioManager::GetInstance()->PlaySound("avoid", 0.2f);
+	TKM::AudioManager::GetInstance()->PlaySound("avoid", 0.1f);
 
 	dodgeBaseRot_ = object_->GetRotate();
 	{
