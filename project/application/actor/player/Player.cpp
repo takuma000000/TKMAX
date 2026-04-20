@@ -7,6 +7,7 @@
 #include "MidBossCore.h"
 #include "AudioManager.h"
 #include "PlayerShotManager.h"
+#include "PlayerShotConfig.h"
 
 #ifdef USE_IMGUI
 #include "imgui.h"
@@ -46,6 +47,12 @@ void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommo
 	// ショットマネージャー初期化
 	shotManager_ = std::make_unique<PlayerShotManager>();
 	shotManager_->Initialize(this, common_, dxCommon_);
+
+	const bool loaded = shotConfig_.Load("./resources/data/playerShotConfig.json");
+	assert(loaded && "playerShotConfig.json の読込に失敗しました");
+
+	shotManager_->SetConfig(&shotConfig_);
+
 	shotManager_->SetOwnerObject(object_.get());
 	shotManager_->SetReticle(reticle_.get());
 	shotManager_->SetCamera(camera_);

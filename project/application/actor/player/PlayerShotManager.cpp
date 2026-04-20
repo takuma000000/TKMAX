@@ -14,12 +14,14 @@ void PlayerShotManager::Initialize(Player* owner, TKM::Object3dCommon* common, T
 	common_ = common;
 	dxCommon_ = dxCommon;
 
-	rbAmmo_ = kRbAmmoMax_;
+	rbAmmo_ = 0;
 	rbEmptyTimer_ = 0.0f;
 	rbRefilling_ = false;
-	rbRefillValue_ = float(rbAmmo_);
+	rbRefillValue_ = 0.0f;
+	rbNoFireTimer_ = 0.0f;
+	rbShotCooldownTimer_ = 0.0f;
 
-	lbAmmo_ = kLbAmmoMax_;
+	lbAmmo_ = 0;
 	lbNoFireTimer_ = 0.0f;
 }
 
@@ -97,6 +99,16 @@ void PlayerShotManager::SetShootingEnabled(bool enabled) {
 		rtHeld_ = false;
 		ltHeld_ = false;
 		ClearLockState();
+
+		bullets_.clear();
+		homingBullets_.clear();
+
+		rbShotCooldownTimer_ = 0.0f;
+		rbRefilling_ = false;
+		rbRefillValue_ = float(rbAmmo_);
+		rbEmptyTimer_ = 0.0f;
+		rbNoFireTimer_ = 0.0f;
+		lbNoFireTimer_ = 0.0f;
 	}
 }
 
@@ -156,7 +168,28 @@ void PlayerShotManager::OnMidBossCoreDestroyed(MidBossCore* core) {
 	core_ = nullptr;
 }
 
+void PlayerShotManager::SetConfig(const PlayerShotConfig* config) {
+	config_ = config;
+
+	assert(config_ && "PlayerShotConfig が未設定です");
+
+	rbAmmo_ = std::max(0, config_->GetRB().ammoMax_);
+	lbAmmo_ = std::max(0, config_->GetLB().ammoMax_);
+
+	rbRefillValue_ = float(rbAmmo_);
+	rbEmptyTimer_ = 0.0f;
+	rbNoFireTimer_ = 0.0f;
+	lbNoFireTimer_ = 0.0f;
+	rbRefilling_ = false;
+	rbShotCooldownTimer_ = 0.0f;
+}
+
 void PlayerShotManager::HandleShooting_(float dt) {
+	assert(config_ && "PlayerShotConfig が未設定です");
+
+	const PlayerShotConfig::RBConfig& rb = config_->GetRB();
+	const PlayerShotConfig::LBConfig& lb = config_->GetLB();
+
 	//====================
 	// RB弾 リチャージ更新（0回復 + アイドル回復）
 	//====================
@@ -166,8 +199,8 @@ void PlayerShotManager::HandleShooting_(float dt) {
 		}
 
 		const bool empty = (rbAmmo_ <= 0);
-		const bool idleReady = (!empty && rbNoFireTimer_ >= kRbEmptyWaitSec_);
-		const bool emptyReady = (empty && (rbEmptyTimer_ >= kRbEmptyWaitSec_));
+		const bool idleReady = (!empty && rbNoFireTimer_ >= rb.refillWaitSec_);
+		const bool emptyReady = (empty && (rbEmptyTimer_ >= rb.refillWaitSec_));
 
 		if (!rbRefilling_) {
 			if (empty) {
@@ -183,13 +216,11 @@ void PlayerShotManager::HandleShooting_(float dt) {
 		}
 
 		if (rbRefilling_) {
-			const float speed = float(kRbAmmoMax_) / std::max(0.001f, kRbRefillSec_);
+			const float speed = float(std::max(1, rb.ammoMax_)) / std::max(0.001f, rb.refillSec_);
 			rbRefillValue_ += speed * dt;
-
-			rbAmmo_ = std::clamp(int(rbRefillValue_), 0, kRbAmmoMax_);
-
-			if (rbAmmo_ >= kRbAmmoMax_) {
-				rbAmmo_ = kRbAmmoMax_;
+			rbAmmo_ = std::clamp(int(rbRefillValue_), 0, std::max(1, rb.ammoMax_));
+			if (rbAmmo_ >= std::max(1, rb.ammoMax_)) {
+				rbAmmo_ = std::max(1, rb.ammoMax_);
 				rbRefilling_ = false;
 				rbEmptyTimer_ = 0.0f;
 				rbNoFireTimer_ = 0.0f;
@@ -201,11 +232,11 @@ void PlayerShotManager::HandleShooting_(float dt) {
 	// LB弾 自動満タン回復
 	//====================
 	{
-		if (!debugUnlimitedLB_ && lbAmmo_ < kLbAmmoMax_) {
+		if (!debugUnlimitedLB_ && lbAmmo_ < std::max(1, lb.ammoMax_)) {
 			lbNoFireTimer_ += dt;
 
-			if (lbNoFireTimer_ >= kLbRefillWaitSec_) {
-				lbAmmo_ = kLbAmmoMax_;
+			if (lbNoFireTimer_ >= lb.refillWaitSec_) {
+				lbAmmo_ = std::max(1, lb.ammoMax_);
 				lbNoFireTimer_ = 0.0f;
 			}
 		} else {
@@ -224,11 +255,13 @@ void PlayerShotManager::HandleShooting_(float dt) {
 	}
 
 	RBShoot_();
-	RTShoot_();
 	LBShoot_();
 }
 
 void PlayerShotManager::RBShoot_() {
+	assert(config_ && "PlayerShotConfig が未設定です");
+	const PlayerShotConfig::RBConfig& rb = config_->GetRB();
+
 	TKM::Input* input = TKM::Input::GetInstance();
 
 	const bool padRB = input->PushButton(XINPUT_GAMEPAD_RIGHT_SHOULDER);
@@ -263,7 +296,7 @@ void PlayerShotManager::RBShoot_() {
 		}
 	}
 
-	bullet->SetVelocity(dir * normalBulletSpeed_);
+	bullet->SetVelocity(dir * rb.bulletSpeed_);
 	bullet->SetCamera(camera_);
 	bullet->SetPlayer(owner_);
 	bullet->SetUseTrail(false);
@@ -308,49 +341,15 @@ void PlayerShotManager::RBShoot_() {
 	bullet->SetEnemy(targetEnemy);
 	bullets_.push_back(std::move(bullet));
 
-	rbShotCooldownTimer_ = kRbShotCooldownSec_;
+	rbShotCooldownTimer_ = rb.shotCooldownSec_;
 	rbAmmo_ = std::max(0, rbAmmo_ - 1);
 	rbNoFireTimer_ = 0.0f;
 }
 
-void PlayerShotManager::RTShoot_() {
-	TKM::Input* input = TKM::Input::GetInstance();
-	const bool pressed = (input->GetRightTrigger() > kTriggerThreshold);
-
-	if (pressed && (canUseSpecial_ || debugUnlimitedSpecial_) && enemy_ && !enemy_->IsDead()) {
-		rtHeld_ = true;
-	}
-
-	if (!pressed && rtHeld_) {
-		if ((canUseSpecial_ || debugUnlimitedSpecial_) && enemy_ && !enemy_->IsDead() && ownerObject_) {
-			auto bullet = std::make_unique<PlayerBullet>();
-			bullet->Initialize(common_, dxCommon_);
-
-			Vector3 startPos = ownerObject_->GetTranslate();
-			Vector3 enemyPos = enemy_->GetWorldPosition();
-			Vector3 dir = MyMath::Normalize(enemyPos - startPos);
-
-			bullet->SetPosition(startPos);
-			bullet->SetVelocity(dir * normalBulletSpeed_);
-			bullet->SetCamera(camera_);
-			bullet->SetEnemy(enemy_);
-			bullet->SetPlayer(owner_);
-			bullet->SetSpecialAttack(true);
-			bullet->SetTrailGroup("trail_rt");
-			bullet->SetCore(core_);
-
-			bullets_.push_back(std::move(bullet));
-
-			enemy_->SetLocked(false);
-			if (!debugUnlimitedSpecial_) {
-				canUseSpecial_ = false;
-			}
-		}
-		rtHeld_ = false;
-	}
-}
-
 void PlayerShotManager::LBShoot_() {
+	assert(config_ && "PlayerShotConfig が未設定です");
+	const PlayerShotConfig::LBConfig& lb = config_->GetLB();
+
 	TKM::Input* input = TKM::Input::GetInstance();
 
 	// ▼ LB：山なりホーミング弾（ロックオンしてる敵に向かう、LB弾は自動で満タン回復する）
@@ -371,7 +370,7 @@ void PlayerShotManager::LBShoot_() {
 		Vector3 start = ownerObject_->GetTranslate(); // 発射位置
 
 		// 終点
-		Vector3 end = start + Vector3{ 0.0f, 0.0f, 28.0f };
+		Vector3 end = start + Vector3{ 0.0f, 0.0f, lb.forwardOffsetZ_ };
 
 		// 優先順位：
 		// 1. コア
@@ -393,7 +392,7 @@ void PlayerShotManager::LBShoot_() {
 			forward = flat / flatLen;
 		}
 
-		float arcHeight = std::clamp(flatLen * 0.25f, 6.0f, 18.0f);
+		float arcHeight = std::clamp(flatLen * 0.25f, 6.0f, lb.arcHeight_);
 
 		// 制御点は、スタートから前方に少し進んだ位置と、エンドから前方に少し戻った位置の2点を、さらに上に持ち上げる
 		Vector3 c1 = start + forward * (flatLen * 0.25f) + Vector3{ 0.0f, arcHeight, 0.0f };

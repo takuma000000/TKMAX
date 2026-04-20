@@ -376,9 +376,11 @@ void GameScene::UpdateEnemyAndWaveLogic(float scaledDeltaTime) {
 		if (bossManager_ && bossManager_->GetBoss() == nullptr) {
 			if (bossEntranceSeq_) {
 				if (!bossEntranceSeq_->IsActive()) {
+					player_->SetShootingEnabled(false);   // 追加：既存弾ごと即消し
 					bossEntranceSeq_->Start(bossManager_->GetSpawnPos());
 				}
 			} else {
+				player_->SetShootingEnabled(false);       // 追加：直接ボス戦開始でも即消し
 				bossManager_->StartBattle();
 			}
 		}
@@ -403,6 +405,7 @@ void GameScene::UpdateGameplaySystems(float rawDeltaTime, float scaledDeltaTime)
 	const bool locked = (flow_->IsGameplayLocked()) || isClear || bossEntranceActive || clearSequenceTriggered_; // ゲームプレイがロックされているかどうか
 
 	player_->SetControlEnabled(!locked && !player_->IsDead());
+	player_->SetShootingEnabled(!locked && !player_->IsDead());
 
 	if (bossEntranceSeq_ && bossEntranceSeq_->IsActive()) {
 		bossEntranceSeq_->Update(rawDeltaTime, bossManager_.get());

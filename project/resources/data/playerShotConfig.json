@@ -1,0 +1,19 @@
+{
+  "rb": {
+    "bulletSpeed": 10.0,     
+    "ammoMax": 500,           
+    "refillWaitSec": 1.0,     
+    "refillSec": 3.0,        
+    "shotCooldownSec": 0.25   
+  },
+
+  "lb": {
+    "ammoMax": 5,             
+    "refillWaitSec": 3.0,    
+
+    "arcHeight": 18.0,        
+    "arcDuration": 0.55,      
+
+    "forwardOffsetZ": 28.0
+  }
+}

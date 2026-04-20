@@ -15,6 +15,7 @@
 #include "TrailRibbonRenderer.h"
 #include "HomingBullet.h"
 #include "PlayerShotManager.h"
+#include "PlayerShotConfig.h"
 
 class MidBossCore;
 class Enemy;
@@ -544,5 +545,9 @@ private:
 	static constexpr size_t kWave1BarrierHitMax_ = 8; // ワンウェイバリアヒットエフェクトの最大数
 	std::vector<Wave1BarrierHit> wave1BarrierHits_; // ワンウェイバリアヒットエフェクトの情報リスト
 	bool wave1BarrierFlashRequested_ = false; // ワンウェイバリアヒットフラッシュエフェクトのリクエストフラグ
-	Vector3 wave1BarrierFlashPos_ = { 0.0f, 0.0f, 0.0f }; // ワンウェイバリアヒットフラッシュエフェクトのリクエスト情報q
+	Vector3 wave1BarrierFlashPos_ = { 0.0f, 0.0f, 0.0f }; // ワンウェイバリアヒットフラッシュエフェクトのリクエスト情報
+	//======================================================================
+	// 弾の外部設定
+	//======================================================================
+	PlayerShotConfig shotConfig_; // プレイヤー弾設定(JSON読込結果)
 };

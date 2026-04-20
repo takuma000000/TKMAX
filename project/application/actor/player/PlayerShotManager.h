@@ -11,6 +11,7 @@
 #include "Object3d.h"
 #include "Camera.h"
 #include "Input.h"
+#include "PlayerShotConfig.h"
 #include "reticle/Reticle.h"
 
 class Player;
@@ -66,6 +67,11 @@ public:
 	/// バリアコアが破壊されたときの処理を行います。
 	/// </summary>
 	void EnableSpecialAttack() { canUseSpecial_ = true; }
+	/// <summary>
+	/// ショット設定を反映します。
+	/// </summary>
+	/// <param name="config">プレイヤーショット設定</param>
+	void SetConfig(const PlayerShotConfig* config);
 
 	/// <summary>
 	/// RBのリフィル中かどうかを取得します。
@@ -74,7 +80,6 @@ public:
 	bool IsRbRefilling() const { return rbRefilling_; }
 
 	// Getter========================================
-
 	/// <summary>
 	/// 現在存在するプレイヤーの弾のリストを取得します。
 	/// </summary>
@@ -95,23 +100,26 @@ public:
 	/// <returns>RBの現在の弾数</returns>
 	int GetRbAmmo() const { return rbAmmo_; }
 	/// <summary>
-	/// RBの最大弾数を取得します。
-	/// </summary>
-	/// <returns>RBの最大弾数</returns>
-	int GetRbAmmoMax() const { return kRbAmmoMax_; }
-	/// <summary>
 	/// LBの現在の弾数を取得します。
 	/// </summary>
 	/// <returns>LBの現在の弾数</returns>
 	int GetLbAmmo() const { return lbAmmo_; }
 	/// <summary>
+	/// RBの最大弾数を取得します。
+	/// </summary>
+	/// <returns>RBの最大弾数</returns>
+	int GetRbAmmoMax() const {
+		return config_ ? config_->GetRB().ammoMax_ : 0;
+	}
+	/// <summary>
 	/// LBの最大弾数を取得します。
 	/// </summary>
 	/// <returns>LBの最大弾数</returns>
-	int GetLbAmmoMax() const { return kLbAmmoMax_; }
+	int GetLbAmmoMax() const {
+		return config_ ? config_->GetLB().ammoMax_ : 0;
+	}
 	// ==============================================
 	// Setter========================================
-
 	/// <summary>
 	/// 所有者のプレイヤーを設定します。
 	/// </summary>
@@ -172,10 +180,6 @@ private:
 	/// <summary>
 	/// LBショットの処理を行います。
 	/// </summary>
-	void RTShoot_();
-	/// <summary>
-	/// LBショットの処理を行います。
-	/// </summary>
 	void LBShoot_();
 
 	//======================================================================
@@ -216,14 +220,12 @@ private:
 	//======================================================================
 	// 射撃共通パラメータ
 	//======================================================================
-	float normalBulletSpeed_ = 10.0f;         // 通常弾の速度
-	static constexpr int kTriggerThreshold = 128; // トリガー入力判定の閾値
+	static constexpr int kTriggerThreshold = 128;
 
 	//======================================================================
 	// RB弾管理（通常連射弾）
 	//======================================================================
-	static constexpr int kRbAmmoMax_ = 20; // RB弾の最大弾数
-	int rbAmmo_ = 0;                        // 現在のRB弾数
+	int rbAmmo_ = 0;                     // RB弾の現在弾数
 
 	static constexpr float kRbEmptyWaitSec_ = 3.0f; // 弾切れ後、回復開始までの待機時間
 	static constexpr float kRbRefillSec_ = 0.60f;   // 満タンまでの回復時間
@@ -240,9 +242,11 @@ private:
 	//======================================================================
 	// LB弾管理（ホーミング弾）
 	//======================================================================
-	static constexpr int kLbAmmoMax_ = 5; // LB弾の最大弾数
-	int lbAmmo_ = 0;                      // 現在のLB弾数
+	int lbAmmo_ = 0;                     // LB弾の現在弾数
 
 	static constexpr float kLbRefillWaitSec_ = 3.0f; // 最後に撃ってから満タン回復までの待機時間
 	float lbNoFireTimer_ = 0.0f;                    // 最後に撃ってからの経過時間
+
+
+	const PlayerShotConfig* config_ = nullptr; // プレイヤー弾設定(JSON)
 };
