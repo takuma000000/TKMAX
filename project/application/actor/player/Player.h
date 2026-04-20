@@ -14,6 +14,7 @@
 #include "LineRenderer.h"
 #include "TrailRibbonRenderer.h"
 #include "HomingBullet.h"
+#include "PlayerShotManager.h"
 
 class MidBossCore;
 class Enemy;
@@ -69,7 +70,7 @@ public:
 	/// <summary>
 	/// 一撃必殺を使用可能にします。
 	/// </summary>
-	void EnableSpecialAttack() { canUseSpecial_ = true; } // 一撃必殺を使用可能にする
+	void EnableSpecialAttack();
 	/// <summary>
 	/// 敵が破壊されたときの処理を行います。
 	/// </summary>
@@ -101,7 +102,7 @@ public:
 	/// <summary>
 	/// RB弾が回復中かどうか。
 	/// </summary>
-	bool IsRbRefilling() const { return rbRefilling_; }
+	bool IsRbRefilling() const;
 	/// <summary>
 	/// LB弾が回復中かどうか。
 	/// </summary>
@@ -155,9 +156,7 @@ public:
 	/// プレイヤーの弾リストを取得します。
 	/// </summary>
 	/// <returns></returns>
-	const std::list<std::unique_ptr<PlayerBullet>>& GetBullets() const {
-		return bullets_;
-	}
+	const std::list<std::unique_ptr<PlayerBullet>>& GetBullets() const;
 	/// <summary>
 	/// プレイヤーの位置を取得します。
 	/// </summary>
@@ -209,19 +208,19 @@ public:
 	/// <summary>
 	/// RB弾の残数を取得します。
 	/// </summary>
-	int GetRbAmmo() const { return rbAmmo_; }
+	int GetRbAmmo() const;
 	/// <summary>
 	/// RB弾の最大数を取得します。
 	/// </summary>
-	int GetRbAmmoMax() const { return kRbAmmoMax_; }
+	int GetRbAmmoMax() const;
 	/// <summary>
 	/// LB弾の残数を取得します。
 	/// </summary>
-	int GetLbAmmo() const { return lbAmmo_; }
+	int GetLbAmmo() const;
 	/// <summary>
 	/// LB弾の最大数を取得します。
 	/// </summary>
-	int GetLbAmmoMax() const { return kLbAmmoMax_; }
+	int GetLbAmmoMax() const;
 	/// <summary>
 	/// ワンウェイバリア（LB弾）に関する情報を取得します。
 	/// </summary>
@@ -348,10 +347,6 @@ private:
 	/// </summary>
 	void HandleFollowCamera();
 	/// <summary>
-	/// 射撃処理を行います。
-	/// </summary>
-	void HandleShooting();
-	/// <summary>
 	/// 回避行動の処理を行います。
 	/// </summary>
 	/// <param name="dt">前フレームからの経過時間（秒）</param>
@@ -360,22 +355,6 @@ private:
 	/// 回避行動を開始します。
 	/// </summary>
 	void StartDodge();
-	/// <summary>
-	/// RB弾を更新します。
-	/// </summary>
-	void RBShoot();
-	/// <summary>
-	/// RT弾を更新します。
-	/// </summary>
-	void RTShoot();
-	/// <summary>
-	/// LB弾を更新します。
-	/// </summary>
-	void LBShoot();
-	/// <summary>
-	/// LT弾を更新します。
-	/// </summary>
-	void LTShoot();
 	/// <summary>
 	/// カメラの三人称視点追従処理を行います。
 	/// </summary>
@@ -391,18 +370,12 @@ private:
 	TKM::Camera* camera_ = nullptr;
 	TKM::Object3dCommon* common_ = nullptr;
 	TKM::DirectXCommon* dxCommon_ = nullptr;
-	Enemy* enemy_ = nullptr;
-	MidBossCore* core_ = nullptr;
+	std::unique_ptr<PlayerShotManager> shotManager_ = nullptr;
 	TKM::RadialBlurEffect* radialBlur_ = nullptr;
-	BarrierCoreManager* barrierCoreManager_ = nullptr;
 
 	TKM::BaseScene* parentScene_ = nullptr;
 	std::unique_ptr<TKM::Object3d> object_; // プレイヤー本体の3Dオブジェクト
 	std::unique_ptr<TKM::Object3d> flipper_; // プレイヤーの左右フリップ用オブジェクト
-	std::list<std::unique_ptr<PlayerBullet>> bullets_;
-	std::vector<std::unique_ptr<Enemy>>* allEnemies_ = nullptr;
-	std::list<std::unique_ptr<HomingBullet>> homingBullets_;
-	Enemy* lastLockedEnemy_ = nullptr;  // 直前にロック表示していた敵
 	//======================================================================
 	// カメラシェイク・バンク・移動範囲
 	//======================================================================
@@ -420,17 +393,13 @@ private:
 	//======================================================================
 	// 入力ラッチ / ジェット煙 / デバッグフラグ
 	//======================================================================
-	bool rtHeld_ = false; // RTをいま保持中か
-	bool ltHeld_ = false; // LTの押下状態ラッチ
 	ParticleEmitter jetEmitter_; // ジェット煙エミッタ
-	bool debugUnlimitedSpecial_ = false; // ImGuiでONならRTを無制限発射
 	bool enableJetSmoke_ = true; // デフォルトON
 	//======================================================================
 	// プレイヤー状態 / 制御フラグ
 	//======================================================================
 	int  maxHp_ = 5; // 最大HP
 	int  hp_ = 5;    // 初期HP
-	bool canUseSpecial_ = false; // 一撃必殺が使用可能かどうか
 	bool controlEnabled_ = true;  // trueなら通常操作、falseなら入力系を全部無視
 	bool reticleVisible_ = true;  // trueならレティクル描画
 	bool shootingEnabled_ = true; // trueなら射撃可能、falseなら射撃禁止
@@ -478,8 +447,6 @@ private:
 	// 入力 & 弾共通パラメータ
 	//======================================================================
 	// 入力 & 弾共通の調整用定数
-	static constexpr int   kTriggerThreshold = 128;  // LT/RT 判定しきい値
-	float                  normalBulletSpeed_ = 10.0f; // RB/LB/RT の弾速
 	static constexpr float kJetSmokeOffsetZ_ = 2.0f; // 機体後ろのジェット位置Zオフセット
 	const float            dt = 1.0f / 60.0f; // 想定フレーム時間
 	//======================================================================
@@ -500,19 +467,6 @@ private:
 	//======================================================================
 	int   lastHitAttackId_ = -1;     // 最後に当たった攻撃ID
 	float sameAttackLockT_ = 0.0f;   // 同一攻撃IDロック残り時間（秒）
-	//======================================================================
-	// RB弾（弾数制限）
-	//======================================================================
-	static constexpr int kRbAmmoMax_ = 500; // RB弾の最大数
-	int rbAmmo_; // 現在のRB弾数
-	static constexpr float kRbEmptyWaitSec_ = 3.0f;   // 0になってから回復開始まで待つ秒数
-	static constexpr float kRbRefillSec_ = 0.60f;  // 回復にかける秒数（短いほど「一気に増える」）
-	float rbEmptyTimer_ = 0.0f;      // 0になってからの経過
-	float rbRefillValue_ = 0.0f;     // 回復中の弾数（floatで滑らかに）
-	bool  rbRefilling_ = false;      // 回復中フラグ
-	float rbNoFireTimer_ = 0.0f; // 最後にRBを撃ってからの経過秒数
-	static constexpr float kRbShotCooldownSec_ = 0.25f; // RB弾の発射間隔
-	float rbShotCooldownTimer_ = 0.0f; // 次にRB弾を撃てるまでの残り時間
 	//======================================================================
 	// 振動（Rumble）
 	//======================================================================
@@ -580,11 +534,7 @@ private:
 	//======================================================================
 	// LB弾（最大5・一定時間で満タン回復）
 	//======================================================================
-	static constexpr int kLbAmmoMax_ = 5;        // LB弾の最大数
-	int  lbAmmo_ = kLbAmmoMax_;                 // 現在のLB弾数
 	bool debugUnlimitedLB_ = false;             // デバッグで無限（必要なら）
-	static constexpr float kLbRefillWaitSec_ = 3.0f; // 最後にLB撃ってから満タンまでの待ち秒数
-	float lbNoFireTimer_ = 0.0f;                // 最後にLBを撃ってからの経過秒
 	//======================================================================
 	// ワンウェイバリア
 	//======================================================================

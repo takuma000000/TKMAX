@@ -9,6 +9,7 @@
 
 #ifdef USE_IMGUI
 #include "imgui.h"
+#include "PlayerShotManager.h"
 #endif
 
 void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon) {
