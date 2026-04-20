@@ -219,6 +219,7 @@
     <ClCompile Include="application\catalog\AudioCatalog.cpp" />
     <ClCompile Include="application\state\ClearComedyStates.cpp" />
     <ClCompile Include="application\state\BossEntranceStates.cpp" />
+    <ClCompile Include="application\actor\player\PlayerShotManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -479,6 +480,7 @@
     <ClInclude Include="application\catalog\AudioCatalog.h" />
     <ClInclude Include="application\state\ClearComedyStates.h" />
     <ClInclude Include="application\state\BossEntranceStates.h" />
+    <ClInclude Include="application\actor\player\PlayerShotManager.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

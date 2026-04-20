@@ -235,6 +235,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\scene\controller\TitleShowdownController.cpp" />
     <ClCompile Include="engine\effect\post\NoiseEffect.cpp" />
     <ClCompile Include="application\ui\SkipGuideUI.cpp" />
+    <ClCompile Include="application\actor\player\PlayerShotManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\actor\enemy\manager\EnemyManager.h" />
@@ -350,6 +351,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\effect\IntroBossActor.h" />
     <ClInclude Include="externals\nlohmann\json.hpp" />
     <ClInclude Include="engine\effect\post\NoiseEffect.h" />
+    <ClInclude Include="application\actor\player\PlayerShotManager.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="application\scene\controller\TitleMenuController.h" />
     <ClInclude Include="application\catalog\TextureCatalog.h" />
