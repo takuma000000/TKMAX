@@ -6,10 +6,10 @@
 #include "RadialBlurEffect.h"
 #include "MidBossCore.h"
 #include "AudioManager.h"
+#include "PlayerShotManager.h"
 
 #ifdef USE_IMGUI
 #include "imgui.h"
-#include "PlayerShotManager.h"
 #endif
 
 void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon) {
@@ -43,6 +43,13 @@ void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommo
 	reticle_->SetMoveRange(moveMin_, moveMax_); // レティクルの移動範囲を指定
 	reticle_->GetCenterWorldPos(); // 中心位置取得用
 
+	// ショットマネージャー初期化
+	shotManager_ = std::make_unique<PlayerShotManager>();
+	shotManager_->Initialize(this, common_, dxCommon_);
+	shotManager_->SetOwnerObject(object_.get());
+	shotManager_->SetReticle(reticle_.get());
+	shotManager_->SetCamera(camera_);
+
 	// パーティクルグループ作成
 	TKM::ParticleManager::GetInstance()->CreateParticleGroup(
 		"jetSmoke", "./resources/texture/circle.png", TKM::ParticleManager::ParticleType::NORMAL); // ジェット煙
@@ -74,14 +81,6 @@ void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommo
 		jetPos.z -= kJetSmokeOffsetZ_;           // 機体のケツあたり
 		jetEmitter_.Initialize("jetSmoke", jetPos);
 	}
-	// RB弾
-	rbAmmo_ = kRbAmmoMax_;// ロケット弾初期弾数
-	rbEmptyTimer_ = 0.0f; // ロケット弾空タイマー初期化
-	rbRefilling_ = false; // ロケット弾リフィル中フラグ初期化
-	rbRefillValue_ = float(rbAmmo_); // ロケット弾リフィル値初期化
-	// LB弾
-	lbAmmo_ = kLbAmmoMax_; // LB弾初期弾数
-	lbNoFireTimer_ = 0.0f; // LB弾発射不可タイマー初期化
 
 	// ワンウェイバリア
 	wave1BarrierHits_.clear(); // ワンウェイバリアヒット情報リスト初期化
@@ -134,57 +133,17 @@ void Player::Update(float dt) {
 		}
 	}
 
-	// 操作可能で、かつ生存してたらプレイヤーの操作を受け付ける
+	// 操作有効かつ生存中のみゲームプレイ処理
 	if (controlEnabled_ && !isDead_) {
-		HandleGamePadMove(); // ゲームパッドのスティック入力で移動
-		HandleDodge(dt); // 回避処理
+		HandleGamePadMove();
+		HandleDodge(dt);
 
-		// RTホールド中はターゲットをロック表示（切り替わり時は前の敵を解除）
-		{
-			TKM::Input* input = TKM::Input::GetInstance();
-			Enemy* cur = (enemy_ && !enemy_->IsDead()) ? enemy_ : nullptr;
-
-			bool hold = (input->GetRightTrigger() > kTriggerThreshold) && (canUseSpecial_ || debugUnlimitedSpecial_);
-
-			// ターゲットが切り替わったら前のロックを解除
-			if (lastLockedEnemy_ && lastLockedEnemy_ != cur) {
-				lastLockedEnemy_->SetLocked(false);
-			}
-
-			if (cur && hold) { // ロック中
-				cur->SetLocked(true);
-				lastLockedEnemy_ = cur;
-			} else { // ロック解除
-				if (cur) cur->SetLocked(false);
-				lastLockedEnemy_ = nullptr;
-			}
-		}
-
-		if (shootingEnabled_) { // 射撃処理
-			HandleShooting(); // 先にプレイヤーの操作より下に置くと自然
+		if (shotManager_) {
+			shotManager_->Update(dt, shootingEnabled_);
 		}
 	} else {
-		// 操作不能中はロック表示を解除しておく
-		if (lastLockedEnemy_) {
-			lastLockedEnemy_->SetLocked(false);
-			lastLockedEnemy_ = nullptr;
-		}
-	}
-
-	for (auto it = bullets_.begin(); it != bullets_.end(); ) { // 弾更新と削除
-		(*it)->Update();
-		if ((*it)->IsDead()) { // 弾が死んでたら削除
-			it = bullets_.erase(it);
-		} else { // 生存してたら次へ
-			++it;
-		}
-	}
-	for (auto it = homingBullets_.begin(); it != homingBullets_.end(); ) {
-		(*it)->Update();
-		if ((*it)->IsDead()) {
-			it = homingBullets_.erase(it);
-		} else {
-			++it;
+		if (shotManager_) {
+			shotManager_->ClearLockState();
 		}
 	}
 
@@ -231,14 +190,9 @@ void Player::Update(float dt) {
 }
 
 void Player::DrawTrails(TKM::DirectXCommon* dxCommon) {
-	for (auto& bullet : bullets_) {
-		if (!bullet) { continue; }
-		bullet->DrawTrail(dxCommon); // 弾のトレイル描画
-	}
-	for (auto& bullet : homingBullets_) {
-		if (!bullet) { continue; }
-		bullet->DrawTrail(dxCommon);
-	}
+	// TrailRibbonRendererの描画
+	shotManager_->DrawTrails(dxCommon);
+
 }
 
 void Player::ImGuiDebug() {
@@ -309,27 +263,17 @@ void Player::ImGuiDebug() {
 }
 
 void Player::RemoveEnemyIfDead() {
-	if (enemy_ && enemy_->IsDead()) {
-		enemy_ = nullptr;
-	}
+	// 敵が死んでたらターゲットを解除
+	shotManager_->RemoveDeadTargets();
+}
 
-	if (core_ && core_->IsDead()) {
-		core_ = nullptr;
-	}
+void Player::EnableSpecialAttack() {
+	shotManager_->EnableSpecialAttack(); // ショットマネージャーに一撃必殺使用可能を通知
 }
 
 void Player::OnEnemyDestroyed(Enemy* e) {
-	if (enemy_ == e) {
-		enemy_ = nullptr;
-	}
-	for (auto& b : bullets_) { // 弾が追従している敵も解除する
-		if (!b) continue; // 安全確認
-		if (b->GetEnemy() == e) { b->SetEnemy(nullptr); } // 敵解除
-	}
-	for (auto& b : homingBullets_) {
-		if (!b) continue;
-		if (b->GetEnemy() == e) { b->SetEnemy(nullptr); }
-	}
+	// 敵が破壊されたときの処理をショットマネージャーに通知（ロック解除や一撃必殺の解放など）
+	shotManager_->OnEnemyDestroyed(e);
 }
 
 void Player::Damage(int value) {
@@ -375,11 +319,8 @@ void Player::Death() {
 		SetShootingEnabled(false);  // 射撃停止
 		SetReticleVisible(false);   // レティクル非表示
 
-		// ロック表示解除
-		if (lastLockedEnemy_) {
-			lastLockedEnemy_->SetLocked(false);
-			lastLockedEnemy_ = nullptr;
-		}
+		// ロック状態クリア（撃墜後はターゲットロックも意味ないので）
+		shotManager_->ClearLockState();
 
 		// 画面手前(-Z)に一発だけ弾かれて、そのまま落ちる
 		deathBackwardDir_ = { 0.0f, 0.0f, -1.0f };
@@ -485,13 +426,7 @@ void Player::Draw(TKM::DirectXCommon* dxCommon) {
 		reticle_->Draw(dxCommon);
 	}
 
-	for (auto& bullet : bullets_) {
-		bullet->Draw(dxCommon); // 弾の描画はしない(今後も予定なし)
-	}
-
-	/*for (auto& bullet : homingBullets_) {
-		bullet->Draw(dxCommon);
-	}*/
+	shotManager_->DrawBullets(dxCommon);
 }
 
 void Player::SetCamera(TKM::Camera* camera) {
@@ -499,6 +434,7 @@ void Player::SetCamera(TKM::Camera* camera) {
 	if (object_) { object_->SetCamera(camera); }
 	if (reticle_) { reticle_->SetCamera(camera); }
 	if (flipper_) { flipper_->SetCamera(camera); }
+	shotManager_->SetCamera(camera); // ショットマネージャー
 }
 
 void Player::SetPosition(const Vector3& pos) {
@@ -510,11 +446,11 @@ void Player::SetParentScene(TKM::BaseScene* scene) {
 }
 
 void Player::SetEnemy(Enemy* enemy) {
-	enemy_ = enemy; // 敵1をセット（ロックオン対象）
+	shotManager_->SetEnemy(enemy); // ショットマネージャーに敵の参照をセット（ロックオンや追従弾のターゲット用）
 }
 
 void Player::SetAllEnemies(std::vector<std::unique_ptr<Enemy>>* enemies) {
-	allEnemies_ = enemies; // 敵全体の参照をセット（弾の追従用）
+	shotManager_->SetAllEnemies(enemies); // ショットマネージャーに敵のリストの参照をセット（全体ロックオンや追従弾のターゲット用）
 }
 
 void Player::SetControlEnabled(bool enabled) {
@@ -530,7 +466,7 @@ void Player::SetReticleVisible(bool visible) {
 }
 
 void Player::SetMidBossCore(MidBossCore* core) {
-	core_ = core; // レティクルのターゲットにコアを追加
+	shotManager_->SetMidBossCore(core); // ショットマネージャーにミッドボスコアの参照をセット（ロックオンや一撃必殺のターゲット用）
 }
 
 void Player::SetColliderScale(const Vector3& s) {
@@ -584,7 +520,7 @@ void Player::SetWave1BarrierInfo(bool active, const Vector3& center, const Vecto
 }
 
 void Player::SetBarrierCoreManager(BarrierCoreManager* manager) {
-	barrierCoreManager_ = manager;
+	shotManager_->SetBarrierCoreManager(manager); // ショットマネージャーにバリアコアマネージャーの参照をセット（ワンウェイバリアのエフェクト用）
 }
 
 void Player::UpdateTitleIdle(float dt) {
@@ -616,20 +552,8 @@ void Player::AddWave1BarrierHit(const Vector3& worldPos) {
 }
 
 void Player::OnMidBossCoreDestroyed(MidBossCore* core) {
-	if (!core) {
-		return;
-	}
-
-	for (auto& b : bullets_) {
-		if (!b) { continue; }
-		// PlayerBullet に GetCore() が無いなら、SetCore(nullptr) を無条件で入れてもいい
-		b->SetCore(nullptr);
-	}
-
-	for (auto& b : homingBullets_) {
-		if (!b) { continue; }
-		b->SetCore(nullptr);
-	}
+	// コアが破壊されたときの処理をショットマネージャーに通知（ロック解除や一撃必殺の解放など）
+	shotManager_->OnMidBossCoreDestroyed(core);
 }
 
 void Player::RequestWave1BarrierFlash(const Vector3& worldPos) {
@@ -648,12 +572,33 @@ bool Player::ConsumeWave1BarrierFlashRequest(Vector3& outWorldPos) {
 }
 
 void Player::SetShootingEnabled(bool enabled) {
-	shootingEnabled_ = enabled; // シューティングの有効 / 無効を切り替えるフラグ
-	if (!enabled) { // 無効にするなら、関連する状態もリセットしておく
-		// 押しっぱなし判定が残らないようにする（復帰時の暴発防止）
-		rtHeld_ = false; // LB/RBは今のところ特に持続処理がないのでリセット不要
-		ltHeld_ = false; // LB/RBは今のところ特に持続処理がないのでリセット不要
-	}
+	shootingEnabled_ = enabled; // 射撃の有効 / 無効を切り替えるフラグ
+
+	shotManager_->SetShootingEnabled(enabled); // ショットマネージャーにも通知して、射撃処理全体をON/OFF
+}
+
+const std::list<std::unique_ptr<PlayerBullet>>& Player::GetBullets() const {
+	return shotManager_->GetBullets();
+}
+
+bool Player::IsRbRefilling() const {
+	return shotManager_ ? shotManager_->IsRbRefilling() : false;
+}
+
+int Player::GetRbAmmo() const {
+	return shotManager_ ? shotManager_->GetRbAmmo() : 0;
+}
+
+int Player::GetRbAmmoMax() const {
+	return shotManager_ ? shotManager_->GetRbAmmoMax() : 0;
+}
+
+int Player::GetLbAmmo() const {
+	return shotManager_ ? shotManager_->GetLbAmmo() : 0;
+}
+
+int Player::GetLbAmmoMax() const {
+	return shotManager_ ? shotManager_->GetLbAmmoMax() : 0;
 }
 
 void Player::SetRumbleEnabled(bool enabled) {
@@ -757,347 +702,6 @@ void Player::HandleFollowCamera() {
 	const float dt = 1.0f / 60.0f;
 	// FPV分岐はしない（ズームは追従側で処理）
 	UpdateCameraFollowThirdPerson(dt);
-}
-
-void Player::HandleShooting() {
-	//====================
-	// RB弾 リチャージ更新（0回復 + アイドル回復）
-	//====================
-	{
-		// 「撃ってない時間」を進める（回復中は進めなくてOK）
-		if (!rbRefilling_) {
-			rbNoFireTimer_ += dt;
-		}
-
-		// --- 回復開始条件 ---
-		// A) 弾が0で、一定時間経過
-		// B) 弾が残っていても、一定時間撃っていない（アイドル）
-		const bool empty = (rbAmmo_ <= 0);
-		const bool idleReady = (!empty && rbNoFireTimer_ >= kRbEmptyWaitSec_);
-		const bool emptyReady = (empty && (rbEmptyTimer_ >= kRbEmptyWaitSec_));
-
-		// 弾が0なら空タイマーを進める（0じゃないなら0に戻す）
-		if (!rbRefilling_) {
-			if (empty) {
-				rbEmptyTimer_ += dt;
-			} else {
-				rbEmptyTimer_ = 0.0f;
-			}
-		}
-
-		// 回復開始
-		if (!rbRefilling_ && (idleReady || emptyReady)) {
-			rbRefilling_ = true;
-
-			// 回復開始時の初期値：
-			// 0回復なら 0 から
-			// アイドル回復なら 現在弾数から一気に増える
-			rbRefillValue_ = empty ? 0.0f : float(rbAmmo_);
-		}
-
-		// 回復中：一気に増えて全回復
-		if (rbRefilling_) {
-			const float speed = float(kRbAmmoMax_) / std::max(0.001f, kRbRefillSec_); // 弾/秒
-			rbRefillValue_ += speed * dt;
-
-			rbAmmo_ = std::clamp(int(rbRefillValue_), 0, kRbAmmoMax_);
-
-			if (rbAmmo_ >= kRbAmmoMax_) {
-				rbAmmo_ = kRbAmmoMax_;
-				rbRefilling_ = false;
-				rbEmptyTimer_ = 0.0f;
-				rbNoFireTimer_ = 0.0f; // 満タンになったらアイドル判定もリセット
-			}
-		}
-	}
-	//====================
-	// LB弾 自動満タン回復（一定時間LBを撃ってないとMaxへ）
-	//====================
-	{
-		if (!debugUnlimitedLB_ && lbAmmo_ < kLbAmmoMax_) { // まだ満タンじゃないなら
-			lbNoFireTimer_ += dt; // 撃ってない時間を進める
-
-			if (lbNoFireTimer_ >= kLbRefillWaitSec_) { // 一定時間撃ってないなら満タンにする
-				lbAmmo_ = kLbAmmoMax_; // 満タンにする
-				lbNoFireTimer_ = 0.0f; // 満タンになったらアイドル判定もリセット
-			}
-		} else {
-			// 満タンならタイマーは不要なのでリセット
-			lbNoFireTimer_ = 0.0f;
-		}
-	}
-
-	//====================
-	// RB弾 クールダウンタイマー更新（撃ってから一定時間は撃てない）
-	// ====================
-	if (rbShotCooldownTimer_ > 0.0f) {
-		rbShotCooldownTimer_ -= dt;
-		if (rbShotCooldownTimer_ < 0.0f) {
-			rbShotCooldownTimer_ = 0.0f;
-		}
-	}
-
-	RBShoot(); // RB弾処理
-	RTShoot(); // RT弾処理
-	LBShoot(); // LB弾処理
-	LTShoot(); // LT弾処理
-}
-
-void Player::RBShoot() {
-	TKM::Input* input = TKM::Input::GetInstance();
-
-	// ▼ RB：通常弾
-	const bool padRB = input->PushButton(XINPUT_GAMEPAD_RIGHT_SHOULDER);
-	const bool keyK = input->PushKey(DIK_K);
-
-	if (!padRB && !keyK) {
-		return;
-	}
-	if (rbShotCooldownTimer_ > 0.0f) {
-		return;
-	}
-	if (rbAmmo_ <= 0 || rbRefilling_) { // 弾切れ中は発射不可
-		return;
-	}
-
-	auto bullet = std::make_unique<PlayerBullet>();
-	bullet->Initialize(common_, dxCommon_);
-
-	// 発射位置＝プレイヤー位置
-	Vector3 startPos = object_->GetTranslate();
-	bullet->SetPosition(startPos);
-
-	// ---- 向き：Reticle の aimDir を使う ----
-	Vector3 dir = { 0, 0, 1 };
-
-	if (reticle_) {
-		dir = reticle_->GetAimDirection();
-		float len = MyMath::Length(dir);
-		if (len <= 0.01f) {
-			dir = { 0, 0, 1 };
-		}
-	}
-
-	// 弾の基本設定
-	bullet->SetVelocity(dir * normalBulletSpeed_);
-	bullet->SetCamera(camera_);
-	bullet->SetPlayer(this);
-	bullet->SetUseTrail(false);
-	bullet->SetBarrierCoreManager(barrierCoreManager_);
-
-	// ==============================
-	// ターゲット決定
-	// ==============================
-	Enemy* targetEnemy = nullptr;
-
-	if (allEnemies_) {
-		Vector3 rayDir = dir;
-		float len = MyMath::Length(rayDir);
-		if (len > 0.001f) {
-			rayDir = rayDir / len;
-		}
-
-		Vector3 rayEnd = startPos + rayDir * 150.0f;
-		float closestDist = std::numeric_limits<float>::max();
-
-		for (auto& e : *allEnemies_) {
-			if (!e) continue;
-			if (e->IsDead() || e->IsDying()) continue;
-
-			Vector3 center = e->GetWorldPosition();
-			Vector3 size = e->GetColliderScale();
-			AABB box(center, size);
-
-			if (box.IsIntersectSegment(startPos, rayEnd)) {
-				float dist = MyMath::Length(center - startPos);
-				if (dist < closestDist) {
-					closestDist = dist;
-					targetEnemy = e.get();
-				}
-			}
-		}
-	}
-
-	// ロック中の敵（ボス含む）
-	if (!targetEnemy) {
-		if (enemy_ && !enemy_->IsDead()) {
-			targetEnemy = enemy_;
-		}
-	}
-
-	bullet->SetEnemy(targetEnemy);
-	bullets_.push_back(std::move(bullet));
-
-	// クールダウン開始
-	rbShotCooldownTimer_ = kRbShotCooldownSec_;
-
-	//  発射成功したら消費
-	rbAmmo_ = std::max(0, rbAmmo_ - 1);
-	// 「撃ってない時間」リセット
-	rbNoFireTimer_ = 0.0f;
-
-}
-
-void Player::RTShoot() {
-	TKM::Input* input = TKM::Input::GetInstance();
-	// RT：一撃必殺（最も近い敵に必中弾）
-	const bool pressed = (input->GetRightTrigger() > kTriggerThreshold);
-
-	// 押している間：ホールド状態にする（発射はしない）
-	if (pressed && (canUseSpecial_ || debugUnlimitedSpecial_) && enemy_ && !enemy_->IsDead()) {
-		rtHeld_ = true; // ロックの見た目は Update() 側でON
-	}
-
-	// 離した瞬間：発射
-	if (!pressed && rtHeld_) {
-		if ((canUseSpecial_ || debugUnlimitedSpecial_) && enemy_ && !enemy_->IsDead()) {
-			auto bullet = std::make_unique<PlayerBullet>();
-			bullet->Initialize(common_, dxCommon_);
-
-			Vector3 startPos = object_->GetTranslate(); // 発射位置
-			Vector3 enemyPos = enemy_->GetWorldPosition(); // 敵位置
-			Vector3 dir = MyMath::Normalize(enemyPos - startPos); // 方向計算
-
-			// 弾設定
-			bullet->SetPosition(startPos); // 弾位置設定
-			bullet->SetVelocity(dir * normalBulletSpeed_); // 速度設定
-			bullet->SetCamera(camera_); // カメラ設定
-			bullet->SetEnemy(enemy_); // 敵設定
-			bullet->SetPlayer(this); // プレイヤー設定
-			bullet->SetSpecialAttack(true); // 一撃必殺フラグON
-
-			// RT専用の軌跡
-			bullet->SetTrailGroup("trail_rt");
-
-			bullet->SetCore(core_);
-
-			bullets_.push_back(std::move(bullet)); // 弾リストに追加
-
-			// 見た目のロックは解除
-			enemy_->SetLocked(false);
-			if (!debugUnlimitedSpecial_) { // 一撃必殺使用済みにする
-				canUseSpecial_ = false;
-			}
-		}
-		rtHeld_ = false; // 次に備えて解除
-	}
-}
-
-void Player::LBShoot() {
-	TKM::Input* input = TKM::Input::GetInstance();
-
-	// ▼ LB：山なりホーミング弾（ロックオンしてる敵に向かう、LB弾は自動で満タン回復する）
-	if ((input->TriggerButton(XINPUT_GAMEPAD_LEFT_SHOULDER) || input->TriggerKey(DIK_L)) && !ltHeld_) {
-
-		// デバッグ無限LBモードでないなら、弾数が0のときは発射できない
-		if (!debugUnlimitedLB_ && lbAmmo_ <= 0) {
-			return;
-		}
-		// LB弾はロックオンしてる敵に向かう山なりホーミング弾
-		auto bullet = std::make_unique<HomingBullet>();
-		bullet->Initialize(common_, dxCommon_);
-
-		Vector3 start = object_->GetTranslate(); // 発射位置
-
-		// 終点
-		Vector3 end = start + Vector3{ 0.0f, 0.0f, 28.0f };
-
-		// 優先順位：
-		// 1. コア
-		// 2. ロック中の敵
-		// 3. 前方固定
-		if (core_ && !core_->IsDead()) {
-			end = core_->GetWorldPosition();
-		} else if (enemy_ && !enemy_->IsDead()) {
-			end = enemy_->GetWorldPosition();
-		}
-
-		// 山なり制御点を作る
-		Vector3 flat = end - start; // 開始から終点へのベクトル
-		flat.y = 0.0f; // 水平方向のベクトルだけ抜き取る
-		float flatLen = MyMath::Length(flat); // 水平距離
-
-		Vector3 forward = { 0.0f, 0.0f, 1.0f }; // デフォルトの前方向
-
-		// 水平距離が十分あるなら、そこから前方向を計算する
-		if (flatLen > 0.001f) {
-			forward = flat / flatLen;
-		}
-
-		float arcHeight = std::clamp(flatLen * 0.25f, 6.0f, 18.0f); // 水平距離に応じた高さ（最小6、最大18）
-
-		// 制御点は、開始から終点へのベクトルの途中に、上方向へのオフセットを加えた位置にする
-		Vector3 c1 = start + forward * (flatLen * 0.25f) + Vector3{ 0.0f, arcHeight, 0.0f };
-		Vector3 c2 = end - forward * (flatLen * 0.20f) + Vector3{ 0.0f, arcHeight * 0.85f, 0.0f };
-
-		// 弾の基本設定
-		bullet->SetPosition(start);
-		bullet->SetEnemy(enemy_);
-		bullet->SetCamera(camera_);
-		bullet->SetPlayer(this);
-		bullet->SetCore(core_);
-		bullet->StartArc(start, c1, c2, end, 0.4f);
-
-		//if (radialBlur_) {
-		//	radialBlur_->BulrStartShock(2.0f, 0.35f); // 強さ = 2.0f、時間 = 0.35秒
-		//}
-
-		homingBullets_.push_back(std::move(bullet)); // ホーミング弾リストに追加
-
-		if (!debugUnlimitedLB_) {
-			lbAmmo_ = std::max(0, lbAmmo_ - 1); // 発射成功したら消費
-		}
-		lbNoFireTimer_ = 0.0f; // 「撃ってない時間」リセット
-
-		ZoomCamera(); // LTの一時ズームアウト開始
-		//StartCameraShake(10); // 軽いシェイクも同時に開始
-		StartRumble(0.12f, 42000, 42000); // 振動も同時に開始（0.12秒、強め）
-
-		ltHeld_ = true;
-	}
-
-	// 離した瞬間：ホールド状態解除
-	if (!input->PushButton(XINPUT_GAMEPAD_LEFT_SHOULDER)) {
-		ltHeld_ = false;
-	}
-}
-
-void Player::LTShoot() {
-#ifdef _DEBUG
-	TKM::Input* input = TKM::Input::GetInstance();
-
-	// ▼ LT：全敵必中弾
-	const bool padLT = (input->GetLeftTrigger() > kTriggerThreshold);
-	const bool keyL = input->PushKey(DIK_Z);
-
-	if ((padLT || keyL) && allEnemies_) {
-
-		// デバッグ無限LBモードでないなら、弾数が0のときは発射できない
-		for (auto& enemy : *allEnemies_) {
-			if (enemy->IsDead()) continue; // 死んでる敵はスキップ
-
-			// LB弾はロックオンしてる敵に向かう山なりホーミング弾
-			auto bullet = std::make_unique<PlayerBullet>();
-			bullet->Initialize(common_, dxCommon_);
-
-			// 発射位置＝プレイヤー位置
-			Vector3 startPos = object_->GetTranslate();
-			Vector3 enemyPos = enemy->GetWorldPosition();
-			Vector3 dir = MyMath::Normalize(enemyPos - startPos);
-
-			// 弾の基本設定
-			bullet->SetPosition(startPos);
-			bullet->SetVelocity(dir * normalBulletSpeed_);
-			bullet->SetCamera(camera_);
-			bullet->SetEnemy(enemy.get());
-			bullet->SetPlayer(this);
-			bullet->SetCore(core_);
-			bullet->SetTrailGroup("trail_lb");
-			// LT弾は全敵必中なので、ターゲットは個々の敵に設定する（LB弾はロック中の敵1体だけだった）
-			bullets_.push_back(std::move(bullet));
-		}
-	}
-#endif
 }
 
 void Player::UpdateCameraFollowThirdPerson(float dt) {

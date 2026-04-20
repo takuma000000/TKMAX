@@ -177,53 +177,72 @@ private:
 	/// LBショットの処理を行います。
 	/// </summary>
 	void LBShoot_();
-	/// <summary>
-	/// LTショットの処理を行います。
-	/// </summary>
-	void LTShoot_();
 
-	Player* owner_ = nullptr;
+	//======================================================================
+	// 参照ポインタ / 共通オブジェクト
+	//======================================================================
+	Player* owner_ = nullptr; // このマネージャを所有しているPlayer本体
 
-	TKM::Object3dCommon* common_ = nullptr;
-	TKM::DirectXCommon* dxCommon_ = nullptr;
-	TKM::Camera* camera_ = nullptr;
-	TKM::Object3d* ownerObject_ = nullptr;
-	Reticle* reticle_ = nullptr;
+	TKM::Object3dCommon* common_ = nullptr;     // Object3d共通描画データ
+	TKM::DirectXCommon* dxCommon_ = nullptr;    // DirectX共通処理
+	TKM::Camera* camera_ = nullptr;             // 描画・弾追従用カメラ
+	TKM::Object3d* ownerObject_ = nullptr;      // Playerの3Dオブジェクト（位置取得用）
+	Reticle* reticle_ = nullptr;                // 照準（弾の発射方向取得用）
 
-	Enemy* enemy_ = nullptr;
-	MidBossCore* core_ = nullptr;
-	BarrierCoreManager* barrierCoreManager_ = nullptr;
-	std::vector<std::unique_ptr<Enemy>>* allEnemies_ = nullptr;
-	Enemy* lastLockedEnemy_ = nullptr;
+	Enemy* enemy_ = nullptr;                    // 現在ロック中の敵
+	MidBossCore* core_ = nullptr;               // 中ボスコア（優先ターゲット）
+	BarrierCoreManager* barrierCoreManager_ = nullptr; // バリアコア管理（当たり判定用）
+	std::vector<std::unique_ptr<Enemy>>* allEnemies_ = nullptr; // 全敵リスト（RB用レイ判定）
+	Enemy* lastLockedEnemy_ = nullptr;          // 前フレームでロックしていた敵（ロック解除用）
 
-	std::list<std::unique_ptr<PlayerBullet>> bullets_;
-	std::list<std::unique_ptr<HomingBullet>> homingBullets_;
+	//======================================================================
+	// 弾オブジェクト管理
+	//======================================================================
+	std::list<std::unique_ptr<PlayerBullet>> bullets_;        // 通常弾（RB/RT）
+	std::list<std::unique_ptr<HomingBullet>> homingBullets_; // ホーミング弾（LB）
 
-	bool shootingEnabled_ = true;
+	//======================================================================
+	// 射撃制御フラグ
+	//======================================================================
+	bool shootingEnabled_ = true; // 射撃許可フラグ（falseなら一切撃てない）
 
-	bool rtHeld_ = false;
-	bool ltHeld_ = false;
+	bool rtHeld_ = false; // RT押しっぱなし判定（離した瞬間発射用）
+	bool ltHeld_ = false; // LB押しっぱなし判定（連射防止ラッチ）
 
-	bool canUseSpecial_ = false;
-	bool debugUnlimitedSpecial_ = false;
-	bool debugUnlimitedLB_ = false;
+	bool canUseSpecial_ = false;      // RT必殺技が使えるか
+	bool debugUnlimitedSpecial_ = false; // デバッグ：RT無限使用
+	bool debugUnlimitedLB_ = false;      // デバッグ：LB無限弾
 
-	float normalBulletSpeed_ = 10.0f;
-	static constexpr int kTriggerThreshold = 128;
+	//======================================================================
+	// 射撃共通パラメータ
+	//======================================================================
+	float normalBulletSpeed_ = 10.0f;         // 通常弾の速度
+	static constexpr int kTriggerThreshold = 128; // トリガー入力判定の閾値
 
-	static constexpr int kRbAmmoMax_ = 500;
-	int rbAmmo_ = 0;
-	static constexpr float kRbEmptyWaitSec_ = 3.0f;
-	static constexpr float kRbRefillSec_ = 0.60f;
-	float rbEmptyTimer_ = 0.0f;
-	float rbRefillValue_ = 0.0f;
-	bool rbRefilling_ = false;
-	float rbNoFireTimer_ = 0.0f;
-	static constexpr float kRbShotCooldownSec_ = 0.25f;
-	float rbShotCooldownTimer_ = 0.0f;
+	//======================================================================
+	// RB弾管理（通常連射弾）
+	//======================================================================
+	static constexpr int kRbAmmoMax_ = 20; // RB弾の最大弾数
+	int rbAmmo_ = 0;                        // 現在のRB弾数
 
-	static constexpr int kLbAmmoMax_ = 8;
-	int lbAmmo_ = 0;
-	static constexpr float kLbRefillWaitSec_ = 3.0f;
-	float lbNoFireTimer_ = 0.0f;
+	static constexpr float kRbEmptyWaitSec_ = 3.0f; // 弾切れ後、回復開始までの待機時間
+	static constexpr float kRbRefillSec_ = 0.60f;   // 満タンまでの回復時間
+
+	float rbEmptyTimer_ = 0.0f;   // 弾切れ状態の経過時間
+	float rbRefillValue_ = 0.0f;  // 回復中の内部値（小数で管理）
+	bool rbRefilling_ = false;    // 回復中フラグ
+
+	float rbNoFireTimer_ = 0.0f;  // 最後に撃ってからの経過時間（アイドル回復判定用）
+
+	static constexpr float kRbShotCooldownSec_ = 0.25f; // 1発ごとの発射間隔
+	float rbShotCooldownTimer_ = 0.0f;                 // クールダウン残り時間
+
+	//======================================================================
+	// LB弾管理（ホーミング弾）
+	//======================================================================
+	static constexpr int kLbAmmoMax_ = 5; // LB弾の最大弾数
+	int lbAmmo_ = 0;                      // 現在のLB弾数
+
+	static constexpr float kLbRefillWaitSec_ = 3.0f; // 最後に撃ってから満タン回復までの待機時間
+	float lbNoFireTimer_ = 0.0f;                    // 最後に撃ってからの経過時間
 };

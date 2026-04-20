@@ -150,6 +150,17 @@ public:
 	/// <param name="outWorldPos"></param>
 	/// <returns></returns>
 	bool ConsumeWave1BarrierFlashRequest(Vector3& outWorldPos);
+	/// <summary>
+	/// カメラのズーム処理を行います。
+	/// </summary>
+	void ZoomCamera();
+	/// <summary>
+	/// 振動開始。
+	/// </summary>
+	/// <param name="sec">振動継続時間（秒）</param>
+	/// <param name="leftMotor">左モーター強度（0〜65535）</param>
+	/// <param name="rightMotor">右モーター強度（0〜65535）</param>
+	void StartRumble(float sec, WORD leftMotor, WORD rightMotor);
 
 	// Getter===================================
 	/// <summary>
@@ -360,10 +371,6 @@ private:
 	/// </summary>
 	/// <param name="dt">前フレームからの経過時間（秒）</param>
 	void UpdateCameraFollowThirdPerson(float dt);
-	/// <summary>
-	/// カメラのズーム処理を行います。
-	/// </summary>
-	void ZoomCamera();
 	//======================================================================
 	// 参照ポインタ / 共通オブジェクト
 	//======================================================================
@@ -478,13 +485,6 @@ private:
 	WORD  rumble2Left_ = 0; // 左モーター強度
 	WORD  rumble2Right_ = 0; // 右モーター強度
 	bool  rumble2Pending_ = false; // 2回目振動保留フラグ
-	/// <summary>
-	/// 振動開始。
-	/// </summary>
-	/// <param name="sec">振動継続時間（秒）</param>
-	/// <param name="leftMotor">左モーター強度（0〜65535）</param>
-	/// <param name="rightMotor">右モーター強度（0〜65535）</param>
-	void StartRumble(float sec, WORD leftMotor, WORD rightMotor);
 	/// <summary>
 	/// 振動更新。
 	/// </summary>
