@@ -5,7 +5,6 @@
 #include <array>
 
 #include "Enemy.h"
-#include "EnemyFactory.h"
 #include "Player.h"
 #include "Camera.h"
 #include "Object3d.h"
