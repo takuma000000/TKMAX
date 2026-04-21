@@ -1,4 +1,4 @@
-#include "EnemyWaveConfig.h"
+#include "EnemyEncounterConfig.h"
 #include <cstdlib>
 #include <CsvReader.h>
 #include <algorithm>
@@ -6,19 +6,19 @@
 #include "json.hpp"
 using json = nlohmann::json;
 
-bool EnemyWaveConfig::StrEq(const std::string& a, const char* b) {
+bool EnemyEncounterConfig::StrEq(const std::string& a, const char* b) {
 	return a == b;
 }
 
-float EnemyWaveConfig::ToF(const std::string& s) {
+float EnemyEncounterConfig::ToF(const std::string& s) {
 	return std::stof(s);
 }
 
-int EnemyWaveConfig::ToI(const std::string& s) {
+int EnemyEncounterConfig::ToI(const std::string& s) {
 	return std::stoi(s);
 }
 
-bool EnemyWaveConfig::HasExtension(const std::string& path, const char* ext) {
+bool EnemyEncounterConfig::HasExtension(const std::string& path, const char* ext) {
 	if (!ext) {
 		return false;
 	}
@@ -48,14 +48,12 @@ static EnemyBehavior ParseBehavior(const std::string& s, EnemyBehavior fallback)
 
 	// 敵の行動パターンを表す文字列を EnemyBehavior 列挙型に変換
 	if (t == "pouncefromabove") { return EnemyBehavior::PounceFromAbove; }
-	if (t == "sinex") { return EnemyBehavior::SineX; }
-	if (t == "straightstop") { return EnemyBehavior::StraightStop; }
-	if (t == "freeroam") { return EnemyBehavior::FreeRoam; }
+	if (t == "movetotarget") { return EnemyBehavior::MoveToTarget; }
 
 	return fallback;
 }
 
-bool EnemyWaveConfig::Load(const char* path) {
+bool EnemyEncounterConfig::Load(const char* path) {
 	if (!path) {
 		return false;
 	}
@@ -73,7 +71,7 @@ bool EnemyWaveConfig::Load(const char* path) {
 	return false;
 }
 
-bool EnemyWaveConfig::LoadCsv(const char* path) {
+bool EnemyEncounterConfig::LoadCsv(const char* path) {
 	std::vector<std::vector<std::string>> rows_;
 	// CSVファイルを読み込む
 	if (!TKM::CsvReader::ReadFile(path, rows_)) {
@@ -98,28 +96,28 @@ bool EnemyWaveConfig::LoadCsv(const char* path) {
 			// Wave1の設定行を処理
 			if (StrEq(type_, "Settings")) {
 				// Wave1,Settings,spawnInterval,a,b,c,...
-				if (StrEq(id_, "spawnInterval")) { wave1_.spawnInterval_ = ToF(get_(3)); }
+				if (StrEq(id_, "spawnInterval")) { smallEnemyPhase_.spawnInterval_ = ToF(get_(3)); }
 				// Wave1,Settings,maxSimultaneous,a,b,c,...
-				if (StrEq(id_, "maxSimultaneous")) { wave1_.maxSimultaneous_ = ToI(get_(3)); }
+				if (StrEq(id_, "maxSimultaneous")) { smallEnemyPhase_.maxSimultaneous_ = ToI(get_(3)); }
 				// Wave1,Settings,defeatTarget,a,b,c,...
-				if (StrEq(id_, "defeatTarget")) { wave1_.defeatTarget_ = ToI(get_(3)); }
+				if (StrEq(id_, "defeatTarget")) { smallEnemyPhase_.defeatTarget_ = ToI(get_(3)); }
 			} else if (StrEq(type_, "SpawnPos") && StrEq(id_, "base")) {
 				// Wave1,SpawnPos,base,a,b,c,...
-				wave1_.baseY_ = ToF(get_(4));
-				wave1_.baseZ_ = ToF(get_(5));
+				smallEnemyPhase_.baseY_ = ToF(get_(4));
+				smallEnemyPhase_.baseZ_ = ToF(get_(5));
 			} else if (StrEq(type_, "RandX") && StrEq(id_, "range")) {
-				wave1_.randXMin_ = ToF(get_(4));
-				wave1_.randXMax_ = ToF(get_(5));
+				smallEnemyPhase_.randXMin_ = ToF(get_(4));
+				smallEnemyPhase_.randXMax_ = ToF(get_(5));
 			}
 			// 敵のパラメータ行（type=EnemyParams, id=default）を処理
 			if (StrEq(type_, "EnemyParams") && StrEq(id_, "default")) {
-				wave1EnemyParams_.model_ = get_(3);
-				wave1EnemyParams_.hp_ = ToI(get_(4));
-				wave1EnemyParams_.startY_ = ToF(get_(5));
-				wave1EnemyParams_.targetForwardZ_ = ToF(get_(6));
-				wave1EnemyParams_.apexY_ = ToF(get_(7));
-				wave1EnemyParams_.pounceTime_ = ToF(get_(8));
-				wave1EnemyParams_.behavior_ = ParseBehavior(get_(11), wave1EnemyParams_.behavior_);
+				mainEnemyParams_.model_ = get_(3);
+				mainEnemyParams_.hp_ = ToI(get_(4));
+				mainEnemyParams_.startY_ = ToF(get_(5));
+				mainEnemyParams_.targetForwardZ_ = ToF(get_(6));
+				mainEnemyParams_.apexY_ = ToF(get_(7));
+				mainEnemyParams_.pounceTime_ = ToF(get_(8));
+				mainEnemyParams_.behavior_ = ParseBehavior(get_(11), mainEnemyParams_.behavior_);
 			}
 		}
 
@@ -127,7 +125,7 @@ bool EnemyWaveConfig::LoadCsv(const char* path) {
 	return true;
 }
 
-bool EnemyWaveConfig::LoadJson(const char* path) {
+bool EnemyEncounterConfig::LoadJson(const char* path) {
 	if (!path) {
 		return false;
 	}
@@ -143,20 +141,20 @@ bool EnemyWaveConfig::LoadJson(const char* path) {
 	// -------------------------
 	// Wave1
 	// -------------------------
-	if (root.contains("wave1")) {
-		auto& w = root["wave1"];
+	if (root.contains("smallEnemyPhase")) {
+		auto& w = root["smallEnemyPhase"];
 
 		if (w.contains("settings")) {
 			auto& s = w["settings"];
 
 			if (s.contains("spawnInterval")) {
-				wave1_.spawnInterval_ = s["spawnInterval"].get<float>();
+				smallEnemyPhase_.spawnInterval_ = s["spawnInterval"].get<float>();
 			}
 			if (s.contains("maxSimultaneous")) {
-				wave1_.maxSimultaneous_ = s["maxSimultaneous"].get<int>();
+				smallEnemyPhase_.maxSimultaneous_ = s["maxSimultaneous"].get<int>();
 			}
 			if (s.contains("defeatTarget")) {
-				wave1_.defeatTarget_ = s["defeatTarget"].get<int>();
+				smallEnemyPhase_.defeatTarget_ = s["defeatTarget"].get<int>();
 			}
 		}
 
@@ -164,16 +162,16 @@ bool EnemyWaveConfig::LoadJson(const char* path) {
 			auto& s = w["spawn"];
 
 			if (s.contains("baseY")) {
-				wave1_.baseY_ = s["baseY"].get<float>();
+				smallEnemyPhase_.baseY_ = s["baseY"].get<float>();
 			}
 			if (s.contains("baseZ")) {
-				wave1_.baseZ_ = s["baseZ"].get<float>();
+				smallEnemyPhase_.baseZ_ = s["baseZ"].get<float>();
 			}
 			if (s.contains("randXMin")) {
-				wave1_.randXMin_ = s["randXMin"].get<float>();
+				smallEnemyPhase_.randXMin_ = s["randXMin"].get<float>();
 			}
 			if (s.contains("randXMax")) {
-				wave1_.randXMax_ = s["randXMax"].get<float>();
+				smallEnemyPhase_.randXMax_ = s["randXMax"].get<float>();
 			}
 		}
 
@@ -181,26 +179,26 @@ bool EnemyWaveConfig::LoadJson(const char* path) {
 			auto& e = w["enemyParams"];
 
 			if (e.contains("model")) {
-				wave1EnemyParams_.model_ = e["model"].get<std::string>();
+				mainEnemyParams_.model_ = e["model"].get<std::string>();
 			}
 			if (e.contains("hp")) {
-				wave1EnemyParams_.hp_ = e["hp"].get<int>();
+				mainEnemyParams_.hp_ = e["hp"].get<int>();
 			}
 			if (e.contains("startY")) {
-				wave1EnemyParams_.startY_ = e["startY"].get<float>();
+				mainEnemyParams_.startY_ = e["startY"].get<float>();
 			}
 			if (e.contains("targetForwardZ")) {
-				wave1EnemyParams_.targetForwardZ_ = e["targetForwardZ"].get<float>();
+				mainEnemyParams_.targetForwardZ_ = e["targetForwardZ"].get<float>();
 			}
 			if (e.contains("apexY")) {
-				wave1EnemyParams_.apexY_ = e["apexY"].get<float>();
+				mainEnemyParams_.apexY_ = e["apexY"].get<float>();
 			}
 			if (e.contains("pounceTime")) {
-				wave1EnemyParams_.pounceTime_ = e["pounceTime"].get<float>();
+				mainEnemyParams_.pounceTime_ = e["pounceTime"].get<float>();
 			}
 			if (e.contains("behavior")) {
-				wave1EnemyParams_.behavior_ =
-					ParseBehavior(e["behavior"].get<std::string>(), wave1EnemyParams_.behavior_);
+				mainEnemyParams_.behavior_ =
+					ParseBehavior(e["behavior"].get<std::string>(), mainEnemyParams_.behavior_);
 			}
 		}
 	}

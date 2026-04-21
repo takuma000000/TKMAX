@@ -14,9 +14,9 @@ class EnemyBullet {
 public:
 	// 敵弾の種類
 	enum class Type {
-		Normal,                // 通常弾
-		FormationCoreCharging, // 隊列SP用のチャージ玉
-		FormationCoreLaunched, // 発射後のSP玉
+		Normal,              // 通常弾
+		SpecialCoreCharging, // 特殊攻撃コアのチャージ中
+		SpecialCoreLaunched, // 特殊攻撃コアの発射後
 	};
 
 	EnemyBullet() = default;
@@ -42,7 +42,7 @@ public:
 	void Draw(TKM::DirectXCommon* dx);
 
 	/// <summary>
-	/// 隊列SP用のチャージ玉として敵弾を初期化します。
+	/// SP攻撃用のチャージ玉を初期化します。初期状態ではチャージ中で、スケールが徐々に大きくなります。一定時間後に発射状態に切り替える必要があります。
 	/// </summary>
 	/// <param name="common">Object3d の共通管理クラス</param>
 	/// <param name="dxCommon">DirectX 共通管理クラス</param>
@@ -53,7 +53,7 @@ public:
 	/// <param name="radius">当たり判定半径</param>
 	/// <param name="chargeDuration">チャージに必要な時間（秒）</param>
 	/// <param name="damage">この弾のダメージ量</param>
-	void InitializeFormationCore(
+	void InitializeSpecialCore(
 		TKM::Object3dCommon* common,
 		TKM::DirectXCommon* dxCommon,
 		TKM::Camera* camera,
@@ -73,17 +73,17 @@ public:
 	/// </summary>
 	void Kill() { isDead_ = true; }
 	/// <summary>
-	/// 隊列SP用のチャージ玉を発射状態にします。
+	/// SP用のチャージ玉を発射状態に切り替えます。これ以降は通常弾と同様に移動し、一定時間後に消滅します。
 	/// </summary>
 	/// <param name="velocity">発射時の速度ベクトル</param>
-	void LaunchFormationCore(const Vector3& velocity);
+	void LaunchSpecialCore(const Vector3& velocity);
 
 	/// <summary>
-	/// この敵弾が隊列SP用のチャージ玉（充電中または発射後）かどうかを返します。
+	/// この敵弾がSP用のチャージ玉（充電中または発射後）かどうかを返します。
 	/// </summary>
 	/// <returns>true ならチャージ玉、false なら通常弾</returns>
-	bool IsFormationCore() const {
-		return type_ == Type::FormationCoreCharging || type_ == Type::FormationCoreLaunched;
+	bool IsSpecialCore() const {
+		return type_ == Type::SpecialCoreCharging || type_ == Type::SpecialCoreLaunched;
 	}
 
 	// Getter===================================

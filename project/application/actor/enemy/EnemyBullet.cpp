@@ -38,7 +38,7 @@ void EnemyBullet::Update(float dt) {
 
 	Vector3 pos_ = object_->GetTranslate();
 
-	if (type_ == Type::FormationCoreCharging) {
+	if (type_ == Type::SpecialCoreCharging) {
 		chargeTimer_ += dt;
 
 		float t_ = 1.0f;
@@ -80,7 +80,7 @@ Vector3 EnemyBullet::GetWorldPosition() const {
 	return object_->GetTranslate();
 }
 
-void EnemyBullet::InitializeFormationCore(
+void EnemyBullet::InitializeSpecialCore(
 	TKM::Object3dCommon* common,
 	TKM::DirectXCommon* dxCommon,
 	TKM::Camera* camera,
@@ -108,7 +108,7 @@ void EnemyBullet::InitializeFormationCore(
 	lifeTime_ = 8.0f;
 	isDead_ = false;
 
-	type_ = Type::FormationCoreCharging;
+	type_ = Type::SpecialCoreCharging;
 	scaleNow_ = startScale;
 	scaleEnd_ = endScale;
 	chargeTimer_ = 0.0f;
@@ -117,9 +117,9 @@ void EnemyBullet::InitializeFormationCore(
 	visible_ = false;
 }
 
-void EnemyBullet::LaunchFormationCore(const Vector3& velocity) {
+void EnemyBullet::LaunchSpecialCore(const Vector3& velocity) {
 	velocity_ = velocity;
-	type_ = Type::FormationCoreLaunched;
+	type_ = Type::SpecialCoreLaunched;
 }
 
 void EnemyBullet::SetVisible(bool visible) {

@@ -6,21 +6,16 @@
 #include "Enemy.h"
 
 //=============================================================
-// EnemyWaveConfigクラス
-// 敵の Wave 出現パターンや数値設定を管理するクラス。
+// EnemyEncounterConfigクラス
+// 敵の遭遇パターンや行動パターンなどの設定を管理するクラス。
 //=============================================================
-class EnemyWaveConfig {
+class EnemyEncounterConfig {
 public:
-	enum class Wave2Pattern {
-		Triangle, // V字隊列
-		Line, // 直線隊列
-		Column, // 縦列隊列
-	};
-
-	struct Wave1 {
+	// Enemy Params ==========================================
+	struct SmallEnemyPhase {
 		float spawnInterval_ = 1.5f; // 敵の出現間隔（秒）
 		int   maxSimultaneous_ = 2; // 同時に存在してよい敵の数
-		int defeatTarget_ = 10; // この Wave で「倒すべき敵の数」
+		int defeatTarget_ = 10; // この雑魚敵フェーズで倒すべき敵の数
 
 		// SpawnPos(base): a(未使用), b=y, c=z
 		float baseY_ = 5.0f; // 敵の生成高さ（ワールド座標）
@@ -30,6 +25,7 @@ public:
 		float randXMin_ = -20.0f; // 敵の生成 X 座標の最小値（ワールド座標）
 		float randXMax_ = 20.0f; // 敵の生成 X 座標の最大値（ワールド座標）
 	};
+	// =======================================================
 
 	/// <summary>
 	/// 設定ファイルを読み込みます。
@@ -53,10 +49,10 @@ public:
 
 	// Getter==========================================
 	/// <summary>
-	/// Wave1設定を取得します。
+	/// SmallEnemyPhase の設定を取得します。
 	/// </summary>
-	/// <returns></returns>
-	const Wave1& GetWave1() const { return wave1_; }
+	/// <returns>SmallEnemyPhase の設定</returns>
+	const SmallEnemyPhase& GetSmallEnemyPhase() const { return smallEnemyPhase_; }
 	// ================================================
 
 private:
@@ -88,13 +84,13 @@ private:
 	static bool HasExtension(const std::string& path, const char* ext);
 
 	//===================================================
-	// Waveごとの設定データ
+	// 文字列を EnemyBehavior 列挙型に変換します。
 	//===================================================
-	Wave1 wave1_{}; // Wave1の設定
+	SmallEnemyPhase smallEnemyPhase_;
 
 public:
 	// Enemy Params ==========================================
-	struct Wave1EnemyParams {
+	struct MainEnemyParams {
 		std::string model_ = "jerryfish.obj"; // 敵のモデルファイル名
 		int hp_ = 1; // 敵のHP
 		float startY_ = 20.0f; // 敵の生成 Y 座標（ワールド座標）
@@ -105,11 +101,13 @@ public:
 	};
 
 	/// <summary>
-	/// Wave1 用の敵パラメータを取得します。
+	/// 雑魚敵フェーズ本隊の敵パラメータを取得します。
 	/// </summary>
-	/// <returns>Wave1 敵パラメータ</returns>
-	const Wave1EnemyParams& GetWave1EnemyParams() const { return wave1EnemyParams_; }
+	/// <returns>雑魚敵フェーズ本隊の敵パラメータ</returns>
+	const MainEnemyParams& GetMainEnemyParams() const { return mainEnemyParams_; }
 private:
-	// Enemy Params 内部データ
-	Wave1EnemyParams wave1EnemyParams_{};
+	// ===================================================
+	// 雑魚敵のパラメータ
+	// ===================================================
+	MainEnemyParams mainEnemyParams_{};
 };

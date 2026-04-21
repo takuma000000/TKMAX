@@ -131,7 +131,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\3d\BarrierCommon.cpp" />
     <ClCompile Include="engine\3d\camera\manager\CameraManager.cpp" />
     <ClCompile Include="engine\csv\CsvReader.cpp" />
-    <ClCompile Include="application\actor\enemy\EnemyWaveConfig.cpp" />
+    <ClCompile Include="application\actor\enemy\EnemyEncounterConfig.cpp" />
     <ClCompile Include="engine\effect\post\AuraVolumeRenderer.cpp" />
     <ClCompile Include="engine\effect\post\AuraEffect.cpp" />
     <ClCompile Include="application\actor\boss\BossController.cpp" />
@@ -257,7 +257,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\3d\BarrierCommon.h" />
     <ClInclude Include="engine\3d\camera\manager\CameraManager.h" />
     <ClInclude Include="engine\csv\CsvReader.h" />
-    <ClInclude Include="application\actor\enemy\EnemyWaveConfig.h" />
+    <ClInclude Include="application\actor\enemy\EnemyEncounterConfig.h" />
     <ClInclude Include="engine\effect\post\AuraVolumeRenderer.h" />
     <ClInclude Include="engine\effect\post\AuraEffect.h" />
     <ClInclude Include="engine\effect\post\BaseEffect.h" />

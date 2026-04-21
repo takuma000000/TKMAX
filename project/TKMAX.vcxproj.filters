@@ -174,7 +174,7 @@
     <ClCompile Include="engine\effect\post\AuraVolumeRenderer.cpp" />
     <ClCompile Include="engine\func\common\TimeScaleController.cpp" />
     <ClCompile Include="engine\csv\CsvReader.cpp" />
-    <ClCompile Include="application\actor\enemy\EnemyWaveConfig.cpp" />
+    <ClCompile Include="application\actor\enemy\EnemyEncounterConfig.cpp" />
     <ClCompile Include="engine\effect\post\FogVolume3D.cpp" />
     <ClCompile Include="engine\effect\post\SmokeVolume3D.cpp" />
     <ClCompile Include="engine\effect\post\LaserBeam3D.cpp" />
@@ -431,7 +431,7 @@
     <ClInclude Include="engine\effect\post\AuraVolumeRenderer.h" />
     <ClInclude Include="engine\func\common\TimeScaleController.h" />
     <ClInclude Include="engine\csv\CsvReader.h" />
-    <ClInclude Include="application\actor\enemy\EnemyWaveConfig.h" />
+    <ClInclude Include="application\actor\enemy\EnemyEncounterConfig.h" />
     <ClInclude Include="engine\effect\post\FogVolume3D.h" />
     <ClInclude Include="engine\effect\post\SmokeVolume3D.h" />
     <ClInclude Include="engine\effect\post\LaserBeam3D.h" />

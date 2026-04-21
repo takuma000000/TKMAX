@@ -12,7 +12,7 @@ class Player;
 
 // =============================================================
 // EnemyBarrierクラス
-// Wave1本隊を包むバリアの状態・描画器・Player同期を管理する。
+// 雑魚敵フェーズ本隊を包むバリアの状態・描画・Player同期を管理する。
 // =============================================================
 class EnemyBarrier {
 public:
@@ -42,7 +42,7 @@ public:
 	/// <param name="camera"></param>
 	void SetCamera(TKM::Camera* camera);
 	/// <summary>
-	/// Playerの設定。バリアはPlayerの位置に追従するため、Playerへの参照を保持します。
+	/// Playerへの参照を設定します。バリア情報の同期や当たり判定連携に使用します。
 	/// </summary>
 	/// <param name="player"></param>
 	void SetPlayer(Player* player);
@@ -57,7 +57,7 @@ public:
 	/// <param name="active"></param>
 	void SetActive(bool active);
 	/// <summary>
-	/// バリアの中心位置の設定。通常はPlayerの位置に追従させるため、Playerの座標を渡すことが想定されます。
+	/// バリアの中心位置を設定します。通常は EnemyManager 側で基準位置から更新されます。
 	/// </summary>
 	/// <param name="center"></param>
 	void SetCenter(const Vector3& center);
@@ -79,7 +79,7 @@ public:
 	// ==================================================
 	// Getter============================================
 	/// <summary>
-	/// バリアの中心位置の取得。通常はPlayerの位置に追従させるため、Playerの座標を返すことが想定されます。
+	/// バリアの中心位置を取得します。
 	/// </summary>
 	/// <returns></returns>
 	float GetRadius() const { return radius_; }

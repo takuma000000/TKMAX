@@ -20,7 +20,7 @@ enum class EnemyBehavior {
 	ChasePlayer,     // プレイヤー方向にじわっと追尾
 	PounceFromAbove, // 上空から急降下してくる
 	FreeRoam,        // 自由に動き回る
-	FormationMove,   // 指定された隊列位置へ移動する
+	MoveToTarget,   // 指定された目標位置へ移動する
 };
 // 死亡リアクションパターン
 enum class EnemyDeathReaction {
@@ -31,8 +31,7 @@ enum class EnemyDeathReaction {
 };
 // 敵の種類
 enum class EnemyType {
-	Normal,        // 通常ザコ
-	Wave1Main,     // 雑魚専フェーズの本隊
+	MainSquad,     // 雑魚専フェーズの本隊
 	Boss,          // ボス
 };
 
@@ -94,10 +93,10 @@ public:
 	/// <returns>怒り状態の場合 true、それ以外は false</returns>
 	bool IsAngry() const { return isAngry_; }
 	/// <summary>
-	/// 隊列位置に到達したかどうかを取得します。
+	/// 目標位置に到達したかどうかを取得します。
 	/// </summary>
 	/// <returns></returns>
-	bool IsInFormation() const { return isInFormation_; }
+	bool HasReachedTarget() const { return isInFormation_; }
 	/// <summary>
 	/// 敵がダメージ無敵状態かどうかを取得します。
 	/// </summary>
@@ -372,7 +371,7 @@ private:
 	//--------------------------------------------------------------
 	//  基本行動タイプ
 	//--------------------------------------------------------------
-	EnemyType    type_ = EnemyType::Normal; // 役割タイプ（通常 / Wave3中ボス / Wave3蘇生核 / ボス）
+	EnemyType    type_; // 役割タイプ（通常 / Wave3中ボス / Wave3蘇生核 / ボス）
 	EnemyBehavior behavior_ = EnemyBehavior::StraightStop; // 行動パターン
 	float t_ = 0.0f;    // 各種挙動で使う汎用タイマー
 	//--------------------------------------------------------------

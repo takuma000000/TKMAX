@@ -16,31 +16,28 @@ void EnemyManager::Initialize(TKM::DirectXCommon* dx, TKM::Camera* camera, TKM::
 	// BarrierCommon初期化
 	TKM::BarrierCommon::GetInstance()->Initialize(dx);
 
-	// CSV読み込み（resources/data に置く運用）
-	waveConfig_.Load("./resources/data/enemy_waves.json");
-
-	// Wave1の設定
-	{
-		const auto& w1_ = waveConfig_.GetWave1();
-		wave1DefeatTarget_ = w1_.defeatTarget_;
-	}
+	// 敵遭遇設定読み込み
+	encounterConfig_.Load("./resources/data/enemy_encounter.json");
+	// 最初のWaveの撃破目標数を設定
+	const auto& phase_ = encounterConfig_.GetSmallEnemyPhase();
+	mainSquadDefeatTarget_ = phase_.defeatTarget_; // 最初のWaveの撃破目標数を保存しておく
 }
 
 void EnemyManager::Update(float dt) {
 	if (!initializedWaves_) { return; }
 
-	if (wave1Barrier_) {
+	if (barrier_) {
 		if (player_) {
 			Vector3 flashPos;
 			if (player_->ConsumeWave1BarrierFlashRequest(flashPos)) {
-				wave1Barrier_->OnHit(flashPos);
+				barrier_->OnHit(flashPos);
 			}
 		}
 
-		UpdateWave1Barrier_();
-		wave1Barrier_->Update(dt);
+		UpdateBarrier_();
+		barrier_->Update(dt);
 	}
-	SyncWave1BarrierInfoToPlayer_();
+	SyncBarrierInfoToPlayer_();
 
 	if (barrierCoreManager_) {
 		barrierCoreManager_->Update(dt);
@@ -57,8 +54,8 @@ void EnemyManager::Update(float dt) {
 			}
 
 			if (e_->GetDefeated()) {
-				if (e_->GetType() == EnemyType::Wave1Main) {
-					++wave1MainDefeatedCount_;
+				if (e_->GetType() == EnemyType::MainSquad) {
+					++mainSquadDefeatedCount_;
 				}
 				++defeatedEnemyCount_;
 
@@ -73,8 +70,8 @@ void EnemyManager::Update(float dt) {
 		}
 	}
 
-	if (wavePhase_ == WavePhase::W1) {
-		UpdateWave1(dt);
+	if (enemyPhase_ == EnemyPhase::SmallEnemyBattle) {
+		UpdateMainSquadBattle_(dt);
 	}
 
 	UpdateEnemyBullets_(dt);
@@ -104,22 +101,22 @@ void EnemyManager::UpdateClosestEnemy() {
 	player_->SetAllEnemies(&enemies_); // 敵リストもセット
 }
 
-void EnemyManager::InitializeWaves() {
+void EnemyManager::StartSmallEnemyPhase() {
 	if (!player_) { return; }
 
 	NotifyPlayerBeforeClearEnemies_(); // プレイヤーに敵全削除を通知（ロックオン解除などのため）
 	enemies_.clear(); // 敵リストクリア
 	enemyBullets_.clear(); // 敵弾リストもクリア
 	playerHitCooldown_ = 0.0f; // プレイヤー被弾クールダウンリセット
-	wave1SpecialCharging_ = false;
-	wave1SpecialCoreBullet_ = nullptr;
-	wave1NormalShotTimer_ = 0.0f;
+	specialCoreCharging_ = false;
+	specialCoreBullet_ = nullptr;
+	scatterShotTimer_ = 0.0f;
 
 	defeatedEnemyCount_ = 0; // 撃破数リセット
-	maxEnemyCount_ = wave1DefeatTarget_; // 最大敵数は最初のWaveの撃破目標数に合わせておく（必要なら後で更新）
+	maxEnemyCount_ = mainSquadDefeatTarget_; // 最大敵数は最初のWaveの撃破目標数に合わせておく（必要なら後で更新）
 
-	wavePhase_ = WavePhase::W1;
-	BeginWave1();
+	enemyPhase_ = EnemyPhase::SmallEnemyBattle;
+	BeginMainSquadBattle_();
 
 	initializedWaves_ = true; // Wave初期化完了フラグセット
 
@@ -130,44 +127,35 @@ void EnemyManager::InitializeWaves() {
 	}
 }
 
-void EnemyManager::SpawnCurrentWave() {
+void EnemyManager::ResetSmallEnemyPhase() {
 	if (!dx_ || !camera_ || !parent_) { return; } // 必要な参照が揃ってないなら何もしない
 
 	NotifyPlayerBeforeClearEnemies_(); // プレイヤーに敵全削除を通知（ロックオン解除などのため）
 	enemies_.clear(); // 敵リストクリア（前のWaveの敵を消す）
 	enemyBullets_.clear(); // 敵弾リストもクリア
 	playerHitCooldown_ = 0.0f; // プレイヤー被弾クールダウンリセット
-	wave1SpecialCharging_ = false;
-	wave1SpecialCoreBullet_ = nullptr;
-	wave1NormalShotTimer_ = 0.0f;
-	SetWave1BarrierActive_(false);
-	SyncWave1BarrierInfoToPlayer_();
+	specialCoreCharging_ = false;
+	specialCoreBullet_ = nullptr;
+	scatterShotTimer_ = 0.0f;
+	SetBarrierActive_(false);
+	SyncBarrierInfoToPlayer_();
 
-	if (wavePhase_ == WavePhase::W1) {
-		BeginWave1();
+	if (enemyPhase_ == EnemyPhase::SmallEnemyBattle) {
+		BeginMainSquadBattle_();
 	}
 }
 
-void EnemyManager::GoToNextWave() {
-	wavePhase_ = WavePhase::Done;
-	SpawnCurrentWave();
-
-	if (defeatedEnemyCount_) {
-		defeatedEnemyCount_ = 0;
-	}
-}
-
-void EnemyManager::SkipToBossWave() {
+void EnemyManager::FinishSmallEnemyPhase() {
 	// いま居るザコ敵は全部消す
 	NotifyPlayerBeforeClearEnemies_();
 	enemies_.clear(); // 敵を全部消す
 	enemyBullets_.clear(); // 敵弾も全部消す
 	playerHitCooldown_ = 0.0f; // プレイヤー被弾クールダウンリセット
-	wave1SpecialCharging_ = false;
-	wave1SpecialCoreBullet_ = nullptr;
-	wave1NormalShotTimer_ = 0.0f;
-	SetWave1BarrierActive_(false);
-	SyncWave1BarrierInfoToPlayer_();
+	specialCoreCharging_ = false;
+	specialCoreBullet_ = nullptr;
+	scatterShotTimer_ = 0.0f;
+	SetBarrierActive_(false);
+	SyncBarrierInfoToPlayer_();
 
 	// 撃破数・最大数もリセット（ゲージを空にしておく）
 	if (defeatedEnemyCount_) {
@@ -178,9 +166,13 @@ void EnemyManager::SkipToBossWave() {
 	}
 
 	// Wave を Done（＝ボスフェーズ）にする
-	wavePhase_ = WavePhase::Done;
+	enemyPhase_ = EnemyPhase::BossReady;
 	// 雑魚戦が終わったらplayBGMを止める
 	TKM::AudioManager::GetInstance()->StopSound("playBGM");
+}
+
+bool EnemyManager::IsSmallEnemyPhaseFinished() const {
+	return (enemyPhase_ == EnemyPhase::BossReady) && enemies_.empty();
 }
 
 void EnemyManager::SetupEnemyForPlayer(Enemy& e) {
@@ -203,7 +195,7 @@ void EnemyManager::NotifyPlayerBeforeClearEnemies_() {
 	}
 }
 
-void EnemyManager::UpdateWave1(float dt) {
+void EnemyManager::UpdateMainSquadBattle_(float dt) {
 	UpdateEnemyBullets_(dt);
 
 	if (playerHitCooldown_ > 0.0f) {
@@ -213,41 +205,39 @@ void EnemyManager::UpdateWave1(float dt) {
 		}
 	}
 
-	// 本隊10体を全部倒したらそのままボス戦へ
-	if (CountAliveWave1Main_() <= 0) {
+	// 雑魚敵フェーズ本隊を全滅させたら、そのままボス戦へ移行
+	if (CountAliveMainSquad_() <= 0) {
 		NotifyPlayerBeforeClearEnemies_();
 		enemies_.clear();
 
 		ClearBarrierCores_();
 
-		SkipToBossWave();
+		FinishSmallEnemyPhase();
 		return;
 	}
 
-	switch (wave1Phase_) {
-	case Wave1Phase::BarrierBattle:
-		UpdateWave1CircleFormation_(dt);
-		UpdateWave1ScatterAttack_(dt);
-		UpdateWave1SpecialAttackCycle_(dt);
-
-		// バリア中は本隊を常に無敵維持
-		SetWave1AllInvincible_(true);
+	switch (mainSquadPhase_) {
+	case MainSquadPhase::BarrierBattle:
+		UpdateMainSquadOrbit_(dt);
+		UpdateScatterAttack_(dt);
+		UpdateSpecialAttackCycle_(dt);
+		SetMainSquadInvincible_(true);
 
 		if (AreAllBarrierCoresDestroyed_()) {
-			BreakWave1Barrier_();
+			BreakBarrier_();
 			return;
 		}
 		break;
 
-	case Wave1Phase::ExposedBattle:
-		UpdateWave1CircleFormation_(dt);
-		UpdateWave1ScatterAttack_(dt);
-		UpdateWave1SpecialAttackCycle_(dt);
+	case MainSquadPhase::ExposedBattle:
+		UpdateMainSquadOrbit_(dt);
+		UpdateScatterAttack_(dt);
+		UpdateSpecialAttackCycle_(dt);
 		break;
 	}
 }
 
-void EnemyManager::UpdateWave1ScatterAttack_(float dt) {
+void EnemyManager::UpdateScatterAttack_(float dt) {
 
 
 	/// ====================================
@@ -256,11 +246,11 @@ void EnemyManager::UpdateWave1ScatterAttack_(float dt) {
 	/// ====================================
 
 
-	wave1NormalShotTimer_ += dt;
-	if (wave1NormalShotTimer_ < wave1NormalShotInterval_) {
+	scatterShotTimer_ += dt;
+	if (scatterShotTimer_ < scatterShotInterval_) {
 		return;
 	}
-	wave1NormalShotTimer_ = 0.0f;
+	scatterShotTimer_ = 0.0f;
 
 	auto* common_ = TKM::Object3dCommon::GetInstance();
 	if (!common_) {
@@ -283,64 +273,63 @@ void EnemyManager::UpdateWave1ScatterAttack_(float dt) {
 		dir_ = dir_ / len_;
 
 		auto bullet_ = std::make_unique<EnemyBullet>();
-		bullet_->Initialize(common_, dx_, camera_, start_, dir_ * wave1NormalBulletSpeed_);
+		bullet_->Initialize(common_, dx_, camera_, start_, dir_ * scatterShotBulletSpeed_);
 		enemyBullets_.push_back(std::move(bullet_));
 	}
 }
 
-void EnemyManager::BeginWave1SpecialCharge_() {
+void EnemyManager::BeginSpecialCoreCharge_() {
 	auto* common_ = TKM::Object3dCommon::GetInstance();
 	if (!common_) {
 		return;
 	}
 
-	wave1SpecialCharging_ = true;
-	wave1SpecialCoreBullet_ = nullptr;
+	specialCoreCharging_ = true;
+	specialCoreBullet_ = nullptr;
 
-	const Vector3 corePos_ = GetWave1SpecialCorePosition_();
-
+	const Vector3 corePos_ = GetSpecialCorePosition_();
 	auto core_ = std::make_unique<EnemyBullet>();
-	core_->InitializeFormationCore(
+	core_->InitializeSpecialCore(
 		common_,
 		dx_,
 		camera_,
 		corePos_,
-		wave1SpecialCoreStartScale_,
-		wave1SpecialCoreEndScale_,
-		wave1SpecialCoreRadius_,
-		wave1SpecialChargeDuration_,
-		wave1SpecialCoreDamage_
+		specialCoreStartScale_,
+		specialCoreEndScale_,
+		specialCoreRadius_,
+		specialCoreChargeDuration_,
+		specialCoreDamage_
 	);
 
-	wave1SpecialCoreBullet_ = core_.get();
+	specialCoreBullet_ = core_.get();
 	enemyBullets_.push_back(std::move(core_));
 }
 
-void EnemyManager::UpdateWave1SpecialCharge_(float dt) {
-	if (!wave1SpecialCharging_ || !wave1SpecialCoreBullet_) {
+void EnemyManager::UpdateSpecialCoreCharge_(float dt) {
+	if (!specialCoreCharging_ || !specialCoreBullet_) {
 		return;
 	}
 
-	EmitWave1SpecialChargeParticles_();
+	EmitSpecialCoreChargeParticles_();
 
-	if (wave1SpecialCoreBullet_->IsDead()) {
-		wave1SpecialCharging_ = false;
-		wave1SpecialCoreBullet_ = nullptr;
+	if (specialCoreBullet_->IsDead()) {
+		specialCoreCharging_ = false;
+		specialCoreBullet_ = nullptr;
 		return;
 	}
 
-	if (wave1PhaseTimer_ >= wave1SpecialChargeDuration_) {
-		FireWave1SpecialCore_();
-		wave1SpecialCharging_ = false;
+	if (mainSquadPhaseTimer_ >= specialCoreChargeDuration_) {
+		FireSpecialCore_();
+		specialCoreCharging_ = false;
 	}
 }
 
-void EnemyManager::FireWave1SpecialCore_() {
-	if (!wave1SpecialCoreBullet_) {
+void EnemyManager::FireSpecialCore_() {
+	if (!specialCoreBullet_) {
 		return;
 	}
 
-	Vector3 start_ = wave1SpecialCoreBullet_->GetWorldPosition();
+	Vector3 start_ = specialCoreBullet_->GetWorldPosition();
 	Vector3 target_ = player_ ? player_->GetPosition() : (start_ + Vector3{ 0.0f, 0.0f, -30.0f });
 
 	Vector3 dir_ = target_ - start_;
@@ -350,7 +339,7 @@ void EnemyManager::FireWave1SpecialCore_() {
 	}
 	dir_ = dir_ / len_;
 
-	wave1SpecialCoreBullet_->LaunchFormationCore(dir_ * wave1SpecialCoreShotSpeed_);
+	specialCoreBullet_->LaunchSpecialCore(dir_ * specialCoreShotSpeed_);
 
 	// 発射時の主役演出
 	auto* pm_ = TKM::ParticleManager::GetInstance();
@@ -367,16 +356,16 @@ void EnemyManager::FireWave1SpecialCore_() {
 		pm_->Emit("w1sp_core_arc", start_, pm_->GetEmitCountScaled(3, priority_));
 	}
 
-	wave1SpecialCoreBullet_ = nullptr;
+	specialCoreBullet_ = nullptr;
 }
 
-void EnemyManager::EmitWave1SpecialChargeParticles_() {
+void EnemyManager::EmitSpecialCoreChargeParticles_() {
 	TKM::ParticleManager* pm_ = TKM::ParticleManager::GetInstance();
 	if (!pm_) {
 		return;
 	}
 
-	const Vector3 corePos_ = GetWave1SpecialCorePosition_();
+	const Vector3 corePos_ = GetSpecialCorePosition_();
 	const auto loadLevel_ = pm_->GetLoadLevel();
 
 	// 継続演出なので、重い時は線の分割数自体を落とす
@@ -468,14 +457,14 @@ void EnemyManager::EmitWave1SpecialChargeParticles_() {
 	pm_->Emit("w1sp_core_arc", corePos_, pm_->GetEmitCountScaled(1, false));
 
 	// チャージ終盤の加速演出
-	if (wave1PhaseTimer_ >= wave1SpecialChargeDuration_ * 0.55f) {
+	if (mainSquadPhaseTimer_ >= specialCoreChargeDuration_ * 0.55f) {
 		//pm_->Emit("w1sp_core_flash", corePos_, pm_->GetEmitCountScaled(1, true));
 		//pm_->Emit("w1sp_core_spark", corePos_, pm_->GetEmitCountScaled(3, false));
 		//pm_->Emit("w1sp_core_arc", corePos_, pm_->GetEmitCountScaled(1, false));
 	}
 }
 
-void EnemyManager::SpawnWave1Group() {
+void EnemyManager::SpawnMainSquad_() {
 	if (!dx_ || !camera_ || !parent_) {
 		return;
 	}
@@ -483,20 +472,20 @@ void EnemyManager::SpawnWave1Group() {
 	NotifyPlayerBeforeClearEnemies_();
 	enemies_.clear();
 
-	const auto& p1_ = waveConfig_.GetWave1EnemyParams();
+	const auto& params_ = encounterConfig_.GetMainEnemyParams();
 
-	for (int i = 0; i < kWave1EnemyCount_; ++i) {
+	for (int i = 0; i < kMainSquadEnemyCount_; ++i) {
 		auto e_ = std::make_unique<Enemy>();
 		e_->Initialize(TKM::Object3dCommon::GetInstance(), dx_);
 		e_->SetCamera(camera_);
 		e_->SetParentScene(parent_);
 
-		e_->SetModel(p1_.model_);
-		e_->SetHP(p1_.hp_);
+		e_->SetModel(params_.model_);
+		e_->SetHP(params_.hp_);
 		e_->SetScale({ 1.0f, 1.0f, 1.0f });
-		e_->SetType(EnemyType::Wave1Main);
+		e_->SetType(EnemyType::MainSquad);
 
-		if (p1_.model_ == "jerryfish.obj") {
+		if (params_.model_ == "jerryfish.obj") {
 			e_->SetTentacleModel("tentacle.obj");
 			e_->SetTentacleLocal(
 				{ 0.0f, 0.0f, 0.0f },
@@ -505,15 +494,15 @@ void EnemyManager::SpawnWave1Group() {
 			);
 		}
 
-		e_->SetBehavior(EnemyBehavior::FormationMove);
-		e_->SetFormationMoveSpeed(wave1FormationMoveSpeed_);
+		e_->SetBehavior(EnemyBehavior::MoveToTarget);
+		e_->SetFormationMoveSpeed(mainSquadMoveSpeed_);
 
-		const float step_ = 6.28318530718f / static_cast<float>(kWave1EnemyCount_);
-		const float ang_ = wave1CircleAngle_ + step_ * static_cast<float>(i);
+		const float step_ = 6.28318530718f / static_cast<float>(kMainSquadEnemyCount_);
+		const float ang_ = mainSquadOrbitAngle_ + step_ * static_cast<float>(i);
 
-		Vector3 pos_ = wave1CircleCenter_;
-		pos_.x += std::cos(ang_) * wave1CircleRadius_;
-		pos_.y += std::sin(ang_) * wave1CircleRadius_;
+		Vector3 pos_ = mainSquadCenter_;
+		pos_.x += std::cos(ang_) * mainSquadOrbitRadius_;
+		pos_.y += std::sin(ang_) * mainSquadOrbitRadius_;
 
 		e_->SetPosition(pos_);
 		e_->SetFormationTarget(pos_);
@@ -539,8 +528,8 @@ void EnemyManager::UpdateEnemyBullets_(float dt) {
 
 		(*it)->Update(dt);
 
-		// 発射済みの共有SPコア弾だけ、飛翔中パーティクルを出す
-		if ((*it)->GetType() == EnemyBullet::Type::FormationCoreLaunched) {
+		// 発射済みの特殊攻撃コア弾だけ、飛翔中パーティクルを出す
+		if ((*it)->GetType() == EnemyBullet::Type::SpecialCoreLaunched) {
 			TKM::ParticleManager* pm_ = TKM::ParticleManager::GetInstance();
 			if (pm_) {
 				const Vector3 p_ = (*it)->GetWorldPosition();
@@ -562,12 +551,12 @@ void EnemyManager::UpdateEnemyBullets_(float dt) {
 	}
 }
 
-void EnemyManager::SetWave1MainFreeze_(bool enable) {
+void EnemyManager::SetMainSquadFreeze_(bool enable) {
 	for (auto& e : enemies_) {
 		if (!e || e->IsDead() || e->IsDying()) {
 			continue;
 		}
-		if (e->GetType() != EnemyType::Wave1Main) {
+		if (e->GetType() != EnemyType::MainSquad) {
 			continue;
 		}
 		e->SetFreezeMove(enable);
@@ -603,7 +592,7 @@ void EnemyManager::SpawnBarrierCores_() {
 		player_->SetBarrierCoreManager(barrierCoreManager_.get());
 	}
 
-	barrierCoreManager_->Spawn(GetWave1BarrierCenter());
+	barrierCoreManager_->Spawn(GetBarrierCenter());
 }
 
 void EnemyManager::ClearBarrierCores_() {
@@ -628,47 +617,47 @@ bool EnemyManager::AreAllBarrierCoresDestroyed_() const {
 	return barrierCoreManager_->IsAllDestroyed();
 }
 
-int EnemyManager::CountAliveWave1Main_() const {
+int EnemyManager::CountAliveMainSquad_() const {
 	int count_ = 0;
 	for (const auto& e : enemies_) {
 		if (!e || e->IsDead() || e->IsDying()) {
 			continue;
 		}
-		if (e->GetType() == EnemyType::Wave1Main) {
+		if (e->GetType() == EnemyType::MainSquad) {
 			++count_;
 		}
 	}
 	return count_;
 }
 
-void EnemyManager::BreakWave1Barrier_() {
-	wave1BarrierBroken_ = true;
-	wave1MainStopped_ = false;
+void EnemyManager::BreakBarrier_() {
+	barrierBroken_ = true;
+	mainSquadStopped_ = false;
 
-	SetWave1AllInvincible_(false);
-	SetWave1MainFreeze_(false);
+	SetMainSquadInvincible_(false);
+	SetMainSquadFreeze_(false);
 
-	if (wave1Barrier_) {
-		wave1Barrier_->StartBreak();
+	if (barrier_) {
+		barrier_->StartBreak();
 	}
 
 	ClearBarrierCores_();
 
-	wave1Phase_ = Wave1Phase::ExposedBattle;
-	wave1PhaseTimer_ = 0.0f;
+	mainSquadPhase_ = MainSquadPhase::ExposedBattle;
+	mainSquadPhaseTimer_ = 0.0f;
 }
 
-void EnemyManager::UpdateWave1SpecialAttackCycle_(float dt) {
-	wave1PhaseTimer_ += dt;
+void EnemyManager::UpdateSpecialAttackCycle_(float dt) {
+	mainSquadPhaseTimer_ += dt;
 
-	if (!wave1SpecialCharging_) {
-		if (wave1PhaseTimer_ >= wave1SpecialChargeDuration_ + 1.0f) {
-			wave1PhaseTimer_ = 0.0f;
-			BeginWave1SpecialCharge_();
+	if (!specialCoreCharging_) {
+		if (mainSquadPhaseTimer_ >= specialCoreChargeDuration_ + 1.0f) {
+			mainSquadPhaseTimer_ = 0.0f;
+			BeginSpecialCoreCharge_();
 		}
 	}
 
-	UpdateWave1SpecialCharge_(dt);
+	UpdateSpecialCoreCharge_(dt);
 }
 
 void EnemyManager::DrawEnemyBullets_(TKM::DirectXCommon* dx) {
@@ -725,16 +714,16 @@ void EnemyManager::CheckEnemyBulletPlayerCollision_(float dt) {
 	}
 }
 
-Vector3 EnemyManager::GetWave1SpecialCorePosition_() const {
-	return wave1CircleCenter_ + wave1SpecialCoreOffset_;
+Vector3 EnemyManager::GetSpecialCorePosition_() const {
+	return mainSquadCenter_ + specialCoreOffset_;
 }
 
-Vector3 EnemyManager::GetWave1BarrierCenter() const {
-	return wave1Barrier_ ? wave1Barrier_->GetCenter() : Vector3{ 0.0f, 0.0f, 0.0f };
+Vector3 EnemyManager::GetBarrierCenter() const {
+	return barrier_ ? barrier_->GetCenter() : Vector3{ 0.0f, 0.0f, 0.0f };
 }
 
-Vector3 EnemyManager::GetWave1BarrierSize() const {
-	return wave1Barrier_ ? wave1Barrier_->GetAABBSize() : Vector3{ 0.0f, 0.0f, 0.0f };
+Vector3 EnemyManager::GetBarrierSize() const {
+	return barrier_ ? barrier_->GetAABBSize() : Vector3{ 0.0f, 0.0f, 0.0f };
 }
 
 void EnemyManager::SetCamera(TKM::Camera* camera) {
@@ -746,8 +735,8 @@ void EnemyManager::OnCameraChanged() {
 		if (e) { e->SetCamera(camera_); }
 	}
 
-	if (wave1Barrier_) {
-		wave1Barrier_->SetCamera(camera_);
+	if (barrier_) {
+		barrier_->SetCamera(camera_);
 	}
 
 	if (barrierCoreManager_) {
@@ -755,41 +744,41 @@ void EnemyManager::OnCameraChanged() {
 	}
 }
 
-void EnemyManager::BeginWave1() {
+void EnemyManager::BeginMainSquadBattle_() {
 
 	ClearBarrierCores_();
 
 	if (maxEnemyCount_) {
-		maxEnemyCount_ = kWave1EnemyCount_;
+		maxEnemyCount_ = kMainSquadEnemyCount_;
 	}
 
-	SpawnWave1Group();
-	SetWave1AllInvincible_(true);
-	SetWave1MainFreeze_(false);
+	SpawnMainSquad_();
+	SetMainSquadInvincible_(true);
+	SetMainSquadFreeze_(false);
 
-	InitializeWave1Barrier_();
-	SetWave1BarrierActive_(true);
-	UpdateWave1Barrier_();
-	if (wave1Barrier_) {
-		wave1Barrier_->SetVisible(true);
+	InitializeBarrier_();
+	SetBarrierActive_(true);
+	UpdateBarrier_();
+	if (barrier_) {
+		barrier_->SetVisible(true);
 	}
-	SyncWave1BarrierInfoToPlayer_();
+	SyncBarrierInfoToPlayer_();
 
 	InitializeBarrierCoreManager_();
 	SpawnBarrierCores_();
 
-	wave1BarrierBroken_ = false;
-	wave1MainStopped_ = false;
-	wave1SpecialCharging_ = false;
-	wave1SpecialCoreBullet_ = nullptr;
+	barrierBroken_ = false;
+	mainSquadStopped_ = false;
+	specialCoreCharging_ = false;
+	specialCoreBullet_ = nullptr;
 
-	wave1Phase_ = Wave1Phase::BarrierBattle;
-	wave1PhaseTimer_ = 0.0f;
-	wave1NormalShotTimer_ = 0.0f;
+	mainSquadPhase_ = MainSquadPhase::BarrierBattle;
+	mainSquadPhaseTimer_ = 0.0f;
+	scatterShotTimer_ = 0.0f;
 }
 
-void EnemyManager::ApplyWave1CircleTargets_() {
-	const float step_ = 6.28318530718f / static_cast<float>(kWave1EnemyCount_);
+void EnemyManager::ApplyMainSquadOrbitTargets_() {
+	const float step_ = 6.28318530718f / static_cast<float>(kMainSquadEnemyCount_);
 
 	int aliveIndex_ = 0;
 	for (auto& e : enemies_) {
@@ -798,35 +787,35 @@ void EnemyManager::ApplyWave1CircleTargets_() {
 		}
 
 		// Wave1本隊だけを円運動の対象にする
-		if (e->GetType() != EnemyType::Wave1Main) {
+		if (e->GetType() != EnemyType::MainSquad) {
 			continue;
 		}
 
-		const float ang_ = wave1CircleAngle_ + step_ * static_cast<float>(aliveIndex_);
+		const float ang_ = mainSquadOrbitAngle_ + step_ * static_cast<float>(aliveIndex_);
 
-		Vector3 pos_ = wave1CircleCenter_;
-		pos_.x += std::cos(ang_) * wave1CircleRadius_;
-		pos_.y += std::sin(ang_) * wave1CircleRadius_;
+		Vector3 pos_ = mainSquadCenter_;
+		pos_.x += std::cos(ang_) * mainSquadOrbitRadius_;
+		pos_.y += std::sin(ang_) * mainSquadOrbitRadius_;
 
-		e->SetBehavior(EnemyBehavior::FormationMove);
-		e->SetFormationMoveSpeed(wave1FormationMoveSpeed_);
+		e->SetBehavior(EnemyBehavior::MoveToTarget);
+		e->SetFormationMoveSpeed(mainSquadMoveSpeed_);
 		e->SetFormationTarget(pos_);
 
 		++aliveIndex_;
 	}
 }
-void EnemyManager::UpdateWave1CircleFormation_(float dt) {
-	wave1CircleAngle_ -= wave1CircleAngularSpeed_ * dt; // 右回転
-	ApplyWave1CircleTargets_();
+void EnemyManager::UpdateMainSquadOrbit_(float dt) {
+	mainSquadOrbitAngle_ -= mainSquadOrbitAngularSpeed_ * dt;
+	ApplyMainSquadOrbitTargets_();
 }
-void EnemyManager::SetWave1AllInvincible_(bool enable) {
+void EnemyManager::SetMainSquadInvincible_(bool enable) {
 	for (auto& e : enemies_) {
 		if (!e || e->IsDead() || e->IsDying()) {
 			continue;
 		}
 
-		// Wave1本隊だけ無敵化する
-		if (e->GetType() != EnemyType::Wave1Main) {
+		// 本隊だけ無敵化する
+		if (e->GetType() != EnemyType::MainSquad) {
 			continue;
 		}
 
@@ -834,8 +823,8 @@ void EnemyManager::SetWave1AllInvincible_(bool enable) {
 	}
 }
 
-void EnemyManager::InitializeWave1Barrier_() {
-	if (wave1Barrier_) {
+void EnemyManager::InitializeBarrier_() {
+	if (barrier_) {
 		return;
 	}
 
@@ -844,53 +833,53 @@ void EnemyManager::InitializeWave1Barrier_() {
 		return;
 	}
 
-	wave1Barrier_ = std::make_unique<EnemyBarrier>();
-	wave1Barrier_->SetCamera(camera_);
-	wave1Barrier_->SetPlayer(player_);
-	wave1Barrier_->Initialize(common_, dx_);
-	wave1Barrier_->SetCenter(GetWave1SpecialCorePosition_() + wave1BarrierOffset_);
-	wave1Barrier_->SetRadius(1.0f);
-	wave1Barrier_->SetShapeScale(wave1BarrierSize_);
-	wave1Barrier_->SetVisible(false);
-	wave1Barrier_->SetActive(false);
+	barrier_ = std::make_unique<EnemyBarrier>();
+	barrier_->SetCamera(camera_);
+	barrier_->SetPlayer(player_);
+	barrier_->Initialize(common_, dx_);
+	barrier_->SetCenter(GetSpecialCorePosition_() + barrierOffset_);
+	barrier_->SetRadius(1.0f);
+	barrier_->SetShapeScale(barrierSize_);
+	barrier_->SetVisible(false);
+	barrier_->SetActive(false);
 }
-void EnemyManager::UpdateWave1Barrier_() {
-	if (!wave1Barrier_) {
+void EnemyManager::UpdateBarrier_() {
+	if (!barrier_) {
 		return;
 	}
 
-	if (wave1BarrierFollowCore_) {
-		wave1Barrier_->SetCenter(GetWave1SpecialCorePosition_() + wave1BarrierOffset_);
+	if (barrierFollowCore_) {
+		barrier_->SetCenter(GetSpecialCorePosition_() + barrierOffset_);
 	}
 
-	wave1Barrier_->SetRadius(1.0f);
-	wave1Barrier_->SetShapeScale(wave1BarrierSize_);
+	barrier_->SetRadius(1.0f);
+	barrier_->SetShapeScale(barrierSize_);
 }
-void EnemyManager::SetWave1BarrierActive_(bool active) {
-	if (!wave1Barrier_) {
-		InitializeWave1Barrier_();
+void EnemyManager::SetBarrierActive_(bool active) {
+	if (!barrier_) {
+		InitializeBarrier_();
 	}
-	if (!wave1Barrier_) {
+	if (!barrier_) {
 		return;
 	}
 
-	wave1Barrier_->SetActive(active);
+	barrier_->SetActive(active);
 }
-void EnemyManager::SyncWave1BarrierInfoToPlayer_() {
-	if (!wave1Barrier_) {
+void EnemyManager::SyncBarrierInfoToPlayer_() {
+	if (!barrier_) {
 		if (player_) {
 			player_->SetWave1BarrierInfo(false, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f });
 		}
 		return;
 	}
 
-	wave1Barrier_->SyncToPlayer();
+	barrier_->SyncToPlayer();
 }
 
 void EnemyManager::Draw(TKM::DirectXCommon* dx) {
 
-	if (wave1Barrier_) {
-		wave1Barrier_->Draw(dx);
+	if (barrier_) {
+		barrier_->Draw(dx);
 	}
 
 	TKM::Object3dCommon::GetInstance()->DrawSetCommon();
@@ -922,51 +911,39 @@ void EnemyManager::ImGuiDebug() {
 	"雑魚フェーズ",
 	"Bossフェーズ"
 	};
-	ImGui::Text("現在のWave: %s", kWaveLabel_[static_cast<int>(wavePhase_)]);
+	ImGui::Text("現在のフェーズ: %s", kWaveLabel_[static_cast<int>(enemyPhase_)]);
 
-	// 「次のフェーズへ」ボタン
-	if (ImGui::Button("次のフェーズへ")) {
-		GoToNextWave();
-	}
-	ImGui::SameLine(); // 横並びに
 	// 「ボスWaveへ」ボタン
 	if (ImGui::Button("ボスWaveへ")) {
-		SkipToBossWave();
+		FinishSmallEnemyPhase();
 	}
 
 	if (ImGui::CollapsingHeader("Wave1バリア")) {
-		ImGui::Checkbox("中心追従", &wave1BarrierFollowCore_);
-		ImGui::DragFloat3("バリアオフセット", &wave1BarrierOffset_.x, 0.1f);
-		ImGui::DragFloat3("バリアサイズXYZ", &wave1BarrierSize_.x, 0.1f, 0.1f, 200.0f);
+		ImGui::Checkbox("中心追従", &barrierFollowCore_);
+		ImGui::DragFloat3("バリアオフセット", &barrierOffset_.x, 0.1f);
+		ImGui::DragFloat3("バリアサイズXYZ", &barrierSize_.x, 0.1f, 0.1f, 200.0f);
 
-		if (wave1Barrier_) {
+		if (barrier_) {
 
 			ImGui::Separator();
 			ImGui::Text("バリアシェーダ");
 
-			ImGui::DragFloat("フレネル強さ", &wave1BarrierShaderFresnelPower_, 0.01f, 0.1f, 10.0f);
-			ImGui::DragFloat("ベース明るさ", &wave1BarrierShaderBaseStrength_, 0.01f, 0.0f, 5.0f);
-			ImGui::DragFloat("縁の強さ", &wave1BarrierShaderRimStrength_, 0.01f, 0.0f, 5.0f);
-			ImGui::DragFloat("中央の濃さ", &wave1BarrierShaderAlphaBase_, 0.01f, 0.0f, 1.0f);
-			ImGui::DragFloat("縁の濃さ", &wave1BarrierShaderAlphaRim_, 0.01f, 0.0f, 1.0f);
-			ImGui::DragFloat3("色補正RGB", &wave1BarrierShaderTint_.x, 0.01f, 0.0f, 2.0f);
-
-			bool active = wave1Barrier_->IsActive();
-			bool visible = wave1Barrier_->IsVisible();
+			bool active = barrier_->IsActive();
+			bool visible = barrier_->IsVisible();
 
 			if (ImGui::Checkbox("バリア有効", &active)) {
-				wave1Barrier_->SetActive(active);
+				barrier_->SetActive(active);
 			}
 			if (ImGui::Checkbox("バリア表示", &visible)) {
-				wave1Barrier_->SetVisible(visible);
+				barrier_->SetVisible(visible);
 			}
 
 			ImGui::Text("現在Center : %.2f, %.2f, %.2f",
-				wave1Barrier_->GetCenter().x,
-				wave1Barrier_->GetCenter().y,
-				wave1Barrier_->GetCenter().z);
+				barrier_->GetCenter().x,
+				barrier_->GetCenter().y,
+				barrier_->GetCenter().z);
 
-			ImGui::Text("現在Radius : %.2f", wave1Barrier_->GetRadius());
+			ImGui::Text("現在Radius : %.2f", barrier_->GetRadius());
 		}
 	}
 

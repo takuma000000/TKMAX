@@ -1,0 +1,30 @@
+{
+  "_comment": "敵遭遇設定。現在は雑魚敵フェーズ用の設定のみを持つ。",
+
+  "smallEnemyPhase": {
+    "_comment": "上空から飛び込み敵が出る雑魚敵フェーズ。",
+
+    "settings": {
+      "spawnInterval": 1.5,
+      "maxSimultaneous": 2,
+      "defeatTarget": 10
+    },
+
+    "spawn": {
+      "baseY": 5.0,
+      "baseZ": 100.0,
+      "randXMin": -20.0,
+      "randXMax": 20.0
+    },
+
+    "enemyParams": {
+      "model": "jerryfish.obj",
+      "hp": 1,
+      "startY": 20.0,
+      "targetForwardZ": 3.0,
+      "apexY": 30.0,
+      "pounceTime": 1.6,
+      "behavior": "PounceFromAbove"
+    }
+  }
+}

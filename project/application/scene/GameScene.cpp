@@ -372,7 +372,7 @@ void GameScene::UpdateEnemyAndWaveLogic(float scaledDeltaTime) {
 	// 全Waveクリア → ボス登場開始
 	// ただし、クリア開始済みなら絶対に入らない
 	// ----------------------------------------
-	if (!clearSequenceTriggered_ && enemyManager_->IsAllWavesCleared()) {
+	if (!clearSequenceTriggered_ && enemyManager_->IsSmallEnemyPhaseFinished()) {
 		if (bossManager_ && bossManager_->GetBoss() == nullptr) {
 			if (bossEntranceSeq_) {
 				if (!bossEntranceSeq_->IsActive()) {
@@ -490,7 +490,7 @@ void GameScene::HandleDebugKeysAndRequests() {
 
 	// ── 敵初期化要求が来ていたら実行 ──
 	if (requestInitEnemies_) {
-		enemyManager_->InitializeWaves();
+		enemyManager_->StartSmallEnemyPhase();
 		enemiesInitialized_ = true;
 		requestInitEnemies_ = false;
 	}
