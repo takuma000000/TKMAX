@@ -16,7 +16,7 @@
 
 class Player;
 class Enemy;
-class MidBossCore;
+class BarrierCore;
 class BarrierCoreManager;
 
 class PlayerShotManager {
@@ -62,7 +62,7 @@ public:
 	/// ミッドボスコアが破壊されたときの処理を行います。
 	/// </summary>
 	/// <param name="core">破壊されたミッドボスコアのポインタ</param>
-	void OnMidBossCoreDestroyed(MidBossCore* core);
+	void OnBarrierCoreDestroyed(BarrierCore* core);
 	/// <summary>
 	/// バリアコアが破壊されたときの処理を行います。
 	/// </summary>
@@ -149,7 +149,7 @@ public:
 	/// ミッドボスコアを設定します。
 	/// </summary>
 	/// <param name="core">設定するミッドボスコアのポインタ</param>
-	void SetMidBossCore(MidBossCore* core) { core_ = core; }
+	void SetBarrierCore(BarrierCore* core) { core_ = core; }
 	/// <summary>
 	/// バリアコアマネージャーを設定します。
 	/// </summary>
@@ -194,7 +194,7 @@ private:
 	Reticle* reticle_ = nullptr;                // 照準（弾の発射方向取得用）
 
 	Enemy* enemy_ = nullptr;                    // 現在ロック中の敵
-	MidBossCore* core_ = nullptr;               // 中ボスコア（優先ターゲット）
+	BarrierCore* core_ = nullptr;               // 中ボスコア（優先ターゲット）
 	BarrierCoreManager* barrierCoreManager_ = nullptr; // バリアコア管理（当たり判定用）
 	std::vector<std::unique_ptr<Enemy>>* allEnemies_ = nullptr; // 全敵リスト（RB用レイ判定）
 	Enemy* lastLockedEnemy_ = nullptr;          // 前フレームでロックしていた敵（ロック解除用）

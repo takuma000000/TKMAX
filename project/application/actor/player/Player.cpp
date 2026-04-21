@@ -4,7 +4,7 @@
 #include "AABB.h"
 #include <limits>
 #include "RadialBlurEffect.h"
-#include "MidBossCore.h"
+#include "BarrierCore.h"
 #include "AudioManager.h"
 #include "PlayerShotManager.h"
 #include "PlayerShotConfig.h"
@@ -472,8 +472,8 @@ void Player::SetReticleVisible(bool visible) {
 	reticleVisible_ = visible; // レティクルの表示 / 非表示を切り替えるフラグ
 }
 
-void Player::SetMidBossCore(MidBossCore* core) {
-	shotManager_->SetMidBossCore(core); // ショットマネージャーにミッドボスコアの参照をセット（ロックオンや一撃必殺のターゲット用）
+void Player::SetBarrierCore(BarrierCore* core) {
+	shotManager_->SetBarrierCore(core); // ショットマネージャーにミッドボスコアの参照をセット（ロックオンや一撃必殺のターゲット用）
 }
 
 void Player::SetColliderScale(const Vector3& s) {
@@ -558,9 +558,9 @@ void Player::AddWave1BarrierHit(const Vector3& worldPos) {
 	}
 }
 
-void Player::OnMidBossCoreDestroyed(MidBossCore* core) {
+void Player::OnBarrierCoreDestroyed(BarrierCore* core) {
 	// コアが破壊されたときの処理をショットマネージャーに通知（ロック解除や一撃必殺の解放など）
-	shotManager_->OnMidBossCoreDestroyed(core);
+	shotManager_->OnBarrierCoreDestroyed(core);
 }
 
 void Player::RequestWave1BarrierFlash(const Vector3& worldPos) {

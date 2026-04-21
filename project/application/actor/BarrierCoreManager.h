@@ -3,7 +3,7 @@
 #include <memory>
 #include <vector>
 #include <functional>
-#include "MidBossCore.h"
+#include "BarrierCore.h"
 #include "Object3dCommon.h"
 #include "DirectXCommon.h"
 #include "Camera.h"
@@ -71,10 +71,10 @@ public:
 	/// <returns>生存コア数</returns>
 	int GetAliveCount() const;
 	/// <summary>
-	/// 生存しているコアのリストを取得します。
+	/// 破壊されていないコアのリストを取得します。
 	/// </summary>
 	/// <returns>生存コアポインタ配列</returns>
-	std::vector<MidBossCore*> GetAliveCores() const;
+	std::vector<BarrierCore*> GetAliveCores() const;
 	// ========================================
 	// Setter==================================
 	/// <summary>
@@ -111,7 +111,7 @@ private:
 	/// 最初に見つかった生存コアを取得します。
 	/// </summary>
 	/// <returns>生存コア（なければ nullptr）</returns>
-	MidBossCore* FindFirstAliveCore_() const;
+	BarrierCore* FindFirstAliveCore_() const;
 
 	//======================================================================
 	// 参照ポインタ / 共通オブジェクト
@@ -124,7 +124,7 @@ private:
 	//======================================================================
 	// コア管理
 	//======================================================================
-	std::vector<std::unique_ptr<MidBossCore>> cores_;
+	std::vector<std::unique_ptr<BarrierCore>> cores_;
 	//======================================================================
 	// コア基本設定
 	//======================================================================

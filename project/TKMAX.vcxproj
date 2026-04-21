@@ -212,7 +212,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\3d\SkyBox.cpp" />
     <ClCompile Include="engine\base\SystemIncludes.cpp" />
     <ClCompile Include="application\actor\player\reticle\Reticle.cpp" />
-    <ClCompile Include="application\actor\enemy\MidBossCore.cpp" />
+    <ClCompile Include="application\actor\enemy\BarrierCore.cpp" />
     <ClCompile Include="engine\effect\post\RadialBlurEffect.cpp" />
     <ClCompile Include="engine\effect\post\VignettingEffect.cpp" />
     <ClCompile Include="engine\effect\post\WaterRippleEffect.cpp" />
@@ -319,7 +319,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\effect\line\LineRenderer.h" />
     <ClInclude Include="engine\effect\post\FogEffect.h" />
     <ClInclude Include="application\effect\IrisUtil.h" />
-    <ClInclude Include="application\actor\enemy\MidBossCore.h" />
+    <ClInclude Include="application\actor\enemy\BarrierCore.h" />
     <ClInclude Include="engine\3d\ModelTypes.h" />
     <ClInclude Include="engine\effect\post\RadialBlurEffect.h" />
     <ClInclude Include="engine\effect\post\VignettingEffect.h" />

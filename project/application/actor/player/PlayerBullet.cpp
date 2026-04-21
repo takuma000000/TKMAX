@@ -4,7 +4,7 @@
 #include "AABB.h"
 #include "Player.h"
 #include "Enemy.h"
-#include "MidBossCore.h"
+#include "BarrierCore.h"
 #include "MyMath.h"
 #include "BarrierCoreManager.h"
 #include "TrailRibbonRenderer.h"
@@ -246,7 +246,7 @@ void PlayerBullet::Update() {
 	if (barrierCoreManager_) {
 		const auto aliveCores_ = barrierCoreManager_->GetAliveCores();
 
-		for (MidBossCore* core : aliveCores_) {
+		for (BarrierCore* core : aliveCores_) {
 			if (!core) {
 				continue;
 			}
@@ -405,7 +405,7 @@ void PlayerBullet::SetSpecialAttack(bool flag) {
 	isSpecialAttack_ = flag; // 一撃必殺フラグを設定
 }
 
-void PlayerBullet::SetCore(MidBossCore* core) {
+void PlayerBullet::SetCore(BarrierCore* core) {
 	core_ = core; // ヒット対象の核を設定
 }
 

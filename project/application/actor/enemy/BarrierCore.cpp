@@ -1,5 +1,5 @@
 #define NOMINMAX
-#include "MidBossCore.h"
+#include "BarrierCore.h"
 #include "ModelManager.h"
 #include <algorithm>
 
@@ -7,10 +7,10 @@
 #include "imgui.h"
 #endif
 
-void MidBossCore::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon) {
+void BarrierCore::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon) {
 	object_ = std::make_unique<TKM::Object3d>();
 	object_->Initialize(common, dxCommon);
-	object_->SetModel("barrierCore.obj"); // 核用の見た目
+	object_->SetModel("barrierCore.obj"); // バリアコアのモデルをセット
 
 	if (camera_) {
 		object_->SetCamera(camera_);
@@ -22,51 +22,51 @@ void MidBossCore::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dx
 	colliderScale_ = { 1.71f, 1.71f, 1.71f };
 }
 
-void MidBossCore::SetCamera(TKM::Camera* cam) {
+void BarrierCore::SetCamera(TKM::Camera* cam) {
 	camera_ = cam;
 	if (object_) {
 		object_->SetCamera(cam);
 	}
 }
 
-void MidBossCore::SetParentScene(TKM::BaseScene* scene) {
+void BarrierCore::SetParentScene(TKM::BaseScene* scene) {
 	parent_ = scene; // Object3d の親シーンも設定
 }
 
-void MidBossCore::SetColliderScale(const Vector3& s) {
+void BarrierCore::SetColliderScale(const Vector3& s) {
 	colliderScale_ = s; // 当たり判定のサイズを変更（エフェクトや音などがあればここで）
 }
 
-void MidBossCore::SetReticle(Reticle* r) {
+void BarrierCore::SetReticle(Reticle* r) {
 	reticle_ = r; // 当たり判定の可視化にレティクルの情報を使うために保持
 }
 
-void MidBossCore::SetPlayer(std::function<Vector3()> getter) {
+void BarrierCore::SetPlayer(std::function<Vector3()> getter) {
 	playerGetter_ = std::move(getter); // プレイヤー位置取得関数を保持
 }
 
-void MidBossCore::SetHP(int hp) {
+void BarrierCore::SetHP(int hp) {
 	hp_ = hp; maxHP_ = hp; // HP変化に応じたエフェクトや音などがあればここで
 }
 
-void MidBossCore::SetPosition(const Vector3& pos) {
+void BarrierCore::SetPosition(const Vector3& pos) {
 	if (!object_) return;
 	object_->SetTranslate(pos);
 }
 
-Vector3 MidBossCore::GetWorldPosition() const {
+Vector3 BarrierCore::GetWorldPosition() const {
 	if (!object_) return {};
 	return object_->GetTranslate();
 }
 
-void MidBossCore::SetScale(const Vector3& s) {
+void BarrierCore::SetScale(const Vector3& s) {
 	baseScale_ = s;
 	if (object_) {
 		object_->SetScale(s);
 	}
 }
 
-void MidBossCore::Update(float dt) {
+void BarrierCore::Update(float dt) {
 	if (!object_) return;
 	time_ += dt;
 
@@ -220,16 +220,16 @@ void MidBossCore::Update(float dt) {
 	}
 }
 
-void MidBossCore::Draw(TKM::DirectXCommon* dxCommon) {
+void BarrierCore::Draw(TKM::DirectXCommon* dxCommon) {
 	if (!object_) return;
 	object_->Draw(dxCommon);
 }
 
-void MidBossCore::ImGuiDebug() {
+void BarrierCore::ImGuiDebug() {
 #ifdef USE_IMGUI
 	if (!object_) return;
 
-	ImGui::Begin("蘇生コア");
+	ImGui::Begin("バリアコア");
 
 	Vector3 pos_ = object_->GetTranslate();
 	Vector3 scale_ = baseScale_;
@@ -252,20 +252,20 @@ void MidBossCore::ImGuiDebug() {
 #endif
 }
 
-void MidBossCore::OnHitWithDamage(int damage) {
+void BarrierCore::OnHitWithDamage(int damage) {
 	if (isDead_ || isDying_) return;
 	hp_ -= damage; // ダメージを減算
 
-	// ダメージを受けたときのエフェクトや音などがあればここで
+	// ダメージに応じたエフェクトや音などがあればここで
 	if (hp_ <= 0) {
 		hp_ = 0; // HPが0以下になったら死亡状態に移行
 		StartDeathReaction({ 0.0f, 0.0f, 1.0f }); // デフォルトの被弾方向（例：正面からの攻撃）で死亡リアクションを開始
 	}
 }
 
-void MidBossCore::StartDeathReaction(const Vector3& hitDir) {
+void BarrierCore::StartDeathReaction(const Vector3& hitDir) {
 	if (isDying_) return;
-	// 死亡演出開始
+	// 破壊演出開始
 	isDying_ = true;
 	deathTimer_ = 0.0f;
 	deathAlpha_ = 1.0f;
@@ -282,7 +282,7 @@ void MidBossCore::StartDeathReaction(const Vector3& hitDir) {
 	deathRotateSpeed_ = { 0.0f, 2.0f, 0.0f };
 }
 
-void MidBossCore::SyncTransform() {
+void BarrierCore::SyncTransform() {
 	if (!object_) return;
 	object_->Update();  // 行列と定数バッファだけ更新
 }

@@ -152,7 +152,7 @@
     <ClCompile Include="application\actor\boss\BossController.cpp">
       <Filter>application\boss</Filter>
     </ClCompile>
-    <ClCompile Include="application\actor\enemy\MidBossCore.cpp">
+    <ClCompile Include="application\actor\enemy\BarrierCore.cpp">
       <Filter>application\enemy</Filter>
     </ClCompile>
     <ClCompile Include="engine\effect\post\WaterRippleEffect.cpp">
@@ -397,7 +397,7 @@
     <ClInclude Include="application\actor\boss\BossController.h">
       <Filter>application\boss</Filter>
     </ClInclude>
-    <ClInclude Include="application\actor\enemy\MidBossCore.h">
+    <ClInclude Include="application\actor\enemy\BarrierCore.h">
       <Filter>application\enemy</Filter>
     </ClInclude>
     <ClInclude Include="application\effect\IrisUtil.h">

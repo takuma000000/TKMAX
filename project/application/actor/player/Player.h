@@ -17,7 +17,7 @@
 #include "PlayerShotManager.h"
 #include "PlayerShotConfig.h"
 
-class MidBossCore;
+class BarrierCore;
 class Enemy;
 class BarrierCoreManager;
 
@@ -139,7 +139,7 @@ public:
 	/// ミッドボスコアが破壊されたときの処理を行います。
 	/// </summary>
 	/// <param name="core"></param>
-	void OnMidBossCoreDestroyed(MidBossCore* core);
+	void OnBarrierCoreDestroyed(BarrierCore* core);
 	/// <summary>
 	/// ワンウェイバリア（LB弾）が敵の攻撃にヒットしたときのフラッシュエフェクトをリクエストします。
 	/// </summary>
@@ -299,7 +299,7 @@ public:
 	/// ミッドボスコア参照を設定します。
 	/// </summary>
 	/// <param name="core">ミッドボスコア（nullptr 可）</param>
-	void SetMidBossCore(MidBossCore* core);
+	void SetBarrierCore(BarrierCore* core);
 	/// <summary>
 	/// プレイヤーの当たり判定用スケールを設定します。
 	/// </summary>

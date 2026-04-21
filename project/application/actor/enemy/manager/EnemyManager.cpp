@@ -598,7 +598,7 @@ void EnemyManager::SpawnBarrierCores_() {
 void EnemyManager::ClearBarrierCores_() {
 	if (!barrierCoreManager_) {
 		if (player_) {
-			player_->SetMidBossCore(nullptr);
+			player_->SetBarrierCore(nullptr);
 		}
 		return;
 	}

@@ -8,7 +8,7 @@
 
 class Player;
 class Enemy;
-class MidBossCore;
+class BarrierCore;
 
 //=============================================================
 // HomingBulletクラス
@@ -102,7 +102,7 @@ public:
 	/// ホーミング弾のターゲットとなるコアを設定します。
 	/// </summary>
 	/// <param name="core"></param>
-	void SetCore(MidBossCore* core);
+	void SetCore(BarrierCore* core);
 	// =========================================
 
 private:
@@ -117,7 +117,7 @@ private:
 	//==============================================
 	Player* player_ = nullptr;
 	Enemy* enemy_ = nullptr;
-	MidBossCore* core_ = nullptr;
+	BarrierCore* core_ = nullptr;
 	TKM::Camera* camera_ = nullptr;
 	//==============================================
 	// 描画オブジェクト

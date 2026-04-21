@@ -2,7 +2,7 @@
 
 #include "Player.h"
 #include "Enemy.h"
-#include "MidBossCore.h"
+#include "BarrierCore.h"
 #include "BarrierCoreManager.h"
 #include "AABB.h"
 #include "MyMath.h"
@@ -150,7 +150,7 @@ void PlayerShotManager::OnEnemyDestroyed(Enemy* e) {
 	}
 }
 
-void PlayerShotManager::OnMidBossCoreDestroyed(MidBossCore* core) {
+void PlayerShotManager::OnBarrierCoreDestroyed(BarrierCore* core) {
 	if (!core) {
 		return;
 	}

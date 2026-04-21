@@ -11,27 +11,27 @@
 #include "reticle/Reticle.h"
 
 //==================================================
-// MidBossCoreクラス
-// 中ボスのコア部分を管理するクラス。
+// BarrierCoreクラス
+// バリア破壊用コアを管理するクラス。
 //==================================================
-class MidBossCore {
+class BarrierCore {
 public:
-	MidBossCore() = default;
-	~MidBossCore() = default;
+	BarrierCore() = default;
+	~BarrierCore() = default;
 
 	/// <summary>
-	/// 敵オブジェクトを初期化します。
+	/// バリアコアを初期化します。
 	/// </summary>
 	/// <param name="common">Object3d の共通管理クラス</param>
 	/// <param name="dxCommon">DirectX 共通管理クラス</param>
 	void Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon);
 	/// <summary>
-	/// 敵の更新処理を行います。
+	/// バリアコアの更新処理を行います。
 	/// </summary>
 	/// <param name="dt">前フレームからの経過時間（秒）</param>
 	void Update(float dt);
 	/// <summary>
-	/// 敵を描画します。
+	/// バリアコアを描画します。
 	/// </summary>
 	/// <param name="dxCommon">DirectX 共通管理クラス</param>
 	void Draw(TKM::DirectXCommon* dxCommon);
@@ -41,12 +41,12 @@ public:
 	/// </summary>
 	void ImGuiDebug();
 	/// <summary>
-	/// 敵が死亡したかどうかを取得します。
+	/// バリアコアが死亡したかどうかを取得します。
 	/// </summary>
 	/// <returns></returns>
 	bool IsDead() const { return isDead_; }
 	/// <summary>
-	/// 敵が死亡演出中かどうかを取得します。
+	/// バリアコアが死亡演出中かどうかを取得します。
 	/// </summary>
 	/// <returns></returns>
 	bool IsDying() const { return isDying_; }
@@ -57,7 +57,7 @@ public:
 	/// <param name="damage">受けるダメージ量</param>
 	void OnHitWithDamage(int damage);
 	/// <summary>
-	/// 敵の死亡リアクションを開始します。
+	/// バリアコアの死亡リアクションを開始します。
 	/// </summary>
 	/// <param name="hitDir">被弾方向（正規化ベクトル）</param>
 	void StartDeathReaction(const Vector3& hitDir);
@@ -125,7 +125,7 @@ public:
 	/// <param name="r"></param>
 	void SetReticle(Reticle* r);
 	/// <summary>
-	/// プレイヤー位置取得関数を設定します。
+	/// プレイヤー位置取得関数を設定します。演出や向き計算に使用します。
 	/// </summary>
 	/// <param name="getter"></param>
 	void SetPlayer(std::function<Vector3()> getter);

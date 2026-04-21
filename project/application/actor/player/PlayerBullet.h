@@ -15,7 +15,7 @@
 class Player;
 class Enemy;
 class BarrierCoreManager;
-class MidBossCore;
+class BarrierCore;
 
 //=============================================================
 // PlayerBulletクラス
@@ -124,7 +124,7 @@ public:
 	/// 中ボスコア参照を設定します。
 	/// </summary>
 	/// <param name="core">中ボスコア（nullptr 可）</param>
-	void SetCore(MidBossCore* core);
+	void SetCore(BarrierCore* core);
 	/// <summary>
 	/// 発射時の出現演出としてベジェ曲線移動を開始します。
 	/// </summary>
@@ -146,7 +146,7 @@ private:
 	Vector3 velocity_{}; // 弾の現在速度
 	Vector3 prevPos_{}; // 前フレームの位置（トンネリング対策用）
 	Enemy* enemy_ = nullptr;
-	MidBossCore* core_ = nullptr;
+	BarrierCore* core_ = nullptr;
 	BarrierCoreManager* barrierCoreManager_ = nullptr;
 	TKM::Camera* camera_ = nullptr;
 	//======================================================================

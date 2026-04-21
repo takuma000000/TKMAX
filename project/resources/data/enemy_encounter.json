@@ -2,7 +2,7 @@
   "_comment": "敵遭遇設定。現在は雑魚敵フェーズ用の設定のみを持つ。",
 
   "smallEnemyPhase": {
-    "_comment": "上空から飛び込み敵が出る雑魚敵フェーズ。",
+    "_comment": "雑魚敵の情報",
 
     "settings": {
       "spawnInterval": 1.5,

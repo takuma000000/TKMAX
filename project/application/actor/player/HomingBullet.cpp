@@ -5,7 +5,7 @@
 #include "AABB.h"
 #include "Player.h"
 #include "Enemy.h"
-#include "MidBossCore.h"
+#include "BarrierCore.h"
 #include "TrailRibbonRenderer.h"
 
 namespace {
@@ -69,7 +69,7 @@ void HomingBullet::SetPlayer(Player* player) {
 	player_ = player;
 }
 
-void HomingBullet::SetCore(MidBossCore* core) {
+void HomingBullet::SetCore(BarrierCore* core) {
 	core_ = core;
 }
 

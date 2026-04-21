@@ -28,7 +28,7 @@ void BarrierCoreManager::Update(float dt) {
 
 		if ((*it)->IsDead()) {
 			if (player_) {
-				player_->OnMidBossCoreDestroyed((*it).get());
+				player_->OnBarrierCoreDestroyed((*it).get());
 			}
 			it = cores_.erase(it);
 		} else {
@@ -51,7 +51,7 @@ void BarrierCoreManager::Draw(TKM::DirectXCommon* dxCommon) {
 void BarrierCoreManager::Clear() {
 	cores_.clear();
 	if (player_) {
-		player_->SetMidBossCore(nullptr);
+		player_->SetBarrierCore(nullptr);
 	}
 }
 
@@ -103,8 +103,8 @@ int BarrierCoreManager::GetAliveCount() const {
 	return count_;
 }
 
-std::vector<MidBossCore*> BarrierCoreManager::GetAliveCores() const {
-	std::vector<MidBossCore*> result;
+std::vector<BarrierCore*> BarrierCoreManager::GetAliveCores() const {
+	std::vector<BarrierCore*> result;
 	result.reserve(cores_.size());
 
 	for (const auto& core : cores_) {
@@ -163,7 +163,7 @@ void BarrierCoreManager::SpawnOne_(const Vector3& pos) {
 		return;
 	}
 
-	auto core_ = std::make_unique<MidBossCore>();
+	auto core_ = std::make_unique<BarrierCore>();
 	core_->Initialize(common_, dxCommon_);
 	core_->SetCamera(camera_);
 	core_->SetParentScene(parent_);
@@ -180,7 +180,7 @@ void BarrierCoreManager::SpawnOne_(const Vector3& pos) {
 	cores_.push_back(std::move(core_));
 }
 
-MidBossCore* BarrierCoreManager::FindFirstAliveCore_() const {
+BarrierCore* BarrierCoreManager::FindFirstAliveCore_() const {
 	for (const auto& core : cores_) {
 		if (!core) {
 			continue;
@@ -197,5 +197,5 @@ void BarrierCoreManager::SyncPlayerTarget_() {
 		return;
 	}
 
-	player_->SetMidBossCore(FindFirstAliveCore_());
+	player_->SetBarrierCore(FindFirstAliveCore_());
 }
