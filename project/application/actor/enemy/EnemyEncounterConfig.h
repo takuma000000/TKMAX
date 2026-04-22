@@ -13,17 +13,15 @@ class EnemyEncounterConfig {
 public:
 	// Enemy Params ==========================================
 	struct SmallEnemyPhase {
-		float spawnInterval_ = 1.5f; // 敵の出現間隔（秒）
-		int   maxSimultaneous_ = 2; // 同時に存在してよい敵の数
-		int defeatTarget_ = 10; // この雑魚敵フェーズで倒すべき敵の数
+		float spawnInterval_ = 0.0f; // 敵の生成間隔（秒）
+		int   maxSimultaneous_ = 0;  // 同時に存在する敵の最大数
+		int defeatTarget_ = 0;       // このフェーズの目標撃破数
 
-		// SpawnPos(base): a(未使用), b=y, c=z
-		float baseY_ = 5.0f; // 敵の生成高さ（ワールド座標）
-		float baseZ_ = 100.0f; // 敵の生成基準 Z 座標（ワールド座標）
+		float baseY_ = 0.0f;         // 敵の生成 Y 座標（ワールド座標）
+		float baseZ_ = 0.0f;         // 敵の生成 Z 座標（ワールド座標）
 
-		// RandX(range): b=min, c=max
-		float randXMin_ = -20.0f; // 敵の生成 X 座標の最小値（ワールド座標）
-		float randXMax_ = 20.0f; // 敵の生成 X 座標の最大値（ワールド座標）
+		float randXMin_ = 0.0f;      // 敵の生成 X 座標のランダム範囲最小値（ワールド座標）
+		float randXMax_ = 0.0f;      // 敵の生成 X 座標のランダム範囲最大値（ワールド座標）
 	};
 	// =======================================================
 
@@ -91,13 +89,13 @@ private:
 public:
 	// Enemy Params ==========================================
 	struct MainEnemyParams {
-		std::string model_ = "jerryfish.obj"; // 敵のモデルファイル名
-		int hp_ = 1; // 敵のHP
-		float startY_ = 20.0f; // 敵の生成 Y 座標（ワールド座標）
-		float targetForwardZ_ = 3.0f; // 敵が前進して目指す Z 座標（ワールド座標）
-		float apexY_ = 30.0f; // 敵がジャンプで到達する最高点の Y 座標（ワールド座標）
-		float pounceTime_ = 1.6f; // ジャンプの頂点に達するまでの時間（秒）
-		EnemyBehavior behavior_ = EnemyBehavior::PounceFromAbove; // 敵の行動パターン
+		std::string model_; // 敵のモデルファイル名
+		int hp_ = 0; // 敵のHP
+		float startY_ = 0.0f; // 敵の生成 Y 座標（ワールド座標）
+		float targetForwardZ_ = 0.0f; // 敵が前進して目指す Z 座標（ワールド座標）
+		float apexY_ = 0.0f; // 敵がジャンプで到達する最高点の Y 座標（ワールド座標）
+		float pounceTime_ = 0.0f; // ジャンプの頂点に達するまでの時間（秒）
+		EnemyBehavior behavior_ = EnemyBehavior::MoveToTarget; // 敵の行動パターン
 	};
 
 	/// <summary>

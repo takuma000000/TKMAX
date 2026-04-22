@@ -17,10 +17,8 @@ void EnemyManager::Initialize(TKM::DirectXCommon* dx, TKM::Camera* camera, TKM::
 	TKM::BarrierCommon::GetInstance()->Initialize(dx);
 
 	// 敵遭遇設定読み込み
-	encounterConfig_.Load("./resources/data/enemy_encounter.json");
-	// 最初のWaveの撃破目標数を設定
-	const auto& phase_ = encounterConfig_.GetSmallEnemyPhase();
-	mainSquadDefeatTarget_ = phase_.defeatTarget_; // 最初のWaveの撃破目標数を保存しておく
+	const bool loaded_ = encounterConfig_.Load("./resources/data/enemy_encounter.json");
+	assert(loaded_ && "enemy_encounter.json の読込に失敗しました"); // ファイルがない、JSON構造が不正などで読込失敗した場合
 }
 
 void EnemyManager::Update(float dt) {
@@ -112,8 +110,8 @@ void EnemyManager::StartSmallEnemyPhase() {
 	specialCoreBullet_ = nullptr;
 	scatterShotTimer_ = 0.0f;
 
-	defeatedEnemyCount_ = 0; // 撃破数リセット
-	maxEnemyCount_ = mainSquadDefeatTarget_; // 最大敵数は最初のWaveの撃破目標数に合わせておく（必要なら後で更新）
+	defeatedEnemyCount_ = 0;
+	maxEnemyCount_ = std::max(0, encounterConfig_.GetSmallEnemyPhase().defeatTarget_); // 敵撃破数・最大数リセット（最大数は次のWaveの目標撃破数をセット）
 
 	enemyPhase_ = EnemyPhase::SmallEnemyBattle;
 	BeginMainSquadBattle_();
@@ -748,9 +746,8 @@ void EnemyManager::BeginMainSquadBattle_() {
 
 	ClearBarrierCores_();
 
-	if (maxEnemyCount_) {
-		maxEnemyCount_ = kMainSquadEnemyCount_;
-	}
+	// 撃破数リセット（最大数は次のWaveの目標撃破数をセット）
+	maxEnemyCount_ = std::max(0, encounterConfig_.GetSmallEnemyPhase().defeatTarget_);
 
 	SpawnMainSquad_();
 	SetMainSquadInvincible_(true);

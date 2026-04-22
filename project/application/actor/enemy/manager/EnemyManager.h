@@ -391,7 +391,6 @@ private:
 	//======================================================================
 	MainSquadPhase mainSquadPhase_;                     // Wave1本隊の段階
 	float mainSquadPhaseTimer_ = 0.0f;                      // 現在フェーズ開始からの経過時間
-	int mainSquadDefeatTarget_ = 10;                        // Wave1で撃破対象となる敵数
 	int mainSquadDefeatedCount_ = 0;                    // Wave1本隊の撃破数
 	bool mainSquadStopped_ = false;                     // 本隊停止中かどうか
 
