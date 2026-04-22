@@ -9,66 +9,99 @@ namespace TKM {
 
 	//=============================================================
 	// IntroStartBannerクラス
-	// ・ゲーム開始時の「START」バナーの表示を管理するクラス。
+	// ゲーム開始バナーを管理するクラス
 	//=============================================================
 	class IntroStartBanner {
 	public:
+		//=============================================================
+		// 初期化・制御
+		//=============================================================
+
 		/// <summary>
-		/// イントロ開始バナーを初期化します。
+		/// 開始バナーを初期化します。
 		/// </summary>
-		/// <param name="dxCommon">DirectX 共通管理クラス</param>
 		void Initialize(DirectXCommon* dxCommon);
+
 		/// <summary>
-		/// イントロ開始バナーをリセットして再生準備します。
+		/// バナー状態をリセットします。
 		/// </summary>
 		void Reset();
+
 		/// <summary>
-		/// イントロ開始バナーの表示を開始します。
+		/// バナー表示を開始します。
 		/// </summary>
 		void Start();
+
+		//=============================================================
+		// 更新・描画
+		//=============================================================
+
 		/// <summary>
-		/// イントロ開始バナーの更新処理を行います。
+		/// バナーを更新します。
 		/// </summary>
-		/// <param name="dt">前フレームからの経過時間（秒）</param>
 		void Update(float dt);
+
 		/// <summary>
-		/// イントロ開始バナーの描画処理を行います。
+		/// バナーを描画します。
 		/// </summary>
 		void Draw() const;
 
+		//=============================================================
+		// 状態取得
+		//=============================================================
+
 		/// <summary>
-		/// イントロ開始バナーの表示中かどうかを取得します。
+		/// 表示中かを返します。
 		/// </summary>
-		/// <returns>表示中の場合 true</returns>
 		bool IsVisible() const { return visible_; }
+
 		/// <summary>
-		/// イントロ開始バナーの表示が終了したかどうかを取得します。
+		/// 表示終了済みかを返します。
 		/// </summary>
-		/// <returns>表示が終了した場合 true</returns>
 		bool IsFinished() const { return finished_; }
 
 	private:
-		std::unique_ptr<Sprite> sprite_;
+		//=============================================================
+		// スプライト
+		//=============================================================
 
-		bool slideIn_ = false;
-		bool visible_ = false;
-		bool started_ = false;
-		bool fadeOut_ = false;
-		bool finished_ = false;
+		std::unique_ptr<Sprite> sprite_ = nullptr; // バナースプライト
 
-		Vector2 startPos_ = { TKM::WindowsAPI::kClientWidth_ + 400.0f, TKM::WindowsAPI::kClientHeight_ * 0.5f };
-		Vector2 endPos_ = { TKM::WindowsAPI::kClientWidth_ * 0.5f,  TKM::WindowsAPI::kClientHeight_ * 0.5f };
+		//=============================================================
+		// 状態フラグ
+		//=============================================================
 
-		Ease::Tween tween_;
-		float duration_ = 1.0f;
-		float holdSec_ = 1.0f;
-		float holdElapsed_ = 0.0f;
-		float fadeSec_ = 0.6f;
-		float alpha_ = 1.0f;
+		bool slideIn_ = false;  // スライドイン中
+		bool visible_ = false;  // 表示中
+		bool started_ = false;  // 開始済み
+		bool fadeOut_ = false;  // フェードアウト中
+		bool finished_ = false; // 終了済み
 
-		float glowAmp_ = 0.8f;
-		float glowSpeed_ = 10.0f;
-		bool  glowOn_ = true;
+		//=============================================================
+		// 位置
+		//=============================================================
+
+		Vector2 startPos_ = { TKM::WindowsAPI::GetClientWidth() + 400.0f, TKM::WindowsAPI::GetClientHeight() * 0.5f }; // 開始位置
+		Vector2 endPos_ = { TKM::WindowsAPI::GetClientWidth() * 0.5f,  TKM::WindowsAPI::GetClientHeight() * 0.5f };    // 終了位置
+
+		//=============================================================
+		// 時間制御
+		//=============================================================
+
+		Ease::Tween tween_;       // 位置補間
+		float duration_ = 1.0f;   // スライド時間
+		float holdSec_ = 1.0f;    // 停止時間
+		float holdElapsed_ = 0.0f;// 停止経過
+		float fadeSec_ = 0.6f;    // フェード時間
+		float alpha_ = 1.0f;      // 透明度
+
+		//=============================================================
+		// 発光演出
+		//=============================================================
+
+		float glowAmp_ = 0.8f;    // 発光量
+		float glowSpeed_ = 10.0f; // 発光速度
+		bool  glowOn_ = true;     // 発光ON/OFF
 	};
 
 }

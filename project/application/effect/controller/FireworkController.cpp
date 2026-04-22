@@ -24,8 +24,8 @@ namespace TKM {
 		Vector3 camRight = MyMath::Normalize({ camW.m[0][0], camW.m[0][1], camW.m[0][2] });
 		Vector3 camUp = MyMath::Normalize({ camW.m[1][0], camW.m[1][1], camW.m[1][2] });
 
-		float aspect = static_cast<float>(WindowsAPI::kClientWidth_) /
-			static_cast<float>(WindowsAPI::kClientHeight_);
+		float aspect = static_cast<float>(WindowsAPI::GetClientWidth()) /
+			static_cast<float>(WindowsAPI::GetClientHeight());
 
 		const float halfHeight = halfHeight_;
 		const float halfWidth = halfHeight_ * aspect;

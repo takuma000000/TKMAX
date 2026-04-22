@@ -11,80 +11,94 @@ namespace TKM {
 	class ModelCommon;
 }
 
-//=============================================================
-// Modelクラス
-// 3Dモデルのデータ読み込みと描画を行うクラス。
-//=============================================================
 namespace TKM {
+
+	//=============================================================
+	// Modelクラス
+	// 3Dモデルの読み込みと描画を管理するクラス
+	//=============================================================
 	class Model {
 	private:
-		ModelCommon* modelCommon_ = nullptr;
-		DirectXCommon* dxCommon_ = nullptr;
+		//=============================================================
+		// 共通参照
+		//=============================================================
 
-		// Objファイルのデータ
-		ModelData modelData_;
+		ModelCommon* modelCommon_ = nullptr; // モデル共通管理
+		DirectXCommon* dxCommon_ = nullptr;  // DirectX共通管理
+
+		//=============================================================
+		// モデルデータ
+		//=============================================================
+
+		ModelData modelData_; // 読み込み済みモデルデータ
+
+		using MaterialMap = std::unordered_map<std::string, MaterialData>; // マテリアル名とデータの対応表
+
+		//=============================================================
+		// リソース
+		//=============================================================
+
+		Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource_; // 頂点リソース
+		VertexData* vertexData_ = nullptr;                      // 頂点データ書き込み先
+		D3D12_VERTEX_BUFFER_VIEW vertexBufferView_{};           // 頂点バッファビュー
+
+		Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_; // マテリアルリソース
+		Material* materialData_ = nullptr;                        // マテリアルデータ書き込み先
+
+		//=============================================================
+		// Transform
+		//=============================================================
+
+		Transform transform_{ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} }; // モデルTransform
+
+		//=============================================================
+		// 読み込み
+		//=============================================================
 
 		/// <summary>
 		/// マテリアルテンプレートファイルを読み込みます。
 		/// </summary>
-		/// <param name="directoryPath"></param>
-		/// <param name="filename"></param>
-		/// <returns></returns>
 		static MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
+
 		/// <summary>
 		/// Objファイルを読み込みます。
 		/// </summary>
-		/// <param name="directoryPath"></param>
-		/// <param name="filename"></param>
-		/// <returns></returns>
 		static ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename);
 
-		// 頂点リソースを作る
-		Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource_;
-		// 頂点リソースにデータを書き込む
-		VertexData* vertexData_ = nullptr;
-		// 頂点バッファビューを作成する
-		D3D12_VERTEX_BUFFER_VIEW vertexBufferView_{};
-
-		// マテリアル用のリソースを作る
-		Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
-		// マテリアルにデータを書き込む
-		Material* materialData_ = nullptr;
-
-		using MaterialMap = std::unordered_map<std::string, MaterialData>; // マテリアル名とマテリアルデータのマップ
-
 		/// <summary>
-		/// マテリアルテンプレートファイルを読み込みます（マルチマテリアル対応版）。
+		/// マルチマテリアル用テンプレートファイルを読み込みます。
 		/// </summary>
-		/// <param name="directoryPath"></param>
-		/// <param name="filename"></param>
-		/// <returns></returns>
 		static MaterialMap LoadMaterialTemplateFileMulti(const std::string& directoryPath, const std::string& filename);
+
+		//=============================================================
+		// リソース生成
+		//=============================================================
+
 		/// <summary>
-		/// 頂点リソースを作成します。
+		/// 頂点リソースを生成します。
 		/// </summary>
-		/// <param name="dxCommon"></param>
 		void VertexResource(DirectXCommon* dxCommon);
+
 		/// <summary>
-		/// マテリアルリソースを作成します。
+		/// マテリアルリソースを生成します。
 		/// </summary>
-		/// <param name="dxCommon"></param>
 		void MaterialResource(DirectXCommon* dxCommon);
 
-		Transform transform_{ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
+	public:
+		//=============================================================
+		// 生成・禁止事項
+		//=============================================================
 
-	public://メンバ関数
-
-		// デフォルトコンストラクタ
 		Model() = default;
-		// デストラクタ
 		~Model() = default;
 
-		// コピーコンストラクタとコピー代入演算子を禁止
 		Model(const Model&) = delete;
 		Model& operator=(const Model&) = delete;
 
-		// ムーブコンストラクタ
+		//=============================================================
+		// ムーブ
+		//=============================================================
+
 		Model(Model&& other) noexcept
 			: modelCommon_(other.modelCommon_),
 			dxCommon_(other.dxCommon_),
@@ -94,7 +108,7 @@ namespace TKM {
 			other.modelCommon_ = nullptr;
 			other.dxCommon_ = nullptr;
 		}
-		// ムーブ代入演算子
+
 		Model& operator=(Model&& other) noexcept {
 			if (this != &other) {
 				modelCommon_ = other.modelCommon_;
@@ -108,67 +122,75 @@ namespace TKM {
 			return *this;
 		}
 
+		//=============================================================
+		// 初期化・描画
+		//=============================================================
+
 		/// <summary>
 		/// モデルを初期化します。
 		/// </summary>
-		/// <param name="modelCommon"></param>
-		/// <param name="dxCommon"></param>
-		/// <param name="directorypath"></param>
-		/// <param name="filename"></param>
 		void Initialize(ModelCommon* modelCommon, DirectXCommon* dxCommon, const std::string& directorypath, const std::string& filename);
+
 		/// <summary>
 		/// モデルを描画します。
 		/// </summary>
 		void Draw();
+
 		/// <summary>
-		/// マテリアルをオーバーライドせずにモデルを描画します。
+		/// マテリアル上書きなしで描画します。
 		/// </summary>
 		void DrawWithoutMaterialOverride();
 
+		//=============================================================
+		// 状態取得
+		//=============================================================
+
 		/// <summary>
-		/// マルチマテリアルかどうかを返します。
+		/// マルチマテリアルかを返します。
 		/// </summary>
-		/// <returns></returns>
 		bool IsMultiMaterial() const { return modelData_.submeshes_.size() > 1; }
 
-		// Getter===================================
+		//=============================================================
+		// Getter
+		//=============================================================
+
 		/// <summary>
-		/// テクスチャパスの取得。
+		/// テクスチャパスを取得します。
 		/// </summary>
-		/// <returns></returns>
 		std::string GetTexturePath() const { return modelData_.material_.textureFilePath_; }
+
 		/// <summary>
-		/// スケールの取得。
+		/// スケールを取得します。
 		/// </summary>
-		/// <returns></returns>
 		const Vector3& GetScale() const { return transform_.scale_; }
+
 		/// <summary>
-		/// 回転の取得。
+		/// 回転を取得します。
 		/// </summary>
-		/// <returns></returns>
 		const Vector3& GetRotate() const { return transform_.rotate_; }
+
 		/// <summary>
-		/// 平行移動の取得。
+		/// 平行移動を取得します。
 		/// </summary>
-		/// <returns></returns>
 		const Vector3& GetTranslate() const { return transform_.translate_; }
-		// =========================================
-		// Setter===================================
+
+		//=============================================================
+		// Setter
+		//=============================================================
+
 		/// <summary>
-		/// スケールの設定。
+		/// スケールを設定します。
 		/// </summary>
-		/// <param name="scale"></param>
 		void SetScale(const Vector3& scale) { this->transform_.scale_ = scale; }
+
 		/// <summary>
-		/// 回転の設定。
+		/// 回転を設定します。
 		/// </summary>
-		/// <param name="rotate"></param>
 		void SetRotate(const Vector3& rotate) { this->transform_.rotate_ = rotate; }
+
 		/// <summary>
-		/// 平行移動の設定。
+		/// 平行移動を設定します。
 		/// </summary>
-		/// <param name="translate"></param>
 		void SetTranslate(const Vector3& translate) { this->transform_.translate_ = translate; }
-		// ========================================
 	};
 }

@@ -121,13 +121,13 @@ private:
 	bool isClearMenuVisible_ = false; // GAME CLEAR と同時に出す
 
 	Vector2 clearSpriteCenterPos_ = {
-		static_cast<float>(TKM::WindowsAPI::kClientWidth_) * 0.5f,
-		static_cast<float>(TKM::WindowsAPI::kClientHeight_) * 0.5f
+		static_cast<float>(TKM::WindowsAPI::GetClientWidth()) * 0.5f,
+		static_cast<float>(TKM::WindowsAPI::GetClientHeight()) * 0.5f
 	}; // 最終表示位置（画面中央）
 
 	Vector2 clearSpriteStartPos_ = {
-		static_cast<float>(TKM::WindowsAPI::kClientWidth_) * 0.5f,
-		static_cast<float>(TKM::WindowsAPI::kClientHeight_) * 0.5f + 70.0f
+		static_cast<float>(TKM::WindowsAPI::GetClientWidth()) * 0.5f,
+		static_cast<float>(TKM::WindowsAPI::GetClientHeight()) * 0.5f + 70.0f
 	}; // 演出開始位置（少し下）
 	//======================================================================
 	// アイリス遷移

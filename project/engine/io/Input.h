@@ -8,12 +8,20 @@
 
 //=============================================================
 // Inputクラス
-// キーボードとゲームパッドの入力を管理するクラス。
+// キーボードとゲームパッドの入力を管理するクラス
 //=============================================================
 namespace TKM {
 	class Input {
 	public:
 		template <class T> using ComPtr = Microsoft::WRL::ComPtr<T>;
+
+		//=============================================================
+		// 取得・生成
+		//=============================================================
+
+		/// <summary>
+		/// インスタンスを取得します。
+		/// </summary>
 		static Input* GetInstance();
 
 		Input() = default;
@@ -21,114 +29,149 @@ namespace TKM {
 		Input(const Input&) = delete;
 		Input& operator=(const Input&) = delete;
 
+		//=============================================================
+		// 初期化・終了・更新
+		//=============================================================
+
 		/// <summary>
-		/// オブジェクトやモジュールの初期化を行う。
+		/// Inputを初期化します。
 		/// </summary>
-		/// <param name="winApp"></param>
+		/// <param name="winApp">Windows管理</param>
 		void Initialize(TKM::WindowsAPI* winApp);
+
 		/// <summary>
-		/// オブジェクトやモジュールの終了処理（クリーンアップ）を行う。
-		/// <para>Inputの終了処理を行います。</para>
+		/// Inputを終了します。
 		/// </summary>
 		void Finalize();
+
 		/// <summary>
-		/// <para>Inputの更新を行います。</para>
+		/// Inputを更新します。
 		/// </summary>
 		void Update();
 
+		//=============================================================
+		// キーボード・パッド入力
+		//=============================================================
+
 		/// <summary>
-		/// <para>指定したキーが押されているかを返します。</para>
+		/// 指定したキーが押されているかを返します。
 		/// </summary>
-		/// <param name="keyNumber"></param>
-		/// <returns></returns>
+		/// <param name="keyNumber">キー番号</param>
+		/// <returns>押されていたらtrue</returns>
 		bool PushKey(BYTE keyNumber);
+
 		/// <summary>
-		/// <para>指定したキーが押された瞬間かを返します。</para>
+		/// 指定したキーが押された瞬間かを返します。
 		/// </summary>
-		/// <param name="keyNumber"></param>
-		/// <returns></returns>
+		/// <param name="keyNumber">キー番号</param>
+		/// <returns>押された瞬間ならtrue</returns>
 		bool TriggerKey(BYTE keyNumber);
+
 		/// <summary>
-		/// <para>指定したボタンが押されているかを返します。</para>
+		/// 指定したボタンが押されているかを返します。
 		/// </summary>
-		/// <param name="button"></param>
-		/// <returns></returns>
+		/// <param name="button">ボタン</param>
+		/// <returns>押されていたらtrue</returns>
 		bool PushButton(WORD button);
+
 		/// <summary>
-		/// <para>指定したボタンが押された瞬間かを返します。</para>
+		/// 指定したボタンが押された瞬間かを返します。
 		/// </summary>
-		/// <param name="button"></param>
-		/// <returns></returns>
+		/// <param name="button">ボタン</param>
+		/// <returns>押された瞬間ならtrue</returns>
 		bool TriggerButton(WORD button);
+
 		/// <summary>
-		/// <para>ゲームパッドが接続されているかを返します。</para>
+		/// ゲームパッドが接続されているかを返します。
 		/// </summary>
-		/// <returns></returns>
+		/// <returns>接続されていたらtrue</returns>
 		bool IsGamepadConnected() const;
 
-		// Getter========================================
+		//=============================================================
+		// Getter
+		//=============================================================
+
 		/// <summary>
-		/// <para>左スティックのX軸の値を取得します。</para>
+		/// 左スティックのX軸値を取得します。
 		/// </summary>
-		/// <returns></returns>
+		/// <returns>X軸値</returns>
 		SHORT GetLeftStickX();
+
 		/// <summary>
-		/// <para>左スティックのY軸の値を取得します。</para>
+		/// 左スティックのY軸値を取得します。
 		/// </summary>
-		/// <returns></returns>
+		/// <returns>Y軸値</returns>
 		SHORT GetLeftStickY();
+
 		/// <summary>
-		/// <para>右スティックのX軸の値を取得します。</para>
+		/// 右スティックのX軸値を取得します。
 		/// </summary>
-		/// <returns></returns>
+		/// <returns>X軸値</returns>
 		SHORT GetRightStickX();
+
 		/// <summary>
-		///	<para>右スティックのY軸の値を取得します。</para>
+		/// 右スティックのY軸値を取得します。
 		/// </summary>
-		/// <returns></returns>
+		/// <returns>Y軸値</returns>
 		SHORT GetRightStickY();
+
 		/// <summary>
-		/// <para>右トリガーの取得</para>
+		/// 右トリガー値を取得します。
 		/// </summary>
-		/// <returns></returns>
+		/// <returns>右トリガー値</returns>
 		BYTE GetRightTrigger();
+
 		/// <summary>
-		/// <para>左トリガーの取得</para>
+		/// 左トリガー値を取得します。
 		/// </summary>
-		/// <returns></returns>
+		/// <returns>左トリガー値</returns>
 		BYTE GetLeftTrigger();
+
 		/// <summary>
-		///	<para>マウスホイールの回転量を取得します。</para>
+		/// マウスホイール回転量を取得します。
 		/// </summary>
-		/// <returns></returns>
-		int  GetWheel() const { return wheel_; }
-		// ==============================================
-		// Setter========================================
+		/// <returns>ホイール回転量</returns>
+		int GetWheel() const { return wheel_; }
+
+		//=============================================================
+		// Setter
+		//=============================================================
+
 		/// <summary>
-		/// <para>コントローラーの振動を設定します。</para>
+		/// コントローラーの振動を設定します。
 		/// </summary>
-		/// <param name="leftMotor"></param>
-		/// <param name="rightMotor"></param>
+		/// <param name="leftMotor">左モーターの強さ</param>
+		/// <param name="rightMotor">右モーターの強さ</param>
 		void SetVibration(WORD leftMotor, WORD rightMotor);
+
 		/// <summary>
-		/// <para>マウスホイールの回転量を設定します。</para>
+		/// マウスホイール回転量を設定します。
 		/// </summary>
-		/// <param name="delta"></param>
+		/// <param name="delta">ホイール回転量</param>
 		void SetWheel(int delta) { wheel_ = delta; }
-		// ==============================================
+
 	private:
+		//=============================================================
+		// DirectInput
+		//=============================================================
 
-		ComPtr<IDirectInputDevice8> keyboard_;
-		BYTE key_[256] = {};
-		BYTE keyPre_[256] = {};
-		ComPtr<IDirectInput8> directInput_;
-		TKM::WindowsAPI* winApp_ = nullptr;
+		ComPtr<IDirectInputDevice8> keyboard_; // キーボードデバイス
+		BYTE key_[256] = {};                   // 現在キー状態
+		BYTE keyPre_[256] = {};                // 前フレームキー状態
+		ComPtr<IDirectInput8> directInput_;    // DirectInput本体
+		TKM::WindowsAPI* winApp_ = nullptr;    // Windows管理
 
-		// XInput 用のメンバ変数
-		XINPUT_STATE controllerState_ = {};
-		XINPUT_STATE prevControllerState_ = {};
+		//=============================================================
+		// XInput
+		//=============================================================
 
-		// マウスホイール量（フレーム単位でリセットされる）
-		int wheel_ = 0;
+		XINPUT_STATE controllerState_ = {};     // 現在コントローラー状態
+		XINPUT_STATE prevControllerState_ = {}; // 前フレームコントローラー状態
+
+		//=============================================================
+		// マウス
+		//=============================================================
+
+		int wheel_ = 0; // マウスホイール量
 	};
 }

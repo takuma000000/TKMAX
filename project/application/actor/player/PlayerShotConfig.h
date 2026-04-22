@@ -56,7 +56,9 @@ private:
 	/// </summary>
 	static bool HasExtension(const std::string& path, const char* ext);
 
+	// ========================================
 	// 設定値
+	// ========================================
 	RBConfig rb_; // RB弾の設定
 	LBConfig lb_; // LB弾の設定
 };

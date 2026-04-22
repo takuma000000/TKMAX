@@ -7,90 +7,131 @@ namespace TKM {
 
 	//=============================================================
 	// LaserBeam3Dクラス
-	// 3D空間に存在するレーザービームの管理を行うクラス。
+	// 3D空間に存在するレーザービームの管理を行うクラス
 	//=============================================================
 	class LaserBeam3D {
 	public:
+		//=============================================================
+		// 設定構造体
+		//=============================================================
+
 		struct Desc {
-			Vector3 startWS_{ 0.0f, 0.0f, 0.0f };
-			Vector3 endWS_{ 0.0f, 0.0f, 0.0f };
+			Vector3 startWS_{ 0.0f, 0.0f, 0.0f }; // 開始座標
+			Vector3 endWS_{ 0.0f, 0.0f, 0.0f };   // 終了座標
 
-			// ビームの太さ（ワールド半径）
-			float radius_ = 2.2f;
+			//=========================================================
+			// ビーム形状
+			//=========================================================
 
+			float radius_ = 2.2f; // 半径
+
+			//=========================================================
 			// 見た目
-			Vector3 color_{ 0.2f, 0.85f, 1.0f };
-			float intensity_ = 3.0f;     // 発光強さ（加算）
-			float coreSharpness_ = 7.0f; // 中心コアの締まり（大きいほど細く強い）
-			float edgeSoftness_ = 1.2f;  // 外側の落ち方
+			//=========================================================
 
-			// 分割（ビーム方向に何枚置くか）
-			uint32_t sliceCount_ = 64;
+			Vector3 color_{ 0.2f, 0.85f, 1.0f }; // 色
+			float intensity_ = 3.0f;             // 発光強さ
+			float coreSharpness_ = 7.0f;         // コアの締まり
+			float edgeSoftness_ = 1.2f;          // 外側の落ち方
 
-			// ゆらぎ（ちらつき/波）
-			float noiseScale_ = 1.0f; // 1D的なノイズのスケール
-			float noiseSpeed_ = 1.0f; // 時間変化
+			//=========================================================
+			// 分割
+			//=========================================================
 
+			uint32_t sliceCount_ = 64; // スライス数
+
+			//=========================================================
+			// ゆらぎ
+			//=========================================================
+
+			float noiseScale_ = 1.0f; // ノイズスケール
+			float noiseSpeed_ = 1.0f; // ノイズ速度
+
+			//=========================================================
 			// 状態
-			bool active_ = false;
-			bool telegraph_ = false; // 予告（点滅弱めなど）
+			//=========================================================
+
+			bool active_ = false;    // 有効フラグ
+			bool telegraph_ = false; // 予告状態
 		};
 
+		//=============================================================
+		// 初期化・更新・描画
+		//=============================================================
+
 		/// <summary>
-		/// 初期化
+		/// LaserBeam3Dを初期化します。
 		/// </summary>
-		/// <param name="dx"></param>
+		/// <param name="dx">DirectX共通管理</param>
 		void Initialize(DirectXCommon* dx);
+
 		/// <summary>
-		/// 更新
+		/// LaserBeam3Dを更新します。
 		/// </summary>
-		/// <param name="dt"></param>
+		/// <param name="dt">経過時間</param>
 		void Update(float dt);
+
 		/// <summary>
-		/// 描画
+		/// LaserBeam3Dを描画します。
 		/// </summary>
-		/// <param name="viewProj"></param>
-		/// <param name="camRightWS"></param>
-		/// <param name="camUpWS"></param>
-		/// <param name="camFwdWS"></param>
+		/// <param name="viewProj">ビュー射影行列</param>
+		/// <param name="camRightWS">カメラ右方向ベクトル</param>
+		/// <param name="camUpWS">カメラ上方向ベクトル</param>
+		/// <param name="camFwdWS">カメラ前方向ベクトル</param>
 		void Draw(const Matrix4x4& viewProj,
 			const Vector3& camRightWS,
 			const Vector3& camUpWS,
 			const Vector3& camFwdWS);
+
 		/// <summary>
-		/// デバッグ用ImGui表示
+		/// ImGuiデバッグ表示を行います。
 		/// </summary>
 		void ImGuiDebug();
 
+		//=============================================================
+		// Getter
+		//=============================================================
+
 		/// <summary>
-		/// アクティブか？
+		/// アクティブかを取得します。
 		/// </summary>
-		/// <returns></returns>
+		/// <returns>有効ならtrue</returns>
 		bool IsActive() const { return desc_.active_; }
 
-		// Setter=====================================
+		/// <summary>
+		/// 設定情報を取得します。
+		/// </summary>
+		/// <returns>現在の設定情報</returns>
+		const Desc& GetDesc() const { return desc_; }
+
+		//=============================================================
+		// Setter
+		//=============================================================
+
 		/// <summary>
 		/// アクティブ状態を設定します。
 		/// </summary>
-		/// <param name="a">有効にする場合 true、無効にする場合 false</param>
+		/// <param name="a">有効状態</param>
 		void SetActive(bool a) { desc_.active_ = a; }
+
 		/// <summary>
 		/// 設定情報を設定します。
 		/// </summary>
-		/// <param name="desc">設定する FogVolume3D のパラメータ</param>
+		/// <param name="desc">設定内容</param>
 		void SetDesc(const Desc& desc) { desc_ = desc; }
-		// ===========================================
-		// Getter=====================================
-		/// <summary>
-		/// 説明取得（const）
-		/// </summary>
-		/// <returns></returns>
-		const Desc& GetDesc() const { return desc_; }
-		// ===========================================
-	private:
-		DirectXCommon* dxCommon_ = nullptr;
-		Desc desc_{};
 
-		float time_ = 0.0f;
+	private:
+		//=============================================================
+		// 共通参照
+		//=============================================================
+
+		DirectXCommon* dxCommon_ = nullptr; // DirectX共通管理
+
+		//=============================================================
+		// 状態
+		//=============================================================
+
+		Desc desc_{};       // 設定情報
+		float time_ = 0.0f; // 経過時間
 	};
 }

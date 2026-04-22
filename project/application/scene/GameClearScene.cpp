@@ -115,8 +115,8 @@ void GameClearScene::Initialize() {
 		TKM::SpriteCommon::GetInstance(),
 		dxCommon_,
 		this,
-		WindowsAPI::kClientWidth_,
-		WindowsAPI::kClientHeight_
+		static_cast<float>(WindowsAPI::GetClientWidth()),
+		static_cast<float>(WindowsAPI::GetClientHeight())
 	);
 
 	// ─────────────────────

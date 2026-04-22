@@ -1,6 +1,5 @@
 #pragma once
-#include "Vector3.h"
-#include "Vector4.h"
+#include "MyMath.h"
 
 //=============================================================
 // DirectionalLightクラス
@@ -8,34 +7,63 @@
 //=============================================================
 namespace TKM {
 	class DirectionalLight {
-
 	public:
+		//=============================================================
+		// 生成・破棄
+		//=============================================================
+
 		DirectionalLight() = default;
 		~DirectionalLight() = default;
 
+		//=============================================================
+		// 初期化・更新
+		//=============================================================
+
 		/// <summary>
-		/// <summary>平行光源を初期化します。</summary>
+		/// 平行光源を初期化します。
 		/// </summary>
-		/// <param name="color"></param>
-		/// <param name="direction"></param>
-		/// <param name="intensity"></param>
 		void Initialize(const Vector4& color, const Vector3& direction, float intensity);
-		/// <summary>平行光源を更新します。</summary>
+
+		/// <summary>
+		/// 平行光源を更新します。
+		/// </summary>
 		void Update();
 
-		/// <summary>平行光源の各種パラメータを取得します。</summary>
+		//=============================================================
+		// Getter
+		//=============================================================
+
+		/// <summary>
+		/// 色を取得します。
+		/// </summary>
 		Vector4 GetColor() const { return color_; }
-		/// <summary>平行光源の各種パラメータを取得します。</summary>
+
+		/// <summary>
+		/// 方向を取得します。
+		/// </summary>
 		Vector3 GetDirection() const { return direction_; }
-		/// <summary>平行光源の各種パラメータを取得します。</summary>
+
+		/// <summary>
+		/// 強度を取得します。
+		/// </summary>
 		float GetIntensity() const { return intensity_; }
 
-		/// <summary>平行光源の各種パラメータを設定します。</summary>
+		//=============================================================
+		// Setter
+		//=============================================================
+
+		/// <summary>
+		/// 方向を設定します。
+		/// </summary>
 		void SetDirection(const Vector3& direction) { direction_ = direction; }
 
 	private:
-		Vector4 color_;
-		Vector3 direction_;
-		float intensity_;
+		//=============================================================
+		// 光源パラメータ
+		//=============================================================
+
+		Vector4 color_{};        // 色
+		Vector3 direction_{};    // 方向
+		float intensity_ = 0.0f; // 強度
 	};
 }

@@ -199,8 +199,8 @@ void GameScene::InitializeSprite() {
 	flow_->Initialize(dxCommon_, TKM::Object3dCommon::GetInstance());
 	// ──────────────── UIコントローラーの初期化 ───────────────
 	ui_ = std::make_unique<TKM::UIController>();
-	const float w = (float)WindowsAPI::kClientWidth_;
-	const float h = (float)WindowsAPI::kClientHeight_;
+	const float w = static_cast<float>(WindowsAPI::GetClientWidth());
+	const float h = static_cast<float>(WindowsAPI::GetClientHeight());
 	ui_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, this, w, h);
 	// ──────────────── ポーズメニュー（形だけ） ───────────────
 	pause_ = std::make_unique<TKM::PauseMenuController>();

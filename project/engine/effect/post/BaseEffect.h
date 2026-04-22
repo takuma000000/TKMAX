@@ -1,34 +1,49 @@
 #pragma once
-namespace TKM{
+namespace TKM {
 	class DirectXCommon;
 }
 
 //=============================================================
 // BaseEffectクラス
-// ポストエフェクトの基底クラス。
+// ポストエフェクトの基底クラス
 //=============================================================
 namespace TKM {
 	class BaseEffect {
 	public:
+		//=============================================================
+		// 生成・破棄
+		//=============================================================
+
 		virtual ~BaseEffect() = default;
 
+		//=============================================================
+		// 初期化・更新・描画
+		//=============================================================
+
 		/// <summary>
-		/// ポストエフェクトの初期化
+		/// ポストエフェクトを初期化します。
 		/// </summary>
-		/// <param name="dx"></param>
+		/// <param name="dx">DirectX共通管理</param>
 		virtual void Initialize(TKM::DirectXCommon* dx) {
 			dxCommon_ = dx;
 		}
+
 		/// <summary>
-		/// ポストエフェクトの更新
+		/// ポストエフェクトを更新します。
 		/// </summary>
-		/// <param name="dt"></param>
+		/// <param name="dt">経過時間</param>
 		virtual void Update(float dt) = 0;
+
 		/// <summary>
-		/// ポストエフェクトの描画
+		/// ポストエフェクトを描画します。
 		/// </summary>
 		virtual void Draw() = 0;
+
 	protected:
-		TKM::DirectXCommon* dxCommon_ = nullptr;
+		//=============================================================
+		// 共通参照
+		//=============================================================
+
+		TKM::DirectXCommon* dxCommon_ = nullptr; // DirectX共通管理
 	};
 }

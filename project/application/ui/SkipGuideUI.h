@@ -5,58 +5,84 @@
 #include "Input.h"
 
 namespace TKM {
-	//==============================================================================
+
+	//=============================================================
 	// SkipGuideUIクラス
-	// 開始時のボスのスタートムービー演出をスキップするためのUI
-	//==============================================================================
+	// スキップ案内UIを管理するクラス
+	//=============================================================
 	class SkipGuideUI {
 	public:
+		//=============================================================
+		// 初期化
+		//=============================================================
+
 		/// <summary>
-		/// SkipGuideUIを初期化します。
+		/// スキップ案内UIを初期化します。
 		/// </summary>
-		/// <param name="spriteCommon">スプライト共通管理クラス</param>
-		/// <param name="dxCommon">DirectX 共通管理クラス</param>
-		/// <param name="screenW">画面幅</param>
-		/// <param name="screenH">画面高さ</param>
 		void Initialize(
 			SpriteCommon* spriteCommon,
 			DirectXCommon* dxCommon,
 			float screenW,
 			float screenH
 		);
+
+		//=============================================================
+		// 更新・描画
+		//=============================================================
+
 		/// <summary>
-		/// SkipGuideUIを更新します。
+		/// スキップ案内UIを更新します。
 		/// </summary>
-		/// <param name="dt">デルタタイム</param>
-		/// <param name="canSkip">スキップ可能かどうか</param>
 		void Update(float dt, bool canSkip);
+
 		/// <summary>
-		/// SkipGuideUIを描画します。
+		/// スキップ案内UIを描画します。
 		/// </summary>
-		/// <param name="alpha">アルファ値（0.0f〜1.0f）</param>
 		void Draw(float alpha);
+
 		/// <summary>
-		/// SkipGuideUI の ImGui 調整を表示します。
+		/// ImGui調整項目を表示します。
 		/// </summary>
 		void DrawImGui();
 
 	private:
-		std::unique_ptr<Sprite> sprite_;
+		//=============================================================
+		// スプライト
+		//=============================================================
 
-		Vector2 basePos_{};
-		Vector2 baseSize_{};
-		Vector2 offset_{ -137.0f, -49.0f }; // 右下基準の位置オフセット
+		std::unique_ptr<Sprite> sprite_ = nullptr; // UIスプライト
 
-		float holdTimer_ = 0.0f;
-		static constexpr float kHoldTime_ = 2.0f; // 押し続ける必要のある時間（秒）
+		//=============================================================
+		// 配置
+		//=============================================================
 
-		float normalScale_ = 0.90f;
-		float pressScale_ = 1.10f;
+		Vector2 basePos_{};                    // 基準位置
+		Vector2 baseSize_{};                   // 基準サイズ
+		Vector2 offset_{ -137.0f, -49.0f };    // 右下基準オフセット
 
-		Vector4 normalColor_{ 1.0f, 1.0f, 1.0f, 0.60f };
-		Vector4 pressColor_{ 1.0f, 1.0f, 0.0f, 1.00f }; // 押しているときの色
+		//=============================================================
+		// 入力保持
+		//=============================================================
 
-		float screenW_ = 0.0f;
-		float screenH_ = 0.0f;
+		float holdTimer_ = 0.0f;               // 長押し時間
+		static constexpr float kHoldTime_ = 2.0f; // 必要長押し時間
+
+		//=============================================================
+		// 見た目
+		//=============================================================
+
+		float normalScale_ = 0.90f;            // 通常時スケール
+		float pressScale_ = 1.10f;             // 押下時スケール
+
+		Vector4 normalColor_{ 1.0f, 1.0f, 1.0f, 0.60f }; // 通常色
+		Vector4 pressColor_{ 1.0f, 1.0f, 0.0f, 1.00f };  // 押下時色
+
+		//=============================================================
+		// 画面サイズ
+		//=============================================================
+
+		float screenW_ = 0.0f;                 // 画面幅
+		float screenH_ = 0.0f;                 // 画面高さ
 	};
+
 }

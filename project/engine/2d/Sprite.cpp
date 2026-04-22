@@ -175,7 +175,7 @@ namespace TKM {
 		// ビュー行列は単位行列
 		Matrix4x4 viewMatrixSprite = MyMath::MakeIdentity4x4();
 		// 射影行列は直交投影行列
-		Matrix4x4 projectionMatrixSprite = MyMath::MakeOrthographicMatrix(0.0f, 0.0f, float(WindowsAPI::kClientWidth_), float(WindowsAPI::kClientHeight_), 0.0f, 100.0f);
+		Matrix4x4 projectionMatrixSprite = MyMath::MakeOrthographicMatrix(0.0f, 0.0f, static_cast<float>(WindowsAPI::GetClientWidth()), static_cast<float>(WindowsAPI::GetClientHeight()), 0.0f, 100.0f);
 
 		transformationMatrixData_->wvp = MyMath::Multiply(worldMatrixSprite, MyMath::Multiply(viewMatrixSprite, projectionMatrixSprite)); // WVP行列の計算
 		transformationMatrixData_->World = worldMatrixSprite; // ワールド行列の設定

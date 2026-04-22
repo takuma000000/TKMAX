@@ -8,74 +8,125 @@ namespace TKM {
 	class DirectXCommon;
 }
 
-//=============================================================
-// SrvManagerクラス
-// SRV（Shader Resource View）ヒープの管理と割り当てを行うクラス。
-//=============================================================
 namespace TKM {
+
+	//=============================================================
+	// SrvManagerクラス
+	// SRVヒープの管理を行うクラス
+	//=============================================================
 	class SrvManager {
-
 	private:
-		TKM::DirectXCommon* directXCommon_ = nullptr;
+		//=============================================================
+		// 共通参照
+		//=============================================================
 
-		//SRV用のデスクリプタサイズ
-		uint32_t descriptorSize_;
-		//SRVデスクリプタヒープ
-		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeap_;
+		TKM::DirectXCommon* directXCommon_ = nullptr; // DirectX共通管理
 
-		//次に使用するSRVインデックス
-		uint32_t useIndex_ = 0;
+		//=============================================================
+		// SRVヒープ
+		//=============================================================
+
+		uint32_t descriptorSize_ = 0; // デスクリプタサイズ
+		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeap_; // デスクリプタヒープ
+
+		uint32_t useIndex_ = 0; // 次に使用するSRVインデックス
 
 	public:
-		//デストラクタ
+		//=============================================================
+		// 生成・破棄
+		//=============================================================
+
 		~SrvManager();
 
-		//初期化
-		/// <summary>SRVマネージャを初期化します。</summary>
-		/// <param name="directXCommon">DirectX共通。</param>
+		//=============================================================
+		// 初期化・描画準備
+		//=============================================================
+
+		/// <summary>
+		/// SRVマネージャを初期化します。
+		/// </summary>
 		void Initialize(TKM::DirectXCommon* directXCommon);
-		//ヒープセットコマンド
-		/// <summary>SRVデスクリプタヒープをセットします。</summary>
+
+		/// <summary>
+		/// SRVデスクリプタヒープをセットします。
+		/// </summary>
 		void PreDraw();
-		//SRVセットコマンド
-		/// <summary>SRVデスクリプタテーブルをセットします。</summary>
+
+		/// <summary>
+		/// SRVデスクリプタテーブルをセットします。
+		/// </summary>
 		void SetGraphicsRootDescriptorTable(UINT RootParameterIndex, uint32_t srvIndex);
 
-		//
-		/// <summary>SRVを1つ割り当てます。</summary>
+		//=============================================================
+		// SRV割り当て
+		//=============================================================
+
+		/// <summary>
+		/// SRVを1つ割り当てます。
+		/// </summary>
 		uint32_t Allocate();
 
-		//確保可能チェック
-		/// <summary>SRVを確保可能かチェックします。</summary>
+		/// <summary>
+		/// SRVを確保可能かを返します。
+		/// </summary>
 		bool Available() const;
 
-		//最大SRV数( 最大テクスチャ枚数 )
+		/// <summary>
+		/// 最大SRV数を表します。
+		/// </summary>
 		static const uint32_t kMaxSRVCount;
 
-	public: //色々な関数
-		//指定番号のCPUディスクリプタハンドルを取得する
-		/// <summary>指定番号のCPUディスクリプタハンドルを取得します。</summary>
+		//=============================================================
+		// ディスクリプタ取得
+		//=============================================================
+
+		/// <summary>
+		/// 指定番号のCPUディスクリプタハンドルを取得します。
+		/// </summary>
 		static D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandleSUB(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index);
-		//指定番号のGPUディスクリプタハンドルを取得する
-		/// <summary>指定番号のGPUディスクリプタハンドルを取得します。</summary>
+
+		/// <summary>
+		/// 指定番号のGPUディスクリプタハンドルを取得します。
+		/// </summary>
 		static D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandleSUB(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index);
-		//SRVの指定番号のCPUディスクリプタハンドルを取得する
-		/// <summary>SRVの指定番号のCPUディスクリプタハンドルを取得します。</summary>
+
+		/// <summary>
+		/// SRVのCPUディスクリプタハンドルを取得します。
+		/// </summary>
 		D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(uint32_t index);
-		//SRVの指定番号のGPUディスクリプタハンドルを取得する
-		/// <summary>SRVの指定番号のGPUディスクリプタハンドルを取得します。</summary>
+
+		/// <summary>
+		/// SRVのGPUディスクリプタハンドルを取得します。
+		/// </summary>
 		D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(uint32_t index);
-		//SRV生成関数( テクスチャ用 )
-		///	<summary>テクスチャ2D用のSRVを生成します。</summary>
+
+		//=============================================================
+		// SRV生成
+		//=============================================================
+
+		/// <summary>
+		/// テクスチャ2D用SRVを生成します。
+		/// </summary>
 		void CreateSRVforTexture2D(uint32_t srvIndex, ID3D12Resource* pResource, DXGI_FORMAT Format, UINT MipLevels);
-		//SRV生成
-		///	<summary>構造化バッファ用のSRVを生成します。</summary>
+
+		/// <summary>
+		/// 構造化バッファ用SRVを生成します。
+		/// </summary>
 		void CreateSRVforStructureBuffer(uint32_t srvIndex, ID3D12Resource* pResource, UINT numElements, UINT structureByteStride);
 
-		//getter
-		/// <summary>SRVデスクリプタヒープのゲッター。</summary>
+		//=============================================================
+		// Getter
+
+		/// <summary>
+		/// SRVデスクリプタヒープを取得します。
+		/// </summary>
 		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> GetSrvDescriptorHeap() const { return descriptorHeap_; }
-		///<summary>SRVデスクリプタサイズのゲッター。</summary>
+
+		/// <summary>
+		/// SRVデスクリプタサイズを取得します。
+		/// </summary>
 		uint32_t GetDescriptorSizeSRV() { return descriptorSize_; }
+
+		//=============================================================
 	};
 }

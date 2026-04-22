@@ -7,91 +7,125 @@ namespace TKM {
 
 	//=============================================================
 	// FogVolume3Dクラス
-	// 3D空間に存在する霧の管理を行うクラス。
+	// 3D空間に存在する霧の管理を行うクラス
 	//=============================================================
 	class FogVolume3D {
 	public:
+		//=============================================================
+		// 設定構造体
+		//=============================================================
+
 		struct Desc {
-			Vector3 centerWS_{ 0.0f, 0.0f, 0.0f }; // 中心座標（ワールド）
-			Vector3 halfSizeWS_{ 900.0f, 220.0f, 900.0f }; // 範囲サイズ（半径）
+			Vector3 centerWS_{ 0.0f, 0.0f, 0.0f };             // 中心座標（ワールド）
+			Vector3 halfSizeWS_{ 900.0f, 220.0f, 900.0f };     // 半サイズ（ワールド）
 
-			// --- 見た目（煙っぽく） ---
-			Vector3 color_{ 0.92f, 0.92f, 0.92f };
-			float density_ = 0.06f; // 全体の濃さ（煙は少し濃い目が映える）
+			//=========================================================
+			// 見た目
+			//=========================================================
 
-			uint32_t sliceCount_ = 80; // スライス数
+			Vector3 color_{ 0.92f, 0.92f, 0.92f };             // 色
+			float density_ = 0.06f;                            // 濃さ
+			uint32_t sliceCount_ = 80;                         // スライス数
 
-			// --- もくもく感（大きい塊 + ゆっくり） ---
-			float noiseScale_ = 0.18f;  // PS側で低周波メインに組むので、ここは少し大きめでOK
-			float noiseSpeed_ = 0.00f;  // 煙はゆっくり
+			//=========================================================
+			// ノイズ
+			//=========================================================
 
-			// --- 高さ方向（下が濃い / 上が薄い）---
-			// 0..1（0=体積の下端, 1=上端）
-			float fogStart_ = 0.10f; // この高さまでは濃い
-			float fogEnd_ = 0.90f;   // この高さでほぼ消える
+			float noiseScale_ = 0.18f;                         // ノイズスケール
+			float noiseSpeed_ = 0.00f;                         // ノイズ速度
+			float noiseStrength_ = 0.85f;                      // ノイズ強度
+			float worldScale_ = 1.0f;                          // ワールドスケール
+			Vector3 worldPos_{ 0.0f, 0.0f, 0.0f };            // ノイズ基準座標
 
-			// --- ノイズ強さ / 基準座標 ---
-			float noiseStrength_ = 0.85f; // もくもくのムラ（強め）
-			float worldScale_ = 1.0f;     // ノイズ座標のスケール（基本1）
-			Vector3 worldPos_{ 0.0f, 0.0f, 0.0f }; // ノイズの基準（基本=centerWSに同期）
+			//=========================================================
+			// 高さ方向
+			//=========================================================
 
-			float softness_ = 1.8f; // 端の落ち方（大きいほど中心寄りに残る）
+			float fogStart_ = 0.10f;                           // 濃く出る開始位置
+			float fogEnd_ = 0.90f;                             // 薄くなる終了位置
+
+			//=========================================================
+			// 端処理
+			//=========================================================
+
+			float softness_ = 1.8f;                            // 端の落ち方
 		};
+
+		//=============================================================
+		// 初期化・更新・描画
+		//=============================================================
 
 		/// <summary>
 		/// FogVolume3Dを初期化します。
 		/// </summary>
-		/// <param name="dx"></param>
+		/// <param name="dx">DirectX共通管理</param>
 		void Initialize(DirectXCommon* dx);
+
 		/// <summary>
 		/// FogVolume3Dを更新します。
 		/// </summary>
-		/// <param name="dt"></param>
+		/// <param name="dt">経過時間</param>
 		void Update(float dt);
+
 		/// <summary>
 		/// FogVolume3Dを描画します。
 		/// </summary>
-		/// <param name="viewProj"></param>
-		/// <param name="camRightWS"></param>
-		/// <param name="camUpWS"></param>
-		/// <param name="camFwdWS"></param>
+		/// <param name="viewProj">ビュー射影行列</param>
+		/// <param name="camRightWS">カメラ右方向ベクトル</param>
+		/// <param name="camUpWS">カメラ上方向ベクトル</param>
+		/// <param name="camFwdWS">カメラ前方向ベクトル</param>
 		void Draw(const Matrix4x4& viewProj, const Vector3& camRightWS, const Vector3& camUpWS, const Vector3& camFwdWS);
+
 		/// <summary>
-		/// ImGuiデバッグ表示。
+		/// ImGuiデバッグ表示を行います。
 		/// </summary>
 		void ImGuiDebug();
 
+		//=============================================================
+		// Getter
+		//=============================================================
+
 		/// <summary>
-		/// FogVolume3Dがアクティブかどうかを取得します。
+		/// FogVolume3Dが有効かを取得します。
 		/// </summary>
-		/// <returns></returns>
+		/// <returns>有効ならtrue</returns>
 		bool IsActive() const { return active_; }
 
-		// Setter===================================
 		/// <summary>
-		/// FogVolume3D のアクティブ状態を設定します。
+		/// FogVolume3Dの設定を取得します。
 		/// </summary>
-		/// <param name="a">有効にする場合 true、無効にする場合 false</param>
-		void SetActive(bool a) { active_ = a; }
-		/// <summary>
-		/// FogVolume3D の設定をセットします。
-		/// </summary>
-		/// <param name="desc">設定する FogVolume3D のパラメータ</param>
-		void SetDesc(const Desc& desc) { desc_ = desc; }
-		// =========================================
-		// Getter===================================
-		/// <summary>
-		/// FogVolume3Dの設定取得（const版）。
-		/// </summary>
-		/// <returns></returns>
+		/// <returns>現在の設定</returns>
 		const Desc& GetDesc() const { return desc_; }
-		// =========================================
+
+		//=============================================================
+		// Setter
+		//=============================================================
+
+		/// <summary>
+		/// FogVolume3Dの有効状態を設定します。
+		/// </summary>
+		/// <param name="a">有効状態</param>
+		void SetActive(bool a) { active_ = a; }
+
+		/// <summary>
+		/// FogVolume3Dの設定を設定します。
+		/// </summary>
+		/// <param name="desc">設定内容</param>
+		void SetDesc(const Desc& desc) { desc_ = desc; }
 
 	private:
-		DirectXCommon* dxCommon_ = nullptr;
-		Desc desc_{};
+		//=============================================================
+		// 共通参照
+		//=============================================================
 
-		bool active_ = true;
-		float time_ = 0.0f;
+		DirectXCommon* dxCommon_ = nullptr; // DirectX共通管理
+
+		//=============================================================
+		// 状態
+		//=============================================================
+
+		Desc desc_{};         // 設定
+		bool active_ = true;  // 有効フラグ
+		float time_ = 0.0f;   // 経過時間
 	};
 }

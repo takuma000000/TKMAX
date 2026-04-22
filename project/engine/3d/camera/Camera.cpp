@@ -5,7 +5,7 @@ namespace TKM {
 		//初期化
 		:transform_({ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} })
 		, fovY_(0.45f)
-		, aspectRatio_(float(WindowsAPI::kClientWidth_) / float(WindowsAPI::kClientHeight_))
+		, aspectRatio_(float(WindowsAPI::GetClientWidth()) / float(WindowsAPI::GetClientHeight()))
 		, nearClip_(0.1f)
 		, farClip_(200.0f) // 描画距離の上限
 		, worldMatrix_(MyMath::MakeAffineMatrix(transform_.scale_, transform_.rotate_, transform_.translate_))

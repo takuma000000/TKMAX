@@ -14,172 +14,182 @@ namespace TKM {
 
 	//=============================================================
 	// RBGaugeUIクラス
-	// プレイヤーの弾数を表示するUIの管理を行うクラス。
+	// プレイヤーの弾数を表示するUIの管理クラス。
 	//=============================================================
 	class RBGaugeUI {
 	public:
 		struct Desc {
-			// 位置は「中央基準」で扱う（左右端→中央の計算が楽）
-			Vector2 center_ = { WindowsAPI::kClientWidth_ * 0.5f, WindowsAPI::kClientHeight_ - 60.0f };
-			Vector2 size_ = { 520.0f, 18.0f }; // 全体幅/高さ
+			Vector2 center_ = { WindowsAPI::GetClientWidth() * 0.5f, WindowsAPI::GetClientHeight() - 60.0f }; // 中央基準位置
+			Vector2 size_ = { 520.0f, 18.0f }; // 全体サイズ
 
-			// shake
-			float shakeTime_ = 0.12f; // 揺れの継続時間（秒）
-			float shakePower_ = 4.0f; // 揺れの強さ（ピクセル）
+			float shakeTime_ = 0.12f; // 揺れ時間
+			float shakePower_ = 4.0f; // 揺れ強さ
 
-			// lag（遅延バー）
-			float lagSpeed_ = 900.0f; // 大きいほど速く追従（弾なので速めが気持ちいい）
+			float lagSpeed_ = 900.0f; // 遅延バーの追従速度
 
-			// テクスチャ
 			std::string frameTex_ = "./resources/texture/gray.jpg"; // フレーム
-			std::string fillTex_ = "./resources/texture/blue.dds"; // 塗り（通常）
+			std::string fillTex_ = "./resources/texture/blue.dds";  // 塗り
 
-			// 色（単純回避用）
-			Vector4 baseColor_ = { 1.0f, 1.0f, 1.0f, 0.3f };   // 通常
-			Vector4 drainColor_ = { 0.25f, 0.95f, 1.0f, 1.0f };   // 減ってる最中（撃った直後）
-			Vector4 refillColor_ = { 0.55f, 1.0f, 0.55f, 1.0f };   // 回復中
-			Vector4 lagColor_ = { 0.65f, 0.65f, 0.65f, 1.0f };  // 遅延バー
+			Vector4 baseColor_ = { 1.0f, 1.0f, 1.0f, 0.3f }; // 通常色
+			Vector4 drainColor_ = { 0.25f, 0.95f, 1.0f, 1.0f }; // 減少時
+			Vector4 refillColor_ = { 0.55f, 1.0f, 0.55f, 1.0f }; // 回復時
+			Vector4 lagColor_ = { 0.65f, 0.65f, 0.65f, 1.0f }; // 遅延バー
 		};
 
 	public:
 
 		/// <summary>
-		/// 弾数 UI を初期化します。
+		/// 弾数UIを初期化します。
 		/// </summary>
 		/// <param name="spriteCommon">スプライト共通管理クラス</param>
-		/// <param name="dxCommon">DirectX 共通管理クラス</param>
-		/// <param name="parentScene">所属する親シーン</param>
-		/// <param name="desc">弾数 UI の設定情報</param>
+		/// <param name="dxCommon">DirectX共通管理クラス</param>
+		/// <param name="parentScene">所属シーン</param>
+		/// <param name="desc">UI設定情報</param>
 		void Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, BaseScene* parentScene, const Desc& desc);
+
 		/// <summary>
-		/// 弾数 UI の更新処理を行います。
+		/// 弾数UIを更新します。
 		/// </summary>
 		/// <param name="dt">前フレームからの経過時間（秒）</param>
-		/// <param name="ammo">現在の弾数</param>
+		/// <param name="ammo">現在弾数</param>
 		/// <param name="maxAmmo">最大弾数</param>
-		/// <param name="refilling">リロード（補充）中の場合 true</param>
+		/// <param name="refilling">回復中かどうか</param>
+		/// <param name="blink">点滅を行うかどうか</param>
 		void Update(float dt, int ammo, int maxAmmo, bool refilling, bool blink = false);
+
 		/// <summary>
-		/// 弾数 UI を描画します。
+		/// 弾数UIを描画します。
 		/// </summary>
 		void Draw();
 
 		/// <summary>
-		/// UI が表示状態かどうかを取得します。
+		/// 表示状態を取得します。
 		/// </summary>
-		/// <returns>表示中の場合 true、それ以外は false</returns>
+		/// <returns>trueなら表示中、falseなら非表示</returns>
 		bool IsVisible() const { return visible_; }
 
 		// Getter=====================================
 		/// <summary>
-		/// 弾数 UI の設定情報を取得します。
+		/// 設定情報を取得します。
 		/// </summary>
-		/// <returns></returns>
+		/// <returns>現在のUI設定情報</returns>
 		const Desc& GetDesc() const { return desc_; }
 		// ===========================================
+
 		// Setter=====================================
 		/// <summary>
-		/// 可視状態を設定します。
+		/// 表示状態を設定します。
 		/// </summary>
-		/// <param name="v">表示する場合 true、それ以外は false</param>
+		/// <param name="v">trueで表示、falseで非表示</param>
 		void SetVisible(bool v);
+
 		/// <summary>
 		/// 設定情報を設定します。
 		/// </summary>
-		/// <param name="desc">設定する情報</param>
+		/// <param name="desc">設定するUI情報</param>
 		void SetDesc(const Desc& desc);
 		// ===========================================
 
 	private:
 		/// <summary>
-		/// a〜b の範囲でランダムな浮動小数点数を返します。
+		/// 指定範囲のランダム値を返します。
 		/// </summary>
 		/// <param name="a">最小値</param>
 		/// <param name="b">最大値</param>
-		/// <returns>a〜b の範囲内のランダムな浮動小数点数</returns>
+		/// <returns>a～b の範囲のランダム値</returns>
 		float RandRange_(float a, float b);
 
 		//======================================================================
 		// 参照 / 設定
 		//======================================================================
-		SpriteCommon* spriteCommon_ = nullptr;
-		DirectXCommon* dxCommon_ = nullptr;
-		BaseScene* parentScene_ = nullptr;
-		Desc desc_{}; // 設定情報
+		SpriteCommon* spriteCommon_ = nullptr; // スプライト共通管理クラス
+		DirectXCommon* dxCommon_ = nullptr; // DirectX共通管理クラス
+		BaseScene* parentScene_ = nullptr; // 所属シーン
+		Desc desc_{};     // UI設定
 		bool visible_ = true; // 表示状態
+
 		//======================================================================
 		// 状態
 		//======================================================================
-		int lastAmmo_ = -1; // 前フレームの弾数（減ったかどうかの判定用。初期値は -1 で、最初の Update で現在弾数に置き換える）
-		int prevAmmo_ = -1; // さらに前フレームの弾数（破片数の決定用）
-		float lagAmmo_ = 0.0f; // 遅延バー用の弾数（float で、見た目上は小数点以下切り捨て。減ったときはすぐに現在弾数に合わせる。回復中はゆっくり現在弾数に近づける）
-		float prevHalfW_ = 0.0f; // 前フレームの半幅（破片の発生位置決定用。Update の最後で現在の半幅に置き換える）
+		int lastAmmo_ = -1; // 前フレーム弾数
+		int prevAmmo_ = -1; // さらに前の弾数
+		float lagAmmo_ = 0.0f; // 遅延バー用弾数
+		float prevHalfW_ = 0.0f; // 前フレーム幅
+
 		//======================================================================
 		// 揺れ
 		//======================================================================
-		float shakeTimer_ = 0.0f; // 揺れの残り時間（秒）。撃った瞬間に shakeTime_ をセットして、Update で減らしていく。0 以下になったら揺れ終了。
+		float shakeTimer_ = 0.0f; // 揺れ残り時間
+
 		//======================================================================
-		// 直後だけ色を変える（撃った直後＝短時間）
+		// 色変化（発射直後）
 		//======================================================================
-		float drainTimer_ = 0.0f; // 撃った直後の残り時間（秒）。撃った瞬間に kDrainFlashSec_ をセットして、Update で減らしていく。0 以下になったら通常色。
-		static constexpr float kDrainFlashSec_ = 0.10f; // 撃った直後の色変化の継続時間（秒）
+		float drainTimer_ = 0.0f; // 色変化タイマー
+		static constexpr float kDrainFlashSec_ = 0.10f; // 発射直後の色変化時間
+
 		//======================================================================
-		// パンチ（減った瞬間だけ縮んで戻る）
+		// パンチ演出
 		//======================================================================
-		float punchTimer_ = 0.0f; // パンチの残り時間（秒）。減った瞬間に kPunchSec_ をセットして、Update で減らしていく。0 以下になったらパンチ終了。
-		static constexpr float kPunchSec_ = 0.08f; // パンチの継続時間（秒）
+		float punchTimer_ = 0.0f; // パンチ残り時間
+		static constexpr float kPunchSec_ = 0.08f; // パンチ時間
+
 		//======================================================================
 		// スプライト
 		//======================================================================
 		std::unique_ptr<Sprite> frame_; // フレーム
-		std::unique_ptr<Sprite> fillL_; // 塗り（左半分）
-		std::unique_ptr<Sprite> fillR_; // 塗り（右半分。分けるのは遅延バーを別の色にするため）
-		std::unique_ptr<Sprite> lagL_; // 遅延バー（左半分。右半分は fillR_ と同じテクスチャで、色だけ変える）
-		std::unique_ptr<Sprite> lagR_; // 遅延バー（右半分）
+		std::unique_ptr<Sprite> fillL_; // 塗り左
+		std::unique_ptr<Sprite> fillR_; // 塗り右
+		std::unique_ptr<Sprite> lagL_; // 遅延バー左
+		std::unique_ptr<Sprite> lagR_; // 遅延バー右
+
 		//======================================================================
-		// 破片（チップ）
+		// 破片
 		//======================================================================
 		struct Chip {
-			std::unique_ptr<Sprite> sp_; // 破片のスプライト
-			Vector2 pos_{}; // 破片の位置（ワールド座標）
-			Vector2 vel_{}; // 破片の速度
-			float life_ = 0.0f; // 破片の残り寿命（秒）。撃った瞬間に maxLife_ をセットして、Update で減らしていく。0 以下になったら消える。
-			float maxLife_ = 0.0f; // 破片の寿命（秒）。これもランダムにして、寿命が尽きると消えるようにする
-			float size_ = 6.0f; // 破片のサイズ。これもランダムにして、Update でスプライトのサイズに反映させる
-			bool active_ = false; // 破片が有効かどうか。撃った瞬間に true にして、寿命が尽きると false にする。Update で active_ な破片だけ更新・描画するようにする
+			std::unique_ptr<Sprite> sp_; // 破片スプライト
+			Vector2 pos_{}; // 破片位置
+			Vector2 vel_{}; // 破片速度
+			float life_ = 0.0f; // 残り寿命
+			float maxLife_ = 0.0f; // 最大寿命
+			float size_ = 6.0f; // サイズ
+			bool active_ = false; // 有効状態
 		};
-		std::vector<Chip> chips_; // 破片のプール。撃ったときにこの中から空いてるのを探して発生させる。数は適当に（多すぎると重くなるし、少なすぎると足りなくなる）。64 個もあればまず足りないと思う。
-		// 破片パラメータ（好みで調整）
-		static constexpr int   kChipPool_ = 64; // 破片のプール数
-		static constexpr float kChipLife_ = 0.22f; // 破片の寿命（秒）
-		static constexpr float kChipSpeed_ = 140.0f; // 破片の初速（ピクセル/秒）
-		static constexpr float kChipSpread_ = 90.0f; // 破片の広がり角度（度）。0 なら真横、90 なら上下に広がる。180 以上は全方向に広がる
-		static constexpr float kChipGravity_ = 520.0f; // 破片の重力加速度（ピクセル/秒^2）。0 なら重力なし。正の値で下方向にかかる
-		static constexpr float kChipSizeMin_ = 4.0f; // 破片のサイズの最小値（ピクセル）。これもランダムにして、サイズがランダムになるようにする。あまり小さすぎると見えないし、あまり大きすぎると不自然なので、適当に調整する
-		static constexpr float kChipSizeMax_ = 10.0f; // 破片のサイズの最大値（ピクセル）
+
+		std::vector<Chip> chips_; // 破片プール
+
+		static constexpr int   kChipPool_ = 64; // 破片プール数
+		static constexpr float kChipLife_ = 0.22f; // 破片寿命
+		static constexpr float kChipSpeed_ = 140.0f; // 破片初速
+		static constexpr float kChipSpread_ = 90.0f; // 拡散角度
+		static constexpr float kChipGravity_ = 520.0f; // 重力加速度
+		static constexpr float kChipSizeMin_ = 4.0f; // 破片最小サイズ
+		static constexpr float kChipSizeMax_ = 10.0f; // 破片最大サイズ
+
 		//======================================================================
 		// 点滅
 		//======================================================================
-		float blinkT_ = 0.0f;          // 点滅用タイマー
-		float blinkInterval_ = 0.10f;  // 何秒ごとにON/OFFするか
-		float blinkLowMul_ = 0.25f;    // OFF側の暗さ（alpha倍率）
+		float blinkT_ = 0.0f; // 点滅タイマー
+		float blinkInterval_ = 0.10f; // 点滅間隔
+		float blinkLowMul_ = 0.25f; // 点滅時の暗さ倍率
 
 		/// <summary>
-		/// 破片を発生させます。
+		/// 破片を生成します。
 		/// </summary>
-		/// <param name="cx">発生中心の X 座標（ワールド座標）</param>
-		/// <param name="y">発生位置の Y 座標（ワールド座標）</param>
-		/// <param name="oldHalf">分割前の半径（または半幅）</param>
-		/// <param name="newHalf">分割後の半径（または半幅）</param>
+		/// <param name="cx">生成中心X座標</param>
+		/// <param name="y">生成位置Y座標</param>
+		/// <param name="oldHalf">生成前の半幅</param>
+		/// <param name="newHalf">生成後の半幅</param>
 		void SpawnChips_(float cx, float y, float oldHalf, float newHalf);
+
 		/// <summary>
-		/// 破片の更新処理を行います。
+		/// 破片を更新します。
 		/// </summary>
 		/// <param name="dt">前フレームからの経過時間（秒）</param>
 		void UpdateChips_(float dt);
+
 		/// <summary>
-		/// 破片を描画する。
+		/// 破片を描画します。
 		/// </summary>
 		void DrawChips_();
 	};
-} // namespace TKM
+}

@@ -25,7 +25,9 @@ namespace TKM {
 		ModelManager& operator=(ModelManager&) = delete;
 		///---------------------------------------------------------
 
+		//=============================================================
 		//モデルデータコンテナ
+		//=============================================================
 		std::map<std::string, std::unique_ptr<TKM::Model>> models_;
 		//モデル共通部
 		TKM::ModelCommon* modelCommon_ = nullptr;

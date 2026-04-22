@@ -17,7 +17,7 @@ namespace TKM {
 	public:
 		struct Desc {
 			// RBと同じ思想：中心座標で扱う
-			Vector2 center_ = { WindowsAPI::kClientWidth_ * 0.5f, WindowsAPI::kClientHeight_ - 40.0f };
+			Vector2 center_ = { WindowsAPI::GetClientWidth() * 0.5f, WindowsAPI::GetClientHeight() - 40.0f };
 			Vector2 size_ = { 520.0f, 18.0f };
 
 			int segments_ = 5; // 分割数

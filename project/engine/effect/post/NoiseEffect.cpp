@@ -30,8 +30,8 @@ namespace TKM {
 				rgbShift_,
 				flash_,
 				Vector2(
-					static_cast<float>(WindowsAPI::kClientWidth_),
-					static_cast<float>(WindowsAPI::kClientHeight_)
+					static_cast<float>(WindowsAPI::GetClientWidth()),
+					static_cast<float>(WindowsAPI::GetClientHeight())
 				)
 			);
 			return;
@@ -47,8 +47,8 @@ namespace TKM {
 			rgbShift_,
 			flash_,
 			Vector2(
-				static_cast<float>(WindowsAPI::kClientWidth_),
-				static_cast<float>(WindowsAPI::kClientHeight_)
+				static_cast<float>(WindowsAPI::GetClientWidth()),
+				static_cast<float>(WindowsAPI::GetClientHeight())
 			)
 		);
 	}

@@ -126,8 +126,8 @@ namespace TKM {
 		renderTextureResource_ =
 			CreateRenderTextureResource(
 				device_,
-				WindowsAPI::kClientWidth_,
-				WindowsAPI::kClientHeight_,
+				WindowsAPI::GetClientWidth(),
+				WindowsAPI::GetClientHeight(),
 				DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
 				kRenderTargetClearValue);
 
@@ -148,8 +148,8 @@ namespace TKM {
 		postEffectTextureResource_ =
 			CreateRenderTextureResource(
 				device_,
-				WindowsAPI::kClientWidth_,
-				WindowsAPI::kClientHeight_,
+				WindowsAPI::GetClientWidth(),
+				WindowsAPI::GetClientHeight(),
 				DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
 				kRenderTargetClearValue);
 
@@ -1006,7 +1006,7 @@ namespace TKM {
 		cb->CenterUV = { 0.5f, 0.5f };
 		cb->TopUV = { 0.5f, 0.35f };
 		cb->BottomUV = { 0.5f, 0.70f };
-		cb->Aspect = WindowsAPI::kClientWidth_ / (float)WindowsAPI::kClientHeight_;
+		cb->Aspect = WindowsAPI::GetClientWidth() / (float)WindowsAPI::GetClientHeight();
 		cb->Time = 0.0f;
 		cb->Radius = 0.22f;
 		cb->Intensity = 0.0f;
@@ -1652,8 +1652,8 @@ namespace TKM {
 
 #pragma region スワップチェーンの生成
 		//スワップチェーンを生成する
-		swapChainDesc_.Width = WindowsAPI::kClientWidth_;	//画面の幅。ウィンドウのクライアント領域を同じものにしておく
-		swapChainDesc_.Height = WindowsAPI::kClientHeight_;//画面の高さ。ウィンドウのクライアント領域を同じものにしておく
+		swapChainDesc_.Width = WindowsAPI::GetClientWidth();	//画面の幅。ウィンドウのクライアント領域を同じものにしておく
+		swapChainDesc_.Height = WindowsAPI::GetClientHeight();//画面の高さ。ウィンドウのクライアント領域を同じものにしておく
 		swapChainDesc_.Format = DXGI_FORMAT_R8G8B8A8_UNORM;	//色の形式
 		swapChainDesc_.SampleDesc.Count = 1;	//マルチサンプルしない
 		swapChainDesc_.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;	//描画のターゲットとして利用する
@@ -1669,8 +1669,8 @@ namespace TKM {
 
 	void DirectXCommon::GenerateZBuffer() {
 		// device と width, height を正しく設定
-		int32_t width = WindowsAPI::kClientWidth_;  // クライアント領域の幅
-		int32_t height = WindowsAPI::kClientHeight_; // クライアント領域の高さ
+		int32_t width = WindowsAPI::GetClientWidth();  // クライアント領域の幅
+		int32_t height = WindowsAPI::GetClientHeight(); // クライアント領域の高さ
 
 		// Zバッファ（深度ステンシルテクスチャ）を作成
 		depthStencilResource_ = CreateDepthStencilTextureResource(device_, width, height);
@@ -2257,7 +2257,7 @@ namespace TKM {
 
 	void DirectXCommon::InitializeDSV() {
 		//DepthStencilTextureをウィンドウのサイズで作成
-		depthStencilResource_ = CreateDepthStencilTextureResource(device_.Get(), WindowsAPI::kClientWidth_, WindowsAPI::kClientHeight_);
+		depthStencilResource_ = CreateDepthStencilTextureResource(device_.Get(), WindowsAPI::GetClientWidth(), WindowsAPI::GetClientHeight());
 
 		//DSV用のHeapでDiscriptorの数は1。DSVはShader内で触るものではないので、ShaderVisibleはfalse
 		dsvDescriptorHeap_ = this->CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
@@ -2284,8 +2284,8 @@ namespace TKM {
 
 	void DirectXCommon::InitializeViewport() {
 		//ビューポート矩形の設定
-		viewport_.Width = WindowsAPI::kClientWidth_;
-		viewport_.Height = WindowsAPI::kClientHeight_;
+		viewport_.Width = static_cast<float>(WindowsAPI::GetClientWidth());
+		viewport_.Height = static_cast<float>(WindowsAPI::GetClientHeight());
 		viewport_.TopLeftX = 0;
 		viewport_.TopLeftY = 0;
 		viewport_.MinDepth = 0.0f;
@@ -2295,9 +2295,9 @@ namespace TKM {
 	void DirectXCommon::InitializeScissorRect() {
 		//シザリング矩形の設定
 		scissorRect_.left = 0;
-		scissorRect_.right = WindowsAPI::kClientWidth_;
+		scissorRect_.right = WindowsAPI::GetClientWidth();
 		scissorRect_.top = 0;
-		scissorRect_.bottom = WindowsAPI::kClientHeight_;
+		scissorRect_.bottom = WindowsAPI::GetClientHeight();
 	}
 
 	void DirectXCommon::InitializeNoisePipeline() {
@@ -2397,8 +2397,8 @@ namespace TKM {
 		cb->RGBShift = 0.006f;
 		cb->Flash = 0.08f;
 		cb->Resolution = {
-			static_cast<float>(WindowsAPI::kClientWidth_),
-			static_cast<float>(WindowsAPI::kClientHeight_)
+			static_cast<float>(WindowsAPI::GetClientWidth()),
+			static_cast<float>(WindowsAPI::GetClientHeight())
 		};
 
 		noiseInitialized_ = true;

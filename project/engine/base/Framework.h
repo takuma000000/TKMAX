@@ -5,7 +5,7 @@
 #include "SceneManager.h"
 #include "AbstractSceneFactory.h"
 
-//前方宣言
+// 前方宣言
 class WindowsAPI;
 namespace TKM {
 	class DirectXCommon;
@@ -14,80 +14,119 @@ namespace TKM {
 	class ImGuiManager;
 }
 
-//=============================================================
-// Frameworkクラス
-// ゲーム全体の初期化・更新・描画・終了処理を統括する基盤クラス。
-//=============================================================
 namespace TKM {
+
+	//=============================================================
+	// Frameworkクラス
+	// ゲーム全体の処理を統括する基盤クラス
+	//=============================================================
 	class Framework {
 	public:
-		virtual ~Framework() = default; // 仮想デストラクタ
+		//=============================================================
+		// 生成・破棄
+		//=============================================================
+
+		virtual ~Framework() = default;
+
+		//=============================================================
+		// 初期化・終了
+		//=============================================================
 
 		/// <summary>
-		/// 初期化を行う関数。
+		/// 初期化します。
 		/// </summary>
-		virtual void Initialize();   // 初期化
+		virtual void Initialize();
+
 		/// <summary>
-		/// 終了処理を行う関数。
+		/// 終了します。
 		/// </summary>
-		virtual void Finalize();     // 終了
+		virtual void Finalize();
+
+		//=============================================================
+		// 更新・描画・実行
+		//=============================================================
+
 		/// <summary>
-		/// 毎フレーム更新を行う関数。
+		/// 毎フレーム更新します。
 		/// </summary>
-		virtual void Update();       // 毎フレーム更新
+		virtual void Update();
+
 		/// <summary>
-		/// 毎フレーム描画を行う関数。
+		/// 毎フレーム描画します。
 		/// </summary>
-		virtual void Draw();         // 描画
+		virtual void Draw();
+
 		/// <summary>
-		/// 終了フラグの取得を行う関数。
-		/// </summary>
-		/// <returns></returns>
-		virtual bool IsEndRequest() { return endRequest_; }
-		/// <summary>
-		/// フレームワークの実行を行う関数。
+		/// フレームワークを実行します。
 		/// </summary>
 		void Run();
 
-		// Getter========================================
+		//=============================================================
+		// 状態取得
+		//=============================================================
+
 		/// <summary>
-		/// WindowsAPIのゲッター。
+		/// 終了要求中かを返します。
 		/// </summary>
-		/// <returns></returns>
+		virtual bool IsEndRequest() { return endRequest_; }
+
+		//=============================================================
+		// Getter
+
+		/// <summary>
+		/// WindowsAPIを取得します。
+		/// </summary>
 		WindowsAPI* GetWindowsAPI() const { return windowsAPI_.get(); }
+
 		/// <summary>
-		/// DirectXCommonのゲッター。
+		/// DirectX共通管理を取得します。
 		/// </summary>
-		/// <returns></returns>
 		TKM::DirectXCommon* GetDirectXCommon() const { return dxCommon_.get(); }
+
 		/// <summary>
-		/// SrvManagerのゲッター。
+		/// SRV管理を取得します。
 		/// </summary>
-		/// <returns></returns>
 		SrvManager* GetSrvManager() const { return srvManager_.get(); }
-		// ==============================================
-		// Setter========================================
+
+		//=============================================================
+
+		//=============================================================
+		// Setter
+
 		/// <summary>
-		/// 終了フラグの設定を行う関数。
+		/// 終了要求フラグを設定します。
 		/// </summary>
-		/// <param name="endRequest"></param>
-		void SetEndRequest(bool endRequest) { endRequest_ = endRequest; } // 終了フラグを設定する
-		// ==============================================
+		void SetEndRequest(bool endRequest) { endRequest_ = endRequest; }
+
+		//=============================================================
+
 	protected:
-		bool endRequest_ = false;    // 終了フラグ
+		//=============================================================
+		// 状態
+		//=============================================================
 
-		// 汎用メンバ変数
-		std::unique_ptr<WindowsAPI> windowsAPI_;
-		std::unique_ptr<TKM::DirectXCommon> dxCommon_;
-		std::unique_ptr<SrvManager> srvManager_;
+		bool endRequest_ = false; // 終了要求フラグ
 
-		//ポインタ...ImGuiManager
-		std::unique_ptr<TKM::ImGuiManager>  imguiManager_ = nullptr;
+		//=============================================================
+		// 共通管理
+		//=============================================================
 
-		//シーンファクトリー
-		std::unique_ptr<AbstractSceneFactory> sceneFactory_ = nullptr;
+		std::unique_ptr<WindowsAPI> windowsAPI_;                 // Windows管理
+		std::unique_ptr<TKM::DirectXCommon> dxCommon_;          // DirectX共通管理
+		std::unique_ptr<SrvManager> srvManager_;                // SRV管理
+		std::unique_ptr<TKM::ImGuiManager> imguiManager_ = nullptr; // ImGui管理
+
+		//=============================================================
+		// シーン生成
+		//=============================================================
+
+		std::unique_ptr<AbstractSceneFactory> sceneFactory_ = nullptr; // シーンファクトリー
 
 	private:
-		std::unique_ptr<TKM::SceneManager> sceneManager_ = nullptr;
+		//=============================================================
+		// シーン管理
+		//=============================================================
+
+		std::unique_ptr<TKM::SceneManager> sceneManager_ = nullptr; // シーン管理
 	};
 }

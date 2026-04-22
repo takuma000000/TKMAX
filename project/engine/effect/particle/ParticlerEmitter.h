@@ -3,44 +3,65 @@
 
 //=============================================================
 // ParticleEmitterクラス
-// パーティクルの発生位置・頻度を管理するクラス。
+// パーティクルの発生位置・頻度を管理するクラス
 //=============================================================
-class ParticleEmitter{
+class ParticleEmitter {
 public:
+	//=============================================================
+	// 初期化・更新・放出
+	//=============================================================
+
 	/// <summary>
 	/// パーティクルエミッターを初期化します。
 	/// </summary>
-	/// <param name="name"></param>
-	/// <param name="pos"></param>
+	/// <param name="name">使用するパーティクルグループ名</param>
+	/// <param name="pos">初期位置</param>
 	void Initialize(std::string name, Vector3 pos);
+
 	/// <summary>
-	/// <summary>パーティクルを放出します。</summary>
+	/// パーティクルを放出します。
 	/// </summary>
 	void Emit();
+
 	/// <summary>
-	/// <summary>パーティクルエミッターを更新します。</summary>
+	/// パーティクルエミッターを更新します。
 	/// </summary>
 	void Update();
+
+	//=============================================================
+	// Setter
+	//=============================================================
+
 	/// <summary>
-	/// <summary>パーティクルエミッターの位置を設定します。</summary>
+	/// パーティクルエミッターの位置を設定します。
 	/// </summary>
-	/// <param name="pos"></param>
+	/// <param name="pos">設定する位置</param>
 	void SetPosition(const Vector3& pos) {
 		emitter_.transform_.translate_ = pos;
-	};
+	}
+
 private:
-	//エミッター構造体
+	//=============================================================
+	// エミッター構造体
+	//=============================================================
+
 	struct Emitter {
-		TKM::ParticleManager::Transform transform_;
-		uint32_t count_;
-		float frequency_;
-		float frequencyTime_;
+		TKM::ParticleManager::Transform transform_; // 変換情報
+		uint32_t count_;                            // 放出数
+		float frequency_;                           // 放出間隔
+		float frequencyTime_;                       // 放出経過時間
 	};
 
-	Emitter emitter_{};
+	//=============================================================
+	// エミッター情報
+	//=============================================================
 
-	std::string name_;
+	Emitter emitter_{};    // エミッター本体
+	std::string name_;     // 使用グループ名
 
-	//Δtを定義
-	const float kDeltaTime_ = 1.0f / 60.0f;
+	//=============================================================
+	// 定数
+	//=============================================================
+
+	const float kDeltaTime_ = 1.0f / 60.0f; // Δt
 };

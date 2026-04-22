@@ -27,6 +27,9 @@ namespace TKM {
 		std::unique_ptr<TKM::BaseScene> CreateScene(const std::string& sceneName) override;
 
 	private:
+		//=============================================================
+		// 共通参照
+		//=============================================================
 		TKM::DirectXCommon* dxCommon_ = nullptr;
 		TKM::SrvManager* srvManager_ = nullptr;
 	};

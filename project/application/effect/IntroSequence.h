@@ -141,60 +141,67 @@ namespace TKM {
 		//======================================================================
 		// Iris開き演出
 		//======================================================================
-		std::unique_ptr<Sprite> iris_ = nullptr; // アイリス用スプライト
-		bool   irisOpening_ = true; // trueで「開く」演出中
-		float  irisMaxScale_ = 0.0f; // アイリスが最大に広がるスケール（画面全体を覆うサイズ）
-		Ease::Tween irisTween_; // アイリス開きのイージング
+		std::unique_ptr<Sprite> iris_ = nullptr; // アイリススプライト
+		bool   irisOpening_ = true;              // アイリス開き中フラグ
+		float  irisMaxScale_ = 0.0f;             // 最大スケール
+		Ease::Tween irisTween_;                  // イージング
 
-		// Iris開きと同時に出すエフェクト
-		bool  emitOpenBurst_ = true; // アイリス開きと同時に出す爆発エフェクト（最初はtrueで、アイリス開きの途中で一度だけ出す）
-		float emitOpenDelaySec_ = 0.7f; // アイリス開きの途中で出す（0.0fだと同時、0.8fだとアイリスが完全に開いてから）
-		float emitOpenElapsed_ = 0.0f; // アイリス開き開始からの経過時間（秒）
+		// Iris開き中エフェクト
+		bool  emitOpenBurst_ = true;             // 開き中の爆発エフェクト発生フラグ（1回）
+		float emitOpenDelaySec_ = 0.7f;          // 爆発発生タイミング
+		float emitOpenElapsed_ = 0.0f;           // 経過時間
 
-		bool  emitFireworkPending_ = false; // アイリス開きと同時に出す花火エフェクトの発射が保留されているか（最初はfalseで、アイリス開きの途中で一度だけtrueになる）
-		float emitFireworkDelaySec_ = 0.7f; // アイリス開きの途中で出す花火エフェクトの発射（0.0fだと同時、0.8fだとアイリスが完全に開いてから）
-		Vector3 lastEmitPos_{ 0.0f,0.0f,0.0f }; // アイリス開きと同時に出す花火エフェクトの発射位置（ワールド座標）。アイリスの中心に近い位置をランダムに選ぶ。
-		// アイリスのトランジション時間
-		static constexpr float kIrisDurationSec_ = 0.8f; // アイリスの最大スケール（画面全体を覆うサイズ）に対する、開始スケールの割合
+		bool  emitFireworkPending_ = false;      // 花火発射待機フラグ
+		float emitFireworkDelaySec_ = 0.7f;      // 花火発射タイミング
+		Vector3 lastEmitPos_{ 0.0f,0.0f,0.0f };  // 花火発射位置
+
+		// Irisトランジション時間
+		static constexpr float kIrisDurationSec_ = 0.8f;
+
 		//======================================================================
 		// カメラインロ（回転）
 		//======================================================================
-		Ease::Tween camYawTween_; // カメラインロのヨーイング（左右回転）のイージング
-		float camIntroDuration_ = 1.2f; // カメラインロの全体の時間（秒）
-		// カメラインロの開始・終了時の角度（ラジアン）。開始は少し左を向いていて、終了は正面を向く。
-		float camYawStart_ = -1.2f; // ラジアンで、左を向いている状態（-1.2は約-68.75度）。この値を大きくすると開始時により左を向いていることになる。
-		float camYawEnd_ = 0.0f; // ラジアンで、正面を向いている状態。通常は0.0fで問題ないはず。
-		float camPitchStart_ = 0.12f; // ラジアンで、カメラが少し上を向いている状態。これを大きくすると開始時により上を向いていることになる。
-		float camPitchEnd_ = 0.05f; // ラジアンで、カメラが少し上を向いている状態。これを大きくすると終了時により上を向いていることになる。
+		Ease::Tween camYawTween_;    // ヨー回転イージング
+		float camIntroDuration_ = 1.2f; // 演出時間
+
+		float camYawStart_ = -1.2f;  // 開始ヨー
+		float camYawEnd_ = 0.0f;     // 終了ヨー
+		float camPitchStart_ = 0.12f;// 開始ピッチ
+		float camPitchEnd_ = 0.05f;  // 終了ピッチ
+
 		//======================================================================
 		// 「ゲームスタート」表示
 		//======================================================================
-		IntroStartBanner startBanner_; // 「ゲームスタート」表示の管理クラス
+		IntroStartBanner startBanner_; // スタート表示管理
+
 		//======================================================================
 		// イントロ用ボス
 		//======================================================================
 		IntroBossActor introBossActor_;
+
 		//======================================================================
-		// ボス演出用カメラブレンド
+		// ボス演出カメラブレンド
 		//======================================================================
-		bool camBlendToBossActive_ = false;     // 通常→ボス演出カメラへ補間中
-		bool camBlendBackActive_ = false;       // ボス演出→通常カメラへ補間中
-		// カメラの位置は変えず、回転のみを補間する。以下はそのための変数。
-		Vector3 camSavedRot_{ 0.0f, 0.0f, 0.0f };      // ボス演出開始前の回転を保存
-		Vector3 camBossStartRot_{ 0.0f, 0.0f, 0.0f };  // ボス演出ブレンド開始回転
-		Vector3 camBossTargetRot_{ 0.0f, 0.0f, 0.0f }; // ボス演出時の目標回転
-		Vector3 camReturnStartRot_{ 0.0f, 0.0f, 0.0f };// 戻り補間開始回転
-		// カメラブレンドのイージング
-		Ease::Tween camBlendToBossTween_; // 通常→ボス演出
-		Ease::Tween camBlendBackTween_;   // ボス演出→通常
-		// カメラブレンドの時間
-		float camBlendToBossSec_ = 0.45f; // 入り補間時間
-		float camBlendBackSec_ = 0.55f;   // 戻り補間時間
+		bool camBlendToBossActive_ = false; // 通常→ボスカメラ補間中
+		bool camBlendBackActive_ = false;   // ボス→通常カメラ補間中
+
+		Vector3 camSavedRot_{ 0.0f, 0.0f, 0.0f };       // 元の回転
+		Vector3 camBossStartRot_{ 0.0f, 0.0f, 0.0f };   // 補間開始回転
+		Vector3 camBossTargetRot_{ 0.0f, 0.0f, 0.0f };  // 目標回転
+		Vector3 camReturnStartRot_{ 0.0f, 0.0f, 0.0f }; // 戻り開始回転
+
+		Ease::Tween camBlendToBossTween_; // 通常→ボス
+		Ease::Tween camBlendBackTween_;   // ボス→通常
+
+		float camBlendToBossSec_ = 0.45f; // 入り時間
+		float camBlendBackSec_ = 0.55f;   // 戻り時間
+
 		//======================================================================
-		// ボス演出のうち、スキップ可能なフェーズに入っているかどうかを管理する変数
-		// ======================================================================
-		float skipHoldTimer_ = 0.0f; // スキップ用の長押し時間
-		static constexpr float kSkipHoldSec_ = 2.0f; // 何秒でスキップするか
+		// スキップ制御
+		//======================================================================
+		float skipHoldTimer_ = 0.0f;              // 長押し時間
+		static constexpr float kSkipHoldSec_ = 2.0f; // スキップ判定時間
+
 		//======================================================================
 		// StateMachine
 		//======================================================================

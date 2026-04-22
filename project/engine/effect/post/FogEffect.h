@@ -6,70 +6,103 @@ namespace TKM {
 
 	//=============================================================
 	// FogEffectクラス
-	// 霧エフェクトの管理を行うクラス。
+	// 霧エフェクトの管理を行うクラス
 	//=============================================================
 	class FogEffect : public TKM::BaseEffect {
 	public:
+		//=============================================================
+		// 初期化・更新・描画
+		//=============================================================
+
 		/// <summary>
-		/// ポストエフェクトの初期化
+		/// 霧エフェクトを初期化します。
 		/// </summary>
-		/// <param name="dx"></param>
+		/// <param name="dx">DirectX共通管理</param>
 		void Initialize(TKM::DirectXCommon* dx) override {
 			TKM::BaseEffect::Initialize(dx);
 		}
+
 		/// <summary>
-		/// ポストエフェクトの更新
+		/// 霧エフェクトを更新します。
 		/// </summary>
-		/// <param name="dt"></param>
+		/// <param name="dt">経過時間</param>
 		void Update(float dt) override;
+
 		/// <summary>
-		/// ポストエフェクトの描画
+		/// 霧エフェクトを描画します。
 		/// </summary>
-		void Draw() override {}  // 描画は DirectXCommon 側のチェーンでやる
+		void Draw() override {}  // 描画は DirectXCommon 側で行う
+
 		/// <summary>
-		/// ImGuiデバッグ表示
+		/// ImGuiデバッグ表示を行います。
 		/// </summary>
 		void ImGuiDebug();
 
+		//=============================================================
+		// Getter
+		//=============================================================
+
 		/// <summary>
-		/// 霧の有効・無効
+		/// 霧が有効かを取得します。
 		/// </summary>
-		/// <returns></returns>
+		/// <returns>有効ならtrue</returns>
 		bool IsActive() const { return active_; }
 
-		// Setter========================================
+		//=============================================================
+		// Setter
+		//=============================================================
+
 		/// <summary>
-		/// 霧の基準となるワールド座標の設定
+		/// 霧の基準ワールド座標を設定します。
 		/// </summary>
-		/// <param name="pos"></param>
+		/// <param name="pos">基準座標</param>
 		void SetWorldPos(const Vector3& pos) { worldPos_ = pos; }
+
 		/// <summary>
-		/// 霧パターンの「世界空間スケール」の設定
+		/// ワールドスケールを設定します。
 		/// </summary>
-		/// <param name="s"></param>
+		/// <param name="s">ワールドスケール</param>
 		void SetWorldScale(float s) { worldScale_ = s; }
+
 		/// <summary>
-		/// 霧の有効・無効設定
+		/// 霧の有効状態を設定します。
 		/// </summary>
-		/// <param name="a"></param>
+		/// <param name="a">有効状態</param>
 		void SetActive(bool a) { active_ = a; }
-		// ==============================================
 
 	private:
-		bool   active_ = true;             // 霧は最初から有効でOK
-		float  density_ = 0.495f;            // 画面全体の濃さ
-		float  start_ = 0.17f;              // 全画面に霧をかけたいので 0〜1 のまま
-		float  end_ = 0.376f;
-		float  noiseScale_ = 10.0f;         // 塊の大きさ）
-		float  noiseStrength_ = 0.817f;      // ムラの強さ
-		float  time_ = 0.0f; // 時間経過用
-		float timeScale_ = 1.0f;      // 霧アニメ速度（Time倍率）
-		Vector2 driftSpeedXZ_ = { 0.0f, 0.0f };   // 霧の自動移動速度（ワールド単位/秒）
-		Vector2 driftOffsetXZ_ = { 0.0f, 0.0f };  // 蓄積オフセット
-		bool   freezeTime_ = false;    // 時間停止（形だけ止めたい時）
-		Vector3 color_ = { 0.9f, 0.9f, 1.0f }; // 霧の色
+		//=============================================================
+		// 基本パラメータ
+		//=============================================================
 
-		Vector3 worldPos_ = { 0.0f, 0.0f, 0.0f }; // 霧の基準となるワールド座標
-		float   worldScale_ = 0.02f;                // どれくらい動きに反応するか
+		bool   active_ = true;          // 有効フラグ
+		float  density_ = 0.495f;       // 濃さ
+		float  start_ = 0.17f;          // 開始距離
+		float  end_ = 0.376f;           // 終了距離
+		float  noiseScale_ = 10.0f;     // ノイズスケール
+		float  noiseStrength_ = 0.817f; // ノイズ強度
+
+		//=============================================================
+		// 時間制御
+		//=============================================================
+
+		float time_ = 0.0f;             // 経過時間
+		float timeScale_ = 1.0f;        // 時間スケール
+		bool  freezeTime_ = false;      // 時間停止フラグ
+
+		//=============================================================
+		// 移動
+		//=============================================================
+
+		Vector2 driftSpeedXZ_ = { 0.0f, 0.0f };  // 自動移動速度
+		Vector2 driftOffsetXZ_ = { 0.0f, 0.0f }; // 蓄積オフセット
+
+		//=============================================================
+		// 色・基準座標
+		//=============================================================
+
+		Vector3 color_ = { 0.9f, 0.9f, 1.0f };      // 色
+		Vector3 worldPos_ = { 0.0f, 0.0f, 0.0f };   // 基準ワールド座標
+		float   worldScale_ = 0.02f;                // ワールドスケール
 	};
 }

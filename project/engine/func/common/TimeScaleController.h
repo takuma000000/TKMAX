@@ -6,57 +6,92 @@ namespace TKM {
 
 	//=============================================================
 	// TimeScaleControllerクラス
-	// 時間のスケール（速さ）を管理するクラス。
-	// ゲーム全体の時間の流れをスローにしたり、元に戻したりするためのコントローラー。
+	// 時間スケールを管理するクラス
 	//=============================================================
 	class TimeScaleController {
 	public:
+		//=============================================================
+		// 初期化・更新
+		//=============================================================
+
 		/// <summary>
-		/// 初期化
+		/// 初期化します。
 		/// </summary>
 		void Initialize();
+
 		/// <summary>
-		/// 更新
+		/// 更新します。
 		/// </summary>
-		/// <param name="dt"></param>
+		/// <param name="dt">経過時間</param>
 		void Update(float dt);
 
-		/// <summary>
-		/// スロー要求
-		/// </summary>
-		/// <param name="scale"></param>
-		/// <param name="duration"></param>
-		void RequestSlow(float scale, float duration); // 引数: スケール、維持時間
-		/// <summary>
-		/// スロー要求（詳細指定版）
-		/// </summary>
-		/// <param name="scale"></param>
-		/// <param name="duration"></param>
-		/// <param name="blendIn"></param>
-		/// <param name="blendOut"></param>
-		void RequestSlowAdvanced(float scale, float duration, float blendIn, float blendOut); // 引数: スケール、維持時間、入りの速さ、戻りの速さ
+		//=============================================================
+		// スロー要求
+		//=============================================================
 
-		// Getter===================================
+		/// <summary>
+		/// スローを要求します。
+		/// </summary>
+		/// <param name="scale">適用する時間スケール</param>
+		/// <param name="duration">維持時間</param>
+		void RequestSlow(float scale, float duration);
+
+		/// <summary>
+		/// 詳細指定でスローを要求します。
+		/// </summary>
+		/// <param name="scale">適用する時間スケール</param>
+		/// <param name="duration">維持時間</param>
+		/// <param name="blendIn">入り時間</param>
+		/// <param name="blendOut">戻り時間</param>
+		void RequestSlowAdvanced(float scale, float duration, float blendIn, float blendOut);
+
+		//=============================================================
+		// Getter
+		//=============================================================
+
+		/// <summary>
+		/// 現在の時間スケールを取得します。
+		/// </summary>
+		/// <returns>現在の時間スケール</returns>
 		float GetScale() const { return currentScale_; }
-		// =========================================1
 
 	private:
+		//=============================================================
+		// フェーズ
+		//=============================================================
+
 		enum class Phase {
-			None,
-			BlendIn,
-			Hold,
-			BlendOut
+			None,     // 通常状態
+			BlendIn,  // 減速中
+			Hold,     // 維持中
+			BlendOut  // 復帰中
 		};
 
-		float currentScale_ = 1.0f;
-		float targetScale_ = 1.0f;
+		//=============================================================
+		// 時間スケール
+		//=============================================================
 
-		float hold_ = 0.0f;
-		float timer_ = 0.0f;
+		float currentScale_ = 1.0f; // 現在の時間スケール
+		float targetScale_ = 1.0f;  // 目標時間スケール
 
-		float blendIn_ = 0.0f;
-		float blendOut_ = 0.0f;
+		//=============================================================
+		// タイマー
+		//=============================================================
 
-		Phase phase_ = Phase::None;
+		float hold_ = 0.0f;   // 維持時間
+		float timer_ = 0.0f;  // 経過時間
+
+		//=============================================================
+		// 補間時間
+		//=============================================================
+
+		float blendIn_ = 0.0f;  // 入り時間
+		float blendOut_ = 0.0f; // 戻り時間
+
+		//=============================================================
+		// 状態
+		//=============================================================
+
+		Phase phase_ = Phase::None; // 現在フェーズ
 	};
 }

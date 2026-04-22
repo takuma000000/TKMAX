@@ -7,72 +7,103 @@
 
 //=============================================================
 // SceneManagerクラス
-// シーンの管理を行うクラス。
+// シーンの管理を行うクラス
 //=============================================================
 namespace TKM {
 	class SceneManager {
-	public://メンバ関数
-		/// <summary>
-		/// </span class="code-inline">SceneManager</span>のコンストラクタ
-		/// </summary>
-		void Update();
-		/// <summary>
-		/// </span class="code-inline">SceneManager</span>の描画
-		/// </summary>
-		void Draw();
-		/// <summary>
-		/// 3Dオブジェクトの描画
-		/// </summary>
-		void Draw3D();
-		/// <summary>
-		/// Spriteの描画
-		/// </summary>
-		void DrawSprite();
+	public:
+		//=============================================================
+		// 生成・破棄
+		//=============================================================
 
 		/// <summary>
-		/// </span class="code-inline">SceneManager</span>のデストラクタ
+		/// SceneManagerを破棄します。
 		/// </summary>
 		~SceneManager();
 
+		//=============================================================
+		// 更新・描画
+		//=============================================================
+
 		/// <summary>
-		/// アプリ終了を要求します
+		/// SceneManagerを更新します。
+		/// </summary>
+		void Update();
+
+		/// <summary>
+		/// SceneManagerを描画します。
+		/// </summary>
+		void Draw();
+
+		/// <summary>
+		/// 3Dオブジェクトを描画します。
+		/// </summary>
+		void Draw3D();
+
+		/// <summary>
+		/// Spriteを描画します。
+		/// </summary>
+		void DrawSprite();
+
+		//=============================================================
+		// シーン制御
+		//=============================================================
+
+		/// <summary>
+		/// アプリ終了を要求します。
 		/// </summary>
 		void RequestQuit() { quitRequested_ = true; }
+
 		/// <summary>
-		/// 終了要求が出ているか
+		/// 終了要求中かを取得します。
 		/// </summary>
+		/// <returns>終了要求中ならtrue</returns>
 		bool IsQuitRequested() const { return quitRequested_; }
+
 		/// <summary>
-		/// シーン名を指定して次のシーンへ切り替えます
+		/// シーン名を指定して次のシーンへ切り替えます。
 		/// </summary>
+		/// <param name="sceneName">切り替え先のシーン名</param>
 		void ChangeScene(const std::string& sceneName);
 
-		// Setter========================================
+		//=============================================================
+		// Setter
+		//=============================================================
+
 		/// <summary>
-		/// </span class="code-inline">SceneManager</span>のDirectXCommonセット
+		/// シーンファクトリーを設定します。
 		/// </summary>
-		/// <param name="sceneFactory"></param>
+		/// <param name="sceneFactory">シーンファクトリー</param>
 		void SetSceneFactory(TKM::AbstractSceneFactory* sceneFactory) {
 			sceneFactory_ = sceneFactory;
 		}
+
 		/// <summary>
-		/// 次のシーンをセットします（シーン切り替えは次のUpdateで行われる）
+		/// 次のシーンを設定します。
 		/// </summary>
-		/// <param name="nextScene"></param>
+		/// <param name="nextScene">次に切り替えるシーン</param>
 		void SetNextScene(std::unique_ptr<TKM::BaseScene> nextScene) {
 			nextScene_ = std::move(nextScene);
 		}
-		// ==============================================
 
 	private:
-		// 現在のシーン
-		std::unique_ptr<TKM::BaseScene> scene_ = nullptr;
-		std::unique_ptr<TKM::BaseScene> nextScene_ = nullptr;
+		//=============================================================
+		// シーン
+		//=============================================================
 
-		TKM::DirectXCommon* dxCommon_ = nullptr;
+		std::unique_ptr<TKM::BaseScene> scene_ = nullptr;     // 現在のシーン
+		std::unique_ptr<TKM::BaseScene> nextScene_ = nullptr; // 次のシーン
 
-		//シーンファクトリー
-		TKM::AbstractSceneFactory* sceneFactory_ = nullptr;
+		//=============================================================
+		// 共通参照
+		//=============================================================
+
+		TKM::DirectXCommon* dxCommon_ = nullptr;          // DirectX共通管理
+		TKM::AbstractSceneFactory* sceneFactory_ = nullptr; // シーンファクトリー
+
+		//=============================================================
+		// 状態
+		//=============================================================
 
 		bool quitRequested_ = false; // アプリ終了要求フラグ
 	};

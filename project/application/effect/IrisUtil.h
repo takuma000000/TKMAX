@@ -29,11 +29,11 @@ inline std::unique_ptr<TKM::Sprite> CreateCenteredIrisSprite(
 	// 画面中央
 	sprite_->SetAnchorPoint({ 0.5f, 0.5f }); // アイリスの中心が画面中央に来るようにアンカーポイントを設定
 	sprite_->SetPosition(
-		{ TKM::WindowsAPI::kClientWidth_ * 0.5f, TKM::WindowsAPI::kClientHeight_ * 0.5f }); // アイリスの中心が画面中央に来るように位置を設定
+		{ TKM::WindowsAPI::GetClientWidth() * 0.5f, TKM::WindowsAPI::GetClientHeight() * 0.5f }); // アイリスの中心が画面中央に来るように位置を設定
 
 	// 画面対角長から「絶対にはみ出す」スケールを計算
-	const float w_ = static_cast<float>(TKM::WindowsAPI::kClientWidth_); // 画面の幅
-	const float h_ = static_cast<float>(TKM::WindowsAPI::kClientHeight_); // 画面の高さ
+	const float w_ = static_cast<float>(TKM::WindowsAPI::GetClientWidth()); // 画面の幅
+	const float h_ = static_cast<float>(TKM::WindowsAPI::GetClientHeight()); // 画面の高さ
 	const float diag_ = std::sqrt(w_ * w_ + h_ * h_);
 
 	// 2 倍くらいにしておけば端がチラ見えしない

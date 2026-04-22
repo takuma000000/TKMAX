@@ -10,10 +10,10 @@
 
 class Player;
 
-// =============================================================
+//=============================================================
 // EnemyBarrierクラス
 // 雑魚敵フェーズ本隊を包むバリアの状態・描画・Player同期を管理する。
-// =============================================================
+//=============================================================
 class EnemyBarrier {
 public:
 	EnemyBarrier() = default;
@@ -25,10 +25,13 @@ public:
 	/// <param name="common">Object3d の共通管理クラス</param>
 	/// <param name="dxCommon">DirectX 共通管理クラス</param>
 	void Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon);
+
 	/// <summary>
 	/// バリアを更新します。
 	/// </summary>
+	/// <param name="dt">経過時間（秒）</param>
 	void Update(float dt);
+
 	/// <summary>
 	/// バリアを描画します。
 	/// </summary>
@@ -37,204 +40,273 @@ public:
 
 	// Setter============================================
 	/// <summary>
-	/// カメラの設定。
+	/// 使用するカメラを設定します。
 	/// </summary>
-	/// <param name="camera"></param>
+	/// <param name="camera">描画に使用するカメラ</param>
 	void SetCamera(TKM::Camera* camera);
+
 	/// <summary>
-	/// Playerへの参照を設定します。バリア情報の同期や当たり判定連携に使用します。
+	/// Player への参照を設定します。
+	/// バリア情報の同期や当たり判定連携に使用します。
 	/// </summary>
-	/// <param name="player"></param>
+	/// <param name="player">Player への参照</param>
 	void SetPlayer(Player* player);
+
 	/// <summary>
-	/// バリアの表示設定。表示状態は内部で管理され、描画処理で反映されます。
+	/// バリアの表示状態を設定します。
 	/// </summary>
-	/// <param name="visible"></param>
+	/// <param name="visible">true で表示、false で非表示</param>
 	void SetVisible(bool visible) { visible_ = visible; }
+
 	/// <summary>
-	/// バリアの有効設定。無効にすると描画も判定も行われなくなります。
+	/// バリアの有効状態を設定します。
+	/// 無効にすると描画も判定も行われなくなります。
 	/// </summary>
-	/// <param name="active"></param>
+	/// <param name="active">true で有効、false で無効</param>
 	void SetActive(bool active);
+
 	/// <summary>
-	/// バリアの中心位置を設定します。通常は EnemyManager 側で基準位置から更新されます。
+	/// バリアの中心位置を設定します。
+	/// 通常は EnemyManager 側で基準位置から更新されます。
 	/// </summary>
-	/// <param name="center"></param>
+	/// <param name="center">中心位置</param>
 	void SetCenter(const Vector3& center);
+
 	/// <summary>
-	/// バリアの半径の設定。バリアは球体として扱われ、半径を設定することで大きさを調整できます。
+	/// バリアの半径を設定します。
 	/// </summary>
-	/// <param name="radius"></param>
+	/// <param name="radius">半径</param>
 	void SetRadius(float radius);
+
 	/// <summary>
-	/// バリアの色の設定。描画処理で使用される色を設定します。通常は半透明な色が使用され、バリアの存在を視覚的に示すために利用されます。
+	/// バリアの色を設定します。
 	/// </summary>
-	/// <param name="color"></param>
+	/// <param name="color">バリア色</param>
 	void SetColor(const Vector4& color);
+
 	/// <summary>
-	/// バリアの形状スケールの設定。バリアは球体として描画されますが、形状スケールを設定することで、球体の見た目を変形させることができます。例えば、特定の軸方向に伸ばすことで楕円体のような見た目にすることができます。
+	/// バリアの形状スケールを設定します。
+	/// 球体の見た目を変形させるために使用します。
 	/// </summary>
-	/// <param name="shapeScale"></param>
+	/// <param name="shapeScale">形状スケール</param>
 	void SetShapeScale(const Vector3& shapeScale);
 	// ==================================================
+
 	// Getter============================================
+	/// <summary>
+	/// バリアの半径を取得します。
+	/// </summary>
+	/// <returns>バリア半径</returns>
+	float GetRadius() const { return radius_; }
+
 	/// <summary>
 	/// バリアの中心位置を取得します。
 	/// </summary>
-	/// <returns></returns>
-	float GetRadius() const { return radius_; }
-	/// <summary>
-	/// バリアの半径の取得。バリアは球体として扱われ、半径を取得することで大きさを知ることができます。
-	/// </summary>
-	/// <returns></returns>
+	/// <returns>中心位置</returns>
 	const Vector3& GetCenter() const { return center_; }
+
 	/// <summary>
-	/// バリアのAABBサイズの取得。バリアは球体として扱われるため、AABBサイズは半径の2倍になります。
+	/// バリアの AABB サイズを取得します。
 	/// </summary>
-	/// <returns></returns>
+	/// <returns>AABB サイズ</returns>
 	Vector3 GetAABBSize() const;
+
 	/// <summary>
-	/// バリアの楕円体半径の取得。バリアは球体として描画されますが、形状スケールを取得することで、球体の見た目の変形具合を知ることができます。楕円体半径は、半径に形状スケールを掛けた値になります。
+	/// バリアの楕円体半径を取得します。
 	/// </summary>
-	/// <returns></returns>
+	/// <returns>楕円体半径</returns>
 	Vector3 GetEllipsoidRadius() const;
+
 	/// <summary>
-	/// バリアの色の取得。描画処理で使用される色を取得します。
+	/// Player への参照を取得します。
 	/// </summary>
-	/// <returns></returns>
+	/// <returns>Player への参照</returns>
 	Player* GetPlayer() const { return player_; }
+
 	/// <summary>
-	/// バリアの形状スケールの取得。バリアは球体として描画されますが、形状スケールを取得することで、球体の見た目の変形具合を知ることができます。
+	/// バリアの色を取得します。
 	/// </summary>
-	/// <returns></returns>
+	/// <returns>バリア色</returns>
 	const Vector4& GetColor() const { return color_; }
+
 	/// <summary>
-	/// バリアの形状スケールの取得。バリアは球体として描画されますが、形状スケールを取得することで、球体の見た目の変形具合を知ることができます。
+	/// バリアの形状スケールを取得します。
 	/// </summary>
-	/// <returns></returns>
+	/// <returns>形状スケール</returns>
 	const Vector3& GetShapeScale() const { return shapeScale_; }
 
+	/// <summary>
+	/// シェーダ用フレネル強度を取得します。
+	/// </summary>
+	/// <returns>フレネル強度</returns>
 	float GetShaderFresnelPower() const { return shaderFresnelPower_; }
+
+	/// <summary>
+	/// シェーダ用ベース強度を取得します。
+	/// </summary>
+	/// <returns>ベース強度</returns>
 	float GetShaderBaseStrength() const { return shaderBaseStrength_; }
+
+	/// <summary>
+	/// シェーダ用リム強度を取得します。
+	/// </summary>
+	/// <returns>リム強度</returns>
 	float GetShaderRimStrength() const { return shaderRimStrength_; }
+
+	/// <summary>
+	/// シェーダ用ベースアルファを取得します。
+	/// </summary>
+	/// <returns>ベースアルファ</returns>
 	float GetShaderAlphaBase() const { return shaderAlphaBase_; }
+
+	/// <summary>
+	/// シェーダ用リムアルファを取得します。
+	/// </summary>
+	/// <returns>リムアルファ</returns>
 	float GetShaderAlphaRim() const { return shaderAlphaRim_; }
+
+	/// <summary>
+	/// シェーダ用色味を取得します。
+	/// </summary>
+	/// <returns>色味</returns>
 	const Vector3& GetShaderTint() const { return shaderTint_; }
 	// ==================================================
 
 	/// <summary>
-	/// バリアが有効かどうかを取得します。有効な場合、描画と判定が行われます。無効な場合、描画も判定も行われません。
+	/// バリアが有効かどうかを取得します。
 	/// </summary>
-	/// <returns></returns>
+	/// <returns>true なら有効、false なら無効</returns>
 	bool IsActive() const { return active_; }
+
 	/// <summary>
-	/// バリアが表示されているかどうかを取得します。表示されている場合、描画処理でバリアが描かれます。非表示の場合、描画処理でバリアは描かれませんが、判定は行われる状態になります。
+	/// バリアが表示されているかどうかを取得します。
 	/// </summary>
-	/// <returns></returns>
+	/// <returns>true なら表示、false なら非表示</returns>
 	bool IsVisible() const { return visible_; }
 
 	/// <summary>
-	/// バリアの状態をPlayerの位置に同期させます。通常はPlayerの座標をバリアの中心位置に設定することで、バリアがPlayerを包むようにします。
+	/// バリアの状態を Player に同期させます。
 	/// </summary>
 	void SyncToPlayer();
 
 	/// <summary>
-	/// バリアが攻撃にヒットしたときの処理を行います。ヒットした位置を引数で受け取り、ヒットエフェクトの発生やバリアの状態変化などを行います。
+	/// バリアが攻撃にヒットしたときの処理を行います。
 	/// </summary>
+	/// <param name="pos">ヒット位置</param>
 	void OnHit(const Vector3& pos);
 
 	/// <summary>
-	/// バリアの破壊を開始します。破壊開始後、バリアは徐々に消えていくなどのエフェクトが発生し、最終的には無効になります。
+	/// バリアの破壊を開始します。
 	/// </summary>
 	void StartBreak();
+
 	/// <summary>
-	/// バリアが破壊中かどうかを取得します。破壊中の場合、バリアは徐々に消えていくなどのエフェクトが発生し、最終的には無効になります。
+	/// バリアが破壊中かどうかを取得します。
 	/// </summary>
-	/// <returns></returns>
+	/// <returns>true なら破壊中、false なら通常状態</returns>
 	bool IsBreaking() const { return isBreaking_; }
 
 private:
 	/// <summary>
-	/// バリアの見た目を更新します。通常はバリアの中心位置や半径、色などを反映させるために、Object3d のワールド行列やマテリアルパラメータを更新する処理が含まれます。
+	/// バリアの見た目を更新します。
 	/// </summary>
 	void UpdateVisual_();
 
-	std::unique_ptr<TKM::Object3d> object_ = nullptr;
+	//======================================================================
+	// 描画オブジェクト / 外部参照
+	//======================================================================
+	std::unique_ptr<TKM::Object3d> object_ = nullptr; // バリア描画用オブジェクト
 
-	TKM::DirectXCommon* dxCommon_ = nullptr;
-	TKM::Camera* camera_ = nullptr;
-	Player* player_ = nullptr;
+	TKM::DirectXCommon* dxCommon_ = nullptr; // DirectX 共通管理クラス
+	TKM::Camera* camera_ = nullptr;          // 描画に使用するカメラ
+	Player* player_ = nullptr;               // 同期対象の Player
+	TKM::BarrierCommon* barrierCommon_ = nullptr; // バリア共通描画情報
 
-	bool active_ = false;
-	bool visible_ = false;
+	//======================================================================
+	// バリア基本状態
+	//======================================================================
+	bool active_ = false;  // バリアが有効かどうか
+	bool visible_ = false; // バリアが表示されているかどうか
 
-	Vector3 center_ = { 0.0f, 0.0f, 0.0f };
-	float radius_ = 18.0f;
-	Vector3 shapeScale_ = { 1.0f, 1.0f, 1.0f };
+	Vector3 center_ = { 0.0f, 0.0f, 0.0f };    // バリア中心位置
+	float radius_ = 18.0f;                     // バリア半径
+	Vector3 shapeScale_ = { 1.0f, 1.0f, 1.0f }; // バリア形状スケール
+	Vector4 color_ = { 0.0f, 0.0f, 0.0f, 1.0f }; // バリア色
 
-	// キラン用
-	float hitFlashTimer_ = 0.0f;
-	Vector3 hitFlashPos_ = { 0,0,0 };
+	//======================================================================
+	// ヒット演出
+	//======================================================================
+	float hitFlashTimer_ = 0.0f;              // ヒットフラッシュの残り時間
+	Vector3 hitFlashPos_ = { 0.0f, 0.0f, 0.0f }; // ヒットフラッシュ位置
 
-	TKM::BarrierCommon* barrierCommon_ = nullptr; // バリア
+	//======================================================================
+	// シェーダパラメータ
+	//======================================================================
+	float shaderFresnelPower_ = 2.2f;     // フレネル強度
+	float shaderBaseStrength_ = 0.02f;    // ベース発光強度
+	float shaderRimStrength_ = 1.0f;      // リム発光強度
+	float shaderAlphaBase_ = 0.08f;       // ベースアルファ
+	float shaderAlphaRim_ = 0.35f;        // リムアルファ
+	Vector3 shaderTint_ = { 1.0f, 0.72f, 0.95f }; // シェーダ色味
 
-	Vector4 color_ = { 0.0f, 0.0f, 0.0f, 1.0f };
+	float shaderHexScale_ = 8.0f;         // 六角形模様のスケール
+	float shaderHexLineWidth_ = 0.030f;   // 六角形ライン幅
+	float shaderHexGlowStrength_ = 2.4f;  // 六角形発光強度
+	float shaderHexAlpha_ = 0.85f;        // 六角形アルファ
 
-	float shaderFresnelPower_ = 2.2f;
-	float shaderBaseStrength_ = 0.02f;
-	float shaderRimStrength_ = 1.0f;
-	float shaderAlphaBase_ = 0.08f;
-	float shaderAlphaRim_ = 0.35f;
-	Vector3 shaderTint_ = { 1.0f, 0.72f, 0.95f };
+	float shaderBreakProgress_ = 0.0f;    // 破壊進行度
+	float shaderBreakEdgeWidth_ = 0.08f;  // 破壊境界幅
+	float shaderBreakGlowStrength_ = 2.8f; // 破壊時発光強度
+	float shaderBreakNoiseScale_ = 14.0f; // 破壊ノイズスケール
+	Vector3 shaderBreakOrigin_ = { 0.0f, 0.0f, 0.0f }; // 破壊起点位置
 
-	float shaderHexScale_ = 8.0f;
-	float shaderHexLineWidth_ = 0.030f;
-	float shaderHexGlowStrength_ = 2.4f;
-	float shaderHexAlpha_ = 0.85f;
+	float collisionScaleZ_ = 1.0f; // Z方向の当たり判定補正
 
-	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
-	Vector4* materialData_ = nullptr;
+	//======================================================================
+	// GPUリソース
+	//======================================================================
+	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_; // マテリアル用GPUリソース
+	Vector4* materialData_ = nullptr;                         // マテリアルデータ参照先
 
-	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource_;
-	Matrix4x4* wvpData_ = nullptr;
+	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource_; // WVP行列用GPUリソース
+	Matrix4x4* wvpData_ = nullptr;                      // WVP行列データ参照先
 
+	/// <summary>
+	/// バリアシェーダへ渡すパラメータ構造体
+	/// </summary>
 	struct BarrierShaderParam {
-		float fresnelPower;
-		float baseStrength;
-		float rimStrength;
-		float alphaBase;
+		float fresnelPower;      // フレネル強度
+		float baseStrength;      // ベース発光強度
+		float rimStrength;       // リム発光強度
+		float alphaBase;         // ベースアルファ
 
-		float alphaRim;
-		float hexScale;
-		float hexLineWidth;
-		float hexGlowStrength;
+		float alphaRim;          // リムアルファ
+		float hexScale;          // 六角形模様スケール
+		float hexLineWidth;      // 六角形ライン幅
+		float hexGlowStrength;   // 六角形発光強度
 
-		float hexAlpha;
-		float breakProgress;
-		float breakEdgeWidth;
-		float breakGlowStrength;
+		float hexAlpha;          // 六角形アルファ
+		float breakProgress;     // 破壊進行度
+		float breakEdgeWidth;    // 破壊境界幅
+		float breakGlowStrength; // 破壊発光強度
 
-		Vector3 tint;
-		float breakNoiseScale;
+		Vector3 tint;            // 色味
+		float breakNoiseScale;   // 破壊ノイズスケール
 
-		Vector3 breakOrigin;
-		float padding1;
+		Vector3 breakOrigin;     // 破壊起点位置
+		float padding1;          // パディング
 
-		float hitFlashTime;
-		Vector3 hitFlashPos;
+		float hitFlashTime;      // ヒットフラッシュ時間
+		Vector3 hitFlashPos;     // ヒットフラッシュ位置
 	};
 
-	Microsoft::WRL::ComPtr<ID3D12Resource> barrierShaderParamResource_;
-	BarrierShaderParam* barrierShaderParamData_ = nullptr;
+	Microsoft::WRL::ComPtr<ID3D12Resource> barrierShaderParamResource_;// シェーダパラメータ用GPUリソース
+	BarrierShaderParam* barrierShaderParamData_ = nullptr;             // シェーダパラメータ参照先
 
-	bool isBreaking_ = false;
-	float breakTimer_ = 0.0f;
-	float breakDuration_ = 2.0f;
-
-	float shaderBreakProgress_ = 0.0f;
-	float shaderBreakEdgeWidth_ = 0.08f;
-	float shaderBreakGlowStrength_ = 2.8f;
-	float shaderBreakNoiseScale_ = 14.0f;
-	Vector3 shaderBreakOrigin_ = { 0.0f, 0.0f, 0.0f };
-	float collisionScaleZ_ = 1.0f;
+	//======================================================================
+	// 破壊状態
+	//======================================================================
+	bool isBreaking_ = false;      // バリアが破壊中かどうか
+	float breakTimer_ = 0.0f;      // 破壊演出タイマー
+	float breakDuration_ = 2.0f;   // 破壊演出時間
 };

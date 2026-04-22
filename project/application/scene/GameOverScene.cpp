@@ -92,7 +92,7 @@ void GameOverScene::Initialize() {
 	overSprite_ = std::make_unique<Sprite>();
 	overSprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, "./resources/texture/over.png");
 	overSprite_->SetAnchorPoint({ 0.5f, 0.5f });
-	overSprite_->SetPosition({ WindowsAPI::kClientWidth_ * 0.5f, WindowsAPI::kClientHeight_ * 0.5f });
+	overSprite_->SetPosition({ WindowsAPI::GetClientWidth() * 0.5f, WindowsAPI::GetClientHeight() * 0.5f });
 	// アルファ0で開始（見えない状態）
 	overSprite_->SetColor({ 1, 1, 1, 0 });
 	overActive_ = true;
@@ -115,8 +115,8 @@ void GameOverScene::Initialize() {
 		TKM::SpriteCommon::GetInstance(),
 		dxCommon_,
 		this,
-		WindowsAPI::kClientWidth_,
-		WindowsAPI::kClientHeight_
+		static_cast<float>(WindowsAPI::GetClientWidth()),
+		static_cast<float>(WindowsAPI::GetClientHeight())
 	);
 
 	// ノイズ
