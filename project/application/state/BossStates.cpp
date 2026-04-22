@@ -21,13 +21,13 @@ void BossEnterState::Update(TKM::IStateContext& ctx, float dt) {
 	Enemy& boss = *c.boss_; // ボス敵オブジェクトへの参照
 	Vector3& pos = c.posWork_; // ボスの位置ワーク（実際の位置は boss.GetWorldPosition() で取得）
 
-	const float targetZ_ = c.orbitZ_; // 予備動作中の目標Z座標
+	const float targetZ_ = c.config_->orbit_.z_;
 	const float speed_ = 18.0f; // 予備動作中の移動速度（Z方向）
 
 	// 予備動作：Z方向に近づきつつ、X/Yはゆっくり中央へ
 	pos.z = BossController::Approach(pos.z, targetZ_, speed_ * dt);
 	pos.x = BossController::Approach(pos.x, 0.0f, 10.0f * dt);
-	pos.y = BossController::Approach(pos.y, c.orbitY_, 10.0f * dt);
+	pos.y = BossController::Approach(pos.y, c.config_->orbit_.y_, 10.0f * dt);
 
 	if (std::abs(pos.z - targetZ_) < 0.05f) { // 予備動作完了判定（Zが目標に十分近づいたら）
 		c.ChangeState(BossController::State::Orbit); // 予備動作完了 → 軌道移動へ遷移
@@ -51,20 +51,19 @@ void BossOrbitState::Update(TKM::IStateContext& ctx, float dt) {
 
 	// -----------------------------
 	float t_ = c.timer_; // 軌道移動の経過時間
-	float angle_ = t_ * c.orbitAngularSpeed_; // 軌道移動の角度（時間経過で増加）
-	float ox_ = std::cos(angle_) * c.orbitRadiusX_; // 円軌道のXオフセット
-	float oy_ = std::sin(angle_ * 0.9f) * c.orbitRadiusY_; // 円軌道のYオフセット（角速度を少し変えて楕円っぽく）
+	float angle_ = t_ * c.config_->orbit_.angularSpeed_;
+	float ox_ = std::cos(angle_) * c.config_->orbit_.radiusX_;
+	float oy_ = std::sin(angle_ * 0.9f) * c.config_->orbit_.radiusY_;
 	// -----------------------------
 
 	// 目標位置：プレイヤーに少し引き寄せつつ、軌道オフセットも加える
 	Vector3 target_;
-	target_.x = playerPos.x * c.orbitPlayerInfluence_ + ox_; // プレイヤー位置を少し反映 + 軌道オフセット
-	target_.y = c.orbitY_ + playerPos.y * 0.2f + oy_; // 基準高さ + プレイヤー位置を少し反映 + 軌道オフセット
-	target_.z = c.orbitZ_; // Zは常に一定（軌道の半径）
-	// 現在位置から目標位置へスムーズに移動
-	pos = BossController::SmoothDamp(pos, target_, c.orbitFollow_, dt);
+	target_.x = playerPos.x * c.config_->orbit_.playerInfluence_ + ox_;
+	target_.y = c.config_->orbit_.y_ + playerPos.y * 0.2f + oy_;
+	target_.z = c.config_->orbit_.z_;
+	pos = BossController::SmoothDamp(pos, target_, c.config_->orbit_.follow_, dt);
 
-	if (c.timer_ < c.orbitDuration_) { return; } // 軌道移動の経過時間が一定に満たない場合は攻撃せず、引き続き軌道移動を続ける
+	if (c.timer_ < c.config_->orbit_.duration_) { return; }
 
 	// -----------------------------
 	// 通常時：ミサイル or スラッシュ
@@ -81,7 +80,7 @@ void BossOrbitState::Update(TKM::IStateContext& ctx, float dt) {
 		if (doSlash_) { // スラッシュ攻撃を選択した場合
 			// スラッシュ（溜め→発射）
 			c.slashCharging_ = true; // スラッシュ攻撃のチャージ開始
-			c.slashChargeTimer_ = c.slashChargeTime_; // スラッシュ攻撃のチャージタイマーを初期化
+			c.slashChargeTimer_ = c.config_->slash_.chargeTime_;
 			c.slashChargeFrame_ = 0; // スラッシュ攻撃のチャージフレームカウンターを初期化
 
 			if (boss.GetPlayer()) { // プレイヤー位置のスナップを取得（プレイヤーが存在する場合）
@@ -92,7 +91,7 @@ void BossOrbitState::Update(TKM::IStateContext& ctx, float dt) {
 				c.slashTargetValid_ = true; // スラッシュ攻撃のターゲットが有効であることを示すフラグを立てる
 			}
 			// スラッシュ攻撃のクールダウンタイマーを初期化
-			c.slashCooldownT_ = c.slashCooldown_;
+			c.slashCooldownT_ = c.config_->slash_.cooldown_;
 
 			// --- スラッシュ選択時：ミサイル系は完全に止める（混在防止）---
 			c.burstTargetValid_ = false;
@@ -114,7 +113,7 @@ void BossOrbitState::Update(TKM::IStateContext& ctx, float dt) {
 		c.burstTargetValid_ = false;
 		c.burstCharged_ = false;
 		c.missileCharging_ = true;
-		c.missileChargeTimer_ = c.missileChargeTime_;
+		c.missileChargeTimer_ = c.config_->missile_.chargeTime_;
 		c.missileChargeFrame_ = 0;
 		c.missileRequestCount_ = 0;
 		c.missileRequestConsumeIndex_ = 0;
@@ -132,7 +131,7 @@ void BossOrbitState::Update(TKM::IStateContext& ctx, float dt) {
 	}
 
 	// 怒り中のみレーザーへ
-	c.laserAimFixed_ = playerPos + c.playerVel_ * c.predictLeadTime_;
+	c.laserAimFixed_ = playerPos + c.playerVel_ * c.config_->predictLeadTime_;
 	// レーザーの照準はアリーナ内にクランプしておく（当たり判定がアリーナ外に出ないように）
 	c.laserAimFixed_.x = std::clamp(c.laserAimFixed_.x, c.arenaMin_.x, c.arenaMax_.x);
 	c.laserAimFixed_.y = std::clamp(c.laserAimFixed_.y, c.arenaMin_.y, c.arenaMax_.y);
@@ -158,22 +157,22 @@ void BossRecoverState::Update(TKM::IStateContext& ctx, float dt) {
 	Vector3& pos = c.posWork_; // ボスの位置ワーク（実際の位置は boss.GetWorldPosition() で取得）
 
 	// 目標：Orbitの高さとZへ戻す
-	Vector3 target_{ pos.x, c.orbitY_, c.orbitZ_ };
-	pos = BossController::SmoothDamp(pos, target_, 0.18f, dt); // スムーズに軌道の高さとZへ戻す
+	Vector3 target_{ pos.x, c.config_->orbit_.y_, c.config_->orbit_.z_ };
+	pos = BossController::SmoothDamp(pos, target_, c.config_->recover_.follow_, dt);
 
 	// ============================================================
 	// Missile Charge / 6-way Fire Execute（Recover中のみ）
 	// ============================================================
 	if (c.missileCharging_ || c.burstCharged_) {
 		Vector3 muzzleCenter_ = boss.GetWorldPosition();
-		muzzleCenter_.y += c.missileMuzzleYOffset_;
+		muzzleCenter_.y += c.config_->missile_.muzzleYOffset_;
 
 		if (c.missileCharging_) {
 			auto* pm_ = TKM::ParticleManager::GetInstance();
 			if (pm_) {
 				Vector3 p_ = muzzleCenter_;
 
-				float t = 1.0f - (c.missileChargeTimer_ / c.missileChargeTime_);
+				float t = 1.0f - (c.missileChargeTimer_ / c.config_->missile_.chargeTime_);
 				t = std::clamp(t, 0.0f, 1.0f);
 
 				int inwardCount_ = 2 + (int)(t * 7);
@@ -262,7 +261,7 @@ void BossRecoverState::Update(TKM::IStateContext& ctx, float dt) {
 
 	if (c.slashCharging_) { // スラッシュ攻撃のチャージ中の場合
 		Vector3 p_ = boss.GetWorldPosition(); // スラッシュの発射位置は、ボスの現在位置から少し前方（プレイヤー側）に出す
-		p_.y += c.missileMuzzleYOffset_; // スラッシュの発射位置は、ボスの現在位置から少し上にオフセット（ミサイルと同じ高さ）
+		p_.y += 10.0f;
 		c.slashPos_ = p_; // スラッシュの発射位置を更新
 
 		if (boss.GetPlayer()) { // スラッシュのターゲットは、チャージ中はスナップ位置、そうでない場合はプレイヤー位置を直接ターゲットにする（プレイヤーが存在する場合）
@@ -272,7 +271,7 @@ void BossRecoverState::Update(TKM::IStateContext& ctx, float dt) {
 		}
 
 		if (auto* pm_ = TKM::ParticleManager::GetInstance()) { // パーティクルマネージャーが存在する場合は、チャージ中のエフェクトを出す
-			float t = 1.0f - (c.slashChargeTimer_ / c.slashChargeTime_);
+			float t = 1.0f - (c.slashChargeTimer_ / c.config_->slash_.chargeTime_);
 			t = std::clamp(t, 0.0f, 1.0f);
 
 			// プレイヤー方向へ少し前に出した位置を、予兆の中心にする
@@ -326,7 +325,7 @@ void BossRecoverState::Update(TKM::IStateContext& ctx, float dt) {
 		if (c.slashChargeTimer_ <= 0.0f) { // チャージタイマーが0以下になったらチャージ完了
 			c.slashCharging_ = false; // チャージ完了 → チャージ中フラグを下ろす
 			c.slashFireReq_ = true; // スラッシュ発射リクエストを立てる
-			c.slashCooldownT_ = c.slashCooldown_; // スラッシュ攻撃のクールダウンタイマーを初期化
+			c.slashCooldownT_ = c.config_->slash_.cooldown_;
 		}
 	}
 
@@ -351,7 +350,7 @@ void BossRecoverState::Update(TKM::IStateContext& ctx, float dt) {
 		c.missileRequestConsumeIndex_ = 0;
 	}
 
-	if (c.timer_ >= c.recoverDuration_ && !missileBusy_ && !slashBusy_) { // 回復状態の経過時間が一定を超えていて、かつミサイルもスラッシュも忙しくない（攻撃が完全に終わっている）場合
+	if (c.timer_ >= c.config_->recover_.duration_ && !missileBusy_ && !slashBusy_) {
 		c.ChangeState(BossController::State::Orbit); // 回復状態終了 → 軌道移動へ遷移
 	}
 }
@@ -369,7 +368,7 @@ void BossLaserWindupState::Enter(TKM::IStateContext& ctx) {
 	c.laserTelegraph_ = true;
 	c.laserBasePos_ = c.posWork_;
 	// レーザーの開始位置と終了位置を初期化
-	c.laserStartWS_ = c.laserBasePos_ + Vector3{ 0.0f, c.laserMuzzleYOffset_, 0.0f };
+	c.laserStartWS_ = c.laserBasePos_ + Vector3{ 0.0f, c.config_->laser_.muzzleYOffset_, 0.0f };
 	c.laserEndWS_ = c.laserAimFixed_;
 }
 
@@ -387,7 +386,9 @@ void BossLaserWindupState::Update(TKM::IStateContext& ctx, float dt) {
 	// レーザーの基準位置は、ボスの現在位置から少し前方（プレイヤー側）に出す
 	pos = c.laserBasePos_;
 	// レーザーの基準位置をプレイヤー側に少しオフセット（Z方向に前方）する
-	float t_ = (c.laserWindup_ > 0.0001f) ? (c.timer_ / c.laserWindup_) : 1.0f;
+	float t_ = (c.config_->laser_.windup_ > 0.0001f)
+		? (c.timer_ / c.config_->laser_.windup_)
+		: 1.0f;
 	t_ = std::clamp(t_, 0.0f, 1.0f);
 	float ramp_ = t_ * t_;
 	float amp_ = 0.18f * (0.2f + 0.8f * ramp_);
@@ -395,10 +396,10 @@ void BossLaserWindupState::Update(TKM::IStateContext& ctx, float dt) {
 	pos.x += std::sin(c.timer_ * 60.0f) * amp_;
 	pos.y += std::sin(c.timer_ * 87.0f + 1.7f) * (amp_ * 0.55f);
 	// レーザーの開始位置と終了位置を更新
-	c.laserStartWS_ = c.laserBasePos_ + Vector3{ 0.0f, c.laserMuzzleYOffset_, 0.0f };
+	c.laserStartWS_ = c.laserBasePos_ + Vector3{ 0.0f, c.config_->laser_.muzzleYOffset_, 0.0f };
 	c.laserEndWS_ = c.laserAimFixed_;
 
-	if (c.timer_ >= c.laserWindup_) { // レーザーの溜め時間が経過したら、レーザー発射へ遷移
+	if (c.timer_ >= c.config_->laser_.windup_) { // レーザーの溜め時間が経過したら、レーザー発射へ遷移
 		c.ChangeState(BossController::State::LaserFire); // レーザー溜め完了 → レーザー発射へ遷移
 	}
 }
@@ -439,21 +440,21 @@ void BossLaserFireState::Update(TKM::IStateContext& ctx, float dt) {
 		// レーザーの照準は、プレイヤーの現在位置 + プレイヤーの速度 * 予測時間 で計算する
 		Vector3 p_ = boss.GetPlayer()();
 		Vector3 v_ = c.playerVel_;
-		Vector3 pred_ = p_ + v_ * c.predictLeadTime_;
+		Vector3 pred_ = p_ + v_ * c.config_->predictLeadTime_;
 		// レーザーの照準はアリーナ内にクランプしておく（当たり判定がアリーナ外に出ないように）
 		pred_.x = std::clamp(pred_.x, c.arenaMin_.x, c.arenaMax_.x);
 		pred_.y = std::clamp(pred_.y, c.arenaMin_.y, c.arenaMax_.y);
 		pred_.z = std::clamp(pred_.z, c.arenaMin_.z, c.arenaMax_.z);
-		// レーザーの照準を、固定照準と予測照準の間で線形補間する（追尾の強さは c.laserTrackStrength_ で調整）
-		aim_ = MyMath::Vector3Lerp(aim_, pred_, c.laserTrackStrength_);
+		// レーザーの照準を、固定照準と予測照準の間で線形補間する（追尾の強さは c.config_->laser_.trackStrength_ で調整）
+		aim_ = MyMath::Vector3Lerp(aim_, pred_, c.config_->laser_.trackStrength_);
 	}
 
-	c.laserStartWS_ = c.laserBasePos_ + Vector3{ 0.0f, c.laserMuzzleYOffset_, 0.0f };
+	c.laserStartWS_ = c.laserBasePos_ + Vector3{ 0.0f, c.config_->laser_.muzzleYOffset_, 0.0f };
 	c.laserEndWS_ = aim_;
 
-	if (c.timer_ >= c.laserFire_) { // レーザーの発射時間が経過したら、レーザー回復へ遷移
-		c.laserCooldownT_ = 0.0f; // レーザー攻撃のクールダウンタイマーを初期化（次のレーザー攻撃までの待ち時間に使う）
-		c.ChangeState(BossController::State::LaserRecover); // レーザー発射完了 → レーザー回復へ遷移
+	if (c.timer_ >= c.config_->laser_.fire_) {
+		c.laserCooldownT_ = 0.0f;
+		c.ChangeState(BossController::State::LaserRecover);
 	}
 }
 
@@ -476,9 +477,14 @@ void BossLaserRecoverState::Update(TKM::IStateContext& ctx, float dt) {
 	c.laserActive_ = false;
 	c.laserTelegraph_ = false;
 	// レーザー回復中は、ボスの位置を軌道の高さとZへスムーズに戻す
-	pos = BossController::SmoothDamp(pos, Vector3{ pos.x, c.orbitY_, c.orbitZ_ }, 0.18f, dt);
+	pos = BossController::SmoothDamp(
+		pos,
+		Vector3{ pos.x, c.config_->orbit_.y_, c.config_->orbit_.z_ },
+		0.18f,
+		dt
+	);
 
-	if (c.timer_ >= c.laserRecover_) { // レーザー回復の経過時間が一定を超えたら、次の行動へ遷移
-		c.ChangeState(BossController::State::Recover); // レーザー回復完了 → 回復状態へ遷移
+	if (c.timer_ >= c.config_->laser_.recover_) {
+		c.ChangeState(BossController::State::Recover);
 	}
 }

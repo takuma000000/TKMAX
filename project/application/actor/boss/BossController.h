@@ -154,7 +154,7 @@ public:
 	/// レーザー半径を取得します。
 	/// </summary>
 	/// <returns></returns>
-	float GetLaserRadius() const { return laserRadius_; }
+	float GetLaserRadius() const { return config_ ? config_->laser_.radius_ : 0.0f; }
 	/// <summary>
 	/// チャージの進行度(0..1)（触手揺れ強度用）
 	/// </summary>
@@ -213,8 +213,6 @@ private:
 	//==============================
 	// Player cache / Prediction
 	//==============================
-	// 予測（どれくらい先を狙うか）
-	float predictLeadTime_ = 0.35f;
 	// 前フレームプレイヤー位置
 	Vector3 prevPlayerPos_{}; // プレイヤー位置前フレームキャッシュ
 	bool hasPrevPlayerPos_ = false; // 前フレーム位置キャッシュ有無
@@ -223,15 +221,6 @@ private:
 	//==============================
 	// Orbit
 	//==============================
-	float orbitZ_ = 55.0f; // 旋回Z座標
-	float orbitY_ = 8.0f; // 旋回Y座標
-	float orbitRadiusX_ = 10.0f; // 旋回半径X
-	float orbitRadiusY_ = 2.5f; // 旋回半径Y
-	float orbitAngularSpeed_ = 1.3f; // 旋回角速度（ラジアン/秒）
-	float orbitPlayerInfluence_ = 0.35f; // プレイヤー位置影響度合い（0〜1）
-	float orbitFollow_ = 0.16f; // 追従速度（大きいほど速い、0〜1）
-	float orbitDuration_ = 3.2f; // 旋回継続時間
-	float recoverDuration_ = 1.0f; // 回復時間
 	float recoverAngle_ = 0.0f; // 回復時のOrbit角度スタート位置
 	//==============================
 	// Rage
@@ -240,25 +229,12 @@ private:
 	bool rageActive_ = false; // 怒っているか
 	// --- Rage Gauge ---
 	float rageGauge_ = 0.0f;          // 0..1
-	float rageGainPerHp_ = 0.08f;     // HP1減ったら+0.08（12〜13ダメで満タン）
-	float rageDecayPerSec_ = 0.25f;   // 何も無いと毎秒-0.25（4秒で空）
-	float rageOnThreshold_ = 1.0f;    // 満タンで怒りON
-	float rageOffThreshold_ = 0.20f;  // ここまで落ちたら怒りOFF
 	int   lastHpForRage_ = -1;        // 前回HP（ダメージ検出用）
 	float noDamageTime_ = 0.0f;       // 最後に被ダメしてからの経過
-	float rageDecayDelay_ = 2.0f;     // 秒間ノーダメなら減衰開始
 	//==============================
 	// Laser（怒り中のみ）
 	//==============================
-	float laserCooldown_ = 5.0f;      // 連発防止
 	float laserCooldownT_ = 0.0f; // クールタイム残り
-	float laserChance_ = 0.40f;       // Orbit終了時にレーザーへ分岐する確率（怒り中）
-	float laserWindup_ = 0.70f;       // 予告
-	float laserFire_ = 1.10f;         // 発射
-	float laserRecover_ = 0.55f;      // 復帰
-	float laserRadius_ = 2.2f;        // 当たり判定の太さ
-	float laserMuzzleYOffset_ = 10.0f; // 発射位置Yオフセット（ボス中心＋）
-	float laserTrackStrength_ = 0.15f; // 発射中の軽い追尾（0で固定）
 	bool  laserActive_ = false;        // 予告 or 発射
 	bool  laserTelegraph_ = false;     // 予告中
 	Vector3 laserStartWS_{ 0.0f,0.0f,0.0f }; // レーザー開始位置（ワールド座標）
@@ -297,14 +273,8 @@ private:
 	std::array<MissileFireRequest, kMissileSimultaneousCount_> missileRequests_{}; // 発射リクエスト配列
 	int missileRequestCount_ = 0; // 発射リクエスト数
 	int missileRequestConsumeIndex_ = 0; // 発射リクエスト消費用インデックス
-	float missileSpeed_ = 70.0f; // 速度
-	int missileDamage_ = 1; // ダメージ
-	int missileLifeFrame_ = 180; // 寿命フレーム
-	float missileMuzzleYOffset_ = 1.0f; // 発射位置Yオフセット（ボス中心＋）
-	float missileCurveHeight_ = 2.5f; // 曲線の山なり高さ
 	// --- Missile simultaneous shot ---
 	bool missileCharging_ = false; // 溜め中か
-	float missileChargeTime_ = 1.0f; // 溜め時間（秒）
 	float missileChargeTimer_ = 0.0f; // 溜め残り
 	int missileChargeFrame_ = 0; // 間引き用
 	Vector3 burstTargetSnap_{ 0.0f, 0.0f, 0.0f }; // 発射瞬間のplayer座標
@@ -316,16 +286,11 @@ private:
 	bool slashFireReq_ = false; // 発射要求フラグ
 	Vector3 slashPos_{ 0.0f,0.0f,0.0f }; // 発射位置
 	Vector3 slashTarget_{ 0.0f,0.0f,0.0f }; // 発射時点のplayer座標（到達点）
-	float slashSpeed_ = 95.0f;     // ミサイルより速め推奨
-	int slashDamage_ = 2; // ダメージ
-	int slashLifeFrame_ = 90; // 寿命フレーム
 	// 予備動作（スラッシュ用：ミサイルとは別）
 	bool slashCharging_ = false; // 溜め中か
-	float slashChargeTime_ = 1.5f; // 溜め時間（秒）
 	float slashChargeTimer_ = 0.0f; // 溜め残り
 	int slashChargeFrame_ = 0; // 間引き用
 	// クールタイム（連発防止）
-	float slashCooldown_ = 0.0f; // 何秒間隔で撃てるか
 	float slashCooldownT_ = 0.0f; // クールタイム残り
 	// スラッシュ：発射時点のターゲット固定
 	Vector3 slashTargetSnap_{ 0.0f, 0.0f, 0.0f }; // 発射時点のplayer座標を固定

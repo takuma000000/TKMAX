@@ -7,39 +7,12 @@
 #endif
 
 void BossController::Initialize(const Vector3& arenaMin, const Vector3& arenaMax) {
+	// 設定読み込み
+	assert(config_ && "BossControllerConfig が未設定です");
+
 	// アリーナ範囲設定
 	arenaMin_ = arenaMin;
 	arenaMax_ = arenaMax;
-
-	// コンフィグから各種パラメータ読み込み
-	predictLeadTime_ = config_->predictLeadTime_;
-	rageGainPerHp_ = config_->rage_.gainPerHp_;
-	rageDecayDelay_ = config_->rage_.decayDelay_;
-	rageDecayPerSec_ = config_->rage_.decayPerSec_;
-	rageOnThreshold_ = config_->rage_.onThreshold_;
-	rageOffThreshold_ = config_->rage_.offThreshold_;
-	orbitZ_ = config_->orbit_.z_;
-	orbitY_ = config_->orbit_.y_;
-	orbitRadiusX_ = config_->orbit_.radiusX_;
-	orbitRadiusY_ = config_->orbit_.radiusY_;
-	orbitAngularSpeed_ = config_->orbit_.angularSpeed_;
-	orbitPlayerInfluence_ = config_->orbit_.playerInfluence_;
-	orbitFollow_ = config_->orbit_.follow_;
-	orbitDuration_ = config_->orbit_.duration_;
-	recoverDuration_ = config_->recover_.duration_;
-	missileMuzzleYOffset_ = config_->missile_.muzzleYOffset_;
-	missileChargeTime_ = config_->missile_.chargeTime_;
-	missileRequestCount_ = 0;
-	missileRequestConsumeIndex_ = 0;
-	missileSpeed_ = config_->missile_.speed_;
-	missileCurveHeight_ = config_->missile_.curveHeight_;
-	missileDamage_ = config_->missile_.damage_;
-	missileLifeFrame_ = config_->missile_.lifeFrame_;
-	slashCooldown_ = config_->slash_.cooldown_;
-	slashChargeTime_ = config_->slash_.chargeTime_;
-	slashSpeed_ = config_->slash_.speed_;
-	slashDamage_ = config_->slash_.damage_;
-	slashLifeFrame_ = config_->slash_.lifeFrame_;
 
 	// 状態遷移初期化
 	sm_.Initialize(this);
@@ -111,15 +84,15 @@ void BossController::Update(float dt, Enemy& boss) {
 	lastHpForRage_ = hpNow_;
 
 	if (dmg_ > 0) { // ダメージを受けていたらゲージ増加
-		rageGauge_ += static_cast<float>(dmg_) * rageGainPerHp_; // ゲージ増加
+		rageGauge_ += static_cast<float>(dmg_) * config_->rage_.gainPerHp_;
 		noDamageTime_ = 0.0f; // 無被ダメ時間リセット
 	} else {
 		noDamageTime_ += dt; // 無被ダメ時間加算
-		if (noDamageTime_ >= rageDecayDelay_) { // 減衰開始
-			rageGauge_ -= rageDecayPerSec_ * dt; // ゲージ減少
+		if (noDamageTime_ >= config_->rage_.decayDelay_) {
+			rageGauge_ -= config_->rage_.decayPerSec_ * dt;
 		}
 	}
-	rageGauge_ = std::clamp(rageGauge_, 0.0f, 1.5f); // ゲージクランプ
+	rageGauge_ = std::clamp(rageGauge_, 0.0f, config_->rage_.maxGauge_);
 	// 怒りモード判定
 	rageActive_ = false;
 
@@ -204,10 +177,10 @@ bool BossController::ConsumeMissileFireRequest(
 
 	outPos = req.pos_;
 	outTarget = req.target_;
-	outSpeed = missileSpeed_;
+	outSpeed = config_->missile_.speed_;
 	outControlOffset = req.controlOffset_;
-	outDamage = missileDamage_;
-	outLifeFrame = missileLifeFrame_;
+	outDamage = config_->missile_.damage_;
+	outLifeFrame = config_->missile_.lifeFrame_;
 
 	// 全て消費したらリクエストリセット
 	if (missileRequestConsumeIndex_ >= missileRequestCount_) {
@@ -224,9 +197,9 @@ bool BossController::ConsumeSlashFireRequest(Vector3& outPos, Vector3& outTarget
 	// 出力セット
 	outPos = slashPos_; // 発射位置
 	outTarget = slashTarget_; // 目標位置
-	outSpeed = slashSpeed_; // 速度
-	outDamage = slashDamage_; // ダメージ
-	outLifeFrame = slashLifeFrame_; // 寿命フレーム
+	outSpeed = config_->slash_.speed_;
+	outDamage = config_->slash_.damage_;
+	outLifeFrame = config_->slash_.lifeFrame_;
 	return true;
 }
 
@@ -241,13 +214,13 @@ float BossController::GetCharge01() const {
 	float v = 0.0f; // ミサイルとスラッシュのチャージ状態を計算
 
 	// ミサイル
-	if (missileCharging_ && missileChargeTime_ > 0.0001f) { // チャージ中でチャージ時間が正なら
-		float t = 1.0f - (missileChargeTimer_ / missileChargeTime_); // 経過割合計算
+	if (missileCharging_ && config_->missile_.chargeTime_ > 0.0001f) {
+		float t = 1.0f - (missileChargeTimer_ / config_->missile_.chargeTime_);
 		v = std::max(v, std::clamp(t, 0.0f, 1.0f)); // 0～1にクランプして最大値を取る
 	}
 	// スラッシュ
-	if (slashCharging_ && slashChargeTime_ > 0.0001f) { // チャージ中でチャージ時間が正なら
-		float t = 1.0f - (slashChargeTimer_ / slashChargeTime_); // 経過割合計算
+	if (slashCharging_ && config_->slash_.chargeTime_ > 0.0001f) {
+		float t = 1.0f - (slashChargeTimer_ / config_->slash_.chargeTime_);
 		v = std::max(v, std::clamp(t, 0.0f, 1.0f)); // 0～1にクランプして最大値を取る
 	}
 	// レーザー予告は強めに
@@ -259,7 +232,8 @@ float BossController::GetCharge01() const {
 }
 
 void BossController::SetConfig(const BossControllerConfig* config) {
-	config_ = config; // 設定セット
+	config_ = config;
+	assert(config_ && "BossControllerConfig が未設定です");
 }
 
 void BossController::ChangeState(State s) {
