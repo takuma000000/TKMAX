@@ -22,15 +22,18 @@ void BossEnterState::Update(TKM::IStateContext& ctx, float dt) {
 	Vector3& pos = c.posWork_; // ボスの位置ワーク（実際の位置は boss.GetWorldPosition() で取得）
 
 	const float targetZ_ = c.config_->orbit_.z_;
-	const float speed_ = 18.0f; // 予備動作中の移動速度（Z方向）
+	const float speedZ_ = c.config_->enter_.approachSpeedZ_;
+	const float speedX_ = c.config_->enter_.approachSpeedX_;
+	const float speedY_ = c.config_->enter_.approachSpeedY_;
+	const float completeEpsilonZ_ = c.config_->enter_.completeEpsilonZ_;
 
 	// 予備動作：Z方向に近づきつつ、X/Yはゆっくり中央へ
-	pos.z = BossController::Approach(pos.z, targetZ_, speed_ * dt);
-	pos.x = BossController::Approach(pos.x, 0.0f, 10.0f * dt);
-	pos.y = BossController::Approach(pos.y, c.config_->orbit_.y_, 10.0f * dt);
+	pos.z = BossController::Approach(pos.z, targetZ_, speedZ_ * dt);
+	pos.x = BossController::Approach(pos.x, 0.0f, speedX_ * dt);
+	pos.y = BossController::Approach(pos.y, c.config_->orbit_.y_, speedY_ * dt);
 
-	if (std::abs(pos.z - targetZ_) < 0.05f) { // 予備動作完了判定（Zが目標に十分近づいたら）
-		c.ChangeState(BossController::State::Orbit); // 予備動作完了 → 軌道移動へ遷移
+	if (std::abs(pos.z - targetZ_) < completeEpsilonZ_) {
+		c.ChangeState(BossController::State::Orbit);
 	}
 }
 
@@ -74,7 +77,7 @@ void BossOrbitState::Update(TKM::IStateContext& ctx, float dt) {
 		const bool canSlash_ = (c.slashCooldownT_ <= 0.0f); // スラッシュ攻撃がクールダウン中でないか
 		std::uniform_real_distribution<float> u01(0.0f, 1.0f); // スラッシュ攻撃の選択率（クールダウン中は0%、そうでない場合は45%）
 
-		const float slashRate_ = canSlash_ ? 0.45f : 0.0f; // スラッシュ攻撃の選択率（クールダウン中は0%、そうでない場合は45%）
+		const float slashRate_ = canSlash_ ? c.config_->slash_.selectRate_ : 0.0f;
 		const bool doSlash_ = (u01(c.rng_) < slashRate_); // スラッシュ攻撃を行うかどうかの判定
 
 		if (doSlash_) { // スラッシュ攻撃を選択した場合

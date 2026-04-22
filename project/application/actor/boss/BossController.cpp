@@ -93,8 +93,17 @@ void BossController::Update(float dt, Enemy& boss) {
 		}
 	}
 	rageGauge_ = std::clamp(rageGauge_, 0.0f, config_->rage_.maxGauge_);
-	// 怒りモード判定
-	rageActive_ = false;
+
+	// 怒りモード判定（ヒステリシスあり）
+	if (!rageActive_) {
+		if (rageGauge_ >= config_->rage_.onThreshold_) {
+			rageActive_ = true;
+		}
+	} else {
+		if (rageGauge_ <= config_->rage_.offThreshold_) {
+			rageActive_ = false;
+		}
+	}
 
 	// プレイヤー位置・速度更新
 	if (boss.GetPlayer()) { // プレイヤー位置取得関数があるなら
