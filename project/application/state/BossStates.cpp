@@ -134,15 +134,15 @@ void BossOrbitState::Update(TKM::IStateContext& ctx, float dt) {
 	}
 
 	// 怒り中のみレーザーへ
-	c.laserAimFixed_ = playerPos + c.playerVel_ * c.config_->predictLeadTime_;
-	// レーザーの照準はアリーナ内にクランプしておく（当たり判定がアリーナ外に出ないように）
-	c.laserAimFixed_.x = std::clamp(c.laserAimFixed_.x, c.arenaMin_.x, c.arenaMax_.x);
-	c.laserAimFixed_.y = std::clamp(c.laserAimFixed_.y, c.arenaMin_.y, c.arenaMax_.y);
-	c.laserAimFixed_.z = std::clamp(c.laserAimFixed_.z, c.arenaMin_.z, c.arenaMax_.z);
-	// レーザーの基準位置は、ボスの現在位置から少し前方（プレイヤー側）に出す
-	c.laserBasePos_ = pos;
+	//c.laserAimFixed_ = playerPos + c.playerVel_ * c.config_->predictLeadTime_;
+	//// レーザーの照準はアリーナ内にクランプしておく（当たり判定がアリーナ外に出ないように）
+	//c.laserAimFixed_.x = std::clamp(c.laserAimFixed_.x, c.arenaMin_.x, c.arenaMax_.x);
+	//c.laserAimFixed_.y = std::clamp(c.laserAimFixed_.y, c.arenaMin_.y, c.arenaMax_.y);
+	//c.laserAimFixed_.z = std::clamp(c.laserAimFixed_.z, c.arenaMin_.z, c.arenaMax_.z);
+	//// レーザーの基準位置は、ボスの現在位置から少し前方（プレイヤー側）に出す
+	//c.laserBasePos_ = pos;
 	// レーザーの基準位置をプレイヤー側に少しオフセット（Z方向に前方）する
-	c.ChangeState(BossController::State::LaserWindup);
+	c.ChangeState(BossController::State::Recover);
 }
 
 //=====================================================

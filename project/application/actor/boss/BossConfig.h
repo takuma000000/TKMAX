@@ -93,7 +93,7 @@ struct BossMissileConfig {
 	int burstCount_ = 3; // 1回の攻撃で発射するミサイルの数
 	float burstInterval_ = 0.5f; // 連続してミサイルを発射する場合の、ミサイル同士の発射間隔（秒）
 	float speed_ = 70.0f; // ミサイルの速度
-	float curveHeight_ = 2.5f; // ミサイルの軌道の曲がり具合（この値が大きいほど、ミサイルは放物線を描いて落ちる）
+	float curveHeight_ = 4.0f; // ミサイルの軌道の曲がり具合（この値が大きいほど、ミサイルは放物線を描いて落ちる）
 	int damage_ = 1; // ミサイルのダメージ
 	int lifeFrame_ = 180; // ミサイルの寿命（フレーム、これを超えるとミサイルは消える）
 };
@@ -103,10 +103,10 @@ struct BossMissileConfig {
 //-------------------------------------------------------------
 struct BossSlashConfig {
 	float cooldown_ = 2.0f; // 攻撃のクールダウン時間（秒）
-	float selectRate_ = 0.45f; // この攻撃が選択される確率（0〜1の範囲で、他の攻撃と合計して1になるように調整する）
-	float chargeTime_ = 0.55f; // 攻撃前のチャージ時間（秒）
+	float selectRate_ = 0.5f; // この攻撃が選択される確率（0〜1の範囲で、他の攻撃と合計して1になるように調整する）
+	float chargeTime_ = 0.7f; // 攻撃前のチャージ時間（秒）
 	float speed_ = 95.0f; // 攻撃の速度
-	int damage_ = 2; // 攻撃のダメージ
+	int damage_ = 1; // 攻撃のダメージ
 	int lifeFrame_ = 90; // 攻撃の寿命（フレーム、これを超えると攻撃は消える）
 };
 

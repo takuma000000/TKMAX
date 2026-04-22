@@ -104,6 +104,7 @@ void BossController::Update(float dt, Enemy& boss) {
 			rageActive_ = false;
 		}
 	}
+	rageActive_ = false; // 一時的にレーザー行動を無効化
 
 	// プレイヤー位置・速度更新
 	if (boss.GetPlayer()) { // プレイヤー位置取得関数があるなら
