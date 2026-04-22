@@ -178,14 +178,39 @@ void BossRecoverState::Update(TKM::IStateContext& ctx, float dt) {
 				float t = 1.0f - (c.missileChargeTimer_ / c.config_->missile_.chargeTime_);
 				t = std::clamp(t, 0.0f, 1.0f);
 
-				int inwardCount_ = 2 + (int)(t * 7);
-				int crackleCount_ = 1 + (int)(t * 3);
-				pm_->Emit("boss_windup_inward", p_, inwardCount_);
-				pm_->Emit("boss_windup_crackle", p_, crackleCount_);
+				// ミサイルは「収束」ではなく「発射システム起動」。
+				// 時間経過で、発射口点灯 → レーン展開 → 骨組み表示 → 最終点火 に寄せる。
 
-				int step_ = (t < 0.55f) ? 4 : 2;
-				if ((c.missileChargeFrame_ % step_) == 0) {
-					pm_->Emit("boss_windup_shell", p_, 1);
+				if (t < 0.20f) {
+					// 序盤：発射口が点き始める
+					pm_->Emit("bossMissile_node", p_, 2);
+				} else if (t < 0.45f) {
+					// 中盤前：点火ノード増加 + 細い前方レーン
+					pm_->Emit("bossMissile_node", p_, 3);
+					pm_->Emit("bossMissile_lane", p_, 2);
+
+					if ((c.missileChargeFrame_ % 4) == 0) {
+						pm_->Emit("bossMissile_jet", p_, 2);
+					}
+				} else if (t < 0.75f) {
+					// 中盤後：レーンが増え、兵器UIの骨組みが前方空間に出る
+					pm_->Emit("bossMissile_node", p_, 4);
+					pm_->Emit("bossMissile_lane", p_, 4);
+					pm_->Emit("bossMissile_jet", p_, 3);
+
+					if ((c.missileChargeFrame_ % 3) == 0) {
+						pm_->Emit("bossMissile_grid", p_, 1);
+					}
+				} else {
+					// 終盤：全レーン点灯 + フラッシュ
+					pm_->Emit("bossMissile_node", p_, 7);
+					pm_->Emit("bossMissile_lane", p_, 9);
+					pm_->Emit("bossMissile_jet", p_, 7);
+
+					if ((c.missileChargeFrame_ % 2) == 0) {
+						pm_->Emit("bossMissile_grid", p_, 2);
+					}
+					pm_->Emit("bossMissile_flash", p_, 3);
 				}
 			}
 			++c.missileChargeFrame_;

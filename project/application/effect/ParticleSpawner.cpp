@@ -19,6 +19,9 @@ namespace TKM {
 		if (MakeClearStageFireParticle(rng, groupName, center, p)) {
 			return p;
 		}
+		if (MakeBossMissileTelegraphParticle(rng, groupName, center, p)) {
+			return p;
+		}
 
 		if (groupName == "irisOpen") { //── 開幕用：中心から“放出”する粒 ──
 			// ── 開幕用：中心へ“吸い込む”柔らかい粒 ──
@@ -1167,65 +1170,6 @@ namespace TKM {
 				frand(0.05f, 0.15f)
 			};
 			p.color_ = { col.x, col.y, col.z, 1.0f };
-		} else if (groupName == "boss_windup_inward") {
-			// 外→内へ吸い込まれる粒（溜め感の主成分）
-			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
-
-			std::uniform_real_distribution<float> off(-1.8f, 1.8f);
-			Vector3 o = { off(rng), off(rng) * 0.4f, off(rng) };
-			p.transform_.translate_ = center + o;
-
-			Vector3 dir = MyMath::Normalize(-o); // 中心へ
-			float spd = frand(0.55f, 1.05f);
-			p.velocity_ = dir * spd;
-
-			float sc = frand(6.0f, 14.0f);
-			p.transform_.scale_ = { sc, sc, sc };
-
-			p.lifeTime_ = frand(0.22f, 0.40f);
-			p.currentTime_ = 0.0f;
-
-			p.color_ = { frand(0.90f, 1.00f), frand(0.20f, 0.45f), frand(0.90f, 1.00f), 1.0f };
-
-		} else if (groupName == "boss_windup_crackle") {
-			// バチバチ（短命スパーク）
-			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
-
-			std::uniform_real_distribution<float> off(-0.55f, 0.55f);
-			Vector3 o = { off(rng), off(rng) * 0.3f, off(rng) };
-			p.transform_.translate_ = center + o;
-
-			// ランダムに散る
-			Vector3 dir = MyMath::Normalize(o);
-			float spd = frand(0.40f, 1.10f);
-			p.velocity_ = dir * spd;
-
-			float sc = frand(4.0f, 10.0f);
-			p.transform_.scale_ = { sc, sc, sc };
-
-			p.lifeTime_ = frand(0.10f, 0.20f);
-			p.currentTime_ = 0.0f;
-
-			// 白〜紫寄り
-			float t = frand(0.0f, 1.0f);
-			p.color_ = { 1.0f, 0.55f - 0.25f * t, 1.0f, 1.0f };
-
-		} else if (groupName == "boss_windup_shell") {
-			// 外周リング（パルス）
-			auto frand = [&rng](float a, float b) { return std::uniform_real_distribution<float>(a, b)(rng); };
-
-			p.transform_.translate_ = center;
-
-			float sc = frand(14.0f, 26.0f);
-			p.transform_.scale_ = { sc, sc, sc };
-
-			// ゆっくり拡張（リングなのでXYよりXZのイメージだけど簡略化でOK）
-			p.velocity_ = { 0.0f, frand(0.02f, 0.06f), 0.0f };
-
-			p.lifeTime_ = frand(0.18f, 0.28f);
-			p.currentTime_ = 0.0f;
-
-			p.color_ = { frand(0.95f, 1.0f), frand(0.15f, 0.35f), frand(0.95f, 1.0f), 1.0f };
 		} else if (groupName == "boss_slash_omen_core") {
 			// 中心の邪核：暗い中心と、赤黒い縁の圧縮核
 			auto frand = [&rng](float a, float b) {
@@ -3086,7 +3030,7 @@ namespace TKM {
 	) {
 		auto frand = [&rng](float a, float b) {
 			return std::uniform_real_distribution<float>(a, b)(rng);
-		};
+			};
 
 		Vector3 fireBaseColor{};
 		Vector3 fireTipColor{};
@@ -3180,4 +3124,143 @@ namespace TKM {
 		return false;
 	}
 
+	bool ParticleSpawner::MakeBossMissileTelegraphParticle(
+		std::mt19937& rng,
+		const std::string& groupName,
+		const Vector3& center,
+		ParticleManager::Particle& p
+	) {
+		auto frand = [&rng](float a, float b) {
+			return std::uniform_real_distribution<float>(a, b)(rng);
+			};
+
+		if (groupName == "bossMissile_node") {
+			// 発射口の点火ノード
+			float side = (frand(0.0f, 1.0f) < 0.5f) ? -1.0f : 1.0f;
+			float level = std::floor(frand(0.0f, 3.99f));
+
+			Vector3 local{};
+			local.x = side * (7.0f + level * 2.4f);
+			local.y = 2.5f + level * 2.6f;
+			local.z = 3.0f + level * 1.4f;
+
+			p.transform_.translate_ = center + local;
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+
+			float sc = frand(1.4f, 2.6f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.10f, 0.16f);
+			p.currentTime_ = 0.0f;
+
+			// 白紫〜青紫。兵器っぽく
+			float t = frand(0.0f, 1.0f);
+			p.color_ = {
+				0.70f + 0.25f * t,
+				0.35f + 0.20f * t,
+				1.00f,
+				1.0f
+			};
+			return true;
+		}
+
+		if (groupName == "bossMissile_lane") {
+			// 前方に伸びる発射レーン
+			float side = (frand(0.0f, 1.0f) < 0.5f) ? -1.0f : 1.0f;
+			float band = std::floor(frand(0.0f, 3.99f));
+
+			Vector3 start{};
+			start.x = side * (6.5f + band * 3.2f);
+			start.y = 3.0f + band * 2.0f;
+			start.z = 8.0f + band * 4.0f;
+
+			p.transform_.translate_ = center + start;
+
+			// 前方向に押し出す
+			p.velocity_ = {
+				frand(-0.10f, 0.10f),
+				frand(-0.03f, 0.10f),
+				frand(3.5f, 6.5f)
+			};
+
+			float thin = frand(0.18f, 0.34f);
+			float len = frand(10.0f, 18.0f);
+			p.transform_.scale_ = { thin, thin, len };
+
+			p.lifeTime_ = frand(0.12f, 0.20f);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { 0.95f, 0.45f, 1.0f, 1.0f };
+			return true;
+		}
+
+		if (groupName == "bossMissile_grid") {
+			// 発射システム骨組み。中心じゃなく前方空間に出す
+			Vector3 local{};
+			local.x = frand(-8.0f, 8.0f);
+			local.y = frand(3.0f, 10.0f);
+			local.z = frand(14.0f, 24.0f);
+
+			p.transform_.translate_ = center + local;
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+
+			float sc = frand(10.0f, 16.0f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.10f, 0.16f);
+			p.currentTime_ = 0.0f;
+
+			// 薄い兵器UI
+			p.color_ = { 0.65f, 0.75f, 1.0f, 0.85f };
+			return true;
+		}
+
+		if (groupName == "bossMissile_jet") {
+			// 発射口から前に吹くスパーク
+			float side = (frand(0.0f, 1.0f) < 0.5f) ? -1.0f : 1.0f;
+
+			Vector3 local{};
+			local.x = side * frand(6.0f, 11.0f);
+			local.y = frand(2.0f, 8.5f);
+			local.z = frand(4.0f, 8.0f);
+
+			p.transform_.translate_ = center + local;
+			p.velocity_ = {
+				frand(-0.35f, 0.35f),
+				frand(-0.15f, 0.25f),
+				frand(5.0f, 9.0f)
+			};
+
+			float sc = frand(0.35f, 0.70f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.08f, 0.16f);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { 1.0f, 0.55f, 0.95f, 1.0f };
+			return true;
+		}
+
+		if (groupName == "bossMissile_flash") {
+			// 全点火の最後の合図
+			Vector3 local{};
+			local.x = frand(-4.0f, 4.0f);
+			local.y = frand(3.0f, 8.0f);
+			local.z = frand(10.0f, 18.0f);
+
+			p.transform_.translate_ = center + local;
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+
+			float sc = frand(5.0f, 8.5f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.05f, 0.08f);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { 1.0f, 0.82f, 1.0f, 1.0f };
+			return true;
+		}
+
+		return false;
+	}
 }

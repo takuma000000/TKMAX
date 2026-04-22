@@ -313,6 +313,22 @@ namespace TKM {
 						(*particleIterator).transform_.scale_.y *= grow;
 						(*particleIterator).transform_.scale_.z *= grow;
 					}
+					if (g == "bossMissile_lane") {
+						float stretch = 1.0f + 18.0f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.z *= stretch;
+					}
+					if (g == "bossMissile_grid") {
+						float grow = 1.0f + 8.0f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.x *= grow;
+						(*particleIterator).transform_.scale_.y *= grow;
+						(*particleIterator).transform_.scale_.z *= grow;
+					}
+					if (g == "bossMissile_flash") {
+						float grow = 1.0f + 24.0f * kDeltaTime_;
+						(*particleIterator).transform_.scale_.x *= grow;
+						(*particleIterator).transform_.scale_.y *= grow;
+						(*particleIterator).transform_.scale_.z *= grow;
+					}
 
 					// アルファカーブ（“パァン”を作る）
 					float a = 1.0f - t;

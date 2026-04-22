@@ -87,13 +87,17 @@ namespace TKM {
 		// 中心の強いフラッシュ
 		pm->CreateParticleGroup("core_charge_flash", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
 
-		/// === Boss Windup FX（予備動作）===
-		// 外側を覆うリング状エネルギー
-		pm->CreateParticleGroup("boss_windup_shell", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
-		// 火花がパチパチ飛ぶエフェクト
-		pm->CreateParticleGroup("boss_windup_crackle", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// 内向きに吸い込まれる粒子
-		pm->CreateParticleGroup("boss_windup_inward", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
+		/// === Boss Missile Launch System FX（ミサイル発射システム起動） ===
+		// 発射口の点火ノード
+		pm->CreateParticleGroup("bossMissile_node", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
+		// 前方に伸びる発射レーン
+		pm->CreateParticleGroup("bossMissile_lane", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
+		// 兵器UIっぽい薄い骨組み
+		pm->CreateParticleGroup("bossMissile_grid", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
+		// 発射口から吹く前方スパーク
+		pm->CreateParticleGroup("bossMissile_jet", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
+		// 最終点火フラッシュ
+		pm->CreateParticleGroup("bossMissile_flash", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
 
 		/// === Boss Slash Omen FX（斬撃前の邪悪な予兆） ===
 		// 中心の邪核

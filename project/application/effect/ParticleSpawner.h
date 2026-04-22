@@ -31,6 +31,15 @@ namespace TKM {
 			const Vector3& center,
 			ParticleManager::Particle& p
 		);
+		/// <summary>
+		/// ボスのミサイル予告用の粒を生成する関数。groupNameが"bossEntrance_missileTelegraph"のときに呼び出される。
+		/// </summary>
+		/// <param name="rng">乱数生成器</param>
+		/// <param name="groupName">生成するパーティクルのグループ名</param>
+		/// <param name="center">生成するパーティクルの中心位置</param>
+		/// <param name="p">生成されたパーティクルを格納する参照</param>
+		/// <returns>生成に成功したかどうか</returns>
+		static bool MakeBossMissileTelegraphParticle(std::mt19937& rng, const std::string& groupName, const Vector3& center, ParticleManager::Particle& p);
 	};
 
 }
