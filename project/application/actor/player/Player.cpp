@@ -14,298 +14,461 @@
 #endif
 
 void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon) {
-	common_ = common; // Object3d共通
-	dxCommon_ = dxCommon; // DirectX共通
+	// Object3d共通への参照を保持する
+	common_ = common;
 
-	// TrailRibbonRenderer初期化
+	// DirectX共通への参照を保持する
+	dxCommon_ = dxCommon;
+
+	// トレイル描画システムを初期化する
 	TKM::TrailRibbonRenderer::GetInstance()->Initialize(dxCommon_);
 
-	// 3Dオブジェクト作成
+	//=========================================================
+	// プレイヤー本体生成
+	//=========================================================
+
+	// プレイヤー本体の3Dオブジェクトを生成する
 	object_ = std::make_unique<TKM::Object3d>();
+
+	// 本体の描画に必要な情報を渡して初期化する
 	object_->Initialize(common_, dxCommon_);
+
+	// 本体モデルを設定する
 	object_->SetModel("turtle.obj");
 
-	// ヒレ（4枚入り）
-	flipper_ = std::make_unique<TKM::Object3d>();
-	flipper_->Initialize(common_, dxCommon_);
-	flipper_->SetModel("turtle_flipper.obj");
-	// 親子付け
-	flipper_->SetParent(object_.get());
-	flipperBaseRot_ = flipper_->GetRotate(); // ヒレの回転の基準値を保存
-	flipperAnimT_ = 0.0f; // ヒレのアニメーション用タイマー
+	//=========================================================
+	// ヒレ生成
+	//=========================================================
 
+	// ヒレ用3Dオブジェクトを生成する
+	flipper_ = std::make_unique<TKM::Object3d>();
+
+	// ヒレの描画に必要な情報を渡して初期化する
+	flipper_->Initialize(common_, dxCommon_);
+
+	// ヒレモデルを設定する
+	flipper_->SetModel("turtle_flipper.obj");
+
+	// ヒレを本体の子にして追従させる
+	flipper_->SetParent(object_.get());
+
+	// ヒレ回転の基準姿勢を保存する
+	flipperBaseRot_ = flipper_->GetRotate();
+
+	// ヒレアニメ用タイマーを初期化する
+	flipperAnimT_ = 0.0f;
+
+	//=========================================================
+	// レティクル生成
+	//=========================================================
+
+	// レティクルを生成する
 	reticle_ = std::make_unique<Reticle>();
-	reticle_->Initialize(common_, dxCommon_, "reticle_big.obj"); // モデル指定可
-	// Player から位置とヨー角(radians)を渡す（循環依存を避けるためコールバック）
+
+	// レティクルを初期化する
+	reticle_->Initialize(common_, dxCommon_, "reticle_big.obj");
+
+	// プレイヤーの位置とヨー角をレティクルへ渡すコールバックを登録する
 	reticle_->BindOwner(
 		[this]() { return object_->GetTranslate(); },
 		[this]() { return object_->GetRotate().y; }
 	);
-	reticle_->SetMoveRange(moveMin_, moveMax_); // レティクルの移動範囲を指定
-	reticle_->GetCenterWorldPos(); // 中心位置取得用
 
-	// ショットマネージャー初期化
+	// レティクルの移動範囲を設定する
+	reticle_->SetMoveRange(moveMin_, moveMax_);
+
+	// レティクル中心取得処理を一度呼んでおく
+	reticle_->GetCenterWorldPos();
+
+	//=========================================================
+	// ショットマネージャー生成
+	//=========================================================
+
+	// ショットマネージャーを生成する
 	shotManager_ = std::make_unique<PlayerShotManager>();
+
+	// プレイヤー参照と描画情報を渡して初期化する
 	shotManager_->Initialize(this, common_, dxCommon_);
 
+	// ショット設定JSONを読み込む
 	const bool loaded = shotConfig_.Load("./resources/data/playerShotConfig.json");
+
+	// 読み込み失敗時は停止する
 	assert(loaded && "playerShotConfig.json の読込に失敗しました");
 
+	// 読み込んだ設定をショットマネージャーへ渡す
 	shotManager_->SetConfig(&shotConfig_);
 
+	// 自機オブジェクト参照を渡す
 	shotManager_->SetOwnerObject(object_.get());
+
+	// レティクル参照を渡す
 	shotManager_->SetReticle(reticle_.get());
+
+	// カメラ参照を渡す
 	shotManager_->SetCamera(camera_);
 
+	//=========================================================
 	// パーティクルグループ作成
+	//=========================================================
+
+	// ジェット煙パーティクルを作成する
 	TKM::ParticleManager::GetInstance()->CreateParticleGroup(
-		"jetSmoke", "./resources/texture/circle.png", TKM::ParticleManager::ParticleType::NORMAL); // ジェット煙
+		"jetSmoke", "./resources/texture/circle.png", TKM::ParticleManager::ParticleType::NORMAL);
+
+	// 被弾スパークパーティクルを作成する
 	TKM::ParticleManager::GetInstance()->CreateParticleGroup(
-		"damageSpark", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL); // 故障スパーク（バチバチ）
-	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_rb", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL); // 弾の軌跡
-	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lb", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL); // 弾の軌跡
-	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_rt", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL); // 弾の軌跡
-	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lt", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL); // 弾の軌跡
-	// --- LT弾：メルヘン弾道（3レイヤー）---
+		"damageSpark", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL);
+
+	// RB弾の軌跡パーティクルを作成する
+	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_rb", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL);
+
+	// LB弾の軌跡パーティクルを作成する
+	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lb", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL);
+
+	// RT弾の軌跡パーティクルを作成する
+	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_rt", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL);
+
+	// LT弾の軌跡パーティクルを作成する
+	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lt", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL);
+
+	// LT弾リボン軌跡パーティクルを作成する
 	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lt_ribbon", "./resources/texture/firework_star.png", TKM::ParticleManager::ParticleType::RIBBON);
+
+	// LT弾キラキラパーティクルを作成する
 	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lt_sparkle", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL);
+
+	// LT弾リングパーティクルを作成する
 	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lt_ring", "./resources/texture/gradationLine.png", TKM::ParticleManager::ParticleType::RING);
+
+	// LB弾のキラキラ演出パーティクルを作成する
 	TKM::ParticleManager::GetInstance()->CreateParticleGroup(
 		"trail_lb_glitter",
 		"./resources/texture/firework_star.png",
 		TKM::ParticleManager::ParticleType::NORMAL);
+
+	// LB弾の稲光メイン演出パーティクルを作成する
 	TKM::ParticleManager::GetInstance()->CreateParticleGroup(
 		"trail_lb_bolt_main",
 		"./resources/texture/gradationLine.png",
 		TKM::ParticleManager::ParticleType::NORMAL);
+
+	// LB弾の稲光コア演出パーティクルを作成する
 	TKM::ParticleManager::GetInstance()->CreateParticleGroup(
 		"trail_lb_bolt_core",
 		"./resources/texture/gradationLine.png",
 		TKM::ParticleManager::ParticleType::NORMAL);
 
-	if (enableJetSmoke_) { // ジェット煙初期化
+	//=========================================================
+	// ジェット煙エミッタ初期化
+	//=========================================================
+
+	// ジェット煙が有効なら初期化する
+	if (enableJetSmoke_) {
+		// 機体後方に煙の初期位置を作る
 		Vector3 jetPos = object_->GetTranslate();
-		jetPos.z -= kJetSmokeOffsetZ_;           // 機体のケツあたり
+		jetPos.z -= kJetSmokeOffsetZ_;
+
+		// エミッタを初期化する
 		jetEmitter_.Initialize("jetSmoke", jetPos);
 	}
 
-	// ワンウェイバリア
-	wave1BarrierHits_.clear(); // ワンウェイバリアヒット情報リスト初期化
+	//=========================================================
+	// ワンウェイバリア関連初期化
+	//=========================================================
+
+	// バリアヒット情報リストを空にする
+	wave1BarrierHits_.clear();
 }
 
 void Player::Update(float dt) {
-	UpdateRumble(dt); // コントローラー振動更新
+	// コントローラー振動を更新する
+	UpdateRumble(dt);
 
-	// --- 無敵時間 更新（操作無効でも進める）---
+	//=========================================================
+	// 無敵時間更新
+	//=========================================================
 	if (isInvincible_) {
+		// 無敵経過時間を進める
 		invincibleT_ += dt;
+
+		// 点滅用タイマーを進める
 		blinkT_ += dt;
 
+		// 一定間隔ごとに表示/非表示を切り替える
 		if (blinkT_ >= kBlinkInterval_) {
 			blinkT_ = 0.0f;
 			invincibleVisible_ = !invincibleVisible_;
 		}
 
+		// 無敵時間が終わったら通常状態へ戻す
 		if (invincibleT_ >= kInvincibleSec_) {
 			isInvincible_ = false;
 			invincibleT_ = 0.0f;
 			blinkT_ = 0.0f;
-			invincibleVisible_ = true; // 最後は必ず表示
+			invincibleVisible_ = true;
 		}
 	}
 
-	// 被弾フラッシュ用タイマー更新
+	//=========================================================
+	// 被弾フラッシュタイマー更新
+	//=========================================================
 	if (hitFlashTimer_ > 0.0f) {
+		// タイマーを減らす
 		hitFlashTimer_ -= dt;
+
+		// 0未満にならないようにする
 		if (hitFlashTimer_ < 0.0f) {
 			hitFlashTimer_ = 0.0f;
 		}
 	}
 
-	if (sameAttackLockT_ > 0.0f) { // 同一攻撃IDロックタイマー更新
+	//=========================================================
+	// 同一攻撃IDロックタイマー更新
+	//=========================================================
+	if (sameAttackLockT_ > 0.0f) {
+		// ロック時間を減らす
 		sameAttackLockT_ -= dt;
+
+		// 0未満にならないようにする
 		if (sameAttackLockT_ < 0.0f) { sameAttackLockT_ = 0.0f; }
 	}
 
+	// レティクルがあれば更新する
 	if (reticle_) reticle_->Update(dt);
 
-	// Wave1バリアのヒット情報を更新
+	//=========================================================
+	// Wave1バリアヒット履歴更新
+	//=========================================================
 	for (auto it = wave1BarrierHits_.begin(); it != wave1BarrierHits_.end();) {
+		// 各ヒット情報の経過時間を進める
 		it->age_ += dt;
-		// 寿命が尽きてたら削除
+
+		// 寿命を超えたものは削除する
 		if (it->age_ >= it->life_) {
 			it = wave1BarrierHits_.erase(it);
-		} else { // 生存してたら次へ
+		} else {
+			// まだ生きているものは次へ進む
 			++it;
 		}
 	}
 
-	// 操作有効かつ生存中のみゲームプレイ処理
+	//=========================================================
+	// ゲームプレイ処理
+	//=========================================================
 	if (controlEnabled_ && !isDead_) {
+		// 通常移動処理
 		HandleGamePadMove();
+
+		// 回避処理
 		HandleDodge(dt);
 
+		// ショットマネージャーがあれば射撃更新
 		if (shotManager_) {
 			shotManager_->Update(dt, shootingEnabled_);
 		}
 	} else {
+		// 操作不可時はロック状態だけ解除しておく
 		if (shotManager_) {
 			shotManager_->ClearLockState();
 		}
 	}
 
 #ifdef USE_IMGUI
-	// ───────── 自機当たり判定ワイヤーボックス描画 ─────────
+	//=========================================================
+	// 自機当たり判定可視化
+	//=========================================================
 	{
+		// 現在位置を取得する
 		Vector3 center = object_->GetTranslate();
+
+		// 当たり判定サイズを取得する
 		Vector3 size = colliderScale_;
 
+		// ライン描画システムを取得する
 		auto* lr = TKM::LineRenderer::GetInstance();
 
+		// 被弾フラッシュ中は赤、それ以外は緑で表示する
 		TKM::LineRenderer::Color col =
 			(hitFlashTimer_ > 0.0f)
 			? TKM::LineRenderer::Color{ 1.0f, 0.0f, 0.0f, 1.0f }
 		: TKM::LineRenderer::Color{ 0.0f, 1.0f, 0.0f, 1.0f };
 
+		// AABBを描画する
 		lr->AddAABB(center, size, col);
 	}
 #endif
 
-	Death(); // 撃墜処理
+	// 撃墜処理を更新する
+	Death();
 
-	// ---- ジェット煙（HPが0なら停止）----
+	//=========================================================
+	// ジェット煙更新
+	//=========================================================
 	if (enableJetSmoke_ && hp_ > 0) {
+		// 機体後方に煙の発生位置を置く
 		Vector3 jetPos = object_->GetTranslate();
 		jetPos.z -= kJetSmokeOffsetZ_;
+
+		// エミッタ位置を更新する
 		jetEmitter_.SetPosition(jetPos);
+
+		// エミッタを更新する
 		jetEmitter_.Update();
 	}
 
-	RemoveEnemyIfDead(); // 敵が死んでたら参照をクリア
-	UpdateFlipperAnim_(dt); // ヒレのアニメーション更新
+	// 死亡済みターゲット参照を整理する
+	RemoveEnemyIfDead();
+
+	// ヒレアニメを更新する
+	UpdateFlipperAnim_(dt);
+
+	// 生きている間だけ浮遊とカメラ追従を更新する
 	if (!isDead_) {
-		UpdateFloatBob_(dt); // 浮遊のアニメーション更新
-		HandleFollowCamera(); // 生存中だけカメラ追従
+		UpdateFloatBob_(dt);
+		HandleFollowCamera();
 	}
 
-	// TrailRibbonRendererの更新
+	// トレイル描画システムを更新する
 	TKM::TrailRibbonRenderer::GetInstance()->Update(dt);
 
-	TKM::ParticleManager::GetInstance()->Update(dt); // パーティクルマネージャー更新
-	object_->Update(); // プレイヤー本体更新
-	flipper_->Update(); // ヒレ更新
+	// パーティクルマネージャーを更新する
+	TKM::ParticleManager::GetInstance()->Update(dt);
+
+	// プレイヤー本体の行列などを更新する
+	object_->Update();
+
+	// ヒレの行列などを更新する
+	flipper_->Update();
 }
 
 void Player::DrawTrails(TKM::DirectXCommon* dxCommon) {
-	// TrailRibbonRendererの描画
+	// ショットマネージャー経由でトレイルを描画する
 	shotManager_->DrawTrails(dxCommon);
-
 }
 
 void Player::ImGuiDebug() {
 #ifdef USE_IMGUI
+	// 本体がなければ何もしない
 	if (!object_) return;
 
+	// 現在のTransformを取得する
 	Vector3 pos = object_->GetTranslate();
 	Vector3 rot = object_->GetRotate();
 	Vector3 scale = object_->GetScale();
 
-	//---------------- プレイヤー本体 ----------------
+	//=========================================================
+	// プレイヤー本体デバッグUI
+	//=========================================================
 	ImGui::Begin("プレイヤー");
 
+	// バリア状態表示
 	ImGui::Text("バリア状態: %s", wave1BarrierActive_ ? "ON" : "OFF");
+
+	// バリアヒット数表示
 	ImGui::Text("ヒット数: %d", static_cast<int>(wave1BarrierHits_.size()));
 
+	// 直前に受けた攻撃ID表示
 	ImGui::Text("直前に当たった攻撃ID: %d", lastHitAttackId_);
 
+	// 位置編集
 	if (ImGui::DragFloat3("位置", &pos.x, 0.01f)) {
 		object_->SetTranslate(pos);
 	}
+
+	// 回転編集
 	if (ImGui::DragFloat3("回転", &rot.x, 0.01f)) {
 		object_->SetRotate(rot);
 	}
+
+	// 拡縮編集
 	if (ImGui::DragFloat3("拡縮cale", &scale.x, 0.01f)) {
 		object_->SetScale(scale);
 	}
-	ImGui::Separator(); // 区切り線
-	// 当たり判定サイズ
+
+	ImGui::Separator();
+
+	// 当たり判定サイズ編集
 	Vector3 col = colliderScale_;
 	if (ImGui::DragFloat3("当たり判定サイズ(自機)", &col.x, 0.01f, 0.01f, 50.0f)) {
 		colliderScale_ = col;
 	}
-	ImGui::Separator(); // 区切り線
-	if (ImGui::Button("HPリセット")) { hp_ = 5; } // 2
+
+	ImGui::Separator();
+
+	// HPリセットボタン
+	if (ImGui::Button("HPリセット")) { hp_ = 5; }
+
 	ImGui::SeparatorText("カメラシェイク");
-	ImGui::SliderFloat("強度のベース", &shakeBaseStrength_, 0.0f, 5.0f); // ベースとなるカメラシェイク強度
-	ImGui::SliderFloat("ズーム強調", &shakeZoomBoost_, 0.0f, 15.0f); // ズーム時の追加倍率
-	ImGui::Text("現在の増幅量 : %.2f", shakeBaseStrength_ + (1.0f - camZoom_) * shakeZoomBoost_); // 現在の倍率を表示
+
+	// シェイク基本強度調整
+	ImGui::SliderFloat("強度のベース", &shakeBaseStrength_, 0.0f, 5.0f);
+
+	// ズーム時追加強度調整
+	ImGui::SliderFloat("ズーム強調", &shakeZoomBoost_, 0.0f, 15.0f);
+
+	// 現在のシェイク倍率表示
+	ImGui::Text("現在の増幅量 : %.2f", shakeBaseStrength_ + (1.0f - camZoom_) * shakeZoomBoost_);
+
 	ImGui::End();
-	////---------------- プレイヤー弾ステータス ----------------
-	//ImGui::Begin("P弾ステータス");
-	//ImGui::SliderFloat("弾速度(RB,RT,LB)", &normalBulletSpeed_, 0.1f, 15.0); // RB,RT,LBの弾速度調整
-
-	//ImGui::Separator();
-
-	//float rate = float(rbAmmo_) / float(kRbAmmoMax_);
-	//char label[64];
-	//std::snprintf(
-	//	label,
-	//	sizeof(label),
-	//	"RB弾数 %d / %d",
-	//	rbAmmo_,
-	//	kRbAmmoMax_
-	//);
-	//ImGui::ProgressBar(rate, ImVec2(260.0f, 18.0f), label);
-
-	//if (rbRefilling_) {
-	//	ImGui::Text("RB回復中...");
-	//} else if (rbAmmo_ <= 0) {
-	//	ImGui::Text("RB回復まで %.2f 秒", std::max(0.0f, kRbEmptyWaitSec_ - rbEmptyTimer_));
-	//} else {
-	//	ImGui::Text("RBアイドル回復まで %.2f 秒", std::max(0.0f, kRbEmptyWaitSec_ - rbNoFireTimer_));
-	//}
-
-	//ImGui::End();
 #endif
 }
 
 void Player::RemoveEnemyIfDead() {
-	// 敵が死んでたらターゲットを解除
+	// ショットマネージャー側で死亡済みターゲット参照を外す
 	shotManager_->RemoveDeadTargets();
 }
 
 void Player::EnableSpecialAttack() {
-	shotManager_->EnableSpecialAttack(); // ショットマネージャーに一撃必殺使用可能を通知
+	// 一撃必殺の使用可能化をショットマネージャーへ通知する
+	shotManager_->EnableSpecialAttack();
 }
 
 void Player::OnEnemyDestroyed(Enemy* e) {
-	// 敵が破壊されたときの処理をショットマネージャーに通知（ロック解除や一撃必殺の解放など）
+	// 敵破壊時の後処理をショットマネージャーへ通知する
 	shotManager_->OnEnemyDestroyed(e);
 }
 
 void Player::Damage(int value) {
-
+	// 無敵中ならダメージを受けない
 	if (isInvincible_) { return; }
 
+	// HPを減らす
 	hp_ -= value;
+
+	// 0未満にならないよう補正する
 	if (hp_ < 0) hp_ = 0;
 
-	// ==========================
-	// 被弾Rumble（発射と違う感触）
-	// 1段目: 左強めで「ドン」
-	// 2段目: 少し遅らせて右で「ビリ」
-	// ==========================
-	StartRumble(0.10f, 52000, 18000);  // ドン（重い）
-	rumble2Pending_ = true;
-	rumble2DelayT_ = 0.07f;            // ちょい遅らせる
-	rumble2Sec_ = 0.08f;
-	rumble2Left_ = 0;
-	rumble2Right_ = 42000;             // ビリ（細かい）
+	//=========================================================
+	// 被弾振動設定
+	//=========================================================
 
-	// 被弾したので当たり判定ボックスをしばらく赤くする
+	// 1段目の重い振動を開始する
+	StartRumble(0.10f, 52000, 18000);
+
+	// 2段目振動を予約する
+	rumble2Pending_ = true;
+
+	// 2段目開始までの遅延
+	rumble2DelayT_ = 0.07f;
+
+	// 2段目の継続時間
+	rumble2Sec_ = 0.08f;
+
+	// 2段目左モーター強度
+	rumble2Left_ = 0;
+
+	// 2段目右モーター強度
+	rumble2Right_ = 42000;
+
+	//=========================================================
+	// 被弾フラッシュ開始
+	//=========================================================
 	hitFlashTimer_ = 0.15f;
 
-	// --- 無敵開始（2秒）---
+	//=========================================================
+	// 無敵開始
+	//=========================================================
 	isInvincible_ = true;
 	invincibleT_ = 0.0f;
 	blinkT_ = 0.0f;
@@ -313,591 +476,832 @@ void Player::Damage(int value) {
 }
 
 void Player::Death() {
+	// HPが残っているなら死亡処理しない
 	if (hp_ > 0) {
 		return;
 	}
 
+	//=========================================================
 	// 死亡開始時に一度だけ行う処理
+	//=========================================================
 	if (!deathStartHandled_) {
+		// 開始済みフラグを立てる
 		deathStartHandled_ = true;
+
+		// 死亡状態にする
 		isDead_ = true;
 
-		SetControlEnabled(false);   // 操作停止
-		SetShootingEnabled(false);  // 射撃停止
-		SetReticleVisible(false);   // レティクル非表示
+		// 操作を止める
+		SetControlEnabled(false);
 
-		// ロック状態クリア（撃墜後はターゲットロックも意味ないので）
+		// 射撃を止める
+		SetShootingEnabled(false);
+
+		// レティクルを隠す
+		SetReticleVisible(false);
+
+		// ロック状態を解除する
 		shotManager_->ClearLockState();
 
-		// 画面手前(-Z)に一発だけ弾かれて、そのまま落ちる
+		// 後方へ弾かれつつ落下する初速を与える
 		deathBackwardDir_ = { 0.0f, 0.0f, -1.0f };
 		deathVelocity_ = { 0.0f, -kDeathFallStartSpeed_, -kDeathBackwardSpeed_ * 0.8f };
 
-		// 姿勢は少しだけ崩す
+		// 左右どちらに崩れるかをランダムで決める
 		float rollSign = (rand() % 2 == 0) ? -1.0f : 1.0f;
+
+		// 初期角速度を設定する
 		deathAngularVelocity_.x = 0.012f;
 		deathAngularVelocity_.y = 0.0f;
 		deathAngularVelocity_.z = 0.020f * rollSign;
 
+		// 軽くカメラシェイクする
 		StartCameraShake(20);
 	}
 
-	// 下方向へ加速
+	//=========================================================
+	// 落下・吹き飛び更新
+	//=========================================================
+
+	// 下方向へ重力加速させる
 	deathVelocity_.y -= kDeathGravity_;
+
+	// 落下速度の下限を設ける
 	if (deathVelocity_.y < -kDeathFallMaxSpeed_) {
 		deathVelocity_.y = -kDeathFallMaxSpeed_;
 	}
 
-	// 手前方向(Z)の勢いは少しずつだけ抜ける
+	// 後方への勢いは少しずつ減衰させる
 	deathVelocity_.z *= kDeathBackwardDamping_;
 
-	// 位置反映
+	//=========================================================
+	// 位置更新
+	//=========================================================
 	Vector3 pos = object_->GetTranslate();
 	pos += deathVelocity_;
 	object_->SetTranslate(pos);
 
+	//=========================================================
 	// 姿勢更新
+	//=========================================================
 	Vector3 newRot = object_->GetRotate();
 	newRot.x += deathAngularVelocity_.x;
 	newRot.z += deathAngularVelocity_.z;
 
+	// 前後回転の最大値を制限する
 	if (newRot.x > kDeathMaxPitch_) {
 		newRot.x = kDeathMaxPitch_;
 	}
 
+	// 左右ロールの最大値を制限する
 	newRot.z = std::clamp(newRot.z, -kDeathMaxRoll_, kDeathMaxRoll_);
 	object_->SetRotate(newRot);
 
+	// 角速度は徐々に減衰させる
 	deathAngularVelocity_ *= kDeathRotateDamping_;
 }
 
 void Player::UpdateVisualOnly(float dt) {
-	// クリア演出用：入力や弾処理は回さず、見た目（親子付け/アニメ）だけ更新する
+	// クリア演出用にヒレアニメだけ更新する
 	UpdateFlipperAnim_(dt);
-	// クリア演出用
+
+	// 本体行列だけ更新する
 	if (object_) { object_->Update(); }
+
+	// ヒレ行列だけ更新する
 	if (flipper_) { flipper_->Update(); }
 }
 
 void Player::StartBossDeathCameraZoom() {
-	// すでにボス用ズーム中なら二重起動しない
+	// すでにズーム中なら二重起動しない
 	if (bossZoomActive_) {
 		return;
 	}
 
-	// 調整用定数
+	// ズーム先の目標倍率
 	const float kTargetZoom = 0.35f;
-	const float kZoomTime = 1.2f;   // カメラが引ききるまでの時間
-	const float kBlurTime = 4.795f;   // ブラー継続時間
 
-	// ---- ズームアウト用トゥイーン設定 ----
+	// ズーム時間
+	const float kZoomTime = 1.2f;
+
+	// ブラー継続時間
+	const float kBlurTime = 4.795f;
+
+	//=========================================================
+	// ズームトゥイーン開始
+	//=========================================================
 	bossZoomActive_ = true;
 	bossZoomTween_.Reset(1.0f, kTargetZoom, kZoomTime, Ease::Type::OutCubic);
 	bossZoom_ = 1.0f;
 
-	// ---- ラジアルブラー発火 ----
+	//=========================================================
+	// ラジアルブラー開始
+	//=========================================================
 	if (radialBlur_) {
-		// 強さ = 2.0f、時間 = kBlurTime
 		radialBlur_->BulrStartShock(2.0f, kBlurTime);
 	}
 }
 
 bool Player::TryDamageFromAttack(int damage, int attackId) {
+	// 無敵中なら受けない
 	if (isInvincible_) {
 		return false;
 	}
 
-	// lock中で同じ攻撃IDなら無視
+	// ロック時間中に同じ攻撃IDなら無視する
 	if (sameAttackLockT_ > 0.0f && attackId == lastHitAttackId_) {
 		return false;
 	}
 
-	// 通す
+	// ダメージを通す
 	Damage(damage);
+
+	// 今回の攻撃IDを記録する
 	lastHitAttackId_ = attackId;
-	sameAttackLockT_ = 0.20f; // 0.2秒くらい（好みで）
+
+	// 短時間だけ同一攻撃ロックをかける
+	sameAttackLockT_ = 0.20f;
 	return true;
 }
 
 void Player::Draw(TKM::DirectXCommon* dxCommon) {
-
-	// --- 無敵点滅：見えないタイミングは自機だけ描画しない ---
+	//=========================================================
+	// 無敵点滅中の本体描画制御
+	//=========================================================
 	if (isInvincible_ && !invincibleVisible_) {
-		// 自機（胴体＋ヒレ）を両方スキップ
+		// 点滅の非表示タイミングなので描かない
 	} else {
+		// 本体を描画する
 		object_->Draw(dxCommon);
+
+		// ヒレがあれば描画する
 		if (flipper_) flipper_->Draw(dxCommon);
 	}
-	// クリア演出中などで隠したいときはフラグでOFF
+
+	// レティクル表示フラグが立っていれば描画する
 	if (reticle_ && reticleVisible_) {
 		reticle_->Draw(dxCommon);
 	}
 
+	// 弾を描画する
 	shotManager_->DrawBullets(dxCommon);
 }
 
 void Player::SetCamera(TKM::Camera* camera) {
+	// カメラ参照を保持する
 	this->camera_ = camera;
+
+	// 本体へカメラを渡す
 	if (object_) { object_->SetCamera(camera); }
+
+	// レティクルへカメラを渡す
 	if (reticle_) { reticle_->SetCamera(camera); }
+
+	// ヒレへカメラを渡す
 	if (flipper_) { flipper_->SetCamera(camera); }
-	shotManager_->SetCamera(camera); // ショットマネージャー
+
+	// ショットマネージャーへもカメラを渡す
+	shotManager_->SetCamera(camera);
 }
 
 void Player::SetPosition(const Vector3& pos) {
-	object_->SetTranslate(pos); // 位置設定
+	// 本体位置を設定する
+	object_->SetTranslate(pos);
 }
 
 void Player::SetParentScene(TKM::BaseScene* scene) {
-	parentScene_ = scene; // 親シーン設定
+	// 親シーンを保持する
+	parentScene_ = scene;
 }
 
 void Player::SetEnemy(Enemy* enemy) {
-	shotManager_->SetEnemy(enemy); // ショットマネージャーに敵の参照をセット（ロックオンや追従弾のターゲット用）
+	// ショットマネージャーへ敵参照を渡す
+	shotManager_->SetEnemy(enemy);
 }
 
 void Player::SetAllEnemies(std::vector<std::unique_ptr<Enemy>>* enemies) {
-	shotManager_->SetAllEnemies(enemies); // ショットマネージャーに敵のリストの参照をセット（全体ロックオンや追従弾のターゲット用）
+	// ショットマネージャーへ敵リスト参照を渡す
+	shotManager_->SetAllEnemies(enemies);
 }
 
 void Player::SetControlEnabled(bool enabled) {
+	// 操作有効フラグを更新する
 	controlEnabled_ = enabled;
 
+	// レティクル入力有効状態も合わせる
 	if (reticle_) {
 		reticle_->SetInputEnabled(enabled);
 	}
 }
 
 void Player::SetReticleVisible(bool visible) {
-	reticleVisible_ = visible; // レティクルの表示 / 非表示を切り替えるフラグ
+	// レティクル描画フラグを更新する
+	reticleVisible_ = visible;
 }
 
 void Player::SetBarrierCore(BarrierCore* core) {
-	shotManager_->SetBarrierCore(core); // ショットマネージャーにミッドボスコアの参照をセット（ロックオンや一撃必殺のターゲット用）
+	// ショットマネージャーへバリアコア参照を渡す
+	shotManager_->SetBarrierCore(core);
 }
 
 void Player::SetColliderScale(const Vector3& s) {
+	// 当たり判定サイズを更新する
 	colliderScale_ = s;
 }
 
 void Player::SetRadialBlurEffect(TKM::RadialBlurEffect* effect) {
-	radialBlur_ = effect; // ラジアルブラーエフェクトの参照をセット
+	// ラジアルブラー参照を保持する
+	radialBlur_ = effect;
 }
 
 void Player::SetRotation(const Vector3& r) {
-	object_->SetRotate(r); // 回転設定（直接指定版）
+	// 本体回転を直接設定する
+	object_->SetRotate(r);
 }
 
 void Player::StartCameraShake(int frameCount) {
-	cameraShakeFrame_ = frameCount; // シェイクフレーム数セット
+	// カメラシェイク継続フレーム数を設定する
+	cameraShakeFrame_ = frameCount;
 }
 
 void Player::StopRumble() {
-	// タイマー・強度を全部リセット
+	//=========================================================
+	// 振動状態リセット
+	//=========================================================
 	rumbleT_ = 0.0f;
 	rumbleLeft_ = 0;
 	rumbleRight_ = 0;
 
-	// 追い振動も潰す
+	// 追い振動もリセット
 	rumble2Pending_ = false;
 	rumble2DelayT_ = 0.0f;
 	rumble2Sec_ = 0.0f;
 	rumble2Left_ = 0;
 	rumble2Right_ = 0;
 
-	// 実際に振動も止める
+	// 実際の振動も停止する
 	TKM::Input::GetInstance()->SetVibration(0, 0);
 }
 
 void Player::SetYaw(float yawRad) {
-	if (!object_) { return; } // 安全確認
-	Vector3 r = object_->GetRotate(); // 現在の回転を取得
-	r.y = yawRad; // ヨー角だけ更新
-	object_->SetRotate(r); // ヨー角だけ更新
+	// 本体未生成なら何もしない
+	if (!object_) { return; }
+
+	// 現在回転を取得する
+	Vector3 r = object_->GetRotate();
+
+	// ヨーだけ更新する
+	r.y = yawRad;
+
+	// 回転を反映する
+	object_->SetRotate(r);
 }
 
 void Player::SetWave1BarrierInfo(bool active, const Vector3& center, const Vector3& size) {
+	// バリア有効状態を更新する
 	wave1BarrierActive_ = active;
+
+	// バリア中心位置を更新する
 	wave1BarrierCenter_ = center;
+
+	// バリアサイズを更新する
 	wave1BarrierSize_ = size;
 
+	// 無効化されたらヒット履歴を消す
 	if (!wave1BarrierActive_) {
 		wave1BarrierHits_.clear();
 	}
 }
 
 void Player::SetBarrierCoreManager(BarrierCoreManager* manager) {
-	shotManager_->SetBarrierCoreManager(manager); // ショットマネージャーにバリアコアマネージャーの参照をセット（ワンウェイバリアのエフェクト用）
+	// ショットマネージャーへバリアコアマネージャー参照を渡す
+	shotManager_->SetBarrierCoreManager(manager);
 }
 
 void Player::UpdateTitleIdle(float dt) {
-	// タイトル専用：入力/射撃/移動/ロックオン等は一切触らない
-	// ただし Draw に必要な行列更新だけは行う
-
-	// ヒレだけパタパタ（既存の内部関数を使う）
+	// タイトル中はヒレだけ動かす
 	UpdateFlipperAnim_(dt);
 
-	// 行列更新（これをしないと描画が古いままになることがある）
+	// 本体行列だけ更新する
 	if (object_) { object_->Update(); }
+
+	// ヒレ行列だけ更新する
 	if (flipper_) { flipper_->Update(); }
 }
 
 void Player::AddWave1BarrierHit(const Vector3& worldPos) {
-	// ワンウェイバリアに当たった位置を記録（エフェクト描画用）
+	//=========================================================
+	// バリアヒット情報生成
+	//=========================================================
 	Wave1BarrierHit hit_;
 	hit_.worldPos_ = worldPos;
 	hit_.age_ = 0.0f;
 	hit_.life_ = 0.35f;
 
-	// 古いヒット情報を消しつつ追加
+	// 履歴へ追加する
 	wave1BarrierHits_.push_back(hit_);
 
-	// 上限を超えたら古いのから消す
+	// 上限超過時は古いものから削除する
 	if (wave1BarrierHits_.size() > kWave1BarrierHitMax_) {
-		wave1BarrierHits_.erase(wave1BarrierHits_.begin()); // 最初の要素を削除
+		wave1BarrierHits_.erase(wave1BarrierHits_.begin());
 	}
 }
 
 void Player::OnBarrierCoreDestroyed(BarrierCore* core) {
-	// コアが破壊されたときの処理をショットマネージャーに通知（ロック解除や一撃必殺の解放など）
+	// コア破壊時の処理をショットマネージャーへ通知する
 	shotManager_->OnBarrierCoreDestroyed(core);
 }
 
 void Player::RequestWave1BarrierFlash(const Vector3& worldPos) {
+	// フラッシュ要求フラグを立てる
 	wave1BarrierFlashRequested_ = true;
+
+	// フラッシュ位置を記録する
 	wave1BarrierFlashPos_ = worldPos;
 }
 
 bool Player::ConsumeWave1BarrierFlashRequest(Vector3& outWorldPos) {
+	// 要求が無ければ false を返す
 	if (!wave1BarrierFlashRequested_) {
 		return false;
 	}
 
+	// 呼び出し元へ位置を返す
 	outWorldPos = wave1BarrierFlashPos_;
+
+	// 要求フラグを消す
 	wave1BarrierFlashRequested_ = false;
 	return true;
 }
 
 void Player::SetShootingEnabled(bool enabled) {
-	shootingEnabled_ = enabled; // 射撃の有効 / 無効を切り替えるフラグ
+	// 射撃有効フラグを更新する
+	shootingEnabled_ = enabled;
 
-	shotManager_->SetShootingEnabled(enabled); // ショットマネージャーにも通知して、射撃処理全体をON/OFF
+	// ショットマネージャーへも通知する
+	shotManager_->SetShootingEnabled(enabled);
 }
 
 const std::list<std::unique_ptr<PlayerBullet>>& Player::GetBullets() const {
+	// ショットマネージャーが管理する弾リストを返す
 	return shotManager_->GetBullets();
 }
 
 bool Player::IsRbRefilling() const {
+	// RB回復状態を返す
 	return shotManager_ ? shotManager_->IsRbRefilling() : false;
 }
 
 int Player::GetRbAmmo() const {
+	// 現在RB弾数を返す
 	return shotManager_ ? shotManager_->GetRbAmmo() : 0;
 }
 
 int Player::GetRbAmmoMax() const {
+	// 最大RB弾数を返す
 	return shotManager_ ? shotManager_->GetRbAmmoMax() : 0;
 }
 
 int Player::GetLbAmmo() const {
+	// 現在LB弾数を返す
 	return shotManager_ ? shotManager_->GetLbAmmo() : 0;
 }
 
 int Player::GetLbAmmoMax() const {
+	// 最大LB弾数を返す
 	return shotManager_ ? shotManager_->GetLbAmmoMax() : 0;
 }
 
 void Player::SetRumbleEnabled(bool enabled) {
-	rumbleEnabled_ = enabled; // コントローラー振動の有効 / 無効を切り替えるフラグ
-	if (!enabled) { // 無効にするなら、今鳴ってるのも即停止（追い振動も潰す）
-		StopRumble(); // 鳴ってる最中のも即停止（追い振動も潰す）
+	// 振動許可フラグを更新する
+	rumbleEnabled_ = enabled;
+
+	// 無効化時は現在の振動も即停止する
+	if (!enabled) {
+		StopRumble();
 	}
 }
 
 void Player::SetRotate(const Vector3& rotRad) {
-	if (!object_) { return; } // 安全確認
-	object_->SetRotate(rotRad); // 回転設定（直接指定版）
+	// 本体未生成なら何もしない
+	if (!object_) { return; }
+
+	// 回転を直接設定する
+	object_->SetRotate(rotRad);
 }
 
 void Player::HandleGamePadMove() {
+	// 本体未生成なら何もしない
 	if (!object_) return;
+
+	// 回避中は通常移動しない
 	if (isDodging_) return;
 
+	// 現在位置を取得する
 	Vector3 pos = object_->GetTranslate();
+
+	// 新しい位置の初期値は現在位置
 	Vector3 newPos = pos;
+
+	// このフレームで移動したかどうか
 	bool movingThisFrame = false;
 
 	if (reticle_) {
+		// 目標位置を現在位置で初期化する
 		Vector3 target = pos;
 
-		// レティクル中心のワールド座標（今は「世界に固定される」）
+		// レティクル中心ワールド座標を取得する
 		Vector3 aim = reticle_->GetCenterWorldPos();
 
-		// X/Y だけ追従、Zは固定
+		// X/Y だけレティクルへ追従し、Z は固定する
 		target.x = std::clamp(aim.x, moveMin_.x, moveMax_.x);
 		target.y = std::clamp(aim.y, moveMin_.y, moveMax_.y);
 		target.z = 0.0f;
 
+		// 目標との差分を求める
 		Vector3 diff = { target.x - pos.x, target.y - pos.y, 0.0f };
+
+		// 距離の二乗を求める
 		float dist2 = diff.x * diff.x + diff.y * diff.y;
 
-		const float stopDist = 0.02f; // これ以内なら「追いついた」とみなす
+		// これ以下なら追いついたとみなす
+		const float stopDist = 0.02f;
 
 		if (dist2 > stopDist * stopDist) {
-			const float follow = 0.12f; // 追従のキモ（大きいほどキビキビ）
+			// 補間率
+			const float follow = 0.12f;
+
+			// X方向を補間する
 			newPos.x = MyMath::Lerp(pos.x, target.x, follow);
+
+			// Y方向を補間する
 			newPos.y = MyMath::Lerp(pos.y, target.y, follow);
+
+			// Z は常に固定
 			newPos.z = 0.0f;
+
+			// このフレームで移動あり
 			movingThisFrame = true;
 		} else {
-			newPos = target; // ほぼ同じなら座標を揃えてピタッと停止
+			// ほぼ追いついたら目標座標へ揃える
+			newPos = target;
 		}
 
-		// 画面外に行かないようにクランプ
+		// 範囲外へ出ないようにクランプする
 		newPos.x = std::clamp(newPos.x, moveMin_.x, moveMax_.x);
 		newPos.y = std::clamp(newPos.y, moveMin_.y, moveMax_.y);
 	}
 
-	// ---- バンク処理は今のロジックを流用 ----
+	//=========================================================
+	// バンク・ピッチ更新
+	//=========================================================
 	float vx = newPos.x - pos.x;
 	float vy = newPos.y - pos.y;
 
 	if (movingThisFrame) {
+		// 左右傾き強度
 		const float kBankStrength_ = 0.8f;
+
+		// 上下傾き強度
 		const float kPitchStrength_ = 0.45f;
+
+		// 追従バネ強度
 		const float kSpring_ = 0.25f;
+
+		// 減衰
 		const float kDamping_ = 0.45f;
 
+		// 目標バンク角を計算する
 		float targetBank = -vx * kBankStrength_;
+
+		// 目標ピッチ角を計算する
 		float targetPitch = -vy * kPitchStrength_;
 
+		// バンクをばねで追従させる
 		bankVel_ += (targetBank - bankAngle_) * kSpring_ - bankVel_ * kDamping_;
 		bankAngle_ += bankVel_;
 
+		// ピッチをばねで追従させる
 		pitchVel_ += (targetPitch - pitchAngle_) * kSpring_ - pitchVel_ * kDamping_;
 		pitchAngle_ += pitchVel_;
 	} else {
+		// バンク戻し用バネ強度
 		const float kResetSpring_ = 0.25f;
+
+		// バンク戻し用減衰
 		const float kResetDamping_ = 0.5f;
 
+		// バンクを0へ戻す
 		bankVel_ += (0.0f - bankAngle_) * kResetSpring_ - bankVel_ * kResetDamping_;
 		bankAngle_ += bankVel_;
 
+		// ピッチを0へ戻す
 		pitchVel_ += (0.0f - pitchAngle_) * kResetSpring_ - pitchVel_ * kResetDamping_;
 		pitchAngle_ += pitchVel_;
 
+		// ほぼ止まったら完全に0へ吸着する
 		if (std::fabs(bankAngle_) < 0.001f && std::fabs(bankVel_) < 0.001f) {
 			bankAngle_ = 0.0f;
 			bankVel_ = 0.0f;
 		}
 
+		// ほぼ止まったら完全に0へ吸着する
 		if (std::fabs(pitchAngle_) < 0.001f && std::fabs(pitchVel_) < 0.001f) {
 			pitchAngle_ = 0.0f;
 			pitchVel_ = 0.0f;
 		}
 	}
 
-	// 傾き
+	//=========================================================
+	// 位置と姿勢反映
+	//=========================================================
 	object_->SetTranslate(newPos);
+
 	Vector3 rot = object_->GetRotate();
-	rot.x = pitchAngle_; // X軸回転(上下)
-	rot.z = bankAngle_; // Z軸回転(左右)
+	rot.x = pitchAngle_;
+	rot.z = bankAngle_;
 	object_->SetRotate(rot);
 }
+
 void Player::HandleFollowCamera() {
+	// 内部固定dtで三人称追従を更新する
 	const float dt = 1.0f / 60.0f;
-	// FPV分岐はしない（ズームは追従側で処理）
+
+	// 三人称追従カメラ更新
 	UpdateCameraFollowThirdPerson(dt);
 }
 
 void Player::UpdateCameraFollowThirdPerson(float dt) {
+	// カメラ未設定なら何もしない
 	if (!camera_) return;
 
+	// プレイヤー位置を取得する
 	Vector3 playerPos = object_->GetTranslate();
+
+	// カメラ回転を取得する
 	Vector3 camRot = camera_->GetRotate();
 
-	// ベース値は従来どおり
+	// 基本距離
 	const float baseDistance = 40.0f;
+
+	// 基本高さ
 	const float baseHeight = 4.0f;
 
-	// ---- LT一時ズームアウト更新 ----
+	//=========================================================
+	// LT一時ズーム更新
+	//=========================================================
 	if (ltZoomActive_) {
-		camZoom_ = ltZoomTween_.Update(dt);  // 係数を更新
-		// 最小到達＆ホールドが残っていれば消化
+		// 現在のズーム係数を更新する
+		camZoom_ = ltZoomTween_.Update(dt);
+
+		// INフェーズ完了後はホールドを消化する
 		if (ltZoomTween_.Finished() && ltZoomTween_.end < ltZoomTween_.start) {
 			if (ltZoomHold_ > 0.0f) {
 				ltZoomHold_ -= dt;
 			} else {
-				// 逆方向に戻すトゥイーン開始（0.25秒で 0.82→1.0）
+				// ホールド終了後は元へ戻す
 				ltZoomTween_.Reset(ltZoomTween_.end, 1.0f, 0.25f, Ease::Type::OutCubic);
 			}
 		}
-		// 完全に戻り切ったら終了
+
+		// 完全に戻り切ったらズーム状態を終了する
 		if (ltZoomTween_.Finished() && ltZoomTween_.end == 1.0f) {
 			ltZoomActive_ = false;
 			camZoom_ = 1.0f;
 		}
 	} else {
+		// ズームしていない時は等倍
 		camZoom_ = 1.0f;
 	}
 
-	// ---- ボス撃破ズームアウト更新 ----
+	//=========================================================
+	// ボス撃破ズーム更新
+	//=========================================================
 	if (bossZoomActive_) {
+		// 現在のボスズーム係数を更新する
 		bossZoom_ = bossZoomTween_.Update(dt);
+
+		// 到達したらその値を保持したままズーム更新終了
 		if (bossZoomTween_.Finished()) {
-			// トゥイーン完了 → ここで止めるだけ。bossZoom_ の値はそのまま保持。
 			bossZoomActive_ = false;
 		}
 	}
 
+	// 両ズームを掛け合わせた最終ズーム係数
 	float zoom = camZoom_ * bossZoom_;
-	float distance = baseDistance / zoom; // ← これで LT & ボス両方が効く
+
+	// ズームに応じた実距離
+	float distance = baseDistance / zoom;
+
+	// カメラ高さ
 	float height = baseHeight;
 
+	// 現在のヨー角
 	float angleY = camRot.y;
+
+	// プレイヤー後方オフセットを計算する
 	Vector3 offset = {
 		std::sinf(angleY) * -distance,
 		height,
 		std::cosf(angleY) * -distance
 	};
 
-	// ---- カメラシェイク処理 ----
+	//=========================================================
+	// カメラシェイク更新
+	//=========================================================
 	if (cameraShakeFrame_ > 0) {
+		// LTズーム時の補正量
 		float zoomKick = std::max(0.0f, 1.0f - camZoom_);
+
+		// 最終シェイク倍率
 		float shakeGain = shakeBaseStrength_ + zoomKick * shakeZoomBoost_;
-		// ランダムオフセットを生成（距離に応じて強さ変化）
+
+		// ランダムシェイクオフセットを作る
 		cameraShakeOffset_.x = ((rand() % 100 - 50) / 500.0f) * shakeGain;
 		cameraShakeOffset_.y = ((rand() % 100 - 50) / 500.0f) * shakeGain;
 		cameraShakeOffset_.z = ((rand() % 100 - 50) / 500.0f) * shakeGain;
-		// フレームを減らす
+
+		// 残りフレームを減らす
 		cameraShakeFrame_--;
 	} else {
+		// シェイク無し
 		cameraShakeOffset_ = { 0,0,0 };
 	}
 
-
+	//=========================================================
+	// カメラ位置反映
+	//=========================================================
 	Vector3 cameraPos = playerPos + offset + cameraShakeOffset_;
 	camera_->SetTranslate(cameraPos);
 }
 
 void Player::ZoomCamera() {
-	// === LT押下時の一時カメラズーム ===
-	const float kInTarget = 0.6f; // ズーム到達目標値
-	const float kInTime = 0.12f;  // 再ターゲット時の寄り時間（短め）
-	const float kOutTime = 0.25f;  // 戻り時間
-	const float kHoldUnit = 1.5f;  // 1回の押下で与えるホールド秒
-	const float kHoldMax = 1.2f;  // 連打してもここまで（上限）
+	// LTズーム時の目標倍率
+	const float kInTarget = 0.6f;
 
+	// 寄る時間
+	const float kInTime = 0.12f;
+
+	// 戻る時間
+	const float kOutTime = 0.25f;
+
+	// 1回押しあたりのホールド時間
+	const float kHoldUnit = 1.5f;
+
+	// ホールド上限
+	const float kHoldMax = 1.2f;
+
+	// まだズーム中でなければ通常起動する
 	if (!ltZoomActive_) {
-		// まだズームしていなければ通常起動
 		ltZoomActive_ = true;
 		ltZoomTween_.Reset(1.0f, kInTarget, 0.18f, Ease::Type::OutCubic);
-		ltZoomHold_ = kHoldUnit; // 初回ホールド
+		ltZoomHold_ = kHoldUnit;
 		return;
 	}
 
-	// 既にズーム中
-	const bool isInPhase = (ltZoomTween_.end < ltZoomTween_.start);  // IN方向
+	// 現在がINフェーズかを判定する
+	const bool isInPhase = (ltZoomTween_.end < ltZoomTween_.start);
+
+	// 現在トゥイーンが終了しているか
 	const bool finished = ltZoomTween_.Finished();
 
 	if (isInPhase) {
 		if (!finished) {
-			// まだ「寄りアニメ」進行中 → 何もしない（Resetしない）
+			// まだ寄っている途中なら何もしない
 			return;
 		}
-		// INが完了して「HOLD中」→ ホールドを上限まで延長（積み上げない）
+
+		// 寄りきってホールド中ならホールド時間だけ上書きする
 		ltZoomHold_ = std::min(kHoldMax, std::max(ltZoomHold_, kHoldUnit));
 		return;
 	}
 
-	// ここに来るのは「OUT（戻り）中」→ 現在値から再びINへ
+	// 戻り中に再入力されたら現在値から再度寄り始める
 	ltZoomTween_.Reset(camZoom_, kInTarget, kInTime, Ease::Type::OutCubic);
-	ltZoomHold_ = kHoldUnit; // 再度短くホールド
+	ltZoomHold_ = kHoldUnit;
 }
 
 void Player::StartRumble(float sec, WORD leftMotor, WORD rightMotor) {
-	if (!rumbleEnabled_) { return; } // 振動禁止中は無視
-	// すでに鳴ってるときは、時間は長い方、強さは強い方を優先して上書きするイメージ
+	// 振動禁止中なら無視する
+	if (!rumbleEnabled_) { return; }
+
+	// 時間は長い方を残す
 	rumbleT_ = std::max(rumbleT_, sec);
+
+	// 左モーターは強い方を残す
 	rumbleLeft_ = std::max(rumbleLeft_, leftMotor);
+
+	// 右モーターは強い方を残す
 	rumbleRight_ = std::max(rumbleRight_, rightMotor);
-	// 追い振動は、今鳴ってるのにさらに強い振動が来たときに、上書きせずに追加するイメージ
+
+	// 実際に振動を設定する
 	TKM::Input::GetInstance()->SetVibration(rumbleLeft_, rumbleRight_);
 }
 
 void Player::UpdateRumble(float dt) {
-	// 2段目（追い振動）を時間になったら発火
+	//=========================================================
+	// 2段目振動発火
+	//=========================================================
 	if (rumble2Pending_) {
+		// 遅延時間を減らす
 		rumble2DelayT_ -= dt;
+
+		// 発火タイミングになったら2段目振動を開始する
 		if (rumble2DelayT_ <= 0.0f) {
 			rumble2Pending_ = false;
 			StartRumble(rumble2Sec_, rumble2Left_, rumble2Right_);
 		}
 	}
 
-	if (rumbleT_ <= 0.0f) { return; } // 鳴ってない
+	// 鳴っていなければ何もしない
+	if (rumbleT_ <= 0.0f) { return; }
 
-	// 継続時間を減らす
+	//=========================================================
+	// 振動継続時間更新
+	//=========================================================
 	rumbleT_ -= dt;
+
 	if (rumbleT_ <= 0.0f) {
+		// 振動状態をクリアする
 		rumbleT_ = 0.0f;
 		rumbleLeft_ = 0;
 		rumbleRight_ = 0;
+
+		// 実際の振動を止める
 		TKM::Input::GetInstance()->SetVibration(0, 0);
 	}
 }
 
 void Player::UpdateFlipperAnim_(float dt) {
+	// ヒレが無ければ何もしない
 	if (!flipper_) { return; }
 
+	// アニメ時間を進める
 	flipperAnimT_ += dt;
 
-	// サイン波（-1..+1）
+	// フラップ周波数から角速度を作る
 	float w = 2.0f * MyMath::GetPI() * flipperFlapHz_;
+
+	// サイン波を作る
 	float s = std::sinf(flipperAnimT_ * w);
 
-	// パタパタ（上下フラップ）
+	// 上下フラップ量
 	float flap = s * flipperFlapAmp_;
 
-	// ちょい横揺れ（左右の水かき感）
+	// 横揺れ量
 	float sway = std::sinf(flipperAnimT_ * (w * 0.55f) + 1.2f) * flipperYawSwayAmp_;
 
+	// 基準回転から開始する
 	Vector3 r = flipperBaseRot_;
 
-	// どの軸で曲げるかはモデル向き次第
-	// まずは X をフラップ、Y を揺れにしてみる（合わなければ X<->Z を入れ替え）
+	// Xを上下フラップに使う
 	r.x += flap;
+
+	// Yを横揺れに使う
 	r.y += sway;
 
+	// 回転を反映する
 	flipper_->SetRotate(r);
 }
 
 void Player::UpdateFloatBob_(float dt) {
+	// 浮遊演出無効なら何もしない
 	if (!enableFloatBob_) { return; }
+
+	// 本体が無ければ何もしない
 	if (!object_) { return; }
 
+	// 浮遊アニメ時間を進める
 	floatT_ += dt;
 
-	// -1..+1 のサイン波
+	// サイン波の角速度を計算する
 	float w = 2.0f * MyMath::GetPI() * floatHz_;
+
+	// -1..+1 のサイン波
 	float s = std::sinf(floatT_ * w);
 
-	// いまの座標に「見た目だけ」足す（Yだけ）
+	// 現在位置を取得する
 	Vector3 pos = object_->GetTranslate();
+
+	// Y方向へだけ揺らす
 	pos.y += s * floatAmp_;
+
+	// 位置を反映する
 	object_->SetTranslate(pos);
 }
 
 void Player::StartDodge() {
+	// 本体が無ければ開始しない
 	if (!object_) return;
+
+	// すでに回避中なら開始しない
 	if (isDodging_) return;
 
 	auto* in = TKM::Input::GetInstance();
 
-	//========================================
-	// ゲームパッド方向入力（左スティック）
-	//========================================
+	//=========================================================
+	// ゲームパッド方向入力取得
+	//=========================================================
 	float rx = static_cast<float>(in->GetLeftStickX());
 	float ry = static_cast<float>(in->GetLeftStickY());
 
@@ -909,10 +1313,9 @@ void Player::StartDodge() {
 	rx /= norm;
 	ry /= norm;
 
-	//========================================
-	// キーボード方向入力
-	// WASD と 方向キー 両対応
-	//========================================
+	//=========================================================
+	// キーボード方向入力取得
+	//=========================================================
 	float keyX = 0.0f;
 	float keyY = 0.0f;
 
@@ -921,7 +1324,7 @@ void Player::StartDodge() {
 	if (in->PushKey(DIK_W) || in->PushKey(DIK_UP)) { keyY += 1.0f; }
 	if (in->PushKey(DIK_S) || in->PushKey(DIK_DOWN)) { keyY -= 1.0f; }
 
-	// 斜めをちゃんと扱うため正規化
+	// 斜め入力を正規化する
 	if (std::fabs(keyX) > 0.0001f || std::fabs(keyY) > 0.0001f) {
 		float keyLen = std::sqrt(keyX * keyX + keyY * keyY);
 		if (keyLen > 0.0001f) {
@@ -930,19 +1333,21 @@ void Player::StartDodge() {
 		}
 	}
 
-	//========================================
-	// パッド + キーボードを合成
-	// キーボード入力があるならそっちを優先
-	//========================================
+	//=========================================================
+	// パッドとキーボード入力を合成
+	//=========================================================
 	float moveX = rx;
 	float moveY = ry;
 
+	// キーボード入力があればそちらを優先する
 	if (std::fabs(keyX) > 0.0001f || std::fabs(keyY) > 0.0001f) {
 		moveX = keyX;
 		moveY = keyY;
 	}
 
-	// カメラRight/Up基準でワールド方向へ
+	//=========================================================
+	// カメラ基準のワールド方向へ変換
+	//=========================================================
 	Vector3 camRight = { 1,0,0 };
 	Vector3 camUp = { 0,1,0 };
 	if (camera_) {
@@ -951,41 +1356,56 @@ void Player::StartDodge() {
 		camUp = MyMath::Normalize({ W.m[1][0], W.m[1][1], W.m[1][2] });
 	}
 
+	// カメラ基準で回避方向を作る
 	Vector3 dir = camRight * moveX + camUp * moveY;
 	dir.z = 0.0f;
 
+	// 入力方向が無ければ回避しない
 	if (MyMath::Length(dir) < 0.001f) {
-		return; // 方向入力なしなら回避しない
+		return;
 	}
+
+	// 方向を正規化する
 	dir = MyMath::Normalize(dir);
 
+	//=========================================================
+	// 回避開始状態を設定
+	//=========================================================
 	isDodging_ = true;
 	dodgeT_ = 0.0f;
 	dodgeStartPos_ = object_->GetTranslate();
 	dodgeDir_ = dir;
 
-	// 回避の音
+	// 回避SEを鳴らす
 	TKM::AudioManager::GetInstance()->PlaySound("avoid", 0.1f);
 
+	// 回避開始時の回転を保存する
 	dodgeBaseRot_ = object_->GetRotate();
+
 	{
+		// 横方向成分の絶対値
 		const float ax = std::fabs(dodgeDir_.x);
+
+		// 縦方向成分の絶対値
 		const float ay = std::fabs(dodgeDir_.y);
 
+		// 左右回避か上下回避か判定する
 		const bool horizontal = (ax >= ay);
 
 		if (horizontal) {
-			// 左右回避：Z回転
+			// 左右回避ならロール回転を使う
 			dodgeSpinWRoll_ = 1.0f;
 			dodgeSpinWPitch_ = 0.0f;
 
+			// 左右方向でロール符号を決める
 			dodgeSpinRollSign_ = (dodgeDir_.x >= 0.0f) ? -1.0f : +1.0f;
 			dodgeSpinPitchSign_ = +1.0f;
 		} else {
-			// 上下回避：X回転
+			// 上下回避ならピッチ回転を使う
 			dodgeSpinWRoll_ = 0.0f;
 			dodgeSpinWPitch_ = 1.0f;
 
+			// 上下方向でピッチ符号を決める
 			dodgeSpinPitchSign_ = (dodgeDir_.y >= 0.0f) ? +1.0f : -1.0f;
 			dodgeSpinRollSign_ = +1.0f;
 		}
@@ -995,59 +1415,79 @@ void Player::StartDodge() {
 void Player::HandleDodge(float dt) {
 	auto* in = TKM::Input::GetInstance();
 
-	// Xボタン または Jキーを押した瞬間に開始
+	// 回避中でなく、回避入力が入ったら開始する
 	if (!isDodging_ && (in->PushButton(XINPUT_GAMEPAD_X) || in->TriggerKey(DIK_J))) {
 		StartDodge();
 	}
 
+	// 回避中でなければ以降は何もしない
 	if (!isDodging_) return;
 
+	// 回避経過時間を進める
 	dodgeT_ += dt;
 
-	// 進行（移動/回転）
+	//=========================================================
+	// 進行率計算
+	//=========================================================
 	float uMove = dodgeT_ / std::max(0.001f, dodgeDuration_);
 	if (uMove > 1.0f) uMove = 1.0f;
 
 	float uSpin = dodgeT_ / std::max(0.001f, dodgeSpinDuration_);
 	if (uSpin > 1.0f) uSpin = 1.0f;
 
-	// EaseInOutSine（移動も回転も丁寧になる）
+	// 移動イーズ値
 	float eMove = 0.5f - 0.5f * std::cos(MyMath::GetPI() * uMove);
+
+	// 回転イーズ値
 	float eSpin = 0.5f - 0.5f * std::cos(MyMath::GetPI() * uSpin);
 
-	// 位置：毎フレーム更新（これで「移動し終わってから回転」にならない）
+	//=========================================================
+	// 位置更新
+	//=========================================================
 	{
+		// 開始位置から回避方向へ進める
 		Vector3 pos = dodgeStartPos_ + dodgeDir_ * (dodgeDistance_ * eMove);
+
+		// 範囲外へ出ないようにクランプする
 		pos.x = std::clamp(pos.x, moveMin_.x, moveMax_.x);
 		pos.y = std::clamp(pos.y, moveMin_.y, moveMax_.y);
 		pos.z = 0.0f;
+
+		// 位置を反映する
 		object_->SetTranslate(pos);
 	}
 
-	// 回転：毎フレーム更新（丁寧に1回転）
+	//=========================================================
+	// 回転更新
+	//=========================================================
 	{
-		Vector3 rot = object_->GetRotate(); // Z回転だけ上書き
-		{ // まずは回転の進み具合をイーズする
-			// uSpin をイーズして、さらに回転の進み具合を 0..2回転くらいの範囲で調整
-			float spin = (MyMath::GetPI() * 2.0f) * dodgeSpinTurns_ * eSpin;
-			// ここで回転の軸・量を決める（StartDodgeで決めたやつを使う）
-			Vector3 rot = object_->GetRotate();
-			// 上下：X回転（前転/後転）
-			rot.x = dodgeBaseRot_.x + dodgeSpinPitchSign_ * spin * dodgeSpinWPitch_;
-			// 左右：Z回転（ロール）
-			rot.z = bankAngle_ + dodgeSpinRollSign_ * spin * dodgeSpinWRoll_;
-			// 反映
-			object_->SetRotate(rot);
-		}
+		// 回転の進み量を計算する
+		float spin = (MyMath::GetPI() * 2.0f) * dodgeSpinTurns_ * eSpin;
+
+		// 現在回転を取得する
+		Vector3 rot = object_->GetRotate();
+
+		// 上下回避時はX回転を使う
+		rot.x = dodgeBaseRot_.x + dodgeSpinPitchSign_ * spin * dodgeSpinWPitch_;
+
+		// 左右回避時はZ回転を使う
+		rot.z = bankAngle_ + dodgeSpinRollSign_ * spin * dodgeSpinWRoll_;
+
+		// 回転を反映する
+		object_->SetRotate(rot);
 	}
 
-	// 終了：移動と回転の両方が終わってから
+	//=========================================================
+	// 回避終了処理
+	//=========================================================
 	if (uMove >= 1.0f && uSpin >= 1.0f) {
-		isDodging_ = false; // フラグを戻す
-		// 最終的な回転のリセット
-		Vector3 r = object_->GetRotate(); // 現在の回転をベースに
-		r.x = dodgeBaseRot_.x; // ピッチ戻す
-		r.z = bankAngle_;      // バンクに復帰
-		object_->SetRotate(r); // 反映
+		// 回避終了
+		isDodging_ = false;
+
+		// 最終姿勢を通常状態へ戻す
+		Vector3 r = object_->GetRotate();
+		r.x = dodgeBaseRot_.x;
+		r.z = bankAngle_;
+		object_->SetRotate(r);
 	}
 }
