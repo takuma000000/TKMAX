@@ -10,20 +10,39 @@
 #include "imgui.h"
 #endif
 
+//=============================================================
+// 初期化
+//=============================================================
 void EnemyManager::Initialize(TKM::DirectXCommon* dx, TKM::Camera* camera, TKM::BaseScene* parent, Player* player) {
+	//=========================================================
 	// 共通初期化
+	//=========================================================
 	InitializeCommon(dx, camera, parent, player);
+
+	//=========================================================
 	// BarrierCommon初期化
+	//=========================================================
 	TKM::BarrierCommon::GetInstance()->Initialize(dx);
 
+	//=========================================================
 	// 敵遭遇設定読み込み
+	//=========================================================
 	const bool loaded_ = encounterConfig_.Load("./resources/data/enemy_encounter.json");
-	assert(loaded_ && "enemy_encounter.json の読込に失敗しました"); // ファイルがない、JSON構造が不正などで読込失敗した場合
+	assert(loaded_ && "enemy_encounter.json の読込に失敗しました");
 }
 
+//=============================================================
+// 更新
+//=============================================================
 void EnemyManager::Update(float dt) {
-	if (!initializedWaves_) { return; }
+	// Wave初期化前なら何もしない
+	if (!initializedWaves_) {
+		return;
+	}
 
+	//=========================================================
+	// バリア更新
+	//=========================================================
 	if (barrier_) {
 		if (player_) {
 			Vector3 flashPos;
@@ -35,17 +54,29 @@ void EnemyManager::Update(float dt) {
 		UpdateBarrier_();
 		barrier_->Update(dt);
 	}
+
+	// プレイヤーへバリア情報同期
 	SyncBarrierInfoToPlayer_();
 
+	//=========================================================
+	// バリアコア更新
+	//=========================================================
 	if (barrierCoreManager_) {
 		barrierCoreManager_->Update(dt);
 	}
 
+	//=========================================================
+	// 敵更新
+	//=========================================================
 	for (auto it = enemies_.begin(); it != enemies_.end();) {
 		Enemy* e_ = it->get();
+
 		e_->SetFreezeMove(freezeEnemies_);
 		e_->Update(dt);
 
+		//=====================================================
+		// 敵死亡処理
+		//=====================================================
 		if (e_->IsDead()) {
 			if (player_) {
 				player_->OnEnemyDestroyed(e_);
@@ -57,6 +88,7 @@ void EnemyManager::Update(float dt) {
 				}
 				++defeatedEnemyCount_;
 
+				// 一定数撃破で特殊攻撃解禁
 				if (defeatedEnemyCount_ == 3 && player_) {
 					player_->EnableSpecialAttack();
 				}
@@ -68,94 +100,140 @@ void EnemyManager::Update(float dt) {
 		}
 	}
 
+	//=========================================================
+	// 雑魚敵フェーズ更新
+	//=========================================================
 	if (enemyPhase_ == EnemyPhase::SmallEnemyBattle) {
 		UpdateMainSquadBattle_(dt);
 	}
 
+	//=========================================================
+	// 敵弾更新・当たり判定
+	//=========================================================
 	UpdateEnemyBullets_(dt);
 	CheckEnemyBulletPlayerCollision_(dt);
 }
 
+//=============================================================
+// 最も近い敵を更新
+//=============================================================
 void EnemyManager::UpdateClosestEnemy() {
-	if (!player_) { return; } // Player無効なら何もしない
-	if (enemies_.empty()) { return; } // 敵リスト空なら何もしない
+	if (!player_) { return; }       // Player無効なら何もしない
+	if (enemies_.empty()) { return; } // 敵リストが空なら何もしない
 
-	Enemy* closestEnemy_ = nullptr; // 最も近い敵
-	float closestDistance_ = std::numeric_limits<float>::max(); // 最も近い敵までの距離
-	Vector3 playerPos_ = player_->GetPosition(); // プレイヤー位置
+	Enemy* closestEnemy_ = nullptr;                              // 最も近い敵
+	float closestDistance_ = std::numeric_limits<float>::max(); // 最短距離
+	Vector3 playerPos_ = player_->GetPosition();                // プレイヤー位置
 
-	for (auto& enemy : enemies_) { // 敵リスト走査
+	for (auto& enemy : enemies_) {
 		if (!enemy) { continue; } // 念のためヌルチェック
-		if (!enemy->IsDead() && !enemy->IsDying()) { // 生存中の敵のみ対象
-			float dist_ = MyMath::Length(enemy->GetWorldPosition() - playerPos_); // プレイヤーからの距離計算
-			if (dist_ < closestDistance_) { // 最短距離更新
-				closestDistance_ = dist_; // 最短距離更新
-				closestEnemy_ = enemy.get(); // 最も近い敵更新
+
+		if (!enemy->IsDead() && !enemy->IsDying()) {
+			float dist_ = MyMath::Length(enemy->GetWorldPosition() - playerPos_);
+			if (dist_ < closestDistance_) {
+				closestDistance_ = dist_;
+				closestEnemy_ = enemy.get();
 			}
 		}
 	}
 
-	player_->SetEnemy(closestEnemy_); // 最も近い敵をPlayerにセット
-	player_->SetAllEnemies(&enemies_); // 敵リストもセット
+	player_->SetEnemy(closestEnemy_);
+	player_->SetAllEnemies(&enemies_);
 }
 
+//=============================================================
+// 雑魚敵フェーズ開始
+//=============================================================
 void EnemyManager::StartSmallEnemyPhase() {
-	if (!player_) { return; }
+	if (!player_) {
+		return;
+	}
 
-	NotifyPlayerBeforeClearEnemies_(); // プレイヤーに敵全削除を通知（ロックオン解除などのため）
-	enemies_.clear(); // 敵リストクリア
-	enemyBullets_.clear(); // 敵弾リストもクリア
-	playerHitCooldown_ = 0.0f; // プレイヤー被弾クールダウンリセット
+	//=========================================================
+	// 前状態クリア
+	//=========================================================
+	NotifyPlayerBeforeClearEnemies_(); // ロックオン解除などのため通知
+	enemies_.clear();
+	enemyBullets_.clear();
+	playerHitCooldown_ = 0.0f;
 	specialCoreCharging_ = false;
 	specialCoreBullet_ = nullptr;
 	scatterShotTimer_ = 0.0f;
 
+	//=========================================================
+	// 撃破数初期化
+	//=========================================================
 	defeatedEnemyCount_ = 0;
-	maxEnemyCount_ = std::max(0, encounterConfig_.GetSmallEnemyPhase().defeatTarget_); // 敵撃破数・最大数リセット（最大数は次のWaveの目標撃破数をセット）
+	maxEnemyCount_ = std::max(0, encounterConfig_.GetSmallEnemyPhase().defeatTarget_);
 
+	//=========================================================
+	// フェーズ開始
+	//=========================================================
 	enemyPhase_ = EnemyPhase::SmallEnemyBattle;
 	BeginMainSquadBattle_();
 
-	initializedWaves_ = true; // Wave初期化完了フラグセット
+	initializedWaves_ = true;
 
-	// 最初のロックオン対象
+	//=========================================================
+	// 最初のロックオン対象設定
+	//=========================================================
 	if (!enemies_.empty()) {
-		player_->SetEnemy(enemies_.front().get()); // 最初の敵をロックオン対象にセット
-		player_->SetAllEnemies(&enemies_); // 敵リストもセット
+		player_->SetEnemy(enemies_.front().get());
+		player_->SetAllEnemies(&enemies_);
 	}
 }
 
+//=============================================================
+// 雑魚敵フェーズリセット
+//=============================================================
 void EnemyManager::ResetSmallEnemyPhase() {
-	if (!dx_ || !camera_ || !parent_) { return; } // 必要な参照が揃ってないなら何もしない
+	if (!dx_ || !camera_ || !parent_) {
+		return;
+	}
 
-	NotifyPlayerBeforeClearEnemies_(); // プレイヤーに敵全削除を通知（ロックオン解除などのため）
-	enemies_.clear(); // 敵リストクリア（前のWaveの敵を消す）
-	enemyBullets_.clear(); // 敵弾リストもクリア
-	playerHitCooldown_ = 0.0f; // プレイヤー被弾クールダウンリセット
+	//=========================================================
+	// 戦闘状態クリア
+	//=========================================================
+	NotifyPlayerBeforeClearEnemies_();
+	enemies_.clear();
+	enemyBullets_.clear();
+	playerHitCooldown_ = 0.0f;
 	specialCoreCharging_ = false;
 	specialCoreBullet_ = nullptr;
 	scatterShotTimer_ = 0.0f;
+
 	SetBarrierActive_(false);
 	SyncBarrierInfoToPlayer_();
 
+	//=========================================================
+	// 雑魚敵フェーズ中なら再開
+	//=========================================================
 	if (enemyPhase_ == EnemyPhase::SmallEnemyBattle) {
 		BeginMainSquadBattle_();
 	}
 }
 
+//=============================================================
+// 雑魚敵フェーズ終了
+//=============================================================
 void EnemyManager::FinishSmallEnemyPhase() {
-	// いま居るザコ敵は全部消す
+	//=========================================================
+	// 現在いるザコ敵を全消去
+	//=========================================================
 	NotifyPlayerBeforeClearEnemies_();
-	enemies_.clear(); // 敵を全部消す
-	enemyBullets_.clear(); // 敵弾も全部消す
-	playerHitCooldown_ = 0.0f; // プレイヤー被弾クールダウンリセット
+	enemies_.clear();
+	enemyBullets_.clear();
+	playerHitCooldown_ = 0.0f;
 	specialCoreCharging_ = false;
 	specialCoreBullet_ = nullptr;
 	scatterShotTimer_ = 0.0f;
+
 	SetBarrierActive_(false);
 	SyncBarrierInfoToPlayer_();
 
-	// 撃破数・最大数もリセット（ゲージを空にしておく）
+	//=========================================================
+	// 撃破数・最大数リセット
+	//=========================================================
 	if (defeatedEnemyCount_) {
 		defeatedEnemyCount_ = 0;
 	}
@@ -163,39 +241,58 @@ void EnemyManager::FinishSmallEnemyPhase() {
 		maxEnemyCount_ = 0;
 	}
 
-	// Wave を Done（＝ボスフェーズ）にする
+	//=========================================================
+	// ボスフェーズへ移行
+	//=========================================================
 	enemyPhase_ = EnemyPhase::BossReady;
-	// 雑魚戦が終わったらplayBGMを止める
+
+	// 雑魚戦BGM停止
 	TKM::AudioManager::GetInstance()->StopSound("playBGM");
 }
 
+//=============================================================
+// 雑魚敵フェーズ終了判定
+//=============================================================
 bool EnemyManager::IsSmallEnemyPhaseFinished() const {
 	return (enemyPhase_ == EnemyPhase::BossReady) && enemies_.empty();
 }
 
+//=============================================================
+// 敵へプレイヤー参照を設定
+//=============================================================
 void EnemyManager::SetupEnemyForPlayer(Enemy& e) {
-	if (!player_) { // プレイヤー参照がないなら何もしない
+	if (!player_) {
 		return;
 	}
-	e.SetReticle(player_->GetReticle()); // 敵の照準にプレイヤーの照準をセット
-	e.SetPlayer([this]() { return player_->GetPosition(); }); // 敵のプレイヤー位置取得関数に、プレイヤーの位置を返すラムダをセット
+
+	e.SetReticle(player_->GetReticle());
+	e.SetPlayer([this]() { return player_->GetPosition(); });
 }
 
+//=============================================================
+// 敵全削除前のプレイヤー通知
+//=============================================================
 void EnemyManager::NotifyPlayerBeforeClearEnemies_() {
-	if (!player_) { // プレイヤー参照がないなら何もしない
+	if (!player_) {
 		return;
 	}
 
-	// これから敵が全滅することをプレイヤーに通知して、ロックオン解除などの処理をさせる
+	// これから敵が全滅することを通知し、ロックオン解除などを行わせる
 	for (auto& e : enemies_) {
-		if (!e) { continue; } // 念のためヌルチェック
-		player_->OnEnemyDestroyed(e.get()); // プレイヤーに敵が消えることを通知（ロックオン解除などのため）
+		if (!e) { continue; }
+		player_->OnEnemyDestroyed(e.get());
 	}
 }
 
+//=============================================================
+// 雑魚本隊戦更新
+//=============================================================
 void EnemyManager::UpdateMainSquadBattle_(float dt) {
 	UpdateEnemyBullets_(dt);
 
+	//=========================================================
+	// プレイヤー被弾クールタイム更新
+	//=========================================================
 	if (playerHitCooldown_ > 0.0f) {
 		playerHitCooldown_ -= dt;
 		if (playerHitCooldown_ < 0.0f) {
@@ -203,7 +300,9 @@ void EnemyManager::UpdateMainSquadBattle_(float dt) {
 		}
 	}
 
-	// 雑魚敵フェーズ本隊を全滅させたら、そのままボス戦へ移行
+	//=========================================================
+	// 本隊全滅でボス戦へ移行
+	//=========================================================
 	if (CountAliveMainSquad_() <= 0) {
 		NotifyPlayerBeforeClearEnemies_();
 		enemies_.clear();
@@ -214,6 +313,9 @@ void EnemyManager::UpdateMainSquadBattle_(float dt) {
 		return;
 	}
 
+	//=========================================================
+	// 本隊状態ごとの更新
+	//=========================================================
 	switch (mainSquadPhase_) {
 	case MainSquadPhase::BarrierBattle:
 		UpdateMainSquadOrbit_(dt);
@@ -235,14 +337,15 @@ void EnemyManager::UpdateMainSquadBattle_(float dt) {
 	}
 }
 
+//=============================================================
+// 通常散弾攻撃更新
+//=============================================================
 void EnemyManager::UpdateScatterAttack_(float dt) {
-
 
 	/// ====================================
 	/// 一時的に通常攻撃を止める
 	return;
 	/// ====================================
-
 
 	scatterShotTimer_ += dt;
 	if (scatterShotTimer_ < scatterShotInterval_) {
@@ -276,6 +379,9 @@ void EnemyManager::UpdateScatterAttack_(float dt) {
 	}
 }
 
+//=============================================================
+// 特殊コア攻撃チャージ開始
+//=============================================================
 void EnemyManager::BeginSpecialCoreCharge_() {
 	auto* common_ = TKM::Object3dCommon::GetInstance();
 	if (!common_) {
@@ -303,6 +409,9 @@ void EnemyManager::BeginSpecialCoreCharge_() {
 	enemyBullets_.push_back(std::move(core_));
 }
 
+//=============================================================
+// 特殊コア攻撃チャージ更新
+//=============================================================
 void EnemyManager::UpdateSpecialCoreCharge_(float dt) {
 	if (!specialCoreCharging_ || !specialCoreBullet_) {
 		return;
@@ -322,6 +431,9 @@ void EnemyManager::UpdateSpecialCoreCharge_(float dt) {
 	}
 }
 
+//=============================================================
+// 特殊コア発射
+//=============================================================
 void EnemyManager::FireSpecialCore_() {
 	if (!specialCoreBullet_) {
 		return;
@@ -339,7 +451,9 @@ void EnemyManager::FireSpecialCore_() {
 
 	specialCoreBullet_->LaunchSpecialCore(dir_ * specialCoreShotSpeed_);
 
-	// 発射時の主役演出
+	//=========================================================
+	// 発射時主役演出
+	//=========================================================
 	auto* pm_ = TKM::ParticleManager::GetInstance();
 	if (pm_) {
 		const bool priority_ = true;
@@ -357,6 +471,9 @@ void EnemyManager::FireSpecialCore_() {
 	specialCoreBullet_ = nullptr;
 }
 
+//=============================================================
+// 特殊コアチャージ中パーティクル
+//=============================================================
 void EnemyManager::EmitSpecialCoreChargeParticles_() {
 	TKM::ParticleManager* pm_ = TKM::ParticleManager::GetInstance();
 	if (!pm_) {
@@ -366,7 +483,9 @@ void EnemyManager::EmitSpecialCoreChargeParticles_() {
 	const Vector3 corePos_ = GetSpecialCorePosition_();
 	const auto loadLevel_ = pm_->GetLoadLevel();
 
-	// 継続演出なので、重い時は線の分割数自体を落とす
+	//=========================================================
+	// 負荷に応じた線分数調整
+	//=========================================================
 	int segmentCount_ = 6;
 	switch (loadLevel_) {
 	case TKM::ParticleManager::LoadLevel::Low:
@@ -386,7 +505,9 @@ void EnemyManager::EmitSpecialCoreChargeParticles_() {
 		break;
 	}
 
-	// 生存している敵全員がコアへ送る
+	//=========================================================
+	// 生存している敵全員からコアへ流す
+	//=========================================================
 	for (auto& e : enemies_) {
 		if (!e || e->IsDead() || e->IsDying()) {
 			continue;
@@ -402,7 +523,7 @@ void EnemyManager::EmitSpecialCoreChargeParticles_() {
 		}
 		dir_ = dir_ / len_;
 
-		// 軽く横ブレを入れて点列感を減らす
+		// 軽い横ブレで点列感を減らす
 		Vector3 side_ = { -dir_.z, 0.0f, dir_.x };
 		if (MyMath::Length(side_) <= 0.0001f) {
 			side_ = { 1.0f, 0.0f, 0.0f };
@@ -413,7 +534,7 @@ void EnemyManager::EmitSpecialCoreChargeParticles_() {
 		for (int seg_ = 1; seg_ <= segmentCount_; ++seg_) {
 			const float u_ = static_cast<float>(seg_) / static_cast<float>(segmentCount_ + 1);
 
-			// コアに近いほど密になるように後半へ寄せる
+			// コアに近いほど密になるよう後半へ寄せる
 			const float t_ = 1.0f - (1.0f - u_) * (1.0f - u_);
 
 			Vector3 p_ = src_ + dir_ * (len_ * t_);
@@ -446,7 +567,9 @@ void EnemyManager::EmitSpecialCoreChargeParticles_() {
 		//pm_->Emit("w1sp_sender_glow", src_, pm_->GetEmitCountScaled(1, false));
 	}
 
+	//=========================================================
 	// コア本体の見た目
+	//=========================================================
 	pm_->Emit("w1sp_core_body", corePos_, pm_->GetEmitCountScaled(2, true));
 	pm_->Emit("w1sp_core_inner", corePos_, pm_->GetEmitCountScaled(2, true));
 	//pm_->Emit("w1sp_core_ring", corePos_, pm_->GetEmitCountScaled(1, true));
@@ -454,7 +577,9 @@ void EnemyManager::EmitSpecialCoreChargeParticles_() {
 	//pm_->Emit("w1sp_core_smoke", corePos_, pm_->GetEmitCountScaled(0, false));
 	pm_->Emit("w1sp_core_arc", corePos_, pm_->GetEmitCountScaled(1, false));
 
+	//=========================================================
 	// チャージ終盤の加速演出
+	//=========================================================
 	if (mainSquadPhaseTimer_ >= specialCoreChargeDuration_ * 0.55f) {
 		//pm_->Emit("w1sp_core_flash", corePos_, pm_->GetEmitCountScaled(1, true));
 		//pm_->Emit("w1sp_core_spark", corePos_, pm_->GetEmitCountScaled(3, false));
@@ -462,6 +587,9 @@ void EnemyManager::EmitSpecialCoreChargeParticles_() {
 	}
 }
 
+//=============================================================
+// 雑魚本隊生成
+//=============================================================
 void EnemyManager::SpawnMainSquad_() {
 	if (!dx_ || !camera_ || !parent_) {
 		return;
@@ -517,6 +645,9 @@ void EnemyManager::SpawnMainSquad_() {
 	}
 }
 
+//=============================================================
+// 敵弾更新
+//=============================================================
 void EnemyManager::UpdateEnemyBullets_(float dt) {
 	for (auto it = enemyBullets_.begin(); it != enemyBullets_.end();) {
 		if (!(*it)) {
@@ -526,7 +657,9 @@ void EnemyManager::UpdateEnemyBullets_(float dt) {
 
 		(*it)->Update(dt);
 
-		// 発射済みの特殊攻撃コア弾だけ、飛翔中パーティクルを出す
+		//=====================================================
+		// 発射済み特殊コア弾の飛翔パーティクル
+		//=====================================================
 		if ((*it)->GetType() == EnemyBullet::Type::SpecialCoreLaunched) {
 			TKM::ParticleManager* pm_ = TKM::ParticleManager::GetInstance();
 			if (pm_) {
@@ -549,6 +682,9 @@ void EnemyManager::UpdateEnemyBullets_(float dt) {
 	}
 }
 
+//=============================================================
+// 本隊凍結切り替え
+//=============================================================
 void EnemyManager::SetMainSquadFreeze_(bool enable) {
 	for (auto& e : enemies_) {
 		if (!e || e->IsDead() || e->IsDying()) {
@@ -561,6 +697,9 @@ void EnemyManager::SetMainSquadFreeze_(bool enable) {
 	}
 }
 
+//=============================================================
+// バリアコアマネージャ初期化
+//=============================================================
 void EnemyManager::InitializeBarrierCoreManager_() {
 	if (barrierCoreManager_) {
 		return;
@@ -575,6 +714,9 @@ void EnemyManager::InitializeBarrierCoreManager_() {
 	barrierCoreManager_->Initialize(common_, dx_, camera_, parent_, player_);
 }
 
+//=============================================================
+// バリアコア生成
+//=============================================================
 void EnemyManager::SpawnBarrierCores_() {
 	InitializeBarrierCoreManager_();
 
@@ -593,6 +735,9 @@ void EnemyManager::SpawnBarrierCores_() {
 	barrierCoreManager_->Spawn(GetBarrierCenter());
 }
 
+//=============================================================
+// バリアコア全削除
+//=============================================================
 void EnemyManager::ClearBarrierCores_() {
 	if (!barrierCoreManager_) {
 		if (player_) {
@@ -608,6 +753,9 @@ void EnemyManager::ClearBarrierCores_() {
 	}
 }
 
+//=============================================================
+// バリアコア全破壊判定
+//=============================================================
 bool EnemyManager::AreAllBarrierCoresDestroyed_() const {
 	if (!barrierCoreManager_) {
 		return false;
@@ -615,6 +763,9 @@ bool EnemyManager::AreAllBarrierCoresDestroyed_() const {
 	return barrierCoreManager_->IsAllDestroyed();
 }
 
+//=============================================================
+// 生存中の本隊数カウント
+//=============================================================
 int EnemyManager::CountAliveMainSquad_() const {
 	int count_ = 0;
 	for (const auto& e : enemies_) {
@@ -628,6 +779,9 @@ int EnemyManager::CountAliveMainSquad_() const {
 	return count_;
 }
 
+//=============================================================
+// バリア破壊処理
+//=============================================================
 void EnemyManager::BreakBarrier_() {
 	barrierBroken_ = true;
 	mainSquadStopped_ = false;
@@ -645,6 +799,9 @@ void EnemyManager::BreakBarrier_() {
 	mainSquadPhaseTimer_ = 0.0f;
 }
 
+//=============================================================
+// 特殊攻撃サイクル更新
+//=============================================================
 void EnemyManager::UpdateSpecialAttackCycle_(float dt) {
 	mainSquadPhaseTimer_ += dt;
 
@@ -658,6 +815,9 @@ void EnemyManager::UpdateSpecialAttackCycle_(float dt) {
 	UpdateSpecialCoreCharge_(dt);
 }
 
+//=============================================================
+// 敵弾描画
+//=============================================================
 void EnemyManager::DrawEnemyBullets_(TKM::DirectXCommon* dx) {
 	for (auto& bullet : enemyBullets_) {
 		if (!bullet) {
@@ -667,12 +827,17 @@ void EnemyManager::DrawEnemyBullets_(TKM::DirectXCommon* dx) {
 	}
 }
 
+//=============================================================
+// 敵弾とプレイヤーの当たり判定
+//=============================================================
 void EnemyManager::CheckEnemyBulletPlayerCollision_(float dt) {
 	if (!player_) {
 		return;
 	}
 
+	//=========================================================
 	// 被弾クールタイム更新
+	//=========================================================
 	if (playerHitCooldown_ > 0.0f) {
 		playerHitCooldown_ -= dt;
 		if (playerHitCooldown_ < 0.0f) {
@@ -712,25 +877,42 @@ void EnemyManager::CheckEnemyBulletPlayerCollision_(float dt) {
 	}
 }
 
+//=============================================================
+// 特殊コア位置取得
+//=============================================================
 Vector3 EnemyManager::GetSpecialCorePosition_() const {
 	return mainSquadCenter_ + specialCoreOffset_;
 }
 
+//=============================================================
+// バリア中心取得
+//=============================================================
 Vector3 EnemyManager::GetBarrierCenter() const {
 	return barrier_ ? barrier_->GetCenter() : Vector3{ 0.0f, 0.0f, 0.0f };
 }
 
+//=============================================================
+// バリアサイズ取得
+//=============================================================
 Vector3 EnemyManager::GetBarrierSize() const {
 	return barrier_ ? barrier_->GetAABBSize() : Vector3{ 0.0f, 0.0f, 0.0f };
 }
 
+//=============================================================
+// カメラ設定
+//=============================================================
 void EnemyManager::SetCamera(TKM::Camera* camera) {
 	BattleActorManagerBase::SetCamera(camera);
 }
 
+//=============================================================
+// カメラ変更時処理
+//=============================================================
 void EnemyManager::OnCameraChanged() {
 	for (auto& e : enemies_) {
-		if (e) { e->SetCamera(camera_); }
+		if (e) {
+			e->SetCamera(camera_);
+		}
 	}
 
 	if (barrier_) {
@@ -742,11 +924,13 @@ void EnemyManager::OnCameraChanged() {
 	}
 }
 
+//=============================================================
+// 本隊戦開始
+//=============================================================
 void EnemyManager::BeginMainSquadBattle_() {
-
 	ClearBarrierCores_();
 
-	// 撃破数リセット（最大数は次のWaveの目標撃破数をセット）
+	// 撃破数リセット（最大数は目標撃破数）
 	maxEnemyCount_ = std::max(0, encounterConfig_.GetSmallEnemyPhase().defeatTarget_);
 
 	SpawnMainSquad_();
@@ -756,6 +940,7 @@ void EnemyManager::BeginMainSquadBattle_() {
 	InitializeBarrier_();
 	SetBarrierActive_(true);
 	UpdateBarrier_();
+
 	if (barrier_) {
 		barrier_->SetVisible(true);
 	}
@@ -774,6 +959,9 @@ void EnemyManager::BeginMainSquadBattle_() {
 	scatterShotTimer_ = 0.0f;
 }
 
+//=============================================================
+// 本隊円運動ターゲット反映
+//=============================================================
 void EnemyManager::ApplyMainSquadOrbitTargets_() {
 	const float step_ = 6.28318530718f / static_cast<float>(kMainSquadEnemyCount_);
 
@@ -783,7 +971,7 @@ void EnemyManager::ApplyMainSquadOrbitTargets_() {
 			continue;
 		}
 
-		// Wave1本隊だけを円運動の対象にする
+		// Wave1本隊だけを円運動対象にする
 		if (e->GetType() != EnemyType::MainSquad) {
 			continue;
 		}
@@ -801,10 +989,18 @@ void EnemyManager::ApplyMainSquadOrbitTargets_() {
 		++aliveIndex_;
 	}
 }
+
+//=============================================================
+// 本隊円運動更新
+//=============================================================
 void EnemyManager::UpdateMainSquadOrbit_(float dt) {
 	mainSquadOrbitAngle_ -= mainSquadOrbitAngularSpeed_ * dt;
 	ApplyMainSquadOrbitTargets_();
 }
+
+//=============================================================
+// 本隊無敵切り替え
+//=============================================================
 void EnemyManager::SetMainSquadInvincible_(bool enable) {
 	for (auto& e : enemies_) {
 		if (!e || e->IsDead() || e->IsDying()) {
@@ -820,6 +1016,9 @@ void EnemyManager::SetMainSquadInvincible_(bool enable) {
 	}
 }
 
+//=============================================================
+// バリア初期化
+//=============================================================
 void EnemyManager::InitializeBarrier_() {
 	if (barrier_) {
 		return;
@@ -840,6 +1039,10 @@ void EnemyManager::InitializeBarrier_() {
 	barrier_->SetVisible(false);
 	barrier_->SetActive(false);
 }
+
+//=============================================================
+// バリア更新
+//=============================================================
 void EnemyManager::UpdateBarrier_() {
 	if (!barrier_) {
 		return;
@@ -852,6 +1055,10 @@ void EnemyManager::UpdateBarrier_() {
 	barrier_->SetRadius(1.0f);
 	barrier_->SetShapeScale(barrierSize_);
 }
+
+//=============================================================
+// バリア有効切り替え
+//=============================================================
 void EnemyManager::SetBarrierActive_(bool active) {
 	if (!barrier_) {
 		InitializeBarrier_();
@@ -862,6 +1069,10 @@ void EnemyManager::SetBarrierActive_(bool active) {
 
 	barrier_->SetActive(active);
 }
+
+//=============================================================
+// バリア情報をプレイヤーへ同期
+//=============================================================
 void EnemyManager::SyncBarrierInfoToPlayer_() {
 	if (!barrier_) {
 		if (player_) {
@@ -873,28 +1084,44 @@ void EnemyManager::SyncBarrierInfoToPlayer_() {
 	barrier_->SyncToPlayer();
 }
 
+//=============================================================
+// 描画
+//=============================================================
 void EnemyManager::Draw(TKM::DirectXCommon* dx) {
-
+	//=========================================================
+	// バリア描画
+	//=========================================================
 	if (barrier_) {
 		barrier_->Draw(dx);
 	}
 
 	TKM::Object3dCommon::GetInstance()->DrawSetCommon();
 
+	//=========================================================
+	// バリアコア描画
+	//=========================================================
 	if (barrierCoreManager_) {
 		barrierCoreManager_->Draw(dx);
 	}
 
+	//=========================================================
+	// 敵描画
+	//=========================================================
 	if (!&enemies_) { // enemies_ がまだ紐付いてなかったら何もしない
 		return;
 	}
+
 	for (auto& enemy : enemies_) {
 		enemy->Draw(dx);
 	}
-	// 敵の弾は敵が描画された後に描く（手前に来るように）
+
+	// 敵弾は敵の後に描画する
 	DrawEnemyBullets_(dx);
 }
 
+//=============================================================
+// ImGuiデバッグ表示
+//=============================================================
 void EnemyManager::ImGuiDebug() {
 #ifdef USE_IMGUI
 	// まだ紐付いてないなら何もしない
@@ -903,25 +1130,32 @@ void EnemyManager::ImGuiDebug() {
 	}
 
 	ImGui::Begin("敵ステータス");
-	// ===== Wave 状態表示 =====
+
+	//=========================================================
+	// Wave状態表示
+	//=========================================================
 	static const char* kWaveLabel_[] = {
-	"雑魚フェーズ",
-	"Bossフェーズ"
+		"雑魚フェーズ",
+		"Bossフェーズ"
 	};
 	ImGui::Text("現在のフェーズ: %s", kWaveLabel_[static_cast<int>(enemyPhase_)]);
 
-	// 「ボスWaveへ」ボタン
+	//=========================================================
+	// 強制ボスWave移行
+	//=========================================================
 	if (ImGui::Button("ボスWaveへ")) {
 		FinishSmallEnemyPhase();
 	}
 
+	//=========================================================
+	// Wave1バリア調整
+	//=========================================================
 	if (ImGui::CollapsingHeader("Wave1バリア")) {
 		ImGui::Checkbox("中心追従", &barrierFollowCore_);
 		ImGui::DragFloat3("バリアオフセット", &barrierOffset_.x, 0.1f);
 		ImGui::DragFloat3("バリアサイズXYZ", &barrierSize_.x, 0.1f, 0.1f, 200.0f);
 
 		if (barrier_) {
-
 			ImGui::Separator();
 			ImGui::Text("バリアシェーダ");
 
@@ -935,10 +1169,12 @@ void EnemyManager::ImGuiDebug() {
 				barrier_->SetVisible(visible);
 			}
 
-			ImGui::Text("現在Center : %.2f, %.2f, %.2f",
+			ImGui::Text(
+				"現在Center : %.2f, %.2f, %.2f",
 				barrier_->GetCenter().x,
 				barrier_->GetCenter().y,
-				barrier_->GetCenter().z);
+				barrier_->GetCenter().z
+			);
 
 			ImGui::Text("現在Radius : %.2f", barrier_->GetRadius());
 		}

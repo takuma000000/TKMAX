@@ -7,21 +7,34 @@
 #include "imgui.h"
 #endif
 
+//=============================================================
+// 初期化
+//=============================================================
 void BarrierCore::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon) {
+	//=========================================================
+	// Object3d生成・初期化
+	//=========================================================
 	object_ = std::make_unique<TKM::Object3d>();
 	object_->Initialize(common, dxCommon);
-	object_->SetModel("barrierCore.obj"); // バリアコアのモデルをセット
+	object_->SetModel("barrierCore.obj"); // バリアコア用モデル設定
 
+	// カメラが設定済みなら反映
 	if (camera_) {
 		object_->SetCamera(camera_);
 	}
 
-	// スケール調整
+	//=========================================================
+	// 初期スケール・当たり判定サイズ
+	//=========================================================
 	baseScale_ = { 0.8f, 0.8f, 0.8f };
 	object_->SetScale(baseScale_);
+
 	colliderScale_ = { 1.71f, 1.71f, 1.71f };
 }
 
+//=============================================================
+// カメラ設定
+//=============================================================
 void BarrierCore::SetCamera(TKM::Camera* cam) {
 	camera_ = cam;
 	if (object_) {
@@ -29,36 +42,65 @@ void BarrierCore::SetCamera(TKM::Camera* cam) {
 	}
 }
 
+//=============================================================
+// 親シーン設定
+//=============================================================
 void BarrierCore::SetParentScene(TKM::BaseScene* scene) {
-	parent_ = scene; // Object3d の親シーンも設定
+	parent_ = scene; // Object3d の親シーンも保持
 }
 
+//=============================================================
+// 当たり判定サイズ設定
+//=============================================================
 void BarrierCore::SetColliderScale(const Vector3& s) {
-	colliderScale_ = s; // 当たり判定のサイズを変更（エフェクトや音などがあればここで）
+	colliderScale_ = s; // 当たり判定サイズ変更
 }
 
+//=============================================================
+// レティクル設定
+//=============================================================
 void BarrierCore::SetReticle(Reticle* r) {
-	reticle_ = r; // 当たり判定の可視化にレティクルの情報を使うために保持
+	reticle_ = r; // 当たり判定可視化用に保持
 }
 
+//=============================================================
+// プレイヤー位置取得関数設定
+//=============================================================
 void BarrierCore::SetPlayer(std::function<Vector3()> getter) {
-	playerGetter_ = std::move(getter); // プレイヤー位置取得関数を保持
+	playerGetter_ = std::move(getter);
 }
 
+//=============================================================
+// HP設定
+//=============================================================
 void BarrierCore::SetHP(int hp) {
-	hp_ = hp; maxHP_ = hp; // HP変化に応じたエフェクトや音などがあればここで
+	hp_ = hp;
+	maxHP_ = hp;
 }
 
+//=============================================================
+// 位置設定
+//=============================================================
 void BarrierCore::SetPosition(const Vector3& pos) {
-	if (!object_) return;
+	if (!object_) {
+		return;
+	}
 	object_->SetTranslate(pos);
 }
 
+//=============================================================
+// ワールド位置取得
+//=============================================================
 Vector3 BarrierCore::GetWorldPosition() const {
-	if (!object_) return {};
+	if (!object_) {
+		return {};
+	}
 	return object_->GetTranslate();
 }
 
+//=============================================================
+// スケール設定
+//=============================================================
 void BarrierCore::SetScale(const Vector3& s) {
 	baseScale_ = s;
 	if (object_) {
@@ -66,69 +108,90 @@ void BarrierCore::SetScale(const Vector3& s) {
 	}
 }
 
+//=============================================================
+// 更新
+//=============================================================
 void BarrierCore::Update(float dt) {
-	if (!object_) return;
+	if (!object_) {
+		return;
+	}
+
 	time_ += dt;
 
+	//=========================================================
 	// 死亡演出中
+	//=========================================================
 	if (isDying_) {
-		deathTimer_ += fixedDt_; // t は 0〜1 で変化する値。1 になったら演出完了
-		float t = std::min(deathTimer_ / deathDuration_, 1.0f); // 0〜1 に正規化
-		// 演出内容：上にふわっと上がって縮む感じ + 回転 + 徐々に透明に
+		deathTimer_ += fixedDt_;
+
+		// 0.0 ～ 1.0 の進行率
+		float t = std::min(deathTimer_ / deathDuration_, 1.0f);
+
 		Vector3 pos_ = object_->GetTranslate();
 		Vector3 rot_ = object_->GetRotate();
 		Vector3 scale_ = baseScale_;
 
-		// シンプルに上にふわっと上がって縮む感じ
+		//=====================================================
+		// 演出内容
+		// 上にふわっと上がりつつ縮小し、回転しながら消えていく
+		//=====================================================
 		pos_ += deathVelocity_ * fixedDt_;
 		rot_.y += deathRotateSpeed_.y * fixedDt_;
-		// t が 0→1 で変化する値を使って、スケールを徐々に小さくする
+
 		float s = 1.0f - t;
-		// baseScale_ に s を掛けることで、t が 0→1 でスケールが元の大きさ→0 に変化する
-		scale_ = { baseScale_.x * s, baseScale_.y * s, baseScale_.z * s };
-		// 変化をオブジェクトに反映
+		scale_ = {
+			baseScale_.x * s,
+			baseScale_.y * s,
+			baseScale_.z * s
+		};
+
+		//=====================================================
+		// オブジェクトへ反映
+		//=====================================================
 		object_->SetTranslate(pos_);
 		object_->SetRotate(rot_);
 		object_->SetScale(scale_);
-		// t が 0→1 で変化する値を使って、徐々に透明にする
+
+		// 徐々に透明化
 		deathAlpha_ = 1.0f - t;
-		// 透明度をオブジェクトに反映（モデルのマテリアルが頂点カラーを乗算するタイプである必要あり）
 		object_->SetColor({ 1.0f, 1.0f, 1.0f, deathAlpha_ });
-		// 演出完了後はオブジェクトを消す
+
 		object_->Update();
 
-		// deathTimer_ が deathDuration_ を超えたら演出完了とみなす
+		//=====================================================
+		// 演出完了
+		//=====================================================
 		if (deathTimer_ >= deathDuration_) {
-			// 消える瞬間にエフェクト
 			TKM::ParticleManager* pm_ = TKM::ParticleManager::GetInstance();
-			Vector3 emitPos_ = GetWorldPosition(); // 核の位置からエフェクトを出す
-			pm_->Emit("enemyDeath_core", emitPos_, 1); // 爆発の中心エフェクト
-			pm_->Emit("enemyDeath_smoke", emitPos_, 4); // 煙は複数出す
-			// ここでオブジェクトを完全に消す（描画も更新もしない）
+			Vector3 emitPos_ = GetWorldPosition();
+
+			pm_->Emit("enemyDeath_core", emitPos_, 1);
+			pm_->Emit("enemyDeath_smoke", emitPos_, 4);
+
+			// 完全に消す
 			isDead_ = true;
 		}
 		return;
 	}
 
-	// =========================================
+	//=========================================================
 	// 常時Y軸回転
-	// =========================================
+	//=========================================================
 	{
 		Vector3 rot_ = object_->GetRotate();
-
 		const float kRotateSpeedY_ = -2.0f; // ラジアン/秒
 
 		rot_.y += kRotateSpeedY_ * dt;
-
 		object_->SetRotate(rot_);
 	}
-	// =========================================
+
+	//=========================================================
 	// 脈動（ドクンっ）
-	// 一瞬で膨らんで、すぐ戻って、少し止まる
-	// =========================================
+	// 一瞬で膨らみ、すぐ戻って、少し止まる
+	//=========================================================
 	{
-		const float kBeatCycle_ = 0.85f;     // 1拍の周期（秒）
-		const float kBeatAmplitude_ = 0.22f; // 膨らむ強さ
+		const float kBeatCycle_ = 0.85f;     // 1拍の周期
+		const float kBeatAmplitude_ = 0.22f; // 膨らみ量
 		const float kAttackTime_ = 0.06f;    // 一気に膨らむ時間
 		const float kReleaseTime_ = 0.08f;   // 戻る時間
 
@@ -137,13 +200,13 @@ void BarrierCore::Update(float dt) {
 
 		if (phase < kAttackTime_) {
 			// 一瞬で膨らむ
-			float t = phase / kAttackTime_; // 0 -> 1
+			float t = phase / kAttackTime_;
 			pulseAdd = kBeatAmplitude_ * t;
 		} else if (phase < (kAttackTime_ + kReleaseTime_)) {
 			// すぐ戻る
-			float t = (phase - kAttackTime_) / kReleaseTime_; // 0 -> 1
+			float t = (phase - kAttackTime_) / kReleaseTime_;
 			float inv = 1.0f - t;
-			pulseAdd = kBeatAmplitude_ * (inv * inv); // 急に戻る感じ
+			pulseAdd = kBeatAmplitude_ * (inv * inv);
 		}
 
 		float pulse = 1.0f + pulseAdd;
@@ -155,10 +218,14 @@ void BarrierCore::Update(float dt) {
 
 		object_->SetScale(scale_);
 	}
+
 	object_->Update();
 
 #ifdef USE_IMGUI
-	// ---- 当たり判定の可視化（Enemy と同じ箱描画）----
+	//=========================================================
+	// 当たり判定可視化
+	// Enemy と同じ箱描画方式
+	//=========================================================
 	{
 		Vector3 center_ = GetWorldPosition();
 		Vector3 size_ = colliderScale_;
@@ -178,56 +245,64 @@ void BarrierCore::Update(float dt) {
 	}
 #endif
 
-	// ============================
+	//=========================================================
 	// 核チャージ演出（蘇生エネルギー）
-	// データドリブン版（挙動そのまま）
-	// ============================
+	// データドリブン版
+	//=========================================================
 	{
 		TKM::ParticleManager* pm_ = TKM::ParticleManager::GetInstance();
 		Vector3 center_ = GetWorldPosition();
 
 		struct EmitRule {
 			const char* name_;   // パーティクル名
-			int emitCount_;      // pm->Emit の第3引数
+			int emitCount_;      // Emit の第3引数
 			int repeat_;         // 同フレームで何回 Emit するか
-			int probability_;   // 1なら毎回、3なら1/3、5なら1/5…
+			int probability_;    // 1なら毎回、3なら1/3、5なら1/5
 		};
 
 		static const EmitRule kChargeRules_[] = {
-			// 外殻：拡大球リング（1/3）
+			// 外殻：拡大球リング
 			{ "core_charge_shell",  1, 1, 3 },
 
-			// 中心に吸い込まれる粒子（毎フレーム2回）
+			// 中心へ吸い込まれる粒子
 			{ "core_charge_inward", 1, 2, 1 },
 
-			// ぐるぐる回る細い帯（1/5）
+			// ぐるぐる回る細帯
 			{ "core_charge_ribbon", 1, 1, 5 },
 
-			// 放電フラッシュ（1/20）
+			// 放電フラッシュ
 			{ "core_charge_flash",  3, 1, 20 },
 		};
 
-		// ルールに従ってパーティクルを放出
+		// ルールに従ってパーティクル放出
 		for (const auto& rule : kChargeRules_) {
-			// rule.probability_ に従って、一定確率で放出するか決める
 			if (rule.probability_ <= 1 || (std::rand() % rule.probability_) == 0) {
-				// rule.repeat_ に従って、同フレームで複数回 Emit する
 				for (int i = 0; i < rule.repeat_; ++i) {
-					pm_->Emit(rule.name_, center_, rule.emitCount_); // rule.emitCount_ は、同時に放出するパーティクルの数（例：フラッシュは3つ同時に出す）
+					pm_->Emit(rule.name_, center_, rule.emitCount_);
 				}
 			}
 		}
 	}
 }
 
+//=============================================================
+// 描画
+//=============================================================
 void BarrierCore::Draw(TKM::DirectXCommon* dxCommon) {
-	if (!object_) return;
+	if (!object_) {
+		return;
+	}
 	object_->Draw(dxCommon);
 }
 
+//=============================================================
+// ImGuiデバッグ表示
+//=============================================================
 void BarrierCore::ImGuiDebug() {
 #ifdef USE_IMGUI
-	if (!object_) return;
+	if (!object_) {
+		return;
+	}
 
 	ImGui::Begin("バリアコア");
 
@@ -252,37 +327,59 @@ void BarrierCore::ImGuiDebug() {
 #endif
 }
 
+//=============================================================
+// 被弾ダメージ処理
+//=============================================================
 void BarrierCore::OnHitWithDamage(int damage) {
-	if (isDead_ || isDying_) return;
-	hp_ -= damage; // ダメージを減算
+	if (isDead_ || isDying_) {
+		return;
+	}
 
-	// ダメージに応じたエフェクトや音などがあればここで
+	hp_ -= damage;
+
+	// HPが尽きたら死亡リアクション開始
 	if (hp_ <= 0) {
-		hp_ = 0; // HPが0以下になったら死亡状態に移行
-		StartDeathReaction({ 0.0f, 0.0f, 1.0f }); // デフォルトの被弾方向（例：正面からの攻撃）で死亡リアクションを開始
+		hp_ = 0;
+		StartDeathReaction({ 0.0f, 0.0f, 1.0f });
 	}
 }
 
+//=============================================================
+// 死亡リアクション開始
+//=============================================================
 void BarrierCore::StartDeathReaction(const Vector3& hitDir) {
-	if (isDying_) return;
-	// 破壊演出開始
+	if (isDying_) {
+		return;
+	}
+
 	isDying_ = true;
 	deathTimer_ = 0.0f;
 	deathAlpha_ = 1.0f;
 
 	Vector3 dir_ = hitDir;
-	// hitDir がほぼゼロベクトルだった場合の安全策（正面方向に飛ばす）
+
+	// ゼロベクトル対策
 	if (MyMath::Length(dir_) < 0.001f) {
 		dir_ = { 0.0f, 0.0f, 1.0f };
 	}
-	dir_ = MyMath::Normalize(dir_); // 正規化して方向ベクトルにする
-	// 死亡演出のパラメータを設定（例：被弾方向に少し飛ばしつつ、上にもふわっと上がる感じ）
+
+	dir_ = MyMath::Normalize(dir_);
+
+	//=========================================================
+	// 死亡演出パラメータ設定
+	// 被弾方向へ少し飛ばしつつ、上にもふわっと上がる
+	//=========================================================
 	deathDuration_ = 0.8f;
 	deathVelocity_ = dir_ * 2.5f + Vector3{ 0.0f, 1.2f, 0.0f };
 	deathRotateSpeed_ = { 0.0f, 2.0f, 0.0f };
 }
 
+//=============================================================
+// Transform同期
+//=============================================================
 void BarrierCore::SyncTransform() {
-	if (!object_) return;
-	object_->Update();  // 行列と定数バッファだけ更新
+	if (!object_) {
+		return;
+	}
+	object_->Update(); // 行列と定数バッファのみ更新
 }
