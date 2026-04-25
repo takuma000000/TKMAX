@@ -69,6 +69,7 @@ void GameScene::Initialize() {
 	clearSeq_ = std::make_unique<TKM::ClearSequenceController>();
 	clearSeq_->Initialize(player_.get(), bossManager_.get(), flow_.get(), dxCommon_, skybox_.get(), fireworkController_.get(), postFx_->GetSmokeVolume());
 
+	// クリア演出側からシーン遷移要求を返せるようにFlowへ紐づける
 	flow_->BindClearSequence(clearSeq_.get());
 }
 
@@ -94,6 +95,7 @@ void GameScene::Update() {
 
 	/// ──────────────── クリアシーケンス更新 ───────────────
 	if (flow_->UpdateClear(rawDeltaTime, scaledDeltaTime, postFx_.get(), ui_.get(), bossManager_.get(), TKM::CameraManager::GetInstance()->GetMainCamera(), player_.get())) {
+		// クリア演出中は通常ゲーム更新を進めない
 		EndFrameUpdate();
 		return;
 	}
@@ -113,12 +115,16 @@ void GameScene::Update() {
 			(bossManager_ && bossManager_->IsBattleActive() && !bossManager_->IsBossDead());
 
 		if (entranceActive) {
+			// ボス登場演出中は演出側が管理している空色を使う
 			skybox_->SetColor(bossEntranceSeq_->GetSkyColor());
 		} else if (bossBattleRed) {
+			// ボス戦中は赤くして緊張感を出す
 			skybox_->SetColor({ 10.0f, 0.0f, 0.0f, 1.0f });
 		} else if (introBossRed) {
+			// イントロのボス演出中も赤空にする
 			skybox_->SetColor({ 10.0f, 0.0f, 0.0f, 1.0f });
 		} else {
+			// 通常時は元の色に戻す
 			skybox_->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
 		}
 	}
@@ -131,6 +137,7 @@ void GameScene::Update() {
 
 	/// ──────────────── ポーズUI更新 ───────────────
 	if (TryUpdatePauseAndMaybeEarlyReturn_(rawDeltaTime, allowPauseOpen)) {
+		// ポーズ中は通常ゲーム更新を行わない
 		EndFrameUpdate();
 		return;
 	}
@@ -161,6 +168,7 @@ void GameScene::Draw3D() {
 	const bool isClear = (flow_->IsInClear()) || clearSequenceTriggered_;
 
 	if (!isClear) {
+		// クリア演出中はボス本体の通常描画を止める
 		bossManager_->Draw(dxCommon_);
 	}
 
@@ -336,6 +344,7 @@ void GameScene::UpdateAirStreak(float rawDeltaTime) {
 			float y = v * boxHalfHeight;
 
 			if (x * x + y * y < centerHoleRadius * centerHoleRadius) {
+				// 画面中央に出すぎると視界の邪魔になるため、基本は避ける
 				if (rand01() > 0.25f) {
 					continue;
 				}
@@ -391,6 +400,7 @@ void GameScene::UpdateEnemyAndWaveLogic(float scaledDeltaTime) {
 	const bool locked = (flow_->IsGameplayLocked()) || isClear || bossEntranceActive || clearSequenceTriggered_;
 
 	if (locked || !enemiesInitialized_) {
+		// ロック中や敵未生成の状態では敵フェーズを進めない
 		return;
 	}
 
@@ -399,7 +409,7 @@ void GameScene::UpdateEnemyAndWaveLogic(float scaledDeltaTime) {
 
 	/// ──────────────── ボス撃破時のクリア演出開始 ───────────────
 	if (bossManager_ && bossManager_->IsBossDead()) {
-		clearSequenceTriggered_ = true;
+		clearSequenceTriggered_ = true; // クリア演出を二重開始しないためのフラグ
 		flow_->RequestStartClear();
 		return;
 	}
@@ -409,11 +419,11 @@ void GameScene::UpdateEnemyAndWaveLogic(float scaledDeltaTime) {
 		if (bossManager_ && bossManager_->GetBoss() == nullptr) {
 			if (bossEntranceSeq_) {
 				if (!bossEntranceSeq_->IsActive()) {
-					player_->SetShootingEnabled(false);
+					player_->SetShootingEnabled(false); // 登場演出中は射撃を止める
 					bossEntranceSeq_->Start(bossManager_->GetSpawnPos());
 				}
 			} else {
-				player_->SetShootingEnabled(false);
+				player_->SetShootingEnabled(false); // 即ボス戦へ入る場合も一度射撃を止める
 				bossManager_->StartBattle();
 			}
 		}
@@ -421,7 +431,7 @@ void GameScene::UpdateEnemyAndWaveLogic(float scaledDeltaTime) {
 
 	/// ──────────────── ロックオン対象更新 ───────────────
 	if (bossManager_->IsBossAlive()) {
-		player_->SetEnemy(bossManager_->GetBoss());
+		player_->SetEnemy(bossManager_->GetBoss()); // ボスがいる間はボスを優先ターゲットにする
 	} else {
 		enemyManager_->UpdateClosestEnemy();
 	}
@@ -463,7 +473,7 @@ void GameScene::UpdateGameplaySystems(float rawDeltaTime, float scaledDeltaTime)
 	/// ──────────────── ゲーム開始BGM再生 ───────────────
 	if (isStartVisible && !gameStartedBGMPlayed_) {
 		TKM::AudioManager::GetInstance()->PlaySound("playBGM", 0.1f, true);
-		gameStartedBGMPlayed_ = true;
+		gameStartedBGMPlayed_ = true; // BGMを一度だけ鳴らす
 	}
 
 	/// ──────────────── 開幕ボス演出中のUI制御 ───────────────
@@ -478,6 +488,7 @@ void GameScene::UpdateGameplaySystems(float rawDeltaTime, float scaledDeltaTime)
 
 	/// ──────────────── ボスマネージャ更新 ───────────────
 	if (!bossEntranceActive || bossEntranceSpawned) {
+		// ボス登場演出中でも、生成後はボス側の更新を許可する
 		bossManager_->Update(scaledDeltaTime);
 	}
 
@@ -555,9 +566,11 @@ bool GameScene::TryUpdatePauseAndMaybeEarlyReturn_(float rawDeltaTime, bool allo
 
 	/// ──────────────── BGMポーズ・再開制御 ───────────────
 	if (isPausedNow && !wasPausedLastFrame_) {
+		// ポーズに入った瞬間だけBGMを一時停止する
 		TKM::AudioManager::GetInstance()->PauseSound("playBGM");
 		TKM::AudioManager::GetInstance()->PauseSound("bossPhaseBGM");
 	} else if (!isPausedNow && wasPausedLastFrame_) {
+		// ポーズ解除の瞬間だけBGMを再開する
 		TKM::AudioManager::GetInstance()->ResumeSound("playBGM");
 		TKM::AudioManager::GetInstance()->ResumeSound("bossPhaseBGM");
 	}
@@ -606,6 +619,7 @@ void GameScene::UpdateNormalGameplay_(float rawDeltaTime, float scaledDeltaTime)
 
 	/// ──────────────── クリア要求後の早期終了 ───────────────
 	if (flow_ && flow_->IsInClear()) {
+		// クリア状態に入ったら通常更新をここで止める
 		UpdateTransitionsAndSceneChange(rawDeltaTime);
 		HandleDebugKeysAndRequests();
 		return;

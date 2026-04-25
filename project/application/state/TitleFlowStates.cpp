@@ -4,128 +4,204 @@
 #include "GameScene.h"
 #include <Windows.h>
 
+/// <summary>
+/// 共通のStateContextをTitleSceneとして扱えるように変換します。
+/// </summary>
+/// <param name="ctx">ステートマシンから渡される共通コンテキスト</param>
+/// <returns>TitleScene参照</returns>
 static TitleScene& AsTitle_(TKM::IStateContext& ctx) {
-	return static_cast<TitleScene&>(ctx); // 状態コンテキストをタイトルシーンにキャスト
+	return static_cast<TitleScene&>(ctx);
 }
 
+//=====================================================
+// IntroIrisOpen
+//=====================================================
 void TitleFlowIntroIrisOpenState::Update(TKM::IStateContext& ctx, float dt) {
-	auto& s = AsTitle_(ctx); // 状態コンテキストをタイトルシーンにキャスト
+	auto& s = AsTitle_(ctx);
 
-	// 敵更新（アイリス中でも動かす）
+	// アイリス演出中でも、タイトル背景の敵は動かし続ける
 	for (auto& u : s.titleEnemies_) {
-		if (!u.alive_ || !u.enemy_) { continue; } // 念のため生存とnullptrチェック
-		u.enemy_->Update(dt); // 敵の更新（移動やアニメーションなど）を行う
+		// 消滅済み、または実体がない敵は更新しない
+		if (!u.alive_ || !u.enemy_) {
+			continue;
+		}
+
+		// 敵の移動・アニメーションを更新する
+		u.enemy_->Update(dt);
 	}
 
-	// 開幕アイリス（開く）更新
+	// 開幕アイリスを開く
 	if (s.irisOpening_) {
-		s.irisScale_ = UpdateIrisScale(s.iris_.get(), s.irisTween_, dt); // アイリスのサイズを更新
+		// Tweenに合わせてアイリスのサイズを更新する
+		s.irisScale_ = UpdateIrisScale(s.iris_.get(), s.irisTween_, dt);
 
-		if (s.irisTween_.Finished()) { // アイリスの開きが完了したら
-			s.irisOpening_ = false; // アイリス開幕フラグを下ろす
-			s.irisScale_ = 0.0f; // 念のためサイズを完全に0にしておく
-			s.iris_->SetSize({ s.irisScale_, s.irisScale_ }); // アイリスのサイズを反映
+		// アイリスが開き切ったらIdle状態へ進む
+		if (s.irisTween_.Finished()) {
+			// アイリス開き演出を終了する
+			s.irisOpening_ = false;
 
-			s.seqTimer_ = 0.0f; // シーケンス全体の経過時間初期化
-			s.flowSM_.Change(std::make_unique<TitleFlowIdleState>()); // 次の状態（Idle）へ遷移
+			// 念のためアイリスサイズを完全に0に固定する
+			s.irisScale_ = 0.0f;
+			s.iris_->SetSize({ s.irisScale_, s.irisScale_ });
+
+			// 次の待機シーケンス用にタイマーを初期化する
+			s.seqTimer_ = 0.0f;
+
+			// タイトル待機状態へ遷移する
+			s.flowSM_.Change(std::make_unique<TitleFlowIdleState>());
 		}
 	}
 }
 
+//=====================================================
+// Idle
+//=====================================================
 void TitleFlowIdleState::Enter(TKM::IStateContext& ctx) {
-	auto& s = AsTitle_(ctx); // 状態コンテキストをタイトルシーンにキャスト
-	s.seqTimer_ = 0.0f; // シーケンス全体の経過時間初期化
+	auto& s = AsTitle_(ctx);
+
+	// 待機状態用のタイマーを初期化する
+	s.seqTimer_ = 0.0f;
 }
 
 void TitleFlowIdleState::Update(TKM::IStateContext& ctx, float dt) {
-	auto& s = AsTitle_(ctx); // 状態コンテキストをタイトルシーンにキャスト
+	auto& s = AsTitle_(ctx);
 
-	// 敵うようよ更新
+	// タイトル背景の敵をうようよ動かす
 	for (auto& u : s.titleEnemies_) {
-		if (!u.alive_ || !u.enemy_) { continue; } // 念のため生存とnullptrチェック
-		u.enemy_->Update(dt); // 敵の更新（移動やアニメーションなど）を行う
+		// 消滅済み、または実体がない敵は更新しない
+		if (!u.alive_ || !u.enemy_) {
+			continue;
+		}
+
+		// 敵の移動・アニメーションを更新する
+		u.enemy_->Update(dt);
 	}
 
-	// ① メニューが出てる時：メニュー操作
+	// メニュー表示中は、メニュー操作を優先する
 	if (s.showUi_) {
-		const auto cmd = s.titleMenu_->Update(dt); // メニューの更新（入力処理など）を行い、発行されたコマンドを取得
-		s.titleShowdown_->Update(dt, true); // 見つめ合い演出の更新（ビーム演出有効）
-		// コマンドに応じた処理
+		// メニューの入力更新を行い、発行されたコマンドを取得する
+		const auto cmd = s.titleMenu_->Update(dt);
+
+		// UI表示中は見つめ合い演出も更新する
+		s.titleShowdown_->Update(dt, true);
+
+		// STARTが選ばれたら、メニューを経由せず波紋演出へ進む
 		if (cmd == TitleMenuController::Command::Start) {
-			s.showMenuAfterVanish_ = false; // Vanishing後にメニューを出さない（直接波紋へ）
-			s.flowSM_.Change(std::make_unique<TitleFlowRippleState>()); // 直接波紋へ遷移
+			s.showMenuAfterVanish_ = false;
+			s.flowSM_.Change(std::make_unique<TitleFlowRippleState>());
 			return;
 		}
-		// とじるコマンドが出たらアプリ終了
+
+		// EXITが選ばれたら、アプリ終了を要求する
 		if (cmd == TitleMenuController::Command::Exit) {
-			s.sceneManager_->RequestQuit(); // アプリ終了要求
-			PostQuitMessage(0); // Windowsアプリケーションの終了要求
-			s.earlyExitUpdate_ = true; // Updateの早期終了フラグを立てる（念のため）
+			s.sceneManager_->RequestQuit();
+			PostQuitMessage(0);
+
+			// このフレームの通常更新を止める
+			s.earlyExitUpdate_ = true;
 			return;
 		}
+
+		// メニュー操作中はここで終了する
 		return;
 	}
 
-	// ② メニューが出てない時：待ち→自動で消滅へ
+	// メニューがまだ出ていない間は、少し待ってから敵の消滅演出へ進む
 	s.seqTimer_ += dt;
-	const bool autoGo = (s.seqTimer_ >= 1.4f); // 1.4秒待って自動で消滅へ
-	// Aボタンが押されたら即座に消滅へ
-	if (autoGo) {
-		s.showUi_ = false; // UI非表示
-		s.titleMenu_->SetVisible(false); // メニュー非表示
 
-		s.showMenuAfterVanish_ = true; // Vanishing後にメニューを出す（波紋は飛ばしてメニューへ遷移）
-		s.ScheduleVanish_(); // タイトル敵の消滅をスケジュール（遅延時間をランダムにセット）
-		// 消滅シーケンスへ遷移
+	// 一定時間待ったら自動で消滅演出へ進む
+	const bool autoGo = (s.seqTimer_ >= 1.4f);
+
+	if (autoGo) {
+		// 消滅演出に入るため、一旦UIとメニューは非表示にする
+		s.showUi_ = false;
+		s.titleMenu_->SetVisible(false);
+
+		// 消滅後はメニュー表示へ進む
+		s.showMenuAfterVanish_ = true;
+
+		// 敵ごとの消滅タイミングをランダムに設定する
+		s.ScheduleVanish_();
+
+		// 消滅シーケンスへ遷移する
 		s.flowSM_.Change(std::make_unique<TitleFlowVanishingState>());
 	}
 }
 
+//=====================================================
+// Vanishing
+//=====================================================
 void TitleFlowVanishingState::Enter(TKM::IStateContext& ctx) {
-	auto& s = AsTitle_(ctx); // 状態コンテキストをタイトルシーンにキャスト
-	s.vanishTimer_ = 0.0f; // 消滅シーケンスの経過時間初期化
+	auto& s = AsTitle_(ctx);
+
+	// 消滅シーケンス用のタイマーを初期化する
+	s.vanishTimer_ = 0.0f;
 }
 
 void TitleFlowVanishingState::Update(TKM::IStateContext& ctx, float dt) {
-	auto& s = AsTitle_(ctx); // 状態コンテキストをタイトルシーンにキャスト
-	// 消滅シーケンスの経過時間を更新
+	auto& s = AsTitle_(ctx);
+
+	// 消滅シーケンスの経過時間を進める
 	s.vanishTimer_ += dt;
 
-	// 消えるまで敵は動いてOK
+	// 消えるまでは敵を動かし続ける
 	for (auto& u : s.titleEnemies_) {
-		if (!u.alive_ || !u.enemy_) { continue; } // 念のため生存とnullptrチェック
-		u.enemy_->Update(dt); // 敵の更新（移動やアニメーションなど）を行う
+		// 消滅済み、または実体がない敵は更新しない
+		if (!u.alive_ || !u.enemy_) {
+			continue;
+		}
+
+		// 敵の移動・アニメーションを更新する
+		u.enemy_->Update(dt);
 	}
 
-	// ランダム時差で消す
+	// ランダムに設定された時差で敵を消していく
 	for (auto& u : s.titleEnemies_) {
-		if (!u.alive_ || !u.enemy_) { continue; } //
+		// 消滅済み、または実体がない敵は処理しない
+		if (!u.alive_ || !u.enemy_) {
+			continue;
+		}
 
-		if (s.vanishTimer_ >= u.vanishDelay_) { // 消滅遅延時間を過ぎたら消す
-			s.EmitTitleExplode_(u.enemy_->GetWorldPosition()); // 敵の位置で爆発エフェクトを出す
-			u.alive_ = false; // 生存フラグを下ろす（消滅開始）
+		// 敵ごとの消滅遅延時間を過ぎたら消滅させる
+		if (s.vanishTimer_ >= u.vanishDelay_) {
+			// 敵の位置で爆発エフェクトを出す
+			s.EmitTitleExplode_(u.enemy_->GetWorldPosition());
+
+			// 生存フラグを下ろして、以降の更新・描画対象から外す
+			u.alive_ = false;
 		}
 	}
 
-	// 全滅したら「メニューへ」 or 「波紋へ」
+	// すべての敵が消えたら、次に進む
 	if (s.AllEnemiesGone_()) {
-		if (s.showMenuAfterVanish_) { // Vanishing後にメニューを出す場合
-			s.showUi_ = true; // UI表示
-			s.titleMenu_->SetVisible(true); // メニュー表示
-			s.seqTimer_ = 0.0f; // シーケンス全体の経過時間初期化
-			s.flowSM_.Change(std::make_unique<TitleFlowIdleState>()); // Idle状態へ遷移
+		// 消滅後にメニューを出す場合
+		if (s.showMenuAfterVanish_) {
+			s.showUi_ = true;
+			s.titleMenu_->SetVisible(true);
+
+			// メニュー待機用のタイマーを初期化する
+			s.seqTimer_ = 0.0f;
+
+			// Idleへ戻して、メニュー操作待ちにする
+			s.flowSM_.Change(std::make_unique<TitleFlowIdleState>());
 			return;
 		}
-		// Vanishing後にメニューを出さない場合は直接波紋へ遷移
+
+		// メニューを出さない場合は、そのままゲーム開始用の波紋演出へ進む
 		s.flowSM_.Change(std::make_unique<TitleFlowRippleState>());
 	}
 }
 
+//=====================================================
+// Ripple
+//=====================================================
 void TitleFlowRippleState::Enter(TKM::IStateContext& ctx) {
-	auto& s = AsTitle_(ctx); // 状態コンテキストをタイトルシーンにキャスト
-	s.rippleTimer_ = 0.0f; // 波紋エフェクトの経過時間初期化
+	auto& s = AsTitle_(ctx);
 
-	// 波紋を出す（元のコードそのまま移植）
+	// 波紋演出用のタイマーを初期化する
+	s.rippleTimer_ = 0.0f;
+
+	// 波紋の見た目設定を作る
 	TKM::WaterRippleEffect::RippleDesc d{};
 	d.duration_ = 1.0f;
 	d.radiusMax_ = 0.857f;
@@ -134,25 +210,34 @@ void TitleFlowRippleState::Enter(TKM::IStateContext& ctx) {
 	d.width_ = 10.0f;
 	d.color_ = { 1.0f, 1.0f, 1.0f };
 	d.colorIntensity_ = 0.0f;
+
+	// 画面中央から波紋を発生させる
 	s.rippleEffect_->Trigger({ 0.5f, 0.5f }, d);
 }
 
 void TitleFlowRippleState::Update(TKM::IStateContext& ctx, float dt) {
-	auto& s = AsTitle_(ctx); // 状態コンテキストをタイトルシーンにキャスト
+	auto& s = AsTitle_(ctx);
 
-	s.rippleTimer_ += dt; // 波紋エフェクトの経過時間を更新
+	// 波紋演出の経過時間を進める
+	s.rippleTimer_ += dt;
 
-	if (s.rippleTimer_ >= TitleScene::kRippleWaitSec_) { // 波紋エフェクト発生から一定時間経ったら次の状態へ遷移
-		s.flowSM_.Change(std::make_unique<TitleFlowIrisCloseState>()); // アイリス（閉じる）状態へ遷移
+	// 波紋を少し見せたら、アイリス閉じへ進む
+	if (s.rippleTimer_ >= TitleScene::kRippleWaitSec_) {
+		s.flowSM_.Change(std::make_unique<TitleFlowIrisCloseState>());
 	}
 }
 
+//=====================================================
+// IrisClose
+//=====================================================
 void TitleFlowIrisCloseState::Enter(TKM::IStateContext& ctx) {
-	auto& s = AsTitle_(ctx); // 状態コンテキストをタイトルシーンにキャスト
+	auto& s = AsTitle_(ctx);
 
-	s.irisClosing_ = true; // アイリス（閉じる）フラグを立てる
+	// アイリス閉じ演出を開始する
+	s.irisClosing_ = true;
 
-	s.irisTween_.Reset( // アイリスのサイズを0から最大まで変化させるTweenをセット
+	// アイリスサイズを0から最大まで広げ、画面を閉じる
+	s.irisTween_.Reset(
 		0.0f,
 		s.irisMax_,
 		TitleScene::kIrisDurationSec_,
@@ -161,14 +246,21 @@ void TitleFlowIrisCloseState::Enter(TKM::IStateContext& ctx) {
 }
 
 void TitleFlowIrisCloseState::Update(TKM::IStateContext& ctx, float dt) {
-	auto& s = AsTitle_(ctx); // 状態コンテキストをタイトルシーンにキャスト
+	auto& s = AsTitle_(ctx);
 
-	if (!s.irisClosing_) { return; } // 念のためアイリス（閉じる）フラグチェック
+	// 念のため、閉じ演出中でない場合は何もしない
+	if (!s.irisClosing_) {
+		return;
+	}
 
-	s.irisScale_ = UpdateIrisScale(s.iris_.get(), s.irisTween_, dt); // アイリスのサイズを更新
-	// アイリスのサイズを反映
+	// Tweenに合わせてアイリスサイズを更新する
+	s.irisScale_ = UpdateIrisScale(s.iris_.get(), s.irisTween_, dt);
+
+	// アイリスが閉じ切ったらゲームシーンへ遷移する
 	if (s.irisTween_.Finished()) {
-		s.sceneManager_->SetNextScene(std::make_unique<GameScene>(s.dxCommon_, s.srvManager_)); // 次のシーンをゲームシーンにセット
-		s.earlyExitUpdate_ = true; // Updateの早期終了フラグを立てる（念のため）
+		s.sceneManager_->SetNextScene(std::make_unique<GameScene>(s.dxCommon_, s.srvManager_));
+
+		// このフレームの通常更新を止める
+		s.earlyExitUpdate_ = true;
 	}
 }

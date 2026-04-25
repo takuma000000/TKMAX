@@ -8,242 +8,303 @@
 #endif
 
 namespace TKM {
+
 	void PlayerHudUI::ApplyHudPositions_() {
-		// 左端のX座標 = 左マージン + 左予約領域幅 + 予約領域とゲージの間隔
+		// 左下のHP用予約領域を避けて、弾ゲージの左端X座標を決める
 		float leftEdgeX = hudLeftMargin_ + hudReserveLeftW_ + hudReserveGap_;
 
-		// RBゲージとLBゲージの位置を計算して適用
+		// RBゲージを配置する
 		if (rbGaugeUI_) {
-			auto rbDesc = rbGaugeUI_->GetDesc(); // サイズを取得
+			auto rbDesc = rbGaugeUI_->GetDesc();
 
-			// 中心座標を計算
+			// RBゲージの中心座標を計算する
 			Vector2 rbCenter{
-				leftEdgeX + rbDesc.size_.x * 0.5f, // X座標 = 左端 + ゲージ幅の半分
-				screenH_ - hudBottomMargin_ - ammoUiRaiseY_ // Y座標 = 画面下端 - 下マージン - 上昇量
+				leftEdgeX + rbDesc.size_.x * 0.5f,
+				screenH_ - hudBottomMargin_ - ammoUiRaiseY_
 			};
-			// オフセットを加算
+
+			// RBゲージの中心座標を反映する
 			rbDesc.center_ = rbCenter;
 			rbGaugeUI_->SetDesc(rbDesc);
 
-			// LBゲージはRBゲージの下に配置するので、RBゲージの中心座標とサイズをもとに位置を計算
+			// LBゲージはRBゲージの下に配置する
 			if (lbGaugeUI_) {
 				auto lbDesc = lbGaugeUI_->GetDesc();
-				lbDesc.size_ = rbDesc.size_; // サイズはRBゲージと同じにする
-				// LBゲージの中心座標 = RBゲージの中心座標 + (0, RBゲージの高さ/2 + LBゲージの高さ/2 + 間隔) + オフセット
+
+				// LBゲージのサイズはRBゲージと揃える
+				lbDesc.size_ = rbDesc.size_;
+
+				// RBゲージの下に、間隔と微調整オフセットを加えて配置する
 				lbDesc.center_ = {
 					rbCenter.x + lbGaugeOffset_.x,
 					rbCenter.y + rbDesc.size_.y + lbGaugeSpacingY_ + lbGaugeOffset_.y
 				};
-				lbDesc.segments_ = 5; // LBゲージは5分割で表示する
-				lbGaugeUI_->SetDesc(lbDesc); // 設定を適用して位置を更新
+
+				// LBゲージは弾数に合わせて5分割表示にする
+				lbDesc.segments_ = 5;
+
+				// LBゲージの設定を反映する
+				lbGaugeUI_->SetDesc(lbDesc);
 			}
-			// RBゲージアイコンはRBゲージの右端に配置するので、RBゲージの中心座標とサイズをもとに位置を計算
+
+			// RBゲージアイコンをRBゲージの右端に配置する
 			if (rbGaugeIcon_) {
-				// アイコンの描画サイズ = テクスチャサイズ * スケール
+				// アイコンの描画サイズを取得する
 				float iconW = rbGaugeIconDrawSize_.x;
 				float iconH = rbGaugeIconDrawSize_.y;
+
+				// RBゲージの右端X座標を求める
 				float gaugeRightX = rbCenter.x + rbDesc.size_.x * 0.5f;
-				// アイコンの位置 = RBゲージの右端 + アイコンとゲージの間隔 + アイコンの幅（アイコンのアンカーが右端なので） , RBゲージの中心Y + アイコンの高さの半分（アイコンのアンカーが下端なので））
+
+				// アイコンのアンカーが右下なので、幅と高さを考慮して位置を決める
 				Vector2 iconPos{
 					gaugeRightX + rbGaugeIconPadX_ + iconW,
 					rbCenter.y + iconH * 0.5f
 				};
-				// オフセットを加算
+
+				// ImGui調整用のオフセットを加える
 				iconPos.x += rbGaugeIconOffset_.x;
 				iconPos.y += rbGaugeIconOffset_.y;
-				// 位置を保存してスプライトに適用
+
+				// 基準位置を保存して、スプライトに反映する
 				basePosRBGaugeIcon_ = iconPos;
 				rbGaugeIcon_->SetPosition(basePosRBGaugeIcon_);
 			}
 		}
 
-		// HPゲージは画面左下に配置する
+		// HPゲージは左下の予約領域内に配置する
 		float hpX = hudLeftMargin_ + (hudReserveLeftW_ * 0.5f);
 		float hpY = screenH_ - hudBottomMargin_;
-		// HPゲージの位置 = 左端 + 予約領域幅の半分 , 画面下端 - 下マージン
+
+		// HPゲージ全体の基準位置を計算する
 		Vector2 hpPos{ hpX + hpVertOffset_.x, hpY + hpVertOffset_.y };
-		// 位置を保存してスプライトに適用
+
+		// HPフレームの基準位置を保存して反映する
 		basePosHPFrame_ = hpPos;
-		// HPフレームの位置 = HPゲージの位置
 		hpFrame_->SetPosition(basePosHPFrame_);
-		basePosHPFill_ = { // HPフレームの位置 + フレームのアンカーを考慮したオフセット
+
+		// HP塗りは下端基準なので、フレーム位置から半分上へずらす
+		basePosHPFill_ = {
 			hpPos.x,
 			hpPos.y + hpVertSize_.y * 0.5f
 		};
-		// HPフレームのアンカーは(0.5, 0.5)、HPフレームの位置はhpPosなので、HPフレームの中心はhpPosにある。
 		hpFill_->SetPosition(basePosHPFill_);
 
-		// HPアイコンの位置 = HPフレームの位置 + アイコンのオフセット + アイコンの高さの半分（アイコンのアンカーが中心なので）
+		// HPアイコンはHP塗り位置を基準にして配置する
 		float iconH = hpIconDrawSize_.y;
-		Vector2 iconPos{ // HPフレームの位置 + アイコンのオフセット + アイコンの高さの半分（アイコンのアンカーが中心なので）
+		Vector2 iconPos{
 			basePosHPFill_.x + hpIconOffset_.x,
 			basePosHPFill_.y + (iconH * 0.5f) + hpIconOffset_.y
 		};
-		// 位置を保存してスプライトに適用
-		hpIcon_->SetPosition(iconPos);
 
+		// HPアイコンの位置を反映する
+		hpIcon_->SetPosition(iconPos);
 	}
 
 	void PlayerHudUI::Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, BaseScene* parentScene, float screenW, float screenH) {
+		// 外部から受け取った描画・シーン情報を保存する
 		spriteCommon_ = spriteCommon;
 		dxCommon_ = dxCommon;
 		parentScene_ = parentScene;
 		screenW_ = screenW;
 		screenH_ = screenH;
 
-		// ゲームパッド接続状態を初期化
+		// 現在のゲームパッド接続状態を取得する
 		isGamepadConnected_ = Input::GetInstance()->IsGamepadConnected();
-		// RBゲージUIとLBゲージUIを生成して初期化
+
+		// RBゲージUIを生成して初期化する
 		rbGaugeUI_ = std::make_unique<RBGaugeUI>();
 		RBGaugeUI::Desc rbDesc{};
 		rbGaugeUI_->Initialize(spriteCommon_, dxCommon_, parentScene_, rbDesc);
-		// LBゲージはRBゲージと同じサイズ・位置で、分割数だけ異なる設定で初期化する
+
+		// LBゲージUIを生成して初期化する
 		lbGaugeUI_ = std::make_unique<LBGaugeUI>();
 		LBGaugeUI::Desc lbDesc{};
 		lbGaugeUI_->Initialize(spriteCommon_, dxCommon_, parentScene_, lbDesc);
-		// RBゲージアイコンを生成して初期化
+
+		// RBゲージアイコンを生成して初期化する
 		rbGaugeIcon_ = std::make_unique<Sprite>();
 		rbGaugeIcon_->Initialize(spriteCommon_, dxCommon_, rbGaugeIconTex_);
 		rbGaugeIcon_->SetAutoAdjustTextureSize(false);
 		rbGaugeIcon_->SetAnchorPoint({ 1.0f, 1.0f });
 
-		{ // RBゲージアイコンのテクスチャサイズを取得して描画サイズを計算・設定する
-			const auto& meta = TextureManager::GetInstance()->GetMetadata(rbGaugeIconTex_); // メタデータを取得
-			rbGaugeIconTexSize_ = { (float)meta.width, (float)meta.height }; // テクスチャサイズを保存
-			rbGaugeIcon_->SetTextureLeftTop({ 0.0f, 0.0f }); // 左上を(0,0)に設定
-			rbGaugeIcon_->SetTextureSize(rbGaugeIconTexSize_); // スプライトに設定
-			// 描画サイズ = テクスチャサイズ * スケールで計算して保存
+		{
+			// RBゲージアイコンのテクスチャサイズを取得する
+			const auto& meta = TextureManager::GetInstance()->GetMetadata(rbGaugeIconTex_);
+
+			// テクスチャサイズを保存する
+			rbGaugeIconTexSize_ = { (float)meta.width, (float)meta.height };
+
+			// 画像全体を使用する
+			rbGaugeIcon_->SetTextureLeftTop({ 0.0f, 0.0f });
+			rbGaugeIcon_->SetTextureSize(rbGaugeIconTexSize_);
+
+			// テクスチャサイズとスケールから描画サイズを計算する
 			rbGaugeIconDrawSize_ = {
 				rbGaugeIconTexSize_.x * rbGaugeIconScale_,
 				rbGaugeIconTexSize_.y * rbGaugeIconScale_
 			};
-			rbGaugeIcon_->SetSize(rbGaugeIconDrawSize_); // スプライトに描画サイズを設定
+
+			// 描画サイズを反映する
+			rbGaugeIcon_->SetSize(rbGaugeIconDrawSize_);
 		}
 
-		// HPゲージのスプライトを生成して初期化
+		// HPゲージ用スプライトを生成する
 		hpFrame_ = std::make_unique<Sprite>();
 		hpFill_ = std::make_unique<Sprite>();
 		hpIcon_ = std::make_unique<Sprite>();
-		// HPゲージのテクスチャパス
-		const std::string hpFrameTex = "./resources/texture/player_hp_frame.jpg"; // フレームのテクスチャ
-		const std::string hpFillTex = "./resources/texture/player_hp.jpg"; // 塗りのテクスチャ
-		const std::string hpIconTex = "./resources/texture/player_hp.png"; // アイコンのテクスチャ
-		// スプライトを初期化
+
+		// HPゲージ用のテクスチャパス
+		const std::string hpFrameTex = "./resources/texture/player_hp_frame.jpg";
+		const std::string hpFillTex = "./resources/texture/player_hp.jpg";
+		const std::string hpIconTex = "./resources/texture/player_hp.png";
+
+		// HPゲージ用スプライトを初期化する
 		hpFrame_->Initialize(spriteCommon_, dxCommon_, hpFrameTex);
 		hpFill_->Initialize(spriteCommon_, dxCommon_, hpFillTex);
 		hpIcon_->Initialize(spriteCommon_, dxCommon_, hpIconTex);
-		// テクスチャサイズを取得してスプライトに設定するため、自動調整をオフにする
+
+		// 自動サイズ調整を使わず、こちらで明示的にサイズを設定する
 		hpFrame_->SetAutoAdjustTextureSize(false);
 		hpFill_->SetAutoAdjustTextureSize(false);
 		hpIcon_->SetAutoAdjustTextureSize(false);
 
-		{ // HPゲージのテクスチャサイズを取得してスプライトに設定する
+		{
+			// HPフレームの画像全体を使用する
 			const auto& frameMeta = TextureManager::GetInstance()->GetMetadata(hpFrameTex);
-			hpFrame_->SetTextureLeftTop({ 0.0f, 0.0f }); // 左上を(0,0)に設定
-			hpFrame_->SetTextureSize({ (float)frameMeta.width, (float)frameMeta.height }); // スプライトに設定
+			hpFrame_->SetTextureLeftTop({ 0.0f, 0.0f });
+			hpFrame_->SetTextureSize({ (float)frameMeta.width, (float)frameMeta.height });
 
+			// HP塗りの画像全体を使用する
 			const auto& fillMeta = TextureManager::GetInstance()->GetMetadata(hpFillTex);
-			hpFill_->SetTextureLeftTop({ 0.0f, 0.0f }); // 左上を(0,0)に設定
-			hpFill_->SetTextureSize({ (float)fillMeta.width, (float)fillMeta.height }); // スプライトに設定
+			hpFill_->SetTextureLeftTop({ 0.0f, 0.0f });
+			hpFill_->SetTextureSize({ (float)fillMeta.width, (float)fillMeta.height });
 
+			// HPアイコンの画像全体を使用する
 			const auto& iconMeta = TextureManager::GetInstance()->GetMetadata(hpIconTex);
-			hpIconTexSize_ = { (float)iconMeta.width, (float)iconMeta.height }; // テクスチャサイズを保存
-			hpIcon_->SetTextureLeftTop({ 0.0f, 0.0f }); // 左上を(0,0)に設定
-			hpIcon_->SetTextureSize(hpIconTexSize_); // スプライトに設定
+			hpIconTexSize_ = { (float)iconMeta.width, (float)iconMeta.height };
+			hpIcon_->SetTextureLeftTop({ 0.0f, 0.0f });
+			hpIcon_->SetTextureSize(hpIconTexSize_);
 		}
-		// アンカーポイントを設定
+
+		// HPゲージ各パーツのアンカーを設定する
 		hpFrame_->SetAnchorPoint({ 0.5f, 0.5f });
 		hpFill_->SetAnchorPoint({ 0.5f, 1.0f });
 		hpIcon_->SetAnchorPoint({ 0.5f, 0.5f });
-		// 描画サイズを計算して設定
+
+		// HPフレームと塗りの描画サイズを設定する
 		hpFrame_->SetSize({ hpVertSize_.x + hpFramePad_, hpVertSize_.y + hpFramePad_ });
 		hpFill_->SetSize(hpVertSize_);
 
-		hpIconDrawSize_ = { // 描画サイズ = テクスチャサイズ * スケールで計算
-			hpIconTexSize_.x * hpIconScale_,
-			hpIconTexSize_.y * hpIconScale_
-		};
-		hpIcon_->SetSize(hpIconDrawSize_); // スプライトに描画サイズを設定
-		// 画面サイズに基づいて位置を計算して適用
-		UpdateLayout(screenW_, screenH_);
-	}
-
-	void PlayerHudUI::UpdateLayout(float screenW, float screenH) {
-		screenW_ = screenW;
-		screenH_ = screenH;
-		// 画面サイズに基づいて位置を再計算して適用
-		hpFill_->SetSize(hpVertSize_);
-		hpFrame_->SetSize({ hpVertSize_.x + hpFramePad_, hpVertSize_.y + hpFramePad_ });
-		// HPアイコンの描画サイズ = テクスチャサイズ * スケールで計算して保存・設定
+		// HPアイコンの描画サイズを計算して反映する
 		hpIconDrawSize_ = {
 			hpIconTexSize_.x * hpIconScale_,
 			hpIconTexSize_.y * hpIconScale_
 		};
 		hpIcon_->SetSize(hpIconDrawSize_);
-		// RBゲージアイコンの描画サイズ = テクスチャサイズ * スケールで計算して保存・設定
+
+		// 画面サイズをもとにHUD全体の位置を決める
+		UpdateLayout(screenW_, screenH_);
+	}
+
+	void PlayerHudUI::UpdateLayout(float screenW, float screenH) {
+		// 画面サイズを更新する
+		screenW_ = screenW;
+		screenH_ = screenH;
+
+		// HPゲージの描画サイズを再反映する
+		hpFill_->SetSize(hpVertSize_);
+		hpFrame_->SetSize({ hpVertSize_.x + hpFramePad_, hpVertSize_.y + hpFramePad_ });
+
+		// HPアイコンの描画サイズを再計算する
+		hpIconDrawSize_ = {
+			hpIconTexSize_.x * hpIconScale_,
+			hpIconTexSize_.y * hpIconScale_
+		};
+		hpIcon_->SetSize(hpIconDrawSize_);
+
+		// RBゲージアイコンの描画サイズを再計算する
 		rbGaugeIconDrawSize_ = {
 			rbGaugeIconTexSize_.x * rbGaugeIconScale_,
 			rbGaugeIconTexSize_.y * rbGaugeIconScale_
 		};
 		rbGaugeIcon_->SetSize(rbGaugeIconDrawSize_);
 
-		// HUDの位置を再計算して適用
+		// HUDの配置を再計算して反映する
 		ApplyHudPositions_();
 	}
 
 	void PlayerHudUI::Update(float dt, Player* player) {
 		Input* in = Input::GetInstance();
+
+		// 現在のゲームパッド接続状態を取得する
 		isGamepadConnected_ = in->IsGamepadConnected();
 
-		// RBボタンとLBボタンの押下状態を取得（ゲームパッド接続時はゲームパッドのボタン、非接続時はキーボードのキーで判定）
+		// RB/Kの押下状態を取得する
 		const bool rbDown = isGamepadConnected_
 			? in->PushButton(XINPUT_GAMEPAD_RIGHT_SHOULDER)
 			: in->PushKey(DIK_K);
-		// LBボタンはゲームパッドの左肩ボタン、キーボードのLキーで判定
+
+		// LB/Lの押下状態を取得する
 		const bool lbDown = isGamepadConnected_
 			? in->PushButton(XINPUT_GAMEPAD_LEFT_SHOULDER)
 			: in->PushKey(DIK_L);
 
+		// プレイヤーの弾数情報をもとにRBゲージを更新する
+		rbGaugeUI_->Update(
+			dt,
+			player->GetRbAmmo(),
+			player->GetRbAmmoMax(),
+			player->IsRbRefilling(),
+			rbDown
+		);
 
-		// プレイヤー情報をもとにゲージUIを更新
-		rbGaugeUI_->Update(dt, player->GetRbAmmo(), player->GetRbAmmoMax(), player->IsRbRefilling(), rbDown); // RBゲージUIを更新
-		lbGaugeUI_->Update(dt, player->GetLbAmmo(), player->GetLbAmmoMax(), lbDown); // LBゲージUIを更新
-		rbGaugeIcon_->Update(); // RBゲージアイコンは常に更新して位置を反映させる
-		hpFrame_->Update(); // HPフレームは常に更新して位置を反映させる
-		hpIcon_->Update(); // HPアイコンは常に更新して位置を反映させる
+		// プレイヤーのLB弾数情報をもとにLBゲージを更新する
+		lbGaugeUI_->Update(
+			dt,
+			player->GetLbAmmo(),
+			player->GetLbAmmoMax(),
+			lbDown
+		);
 
-		// RBゲージアイコンはRBボタンが押されている間揺らす
+		// 各スプライトの内部更新を行う
+		rbGaugeIcon_->Update();
+		hpFrame_->Update();
+		hpIcon_->Update();
+
+		// RBゲージアイコンはRB入力中だけ小刻みに揺らす
 		if (rbDown) {
-			float r1 = MyMath::Rand01() * 2.0f - 1.0f; // -1.0～1.0の乱数
-			float r2 = MyMath::Rand01() * 2.0f - 1.0f; // -1.0～1.0の乱数
-			// アイコンの位置 = 基準位置 + 乱数 * 揺れの強さ
+			float r1 = MyMath::Rand01() * 2.0f - 1.0f;
+			float r2 = MyMath::Rand01() * 2.0f - 1.0f;
+
 			rbGaugeIcon_->SetPosition({
 				basePosRBGaugeIcon_.x + r1 * shakeAmpPx_,
 				basePosRBGaugeIcon_.y + r2 * shakeAmpPx_
 				});
-		} else { // 押されていないときは基準位置に戻す
+		} else {
+			// 入力していない場合は基準位置に戻す
 			rbGaugeIcon_->SetPosition(basePosRBGaugeIcon_);
 			shakeT_RBGaugeIcon_ = 0.0f;
 		}
 
-		// HPゲージの更新
+		// 現在HPの割合を取得して、0.0f～1.0fに収める
 		hpTargetRate_ = player->GetHPRate();
 		hpTargetRate_ = std::clamp(hpTargetRate_, 0.0f, 1.0f);
 
-		// HPの現在値を取得
+		// 現在HPを取得する
 		int curHp = player->GetHP();
 
-		// 前回のHPが未初期化（-1）なら、現在のHPを基準にしてアニメーション率を設定しておく
+		// 初回だけ、前回HPとアニメーション率を現在値で初期化する
 		if (prevHp_ < 0) {
 			prevHp_ = curHp;
 			hpAnimRate_ = hpTargetRate_;
 			hpTweenActive_ = false;
 		}
 
-		// HPが減少していたらダメージを受けたと判断して、ヒットフラッシュとシェイクを開始し、HPアニメーションのトゥイーンをリセットする
+		// HPが減っていればダメージを受けたと判断する
 		bool damaged = (curHp < prevHp_);
 
-		// ダメージを受けたときの処理
+		// ダメージ時はフラッシュ・シェイク・HP減少Tweenを開始する
 		if (damaged) {
 			hpHitFlashT_ = hpHitFlashSec_;
 			hpShakeT_ = hpShakeSec_;
@@ -251,93 +312,111 @@ namespace TKM {
 			hpTweenActive_ = true;
 		}
 
-		prevHp_ = curHp; // 現在のHPを保存して次回の更新で比較できるようにする
+		// 次フレームの比較用に現在HPを保存する
+		prevHp_ = curHp;
 
-		// HPアニメーションの更新
+		// HP減少アニメーションを更新する
 		if (hpTweenActive_) {
-			hpAnimRate_ = hpTween_.Update(dt); // トゥイーンを更新してHPアニメーション率を取得
-			// トゥイーンが終了していたら、HPアニメーション率を目標値に直接設定してトゥイーンを非アクティブにする
+			hpAnimRate_ = hpTween_.Update(dt);
+
+			// Tweenが終わったら目標値に固定する
 			if (hpTween_.Finished()) {
 				hpAnimRate_ = hpTargetRate_;
 				hpTweenActive_ = false;
 			}
-		} else { // トゥイーンがアクティブでないときは、HPアニメーション率を目標値に直接設定しておく（この場合はHPの増加なども即座に反映される）
+		} else {
+			// Tween中でない場合は、即座に現在HP割合を反映する
 			hpAnimRate_ = hpTargetRate_;
 		}
 
-		// HPアニメーション率をもとにHPゲージの塗りのサイズを更新する
+		// HP割合に応じて塗りスプライトの高さを変える
 		Vector2 fillSize = hpVertSize_;
 		fillSize.y *= hpAnimRate_;
 		hpFill_->SetSize(fillSize);
 
-		// HPシェイクの更新
+		// HPダメージシェイクを更新する
 		if (hpShakeT_ > 0.0f) {
 			hpShakeT_ -= dt;
-			// シェイク時間が終了していたら0にする
+
+			// 残り時間が負にならないようにする
 			if (hpShakeT_ < 0.0f) {
 				hpShakeT_ = 0.0f;
 			}
 
-			// シェイクのオフセット = (-1.0～1.0の乱数) * 揺れの強さ
+			// ランダムな揺れオフセットを作る
 			float r1 = MyMath::Rand01() * 2.0f - 1.0f;
 			float r2 = MyMath::Rand01() * 2.0f - 1.0f;
 			Vector2 ofs{ r1 * hpShakeAmpPx_, r2 * hpShakeAmpPx_ };
-			// HPフレームとHP塗りの位置 = 基準位置 + シェイクのオフセット
+
+			// HPフレームと塗りを同じ量だけ揺らす
 			hpFrame_->SetPosition({ basePosHPFrame_.x + ofs.x, basePosHPFrame_.y + ofs.y });
 			hpFill_->SetPosition({ basePosHPFill_.x + ofs.x, basePosHPFill_.y + ofs.y });
-		} else { // シェイク時間が終了しているときは基準位置に戻す		{
+		} else {
+			// シェイクしていない場合は基準位置へ戻す
 			hpFrame_->SetPosition(basePosHPFrame_);
 			hpFill_->SetPosition(basePosHPFill_);
 		}
 
-		// HPヒットフラッシュの更新
+		// HPヒットフラッシュ時間を更新する
 		if (hpHitFlashT_ > 0.0f) {
 			hpHitFlashT_ -= dt;
+
+			// 残り時間が負にならないようにする
 			if (hpHitFlashT_ < 0.0f) {
 				hpHitFlashT_ = 0.0f;
 			}
 		}
 
-		// HPフレームとHPアイコンは常に更新して位置を反映させる
+		// HP塗りスプライトの内部更新を行う
 		hpFill_->Update();
 
-		// ImGui調整
+		// ImGui調整項目を表示する
 		DrawImGui();
 	}
 
 	void PlayerHudUI::Draw(float hudAlpha) {
-		// HUD全体のアルファを乗算する関数
+		// HUD全体のアルファを各UI色へ掛ける
 		auto mulAlpha = [&](const Vector4& c) {
 			Vector4 out = c;
 			out.w *= hudAlpha;
 			return out;
 			};
-		// HPゲージのフレームとアイコンを描画
+
+		// HPフレームを描画する
 		hpFrame_->SetColor(mulAlpha(colHPFrame_));
 		hpFrame_->Draw();
-		// HPアイコンはヒットフラッシュの影響を受けないように、フレームと同じアルファで描画する
+
+		// HPアイコンを描画する
 		hpIcon_->SetColor(mulAlpha(colHPIcon_));
 		hpIcon_->Draw();
-		// HPゲージの塗りを描画（ヒットフラッシュの影響を受ける）
+
+		// HPヒットフラッシュの割合を求める
 		float t = 0.0f;
-		// ヒットフラッシュの経過時間をもとに、フラッシュの色と通常の色を線形補間するための割合を計算する
 		if (hpHitFlashSec_ > 0.0f) {
 			t = hpHitFlashT_ / hpHitFlashSec_;
 			t = std::clamp(t, 0.0f, 1.0f);
 		}
-		Vector4 flashCol{ // フラッシュの色は赤で、アルファはHPゲージの通常の色と同じにする
+
+		// フラッシュ時の赤色を作る
+		Vector4 flashCol{
 			1.0f,
 			0.0f,
 			0.0f,
 			colHPFill_.w
 		};
-		// 描画色 = 通常の色 * (1 - t) + フラッシュの色 * t で線形補間する
+
+		// 通常色から赤色へ補間して、ダメージ感を出す
 		Vector4 drawCol = MyMath::Vector4Lerp(colHPFill_, flashCol, t);
+
+		// HP塗りを描画する
 		hpFill_->SetColor(mulAlpha(drawCol));
 		hpFill_->Draw();
-		// RBゲージアイコンとゲージを描画
+
+		// RBゲージアイコンを描画する
 		rbGaugeIcon_->SetColor(mulAlpha(colRBGaugeIcon_));
 		rbGaugeIcon_->Draw();
+
+		// RB/LBゲージを描画する
 		rbGaugeUI_->Draw();
 		lbGaugeUI_->Draw();
 	}
@@ -348,13 +427,16 @@ namespace TKM {
 			bool changed = false;
 
 			if (ImGui::TreeNode("RBゲージアイコン")) {
+				// RBゲージ横のアイコンサイズと配置を調整する
 				changed |= ImGui::DragFloat("サイズ##rbGaugeIcon", &rbGaugeIconScale_, 0.001f, 0.01f, 2.0f);
 				changed |= ImGui::DragFloat("右端余白(px)##rbGaugeIconPad", &rbGaugeIconPadX_, 0.5f, 0.0f, 200.0f);
 				changed |= ImGui::DragFloat2("微調整オフセット##rbGaugeIcon", &rbGaugeIconOffset_.x, 0.5f, -1500.0f, 300.0f);
+
 				ImGui::TreePop();
 			}
 
 			if (ImGui::TreeNode("LBゲージ（残弾5分割）")) {
+				// LBゲージの配置を調整する
 				changed |= ImGui::DragFloat("RBの下の間隔Y(px)##lbGaugeSpace", &lbGaugeSpacingY_, 0.5f, 0.0f, 200.0f);
 				changed |= ImGui::DragFloat2("LBゲージ微調整(x,y)##lbGaugeOfs", &lbGaugeOffset_.x, 0.5f, -500.0f, 500.0f);
 
@@ -362,12 +444,14 @@ namespace TKM {
 					auto ld = lbGaugeUI_->GetDesc();
 					bool localChanged = false;
 
+					// LBゲージ内部の表示設定を調整する
 					localChanged |= ImGui::DragFloat("内側余白 pad(px)##lbPad", &ld.pad_, 0.1f, 0.0f, 20.0f);
 					localChanged |= ImGui::DragFloat("分割の隙間 gap(px)##lbGap", &ld.gap_, 0.1f, 0.0f, 20.0f);
 					localChanged |= ImGui::ColorEdit4("通常色##lbBase", &ld.baseColor_.x);
 					localChanged |= ImGui::ColorEdit4("消費色##lbDrain", &ld.drainColor_.x);
 					localChanged |= ImGui::ColorEdit4("回復色##lbRefill", &ld.refillColor_.x);
 
+					// LBゲージ内部設定に変更があった場合のみ反映する
 					if (localChanged) {
 						lbGaugeUI_->SetDesc(ld);
 					}
@@ -377,11 +461,15 @@ namespace TKM {
 			}
 
 			ImGui::Separator();
+
+			// HPアイコンのサイズと位置を調整する
 			ImGui::Text("HPアイコン");
 			changed |= ImGui::DragFloat("HPアイコン scale", &hpIconScale_, 0.001f, 0.01f, 2.0f);
 			changed |= ImGui::DragFloat2("HPアイコン offset(x,y)", &hpIconOffset_.x, 0.5f, -300.0f, 300.0f);
 
 			ImGui::Separator();
+
+			// 左下HUD全体の配置を調整する
 			ImGui::Text("左下HUD：配置");
 			changed |= ImGui::DragFloat("左余白(px)", &hudLeftMargin_, 0.5f, 0.0f, 600.0f);
 			changed |= ImGui::DragFloat("縦ゲージ確保幅(px)", &hudReserveLeftW_, 0.5f, 0.0f, 800.0f);
@@ -390,11 +478,14 @@ namespace TKM {
 			changed |= ImGui::DragFloat("弾UI上げ量(px)", &ammoUiRaiseY_, 0.5f, 0.0f, 300.0f);
 
 			ImGui::Separator();
+
+			// 縦HPゲージのサイズと位置を調整する
 			ImGui::Text("縦HPゲージ");
 			changed |= ImGui::DragFloat2("HP縦サイズ(w,h)", &hpVertSize_.x, 0.5f, 2.0f, 800.0f);
 			changed |= ImGui::DragFloat2("HP縦オフセット(x,y)", &hpVertOffset_.x, 0.5f, -300.0f, 300.0f);
 			changed |= ImGui::DragFloat("HPフレーム余白", &hpFramePad_, 0.5f, 0.0f, 80.0f);
 
+			// 何か変更があった場合はHUD配置を再計算する
 			if (changed) {
 				UpdateLayout(screenW_, screenH_);
 			}
@@ -403,4 +494,5 @@ namespace TKM {
 		}
 #endif
 	}
+
 } // namespace TKM
