@@ -7,6 +7,9 @@ namespace TKM {
 	//======================================
 	class IStateContext {
 	public:
+		/// <summary>
+		/// IStateContextの仮想デストラクタ
+		/// </summary>
 		virtual ~IStateContext() = default; // 仮想デストラクタ
 	};
 }
