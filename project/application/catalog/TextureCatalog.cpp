@@ -51,8 +51,10 @@ void TextureCatalog::LoadTextureCatalogs() {
 	// TKM::TextureManager はシングルトン
 	auto* tm = TKM::TextureManager::GetInstance();
 
+	// ファイルリストのテクスチャをすべてロードする
 	for (const char* file : kFiles) {
+		// すでにロードされている場合はスキップする
 		std::string path = std::string(kBaseDir) + file;
-		tm->LoadTexture(path);
+		tm->LoadTexture(path); // ロードする際はベースディレクトリを付加する
 	}
 }

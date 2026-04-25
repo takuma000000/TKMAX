@@ -7,153 +7,258 @@
 
 namespace TKM {
 	void PostEffectController::Initialize(DirectXCommon* dxCommon, Player* player, BossManager* bossManager) {
+		// DirectX共通情報を保持する
 		dxCommon_ = dxCommon;
+
+		// プレイヤー参照を保持する
 		player_ = player;
 
-		// ──────────────── 画面エフェクトの初期化 ───────────────
+		//=========================================================
+		// RadialBlurEffect 初期化
+		//=========================================================
 
-		// RadialBlurEffect
+		// 放射ブラーエフェクトを生成する
 		radialBlur_ = std::make_unique<TKM::RadialBlurEffect>();
+
+		// DirectX共通情報を渡して初期化する
 		radialBlur_->Initialize(dxCommon_);
+
+		// DirectXCommon側へ放射ブラーを登録する
 		dxCommon_->SetRadialBlurEffect(radialBlur_.get());
+
+		// プレイヤー側からも放射ブラーを発火できるように渡す
 		if (player) {
 			player->SetRadialBlurEffect(radialBlur_.get());
 		}
 
-		// VignettingEffect
+		//=========================================================
+		// VignettingEffect 初期化
+		//=========================================================
+
+		// ビネットエフェクトを生成する
 		vignetting_ = std::make_unique<TKM::VignettingEffect>();
+
+		// DirectX共通情報を渡して初期化する
 		vignetting_->Initialize(dxCommon_);
 
-		// FogEffect（常時ON）
+		//=========================================================
+		// FogEffect 初期化
+		//=========================================================
+
+		// フォグエフェクトを生成する
 		fog_ = std::make_unique<TKM::FogEffect>();
+
+		// DirectX共通情報を渡して初期化する
 		fog_->Initialize(dxCommon_);
+
+		// 初期状態ではフォグを無効化する
 		fog_->SetActive(false);
+
+		// DirectXCommon側へフォグを登録する
 		dxCommon_->SetFogEffect(fog_.get());
 
-		// AuraEffect
+		//=========================================================
+		// AuraEffect 初期化
+		//=========================================================
+
+		// オーラエフェクトを生成する
 		aura_ = std::make_unique<TKM::AuraEffect>();
+
+		// DirectX共通情報を渡して初期化する
 		aura_->Initialize(dxCommon_);
+
+		// DirectXCommon側へオーラを登録する
 		dxCommon_->SetAuraEffect(aura_.get());
 
-		// WaterRippleEffect
+		//=========================================================
+		// WaterRippleEffect 初期化
+		//=========================================================
+
+		// 水面波紋エフェクトを生成する
 		waterRipple_ = std::make_unique<TKM::WaterRippleEffect>();
+
+		// DirectX共通情報を渡して初期化する
 		waterRipple_->Initialize(dxCommon_);
+
+		// DirectXCommon側へ水面波紋を登録する
 		dxCommon_->SetWaterRippleEffect(waterRipple_.get());
+
+		// BossManager側からも水面波紋を発火できるように渡す
 		if (bossManager) {
 			bossManager->SetWaterRippleEffect(waterRipple_.get());
 		}
 
-		// FogVolume3D
+		//=========================================================
+		// FogVolume3D 初期化
+		//=========================================================
+
+		// 空間霧ボリュームを生成する
 		fogVolume3D_ = std::make_unique<TKM::FogVolume3D>();
+
+		// DirectX共通情報を渡して初期化する
 		fogVolume3D_->Initialize(dxCommon_);
+
 		{
-			auto d = fogVolume3D_->GetDesc();   // コピーで受ける
-			d.centerWS_ = { 0.0f, 6.0f, 20.0f }; // 中心位置
-			d.halfSizeWS_ = { 520.0f, 160.0f, 520.0f }; // 半サイズ
-			d.sliceCount_ = 40; // スライス数
-			d.density_ = 0.19f; // 密度
-			fogVolume3D_->SetDesc(d);           // まとめて反映
+			// 現在の設定をコピーで受け取る
+			auto d = fogVolume3D_->GetDesc();
+
+			// 空間霧の中心位置を設定する
+			d.centerWS_ = { 0.0f, 6.0f, 20.0f };
+
+			// 空間霧の半サイズを設定する
+			d.halfSizeWS_ = { 520.0f, 160.0f, 520.0f };
+
+			// 空間霧のスライス数を設定する
+			d.sliceCount_ = 40;
+
+			// 空間霧の密度を設定する
+			d.density_ = 0.19f;
+
+			// 変更した設定をまとめて反映する
+			fogVolume3D_->SetDesc(d);
 		}
 
-		// SmokeVolume3D
+		//=========================================================
+		// SmokeVolume3D 初期化
+		//=========================================================
+
+		// 空間スモークボリュームを生成する
 		smokeVolume3D_ = std::make_unique<TKM::SmokeVolume3D>();
+
+		// DirectX共通情報を渡して初期化する
 		smokeVolume3D_->Initialize(dxCommon_);
 	}
 
 	void PostEffectController::Finalize() {
+		// DirectXCommonが存在する場合だけ登録解除する
 		if (dxCommon_) {
+			// 放射ブラー参照を解除する
 			dxCommon_->SetRadialBlurEffect(nullptr);
+
+			// ビネット参照を解除する
 			dxCommon_->SetVignettingEffect(nullptr);
+
+			// フォグ参照を解除する
 			dxCommon_->SetFogEffect(nullptr);
+
+			// オーラ参照を解除する
 			dxCommon_->SetAuraEffect(nullptr);
-			// 水面波紋エフェクトは BossManager も参照しているため、両方から解除する
+
+			// 水面波紋参照を解除する
 			dxCommon_->SetWaterRippleEffect(nullptr);
 		}
 	}
 
 	void PostEffectController::Update(float dt, BossManager* bossManager) {
-		// 画面エフェクトの更新=================================
+		//=========================================================
+		// 画面エフェクト更新
+		//=========================================================
+
+		// 放射ブラーを更新する
 		radialBlur_->Update(dt);
 
+		// プレイヤーHPが少ないかどうかを判定する
 		bool lowHp = (player_ && player_->GetHP() <= 2);
+
+		// 低HP状態をビネットへ渡す
 		vignetting_->SetLowHP(lowHp);
+
+		// ビネットを更新する
 		vignetting_->Update(dt);
 
-		//fog_->Update(dt);
-
+		// 水面波紋を更新する
 		waterRipple_->Update(dt);
 
-		//fogVolume3D_->Update(dt);
-
+		// 空間スモークを更新する
 		smokeVolume3D_->Update(dt);
-		// ==================================================
 	}
 
 	void PostEffectController::OnCameraUpdated(TKM::Camera* activeCamera) {
+		// フォグまたはカメラが無ければ更新しない
 		if (!fog_ || !activeCamera) {
 			return;
 		}
 
+		// カメラのワールド行列を取得する
 		const Matrix4x4& camW = activeCamera->GetWorldMatrix();
+
+		// ワールド行列からカメラ位置を取り出す
 		Vector3 camPos{
 			camW.m[3][0],
 			camW.m[3][1],
 			camW.m[3][2]
 		};
+
+		// フォグ側へカメラ位置を渡す
 		fog_->SetWorldPos(camPos);
 	}
 
 	void PostEffectController::SetRadialBlurManual(bool enable, float strength) {
+		// 放射ブラーが存在する場合だけ手動制御を設定する
 		if (radialBlur_) {
-			radialBlur_->SetManualBlur(enable, strength); // 手動で放射ブラーの有効・無効を設定
+			radialBlur_->SetManualBlur(enable, strength);
 		}
 	}
 
 	void PostEffectController::ClearRadialBlurManual() {
+		// 放射ブラーが存在する場合だけ手動制御を解除する
 		if (radialBlur_) {
-			radialBlur_->ClearManualBlur(); // 手動制御を解除
+			radialBlur_->ClearManualBlur();
 		}
 	}
 
 	void PostEffectController::DrawVolumes(TKM::Camera* activeCamera) {
+		// カメラが無ければボリューム描画できない
 		if (!activeCamera) {
 			return;
 		}
 
-		// カメラのワールド行列から、右・上・前方向を抽出
+		//=========================================================
+		// カメラ基準ベクトル取得
+		//=========================================================
+
+		// カメラのワールド行列を取得する
 		const Matrix4x4& camW = activeCamera->GetWorldMatrix();
+
+		// カメラ右方向を取り出す
 		Vector3 right{ camW.m[0][0], camW.m[0][1], camW.m[0][2] };
+
+		// カメラ上方向を取り出す
 		Vector3 up{ camW.m[1][0], camW.m[1][1], camW.m[1][2] };
+
+		// カメラ前方向を取り出す
 		Vector3 fwd{ camW.m[2][0], camW.m[2][1], camW.m[2][2] };
+
+		// カメラ位置を取り出す
 		Vector3 camPos{
 			camW.m[3][0],
 			camW.m[3][1],
 			camW.m[3][2]
 		};
-		// カメラのビュー射影行列を取得
+
+		// カメラのビュー射影行列を取得する
 		Matrix4x4 vp = activeCamera->GetViewProjectionMatrix();
 
-		//// FogVolume（空間霧）
-		//if (fogVolume3D_) {
-		//	fogVolume3D_->Draw(vp, right, up, fwd);
-		//}
-		// 
-		// SmokeVolume（空間スモーク）
+		// 空間スモークを描画する
 		smokeVolume3D_->Draw(vp, right, up, fwd);
-
 	}
 
 	void PostEffectController::ImGuiDebug() {
 #ifdef USE_IMGUI
+		// ポストエフェクト用ImGuiウィンドウを開く
 		if (ImGui::Begin("ポストエフェクト")) {
+			// 煙ボリュームの表示切り替え
 			ImGui::Checkbox("煙ボリュームを表示", &showSmoke_);
+
+			// 表示ONならSmokeVolume3D側のデバッグUIも表示する
 			if (showSmoke_) {
 				if (smokeVolume3D_) {
-					// SmokeVolume3D 側の ImGui はすでに日本語で実装済み
 					smokeVolume3D_->ImGuiDebug();
 				}
 			}
 		}
+
+		// ImGuiウィンドウを閉じる
 		ImGui::End();
 #endif
 	}

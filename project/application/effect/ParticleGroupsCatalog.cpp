@@ -2,275 +2,428 @@
 
 namespace TKM {
 	void ParticleGroupsCatalog::RegisterScene(ParticleManager* pm) {
+		// パーティクルマネージャーが無ければ登録できない
 		if (!pm) { return; }
 
-		/// === 共通 ===
+		//=========================================================
+		// 共通パーティクル
+		//=========================================================
+
+		// 汎用的に使う通常粒子
 		pm->CreateParticleGroup("uv", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
 
-		///==============================
-		///=== パーティクルグループの作成 ===
-		///==============================
+		//=========================================================
+		// 開幕・空間演出系
+		//=========================================================
 
-		/// === エフェクト用 ===
-		// 開幕用：うっすら光が吸い込まれるリング
+		// アイリス開幕時に薄く吸い込まれるリング
 		pm->CreateParticleGroup("irisOpen", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
-		// 花火用：放射状に飛ぶ粒（通常クアッド）
+
+		// アイリス開幕時の花火粒
 		pm->CreateParticleGroup("irisFire", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
-		// 花火用：打ち上げ＆閃光＆爆発
+
+		// 花火の打ち上げ軌跡
 		pm->CreateParticleGroup("fw_launch", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
+
+		// 花火の爆発フラッシュ
 		pm->CreateParticleGroup("fw_flash", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
+
+		// 花火本体の星粒
 		pm->CreateParticleGroup("fw_burst", "./resources/texture/firework_star.png", ParticleManager::ParticleType::NORMAL);
-		// 空気の流れ(風)エフェクト
+
+		// 空気の流れを見せる風の筋
 		pm->CreateParticleGroup("airStreak", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
-		// 敵スポーン
+
+		// 敵出現時のスポーン演出
 		pm->CreateParticleGroup("enemySpawn", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
 
-		/// === 被弾エフェクト用 ===
-		// 中央の強いフラッシュ
+		//=========================================================
+		// 被弾エフェクト
+		//=========================================================
+
+		// 被弾中心の強いフラッシュ
 		pm->CreateParticleGroup("enemyHit_flash", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// 外側に広がるリング
+
+		// 被弾位置から外へ広がるリング
 		pm->CreateParticleGroup("enemyHit_ring", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
-		// 放射状のレイ（細い光の筋）
+
+		// 放射状に伸びる光の筋
 		pm->CreateParticleGroup("enemyHit_rays", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
-		// 小さいスパーク
+
+		// 被弾時の細かいスパーク
 		pm->CreateParticleGroup("enemyHit_spark", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
 
-		/// === LT弾ヒット用・さらにド派手版 ===
-		// 爆心コア（まぶしい光の玉）
+		//=========================================================
+		// LT弾ヒット専用エフェクト
+		//=========================================================
+
+		// LT弾ヒット時の爆心コア
 		pm->CreateParticleGroup("lt_nova_core", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// 球状ショックウェーブ（外側のエネルギー殻）
+
+		// LT弾ヒット時のショックウェーブ
 		pm->CreateParticleGroup("lt_nova_wave", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
-		// デブリ＆煙（暗い破片、煙っぽい粒）
+
+		// LT弾ヒット時の破片・煙
 		pm->CreateParticleGroup("lt_nova_debris", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
-		// 亀裂エフェクト（空間が裂けるような光の筋）
+
+		// LT弾ヒット時の空間亀裂
 		pm->CreateParticleGroup("lt_nova_crack", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// 爆発バースト（明るい爆発の粒）
+
+		// LT弾ヒット時の爆発粒
 		pm->CreateParticleGroup("lt_nova_burst", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
 
-		/// === 敵吹っ飛び死亡専用エフェクト ===
-		// 核となる小さな光の塊（中央でフッと光って消える）
+		//=========================================================
+		// 敵死亡エフェクト
+		//=========================================================
+
+		// 敵死亡時の中心光
 		pm->CreateParticleGroup("enemyDeath_core", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// 周りに飛び散る光の破片
+
+		// 敵死亡時に飛び散る破片
 		pm->CreateParticleGroup("enemyDeath_shard", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// 残り香みたいにふわっと残る煙
+
+		// 敵死亡後に残る煙
 		pm->CreateParticleGroup("enemyDeath_smoke", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
 
-		/// === ボス撃破専用エフェクト ===
-		// 揺れている最中にボンボン出る中サイズ爆発
+		//=========================================================
+		// ボス撃破エフェクト
+		//=========================================================
+
+		// ボス死亡中に出る中サイズ爆発
 		pm->CreateParticleGroup("bossDeath_bomb", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// 最後にドカンと出るリング衝撃波
+
+		// ボス死亡時のリング衝撃波
 		pm->CreateParticleGroup("bossDeath_ring", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
-		// 倒れたあとしばらく残る大きめの煙
+
+		// ボス死亡後に残る煙
 		pm->CreateParticleGroup("bossDeath_smoke", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
-		// 爆心コア（画面中央でドーンと光る玉）
+
+		// ボス撃破完了時の爆心コア
 		pm->CreateParticleGroup("bossClear_core", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// 超デカいショックウェーブ（リング）
+
+		// ボス撃破完了時の巨大ショックウェーブ
 		pm->CreateParticleGroup("bossClear_ring", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
-		// 四方八方に飛ぶ光の破片
+
+		// ボス撃破完了時に飛び散る光の破片
 		pm->CreateParticleGroup("bossClear_spark", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// 重めの破片・残り香みたいな煙
+
+		// ボス撃破完了時の重めの破片・煙
 		pm->CreateParticleGroup("bossClear_debris", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
 
-		/// === 敵飛び掛かり用エフェクト群 ===
-		// 敵の飛び掛かり軌道レール
+		//=========================================================
+		// 敵飛び掛かりエフェクト
+		//=========================================================
+
+		// 敵の飛び掛かり軌道を見せる粒
 		pm->CreateParticleGroup("enemyPounceTrail", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
-		// 軌道上のスパーク
+
+		// 飛び掛かり軌道上のスパーク
 		pm->CreateParticleGroup("enemyPounceSpark", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
 
-		/// === 蘇生核チャージ演出 ===
-		// 外側を覆うエネルギー殻
+		//=========================================================
+		// 蘇生核チャージ演出
+		//=========================================================
+
+		// チャージ中の外殻リング
 		pm->CreateParticleGroup("core_charge_shell", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
-		// 内向きに吸い込まれる粒子
+
+		// 中心へ吸い込まれる粒子
 		pm->CreateParticleGroup("core_charge_inward", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// リボン状のエネルギー帯
+
+		// チャージ中のエネルギー帯
 		pm->CreateParticleGroup("core_charge_ribbon", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
-		// 中心の強いフラッシュ
+
+		// チャージ中心の強いフラッシュ
 		pm->CreateParticleGroup("core_charge_flash", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
 
-		/// === Boss Missile Launch System FX（ミサイル発射システム起動） ===
-		// 発射口の点火ノード
+		//=========================================================
+		// ボスミサイル発射システム演出
+		//=========================================================
+
+		// ミサイル発射口の点火ノード
 		pm->CreateParticleGroup("bossMissile_node", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// 前方に伸びる発射レーン
+
+		// ミサイル発射方向に伸びるレーン
 		pm->CreateParticleGroup("bossMissile_lane", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
-		// 兵器UIっぽい薄い骨組み
+
+		// 兵器UI風の骨組みリング
 		pm->CreateParticleGroup("bossMissile_grid", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
-		// 発射口から吹く前方スパーク
+
+		// 発射口から吹き出すスパーク
 		pm->CreateParticleGroup("bossMissile_jet", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// 最終点火フラッシュ
+
+		// ミサイル発射直前の点火フラッシュ
 		pm->CreateParticleGroup("bossMissile_flash", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
 
-		/// === Boss Slash Omen FX（斬撃前の邪悪な予兆） ===
-		// 中心の邪核
+		//=========================================================
+		// ボス斬撃予兆エフェクト
+		//=========================================================
+
+		// 斬撃予兆の中心核
 		pm->CreateParticleGroup("boss_slash_omen_core", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
+
 		// 周囲から吸い込まれる瘴気粒
 		pm->CreateParticleGroup("boss_slash_omen_inward", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
-		// 核を拘束する禍々しいリング
+
+		// 中心核を囲う不穏なリング
 		pm->CreateParticleGroup("boss_slash_omen_ring", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
-		// 空間が裂けるような細い亀裂
+
+		// 空間が裂けるような亀裂
 		pm->CreateParticleGroup("boss_slash_omen_crack", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
-		// 発射直前の不穏な脈動
+
+		// 発射直前の脈動
 		pm->CreateParticleGroup("boss_slash_omen_pulse", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
 
-		/// === Boss Slash Trail（斬撃の軌道）===
-		// 火花（間引き）
+		//=========================================================
+		// ボス斬撃軌道エフェクト
+		//=========================================================
+
+		// 斬撃軌道上の火花
 		pm->CreateParticleGroup("bossSlash_spark", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
 
-		/// === Boss Slash Trail (3レイヤー) ===
-		// 斬撃のメイン
+		// 斬撃本体
 		pm->CreateParticleGroup("bossSlash_main", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
-		// 斬撃のグロー
+
+		// 斬撃の発光部分
 		pm->CreateParticleGroup("bossSlash_glow", "./resources/texture/firework_star.png", ParticleManager::ParticleType::NORMAL);
-		// 斬撃の尾っぽ
+
+		// 斬撃の尾を引く部分
 		pm->CreateParticleGroup("bossSlash_tail", "./resources/texture/firework_star.png", ParticleManager::ParticleType::NORMAL);
 
-		/// === タイトル用の爆発エフェクト ===
-		// 爆心コア（中心の光の塊）
+		//=========================================================
+		// タイトル爆発エフェクト
+		//=========================================================
+
+		// タイトル爆発の中心光
 		pm->CreateParticleGroup("titleExplode_core", "./resources/texture/circle.png", TKM::ParticleManager::ParticleType::NORMAL);
-		// 放射状のレイ（光の筋）
+
+		// タイトル爆発の放射レイ
 		pm->CreateParticleGroup("titleExplode_rays", "./resources/texture/gradationLine.png", TKM::ParticleManager::ParticleType::CYLINDER);
-		// 破片（小さな光の粒）
+
+		// タイトル爆発の破片粒
 		pm->CreateParticleGroup("titleExplode_debris", "./resources/texture/circle.png", TKM::ParticleManager::ParticleType::NORMAL);
-		// 衝撃波リング（波紋のように広がるリング）
+
+		// タイトル爆発の衝撃波リング
 		pm->CreateParticleGroup("titleExplode_ring", "./resources/texture/gradationLine.png", TKM::ParticleManager::ParticleType::RING);
 
-		/// === タイトル用のビームエフェクト ===
-		// ビーム本体（線状に粒を並べて表現）
+		//=========================================================
+		// タイトルビームエフェクト
+		//=========================================================
+
+		// プレイヤー側ビーム本体
 		pm->CreateParticleGroup("titleBeam_player", "./resources/texture/gradationLine.png", TKM::ParticleManager::ParticleType::CYLINDER);
-		// ビーム本体（線状に粒を並べて表現）
+
+		// ボス側ビーム本体
 		pm->CreateParticleGroup("titleBeam_boss", "./resources/texture/gradationLine.png", TKM::ParticleManager::ParticleType::CYLINDER);
-		// 衝突コア（白い光の塊）
+
+		// ビーム衝突中心の光
 		pm->CreateParticleGroup("titleBeamClash_core", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL);
-		// 放射スパーク（線っぽく）
+
+		// ビーム衝突時の放射スパーク
 		pm->CreateParticleGroup("titleBeamClash_rays", "./resources/texture/gradationLine.png", TKM::ParticleManager::ParticleType::CYLINDER);
-		// 衝撃波リング（リングはgradationLineの方が“波紋/衝撃波”っぽい）
+
+		// ビーム衝突時の衝撃波リング
 		pm->CreateParticleGroup("titleBeamClash_ring", "./resources/texture/gradationLine.png", TKM::ParticleManager::ParticleType::RING);
 
-		/// === スタート演出のボス用エフェクト ===
-		// ワープエフェクト：コア
+		//=========================================================
+		// スタート演出ボス用エフェクト
+		//=========================================================
+
+		// ボスワープ出現の中心光
 		pm->CreateParticleGroup("bossWarp_core", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// ワープエフェクト：渦巻き
+
+		// ボスワープ出現の渦巻き粒
 		pm->CreateParticleGroup("bossWarp_swirl", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
-		// ワープエフェクト：破片
+
+		// ボスワープ出現の破片
 		pm->CreateParticleGroup("bossWarp_dust", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
-		// ボスの注意マーク（！）
+
+		// ボスが驚いた時の注意マーク
 		pm->CreateParticleGroup("bossNoticeMark", "./resources/texture/exclamation.png", ParticleManager::ParticleType::NORMAL);
-		// ワープエフェクト：コア
+
+		// ボス逃走ワープの中心光
 		pm->CreateParticleGroup("bossEscape_warpCore", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// ワープエフェクト：渦巻き
+
+		// ボス逃走ワープの渦巻き粒
 		pm->CreateParticleGroup("bossEscape_warpSwirl", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
-		// ワープエフェクト：破片
+
+		// ボス逃走ワープの裂ける破片
 		pm->CreateParticleGroup("bossEscape_warpShred", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
-		// ワープエフェクト：リング
+
+		// ボス逃走ワープのリング
 		pm->CreateParticleGroup("bossEscape_warpRing", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
 
-		/// === ボス登場用エフェクト ===
-		// 渦巻き：コアを包むように渦巻くエネルギー
+		//=========================================================
+		// ボス登場用エフェクト
+		//=========================================================
+
+		// ボス登場時のリング衝撃波
 		pm->CreateParticleGroup("bossEntrance_ringShock", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
-		// 細いリング：コアの周りを高速で回る細いリング
+
+		// ボス登場時の細い高速リング
 		pm->CreateParticleGroup("bossEntrance_ringThin", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
-		// スパーク：コアから飛び散る火花
+
+		// ボス登場時の煙
 		pm->CreateParticleGroup("bossEntrance_smoke", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
-		// ストリーク：コアから引きずるように伸びる細い光の筋
+
+		// ボス登場時の細い光の筋
 		pm->CreateParticleGroup("bossEntrance_streak", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
-		// スパーク：コアから飛び散る火花
+
+		// ボス登場時の火花
 		pm->CreateParticleGroup("bossEntrance_spark", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// スパーク：コアから飛び散る火花
+
+		// ボス登場時に集まる光粒
 		pm->CreateParticleGroup("bossEntrance_gather", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
 
-		/// === クリア祝福専用エフェクト ===
-		// 中心でパァッと弾ける祝福コア
+		//=========================================================
+		// クリア祝福エフェクト
+		//=========================================================
+
+		// クリア祝福の中心光
 		pm->CreateParticleGroup("clearCelebrate_core", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// 周囲に大量に散る祝福スパーク
+
+		// クリア祝福の大量スパーク
 		pm->CreateParticleGroup("clearCelebrate_spark", "./resources/texture/firework_star.png", ParticleManager::ParticleType::NORMAL);
-		// たまに走る強い祝福レイ
+
+		// クリア祝福の強いレイ
 		pm->CreateParticleGroup("clearCelebrate_ray", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
 
-		/// === Wave1Special用エフェクト ===
-		// 送るライン上の粒
+		//=========================================================
+		// Wave1Special エフェクト
+		//=========================================================
+
+		// 敵からコアへ送るライン上の粒
 		pm->CreateParticleGroup("w1sp_stream", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// 発射元の火花
+
+		// 送信元の発光
 		pm->CreateParticleGroup("w1sp_sender_glow", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// コア本体の見た目
+
+		// 特殊コア本体の粒
 		pm->CreateParticleGroup("w1sp_core_body", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// コアの周りのリング
+
+		// 特殊コア周囲のリング
 		pm->CreateParticleGroup("w1sp_core_ring", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
-		// コアの周りの煙
+
+		// 特殊コア周囲の煙
 		pm->CreateParticleGroup("w1sp_core_smoke", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
-		// 発射時のド派手フラッシュ
+
+		// 特殊コア発射時のフラッシュ
 		pm->CreateParticleGroup("w1sp_core_flash", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// 発射時のド派手フラッシュ
+
+		// 特殊コア発射時のスパーク
 		pm->CreateParticleGroup("w1sp_core_spark", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// 敵からコアへ送るライン上の粒
+
+		// 特殊コア飛翔中の本体粒
 		pm->CreateParticleGroup("w1sp_fly_body", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// 敵からコアへ送るライン上の粒
+
+		// 特殊コア飛翔中の尾
 		pm->CreateParticleGroup("w1sp_fly_tail", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
-		// 敵からコアへ送るライン上の粒
+
+		// 特殊コア飛翔中のスパーク
 		pm->CreateParticleGroup("w1sp_fly_spark", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// 集束線の芯
+
+		// 集束線のストリーク
 		pm->CreateParticleGroup("w1sp_stream_streak", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
-		// コア内部の乱流粒
+
+		// 特殊コア内部の乱流粒
 		pm->CreateParticleGroup("w1sp_core_inner", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// コアの外殻ショック
+
+		// 特殊コア外殻のショックリング
 		pm->CreateParticleGroup("w1sp_core_shell", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
-		// コア周辺の放電
+
+		// 特殊コア周辺の放電
 		pm->CreateParticleGroup("w1sp_core_arc", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
-		// 発射時の破裂片
+
+		// 特殊コア発射時の破裂片
 		pm->CreateParticleGroup("w1sp_core_burst", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// 飛翔中の外殻リング
+
+		// 特殊コア飛翔中の外殻リング
 		pm->CreateParticleGroup("w1sp_fly_shell", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
-		// 飛翔中の放電
+
+		// 特殊コア飛翔中の放電
 		pm->CreateParticleGroup("w1sp_fly_arc", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
-		// 飛翔中のコロナ
+
+		// 特殊コア飛翔中のコロナ
 		pm->CreateParticleGroup("w1sp_fly_corona", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
+
 		// 集束線の芯
 		pm->CreateParticleGroup("w1sp_stream_core", "./resources/texture/firework_star.png", ParticleManager::ParticleType::NORMAL);
+
 		// 集束線のグロー
 		pm->CreateParticleGroup("w1sp_stream_glow", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
 
-		/// GAME CLEAR表示時：祝福クラッカー
-		// 爆心コア（中心の光の塊）
+		//=========================================================
+		// GAME CLEAR 表示時エフェクト
+		//=========================================================
+
+		// GAME CLEAR表示時の祝福コア
 		pm->CreateParticleGroup("clearBannerBurst_core", "./resources/texture/flower.png", ParticleManager::ParticleType::NORMAL);
-		// 放射状のレイ（光の筋）
+
+		// GAME CLEAR表示時の紙吹雪
 		pm->CreateParticleGroup("clearBannerBurst_confetti", "./resources/texture/flower.png", ParticleManager::ParticleType::NORMAL);
-		// 衝撃波リング（波紋のように広がるリング）
+
+		// GAME CLEAR表示時のレイ
 		pm->CreateParticleGroup("clearBannerBurst_ray", "./resources/texture/firework_star.png", ParticleManager::ParticleType::NORMAL);
 
-		/// クリアコミカル逃走：三体のワープ出現
-		// 中心の白飛びコア
+		//=========================================================
+		// クリアコミカル逃走：三体のワープ出現
+		//=========================================================
+
+		// ワープ出現の中心光
 		pm->CreateParticleGroup("clearComedyWarp_core", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
+
 		// 空間が開くリング
 		pm->CreateParticleGroup("clearComedyWarp_ring", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
+
 		// 前後に突き抜けるワープストリーク
 		pm->CreateParticleGroup("clearComedyWarp_streak", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
-		// 破裂時の細かい火花
+
+		// ワープ破裂時の細かい火花
 		pm->CreateParticleGroup("clearComedyWarp_spark", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// 余韻のきらめき
+
+		// ワープ後の余韻きらめき
 		pm->CreateParticleGroup("clearComedyWarp_glitter", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
-	
-		/// クリアコミカル逃走：雑魚Bの「ツルッ」
-		// 転倒の瞬間の衝撃で飛び散る細かい土煙
+
+		//=========================================================
+		// クリアコミカル逃走：雑魚Bのスリップ
+		//=========================================================
+
+		// 滑った瞬間のスピード線
 		pm->CreateParticleGroup("clearComedySlip_streak", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
-		// 転倒の瞬間の衝撃で飛び散る細かい土煙
+
+		// 滑った瞬間の火花
 		pm->CreateParticleGroup("clearComedySlip_spark", "./resources/texture/flower.png", ParticleManager::ParticleType::NORMAL);
-		// 転倒の瞬間の衝撃で飛び散る細かい土煙
+
+		// 滑った瞬間のリング
 		pm->CreateParticleGroup("clearComedySlip_ring", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
-		// 転倒の瞬間の衝撃で飛び散る細かい土煙
+
+		// 滑った瞬間の小片
 		pm->CreateParticleGroup("clearComedySlip_chip", "./resources/texture/flower.png", ParticleManager::ParticleType::NORMAL);
 
-		/// クリアコミカル逃走：雑魚B転倒
-		// 地面にぶつかった瞬間の土煙
+		//=========================================================
+		// クリアコミカル逃走：雑魚B転倒
+		//=========================================================
+
+		// 転倒時の土煙
 		pm->CreateParticleGroup("clearComedyFall_dust", "./resources/texture/firework_star.png", ParticleManager::ParticleType::NORMAL);
-		// 漫画っぽい星
+
+		// 転倒時の漫画風星
 		pm->CreateParticleGroup("clearComedyFall_star", "./resources/texture/flower.png", ParticleManager::ParticleType::NORMAL);
-		// 衝撃のシュッ線
+
+		// 転倒時の衝撃線
 		pm->CreateParticleGroup("clearComedyFall_line", "./resources/texture/flower.png", ParticleManager::ParticleType::NORMAL);
-		// 余韻のくるくる・チラつき
+
+		// 転倒後の余韻パフ
 		pm->CreateParticleGroup("clearComedyFall_puff", "./resources/texture/flower.png", ParticleManager::ParticleType::NORMAL);
 
-		/// クリアシーン：ライブ風ファイアー柱
-		// 炎の柱のコア
+		//=========================================================
+		// クリアシーン：ライブ風ファイアー柱
+		//=========================================================
+
+		// 炎柱のコア
 		pm->CreateParticleGroup("clearStageFire_column", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
-		// 炎の柱のグロー
+
+		// 炎柱上部のグロー
 		pm->CreateParticleGroup("clearStageFire_top", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
 	}
 }

@@ -7,177 +7,366 @@
 
 namespace TKM {
 	void PauseMenuController::Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, BaseScene* parentScene, float screenW, float screenH, const Desc& desc) {
+		// スプライト共通情報を保持する
 		spriteCommon_ = spriteCommon;
+
+		// DirectX共通情報を保持する
 		dxCommon_ = dxCommon;
+
+		// 親シーンを保持する
 		parentScene_ = parentScene;
+
+		// 画面幅を保持する
 		screenW_ = screenW;
+
+		// 画面高さを保持する
 		screenH_ = screenH;
+
+		// ポーズメニュー設定を保持する
 		desc_ = desc;
 
-		// 状態
+		//=========================================================
+		// 状態初期化
+		//=========================================================
+
+		// 初期状態は閉じた状態にする
 		state_ = State::Closed;
+
+		// 初期選択項目を先頭にする
 		index_ = 0;
+
+		// フェード進行率を初期化する
 		fadeT_ = 0.0f;
+
+		// 選択項目の脈動用タイマーを初期化する
 		pulseTime_ = 0.0f;
+
+		// 暗幕の透明度を初期化する
 		curtainAlpha_ = 0.0f;
-		// 入力状態
+
+		//=========================================================
+		// 入力状態初期化
+		//=========================================================
+
+		// START入力の前回状態を初期化する
 		prevStart_ = false;
+
+		// 上入力の前回状態を初期化する
 		prevUp_ = false;
+
+		// 下入力の前回状態を初期化する
 		prevDown_ = false;
+
+		// 決定入力の前回状態を初期化する
 		prevA_ = false;
+
+		// キャンセル入力の前回状態を初期化する
 		prevB_ = false;
 
-		// 暗幕
-		curtain_ = std::make_unique<Sprite>();
-		curtain_->Initialize(spriteCommon_, dxCommon_, desc_.curtainTex);
-		curtain_->SetParentScene(parentScene_);
-		curtain_->SetAnchorPoint({ 0.0f, 0.0f }); // 左上を基準にする
-		curtain_->SetAutoAdjustTextureSize(false);
-		curtain_->SetPosition({ 0.0f, 0.0f }); // 画面全体を覆うようにする
-		curtain_->SetSize({ screenW_, screenH_ }); // 画面全体を覆うようにする
-		curtain_->SetColor({ 0.0f, 0.0f, 0.0f, 0.0f }); // 最初は透明にする
+		//=========================================================
+		// 暗幕生成
+		//=========================================================
 
-		// パネル
+		// 背景を暗くする暗幕スプライトを生成する
+		curtain_ = std::make_unique<Sprite>();
+
+		// 暗幕テクスチャで初期化する
+		curtain_->Initialize(spriteCommon_, dxCommon_, desc_.curtainTex);
+
+		// 親シーンを設定して描画順を合わせる
+		curtain_->SetParentScene(parentScene_);
+
+		// 左上基準で画面全体に広げる
+		curtain_->SetAnchorPoint({ 0.0f, 0.0f });
+
+		// サイズはコード側で画面サイズに合わせるため自動調整を切る
+		curtain_->SetAutoAdjustTextureSize(false);
+
+		// 画面左上に配置する
+		curtain_->SetPosition({ 0.0f, 0.0f });
+
+		// 画面全体を覆うサイズにする
+		curtain_->SetSize({ screenW_, screenH_ });
+
+		// 初期状態では透明にする
+		curtain_->SetColor({ 0.0f, 0.0f, 0.0f, 0.0f });
+
+		//=========================================================
+		// パネル生成
+		//=========================================================
+
+		// メニュー背景パネルを生成する
 		panel_ = std::make_unique<Sprite>();
+
+		// パネルテクスチャで初期化する
 		panel_->Initialize(spriteCommon_, dxCommon_, desc_.panelTex);
+
+		// 親シーンを設定して描画順を合わせる
 		panel_->SetParentScene(parentScene_);
-		panel_->SetAnchorPoint({ 0.0f, 0.0f }); // 左上を基準にする
+
+		// 左上基準で位置補正しやすくする
+		panel_->SetAnchorPoint({ 0.0f, 0.0f });
+
+		// サイズはコード側で指定するため自動調整を切る
 		panel_->SetAutoAdjustTextureSize(false);
 
-		// 項目
+		//=========================================================
+		// 項目生成
+		//=========================================================
+
 		for (int i = 0; i < (int)Item::Count; ++i) {
+			// メニュー項目スプライトを生成する
 			items_[i] = std::make_unique<Sprite>();
+
+			// 項目ごとのテクスチャで初期化する
 			items_[i]->Initialize(spriteCommon_, dxCommon_, desc_.itemTex[i]);
+
+			// 親シーンを設定して描画順を合わせる
 			items_[i]->SetParentScene(parentScene_);
-			items_[i]->SetAnchorPoint({ 0.5f, 0.5f }); // 中心を基準にする
+
+			// 中心基準で選択時の拡縮をしやすくする
+			items_[i]->SetAnchorPoint({ 0.5f, 0.5f });
+
+			// サイズはコード側で指定するため自動調整を切る
 			items_[i]->SetAutoAdjustTextureSize(false);
-			items_[i]->SetSize({ 220.0f, 100.0f }); // サイズ設定
+
+			// 初期サイズを設定する
+			items_[i]->SetSize({ 220.0f, 100.0f });
+
 			{
+				// テクスチャのメタ情報を取得する
 				const auto& md = TextureManager::GetInstance()->GetMetadata(desc_.itemTex[i]);
-				items_[i]->SetTextureLeftTop({ 0.0f,0.0f }); // テクスチャ全体を使う
+
+				// テクスチャ左上を原点にする
+				items_[i]->SetTextureLeftTop({ 0.0f,0.0f });
+
+				// テクスチャ全体を使用する
 				items_[i]->SetTextureSize({ (float)md.width, (float)md.height });
 			}
-			items_[i]->SetColor({ 1.0f, 1.0f, 1.0f, 0.65f }); // 最初は少し透明にする
+
+			// 初期状態では未選択として少し透明にする
+			items_[i]->SetColor({ 1.0f, 1.0f, 1.0f, 0.65f });
 		}
 
-		// カーソル
-		cursor_ = std::make_unique<Sprite>();
-		cursor_->Initialize(spriteCommon_, dxCommon_, desc_.cursorTex);
-		cursor_->SetParentScene(parentScene_);
-		cursor_->SetAnchorPoint({ 0.0f, 0.0f });
-		cursor_->SetAutoAdjustTextureSize(false);
-		cursor_->SetSize({ 28.0f, 28.0f }); // サイズ設定
-		cursor_->SetColor({ 1.0f, 1.0f, 1.0f, 0.9f }); // 最初は少し透明にする
+		//=========================================================
+		// カーソル生成
+		//=========================================================
 
-		UpdateLayout(screenW_, screenH_); // レイアウト初期化
+		// カーソル用スプライトを生成する
+		cursor_ = std::make_unique<Sprite>();
+
+		// カーソルテクスチャで初期化する
+		cursor_->Initialize(spriteCommon_, dxCommon_, desc_.cursorTex);
+
+		// 親シーンを設定して描画順を合わせる
+		cursor_->SetParentScene(parentScene_);
+
+		// 項目左側に置くため左上基準にする
+		cursor_->SetAnchorPoint({ 0.0f, 0.0f });
+
+		// サイズはコード側で指定するため自動調整を切る
+		cursor_->SetAutoAdjustTextureSize(false);
+
+		// カーソルサイズを固定する
+		cursor_->SetSize({ 28.0f, 28.0f });
+
+		// 初期カーソル色を設定する
+		cursor_->SetColor({ 1.0f, 1.0f, 1.0f, 0.9f });
+
+		// 画面サイズに合わせて初期レイアウトを反映する
+		UpdateLayout(screenW_, screenH_);
 	}
 
 	void PauseMenuController::UpdateLayout(float screenW, float screenH) {
+		// 画面幅を更新する
 		screenW_ = screenW;
+
+		// 画面高さを更新する
 		screenH_ = screenH;
 
-		panelSize_ = { 340.0f, 280.0f }; // サイズ設定
-		panelPos_ = { screenW_ - panelSize_.x - 40.0f, screenH_ - panelSize_.y - 40.0f }; // 画面右下に配置
+		// パネルサイズを設定する
+		panelSize_ = { 340.0f, 280.0f };
 
-		baseItemPos_ = { panelPos_.x + panelSize_.x * 0.5f, panelPos_.y + 94.0f }; // 項目の基準位置（パネル内の、最初の項目が来る位置）
-		itemSpacingY_ = 70.0f; // 項目間の垂直スペース
+		// パネルを画面右下に余白40で配置する
+		panelPos_ = { screenW_ - panelSize_.x - 40.0f, screenH_ - panelSize_.y - 40.0f };
 
+		// 項目群の基準位置をパネル内に設定する
+		baseItemPos_ = { panelPos_.x + panelSize_.x * 0.5f, panelPos_.y + 94.0f };
+
+		// 項目同士の縦間隔を設定する
+		itemSpacingY_ = 70.0f;
+
+		// 暗幕がある場合は画面全体を覆うサイズへ更新する
 		if (curtain_) {
-			curtain_->SetSize({ screenW_, screenH_ }); // 画面全体を覆うようにする
-		}
-		if (panel_) {
-			panel_->SetPosition(panelPos_); // 位置設定
-			panel_->SetSize(panelSize_); // サイズ設定
-			panel_->SetColor({ 0.08f, 0.08f, 0.10f, 0.75f }); // 半透明の暗い色にする
+			curtain_->SetSize({ screenW_, screenH_ });
 		}
 
-		// 項目の位置を更新
+		// パネルがある場合は位置・サイズ・色を更新する
+		if (panel_) {
+			panel_->SetPosition(panelPos_);
+			panel_->SetSize(panelSize_);
+			panel_->SetColor({ 0.08f, 0.08f, 0.10f, 0.75f });
+		}
+
+		// 各項目を基準位置から縦に並べる
 		for (int i = 0; i < (int)Item::Count; ++i) {
 			if (items_[i]) {
-				items_[i]->SetPosition({ baseItemPos_.x, baseItemPos_.y + itemSpacingY_ * (float)i }); // 位置設定
+				items_[i]->SetPosition({ baseItemPos_.x, baseItemPos_.y + itemSpacingY_ * (float)i });
 			}
 		}
 	}
 
 	bool PauseMenuController::TriggerPadUp_() {
+		// 入力管理を取得する
 		Input* in = Input::GetInstance();
+
+		// 上方向入力が入っているか判定する
 		bool now =
-			in->PushButton(XINPUT_GAMEPAD_DPAD_UP) || // 十字キー上
-			in->TriggerKey(DIK_W) || // Wキー
-			in->TriggerKey(DIK_UP) || // 上キー
-			(in->GetLeftStickY() > 16000); // 左スティック上
+			in->PushButton(XINPUT_GAMEPAD_DPAD_UP) ||
+			in->TriggerKey(DIK_W) ||
+			in->TriggerKey(DIK_UP) ||
+			(in->GetLeftStickY() > 16000);
+
+		// 前フレームでは押されておらず、今回押された場合だけトリガーにする
 		bool trig = (now && !prevUp_);
+
+		// 今回の入力状態を保存する
 		prevUp_ = now;
+
+		// トリガー結果を返す
 		return trig;
 	}
 
 	bool PauseMenuController::TriggerPadDown_() {
+		// 入力管理を取得する
 		Input* in = Input::GetInstance();
+
+		// 下方向入力が入っているか判定する
 		bool now =
-			in->PushButton(XINPUT_GAMEPAD_DPAD_DOWN) || // 十字キー下
-			in->TriggerKey(DIK_S) || // Sキー
-			in->TriggerKey(DIK_DOWN) || // 下キー
-			(in->GetLeftStickY() < -16000); // 左スティック下
+			in->PushButton(XINPUT_GAMEPAD_DPAD_DOWN) ||
+			in->TriggerKey(DIK_S) ||
+			in->TriggerKey(DIK_DOWN) ||
+			(in->GetLeftStickY() < -16000);
+
+		// 前フレームでは押されておらず、今回押された場合だけトリガーにする
 		bool trig = (now && !prevDown_);
+
+		// 今回の入力状態を保存する
 		prevDown_ = now;
+
+		// トリガー結果を返す
 		return trig;
 	}
 
 	bool PauseMenuController::TriggerA_() {
+		// 入力管理を取得する
 		Input* in = Input::GetInstance();
+
+		// 決定入力が入っているか判定する
 		bool now = in->PushButton(XINPUT_GAMEPAD_A) || in->TriggerKey(DIK_SPACE) || in->TriggerKey(DIK_RETURN);
+
+		// 前フレームでは押されておらず、今回押された場合だけトリガーにする
 		bool trig = (now && !prevA_);
+
+		// 今回の入力状態を保存する
 		prevA_ = now;
+
+		// トリガー結果を返す
 		return trig;
 	}
 
 	bool PauseMenuController::TriggerB_() {
+		// 入力管理を取得する
 		Input* in = Input::GetInstance();
+
+		// キャンセル入力が入っているか判定する
 		bool now = in->PushButton(XINPUT_GAMEPAD_B) || in->PushButton(XINPUT_GAMEPAD_START) || in->TriggerKey(DIK_TAB) || in->TriggerKey(DIK_ESCAPE);
+
+		// 前フレームでは押されておらず、今回押された場合だけトリガーにする
 		bool trig = (now && !prevB_);
+
+		// 今回の入力状態を保存する
 		prevB_ = now;
+
+		// トリガー結果を返す
 		return trig;
 	}
 
 	void PauseMenuController::Open_() {
+		// ポーズ開始状態へ切り替える
 		state_ = State::Pausing;
+
+		// フェード進行率をリセットする
 		fadeT_ = 0.0f;
+
+		// 選択項目の脈動タイマーをリセットする
 		pulseTime_ = 0.0f;
+
+		// 初期選択を先頭に戻す
 		index_ = 0;
 	}
 
 	void PauseMenuController::Close_() {
+		// 再開中状態へ切り替える
 		state_ = State::Resuming;
+
+		// 閉じるフェード進行率をリセットする
 		fadeT_ = 0.0f;
 	}
 
 	void PauseMenuController::MoveIndex_(int delta) {
+		// 項目数を取得する
 		int count = (int)Item::Count;
+
+		// 範囲外に出たらループするように選択番号を更新する
 		index_ = (index_ + delta + count) % count;
 
+		// カーソル移動SEを再生する
 		TKM::AudioManager::GetInstance()->PlaySound("cursor", 0.3f);
 	}
 
 	PauseMenuController::Command PauseMenuController::Update(float dt, bool allowOpen) {
-		// Startで開く（static は使わず、インスタンスのメンバでエッジ検出）
+		//=========================================================
+		// ポーズ開閉入力
+		//=========================================================
+
+		// 入力管理を取得する
 		Input* in = Input::GetInstance();
+
+		// START/TAB/ESC のポーズ入力を取得する
 		bool startNow = in->PushButton(XINPUT_GAMEPAD_START) || in->TriggerKey(DIK_TAB) || in->TriggerKey(DIK_ESCAPE);
+
+		// 前フレームでは押されておらず、今回押された場合だけ開始トリガーにする
 		bool trigStart = (startNow && !prevStart_);
+
+		// 今回のSTART入力状態を保存する
 		prevStart_ = startNow;
 
+		// 0.0〜1.0へ丸めるラムダ
 		auto clamp01 = [](float v) {
 			return std::max(0.0f, std::min(v, 1.0f));
 			};
+
+		// SmoothStepで出現・消失の動きをなめらかにするラムダ
 		auto smoothStep01 = [&](float t) {
 			t = clamp01(t);
-			return t * t * (3.0f - 2.0f * t); // SmoothStep
+			return t * t * (3.0f - 2.0f * t);
 			};
 
+		// 暗幕の最大透明度
 		constexpr float kTargetCurtainAlpha = 0.55f;
+
+		// 開く速度
 		constexpr float kOpenSpeed = 8.0f;
+
+		// 閉じる速度
 		constexpr float kCloseSpeed = 10.0f;
 
+		//=========================================================
+		// 閉じている状態
+		//=========================================================
 		if (state_ == State::Closed) {
+			// 開ける状態で開始入力があればポーズを開く
 			if (allowOpen && trigStart) {
 				Open_();
 				TKM::AudioManager::GetInstance()->PlaySound("pause", 0.4f);
@@ -185,84 +374,132 @@ namespace TKM {
 			return Command::None;
 		}
 
-		// フェード（収束 Lerp ではなく、0→1 の進行で「キレ」を出す）
+		//=========================================================
+		// フェード状態更新
+		//=========================================================
+
 		if (state_ == State::Pausing) {
+			// 開く方向へフェード進行率を進める
 			fadeT_ = clamp01(fadeT_ + dt * kOpenSpeed);
+
+			// なめらかな進行率に変換する
 			float e = smoothStep01(fadeT_);
+
+			// 暗幕透明度を上げる
 			curtainAlpha_ = kTargetCurtainAlpha * e;
+
+			// 開き切ったらPaused状態にする
 			if (fadeT_ >= 1.0f) {
 				state_ = State::Paused;
 				curtainAlpha_ = kTargetCurtainAlpha;
 			}
-		} else if (state_ == State::Resuming) { // 開いている途中から閉じる途中へ（閉じる途中はフェードアウト）
+		} else if (state_ == State::Resuming) {
+			// 閉じる方向へフェード進行率を進める
 			fadeT_ = clamp01(fadeT_ + dt * kCloseSpeed);
+
+			// なめらかな進行率に変換する
 			float e = smoothStep01(fadeT_);
+
+			// 暗幕透明度を下げる
 			curtainAlpha_ = kTargetCurtainAlpha * (1.0f - e);
-			// 完全に閉じたら状態を Closed にして、透明にする
+
+			// 閉じ切ったらClosed状態に戻す
 			if (fadeT_ >= 1.0f) {
 				state_ = State::Closed;
 				curtainAlpha_ = 0.0f;
 				return Command::None;
 			}
-		} else { // Paused
+		} else {
+			// 完全にポーズ中なら暗幕透明度を固定する
 			curtainAlpha_ = kTargetCurtainAlpha;
 		}
 
-		// 操作
+		//=========================================================
+		// ポーズ中の操作
+		//=========================================================
+
 		if (state_ == State::Paused) {
-			// 上下で選択変更（ループ）
+			// 上入力で選択項目を上へ移動する
 			if (TriggerPadUp_()) { MoveIndex_(-1); }
-			// 下入力もループ
+
+			// 下入力で選択項目を下へ移動する
 			if (TriggerPadDown_()) { MoveIndex_(+1); }
-			// B で閉じる（Resume と同じ扱いで、項目選択は無し）
+
+			// キャンセル入力でポーズを閉じる
 			if (TriggerB_()) {
 				TKM::AudioManager::GetInstance()->PlaySound("pause", 0.4f);
 
 				Close_();
 				return Command::None;
 			}
-			// A で決定
+
+			// 決定入力で選択中の項目を実行する
 			if (TriggerA_()) {
+				// 決定SEを再生する
 				TKM::AudioManager::GetInstance()->PlaySound("decision", 0.2f);
 
-				// 波紋発生（画面中央）
+				//=================================================
+				// 決定時の波紋演出
+				//=================================================
 				if (dxCommon_) {
+					// 水面波紋エフェクトを取得する
 					auto* ripple = dxCommon_->GetWaterRippleEffect();
+
+					// 波紋エフェクトが有効なら画面中央に発生させる
 					if (ripple) {
 						TKM::WaterRippleEffect::RippleDesc desc{};
+
+						// 波紋の継続時間を設定する
 						desc.duration_ = 0.6f;
+
+						// 波紋の最大半径を設定する
 						desc.radiusMax_ = 0.85f;
+
+						// 波紋の振幅を設定する
 						desc.amplitude_ = 0.1f;
+
+						// 波紋の細かさを設定する
 						desc.frequency_ = 80.0f;
+
+						// 波紋の幅を設定する
 						desc.width_ = 10.0f;
+
+						// 波紋色を白にする
 						desc.color_ = { 1.0f,1.0f,1.0f };
 
+						// 画面中央に波紋を出す
 						ripple->Trigger({ 0.5f, 0.5f }, desc);
 					}
 				}
 
-				// どの項目が選ばれているかでコマンドを返す
+				// Resumeが選ばれていたらポーズを閉じて再開する
 				if (index_ == (int)Item::Resume) {
 					Close_();
 					return Command::Resume;
 				}
-				// Restart は、選択して A 押した瞬間に即コマンドを返す（長押し無しで即確定）
+
+				// Restartが選ばれていたらリスタート要求を返す
 				if (index_ == (int)Item::Restart) {
 					Close_();
 					return Command::Restart;
 				}
-				// ReturnToTitle は、選択して A 押した瞬間に即コマンドを返す（長押し無しで即確定）
+
+				// ReturnToTitleが選ばれていたらタイトル遷移要求を返す
 				if (index_ == (int)Item::ReturnToTitle) {
 					Close_();
-					return Command::ReturnToTitle; // 長押し無しで即確定
+					return Command::ReturnToTitle;
 				}
 			}
 		}
 
-		// 見た目更新（開く瞬間の気持ちよさ：下からスッ + ちょいポン + 項目は順番に出す）
+		//=========================================================
+		// 見た目更新
+		//=========================================================
+
+		// 選択項目の脈動時間を進める
 		pulseTime_ += dt;
 
-		// UI の出現率（0:非表示 ～ 1:表示）
+		// UIの開き具合を0.0〜1.0で作る
 		float uiOpen = 0.0f;
 		if (state_ == State::Pausing) {
 			uiOpen = smoothStep01(fadeT_);
@@ -272,101 +509,168 @@ namespace TKM {
 			uiOpen = 1.0f - smoothStep01(fadeT_);
 		}
 
-		// 暗幕
+		//=========================================================
+		// 暗幕更新
+		//=========================================================
 		if (curtain_) {
+			// 現在の暗幕透明度を反映する
 			curtain_->SetColor({ 0.0f, 0.0f, 0.0f, curtainAlpha_ });
+
+			// 暗幕を更新する
 			curtain_->Update();
 		}
 
-		// パネル：下からスッ + 少しポン（サイズで表現）
+		//=========================================================
+		// パネル更新
+		//=========================================================
 		if (panel_) {
+			// UI出現率をなめらかにする
 			const float t = smoothStep01(uiOpen);
+
+			// 開き途中は少し下から出るようにする
 			const float slideY = (1.0f - t) * 18.0f;
 
-			// 0.92 -> 1.02 -> 1.00 くらいの小さなポン（やりすぎない）
+			// 小さいポップ拡縮を作る
 			const float pi = 3.14159265f;
-			float pop = std::sin(t * pi);                  // 0->1->0
-			float scale = 0.92f + 0.08f * t + 0.02f * pop; // 0.92 -> 1.02 -> 1.00 付近
+			float pop = std::sin(t * pi);
+			float scale = 0.92f + 0.08f * t + 0.02f * pop;
 
+			// 拡縮後のパネルサイズを計算する
 			Vector2 baseSize = panelSize_;
 			Vector2 newSize = { baseSize.x * scale, baseSize.y * scale };
 
-			// 中心固定（アンカー0,0なので位置を補正）
+			// 中心固定で拡縮させるため、左上位置を補正する
 			Vector2 baseCenter = { panelPos_.x + baseSize.x * 0.5f, panelPos_.y + baseSize.y * 0.5f };
 			Vector2 newPos = { baseCenter.x - newSize.x * 0.5f, baseCenter.y - newSize.y * 0.5f + slideY };
 
+			// パネル位置を反映する
 			panel_->SetPosition(newPos);
+
+			// パネルサイズを反映する
 			panel_->SetSize(newSize);
+
+			// パネル透明度を出現率に合わせる
 			panel_->SetColor({ 0.08f, 0.08f, 0.10f, 0.75f * t });
+
+			// パネルを更新する
 			panel_->Update();
 		}
 
-		// 選択の脈動（開き中は控えめ、開き切ったら通常）
+		//=========================================================
+		// 項目更新
+		//=========================================================
+
+		// 開き中は脈動を控えめにする
 		float pulseBlend = (uiOpen >= 0.95f) ? 1.0f : uiOpen;
+
+		// 選択項目用の脈動倍率を作る
 		float pulse = 1.0f + (0.06f * pulseBlend) * std::sin(pulseTime_ * 6.0f);
 
-		// 項目：順番にフェードイン + 少し下からスッ
+		// 各項目を順番にフェードインさせる
 		for (int i = 0; i < (int)Item::Count; ++i) {
+			// 項目スプライトが無ければ飛ばす
 			if (!items_[i]) { continue; }
 
-			// スタッガー（上から順に少し遅れて出る）
+			// 項目ごとの出現遅延
 			const float delay = 0.08f * (float)i;
+
+			// 項目の出現率を計算する
 			float itemT = clamp01((uiOpen - delay) / 0.70f);
+
+			// 出現率をなめらかにする
 			itemT = smoothStep01(itemT);
 
+			// この項目が選択中かどうか
 			bool selected = (i == index_);
 
-			// 位置：基準位置から、出現率に応じて少し下からスッと上がるようにする
+			// 少し下から上がってくる位置を計算する
 			Vector2 itemPos = {
 				baseItemPos_.x,
 				baseItemPos_.y + itemSpacingY_ * (float)i + (1.0f - itemT) * 10.0f
 			};
+
+			// 項目位置を反映する
 			items_[i]->SetPosition(itemPos);
-			// 色：選択中は少し明るく、非選択は少し暗く（さらに出現率に応じて透明から不透明へ）
+
+			// 選択中は明るく、未選択は少し暗くする
 			Vector4 col = selected ? Vector4{ 1.0f, 1.0f, 1.0f, 0.92f } : Vector4{ 1.0f, 1.0f, 1.0f, 0.62f };
+
+			// 出現率に応じて透明度を変える
 			col.w *= itemT;
+
+			// 項目色を反映する
 			items_[i]->SetColor(col);
 
+			// 選択中なら少し大きい基準サイズにする
 			Vector2 baseSize = selected ? Vector2{ 240.0f, 48.0f } : Vector2{ 220.0f, 44.0f };
+
+			// 選択中なら脈動倍率を反映する
 			Vector2 size = selected ? Vector2{ baseSize.x * pulse, baseSize.y * pulse } : baseSize;
-			// 出現中は少しだけ小さめ（ポン）にして完成感
+
+			// 出現中は少し小さめから完成サイズへ近づける
 			float s = 0.96f + 0.04f * itemT;
 			size = { size.x * s, size.y * s };
 
-			// サイズを設定
+			// 項目サイズを反映する
 			items_[i]->SetSize(size);
+
+			// 項目を更新する
 			items_[i]->Update();
 		}
 
-		// カーソル：選択項目の出現率に追従してフェード
+		//=========================================================
+		// カーソル更新
+		//=========================================================
+
 		if (cursor_) {
+			// 選択項目の出現遅延に合わせる
 			const float delay = 0.08f * (float)index_;
+
+			// 選択項目の出現率を計算する
 			float itemT = clamp01((uiOpen - delay) / 0.70f);
+
+			// 出現率をなめらかにする
 			itemT = smoothStep01(itemT);
 
-			// 位置：選択項目の左側に配置。選択項目と同じく、出現率に応じて少し下からスッと上がるようにする
+			// 選択項目の左側にカーソルを配置する
 			Vector2 pos = {
 				baseItemPos_.x - 150.0f,
 				baseItemPos_.y + itemSpacingY_ * (float)index_ + (1.0f - itemT) * 10.0f
 			};
-			// 色：選択項目と同じアルファで表示
+
+			// カーソル位置を反映する
 			cursor_->SetPosition(pos);
+
+			// カーソルサイズを固定する
 			cursor_->SetSize({ 28.0f, 28.0f });
+
+			// 出現率に応じた透明度で表示する
 			cursor_->SetColor({ 1.0f, 1.0f, 1.0f, 0.9f * itemT });
+
+			// カーソルを更新する
 			cursor_->Update();
 		}
 
-		return Command::None; // 開いている間は特にコマンド無し
+		// このフレームではコマンドなし
+		return Command::None;
 	}
 
 	void PauseMenuController::Draw() {
+		// 閉じている場合は描画しない
 		if (state_ == State::Closed) { return; }
 
+		// 暗幕を描画する
 		if (curtain_) curtain_->Draw();
+
+		// パネルを描画する
 		if (panel_) panel_->Draw();
+
+		// 各項目を描画する
 		for (int i = 0; i < (int)Item::Count; ++i) {
 			if (items_[i]) items_[i]->Draw();
 		}
+
+		// カーソルを描画する
 		if (cursor_) cursor_->Draw();
 	}
 } // namespace TKM

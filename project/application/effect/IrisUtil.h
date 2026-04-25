@@ -9,52 +9,67 @@
 #include "Easing.h"
 
 //=============================================================
-// IrisUtilクラス
-// アイリス演出に関連するユーティリティ関数をまとめたクラス。
+// IrisUtil
+// アイリス演出に使うスプライト生成とスケール更新をまとめたユーティリティ。
 //=============================================================
 
 /// ------------------------------------------------------------
 /// 画面中央に配置されたアイリス用スプライトを生成し、
-/// 画面全体を覆える「最大スケール」を計算して返すユーティリティ。
+/// 画面全体を覆える「最大スケール」を計算して返す。
 /// ------------------------------------------------------------
 inline std::unique_ptr<TKM::Sprite> CreateCenteredIrisSprite(
 	TKM::DirectXCommon* dxCommon,
 	float& outMaxScale,
-	const char* texturePath = "./resources/texture/circle2.png") // texturePathは、アイリスに使用するテクスチャのパス。デフォルトは円形のテクスチャ（circle2.png）を想定。
-{
-	// アイリス用スプライトの生成
-	auto sprite_ = std::make_unique<TKM::Sprite>(); 
+	const char* texturePath = "./resources/texture/circle2.png") {
+	// アイリス用スプライトを生成する
+	auto sprite_ = std::make_unique<TKM::Sprite>();
+
+	// 指定されたテクスチャでスプライトを初期化する
 	sprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon, texturePath);
 
-	// 画面中央
-	sprite_->SetAnchorPoint({ 0.5f, 0.5f }); // アイリスの中心が画面中央に来るようにアンカーポイントを設定
-	sprite_->SetPosition(
-		{ TKM::WindowsAPI::GetClientWidth() * 0.5f, TKM::WindowsAPI::GetClientHeight() * 0.5f }); // アイリスの中心が画面中央に来るように位置を設定
+	// スプライトの中心を基準にして拡縮できるようにする
+	sprite_->SetAnchorPoint({ 0.5f, 0.5f });
 
-	// 画面対角長から「絶対にはみ出す」スケールを計算
-	const float w_ = static_cast<float>(TKM::WindowsAPI::GetClientWidth()); // 画面の幅
-	const float h_ = static_cast<float>(TKM::WindowsAPI::GetClientHeight()); // 画面の高さ
+	// 画面中央に配置する
+	sprite_->SetPosition(
+		{ TKM::WindowsAPI::GetClientWidth() * 0.5f, TKM::WindowsAPI::GetClientHeight() * 0.5f });
+
+	// 画面幅を取得する
+	const float w_ = static_cast<float>(TKM::WindowsAPI::GetClientWidth());
+
+	// 画面高さを取得する
+	const float h_ = static_cast<float>(TKM::WindowsAPI::GetClientHeight());
+
+	// 画面対角線の長さを計算する
 	const float diag_ = std::sqrt(w_ * w_ + h_ * h_);
 
-	// 2 倍くらいにしておけば端がチラ見えしない
+	// 画面端が見切れないように、対角線より大きい最大サイズを設定する
 	outMaxScale = diag_ * 2.0f;
-	// アイリスのサイズを最大スケールに設定
+
+	// 初期サイズとして最大スケールを設定する
 	sprite_->SetSize({ outMaxScale, outMaxScale });
-	// アイリスの初期スケールは小さめにしておく
+
+	// 生成したアイリス用スプライトを返す
 	return sprite_;
 }
 
 /// ------------------------------------------------------------
-/// アイリスのスケール更新処理（開く/閉じるどちらでも使用可）
-/// ・tween.Update(dt) した値をそのままスプライトのサイズに適用する
-/// ・戻り値として現在スケールを返す
+/// アイリスのスケール更新処理。
+/// 開く演出・閉じる演出のどちらでも使用できる。
 /// ------------------------------------------------------------
-inline float UpdateIrisScale(TKM::Sprite* iris, Ease::Tween& tween, float dt)
-{
-	if (!iris) { return 0.0f; } // 念のためnullptrチェック
+inline float UpdateIrisScale(TKM::Sprite* iris, Ease::Tween& tween, float dt) {
+	// スプライトが無ければ更新できないので0を返す
+	if (!iris) { return 0.0f; }
 
-	float scale_ = tween.Update(dt); // tween.Update(dt) した値をそのままスプライトのサイズに適用
-	iris->SetSize({ scale_, scale_ }); // スプライトのサイズを更新
-	iris->Update(); // スプライトの更新（必要に応じて）
+	// Tweenを進めて現在のスケール値を取得する
+	float scale_ = tween.Update(dt);
+
+	// 現在スケールをスプライトサイズに反映する
+	iris->SetSize({ scale_, scale_ });
+
+	// スプライトを更新する
+	iris->Update();
+
+	// 現在スケールを返す
 	return scale_;
 }

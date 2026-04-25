@@ -7,66 +7,89 @@
 
 namespace TKM {
 	void GameFlowController::Initialize(DirectXCommon* dxCommon, TKM::Object3dCommon* object3dCommon) {
+		// イントロシーケンスを生成する
 		intro_ = std::make_unique<IntroSequence>();
+
+		// イントロシーケンスを初期化する
 		intro_->Initialize(dxCommon, object3dCommon);
 
+		// イントロ中はゲームプレイをロックする
 		gameplayLocked_ = true;
 
+		// アイリス閉じ状態を初期化する
 		irisClosing_ = false;
+
+		// タイトル遷移フラグを初期化する
 		irisToTitle_ = false;
+
+		// プレイヤー死亡遷移の開始フラグを初期化する
 		playerDeathStarted_ = false;
+
+		// プレイヤー死亡後の経過時間を初期化する
 		playerDeathElapsed_ = 0.0f;
 	}
 
 	void GameFlowController::Update(float rawDeltaTime, Camera* camera, bool enemiesInitialized, bool& outRequestInitEnemies) {
+		// イントロがある場合はイントロ側の状態を更新する
 		if (intro_) {
 			intro_->Update(kFixedDeltaTime_, camera, enemiesInitialized, outRequestInitEnemies);
+
+			// イントロ側のロック状態をゲームフロー側へ反映する
 			gameplayLocked_ = intro_->IsGameplayLocked();
 		} else {
+			// イントロが無い場合はゲームプレイをロックしない
 			gameplayLocked_ = false;
 		}
 	}
 
 	GameFlowController::TransitionRequest GameFlowController::UpdateTransitions(float rawDeltaTime, Player* player) {
-		(void)rawDeltaTime; // 現状：固定dt（kFixedDeltaTime_）で進行
+		// 現状は固定dtで遷移演出を進めるため、rawDeltaTimeは使わない
+		(void)rawDeltaTime;
 
-		// 1) 死亡 →（4秒後）GameOver 遷移のため Iris 閉じ開始
+		// プレイヤー死亡からGameOverへ進む遷移を確認する
 		HandlePlayerDeathTransition_(player);
 
-		// 2) Tキーでタイトルへ（Iris閉じ開始）
+		// Tキーによるタイトル遷移開始を確認する
 		TryStartTitleTransitionByKey_();
 
-		// 3) クリア演出などで保留された遷移要求を最優先で返す
+		// アイリス閉じ中でなければ、保留中の遷移要求を先に返す
 		if (pendingRequest_ != TransitionRequest::None && !irisClosing_) {
 			return ConsumePendingRequest_();
 		}
 
-		// 4) Iris閉じ進行（閉じ終わったら遷移要求を返す）
+		// アイリス閉じ演出を進め、閉じ終わっていれば遷移要求を返す
 		{
 			const auto req = StepIrisClosing_();
 			if (req != TransitionRequest::None) { return req; }
 		}
 
+		// このフレームでは遷移なし
 		return TransitionRequest::None;
 	}
 
 	void GameFlowController::Draw() const {
-		// Iris閉じ or 外部制御なら描画
+		// アイリス閉じ中、または外部制御中ならイントロ側でアイリスを描画する
 		intro_->Draw(irisClosing_ || externalIrisDraw_);
 	}
 
 	void GameFlowController::DrawIntroBoss3D(DirectXCommon* dxCommon) const {
+		// イントロがある場合だけ、イントロ用ボスを描画する
 		if (intro_) {
-			intro_->DrawIntroBoss3D(dxCommon); // イントロ用ボスの3D描画
+			intro_->DrawIntroBoss3D(dxCommon);
 		}
 	}
 
 	void GameFlowController::RequestToTitleByIris() {
+		// すでにアイリス閉じ中なら二重開始しない
 		if (irisClosing_) { return; }
 
-		// アイリス閉じ開始
+		// アイリス閉じを開始する
 		irisClosing_ = true;
+
+		// 閉じ終わった後はタイトルへ遷移する
 		irisToTitle_ = true;
+
+		// アイリス閉じ用Tweenを開始する
 		irisCloseTween_.Reset(
 			0.0f,
 			intro_ ? intro_->GetIrisMaxScale() : 0.0f,
@@ -76,100 +99,140 @@ namespace TKM {
 	}
 
 	void GameFlowController::BindClearSequence(ClearSequenceController* clearSeq) {
-		clearSeq_ = clearSeq; // クリアシーケンスコントローラをバインド
+		// クリアシーケンスコントローラー参照を保持する
+		clearSeq_ = clearSeq;
 	}
 
 	bool GameFlowController::IsInClear() const {
-		return (clearSeq_ && clearSeq_->IsActive()); // クリアシーケンスがアクティブか？
+		// クリアシーケンスが存在し、実行中かどうかを返す
+		return (clearSeq_ && clearSeq_->IsActive());
 	}
 
 	bool GameFlowController::UpdateClear(float rawDeltaTime, float scaledDeltaTime, PostEffectController* postFx, UIController* ui, BossManager* bossManager, Camera* camera, Player* player) {
+		// クリアシーケンスが無い、またはアクティブでなければ処理しない
 		if (!clearSeq_ || !clearSeq_->IsActive()) {
-			return false; // クリア中じゃない
+			return false;
 		}
 
-		// クリア演出本体（スロー非依存）
+		// クリア演出本体はスロー非依存のrawDeltaTimeで更新する
 		const bool finished = clearSeq_->Update(rawDeltaTime);
 
-		// クリア中でも動かしたいもの（止めない）
+		// クリア中でもパーティクルは更新し続ける
 		ParticleManager::GetInstance()->Update(scaledDeltaTime);
 
-		if (postFx) { // ポストエフェクト更新
-			postFx->Update(scaledDeltaTime, bossManager); // ボスマネージャ参照
-			if (camera) { // カメラ更新通知
-				postFx->OnCameraUpdated(camera); // カメラ更新通知
+		// ポストエフェクトがある場合は更新する
+		if (postFx) {
+			// ボスマネージャー参照も渡してポストエフェクトを更新する
+			postFx->Update(scaledDeltaTime, bossManager);
+
+			// カメラがある場合は、カメラ更新後の情報をポストエフェクトへ渡す
+			if (camera) {
+				postFx->OnCameraUpdated(camera);
 			}
 		}
-		if (ui) { // UI更新
-			ui->Update(scaledDeltaTime, player); // プレイヤー参照
-		}
-		if (finished) { // クリアシーケンス完了
-			pendingRequest_ = TransitionRequest::ToGameClear; // 遷移要求セット
+
+		// UIがある場合はクリア中も更新する
+		if (ui) {
+			ui->Update(scaledDeltaTime, player);
 		}
 
-		return true; // クリア中なので “処理済み”
+		// クリアシーケンスが完了したらGameClearへの遷移要求を保留する
+		if (finished) {
+			pendingRequest_ = TransitionRequest::ToGameClear;
+		}
+
+		// クリア中の処理を行ったことを返す
+		return true;
 	}
 
 	void GameFlowController::RequestStartClear() {
-		if (!clearSeq_) { return; } // バインドされていない
-		clearSeq_->Start(); // クリアシーケンス開始
+		// クリアシーケンスが未バインドなら開始できない
+		if (!clearSeq_) { return; }
+
+		// クリアシーケンスを開始する
+		clearSeq_->Start();
 	}
 
 	bool GameFlowController::IsGameplayLocked() const {
-		return gameplayLocked_ || IsInClear(); // クリア中もロック
+		// イントロ中、またはクリア中ならゲームプレイをロックする
+		return gameplayLocked_ || IsInClear();
 	}
 
 	void GameFlowController::SetExternalIrisDraw(bool enable) {
+		// 外部からアイリス描画を行うかどうかを設定する
 		externalIrisDraw_ = enable;
 	}
 
 	Sprite* GameFlowController::GetIrisSprite() const {
+		// イントロがあればアイリススプライトを返す
 		return intro_ ? intro_->GetIrisSprite() : nullptr;
 	}
 
 	float GameFlowController::GetIrisMaxScale() const {
+		// イントロがあればアイリス最大スケールを返す
 		return intro_ ? intro_->GetIrisMaxScale() : 0.0f;
 	}
 
 	GameFlowController::TransitionRequest GameFlowController::ConsumePendingRequest_() {
+		// 保留中の遷移要求が無ければNoneを返す
 		if (pendingRequest_ == TransitionRequest::None) { return TransitionRequest::None; }
 
+		// 保留中の要求を退避する
 		const auto req = pendingRequest_;
+
+		// 一度返した要求は消す
 		pendingRequest_ = TransitionRequest::None;
+
+		// 退避した要求を返す
 		return req;
 	}
 
 	void GameFlowController::HandlePlayerDeathTransition_(Player* player) {
+		// プレイヤーが無ければ死亡遷移しない
 		if (!player) { return; }
+
+		// プレイヤーが死んでいなければ死亡遷移しない
 		if (!player->IsDead()) { return; }
 
-		// 初回：開始だけして終わり（ネストを浅くする）
+		// 死亡を初めて検知したタイミングでは、タイマー開始だけ行う
 		if (!playerDeathStarted_) {
 			playerDeathStarted_ = true;
 			playerDeathElapsed_ = 0.0f;
 			return;
 		}
 
+		// 死亡後の経過時間を進める
 		playerDeathElapsed_ += kFixedDeltaTime_;
 
-		// 2秒経過したら GameOver 用 Iris 閉じ開始（1回だけ）
+		// 2秒経過するまでは遷移開始しない
 		if (playerDeathElapsed_ < 2.0f) { return; }
+
+		// GameOver用のアイリス閉じを開始する
 		BeginIrisClosing_(false);
 	}
 
 	void GameFlowController::TryStartTitleTransitionByKey_() {
+		// すでにアイリス閉じ中なら開始しない
 		if (irisClosing_) { return; }
+
+		// Tキーが押されていなければ開始しない
 		if (!Input::GetInstance()->TriggerKey(DIK_T)) { return; }
 
+		// タイトル用のアイリス閉じを開始する
 		BeginIrisClosing_(true);
 	}
 
 	void GameFlowController::BeginIrisClosing_(bool toTitle) {
-		if (irisClosing_) { return; } // 多重開始防止
+		// すでにアイリス閉じ中なら二重開始しない
+		if (irisClosing_) { return; }
 
+		// アイリス閉じを開始する
 		irisClosing_ = true;
+
+		// 閉じ終わった後の遷移先がタイトルかどうかを保存する
 		irisToTitle_ = toTitle;
 
+		// アイリス閉じ用Tweenを開始する
 		irisCloseTween_.Reset(
 			0.0f,
 			intro_ ? intro_->GetIrisMaxScale() : 0.0f,
@@ -179,12 +242,19 @@ namespace TKM {
 	}
 
 	void GameFlowController::RequestRestartByIris() {
+		// すでにアイリス閉じ中なら二重開始しない
 		if (irisClosing_) { return; }
 
-		irisClosing_ = true; // アイリス閉じ開始
-		irisToTitle_ = false; // GameOver へ遷移するようにセット
-		pendingRequest_ = TransitionRequest::ToRestart; // 閉じ終わったら再スタートへ遷移要求
+		// アイリス閉じを開始する
+		irisClosing_ = true;
 
+		// タイトルではなくリスタート遷移として扱う
+		irisToTitle_ = false;
+
+		// 閉じ終わった後にリスタート遷移要求を返すようにする
+		pendingRequest_ = TransitionRequest::ToRestart;
+
+		// アイリス閉じ用Tweenを開始する
 		irisCloseTween_.Reset(
 			0.0f,
 			intro_ ? intro_->GetIrisMaxScale() : 0.0f,
@@ -194,18 +264,21 @@ namespace TKM {
 	}
 
 	GameFlowController::TransitionRequest GameFlowController::StepIrisClosing_() {
+		// アイリス閉じ中でなければ遷移なし
 		if (!irisClosing_) { return TransitionRequest::None; }
 
-		// アイリスのスケールを更新
+		// アイリススプライトのスケールを更新する
 		UpdateIrisScale(intro_ ? intro_->GetIrisSprite() : nullptr, irisCloseTween_, kFixedDeltaTime_);
 
-		if (!irisCloseTween_.Finished()) { return TransitionRequest::None; } // 閉じ終わってない
+		// まだ閉じ終わっていなければ遷移なし
+		if (!irisCloseTween_.Finished()) { return TransitionRequest::None; }
 
-		// 閉じ終わったので遷移要求を返す（リクエストセットされていればそちら優先）
+		// 保留中の遷移要求があればそちらを優先して返す
 		if (pendingRequest_ != TransitionRequest::None) {
 			return ConsumePendingRequest_();
 		}
 
-		return irisToTitle_ ? TransitionRequest::ToTitle : TransitionRequest::ToGameOver; // デフォルト遷移
+		// 保留要求が無ければ、タイトルまたはゲームオーバーへ遷移する
+		return irisToTitle_ ? TransitionRequest::ToTitle : TransitionRequest::ToGameOver;
 	}
 } // namespace TKM
