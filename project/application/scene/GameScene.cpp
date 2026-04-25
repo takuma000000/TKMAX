@@ -58,7 +58,7 @@ void GameScene::Initialize() {
 	/// ──────────────── ゲームフローの初期化 ───────────────
 	clearSeq_ = std::make_unique<TKM::ClearSequenceController>();
 	clearSeq_->Initialize(player_.get(), bossManager_.get(), flow_.get(), dxCommon_, skybox_.get(), fireworkController_.get(), postFx_->GetSmokeVolume());
-		flow_->BindClearSequence(clearSeq_.get()); // ゲームフローにクリアシーケンスをバインド
+	flow_->BindClearSequence(clearSeq_.get()); // ゲームフローにクリアシーケンスをバインド
 }
 
 void GameScene::Finalize() {
@@ -130,7 +130,11 @@ void GameScene::Update() {
 	EndFrameUpdate();
 }
 
-void GameScene::Draw() { Draw3D(); DrawSprite(); } // 3Dとスプライトの描画を分ける
+void GameScene::Draw() {
+	// 3Dとスプライトの描画を分ける
+	Draw3D();
+	DrawSprite();
+}
 
 void GameScene::Draw3D() {
 	skybox_->Draw(); // スカイボックス描画
