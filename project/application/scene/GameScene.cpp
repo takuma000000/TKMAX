@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <psapi.h>
 
-
 #ifdef USE_IMGUI
 #include "imgui.h"
 #endif
@@ -16,80 +15,93 @@ void GameScene::Initialize() {
 	/// ──────────────── NULLチェック ────────────────
 	assert(this != nullptr && "this is nullptr in GameScene::Initialize");
 	assert(dxCommon_ != nullptr && "dxCommon is nullptr in GameScene::Initialize");
+
 	/// ──────────────── 各種初期化処理 ───────────────
-	AudioCatalog::LoadGameAudios(); // オーディオのロード
-	TextureCatalog::LoadTextureCatalogs(); // テクスチャカタログのロード
-	InitializeSprite();  // スプライトの作成＆初期化
-	ModelCatalog::LoadModelCatalogs(dxCommon_); // モデルカタログのロード
-	InitializeObjects(); // 3Dオブジェクトの作成＆初期化
-	InitializeCamera();  // カメラの作成＆設定
+	AudioCatalog::LoadGameAudios();
+	TextureCatalog::LoadTextureCatalogs();
+	InitializeSprite();
+	ModelCatalog::LoadModelCatalogs(dxCommon_);
+	InitializeObjects();
+	InitializeCamera();
+
 	/// ──────────────── ライトの初期化 ───────────────
 	directionalLight_ = std::make_unique<DirectionalLight>();
 	directionalLight_->Initialize({ 1.0f, 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 0.0f }, 1.0f);
+
 	/// ──────────────── ラインレンダラーの初期化 ───────────────
 	LineRenderer::GetInstance()->Initialize(dxCommon_);
+
 	/// ──────────────── パーティクルの初期化 ───────────────
 	ParticleManager::GetInstance()->Initialize(dxCommon_, srvManager_, TKM::CameraManager::GetInstance()->GetMainCamera());
-	// パーティクルグループの登録は ParticleGroupsCatalogクラス へ
 	ParticleGroupsCatalog::RegisterScene(ParticleManager::GetInstance());
-	// パーティクルエミッターの初期化
+
 	particleEmitter_ = std::make_unique<ParticleEmitter>();
 	particleEmitter_->Initialize("uv", { 0.0f,2.5f,10.0f });
+
 	/// ──────────────── スカイボックスの初期化 ───────────────
 	skybox_ = std::make_unique<Skybox>();
 	skybox_->Initialize(dxCommon_, srvManager_, "resources/texture/kloofendal_48d_partly_cloudy_puresky_1k.dds");
 	skybox_->SetCamera(TKM::CameraManager::GetInstance()->GetMainCamera());
+
 	/// ──────────────── 敵マネージャの初期化 ───────────────
 	enemyManager_ = std::make_unique<EnemyManager>();
 	enemyManager_->Initialize(dxCommon_, TKM::CameraManager::GetInstance()->GetMainCamera(), this, player_.get());
+
 	/// ──────────────── ボスマネージャの初期化 ───────────────
 	bossManager_ = std::make_unique<BossManager>();
 	bossManager_->Initialize(dxCommon_, TKM::CameraManager::GetInstance()->GetMainCamera(), this, player_.get());
-	bossEntranceSeq_ = std::make_unique<BossEntranceSequence>(); // ボス登場シーケンスの初期化
+
+	bossEntranceSeq_ = std::make_unique<BossEntranceSequence>();
+
 	/// ──────────────── タイムスケールコントローラーの初期化 ───────────────
 	timeScale_.Initialize();
 	bossManager_->SetTimeScaleController(&timeScale_);
+
 	/// ──────────────── 花火コントローラーの初期化 ───────────────
 	fireworkController_ = std::make_unique<TKM::FireworkController>();
 	fireworkController_->Reset();
+
 	/// ──────────────── ポストエフェクトの初期化 ───────────────
 	postFx_ = std::make_unique<TKM::PostEffectController>();
 	postFx_->Initialize(dxCommon_, player_.get(), bossManager_.get());
+
 	/// ──────────────── ゲームフローの初期化 ───────────────
 	clearSeq_ = std::make_unique<TKM::ClearSequenceController>();
 	clearSeq_->Initialize(player_.get(), bossManager_.get(), flow_.get(), dxCommon_, skybox_.get(), fireworkController_.get(), postFx_->GetSmokeVolume());
-	flow_->BindClearSequence(clearSeq_.get()); // ゲームフローにクリアシーケンスをバインド
+
+	flow_->BindClearSequence(clearSeq_.get());
 }
 
 void GameScene::Finalize() {
-	// テクスチャマネージャーの終了
+	/// ──────────────── 各種終了処理 ───────────────
 	TextureManager::GetInstance()->Finalize();
-	// 音声終了処理
 	AudioManager::GetInstance()->Finalize();
-	// 3Dモデルマネージャーの終了
 	ModelManager::GetInstance()->Finalize();
-	// ラインレンダラーの終了
+
+	/// ──────────────── ポストエフェクトの終了 ───────────────
 	postFx_->Finalize();
 
-	// パーティクルの終了
+	/// ──────────────── パーティクルの終了 ───────────────
 	ParticleManager::GetInstance()->ClearAllGroups();
 }
 
 void GameScene::Update() {
-	float rawDeltaTime = 0.0f;   // 前フレームからの経過時間（秒） - ゲーム全体の更新に使用（ポーズ中も動かす）
-	float scaledDeltaTime = 0.0f; // タイムスケール適用後の経過時間（秒） - ゲームプレイシステムの更新に使用（ポーズ中は動かさない）
+	/// ──────────────── フレーム時間の準備 ───────────────
+	float rawDeltaTime = 0.0f;
+	float scaledDeltaTime = 0.0f;
 
-	BeginFrameUpdate(rawDeltaTime, scaledDeltaTime); // フレーム開始処理
+	BeginFrameUpdate(rawDeltaTime, scaledDeltaTime);
 
-	// クリアシーケンス中は他の更新をスキップ
+	/// ──────────────── クリアシーケンス更新 ───────────────
 	if (flow_->UpdateClear(rawDeltaTime, scaledDeltaTime, postFx_.get(), ui_.get(), bossManager_.get(), TKM::CameraManager::GetInstance()->GetMainCamera(), player_.get())) {
 		EndFrameUpdate();
 		return;
 	}
 
-	UpdateFlow(); // ゲーム進行フロー更新
+	/// ──────────────── ゲーム進行フロー更新 ───────────────
+	UpdateFlow();
 
-	// ──────────────── 空の色変更（イントロ / ボス登場 / ボス戦中） ────────────────
+	/// ──────────────── 空の色変更 ───────────────
 	if (skybox_) {
 		const bool introBossRed =
 			(flow_ && flow_->GetIntro() && flow_->GetIntro()->IsBossSkyRedPhase());
@@ -100,7 +112,6 @@ void GameScene::Update() {
 		const bool bossBattleRed =
 			(bossManager_ && bossManager_->IsBattleActive() && !bossManager_->IsBossDead());
 
-		// 優先順位：ボス登場 > ボス戦中 > イントロの順で赤くする
 		if (entranceActive) {
 			skybox_->SetColor(bossEntranceSeq_->GetSkyColor());
 		} else if (bossBattleRed) {
@@ -112,52 +123,59 @@ void GameScene::Update() {
 		}
 	}
 
-	// ──────────────── ゲームプレイのロック状態を判定 ────────────────
+	/// ──────────────── ゲームプレイのロック状態を判定 ───────────────
 	const bool isClear = (flow_->IsInClear());
 	const bool bossEntranceLocked = (bossEntranceSeq_ && bossEntranceSeq_->IsActive());
 	const bool locked = (flow_->IsGameplayLocked()) || isClear || bossEntranceLocked;
 	const bool allowPauseOpen = !locked;
 
-	// ──────────────── ポーズUI更新（rawDeltaTimeでUIだけ動かす） ───────────────
+	/// ──────────────── ポーズUI更新 ───────────────
 	if (TryUpdatePauseAndMaybeEarlyReturn_(rawDeltaTime, allowPauseOpen)) {
-		EndFrameUpdate(); // ゲームプレイシステムの更新をスキップする場合でも、タイムスケールの更新は行う（ポーズ中のUIアニメーション等に反映させるため）
+		EndFrameUpdate();
 		return;
 	}
 
-	// ──────────────── 通常ゲーム更新（scaledDeltaTimeで動かす） ───────────────
+	/// ──────────────── 通常ゲーム更新 ───────────────
 	UpdateNormalGameplay_(rawDeltaTime, scaledDeltaTime);
-	// タイムスケールの更新は最後に行う（ゲームプレイシステムの更新が終わってから適用されるようにするため）
+
+	/// ──────────────── フレーム終了処理 ───────────────
 	EndFrameUpdate();
 }
 
 void GameScene::Draw() {
-	// 3Dとスプライトの描画を分ける
 	Draw3D();
 	DrawSprite();
 }
 
 void GameScene::Draw3D() {
-	skybox_->Draw(); // スカイボックス描画
+	/// ──────────────── 背景描画 ───────────────
+	skybox_->Draw();
 
-	// 3Dオブジェクト描画の共通設定
+	/// ──────────────── 3Dオブジェクト描画 ───────────────
 	Object3dCommon::GetInstance()->DrawSetCommon();
+
 	player_->Draw(dxCommon_);
 	enemyManager_->Draw(dxCommon_);
 	flow_->DrawIntroBoss3D(dxCommon_);
+
 	const bool isClear = (flow_->IsInClear()) || clearSequenceTriggered_;
-	// クリアシーケンス中はボスを描画しない
+
 	if (!isClear) {
 		bossManager_->Draw(dxCommon_);
 	}
 
-	TKM::Camera* activeCamera = TKM::CameraManager::GetInstance()->GetActiveCamera(); // 今フレームのアクティブカメラを取得
-	postFx_->DrawVolumes(activeCamera); // ポストエフェクトのボリューム描画（デバッグ用）zyaa
+	/// ──────────────── ボリューム描画 ───────────────
+	TKM::Camera* activeCamera = TKM::CameraManager::GetInstance()->GetActiveCamera();
+	postFx_->DrawVolumes(activeCamera);
 
+	/// ──────────────── パーティクル描画 ───────────────
 	ParticleManager::GetInstance()->Draw();
 
-	player_->DrawTrails(dxCommon_); // プレイヤーの軌跡描画（パーティクルの後に描くことで、パーティクルの前に来るようにする）
+	/// ──────────────── プレイヤー軌跡描画 ───────────────
+	player_->DrawTrails(dxCommon_);
 
 #ifdef USE_IMGUI
+	/// ──────────────── デバッグライン描画 ───────────────
 	TKM::Camera* cam = TKM::CameraManager::GetInstance()->GetActiveCamera();
 	if (cam) {
 		LineRenderer::GetInstance()->Draw(cam->GetViewProjectionMatrix());
@@ -166,48 +184,56 @@ void GameScene::Draw3D() {
 }
 
 void GameScene::DrawSprite() {
+	/// ──────────────── 2D描画共通設定 ───────────────
 	TKM::SpriteCommon::GetInstance()->DrawSetCommon();
-	flow_->Draw(); // ゲームフローの描画（イントロシーケンス等）
-	ui_->Draw(); // HUD描画
-	pause_->Draw(); // ポーズメニュー描画
-	bossManager_->DrawUI(); // ボスマネージャのUI描画（HPゲージ等）
+
+	/// ──────────────── UI描画 ───────────────
+	flow_->Draw();
+	ui_->Draw();
+	pause_->Draw();
+	bossManager_->DrawUI();
 }
 
 void GameScene::SpawnEnemyBullet(const Vector3& pos, const Vector3& dir, float speed, int damage, int lifeFrame) {
-	bossManager_->SpawnEnemyBullet(pos, dir, speed, damage, lifeFrame); // ボスマネージャに委譲
+	/// ──────────────── 敵弾生成をボスマネージャへ委譲 ───────────────
+	bossManager_->SpawnEnemyBullet(pos, dir, speed, damage, lifeFrame);
 }
 
 TKM::Camera* GameScene::UpdateActiveCamera() {
-	// ──────────────── アクティブカメラの決定＆更新 ───────────────
-	TKM::Camera* activeCamera = TKM::CameraManager::GetInstance()->Update(); // カメラマネージャーに更新を任せて、今フレームのアクティブカメラを取得
-	if (!activeCamera) { return nullptr; } // 万が一カメラマネージャーからnullptrが返ってきたら更新をスキップ（通常はありえないはず）
+	/// ──────────────── アクティブカメラの決定 ───────────────
+	TKM::Camera* activeCamera = TKM::CameraManager::GetInstance()->Update();
+	if (!activeCamera) { return nullptr; }
 
-	// ここで「今フレームのカメラ」を全部に渡す
+	/// ──────────────── 各システムへカメラ反映 ───────────────
 	player_->SetCamera(activeCamera);
-	skybox_->SetCamera(activeCamera); // スカイボックス適用
-	enemyManager_->SetCamera(activeCamera); // 敵マネージャ適用
-	bossManager_->SetCamera(activeCamera); // ボスマネージャ適用
-	// パーティクルマネージャー適用
-	ParticleManager::GetInstance()->SetCamera(activeCamera);
-	postFx_->OnCameraUpdated(activeCamera); // カメラ更新通知
+	skybox_->SetCamera(activeCamera);
+	enemyManager_->SetCamera(activeCamera);
+	bossManager_->SetCamera(activeCamera);
 
-	return activeCamera; // 呼び出し元にも返す
+	/// ──────────────── パーティクル・ポストエフェクトへカメラ反映 ───────────────
+	ParticleManager::GetInstance()->SetCamera(activeCamera);
+	postFx_->OnCameraUpdated(activeCamera);
+
+	return activeCamera;
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 // スプライトを作成し、初期化する
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeSprite() {
-
-	// ──────────────── ゲームフローの初期化 ───────────────
+	/// ──────────────── ゲームフローの初期化 ───────────────
 	flow_ = std::make_unique<TKM::GameFlowController>();
 	flow_->Initialize(dxCommon_, TKM::Object3dCommon::GetInstance());
-	// ──────────────── UIコントローラーの初期化 ───────────────
+
+	/// ──────────────── UIコントローラーの初期化 ───────────────
 	ui_ = std::make_unique<TKM::UIController>();
+
 	const float w = static_cast<float>(WindowsAPI::GetClientWidth());
 	const float h = static_cast<float>(WindowsAPI::GetClientHeight());
+
 	ui_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, this, w, h);
-	// ──────────────── ポーズメニュー（形だけ） ───────────────
+
+	/// ──────────────── ポーズメニューの初期化 ───────────────
 	pause_ = std::make_unique<TKM::PauseMenuController>();
 	pause_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, this, w, h);
 }
@@ -216,182 +242,184 @@ void GameScene::InitializeSprite() {
 // 3Dオブジェクトを作成し、初期化する
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeObjects() {
-	// ──────────────── プレイヤーの初期化 ───────────────
+	/// ──────────────── プレイヤーの初期化 ───────────────
 	player_ = std::make_unique<Player>();
 	player_->Initialize(Object3dCommon::GetInstance(), dxCommon_);
 	player_->SetPosition({ 0.0f, 0.0f, 0.0f });
 	player_->SetParentScene(this);
-	player_->SetEnemy(nullptr); // 最初はボスはいないのでnullptr
+	player_->SetEnemy(nullptr);
 }
 
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 // カメラを作成し、各オブジェクトに適用する
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeCamera() {
-	const Vector3 mainRot = { 0.12f,-1.2f,0.0f }; // カメラの回転（ラジアン）
-	const Vector3 mainPos = { 0.0f,0.0f,-30.0f }; // カメラの位置
-	const Vector3 debugTarget = { 0.0f, 0.0f, 0.0f }; // デバッグカメラの注視点
-	// カメラマネージャーの初期化
+	/// ──────────────── カメラ初期値 ───────────────
+	const Vector3 mainRot = { 0.12f,-1.2f,0.0f };
+	const Vector3 mainPos = { 0.0f,0.0f,-30.0f };
+	const Vector3 debugTarget = { 0.0f, 0.0f, 0.0f };
+
+	/// ──────────────── カメラマネージャー初期化 ───────────────
 	TKM::CameraManager::GetInstance()->Initialize(mainRot, mainPos, debugTarget);
 
-	player_->SetCamera(TKM::CameraManager::GetInstance()->GetMainCamera()); // プレイヤーに通常カメラを適用
+	/// ──────────────── プレイヤーへ通常カメラを適用 ───────────────
+	player_->SetCamera(TKM::CameraManager::GetInstance()->GetMainCamera());
 }
 
 void GameScene::ImGuiDebug() {
 #ifdef USE_IMGUI
-	/////////////////////////////////////////////////////
-	player_->ImGuiDebug(); // プレイヤーのデバッグ表示
-	/////////////////////////////////////////////////////
-	if (bossManager_->GetBoss()) { // ボスマネージャ＆ボスが存在するなら
-		bossManager_->GetBoss()->ImGuiDebug(); // ボスのデバッグ表示
+	/// ──────────────── プレイヤーデバッグ ───────────────
+	player_->ImGuiDebug();
+
+	/// ──────────────── ボスデバッグ ───────────────
+	if (bossManager_->GetBoss()) {
+		bossManager_->GetBoss()->ImGuiDebug();
 	}
-	/////////////////////////////////////////////////////
-	enemyManager_->ImGuiDebug(); // 敵マネージャのデバッグ表示
-	/////////////////////////////////////////////////////
+
+	/// ──────────────── 敵マネージャデバッグ ───────────────
+	enemyManager_->ImGuiDebug();
+
+	/// ──────────────── デバッグカメラ切り替え ───────────────
 	bool useDbg = TKM::CameraManager::GetInstance()->IsUsingDebugCamera();
 	if (ImGui::Checkbox("オン/オフ", &useDbg)) {
 		TKM::CameraManager::GetInstance()->SetUseDebugCamera(useDbg);
 	}
-	/////////////////////////////////////////////////////
-	//skybox_->ImGuiUpdate(); // スカイボックスのデバッグ表示
-	/////////////////////////////////////////////////////
-	postFx_->ImGuiDebug(); // ポストエフェクトのデバッグ表示
-	///////////////////////////////////////////////////////
-	//ImGuiDebugGamepad(); // ゲームパッド入力デバッグ
-	ImGuiDebugInfo(); // パフォーマンス情報デバッグ
-	/////////////////////////////////////////////////////
+
+	/// ──────────────── ポストエフェクトデバッグ ───────────────
+	postFx_->ImGuiDebug();
+
+	/// ──────────────── パフォーマンス情報デバッグ ───────────────
+	ImGuiDebugInfo();
 #endif
 }
 
 void GameScene::UpdateAirStreak(float rawDeltaTime) {
-	// プレイヤーの速度を取得
+	/// ──────────────── 発生タイマー更新 ───────────────
 	airStreakTimer_ += rawDeltaTime;
-	// どれくらいの密度で出すか（小さいほど密度↑）
-	const float emitInterval = 0.035f; // 0.02秒ごと ≒ 1秒あたり50個
-	// アクティブなカメラを取得
+
+	const float emitInterval = 0.035f;
+
+	/// ──────────────── アクティブカメラ取得 ───────────────
 	auto* cam = TKM::CameraManager::GetInstance()->GetActiveCamera();
-	if (!cam) { return; } // 万が一カメラが存在しない場合は出さない（通常はありえないはず）
+	if (!cam) { return; }
 
-	while (airStreakTimer_ >= emitInterval) { // 一定時間経過したら出す
-		airStreakTimer_ -= emitInterval; // タイマーリセット
+	/// ──────────────── 一定間隔で空気の流れを発生 ───────────────
+	while (airStreakTimer_ >= emitInterval) {
+		airStreakTimer_ -= emitInterval;
 
-		// カメラ基準ベクトル
+		/// ──────────────── カメラ基準ベクトル取得 ───────────────
 		const Matrix4x4 camW = cam->GetWorldMatrix();
 		Vector3 camPos = { camW.m[3][0], camW.m[3][1], camW.m[3][2] };
 		Vector3 camFwd = MyMath::Normalize(Vector3{ camW.m[2][0], camW.m[2][1], camW.m[2][2] });
 		Vector3 camRight = MyMath::Normalize(Vector3{ camW.m[0][0], camW.m[0][1], camW.m[0][2] });
 		Vector3 camUp = MyMath::Normalize(Vector3{ camW.m[1][0], camW.m[1][1], camW.m[1][2] });
-		// 乱数生成ラムダ
+
+		/// ──────────────── 乱数生成 ───────────────
 		auto rand01 = []() { return MyMath::Rand01(); };
-		// ─────────────────────────────
-		// カメラ前方の「巨大な箱」の中に出す
-		// ─────────────────────────────
-		const float boxHalfWidth = 40.0f;  // X方向（左右）±40
-		const float boxHalfHeight = 25.0f;  // Y方向（上下）±25
-		const float depthNear = 10.0f;  // カメラから10手前
-		const float depthFar = 120.0f; // カメラから120まで
 
-		// 画面中心はちょっと避けたいので、中心半径を決める
-		const float centerHoleRadius = 3.0f; // この半径内は出にくくする
+		/// ──────────────── 発生範囲設定 ───────────────
+		const float boxHalfWidth = 40.0f;
+		const float boxHalfHeight = 25.0f;
+		const float depthNear = 10.0f;
+		const float depthFar = 120.0f;
+		const float centerHoleRadius = 3.0f;
 
-		// 平面オフセット（x,y）を決める
 		float offsetX = 0.0f;
 		float offsetY = 0.0f;
 
-		for (int tries = 0; tries < 4; ++tries) { // 最大4回までリトライ
-			// -1～+1 の乱数を生成
+		/// ──────────────── 画面中心を避けた発生位置の平面オフセット計算 ───────────────
+		for (int tries = 0; tries < 4; ++tries) {
 			float u = rand01() * 2.0f - 1.0f;
 			float v = rand01() * 2.0f - 1.0f;
-			// スケールして箱内の座標に変換
+
 			float x = u * boxHalfWidth;
 			float y = v * boxHalfHeight;
-			// 中心付近を少しだけ避ける
+
 			if (x * x + y * y < centerHoleRadius * centerHoleRadius) {
-				// たまになら良いので、25%くらいの確率で許可
 				if (rand01() > 0.25f) {
-					continue; // 取り直し
+					continue;
 				}
 			}
-			// 成功したらループ脱出
+
 			offsetX = x;
 			offsetY = y;
 			break;
 		}
 
-		// 奥行き（カメラからの距離）
+		/// ──────────────── 奥行き計算 ───────────────
 		float tDepth = rand01();
 		float depth = MyMath::Lerp(depthNear, depthFar, tDepth);
 
-		// ワールド座標に変換
+		/// ──────────────── ワールド座標へ変換して発生 ───────────────
 		Vector3 emitPos =
 			camPos
 			+ camFwd * depth
 			+ camRight * offsetX
 			+ camUp * offsetY;
-		ParticleManager::GetInstance()->Emit("airStreak", emitPos, 1); // airStreakパーティクルを1個出す
+
+		ParticleManager::GetInstance()->Emit("airStreak", emitPos, 1);
 	}
 }
 
 void GameScene::BeginFrameUpdate(float& outRawDeltaTime, float& outScaledDeltaTime) {
-	// 入力処理
+	/// ──────────────── 入力更新 ───────────────
 	Input::GetInstance()->Update();
-	// 毎フレームの最初に、前フレームのラインをクリア
-	LineRenderer::GetInstance()->BeginFrame();
-	// フレームタイム計測
-	outRawDeltaTime = kFixedDeltaTime_; /// デフォルトデルタタイム（補間なし）
-	timeScale_.Update(outRawDeltaTime); // タイムスケールコントローラーの更新
-	outScaledDeltaTime = outRawDeltaTime * timeScale_.GetScale(); /// スローデルタタイム
 
-	// メモリの初期化
+	/// ──────────────── デバッグライン初期化 ───────────────
+	LineRenderer::GetInstance()->BeginFrame();
+
+	/// ──────────────── フレームタイム計測 ───────────────
+	outRawDeltaTime = kFixedDeltaTime_;
+
+	/// ──────────────── タイムスケール更新 ───────────────
+	timeScale_.Update(outRawDeltaTime);
+	outScaledDeltaTime = outRawDeltaTime * timeScale_.GetScale();
+
+	/// ──────────────── メモリ情報更新 ───────────────
 	UpdateMemory();
 }
 
 void GameScene::UpdateFlow() {
-	flow_->Update(kFixedDeltaTime_, TKM::CameraManager::GetInstance()->GetActiveCamera(), enemiesInitialized_, requestInitEnemies_); // ゲームフローの更新（イントロシーケンスの進行管理など）
+	/// ──────────────── ゲームフロー更新 ───────────────
+	flow_->Update(kFixedDeltaTime_, TKM::CameraManager::GetInstance()->GetActiveCamera(), enemiesInitialized_, requestInitEnemies_);
 }
 
 void GameScene::UpdateEnemyAndWaveLogic(float scaledDeltaTime) {
+	/// ──────────────── ロック状態判定 ───────────────
 	const bool isClear = (flow_->IsInClear());
 	const bool bossEntranceActive = (bossEntranceSeq_ && bossEntranceSeq_->IsActive());
 	const bool locked = (flow_->IsGameplayLocked()) || isClear || bossEntranceActive || clearSequenceTriggered_;
 
-	// クリア中・クリア開始済み・演出ロック中は何もしない
 	if (locked || !enemiesInitialized_) {
 		return;
 	}
 
-	// 敵Wave更新
+	/// ──────────────── 敵Wave更新 ───────────────
 	enemyManager_->Update(scaledDeltaTime);
 
-	// ----------------------------------------
-	// ボス撃破 → クリア演出開始
-	// これを最優先にする
-	// ----------------------------------------
+	/// ──────────────── ボス撃破時のクリア演出開始 ───────────────
 	if (bossManager_ && bossManager_->IsBossDead()) {
 		clearSequenceTriggered_ = true;
 		flow_->RequestStartClear();
 		return;
 	}
 
-	// ----------------------------------------
-	// 全Waveクリア → ボス登場開始
-	// ただし、クリア開始済みなら絶対に入らない
-	// ----------------------------------------
+	/// ──────────────── 小型敵フェーズ終了後のボス登場開始 ───────────────
 	if (!clearSequenceTriggered_ && enemyManager_->IsSmallEnemyPhaseFinished()) {
 		if (bossManager_ && bossManager_->GetBoss() == nullptr) {
 			if (bossEntranceSeq_) {
 				if (!bossEntranceSeq_->IsActive()) {
-					player_->SetShootingEnabled(false);   // 追加：既存弾ごと即消し
+					player_->SetShootingEnabled(false);
 					bossEntranceSeq_->Start(bossManager_->GetSpawnPos());
 				}
 			} else {
-				player_->SetShootingEnabled(false);       // 追加：直接ボス戦開始でも即消し
+				player_->SetShootingEnabled(false);
 				bossManager_->StartBattle();
 			}
 		}
 	}
 
-	// ロックオン対象更新
+	/// ──────────────── ロックオン対象更新 ───────────────
 	if (bossManager_->IsBossAlive()) {
 		player_->SetEnemy(bossManager_->GetBoss());
 	} else {
@@ -400,100 +428,110 @@ void GameScene::UpdateEnemyAndWaveLogic(float scaledDeltaTime) {
 }
 
 void GameScene::UpdateGameplaySystems(float rawDeltaTime, float scaledDeltaTime) {
+	/// ──────────────── クリア中はゲームプレイ更新しない ───────────────
 	if (flow_ && flow_->IsInClear()) {
 		return;
 	}
 
-	const bool isClear = (flow_->IsInClear()); // クリア演出中かどうか
+	/// ──────────────── ゲームプレイロック状態判定 ───────────────
+	const bool isClear = (flow_->IsInClear());
 	const bool bossEntranceActive = (bossEntranceSeq_ && bossEntranceSeq_->IsActive());
 	const bool bossEntranceSpawned = (bossEntranceSeq_ && bossEntranceSeq_->HasSpawnedBoss());
-	const bool locked = (flow_->IsGameplayLocked()) || isClear || bossEntranceActive || clearSequenceTriggered_; // ゲームプレイがロックされているかどうか
+	const bool locked = (flow_->IsGameplayLocked()) || isClear || bossEntranceActive || clearSequenceTriggered_;
 
 	player_->SetControlEnabled(!locked && !player_->IsDead());
 	player_->SetShootingEnabled(!locked && !player_->IsDead());
 
+	/// ──────────────── ボス登場演出更新 ───────────────
 	if (bossEntranceSeq_ && bossEntranceSeq_->IsActive()) {
 		bossEntranceSeq_->Update(rawDeltaTime, bossManager_.get());
 	}
 
-	// スカイボックスの回転更新
+	/// ──────────────── スカイボックス更新 ───────────────
 	skybox_->UpdateRotation();
 
-	// プレイヤーの更新
+	/// ──────────────── プレイヤー更新 ───────────────
 	player_->Update(scaledDeltaTime);
 
-	// ゲーム開始前かどうか（ゲーム開始前は通常HUDを表示せず、開幕ボス演出のSkipUIだけ表示する）
+	/// ──────────────── ゲーム開始状態判定 ───────────────
 	const bool isBeforeGameStart =
 		(flow_ && flow_->IsGameplayLocked());
-	// 「GAME START」が表示されているかどうか
+
 	const bool isStartVisible =
 		(flow_ && flow_->GetIntro() && flow_->GetIntro()->IsStartVisible());
-	// 「GAME START」が表示された瞬間にBGM
+
+	/// ──────────────── ゲーム開始BGM再生 ───────────────
 	if (isStartVisible && !gameStartedBGMPlayed_) {
 		TKM::AudioManager::GetInstance()->PlaySound("playBGM", 0.1f, true);
 		gameStartedBGMPlayed_ = true;
 	}
-	// 開幕ボス演出中かどうか
+
+	/// ──────────────── 開幕ボス演出中のUI制御 ───────────────
 	const bool isOpeningBossIntro =
 		(flow_ && flow_->GetIntro() && flow_->GetIntro()->CanSkipBossIntro());
-	// 開幕ボス演出中だけ SkipUI を表示
+
 	ui_->SetIntroSkipUiActive(isOpeningBossIntro);
-	// ゲームスタート後だけ通常HUDを表示
 	ui_->SetGameplayHudVisible(!isBeforeGameStart);
-	// UIの更新
+
+	/// ──────────────── UI更新 ───────────────
 	ui_->Update(scaledDeltaTime, player_.get());
 
-	// ボスマネージャの更新
-	// 演出中でも、ボス生成後は本体のEnter移動を見せるため更新を回す
+	/// ──────────────── ボスマネージャ更新 ───────────────
 	if (!bossEntranceActive || bossEntranceSpawned) {
 		bossManager_->Update(scaledDeltaTime);
 	}
-	// ポストエフェクトの更新
+
+	/// ──────────────── ポストエフェクト更新 ───────────────
 	postFx_->Update(scaledDeltaTime, bossManager_.get());
 
-	// ライトの更新
+	/// ──────────────── ライト更新 ───────────────
 	directionalLight_->Update();
 
+	/// ──────────────── 空気の流れエフェクト更新 ───────────────
 	if (!isClear && !locked) {
 		UpdateAirStreak(rawDeltaTime);
 	}
 
-	// その他のオブジェクト・パーティクルの更新
+	/// ──────────────── パーティクル更新 ───────────────
 	ParticleManager::GetInstance()->Update(scaledDeltaTime);
 }
 
 void GameScene::UpdateTransitionsAndSceneChange(float rawDeltaTime) {
-	// 遷移は enemyManager_ の有無に依存させない
+	/// ──────────────── 遷移要求取得 ───────────────
 	const auto req = flow_->UpdateTransitions(rawDeltaTime, player_.get());
 
-	if (req == TKM::GameFlowController::TransitionRequest::ToTitle) { // タイトル戻りリクエスト
-		sceneManager_->SetNextScene(std::make_unique<TitleScene>(dxCommon_, srvManager_)); // タイトルシーンをセット
+	/// ──────────────── タイトルへ遷移 ───────────────
+	if (req == TKM::GameFlowController::TransitionRequest::ToTitle) {
+		sceneManager_->SetNextScene(std::make_unique<TitleScene>(dxCommon_, srvManager_));
 		return;
 	}
 
-	if (req == TKM::GameFlowController::TransitionRequest::ToGameOver) { // ゲームオーバーリクエスト
-		sceneManager_->SetNextScene(std::make_unique<GameOverScene>(dxCommon_, srvManager_)); // ゲームオーバーシーンをセット
+	/// ──────────────── ゲームオーバーへ遷移 ───────────────
+	if (req == TKM::GameFlowController::TransitionRequest::ToGameOver) {
+		sceneManager_->SetNextScene(std::make_unique<GameOverScene>(dxCommon_, srvManager_));
 		return;
 	}
 
-	if (req == TKM::GameFlowController::TransitionRequest::ToGameClear) { // ゲームクリアリクエスト
-		sceneManager_->SetNextScene(std::make_unique<GameClearScene>(dxCommon_, srvManager_)); // ゲームクリアシーンをセット
+	/// ──────────────── ゲームクリアへ遷移 ───────────────
+	if (req == TKM::GameFlowController::TransitionRequest::ToGameClear) {
+		sceneManager_->SetNextScene(std::make_unique<GameClearScene>(dxCommon_, srvManager_));
 		return;
 	}
 
-	if (req == TKM::GameFlowController::TransitionRequest::ToRestart) { // リスタートリクエスト
-		sceneManager_->SetNextScene(std::make_unique<GameScene>(dxCommon_, srvManager_)); // 新しいゲームシーンをセット（これでリスタート扱い）
+	/// ──────────────── リスタート遷移 ───────────────
+	if (req == TKM::GameFlowController::TransitionRequest::ToRestart) {
+		sceneManager_->SetNextScene(std::make_unique<GameScene>(dxCommon_, srvManager_));
 		return;
 	}
 }
 
 void GameScene::HandleDebugKeysAndRequests() {
-	// ─── キーボードのYキーでプレイヤーのHPを0にする（デバッグ用）───
+	/// ──────────────── デバッグキー処理 ───────────────
 	if (Input::GetInstance()->TriggerKey(DIK_Y)) {
 		player_->SetHP(0);
 	}
 
-	// ── 敵初期化要求が来ていたら実行 ──
+	/// ──────────────── 敵初期化要求処理 ───────────────
 	if (requestInitEnemies_) {
 		enemyManager_->StartSmallEnemyPhase();
 		enemiesInitialized_ = true;
@@ -502,82 +540,86 @@ void GameScene::HandleDebugKeysAndRequests() {
 }
 
 void GameScene::EndFrameUpdate() {
-	// パフォーマンス情報・デバッグUI
+	/// ──────────────── パフォーマンス情報更新 ───────────────
 	UpdatePerformanceInfo();
 }
 
 bool GameScene::TryUpdatePauseAndMaybeEarlyReturn_(float rawDeltaTime, bool allowPauseOpen) {
+	/// ──────────────── ポーズ未生成チェック ───────────────
 	if (!pause_) { return false; }
 
-	// ポーズメニュー更新
+	/// ──────────────── ポーズメニュー更新 ───────────────
 	const auto cmd = pause_->Update(rawDeltaTime, allowPauseOpen);
 
 	const bool isPausedNow = pause_->IsPaused();
 
-	// playBGM のポーズ/再開
+	/// ──────────────── BGMポーズ・再開制御 ───────────────
 	if (isPausedNow && !wasPausedLastFrame_) {
-		// ポーズされた瞬間にBGMを一時停止
 		TKM::AudioManager::GetInstance()->PauseSound("playBGM");
 		TKM::AudioManager::GetInstance()->PauseSound("bossPhaseBGM");
 	} else if (!isPausedNow && wasPausedLastFrame_) {
-		// ポーズが解除された瞬間にBGMを再開
 		TKM::AudioManager::GetInstance()->ResumeSound("playBGM");
 		TKM::AudioManager::GetInstance()->ResumeSound("bossPhaseBGM");
 	}
+
 	wasPausedLastFrame_ = isPausedNow;
 
-	// HUD透明度調整
+	/// ──────────────── HUD透明度調整 ───────────────
 	const float hudAlpha = isPausedNow ? 0.25f : 1.0f;
 	ui_->SetHudAlpha(hudAlpha);
 
-	// ポーズメニューのコマンド処理
+	/// ──────────────── ポーズメニューコマンド処理 ───────────────
 	if (cmd == TKM::PauseMenuController::Command::ReturnToTitle) {
 		flow_->RequestToTitleByIris();
 	} else if (cmd == TKM::PauseMenuController::Command::Restart) {
 		flow_->RequestRestartByIris();
 	}
 
-	// ポーズ中はゲーム本体を止める。ただし「遷移（タイトル戻り等）」は回す
+	/// ──────────────── ポーズ中でなければ通常更新へ戻る ───────────────
 	if (!isPausedNow) { return false; }
 
+	/// ──────────────── ポーズ中専用更新 ───────────────
 	UpdatePausedOnly_(rawDeltaTime);
 	return true;
 }
 
 void GameScene::UpdatePausedOnly_(float rawDeltaTime) {
-	// デバッグ表示更新
+	/// ──────────────── デバッグ表示更新 ───────────────
 	ImGuiDebug();
-	// アクティブカメラの更新（ポーズ中も視点操作は許可）
+
+	/// ──────────────── アクティブカメラ更新 ───────────────
 	UpdateActiveCamera();
-	// ポーズ中はゲーム更新をスキップするが、遷移は回す
+
+	/// ──────────────── 遷移更新 ───────────────
 	UpdateTransitionsAndSceneChange(rawDeltaTime);
-	// デバッグキー＆リクエスト処理
+
+	/// ──────────────── デバッグキー・要求処理 ───────────────
 	HandleDebugKeysAndRequests();
 }
 
 void GameScene::UpdateNormalGameplay_(float rawDeltaTime, float scaledDeltaTime) {
-	// アクティブカメラの更新
+	/// ──────────────── アクティブカメラ更新 ───────────────
 	UpdateActiveCamera();
 
-	// 敵やウェーブのロジック更新（タイムスケール適用）
+	/// ──────────────── 敵・Waveロジック更新 ───────────────
 	UpdateEnemyAndWaveLogic(scaledDeltaTime);
 
-	// クリア要求が入ったら、そのフレームでも通常ゲーム更新を打ち切る
+	/// ──────────────── クリア要求後の早期終了 ───────────────
 	if (flow_ && flow_->IsInClear()) {
 		UpdateTransitionsAndSceneChange(rawDeltaTime);
 		HandleDebugKeysAndRequests();
 		return;
 	}
 
-	// デバッグ表示更新
+	/// ──────────────── デバッグ表示更新 ───────────────
 	ImGuiDebug();
 
-	// ゲームプレイシステムの更新
+	/// ──────────────── ゲームプレイシステム更新 ───────────────
 	UpdateGameplaySystems(rawDeltaTime, scaledDeltaTime);
 
-	// シーン遷移＆タイトル戻り等の更新（rawDeltaTime）
+	/// ──────────────── シーン遷移更新 ───────────────
 	UpdateTransitionsAndSceneChange(rawDeltaTime);
 
-	// デバッグキー＆リクエスト処理
+	/// ──────────────── デバッグキー・要求処理 ───────────────
 	HandleDebugKeysAndRequests();
 }

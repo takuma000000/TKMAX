@@ -30,7 +30,8 @@ static void VisibleHalfExtentsAtZ_(
 	float fovYRad, float aspect
 ) {
 	float d = z - camZ;
-	if (d < 0.01f) { d = 0.01f; } // カメラより後ろ/近すぎ防止
+	if (d < 0.01f) { d = 0.01f; }
+
 	outHalfH = std::tan(fovYRad * 0.5f) * d;
 	outHalfW = outHalfH * aspect;
 }
@@ -38,79 +39,79 @@ static void VisibleHalfExtentsAtZ_(
 static float LookAtPitch_(const Vector3& from, const Vector3& to) {
 	Vector3 d = { to.x - from.x, to.y - from.y, to.z - from.z };
 	const float horiz = std::sqrt(d.x * d.x + d.z * d.z);
-	return -std::atan2f(d.y, (horiz < 0.0001f ? 0.0001f : horiz)); // ラジアン（上向きがマイナスになる系）
+
+	return -std::atan2f(d.y, (horiz < 0.0001f ? 0.0001f : horiz));
 }
 
 void TitleScene::Initialize() {
-	/// ------------- カメラ初期化 -------------
-	const Vector3 mainRot = { 0.0f, 0.0f, 0.0f }; // カメラの初期回転（オイラー角）
-	const Vector3 mainPos = { 0.0f, camY_, camDist_ }; // カメラの初期平行移動
-	const Vector3 debugTarget = { 0.0f, 0.0f, 0.0f }; // デバッグカメラの注視点
-	// カメラマネージャー初期化
-	TKM::CameraManager::GetInstance()->Initialize(mainRot, mainPos, debugTarget);
-	// 初期はメインカメラ
-	camera_ = TKM::CameraManager::GetInstance()->GetMainCamera();
-	/// ------------ テクスチャ読み込み -----------
-	TextureCatalog::LoadTextureCatalogs(); // タイトルシーンで使うテクスチャをまとめてロード
-	///------------ モデル読み込み ---------------
-	ModelCatalog::LoadModelCatalogs(dxCommon_); // タイトルシーンで使うモデルをまとめてロード
-	///---------------パーティクル----------------
-	TKM::ParticleManager::GetInstance()->Initialize(dxCommon_, srvManager_, TKM::CameraManager::GetInstance()->GetMainCamera());
-	TKM::ParticleManager::GetInstance()->ClearAllGroups(); // 念のため全グループの粒子を消しておく
-	TKM::ParticleGroupsCatalog::RegisterScene(TKM::ParticleManager::GetInstance()); // タイトルシーン用のパーティクルグループを登録
-	///-----------------------------------------
-	// シーケンス開始（StateMachine）
-	flowSM_.Initialize(this); // StateMachine にコンテキストをセットして初期化
-	flowSM_.Change(std::make_unique<TitleFlowIntroIrisOpenState>()); // 最初の状態は「開幕アイリスオープン」
+	/// ──────────────── カメラ初期化 ───────────────
+	const Vector3 mainRot = { 0.0f, 0.0f, 0.0f };
+	const Vector3 mainPos = { 0.0f, camY_, camDist_ };
+	const Vector3 debugTarget = { 0.0f, 0.0f, 0.0f };
 
-	// タイトルスプライト初期化
+	TKM::CameraManager::GetInstance()->Initialize(mainRot, mainPos, debugTarget);
+
+	camera_ = TKM::CameraManager::GetInstance()->GetMainCamera();
+
+	/// ──────────────── テクスチャ読み込み ───────────────
+	TextureCatalog::LoadTextureCatalogs();
+
+	/// ──────────────── モデル読み込み ───────────────
+	ModelCatalog::LoadModelCatalogs(dxCommon_);
+
+	/// ──────────────── パーティクル初期化 ───────────────
+	TKM::ParticleManager::GetInstance()->Initialize(dxCommon_, srvManager_, TKM::CameraManager::GetInstance()->GetMainCamera());
+	TKM::ParticleManager::GetInstance()->ClearAllGroups();
+	TKM::ParticleGroupsCatalog::RegisterScene(TKM::ParticleManager::GetInstance());
+
+	/// ──────────────── タイトル演出フロー初期化 ───────────────
+	flowSM_.Initialize(this);
+	flowSM_.Change(std::make_unique<TitleFlowIntroIrisOpenState>());
+
+	/// ──────────────── タイトルスプライト初期化 ───────────────
 	sprite_ = std::make_unique<Sprite>();
 	sprite_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, "./resources/texture/title_kuraran.dds");
-	// 画面中央に表示
 	sprite_->SetPosition({ -10.0f,-290.0f });
 	sprite_->SetSize({ 1.0f, 1.0f });
 
+	/// ──────────────── ライト初期化 ───────────────
 	dirLight_ = std::make_unique<TKM::DirectionalLight>();
 	dirLight_->Initialize({ 1,1,1,1 }, { 0.0f, -1.0f, 0.0f }, 1.0f);
 
+	/// ──────────────── スカイボックス初期化 ───────────────
 	skybox_ = std::make_unique<TKM::Skybox>();
 	skybox_->Initialize(dxCommon_, srvManager_, "resources/texture/kloofendal_48d_partly_cloudy_puresky_1k.dds");
 	skybox_->SetCamera(TKM::CameraManager::GetInstance()->GetMainCamera());
 
-	// === Iris sprite (白円) 共通ユーティリティ版 ===
-	// 画面中央配置＋画面を覆う最大スケール irisMax_ をまとめて計算
+	/// ──────────────── アイリス初期化 ───────────────
 	iris_ = CreateCenteredIrisSprite(dxCommon_, irisMax_, "./resources/texture/circle2.png");
-	// 色だけここで上書き（白・不透明）
 	iris_->SetColor({ 1,1,1,1 });
-	// 開幕は「覆っている状態」からスタートして、縮んで消える
-	irisStartScale_ = irisMax_;     // 最初：画面を覆う
-	irisEndScale_ = 0.0f;         // 最後：消える（小さく）
+
+	irisStartScale_ = irisMax_;
+	irisEndScale_ = 0.0f;
 	irisScale_ = irisStartScale_;
 	iris_->SetSize({ irisScale_, irisScale_ });
 
-	// Tween：大きい → 小さい（開く）
 	irisTween_.Reset(
 		irisStartScale_,
 		irisEndScale_,
 		kIrisDurationSec_,
-		Ease::Type::OutBack // イージングはお好みで。OutBack は最後にちょっとだけ大きくなってから縮む感じ（バネっぽい）
+		Ease::Type::OutBack
 	);
-	// 開幕は「開いている状態」からスタート
+
 	irisOpening_ = true;
 	irisClosing_ = false;
 
-	// ---------------水面波紋エフェクト----------------
+	/// ──────────────── 水面波紋エフェクト初期化 ───────────────
 	rippleEffect_ = std::make_unique<TKM::WaterRippleEffect>();
 	rippleEffect_->Initialize(dxCommon_);
-	// DirectXCommon 側に「現在の ripple はこれだよ」と教える
 	dxCommon_->SetWaterRippleEffect(rippleEffect_.get());
 
-	// ---------------BGMロード・再生----------------
+	/// ──────────────── BGM読み込み・再生 ───────────────
 	AudioCatalog::LoadTitleAudios();
-	// タイトルBGM再生
-	TKM::AudioManager::GetInstance()->PlaySound("title", 0.1f, true); // 音量少し下げめでループ
+	TKM::AudioManager::GetInstance()->PlaySound("title", 0.1f, true);
 
-	// タイトルメニューコントローラ初期化
+	/// ──────────────── タイトルメニュー初期化 ───────────────
 	titleMenu_ = std::make_unique<TitleMenuController>();
 	titleMenu_->Initialize(
 		TKM::SpriteCommon::GetInstance(),
@@ -120,51 +121,53 @@ void TitleScene::Initialize() {
 		720.0f
 	);
 
-	// 敵の初期化
+	/// ──────────────── タイトル敵初期化 ───────────────
 	CreateTitleEnemies_();
 
-	// メニュー中の見つめ合い演出
+	/// ──────────────── 見つめ合い演出初期化 ───────────────
 	titleShowdown_ = std::make_unique<TitleShowdownController>();
 	titleShowdown_->Initialize(this, dxCommon_, srvManager_, camera_);
 	titleShowdown_->SetBeamActive(true);
 
-	// 最初は敵だけ見せたいのでUIは消す
+	/// ──────────────── 初期表示状態設定 ───────────────
 	showUi_ = false;
 	titleMenu_->SetVisible(false);
-	// 分岐フラグ初期化
+
+	/// ──────────────── 分岐フラグ初期化 ───────────────
 	showMenuAfterVanish_ = false;
-	// タイマー初期化
+
+	/// ──────────────── タイマー初期化 ───────────────
 	seqTimer_ = 0.0f;
 	vanishTimer_ = 0.0f;
 	rippleTimer_ = 0.0f;
 }
 
 void TitleScene::Finalize() {
-	TKM::AudioManager::GetInstance()->Finalize(); // オーディオマネージャー終了
-	TKM::ParticleManager::GetInstance()->ClearAllGroups(); // パーティクル全グループの粒子を消す
+	/// ──────────────── 各種終了処理 ───────────────
+	TKM::AudioManager::GetInstance()->Finalize();
+	TKM::ParticleManager::GetInstance()->ClearAllGroups();
 }
 
 void TitleScene::Update() {
+	/// ──────────────── パフォーマンス情報更新 ───────────────
 	UpdatePerformanceInfo();
 
+	/// ──────────────── 入力更新 ───────────────
 	TKM::Input::GetInstance()->Update();
 
-	dirLight_->Update(); // 平行光源更新
-	TKM::CameraManager::GetInstance()->Update(); // メインカメラ更新（管理側に任せる）
-	sprite_->Update(); // タイトル画像更新
-	rippleEffect_->Update(dt_); // 波紋エフェクト更新
+	/// ──────────────── 基本システム更新 ───────────────
+	dirLight_->Update();
+	TKM::CameraManager::GetInstance()->Update();
+	sprite_->Update();
+	rippleEffect_->Update(dt_);
 
-	// ------------------------------------------------
-	// Flow（タイトル演出） - StateMachine
-	// ------------------------------------------------
-	earlyExitUpdate_ = false; // 更新の早期終了フラグ（これがtrueのときは、以降の更新処理をスキップする）
+	/// ──────────────── タイトル演出フロー更新 ───────────────
+	earlyExitUpdate_ = false;
 	flowSM_.Update(dt_);
-	if (earlyExitUpdate_) { return; }
-	// ------------------------------------------------
 
-	// =====================================================
-	// デバッグ：Tキーでクリア画面へ
-	// =====================================================
+	if (earlyExitUpdate_) { return; }
+
+	/// ──────────────── デバッグ遷移 ───────────────
 	if (TKM::Input::GetInstance()->TriggerKey(DIK_T)) {
 		sceneManager_->SetNextScene(
 			std::make_unique<GameClearScene>(dxCommon_, srvManager_)
@@ -172,27 +175,26 @@ void TitleScene::Update() {
 		return;
 	}
 
-	// スカイボックス回転更新
+	/// ──────────────── スカイボックス回転更新 ───────────────
 	constexpr float kTwoPi = 6.2831853f;
 	skyPitch_ -= skyRotSpeedX_;
+
 	if (skyPitch_ > kTwoPi)  skyPitch_ -= kTwoPi;
 	if (skyPitch_ < 0.0f)    skyPitch_ += kTwoPi;
+
 	skybox_->SetRotation({ skyPitch_, 0.0f, 0.0f });
 
+	/// ──────────────── パーティクル更新 ───────────────
 	TKM::ParticleManager::GetInstance()->Update(dt_);
 
 #ifdef USE_IMGUI
-
+	/// ──────────────── ImGuiデバッグ表示 ───────────────
 	ImGui::Begin("タイトルシーン デバッグ");
 
-	// =========================================================
-	// ① パフォーマンス情報
-	// =========================================================
+	/// ──────────────── パフォーマンス情報 ───────────────
 	ImGuiDebugInfo();
 
-	// =========================================================
-	// ② タイトル敵情報（折りたたみ）
-	// =========================================================
+	/// ──────────────── タイトル敵情報 ───────────────
 	if (ImGui::CollapsingHeader("タイトル敵情報", ImGuiTreeNodeFlags_DefaultOpen)) {
 
 		int aliveCount = 0;
@@ -211,9 +213,7 @@ void TitleScene::Update() {
 		ImGui::Separator();
 	}
 
-	// =========================================================
-	// ③ Flow / タイマー（折りたたみ）
-	// =========================================================
+	/// ──────────────── Flow・タイマー情報 ───────────────
 	if (ImGui::CollapsingHeader("状態 / タイマー", ImGuiTreeNodeFlags_DefaultOpen)) {
 
 		const char* flowName = "（なし）";
@@ -229,73 +229,83 @@ void TitleScene::Update() {
 	}
 
 	ImGui::End();
-
 #endif
 }
 
 void TitleScene::Draw() {
-	DrawBack(); // 2D（背景）
-	Draw3D(); // 3Dオブジェクト
-	DrawSprite(); // UI（手前固定）
+	DrawBack();
+	Draw3D();
+	DrawSprite();
 }
 
 void TitleScene::Draw3D() {
-	// 3D
+	/// ──────────────── 3D描画共通設定 ───────────────
 	TKM::Object3dCommon::GetInstance()->DrawSetCommon();
+
+	/// ──────────────── タイトル敵描画 ───────────────
 	for (auto& u : titleEnemies_) {
 		if (!u.alive_ || !u.enemy_) { continue; }
 		u.enemy_->Draw(dxCommon_);
 	}
 
-	// メニュー中だけ：見つめ合い（Player/Boss）
+	/// ──────────────── 見つめ合い演出描画 ───────────────
 	if (showUi_ && titleMenu_->IsVisible()) {
 		titleShowdown_->Draw(dxCommon_);
 	}
 
-	// Particle
+	/// ──────────────── パーティクル描画 ───────────────
 	TKM::ParticleManager::GetInstance()->Draw();
 }
 
 void TitleScene::DrawSprite() {
-	// UI（手前固定：Swapchain側）
+	/// ──────────────── 2D描画共通設定 ───────────────
 	TKM::SpriteCommon::GetInstance()->DrawSetCommon();
+
+	/// ──────────────── メニュー描画 ───────────────
 	if (showUi_) {
 		titleMenu_->Draw();
 	}
+
+	/// ──────────────── アイリス描画 ───────────────
 	if (irisOpening_ || irisClosing_) {
 		iris_->Draw();
 	}
 }
 
 void TitleScene::DrawBack() {
-	skybox_->Draw(); // スカイボックス（背景3D）
+	/// ──────────────── スカイボックス描画 ───────────────
+	skybox_->Draw();
 
-	// 2D（背景：3Dより先に描かれる＝奥になる）
+	/// ──────────────── 背景スプライト描画共通設定 ───────────────
 	TKM::SpriteCommon::GetInstance()->DrawSetCommon();
 
+	/// ──────────────── タイトル画像描画 ───────────────
 	if (showUi_) {
-		sprite_->Draw(); // タイトル画像（背景）
+		sprite_->Draw();
 	}
 }
 
 void TitleScene::CreateTitleEnemies_() {
+	/// ──────────────── タイトル敵配列初期化 ───────────────
 	titleEnemies_.clear();
 	titleEnemies_.reserve(kEnemyCount);
 
+	/// ──────────────── 画面・カメラ情報設定 ───────────────
 	const float screenW = 1280.0f;
 	const float screenH = 720.0f;
 	const float aspect = screenW / screenH;
 
-	const float fovY = DegToRad_(60.0f);      // タイトルは広め
-	const float camZ = camera_->GetTranslate().z; // カメラのZ位置
+	const float fovY = DegToRad_(60.0f);
+	const float camZ = camera_->GetTranslate().z;
 
-	// Zレンジ（君の近・奥の2層）
+	/// ──────────────── 出現Z範囲設定 ───────────────
 	std::uniform_real_distribution<float> nearZ(6.0f, 14.0f);
 	std::uniform_real_distribution<float> farZ(14.0f, 28.0f);
 
 	const float kNearRatio = 0.65f;
 	const int nearCount = static_cast<int>(kEnemyCount * kNearRatio);
 
+	/// ──────────────── タイトル敵生成 ───────────────
 	for (int i = 0; i < kEnemyCount; ++i) {
 		const bool isNear = (i < nearCount);
 
@@ -304,7 +314,6 @@ void TitleScene::CreateTitleEnemies_() {
 		float halfW = 0.0f, halfH = 0.0f;
 		VisibleHalfExtentsAtZ_(halfW, halfH, z, camZ, fovY, aspect);
 
-		// 少し内側に寄せる（端ギリだと動いた瞬間はみ出るから）
 		const float margin = isNear ? 6.0f : 10.0f;
 		halfW = std::max(1.0f, halfW - margin);
 		halfH = std::max(1.0f, halfH - margin);
@@ -329,8 +338,6 @@ void TitleScene::CreateTitleEnemies_() {
 
 		u.enemy_->SetBehavior(EnemyBehavior::FreeRoam);
 
-		// ローム範囲も「このZの画面内」に合わせてセット（=画面外へ行きにくい）
-		// ただし “絶対に出ない” を保証するには Enemy の移動側でクランプが必要
 		Vector3 roamMin = { -halfW, -halfH, z };
 		Vector3 roamMax = { halfW,  halfH, z };
 		u.enemy_->SetRoamArea(roamMin, roamMax);
@@ -344,27 +351,33 @@ void TitleScene::CreateTitleEnemies_() {
 }
 
 void TitleScene::ScheduleVanish_() {
-	std::uniform_real_distribution<float> d(0.0f, kVanishDelayMaxSec_); // 0～kVanishDelayMaxSec_秒のランダムな遅延を生成する分布
-	// 各敵ユニットにランダムな消滅遅延をセット
+	/// ──────────────── 消滅タイミング設定 ───────────────
+	std::uniform_real_distribution<float> d(0.0f, kVanishDelayMaxSec_);
+
 	for (auto& u : titleEnemies_) {
-		u.vanishDelay_ = d(rng_); // 0～kVanishDelayMaxSec_秒のランダムな遅延
+		u.vanishDelay_ = d(rng_);
 	}
-	vanishTimer_ = 0.0f; // 消滅シーケンスのタイマーリセット
+
+	/// ──────────────── 消滅タイマー初期化 ───────────────
+	vanishTimer_ = 0.0f;
 }
 
 void TitleScene::EmitTitleExplode_(const Vector3& pos) {
+	/// ──────────────── タイトル敵消滅爆発 ───────────────
 	Vector3 p = pos;
 	auto* pm = TKM::ParticleManager::GetInstance();
 
-	pm->Emit("titleExplode_core", p, 28);   // 白飛びコア（爽快感の核）
-	pm->Emit("titleExplode_rays", p, 140);  // 放射光線（画像の“バァン”）
-	pm->Emit("titleExplode_debris", p, 90);   // 火の粉/破片
-	pm->Emit("titleExplode_ring", p, 2);    // 衝撃波
+	pm->Emit("titleExplode_core", p, 28);
+	pm->Emit("titleExplode_rays", p, 140);
+	pm->Emit("titleExplode_debris", p, 90);
+	pm->Emit("titleExplode_ring", p, 2);
 }
+
 bool TitleScene::AllEnemiesGone_() const {
-	// 全てのタイトル敵ユニットが消滅開始（alive_ == false）しているかチェック
+	/// ──────────────── タイトル敵全消滅判定 ───────────────
 	for (const auto& u : titleEnemies_) {
-		if (u.alive_) { return false; } // 1体でも生きている敵がいれば false を返す
+		if (u.alive_) { return false; }
 	}
+
 	return true;
 }
