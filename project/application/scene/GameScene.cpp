@@ -100,6 +100,7 @@ void GameScene::Update() {
 		const bool bossBattleRed =
 			(bossManager_ && bossManager_->IsBattleActive() && !bossManager_->IsBossDead());
 
+		// 優先順位：ボス登場 > ボス戦中 > イントロの順で赤くする
 		if (entranceActive) {
 			skybox_->SetColor(bossEntranceSeq_->GetSkyColor());
 		} else if (bossBattleRed) {

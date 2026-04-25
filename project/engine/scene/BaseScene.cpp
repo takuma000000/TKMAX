@@ -49,7 +49,7 @@ namespace TKM {
 			"TITLE",
 			"GAME",
 			"CLEAR",
-			"OVER"
+			"GAMEOVER"
 		};
 
 		ImGui::Combo(
