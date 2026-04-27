@@ -33,6 +33,11 @@ static Vector3 DirToEuler_(const Vector3& dir) {
 	return { pitch, yaw, 0.0f };
 }
 
+// ベクトルを法線で反射させる
+static Vector3 ReflectVector_(const Vector3& velocity, const Vector3& normal) {
+	return velocity - normal * (2.0f * MyMath::Dot(velocity, normal));
+}
+
 void PlayerBullet::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon) {
 	// 弾本体の3Dオブジェクトを生成する
 	object_ = std::make_unique<TKM::Object3d>();
@@ -236,8 +241,29 @@ void PlayerBullet::Update() {
 			// ヒット済みにする
 			isHit_ = true;
 
-			// 弾を死亡扱いにする
-			isDead_ = true;
+			// 弾が進んできた方向を取得する
+			Vector3 inDir = velocity_;
+			float speed = MyMath::Length(inDir);
+
+			if (speed > 0.0001f) {
+				inDir = inDir / speed;
+			} else {
+				inDir = { 0.0f, 0.0f, 1.0f };
+			}
+
+			// バリアの縁でも中心と同じように、来た方向へそのまま押し返す
+			Vector3 reflectDir = -inDir;
+
+			// 反射後の速度を設定する
+			velocity_ = reflectDir * speed * kBarrierReflectDamping_;
+
+			// めり込み防止：当たる前の位置へ戻して、少しだけ反射方向へ押し出す
+			Vector3 safePos = prevPos_ + reflectDir * kBarrierReflectPushOut_;
+			object_->SetTranslate(safePos);
+			prevPos_ = safePos;
+
+			// 反射後の進行方向へ弾の向きを合わせる
+			object_->SetRotate(DirToEuler_(velocity_));
 
 			// パーティクルマネージャーを取得する
 			TKM::ParticleManager* pm = TKM::ParticleManager::GetInstance();
