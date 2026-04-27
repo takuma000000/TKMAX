@@ -342,10 +342,9 @@ void EnemyManager::UpdateMainSquadBattle_(float dt) {
 //=============================================================
 void EnemyManager::UpdateScatterAttack_(float dt) {
 
-	/// ====================================
-	/// 一時的に通常攻撃を止める
-	return;
-	/// ====================================
+	///=============================
+	return; // 散弾攻撃は一旦封印
+	///=============================
 
 	scatterShotTimer_ += dt;
 	if (scatterShotTimer_ < scatterShotInterval_) {
@@ -803,6 +802,19 @@ void EnemyManager::BreakBarrier_() {
 // 特殊攻撃サイクル更新
 //=============================================================
 void EnemyManager::UpdateSpecialAttackCycle_(float dt) {
+	// 攻撃OFF中は特殊コア攻撃も進行させない
+	if (!enableEnemyAttack_) {
+		mainSquadPhaseTimer_ = 0.0f;
+
+		if (specialCoreBullet_) {
+			specialCoreBullet_->Kill();
+		}
+
+		specialCoreCharging_ = false;
+		specialCoreBullet_ = nullptr;
+		return;
+	}
+
 	mainSquadPhaseTimer_ += dt;
 
 	if (!specialCoreCharging_) {
@@ -1132,7 +1144,7 @@ void EnemyManager::ImGuiDebug() {
 	ImGui::Begin("敵ステータス");
 
 	//=========================================================
-	// Wave状態表示
+	// フェーズ状態表示
 	//=========================================================
 	static const char* kWaveLabel_[] = {
 		"雑魚フェーズ",
@@ -1141,16 +1153,16 @@ void EnemyManager::ImGuiDebug() {
 	ImGui::Text("現在のフェーズ: %s", kWaveLabel_[static_cast<int>(enemyPhase_)]);
 
 	//=========================================================
-	// 強制ボスWave移行
+	// 強制ボス移行
 	//=========================================================
 	if (ImGui::Button("ボスWaveへ")) {
 		FinishSmallEnemyPhase();
 	}
 
 	//=========================================================
-	// Wave1バリア調整
+	// バリア調整
 	//=========================================================
-	if (ImGui::CollapsingHeader("Wave1バリア")) {
+	if (ImGui::CollapsingHeader("バリア")) {
 		ImGui::Checkbox("中心追従", &barrierFollowCore_);
 		ImGui::DragFloat3("バリアオフセット", &barrierOffset_.x, 0.1f);
 		ImGui::DragFloat3("バリアサイズXYZ", &barrierSize_.x, 0.1f, 0.1f, 200.0f);
@@ -1179,6 +1191,24 @@ void EnemyManager::ImGuiDebug() {
 			ImGui::Text("現在Radius : %.2f", barrier_->GetRadius());
 		}
 	}
+
+	//=========================================================
+	// 雑魚敵攻撃ON/OFF
+	//=========================================================
+	if (ImGui::Button(enableEnemyAttack_ ? "雑魚敵攻撃 OFF" : "雑魚敵攻撃 ON")) {
+		enableEnemyAttack_ = !enableEnemyAttack_;
+
+		if (!enableEnemyAttack_) {
+			enemyBullets_.clear();
+			playerHitCooldown_ = 0.0f;
+			specialCoreCharging_ = false;
+			specialCoreBullet_ = nullptr;
+			scatterShotTimer_ = 0.0f;
+			mainSquadPhaseTimer_ = 0.0f;
+		}
+	}
+
+	ImGui::Text("雑魚敵攻撃: %s", enableEnemyAttack_ ? "ON" : "OFF");
 
 	ImGui::End();
 #endif

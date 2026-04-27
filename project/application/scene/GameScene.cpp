@@ -147,6 +147,11 @@ void GameScene::Update() {
 
 	/// ──────────────── フレーム終了処理 ───────────────
 	EndFrameUpdate();
+
+#ifdef USE_IMGUI
+	/// ──────────────── デバッグ表示更新 ───────────────
+	ImGuiDebug();
+#endif
 }
 
 void GameScene::Draw() {
@@ -597,8 +602,6 @@ bool GameScene::TryUpdatePauseAndMaybeEarlyReturn_(float rawDeltaTime, bool allo
 }
 
 void GameScene::UpdatePausedOnly_(float rawDeltaTime) {
-	/// ──────────────── デバッグ表示更新 ───────────────
-	ImGuiDebug();
 
 	/// ──────────────── アクティブカメラ更新 ───────────────
 	UpdateActiveCamera();
@@ -624,9 +627,6 @@ void GameScene::UpdateNormalGameplay_(float rawDeltaTime, float scaledDeltaTime)
 		HandleDebugKeysAndRequests();
 		return;
 	}
-
-	/// ──────────────── デバッグ表示更新 ───────────────
-	ImGuiDebug();
 
 	/// ──────────────── ゲームプレイシステム更新 ───────────────
 	UpdateGameplaySystems(rawDeltaTime, scaledDeltaTime);
