@@ -200,4 +200,10 @@ private:
 	//======================================================================
 	static constexpr float kBarrierReflectDamping_ = 0.28f; // バリア反射時の速度減衰率
 	static constexpr float kBarrierReflectPushOut_ = 0.8f;  // めり込み防止用の押し出し距離
+	//======================================================================
+	// バリア反射後の寿命管理
+	//======================================================================
+	bool isReflected_ = false;      // バリアで反射されたか
+	float reflectedTimer_ = 0.0f;   // 反射後経過時間
+	static constexpr float kReflectedLifeTime_ = 1.3f; // 反射後の寿命（秒）
 };

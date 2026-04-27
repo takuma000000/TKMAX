@@ -95,6 +95,17 @@ void PlayerBullet::Update() {
 		isDead_ = true;
 	}
 
+	//=========================================================
+	// バリア反射後の寿命
+	//=========================================================
+	if (isReflected_) {
+		reflectedTimer_ += dt_; // 反射後の寿命タイマーを進める
+		// 反射後の寿命を超えたら死亡扱いにする
+		if (reflectedTimer_ >= kReflectedLifeTime_) {
+			isDead_ = true; // 死亡フラグを立てる
+		}
+	}
+
 	// 現在位置を取得する
 	Vector3 pos = object_->GetTranslate();
 
@@ -251,11 +262,40 @@ void PlayerBullet::Update() {
 				inDir = { 0.0f, 0.0f, 1.0f };
 			}
 
-			// バリアの縁でも中心と同じように、来た方向へそのまま押し返す
-			Vector3 reflectDir = -inDir;
+			// バリア中心から見た外向き方向を作る
+			Vector3 outward = bulletPos - barrierPos_;
+			float outwardLen = MyMath::Length(outward);
+
+			if (outwardLen > 0.0001f) {
+				outward = outward / outwardLen;
+			} else {
+				outward = { 0.0f, 0.0f, -1.0f };
+			}
+
+			// 来た方向へ押し返す方向
+			Vector3 backDir = -inDir;
+
+			// 押し返し方向に、当たった場所による外向き方向を少し混ぜる
+			static constexpr float kBarrierReflectShapeInfluence_ = 0.35f;
+
+			Vector3 reflectDir =
+				backDir * (1.0f - kBarrierReflectShapeInfluence_) +
+				outward * kBarrierReflectShapeInfluence_;
+
+			// 反射方向を正規化する
+			float reflectLen = MyMath::Length(reflectDir);
+			if (reflectLen > 0.0001f) {
+				reflectDir = reflectDir / reflectLen;
+			} else {
+				reflectDir = backDir;
+			}
 
 			// 反射後の速度を設定する
 			velocity_ = reflectDir * speed * kBarrierReflectDamping_;
+
+
+			isReflected_ = true; // 反射フラグを立てる
+			reflectedTimer_ = 0.0f; // 反射エフェクトのタイマーをリセットする
 
 			// めり込み防止：当たる前の位置へ戻して、少しだけ反射方向へ押し出す
 			Vector3 safePos = prevPos_ + reflectDir * kBarrierReflectPushOut_;
