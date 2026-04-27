@@ -6,6 +6,7 @@
 #include "SpriteCommon.h"
 #include "MyMath.h"
 #include "Input.h"
+#include "Easing.h"
 
 namespace TKM {
 
@@ -189,6 +190,14 @@ namespace TKM {
 		//==============================================================
 		bool rbNoAmmo_ = false; // RB残弾なし状態
 		bool lbNoAmmo_ = false; // LB残弾なし状態
+		bool prevRbNoAmmo_ = false; // 前フレームのRB残弾なし状態
+		bool prevLbNoAmmo_ = false; // 前フレームのLB残弾なし状態
+		float rbCrossPopT_ = 1.0f; // RB赤バツ出現演出タイマー
+		float lbCrossPopT_ = 1.0f; // LB赤バツ出現演出タイマー
+		static constexpr float kCrossPopSec_ = 0.18f; // 赤バツ出現演出時間
+		static constexpr float kCrossBaseSize_ = 54.0f; // 赤バツ通常サイズ
+		static constexpr float kCrossStartScale_ = 0.30f; // 出始めの倍率
+		static constexpr float kCrossEndScale_ = 1.00f; // 最終倍率
 		//=============================================================
 		// Xアイコンのぬめっと移動
 		//=============================================================

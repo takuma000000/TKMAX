@@ -265,6 +265,15 @@ namespace TKM {
 	void OperationGuideUI::Update(float dt, bool rbNoAmmo, bool lbNoAmmo) {
 		Input* in = Input::GetInstance();
 
+		// 残弾なしになった瞬間だけ、赤バツ出現演出を最初から再生する
+		if (rbNoAmmo && !prevRbNoAmmo_) {
+			rbCrossPopT_ = 0.0f;
+		}
+
+		if (lbNoAmmo && !prevLbNoAmmo_) {
+			lbCrossPopT_ = 0.0f;
+		}
+
 		// 残弾なし状態を保存する
 		rbNoAmmo_ = rbNoAmmo;
 		lbNoAmmo_ = lbNoAmmo;
@@ -433,6 +442,18 @@ namespace TKM {
 			basePosLS_.y + lsCurrentOfs_.y
 			});
 
+
+		// 赤バツ出現演出タイマーを進める
+		rbCrossPopT_ = std::min(1.0f, rbCrossPopT_ + dt / kCrossPopSec_);
+		lbCrossPopT_ = std::min(1.0f, lbCrossPopT_ + dt / kCrossPopSec_);
+		// イージングで「ポンッ」と出る倍率を作る
+		const float rbEase = Ease::Eval(Ease::Type::OutBack, rbCrossPopT_);
+		const float lbEase = Ease::Eval(Ease::Type::OutBack, lbCrossPopT_);
+		const float rbScale = MyMath::Lerp(kCrossStartScale_, kCrossEndScale_, rbEase);
+		const float lbScale = MyMath::Lerp(kCrossStartScale_, kCrossEndScale_, lbEase);
+		// 赤バツのサイズを反映する
+		rbNoAmmoCross_->SetSize({ kCrossBaseSize_ * rbScale, kCrossBaseSize_ * rbScale });
+		lbNoAmmoCross_->SetSize({ kCrossBaseSize_ * lbScale, kCrossBaseSize_ * lbScale });
 		// 赤バツをRB/LBアイコンの中心に重ねる
 		rbNoAmmoCross_->SetPosition({
 			basePosRB_.x - rbDrawSize_.x * 0.5f,
@@ -442,10 +463,12 @@ namespace TKM {
 			basePosLB_.x - lbDrawSize_.x * 0.5f,
 			basePosLB_.y - lbDrawSize_.y * 0.5f
 			});
-
 		// 赤バツスプライトを更新する
 		rbNoAmmoCross_->Update();
 		lbNoAmmoCross_->Update();
+		// 次フレーム用に残弾なし状態を保存する
+		prevRbNoAmmo_ = rbNoAmmo_;
+		prevLbNoAmmo_ = lbNoAmmo_;
 
 		// ImGui調整項目を表示する
 		DrawImGui();
