@@ -333,7 +333,7 @@ namespace TKM {
 			// ─────────────────────
 
 			// 細長いライン（ビルボードでカメラ向きになる）
-			p.transform_.scale_ = { 0.2f, 0.2f, 0.2f }; // 幅, 高さ, 奥行き
+			p.transform_.scale_ = { 0.5f, 0.5f, 0.5f }; // 幅, 高さ, 奥行き
 			p.transform_.rotate_ = { 0.0f, 0.0f, 0.0f };
 			p.transform_.translate_.z = 50.0f;
 

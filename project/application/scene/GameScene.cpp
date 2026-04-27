@@ -463,7 +463,7 @@ void GameScene::UpdateGameplaySystems(float rawDeltaTime, float scaledDeltaTime)
 	}
 
 	/// ──────────────── スカイボックス更新 ───────────────
-	skybox_->UpdateRotation();
+	//skybox_->UpdateRotation();
 
 	/// ──────────────── プレイヤー更新 ───────────────
 	player_->Update(scaledDeltaTime);
