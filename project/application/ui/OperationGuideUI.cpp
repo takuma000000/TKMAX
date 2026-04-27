@@ -222,6 +222,14 @@ namespace TKM {
 		uiX_ = CreateSprite_(xTex_, { 1.0f, 1.0f }, &xTexSize_);
 		uiLS_ = CreateSprite_(lsTex_, { 1.0f, 1.0f }, &lsTexSize_);
 
+		// 残弾なし表示用の赤バツを生成する
+		rbNoAmmoCross_ = CreateSprite_("./resources/texture/cross.png", { 0.5f, 0.5f }, &noAmmoCrossTexSize_);
+		lbNoAmmoCross_ = CreateSprite_("./resources/texture/cross.png", { 0.5f, 0.5f }, nullptr);
+
+		// 赤バツの描画サイズを設定する
+		rbNoAmmoCross_->SetSize(noAmmoCrossDrawSize_);
+		lbNoAmmoCross_->SetSize(noAmmoCrossDrawSize_);
+
 		// テクスチャサイズから描画サイズを計算する
 		ApplyGuideSizes_();
 
@@ -254,8 +262,12 @@ namespace TKM {
 		ApplyGuidePositions_();
 	}
 
-	void OperationGuideUI::Update(float dt) {
+	void OperationGuideUI::Update(float dt, bool rbNoAmmo, bool lbNoAmmo) {
 		Input* in = Input::GetInstance();
+
+		// 残弾なし状態を保存する
+		rbNoAmmo_ = rbNoAmmo;
+		lbNoAmmo_ = lbNoAmmo;
 
 		// 現在のゲームパッド接続状態を取得する
 		isGamepadConnected_ = in->IsGamepadConnected();
@@ -332,14 +344,14 @@ namespace TKM {
 		bool lsMoving = (lsX != 0.0f) || (lsY != 0.0f);
 
 		// 入力状態に応じて各UIの色を切り替える
-		colRB_ = rbDown ? onCol_ : idleCol_;
-		colLB_ = lbDown ? onCol_ : idleCol_;
+		colRB_ = (rbDown && !rbNoAmmo_) ? onCol_ : idleCol_;
+		colLB_ = (lbDown && !lbNoAmmo_) ? onCol_ : idleCol_;
 		colX_ = xDown ? onCol_ : idleCol_;
 		colLS_ = lsMoving ? onCol_ : idleCol_;
 
 		// 入力状態に応じてアルファを切り替える
-		colRB_.w = rbDown ? rightUiActiveAlpha_ : rightUiIdleAlpha_;
-		colLB_.w = lbDown ? rightUiActiveAlpha_ : rightUiIdleAlpha_;
+		colRB_.w = (rbDown && !rbNoAmmo_) ? rightUiActiveAlpha_ : rightUiIdleAlpha_;
+		colLB_.w = (lbDown && !lbNoAmmo_) ? rightUiActiveAlpha_ : rightUiIdleAlpha_;
 		colX_.w = xDown ? rightUiActiveAlpha_ : rightUiIdleAlpha_;
 		colLS_.w = lsMoving ? rightUiActiveAlpha_ : rightUiIdleAlpha_;
 
@@ -350,8 +362,8 @@ namespace TKM {
 		uiLS_->Update();
 
 		// RB/LBは押下中だけ小刻みに揺らす
-		ApplyShake_(uiRB_.get(), basePosRB_, rbDown, shakeT_RB_);
-		ApplyShake_(uiLB_.get(), basePosLB_, lbDown, shakeT_LB_);
+		ApplyShake_(uiRB_.get(), basePosRB_, rbDown && !rbNoAmmo_, shakeT_RB_);
+		ApplyShake_(uiLB_.get(), basePosLB_, lbDown && !lbNoAmmo_, shakeT_LB_);
 
 		// Xが押された瞬間だけ、現在の入力方向へ跳ねる
 		bool xTrig = (xDown && !prevXDown_);
@@ -421,6 +433,20 @@ namespace TKM {
 			basePosLS_.y + lsCurrentOfs_.y
 			});
 
+		// 赤バツをRB/LBアイコンの中心に重ねる
+		rbNoAmmoCross_->SetPosition({
+			basePosRB_.x - rbDrawSize_.x * 0.5f,
+			basePosRB_.y - rbDrawSize_.y * 0.5f
+			});
+		lbNoAmmoCross_->SetPosition({
+			basePosLB_.x - lbDrawSize_.x * 0.5f,
+			basePosLB_.y - lbDrawSize_.y * 0.5f
+			});
+
+		// 赤バツスプライトを更新する
+		rbNoAmmoCross_->Update();
+		lbNoAmmoCross_->Update();
+
 		// ImGui調整項目を表示する
 		DrawImGui();
 	}
@@ -442,6 +468,14 @@ namespace TKM {
 
 		uiX_->SetColor(mulAlpha(colX_));
 		uiX_->Draw();
+
+		// RB/LBの残弾なし状態を赤バツで表示する
+		if (rbNoAmmo_ && rbNoAmmoCross_) {
+			rbNoAmmoCross_->Draw();
+		}
+		if (lbNoAmmo_ && lbNoAmmoCross_) {
+			lbNoAmmoCross_->Draw();
+		}
 
 		// LSはゲームパッド接続時のみ表示する
 		if (isGamepadConnected_) {

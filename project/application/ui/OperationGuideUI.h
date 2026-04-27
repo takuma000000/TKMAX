@@ -29,7 +29,10 @@ namespace TKM {
 		/// <summary>
 		/// 右側の操作UIを更新します。
 		/// </summary>
-		void Update(float dt);
+		/// <param name="dt">前フレームからの経過時間（秒）</param>
+		/// <param name="rbNoAmmo">RBの残弾なし状態</param>
+		/// <param name="lbNoAmmo">LBの残弾なし状態</param>
+		void Update(float dt, bool rbNoAmmo, bool lbNoAmmo);
 		/// <summary>
 		/// 右側の操作UIを描画します。
 		/// </summary>
@@ -96,6 +99,8 @@ namespace TKM {
 		std::unique_ptr<Sprite> uiRB_; // RBアイコン
 		std::unique_ptr<Sprite> uiX_; // Xアイコン
 		std::unique_ptr<Sprite> uiLS_; // LSアイコン
+		std::unique_ptr<Sprite> rbNoAmmoCross_; // RBアイコン用の残弾なし赤バツ
+		std::unique_ptr<Sprite> lbNoAmmoCross_; // LBアイコン用の残弾なし赤バツ
 		//=============================================================
 		// テクスチャパス
 		//=============================================================
@@ -118,6 +123,7 @@ namespace TKM {
 		Vector2 rbTexSize_{}; // RBアイコンのテクスチャサイズ
 		Vector2 xTexSize_{}; // Xアイコンのテクスチャサイズ
 		Vector2 lsTexSize_{}; // LSアイコンのテクスチャサイズ
+		Vector2 noAmmoCrossTexSize_{}; // 赤バツテクスチャサイズ
 		//=============================================================
 		// 描画サイズ
 		//=============================================================
@@ -125,6 +131,7 @@ namespace TKM {
 		Vector2 rbDrawSize_{}; // RBアイコンの描画サイズ
 		Vector2 xDrawSize_{}; // Xアイコンの描画サイズ
 		Vector2 lsDrawSize_{}; // LSアイコンの描画サイズ
+		Vector2 noAmmoCrossDrawSize_{ 54.0f, 54.0f }; // 赤バツ描画サイズ
 		//=============================================================
 		// レイアウト
 		//=============================================================
@@ -177,6 +184,11 @@ namespace TKM {
 		float shakeT_RB_ = 0.0f; // RBアイコンの揺れの経過時間
 		float shakeT_LB_ = 0.0f; // LBアイコンの揺れの経過時間
 		float shakeT_X_ = 0.0f; // Xアイコンの揺れの経過時間
+		//=============================================================
+		// 状態
+		//==============================================================
+		bool rbNoAmmo_ = false; // RB残弾なし状態
+		bool lbNoAmmo_ = false; // LB残弾なし状態
 		//=============================================================
 		// Xアイコンのぬめっと移動
 		//=============================================================

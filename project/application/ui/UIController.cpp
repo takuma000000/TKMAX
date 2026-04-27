@@ -75,7 +75,14 @@ namespace TKM {
 		} else {
 			// ゲーム開始後だけ通常HUDを更新する
 			if (gameplayHudVisible_) {
-				operationGuideUI_->Update(dt);
+
+				// RBとLBの残弾なし状態を取得する（playerがnullptrの場合はfalse扱い）
+				const bool rbNoAmmo = player && player->GetRbAmmo() <= 0;
+				const bool lbNoAmmo = player && player->GetLbAmmo() <= 0;
+				// 右側の操作ガイドUIを更新する
+				operationGuideUI_->Update(dt, rbNoAmmo, lbNoAmmo);
+
+				// プレイヤーHUDを更新する
 				playerHudUI_->Update(dt, player);
 			}
 

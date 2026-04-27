@@ -43,6 +43,7 @@ void TextureCatalog::LoadTextureCatalogs() {
 		"skip.png",
 		"end_title.png",
 		"clear.png",
+		"cross.png",
 		"flower.png",
 		"uvChecker.dds",
 		"title_kuraran.dds",
