@@ -14,10 +14,6 @@
 //=============================================================
 
 enum class EnemyBehavior {
-	StraightStop,    // いまの「Z手前に進んでstopZで止まる」
-	SineX,           // Xをサイン波で揺らしながら前進
-	StrafeLtoR,      // Xを左右往復（矩形波）しながら前進
-	ChasePlayer,     // プレイヤー方向にじわっと追尾
 	PounceFromAbove, // 上空から急降下してくる
 	FreeRoam,        // 自由に動き回る
 	MoveToTarget,   // 指定された目標位置へ移動する
@@ -232,24 +228,6 @@ public:
 	/// <param name="v">移動ベクトル</param>
 	void SetVelocity(const Vector3& v);
 	/// <summary>
-	/// 停止 Z 座標を設定します。
-	/// </summary>
-	/// <param name="z">停止 Z 座標（ワールド座標）</param>
-	void SetStopZ(float z);
-	/// <summary>
-	/// SineX 用のパラメータを設定します。
-	/// </summary>
-	/// <param name="ampX">振幅</param>
-	/// <param name="freq">周波数</param>
-	void SetSineParams(float ampX, float freq);
-	/// <summary>
-	/// StrafeX 用のパラメータを設定します。
-	/// </summary>
-	/// <param name="left">左端 X 座標</param>
-	/// <param name="right">右端 X 座標</param>
-	/// <param name="speed">移動速度</param>
-	void SetStrafeX(float left, float right, float speed);
-	/// <summary>
 	/// 射撃可否と射撃間隔を設定します。
 	/// </summary>
 	/// <param name="v">射撃可能にする場合 true、それ以外は false</param>
@@ -372,7 +350,7 @@ private:
 	//  基本行動タイプ
 	//--------------------------------------------------------------
 	EnemyType    type_; // 役割タイプ（通常 / Wave3中ボス / Wave3蘇生核 / ボス）
-	EnemyBehavior behavior_ = EnemyBehavior::StraightStop; // 行動パターン
+	EnemyBehavior behavior_ = EnemyBehavior::PounceFromAbove; // 行動パターン
 	float t_ = 0.0f;    // 各種挙動で使う汎用タイマー
 	//--------------------------------------------------------------
 	//  ロックオン演出

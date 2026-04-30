@@ -250,100 +250,6 @@ void Enemy::Update(float dt) {
 			}
 		}
 
-		// Z方向に進み、指定Zまで来たら止まる基本移動
-		static void Move_StraightStop(Enemy* self, MoveCtx& c) {
-			// 停止済みでなければ前進させる
-			if (!self->stopMove_) {
-				c.pos_ += self->velocity_ * c.factor_;
-
-				// 停止ラインを越えたら、その位置で止める
-				if (c.pos_.z <= self->stopZ_) {
-					c.pos_.z = self->stopZ_;
-					self->stopMove_ = true;
-				}
-			}
-		}
-
-		// X方向にサイン波で揺れながら前進する移動
-		static void Move_SineX(Enemy* self, MoveCtx& c) {
-			// サイン波用の時間を進める
-			self->t_ += 0.05f * c.factor_;
-
-			// Z方向は通常移動
-			c.pos_.z += self->velocity_.z * c.factor_;
-
-			// X方向だけサイン波で左右に揺らす
-			c.pos_.x = self->startX_ + std::sinf(self->sinePhase_ + self->t_ * self->sineFreq_) * self->sineAmpX_;
-
-			// 停止ラインを越えたらZだけ止める
-			if (c.pos_.z <= self->stopZ_) {
-				c.pos_.z = self->stopZ_;
-			}
-		}
-
-		// X方向に左右往復しながらZ方向へ進む移動
-		static void Move_StrafeLtoR(Enemy* self, MoveCtx& c) {
-			// Z方向は前進させる
-			c.pos_.z += self->velocity_.z * c.factor_;
-
-			// 左右移動位置を現在の向きに応じて進める
-			self->strafePosX_ += self->strafeSpeed_ * self->strafeDir_ * c.factor_;
-
-			// 右端を越えたら右端で止めて左向きへ反転する
-			if (self->strafePosX_ > self->strafeRight_) {
-				self->strafePosX_ = self->strafeRight_;
-				self->strafeDir_ = -1;
-			}
-
-			// 左端を越えたら左端で止めて右向きへ反転する
-			if (self->strafePosX_ < self->strafeLeft_) {
-				self->strafePosX_ = self->strafeLeft_;
-				self->strafeDir_ = +1;
-			}
-
-			// 計算したX位置を反映する
-			c.pos_.x = self->strafePosX_;
-
-			// 停止ラインを越えたらZだけ止める
-			if (c.pos_.z <= self->stopZ_) {
-				c.pos_.z = self->stopZ_;
-			}
-		}
-
-		// プレイヤーのXY位置を追いながらZ方向へ進む移動
-		static void Move_ChasePlayer(Enemy* self, MoveCtx& c) {
-			// Z方向は前進させる
-			c.pos_.z += self->velocity_.z * c.factor_;
-
-			// プレイヤー位置取得関数があるときだけ追尾する
-			if (self->playerGetter_) {
-				// 現在位置からプレイヤーまでのベクトルを求める
-				Vector3 toP_ = self->playerGetter_() - c.pos_;
-
-				// Z方向は無視してXY平面だけを追尾対象にする
-				Vector3 desire_ = { toP_.x, toP_.y, 0.0f };
-
-				// プレイヤーまでの距離を求める
-				float len_ = MyMath::Length(desire_);
-
-				// 近すぎると微振動しやすいので、少し離れている時だけ追う
-				if (len_ > 0.001f) {
-					Vector3 dir = MyMath::Normalize(desire_);
-
-					// X方向へ追尾
-					c.pos_.x += dir.x * self->chaseSpeed_ * c.factor_;
-
-					// Y方向へ追尾
-					c.pos_.y += dir.y * self->chaseSpeed_ * c.factor_;
-				}
-			}
-
-			// 停止ラインを越えたらZだけ止める
-			if (c.pos_.z <= self->stopZ_) {
-				c.pos_.z = self->stopZ_;
-			}
-		}
-
 		// 空中から接近して、その後プレイヤーへ急降下する行動
 		static void Move_PounceFromAbove(Enemy* self, MoveCtx& c) {
 			// 急降下開始指示が無ければ何もしない
@@ -538,10 +444,6 @@ void Enemy::Update(float dt) {
 	// 行動 enum と実処理関数を対応付けるテーブル
 	using MoveFn = void(*)(Enemy*, MoveCtx&);
 	static const MoveFn kMoveTable_[] = {
-		&Local::Move_StraightStop,
-		&Local::Move_SineX,
-		&Local::Move_StrafeLtoR,
-		&Local::Move_ChasePlayer,
 		&Local::Move_PounceFromAbove,
 		&Local::Move_FreeRoam,
 		&Local::Move_FormationMove,
@@ -888,29 +790,6 @@ void Enemy::SetBehavior(EnemyBehavior b) {
 void Enemy::SetVelocity(const Vector3& v) {
 	// 移動速度を設定する
 	velocity_ = v;
-}
-
-void Enemy::SetStopZ(float z) {
-	// 停止ラインとなるZ座標を設定する
-	stopZ_ = z;
-}
-
-void Enemy::SetSineParams(float ampX, float freq) {
-	// サイン移動の振れ幅と周波数を設定する
-	sineAmpX_ = ampX;
-	sineFreq_ = freq;
-}
-
-void Enemy::SetStrafeX(float left, float right, float speed) {
-	// 左右移動の範囲を設定する
-	strafeLeft_ = left;
-	strafeRight_ = right;
-
-	// 左右移動の速度を設定する
-	strafeSpeed_ = speed;
-
-	// 初期位置が未設定に近い場合は左端から開始させる
-	if (strafePosX_ == 0.0f) strafePosX_ = left;
 }
 
 void Enemy::SetCanShoot(bool v, float interval) {
