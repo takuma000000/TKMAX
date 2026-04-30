@@ -93,87 +93,81 @@ void BossOrbitState::Update(TKM::IStateContext& ctx, float dt) {
 
 	// -----------------------------
 	// 通常時：ミサイル or スラッシュ
-	// 怒り中：現在はレーザー処理を抑制してRecoverへ
 	// -----------------------------
-	if (!c.rageActive_) {
 
-		// スラッシュがクールダウン中でなければ選択候補に入れる
-		const bool canSlash_ = (c.slashCooldownT_ <= 0.0f);
+	// スラッシュがクールダウン中でなければ選択候補に入れる
+	const bool canSlash_ = (c.slashCooldownT_ <= 0.0f);
 
-		// 0.0f～1.0fの乱数で攻撃を選ぶ
-		std::uniform_real_distribution<float> u01(0.0f, 1.0f);
+	// 0.0f～1.0fの乱数で攻撃を選ぶ
+	std::uniform_real_distribution<float> u01(0.0f, 1.0f);
 
-		// クールダウン中はスラッシュ選択率を0にする
-		const float slashRate_ = canSlash_ ? c.config_->slash_.selectRate_ : 0.0f;
+	// クールダウン中はスラッシュ選択率を0にする
+	const float slashRate_ = canSlash_ ? c.config_->slash_.selectRate_ : 0.0f;
 
-		// スラッシュを行うか判定する
-		const bool doSlash_ = (u01(c.rng_) < slashRate_);
+	// スラッシュを行うか判定する
+	const bool doSlash_ = (u01(c.rng_) < slashRate_);
 
-		if (doSlash_) {
-			// スラッシュ攻撃のチャージを開始する
-			c.slashCharging_ = true;
-			c.slashChargeTimer_ = c.config_->slash_.chargeTime_;
-			c.slashChargeFrame_ = 0;
-
-			// プレイヤーが取れる場合は現在位置をスナップする
-			if (boss.GetPlayer()) {
-				c.slashTargetSnap_ = boss.GetPlayer()();
-				c.slashTargetValid_ = true;
-			}
-			// プレイヤー参照がない場合は、保持しているプレイヤー位置を使う
-			else {
-				c.slashTargetSnap_ = playerPos;
-				c.slashTargetValid_ = true;
-			}
-
-			// スラッシュのクールダウンを開始する
-			c.slashCooldownT_ = c.config_->slash_.cooldown_;
-
-			// スラッシュ選択時はミサイル系の状態を完全に止め、攻撃混在を防ぐ
-			c.burstTargetValid_ = false;
-			c.burstCharged_ = false;
-			c.missileCharging_ = false;
-			c.missileChargeTimer_ = 0.0f;
-			c.missileChargeFrame_ = 0;
-
-			// Recover中でスラッシュチャージ処理を進める
-			c.ChangeState(BossController::State::Recover);
-			return;
-		}
-
-		// ミサイル選択時はスラッシュ系の状態を完全に止め、攻撃混在を防ぐ
-		c.slashCharging_ = false;
-		c.slashChargeTimer_ = 0.0f;
+	if (doSlash_) {
+		// スラッシュ攻撃のチャージを開始する
+		c.slashCharging_ = true;
+		c.slashChargeTimer_ = c.config_->slash_.chargeTime_;
 		c.slashChargeFrame_ = 0;
-		c.slashFireReq_ = false;
-
-		// ミサイルチャージを開始する
-		c.burstTargetValid_ = false;
-		c.burstCharged_ = false;
-		c.missileCharging_ = true;
-		c.missileChargeTimer_ = c.config_->missile_.chargeTime_;
-		c.missileChargeFrame_ = 0;
-		c.missileRequestCount_ = 0;
-		c.missileRequestConsumeIndex_ = 0;
 
 		// プレイヤーが取れる場合は現在位置をスナップする
 		if (boss.GetPlayer()) {
-			c.burstTargetSnap_ = boss.GetPlayer()();
-			c.burstTargetValid_ = true;
+			c.slashTargetSnap_ = boss.GetPlayer()();
+			c.slashTargetValid_ = true;
 		}
 		// プレイヤー参照がない場合は、保持しているプレイヤー位置を使う
 		else {
-			c.burstTargetSnap_ = playerPos;
-			c.burstTargetValid_ = true;
+			c.slashTargetSnap_ = playerPos;
+			c.slashTargetValid_ = true;
 		}
 
-		// Recover中でミサイルチャージ処理を進める
+		// スラッシュのクールダウンを開始する
+		c.slashCooldownT_ = c.config_->slash_.cooldown_;
+
+		// スラッシュ選択時はミサイル系の状態を完全に止め、攻撃混在を防ぐ
+		c.burstTargetValid_ = false;
+		c.burstCharged_ = false;
+		c.missileCharging_ = false;
+		c.missileChargeTimer_ = 0.0f;
+		c.missileChargeFrame_ = 0;
+
+		// Recover中でスラッシュチャージ処理を進める
 		c.ChangeState(BossController::State::Recover);
 		return;
 	}
 
-	// 怒り中のレーザー処理は現在コメントアウト中のため、Recoverへ戻す
+	// ミサイル選択時はスラッシュ系の状態を完全に止め、攻撃混在を防ぐ
+	c.slashCharging_ = false;
+	c.slashChargeTimer_ = 0.0f;
+	c.slashChargeFrame_ = 0;
+	c.slashFireReq_ = false;
+
+	// ミサイルチャージを開始する
+	c.burstTargetValid_ = false;
+	c.burstCharged_ = false;
+	c.missileCharging_ = true;
+	c.missileChargeTimer_ = c.config_->missile_.chargeTime_;
+	c.missileChargeFrame_ = 0;
+	c.missileRequestCount_ = 0;
+	c.missileRequestConsumeIndex_ = 0;
+
+	// プレイヤーが取れる場合は現在位置をスナップする
+	if (boss.GetPlayer()) {
+		c.burstTargetSnap_ = boss.GetPlayer()();
+		c.burstTargetValid_ = true;
+	}
+	// プレイヤー参照がない場合は、保持しているプレイヤー位置を使う
+	else {
+		c.burstTargetSnap_ = playerPos;
+		c.burstTargetValid_ = true;
+	}
+
+	// Recover中でミサイルチャージ処理を進める
 	c.ChangeState(BossController::State::Recover);
+	return;
 }
 
 //=====================================================
@@ -444,179 +438,5 @@ void BossRecoverState::Update(TKM::IStateContext& ctx, float dt) {
 	// Recover時間が過ぎ、攻撃処理も終わっていればOrbitへ戻る
 	if (c.timer_ >= c.config_->recover_.duration_ && !missileBusy_ && !slashBusy_) {
 		c.ChangeState(BossController::State::Orbit);
-	}
-}
-
-//=====================================================
-// LaserWindup
-//=====================================================
-void BossLaserWindupState::Enter(TKM::IStateContext& ctx) {
-	auto& c = AsBoss_(ctx);
-
-	// レーザー溜め状態の経過時間を初期化する
-	c.timer_ = 0.0f;
-
-	// 現在の状態をLaserWindupに設定する
-	c.state_ = BossController::State::LaserWindup;
-
-	// レーザー予兆を有効にする
-	c.laserActive_ = true;
-	c.laserTelegraph_ = true;
-
-	// 溜め開始時のボス位置をレーザー基準位置として固定する
-	c.laserBasePos_ = c.posWork_;
-
-	// レーザーの開始位置と終了位置を初期化する
-	c.laserStartWS_ = c.laserBasePos_ + Vector3{ 0.0f, c.config_->laser_.muzzleYOffset_, 0.0f };
-	c.laserEndWS_ = c.laserAimFixed_;
-}
-
-void BossLaserWindupState::Update(TKM::IStateContext& ctx, float dt) {
-	auto& c = AsBoss_(ctx);
-
-	// 怒り状態が解除されていたら、レーザーを中止してRecoverへ戻る
-	if (!c.rageActive_) {
-		c.laserActive_ = false;
-		c.laserTelegraph_ = false;
-		c.ChangeState(BossController::State::Recover);
-		return;
-	}
-
-	Vector3& pos = c.posWork_;
-
-	// 溜め中はボス位置をレーザー基準位置に固定する
-	pos = c.laserBasePos_;
-
-	// 溜め進行率を計算する
-	float t_ = (c.config_->laser_.windup_ > 0.0001f)
-		? (c.timer_ / c.config_->laser_.windup_)
-		: 1.0f;
-
-	t_ = std::clamp(t_, 0.0f, 1.0f);
-
-	// 終盤ほど揺れを強くする
-	float ramp_ = t_ * t_;
-	float amp_ = 0.18f * (0.2f + 0.8f * ramp_);
-
-	// 溜め中の震えをX/Y方向に加える
-	pos.x += std::sin(c.timer_ * 60.0f) * amp_;
-	pos.y += std::sin(c.timer_ * 87.0f + 1.7f) * (amp_ * 0.55f);
-
-	// レーザーの開始位置と終了位置を更新する
-	c.laserStartWS_ = c.laserBasePos_ + Vector3{ 0.0f, c.config_->laser_.muzzleYOffset_, 0.0f };
-	c.laserEndWS_ = c.laserAimFixed_;
-
-	// 溜め時間が終わったら、レーザー発射へ移行する
-	if (c.timer_ >= c.config_->laser_.windup_) {
-		c.ChangeState(BossController::State::LaserFire);
-	}
-}
-
-//=====================================================
-// LaserFire
-//=====================================================
-void BossLaserFireState::Enter(TKM::IStateContext& ctx) {
-	auto& c = AsBoss_(ctx);
-
-	// レーザー発射状態の経過時間を初期化する
-	c.timer_ = 0.0f;
-
-	// 現在の状態をLaserFireに設定する
-	c.state_ = BossController::State::LaserFire;
-
-	// レーザー本体を有効化し、予兆表示は消す
-	c.laserActive_ = true;
-	c.laserTelegraph_ = false;
-
-	// 発射中のボス位置はWindupで固定した基準位置を使う
-	c.posWork_ = c.laserBasePos_;
-}
-
-void BossLaserFireState::Update(TKM::IStateContext& ctx, float dt) {
-	auto& c = AsBoss_(ctx);
-	Enemy& boss = *c.boss_;
-
-	// 怒り状態が解除されていたら、レーザーを中止してRecoverへ戻る
-	if (!c.rageActive_) {
-		c.laserActive_ = false;
-		c.laserTelegraph_ = false;
-		c.ChangeState(BossController::State::Recover);
-		return;
-	}
-
-	// 発射中はレーザー本体のみ表示する
-	c.laserActive_ = true;
-	c.laserTelegraph_ = false;
-
-	// ボス位置は基準位置に固定する
-	c.posWork_ = c.laserBasePos_;
-
-	// 基本の照準はWindup時点で決めた固定照準
-	Vector3 aim_ = c.laserAimFixed_;
-
-	if (boss.GetPlayer()) {
-		// プレイヤーの現在位置を取得する
-		Vector3 p_ = boss.GetPlayer()();
-
-		// プレイヤー速度から少し先の位置を予測する
-		Vector3 v_ = c.playerVel_;
-		Vector3 pred_ = p_ + v_ * c.config_->predictLeadTime_;
-
-		// 予測照準がアリーナ外に出ないように制限する
-		pred_.x = std::clamp(pred_.x, c.arenaMin_.x, c.arenaMax_.x);
-		pred_.y = std::clamp(pred_.y, c.arenaMin_.y, c.arenaMax_.y);
-		pred_.z = std::clamp(pred_.z, c.arenaMin_.z, c.arenaMax_.z);
-
-		// 固定照準から予測照準へ少しだけ寄せる
-		aim_ = MyMath::Vector3Lerp(aim_, pred_, c.config_->laser_.trackStrength_);
-	}
-
-	// レーザーの開始位置と終了位置を更新する
-	c.laserStartWS_ = c.laserBasePos_ + Vector3{ 0.0f, c.config_->laser_.muzzleYOffset_, 0.0f };
-	c.laserEndWS_ = aim_;
-
-	// 発射時間が終わったら、レーザー回復状態へ移行する
-	if (c.timer_ >= c.config_->laser_.fire_) {
-		c.laserCooldownT_ = 0.0f;
-		c.ChangeState(BossController::State::LaserRecover);
-	}
-}
-
-//=====================================================
-// LaserRecover
-//=====================================================
-void BossLaserRecoverState::Enter(TKM::IStateContext& ctx) {
-	auto& c = AsBoss_(ctx);
-
-	// レーザー回復状態の経過時間を初期化する
-	c.timer_ = 0.0f;
-
-	// 現在の状態をLaserRecoverに設定する
-	c.state_ = BossController::State::LaserRecover;
-
-	// レーザー表示を完全に無効化する
-	c.laserActive_ = false;
-	c.laserTelegraph_ = false;
-}
-
-void BossLaserRecoverState::Update(TKM::IStateContext& ctx, float dt) {
-	auto& c = AsBoss_(ctx);
-	Vector3& pos = c.posWork_;
-
-	// 回復中はレーザー表示を出さない
-	c.laserActive_ = false;
-	c.laserTelegraph_ = false;
-
-	// レーザー回復中は、ボスの位置を軌道の高さとZへスムーズに戻す
-	pos = BossController::SmoothDamp(
-		pos,
-		Vector3{ pos.x, c.config_->orbit_.y_, c.config_->orbit_.z_ },
-		0.18f,
-		dt
-	);
-
-	// 回復時間が終わったら通常Recoverへ戻る
-	if (c.timer_ >= c.config_->laser_.recover_) {
-		c.ChangeState(BossController::State::Recover);
 	}
 }

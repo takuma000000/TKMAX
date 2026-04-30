@@ -111,19 +111,6 @@ struct BossSlashConfig {
 };
 
 //-------------------------------------------------------------
-// BossController の Laser 設定
-//-------------------------------------------------------------
-struct BossLaserConfig {
-	float cooldown_ = 0.0f; // 攻撃のクールダウン時間（秒）
-	float windup_ = 1.0f; // 攻撃の予備動作時間（秒、レーザーが発射される前の溜め時間）
-	float fire_ = 1.2f; // 攻撃の発射時間（秒）
-	float recover_ = 0.8f; // 攻撃の回復時間（秒、レーザーが消えた後の隙の時間）
-	float radius_ = 1.6f; // レーザーの半径（この値が大きいほど、レーザーは太くなる）
-	float muzzleYOffset_ = 1.5f; // レーザーの発射位置のオフセット（ボスの中心から見たY方向の高さ）
-	float trackStrength_ = 0.18f; // レーザーの追尾の強さ（0なら全く追尾しない、1なら完全にプレイヤーを追尾する）
-};
-
-//-------------------------------------------------------------
 // BossController の登場設定
 //-------------------------------------------------------------
 struct BossEnterConfig {
@@ -144,7 +131,6 @@ struct BossControllerConfig {
 	BossRageConfig rage_{}; // Rage ゲージの設定
 	BossMissileConfig missile_{}; // Missile 攻撃の設定
 	BossSlashConfig slash_{}; // Slash 攻撃の設定
-	BossLaserConfig laser_{}; // Laser 攻撃の設定
 	BossEnterConfig enter_{}; // 登場の設定
 };
 

@@ -17,9 +17,6 @@ public:
 	enum class State {
 		Enter, // ボス登場
 		Orbit, // プレイヤーを中心に回りながら攻撃
-		LaserWindup, // レーザー予告
-		LaserFire, // レーザー発射
-		LaserRecover, // レーザー回復
 		Recover, // ダメージ受けて回復
 	};
 
@@ -85,26 +82,6 @@ public:
 	/// <returns></returns>
 	bool IsAuraActive() const { return auraActive_; }
 	/// <summary>
-	/// レーザー予告中かどうかを取得します。
-	/// </summary>
-	/// <returns></returns>
-	bool IsLaserWindup() const { return state_ == State::LaserWindup; }
-	/// <summary>
-	/// レーザー発射中かどうかを取得します。
-	/// </summary>
-	/// <returns></returns>
-	bool IsLaserFiring() const { return state_ == State::LaserFire; }
-	/// <summary>
-	/// レーザーがアクティブかどうかを取得します。
-	/// </summary>
-	/// <returns></returns>
-	bool IsLaserActive() const { return laserActive_; }        // 予告 or 発射中
-	/// <summary>
-	/// レーザーが予告中かどうかを取得します。
-	/// </summary>
-	/// <returns></returns>
-	bool IsLaserTelegraph() const { return laserTelegraph_; }  // 予告中
-	/// <summary>
 	/// いずれかの攻撃をチャージ中か？（触手演出用）
 	/// </summary>
 	bool IsAnyCharging() const;
@@ -140,21 +117,6 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	bool GetAuraUseRing() const { return auraUseRing_; }
-	/// <summary>
-	/// レーザー開始位置（ワールド座標）を取得します。
-	/// </summary>
-	/// <returns></returns>
-	const Vector3& GetLaserStartWS() const { return laserStartWS_; }
-	/// <summary>
-	/// レーザー終了位置（ワールド座標）を取得します。
-	/// </summary>
-	/// <returns></returns>
-	const Vector3& GetLaserEndWS() const { return laserEndWS_; }
-	/// <summary>
-	/// レーザー半径を取得します。
-	/// </summary>
-	/// <returns></returns>
-	float GetLaserRadius() const { return config_ ? config_->laser_.radius_ : 0.0f; }
 	/// <summary>
 	/// チャージの進行度(0..1)（触手揺れ強度用）
 	/// </summary>
@@ -234,9 +196,6 @@ private:
 	//==============================
 	// Laser（怒り中のみ）
 	//==============================
-	float laserCooldownT_ = 0.0f; // クールタイム残り
-	bool  laserActive_ = false;        // 予告 or 発射
-	bool  laserTelegraph_ = false;     // 予告中
 	Vector3 laserStartWS_{ 0.0f,0.0f,0.0f }; // レーザー開始位置（ワールド座標）
 	Vector3 laserEndWS_{ 0.0f,0.0f,0.0f }; // レーザー終了位置（ワールド座標）
 	Vector3 laserBasePos_{ 0.0f,0.0f,0.0f }; // レーザー中の固定基準

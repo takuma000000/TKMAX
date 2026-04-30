@@ -99,17 +99,7 @@
       "lifeFrame": 90
     },
 
-    "laser": {
-      "cooldown": 0.0,
-      "windup": 1.0,
-      "fire": 1.2,
-      "recover": 0.8,
-      "radius": 1.6,
-      "muzzleYOffset": 1.5,
-      "trackStrength": 0.18
-    },
-
-    "enter": {
+      "enter": {
       "approachSpeedZ": 18.0,
       "approachSpeedX": 10.0,
       "approachSpeedY": 10.0,

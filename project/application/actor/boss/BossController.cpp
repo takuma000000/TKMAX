@@ -41,13 +41,6 @@ void BossController::Initialize(const Vector3& arenaMin, const Vector3& arenaMax
 	noDamageTime_ = 0.0f;     // 無被ダメ時間初期化
 
 	//=========================================================
-	// レーザー関連初期化
-	//=========================================================
-	laserCooldownT_ = 0.0f;   // クールタイム初期化
-	laserActive_ = false;     // レーザー発射状態初期化
-	laserTelegraph_ = false;  // レーザー予告状態初期化
-
-	//=========================================================
 	// プレイヤー予測用情報初期化
 	//=========================================================
 	hasPrevPlayerPos_ = false;                 // 前フレーム位置なし
@@ -72,13 +65,6 @@ void BossController::Reset() {
 	rageActive_ = false;      // 怒りモード初期化
 	lastHpForRage_ = -1;      // 前回HP初期化
 	noDamageTime_ = 0.0f;     // 無被ダメ時間初期化
-
-	//=========================================================
-	// レーザー関連リセット
-	//=========================================================
-	laserCooldownT_ = 0.0f;   // クールタイム初期化
-	laserActive_ = false;     // レーザー発射状態初期化
-	laserTelegraph_ = false;  // レーザー予告状態初期化
 
 	//=========================================================
 	// プレイヤー予測用情報リセット
@@ -107,13 +93,6 @@ void BossController::Update(float dt, Enemy& boss) {
 	// 状態タイマー更新
 	//=========================================================
 	timer_ += dt;
-
-	//=========================================================
-	// レーザークールタイム更新
-	//=========================================================
-	if (laserCooldownT_ > 0.0f) {
-		laserCooldownT_ = std::max(0.0f, laserCooldownT_ - dt);
-	}
 
 	//=========================================================
 	// Rage Gauge 更新
@@ -162,9 +141,6 @@ void BossController::Update(float dt, Enemy& boss) {
 		}
 	}
 
-	// 一時的にレーザー行動を無効化
-	rageActive_ = false;
-
 	//=========================================================
 	// プレイヤー位置・速度更新
 	//=========================================================
@@ -204,14 +180,6 @@ void BossController::Update(float dt, Enemy& boss) {
 	auraT_ = 0.0f;
 
 	//=========================================================
-	// Laser状態以外ではレーザー状態を無効化
-	//=========================================================
-	if (state_ != State::LaserWindup && state_ != State::LaserFire) {
-		laserActive_ = false;
-		laserTelegraph_ = false;
-	}
-
-	//=========================================================
 	// 位置反映
 	//=========================================================
 	ClampToArena(posWork_); // アリーナ範囲に収める
@@ -230,12 +198,9 @@ void BossController::ImGuiDebug(Enemy& boss) {
 	ImGui::Begin("ボスコントローラ");
 
 	static const char* kStateName_[] = {
-		"登場",
-		"旋回",
-		"レーザー予告",
-		"レーザー発射",
-		"レーザー復帰",
-		"復帰",
+	"登場",
+	"旋回",
+	"復帰",
 	};
 
 	int si = static_cast<int>(state_);
@@ -320,7 +285,7 @@ bool BossController::ConsumeSlashFireRequest(Vector3& outPos, Vector3& outTarget
 // いずれかの攻撃をチャージ中か
 //=============================================================
 bool BossController::IsAnyCharging() const {
-	return missileCharging_ || slashCharging_ || laserTelegraph_ || (state_ == State::LaserWindup);
+	return missileCharging_ || slashCharging_;
 }
 
 //=============================================================
@@ -349,13 +314,6 @@ float BossController::GetCharge01() const {
 		v = std::max(v, std::clamp(t, 0.0f, 1.0f));
 	}
 
-	//=========================================================
-	// レーザー予告・レーザー予告状態
-	//=========================================================
-	if (laserTelegraph_ || state_ == State::LaserWindup) {
-		v = std::max(v, 1.0f);
-	}
-
 	return v;
 }
 
@@ -378,12 +336,9 @@ void BossController::ChangeState(State s) {
 	// 状態に応じたステートクラスへ遷移
 	//=========================================================
 	switch (s) {
-	case State::Enter:        sm_.Change(std::make_unique<BossEnterState>()); break;
-	case State::Orbit:        sm_.Change(std::make_unique<BossOrbitState>()); break;
-	case State::Recover:      sm_.Change(std::make_unique<BossRecoverState>()); break;
-	case State::LaserWindup:  sm_.Change(std::make_unique<BossLaserWindupState>()); break;
-	case State::LaserFire:    sm_.Change(std::make_unique<BossLaserFireState>()); break;
-	case State::LaserRecover: sm_.Change(std::make_unique<BossLaserRecoverState>()); break;
+	case State::Enter: sm_.Change(std::make_unique<BossEnterState>()); break;
+	case State::Orbit: sm_.Change(std::make_unique<BossOrbitState>()); break;
+	case State::Recover: sm_.Change(std::make_unique<BossRecoverState>()); break;
 	}
 }
 
