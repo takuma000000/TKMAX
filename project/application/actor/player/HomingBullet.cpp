@@ -593,3 +593,40 @@ void HomingBullet::DrawTrail(TKM::DirectXCommon* dxCommon) {
 		p.uvScroll
 	);
 }
+
+void HomingBullet::ResetForReuse() {
+	// 死亡・ヒット状態を解除する
+	isDead_ = false;
+	isHit_ = false;
+
+	// 寿命をリセットする
+	lifeTimer_ = 0.0f;
+
+	// 山なり弾道状態をリセットする
+	isArcActive_ = false;
+	arcT_ = 0.0f;
+	arcDuration_ = 0.0f;
+
+	// ベジェ制御点を初期化する
+	p0_ = { 0.0f, 0.0f, 0.0f };
+	p1_ = { 0.0f, 0.0f, 0.0f };
+	p2_ = { 0.0f, 0.0f, 0.0f };
+	p3_ = { 0.0f, 0.0f, 0.0f };
+
+	// トレイル状態を初期化する
+	trailPts_.clear();
+	trailDistAcc_ = 0.0f;
+	isTrailFading_ = false;
+	trailFadeTimer_ = 0.0f;
+
+	// ターゲット参照を初期化する
+	enemy_ = nullptr;
+	core_ = nullptr;
+
+	// 位置情報を現在位置基準で揃える
+	if (object_) {
+		prevPos_ = object_->GetTranslate();
+		object_->SetScale({ kDefaultScale_, kDefaultScale_, kDefaultScale_ });
+		object_->SetRotate({ 0.0f, 0.0f, 0.0f });
+	}
+}

@@ -74,6 +74,10 @@ void PlayerShotManager::Update(float dt, bool canShoot) {
 
 		// 死亡済みの弾はリストから削除する
 		if ((*it)->IsDead()) {
+			// 死亡した弾は削除せず、待機プールへ戻す
+			bulletPool_.push_back(std::move(*it));
+
+			// 使用中リストからは外す
 			it = bullets_.erase(it);
 		} else {
 			++it;
@@ -87,8 +91,12 @@ void PlayerShotManager::Update(float dt, bool canShoot) {
 		// ホーミング弾を更新する
 		(*it)->Update();
 
-		// 死亡済みの弾はリストから削除する
+		// 死亡済みのホーミング弾はリストから削除する
 		if ((*it)->IsDead()) {
+			// 死亡したホーミング弾は削除せず、待機プールへ戻す
+			homingBulletPool_.push_back(std::move(*it));
+
+			// 使用中リストからは外す
 			it = homingBullets_.erase(it);
 		} else {
 			++it;
@@ -159,11 +167,19 @@ void PlayerShotManager::SetShootingEnabled(bool enabled) {
 		// ロック状態を解除する
 		ClearLockState();
 
-		// 画面上の通常弾を消す
-		bullets_.clear();
+		// 画面上の通常弾を待機プールへ戻す
+		while (!bullets_.empty()) {
+			// 死亡した弾は削除せず、待機プールへ戻す
+			bulletPool_.push_back(std::move(bullets_.front()));
+			bullets_.pop_front(); // 管理リストからは外す
+		}
 
-		// 画面上のホーミング弾を消す
-		homingBullets_.clear();
+		// 画面上のホーミング弾を待機プールへ戻す
+		while (!homingBullets_.empty()) {
+			// 死亡したホーミング弾は削除せず、待機プールへ戻す
+			homingBulletPool_.push_back(std::move(homingBullets_.front()));
+			homingBullets_.pop_front(); // 管理リストからは外す
+		}
 
 		// RB発射クールダウンをリセットする
 		rbShotCooldownTimer_ = 0.0f;
@@ -426,12 +442,23 @@ void PlayerShotManager::RBShoot_() {
 	//=========================================================
 	// RB弾生成
 	//=========================================================
+	
+	// ObjectPoolから弾を取得する。空いていなければ新規生成する。
+	std::unique_ptr<PlayerBullet> bullet;
 
-	// 通常弾を生成する
-	auto bullet = std::make_unique<PlayerBullet>();
-
-	// 通常弾を初期化する
-	bullet->Initialize(common_, dxCommon_);
+	// 待機プールに空きがあればそこから取り出す
+	if (!bulletPool_.empty()) {
+		// 待機プールから弾を取り出す
+		bullet = std::move(bulletPool_.front());
+		bulletPool_.pop_front(); // プールから取り出した弾は再利用する
+		// 再利用用に状態を初期化する
+		bullet->ResetForReuse();
+	} else {
+		// プールに空きが無い場合だけ新しく生成する
+		bullet = std::make_unique<PlayerBullet>();
+		bullet->Initialize(common_, dxCommon_);
+		bullet->ResetForReuse(); // 新規生成でも状態を初期化する
+	}
 
 	// 発射開始位置を取得する
 	Vector3 startPos = ownerObject_->GetTranslate();
@@ -564,11 +591,23 @@ void PlayerShotManager::LBShoot_() {
 		// LBホーミング弾生成
 		//=====================================================
 
-		// ホーミング弾を生成する
-		auto bullet = std::make_unique<HomingBullet>();
+		// ObjectPoolからホーミング弾を取得する。空いていなければ新規生成する。
+		std::unique_ptr<HomingBullet> bullet;
 
-		// ホーミング弾を初期化する
-		bullet->Initialize(common_, dxCommon_);
+		// 待機プールに空きがあればそこから取り出す
+		if (!homingBulletPool_.empty()) {
+			// 待機プールからホーミング弾を取り出す
+			bullet = std::move(homingBulletPool_.front());
+			homingBulletPool_.pop_front(); // プールから取り出したホーミング弾は再利用する
+
+			// 再利用用に状態を初期化する
+			bullet->ResetForReuse();
+		} else {
+			// プールに空きが無い場合だけ新しく生成する
+			bullet = std::make_unique<HomingBullet>();
+			bullet->Initialize(common_, dxCommon_);
+			bullet->ResetForReuse(); // 新規生成でも状態を初期化する
+		}
 
 		// 発射位置を取得する
 		Vector3 start = ownerObject_->GetTranslate();

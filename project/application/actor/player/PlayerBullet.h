@@ -72,6 +72,11 @@ public:
 		const Vector3& velocityAfter
 	);
 
+	/// <summary>
+	/// ObjectPool用：弾を再利用できる状態にリセットする
+	/// </summary>
+	void ResetForReuse();
+
 	// Getter===================================
 	/// <summary>
 	/// 弾の位置を取得します。（ワールド座標）

@@ -671,6 +671,48 @@ void PlayerBullet::StartSpawnBezier(const Vector3& p0, const Vector3& p1, const 
 	velocity_ = { 0,0,0 };
 }
 
+void PlayerBullet::ResetForReuse() {
+	// 死亡・ヒット状態を解除する
+	isDead_ = false;
+	isHit_ = false;
+
+	// 寿命管理をリセットする
+	lifeTimer_ = 0.0f;
+
+	// バリア反射状態をリセットする
+	isReflected_ = false;
+	reflectedTimer_ = 0.0f;
+
+	// 発射時ベジェ演出状態をリセットする
+	isSpawningCurve_ = false;
+	spawnT_ = 0.0f;
+	spawnDuration_ = 0.0f;
+	postSpawnVelocity_ = { 0.0f, 0.0f, 0.0f };
+
+	// 速度を初期化する
+	velocity_ = { 0.0f, 0.0f, 0.0f };
+
+	// ターゲット参照を初期化する
+	enemy_ = nullptr;
+	core_ = nullptr;
+
+	// 必殺状態を初期化する
+	isSpecialAttack_ = false;
+
+	// LT用トレイルを初期化する
+	ltTrailPts_.clear();
+	ltTrailDistAcc_ = 0.0f;
+	ltRingDistAcc_ = 0.0f;
+
+	// 位置情報を現在位置基準で揃える
+	if (object_) {
+		prevPos_ = object_->GetTranslate();
+		trailEmitter_.SetPosition(prevPos_);
+		object_->SetScale({ kDefaultScale_, kDefaultScale_, kDefaultScale_ }); // スケールは変わらない想定だが一応リセットしておく
+		object_->SetRotate({ 0.0f, 0.0f, 0.0f });
+	}
+}
+
 void PlayerBullet::UpdateSpawnBezier() {
 	// 現在位置を取得する
 	Vector3 pos = object_->GetTranslate();

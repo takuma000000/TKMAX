@@ -38,6 +38,11 @@ public:
 	void DrawTrail(TKM::DirectXCommon* dxCommon);
 
 	/// <summary>
+	/// ObjectPool用：ホーミング弾を再利用できる状態にリセットします。
+	/// </summary>
+	void ResetForReuse();
+
+	/// <summary>
 	/// ホーミング弾の山なり弾道を開始します。
 	/// </summary>
 	/// <param name="start">開始位置</param>

@@ -202,8 +202,14 @@ private:
 	//======================================================================
 	// 弾オブジェクト管理
 	//======================================================================
-	std::list<std::unique_ptr<PlayerBullet>> bullets_;        // 通常弾（RB/RT）
-	std::list<std::unique_ptr<HomingBullet>> homingBullets_; // ホーミング弾（LB）
+	std::list<std::unique_ptr<PlayerBullet>> bullets_;        // 使用中の通常弾（RB）
+	std::list<std::unique_ptr<HomingBullet>> homingBullets_;  // 使用中のホーミング弾（LB）
+
+	//======================================================================
+	// ObjectPool
+	//======================================================================
+	std::list<std::unique_ptr<PlayerBullet>> bulletPool_;         // 待機中の通常弾（RB）
+	std::list<std::unique_ptr<HomingBullet>> homingBulletPool_;   // 待機中のホーミング弾（LB）
 
 	//======================================================================
 	// 射撃制御フラグ
