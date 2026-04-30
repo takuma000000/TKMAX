@@ -167,7 +167,8 @@ namespace TKM {
 			float RiseSpeed;
 			float _padX[3];
 		};
-		// LaserBeamCB構造体（レーザービーム用）
+		
+		// BeamCB構造体（レーザービーム用）
 		struct LaserBeamCB {
 			Matrix4x4 ViewProj;
 

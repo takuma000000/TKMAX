@@ -92,7 +92,7 @@ void BossOrbitState::Update(TKM::IStateContext& ctx, float dt) {
 	if (c.timer_ < c.config_->orbit_.duration_) { return; }
 
 	// -----------------------------
-	// 通常時：ミサイル or スラッシュ
+	// ミサイル or スラッシュ
 	// -----------------------------
 
 	// スラッシュがクールダウン中でなければ選択候補に入れる

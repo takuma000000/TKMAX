@@ -193,13 +193,6 @@ private:
 	float rageGauge_ = 0.0f;          // 0..1
 	int   lastHpForRage_ = -1;        // 前回HP（ダメージ検出用）
 	float noDamageTime_ = 0.0f;       // 最後に被ダメしてからの経過
-	//==============================
-	// Laser（怒り中のみ）
-	//==============================
-	Vector3 laserStartWS_{ 0.0f,0.0f,0.0f }; // レーザー開始位置（ワールド座標）
-	Vector3 laserEndWS_{ 0.0f,0.0f,0.0f }; // レーザー終了位置（ワールド座標）
-	Vector3 laserBasePos_{ 0.0f,0.0f,0.0f }; // レーザー中の固定基準
-	Vector3 laserAimFixed_{ 0.0f,0.0f,0.0f }; // 予告開始時の狙い（固定）
 	// --- Windup Stop & Shake ---
 	Vector3 windupBasePos_{ 0.0f, 0.0f, 0.0f }; // 予備動作開始位置（固定）
 	float windupFxTimer_ = 0.0f; // エフェクト用タイマー
@@ -260,9 +253,6 @@ private:
 	friend class BossEnterState;
 	friend class BossOrbitState;
 	friend class BossRecoverState;
-	friend class BossLaserWindupState;
-	friend class BossLaserFireState;
-	friend class BossLaserRecoverState;
 	// StateMachine
 	TKM::StateMachine sm_; // 状態遷移マシン
 	Enemy* boss_ = nullptr; // Update中だけ有効
