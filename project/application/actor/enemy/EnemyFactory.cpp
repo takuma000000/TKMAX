@@ -20,18 +20,15 @@ std::unique_ptr<Enemy> EnemyFactory::CreateMainSquadEnemy(
 	enemy->SetModel(desc.model_);
 	enemy->SetHP(desc.hp_);
 	enemy->SetScale(desc.scale_);
+	enemy->SetType(desc.type_);
 
-	// 雑魚敵フェーズ本隊として扱う
-	enemy->SetType(EnemyType::MainSquad);
-
-	// クラゲモデルの場合は触手も設定する
-	if (desc.model_ == "jerryfish.obj") {
-		enemy->SetTentacleModel("tentacle.obj");
-		// 触手のローカル座標は、モデルの原点を基準に適切な位置・回転・スケールを設定します。
+	// 触手の設定
+	if (desc.useTentacle_) {
+		enemy->SetTentacleModel(desc.tentacleModel_);
 		enemy->SetTentacleLocal(
-			{ 0.0f, 0.0f, 0.0f },
-			{ 0.0f, 0.0f, 0.0f },
-			{ 1.0f, 1.0f, 1.0f }
+			desc.tentacleLocalPosition_,
+			desc.tentacleLocalRotation_,
+			desc.tentacleLocalScale_
 		);
 	}
 

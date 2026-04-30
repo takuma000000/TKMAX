@@ -250,91 +250,6 @@ void Enemy::Update(float dt) {
 			}
 		}
 
-		// 空中から接近して、その後プレイヤーへ急降下する行動
-		static void Move_PounceFromAbove(Enemy* self, MoveCtx& c) {
-			// 急降下開始指示が無ければ何もしない
-			if (!self->pounceStarted_) {
-				return;
-			}
-
-			TKM::ParticleManager* pm_ = TKM::ParticleManager::GetInstance();
-
-			// まだ本格ダイブに入っていない段階
-			if (!self->pounceDiving_) {
-				// 開始からの経過時間を進める
-				self->pounceTime_ += c.dt_;
-
-				// 全体時間に対する進行率を計算する
-				float t_ = self->pounceTime_ / self->pounceDuration_;
-				if (t_ > 1.0f) t_ = 1.0f;
-
-				// 急降下の入りを自然にするためEaseOutQuadを使う
-				auto EaseOutQuad_ = [](float x) {
-					return 1.0f - (1.0f - x) * (1.0f - x);
-					};
-
-				// イージング後の進行率
-				float u_ = EaseOutQuad_(t_);
-
-				// 開始地点→頂点、頂点→目標地点の2本を補間し、
-				// さらにその間を補間して放物線っぽい軌道を作る
-				Vector3 pos1_ = MyMath::Vector3Lerp(self->pounceStart_, self->pounceApex_, u_);
-				Vector3 pos2_ = MyMath::Vector3Lerp(self->pounceApex_, self->pounceTarget_, u_);
-				Vector3 newPos_ = MyMath::Vector3Lerp(pos1_, pos2_, u_);
-
-				// 計算した軌道上の位置を反映する
-				c.pos_ = newPos_;
-
-				// 接近中の軌道にエフェクトを発生させる
-				{
-					Vector3 emitPos_ = c.pos_;
-					pm_->Emit("enemyPounceTrail", emitPos_, 2);
-					pm_->Emit("enemyPounceSpark", emitPos_, 3);
-				}
-
-				// 接近フェーズが終了したら、直線的なダイブフェーズへ切り替える
-				if (t_ >= 1.0f) {
-					// 開始地点から目標地点への方向ベクトルを作る
-					Vector3 dir_ = self->pounceTarget_ - self->pounceStart_;
-
-					// ベクトル長を求める
-					float len_ = MyMath::Length(dir_);
-
-					// 十分な長さがあるなら正規化して使う
-					if (len_ > 0.001f) {
-						dir_ = MyMath::Normalize(dir_);
-					} else {
-						// ほぼ同位置なら、仮の下向きベクトルを使う
-						dir_ = { 0.0f, -0.1f, -1.0f };
-					}
-
-					// 少しだけ下向き成分を増やして、急降下感を強める
-					dir_.y -= 0.2f;
-
-					// 再正規化して方向だけ残す
-					dir_ = MyMath::Normalize(dir_);
-
-					// ダイブ速度を設定する
-					float diveSpeed_ = 0.7f;
-
-					// 以後の移動に使う速度として保存する
-					self->velocity_ = dir_ * diveSpeed_;
-
-					// 本格ダイブ開始フラグを立てる
-					self->pounceDiving_ = true;
-				}
-
-			} else {
-				// ダイブ開始後は保存済み速度で直進する
-				c.pos_ += self->velocity_ * c.factor_;
-
-				// ダイブ中も軌跡エフェクトを継続して出す
-				Vector3 emitPos_ = c.pos_;
-				pm_->Emit("enemyPounceTrail", emitPos_, 2);
-				pm_->Emit("enemyPounceSpark", emitPos_, 2);
-			}
-		}
-
 		// 指定範囲内をランダムに徘徊する行動
 		static void Move_FreeRoam(Enemy* self, MoveCtx& c) {
 			// 0.0f ～ 1.0f のランダム値を返す簡易関数
@@ -444,7 +359,6 @@ void Enemy::Update(float dt) {
 	// 行動 enum と実処理関数を対応付けるテーブル
 	using MoveFn = void(*)(Enemy*, MoveCtx&);
 	static const MoveFn kMoveTable_[] = {
-		&Local::Move_PounceFromAbove,
 		&Local::Move_FreeRoam,
 		&Local::Move_FormationMove,
 	};

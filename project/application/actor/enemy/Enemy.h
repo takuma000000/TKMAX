@@ -14,7 +14,6 @@
 //=============================================================
 
 enum class EnemyBehavior {
-	PounceFromAbove, // 上空から急降下してくる
 	FreeRoam,        // 自由に動き回る
 	MoveToTarget,   // 指定された目標位置へ移動する
 };
@@ -350,7 +349,7 @@ private:
 	//  基本行動タイプ
 	//--------------------------------------------------------------
 	EnemyType    type_; // 役割タイプ（通常 / Wave3中ボス / Wave3蘇生核 / ボス）
-	EnemyBehavior behavior_ = EnemyBehavior::PounceFromAbove; // 行動パターン
+	EnemyBehavior behavior_ = EnemyBehavior::MoveToTarget; // 行動パターン
 	float t_ = 0.0f;    // 各種挙動で使う汎用タイマー
 	//--------------------------------------------------------------
 	//  ロックオン演出

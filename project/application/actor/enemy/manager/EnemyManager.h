@@ -390,7 +390,7 @@ private:
 	// 本隊戦の進行状態
 	//======================================================================
 	MainSquadPhase mainSquadPhase_;                     // Wave1本隊の段階
-	float mainSquadPhaseTimer_ = 0.0f;                      // 現在フェーズ開始からの経過時間
+	float mainSquadPhaseTimer_ = 0.0f;                  // 現在フェーズ開始からの経過時間
 	int mainSquadDefeatedCount_ = 0;                    // Wave1本隊の撃破数
 	bool mainSquadStopped_ = false;                     // 本隊停止中かどうか
 
@@ -398,7 +398,6 @@ private:
 	// 本隊の配置・移動設定
 	//======================================================================
 	static constexpr int kMainSquadEnemyCount_ = 10;        // Wave1本隊の敵数
-	float mainSquadMoveSpeed_ = 0.22f;             // 隊列移動速度
 	float mainSquadOrbitRadius_ = 18.0f;                   // 円隊列の半径
 	float mainSquadOrbitAngularSpeed_ = 0.75f;             // 円隊列の回転速度（rad/sec）
 	float mainSquadOrbitAngle_ = 0.0f;                     // 現在の円回転角

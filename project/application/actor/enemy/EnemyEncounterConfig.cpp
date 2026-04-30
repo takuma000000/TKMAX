@@ -46,22 +46,43 @@ bool EnemyEncounterConfig::HasExtension(const std::string& path, const char* ext
 	return lowerPath.compare(lowerPath.size() - lowerExt.size(), lowerExt.size(), lowerExt) == 0;
 }
 
-// 文字列からEnemyBehavior列挙型へ変換する
-static EnemyBehavior ParseBehavior(const std::string& s, EnemyBehavior fallback) {
+static Vector3 ParseVector3(const json& j, const Vector3& fallback) {
+	Vector3 result = fallback; // JSONがオブジェクトでない場合は既存値を維持して返す
+
+	// JSONがオブジェクトでない場合は既存値を維持して返す
+	if (!j.is_object()) {
+		return result;
+	}
+	// x, y, z の各要素が存在する場合のみ値を更新する
+	if (j.contains("x")) {
+		result.x = j["x"].get<float>();
+	}
+	if (j.contains("y")) {
+		result.y = j["y"].get<float>();
+	}
+	if (j.contains("z")) {
+		result.z = j["z"].get<float>();
+	}
+
+	return result; // JSONに必要な要素がない場合は既存値を維持して返す
+}
+
+static EnemyType ParseEnemyType(const std::string& s, EnemyType fallback) {
 	// 空文字や"0"なら既存値をそのまま使う
-	if (s.empty() || s == "0") { return fallback; }
+	if (s.empty()) {
+		return fallback;
+	}
 
 	// 小文字に統一して比較しやすくする
 	std::string t = s;
+	// 小文字に変換して比較しやすくする
 	std::transform(t.begin(), t.end(), t.begin(),
-		[](unsigned char c) { return (char)std::tolower(c); });
+		[](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 
-	// 文字列に応じて行動パターンへ変換
-	if (t == "pouncefromabove") { return EnemyBehavior::PounceFromAbove; }
-	if (t == "movetotarget") { return EnemyBehavior::MoveToTarget; }
+	if (t == "mainsquad") { return EnemyType::MainSquad; } // デフォルト値と同じなので明示的に指定された場合も MainSquad を返す
+	if (t == "boss") { return EnemyType::Boss; } // 該当しない場合は既存の値を維持
 
-	// 該当しない場合は既存の値を維持
-	return fallback;
+	return fallback; // 該当しない場合は既存の値を維持
 }
 
 // ファイル拡張子に応じてCSVかJSONかを振り分けて読み込む
@@ -118,22 +139,10 @@ bool EnemyEncounterConfig::LoadCsv(const char* path) {
 		// Wave1設定
 		//=====================================================
 		if (StrEq(wave_, "Wave1")) {
-
 			//-------------------------
-			// Wave1 Settings
+			// Settings
 			//-------------------------
 			if (StrEq(type_, "Settings")) {
-
-				// 出現間隔
-				if (StrEq(id_, "spawnInterval")) {
-					smallEnemyPhase_.spawnInterval_ = ToF(get_(3));
-				}
-
-				// 同時出現数
-				if (StrEq(id_, "maxSimultaneous")) {
-					smallEnemyPhase_.maxSimultaneous_ = ToI(get_(3));
-				}
-
 				// 撃破目標数
 				if (StrEq(id_, "defeatTarget")) {
 					smallEnemyPhase_.defeatTarget_ = ToI(get_(3));
@@ -141,40 +150,12 @@ bool EnemyEncounterConfig::LoadCsv(const char* path) {
 
 			}
 			//-------------------------
-			// 出現位置ベース
-			//-------------------------
-			else if (StrEq(type_, "SpawnPos") && StrEq(id_, "base")) {
-
-				// Y座標基準
-				smallEnemyPhase_.baseY_ = ToF(get_(4));
-
-				// Z座標基準
-				smallEnemyPhase_.baseZ_ = ToF(get_(5));
-			}
-			//-------------------------
-			// ランダムX範囲
-			//-------------------------
-			else if (StrEq(type_, "RandX") && StrEq(id_, "range")) {
-
-				smallEnemyPhase_.randXMin_ = ToF(get_(4));
-				smallEnemyPhase_.randXMax_ = ToF(get_(5));
-			}
-
-			//-------------------------
 			// 敵パラメータ
 			//-------------------------
 			if (StrEq(type_, "EnemyParams") && StrEq(id_, "default")) {
 
 				mainEnemyParams_.model_ = get_(3);          // モデル名
 				mainEnemyParams_.hp_ = ToI(get_(4));        // HP
-				mainEnemyParams_.startY_ = ToF(get_(5));    // 初期Y
-				mainEnemyParams_.targetForwardZ_ = ToF(get_(6)); // 前進目標Z
-				mainEnemyParams_.apexY_ = ToF(get_(7));     // 頂点Y
-				mainEnemyParams_.pounceTime_ = ToF(get_(8)); // 突進時間
-
-				// 行動パターンを文字列から変換
-				mainEnemyParams_.behavior_ =
-					ParseBehavior(get_(11), mainEnemyParams_.behavior_);
 			}
 		}
 	}
@@ -215,34 +196,8 @@ bool EnemyEncounterConfig::LoadJson(const char* path) {
 		if (w.contains("settings")) {
 			auto& s = w["settings"];
 
-			if (s.contains("spawnInterval")) {
-				smallEnemyPhase_.spawnInterval_ = s["spawnInterval"].get<float>();
-			}
-			if (s.contains("maxSimultaneous")) {
-				smallEnemyPhase_.maxSimultaneous_ = s["maxSimultaneous"].get<int>();
-			}
 			if (s.contains("defeatTarget")) {
 				smallEnemyPhase_.defeatTarget_ = s["defeatTarget"].get<int>();
-			}
-		}
-
-		//-------------------------
-		// Spawn設定
-		//-------------------------
-		if (w.contains("spawn")) {
-			auto& s = w["spawn"];
-
-			if (s.contains("baseY")) {
-				smallEnemyPhase_.baseY_ = s["baseY"].get<float>();
-			}
-			if (s.contains("baseZ")) {
-				smallEnemyPhase_.baseZ_ = s["baseZ"].get<float>();
-			}
-			if (s.contains("randXMin")) {
-				smallEnemyPhase_.randXMin_ = s["randXMin"].get<float>();
-			}
-			if (s.contains("randXMax")) {
-				smallEnemyPhase_.randXMax_ = s["randXMax"].get<float>();
 			}
 		}
 
@@ -258,21 +213,42 @@ bool EnemyEncounterConfig::LoadJson(const char* path) {
 			if (e.contains("hp")) {
 				mainEnemyParams_.hp_ = e["hp"].get<int>();
 			}
-			if (e.contains("startY")) {
-				mainEnemyParams_.startY_ = e["startY"].get<float>();
+			if (e.contains("scale")) {
+				mainEnemyParams_.scale_ =
+					ParseVector3(e["scale"], mainEnemyParams_.scale_);
 			}
-			if (e.contains("targetForwardZ")) {
-				mainEnemyParams_.targetForwardZ_ = e["targetForwardZ"].get<float>();
+			if (e.contains("type")) {
+				mainEnemyParams_.type_ =
+					ParseEnemyType(e["type"].get<std::string>(), mainEnemyParams_.type_);
 			}
-			if (e.contains("apexY")) {
-				mainEnemyParams_.apexY_ = e["apexY"].get<float>();
+			if (e.contains("tentacle")) {
+				auto& t = e["tentacle"];
+
+				if (t.contains("enabled")) {
+					mainEnemyParams_.useTentacle_ = t["enabled"].get<bool>();
+				}
+				if (t.contains("model")) {
+					mainEnemyParams_.tentacleModel_ = t["model"].get<std::string>();
+				}
+				if (t.contains("localPosition")) {
+					mainEnemyParams_.tentacleLocalPosition_ =
+						ParseVector3(t["localPosition"], mainEnemyParams_.tentacleLocalPosition_);
+				}
+				if (t.contains("localRotation")) {
+					mainEnemyParams_.tentacleLocalRotation_ =
+						ParseVector3(t["localRotation"], mainEnemyParams_.tentacleLocalRotation_);
+				}
+				if (t.contains("localScale")) {
+					mainEnemyParams_.tentacleLocalScale_ =
+						ParseVector3(t["localScale"], mainEnemyParams_.tentacleLocalScale_);
+				}
 			}
-			if (e.contains("pounceTime")) {
-				mainEnemyParams_.pounceTime_ = e["pounceTime"].get<float>();
-			}
-			if (e.contains("behavior")) {
-				mainEnemyParams_.behavior_ =
-					ParseBehavior(e["behavior"].get<std::string>(), mainEnemyParams_.behavior_);
+			if (e.contains("formation")) {
+				auto& f = e["formation"];
+
+				if (f.contains("moveSpeed")) {
+					mainEnemyParams_.formationMoveSpeed_ = f["moveSpeed"].get<float>();
+				}
 			}
 		}
 	}

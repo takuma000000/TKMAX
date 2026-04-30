@@ -2,29 +2,71 @@
   "_comment": "敵遭遇設定。現在は雑魚敵フェーズ用の設定のみを持つ。",
 
   "smallEnemyPhase": {
-    "_comment": "雑魚敵の情報",
+    "_comment": "雑魚敵フェーズ全体の設定。",
 
     "settings": {
-      "spawnInterval": 1.5,
-      "maxSimultaneous": 2,
-      "defeatTarget": 10
-    },
+      "_comment": "雑魚敵フェーズの進行設定。",
 
-    "spawn": {
-      "baseY": 5.0,
-      "baseZ": 100.0,
-      "randXMin": -20.0,
-      "randXMax": 20.0
+      "defeatTarget": 10,
+      "_defeatTarget_comment": "フェーズ終了に必要な撃破数。"
     },
 
     "enemyParams": {
+      "_comment": "生成される雑魚敵本隊の設定。",
+
       "model": "jerryfish.obj",
-      "hp":1,
-      "startY": 20.0,
-      "targetForwardZ": 3.0,
-      "apexY": 30.0,
-      "pounceTime": 1.6,
-      "behavior": "PounceFromAbove"
+      "_model_comment": "敵本体に使用するモデル名。",
+
+      "hp": 1,
+      "_hp_comment": "敵のHP。",
+
+      "scale": {
+        "_comment": "敵本体の表示スケール。",
+        "x": 1.0,
+        "y": 1.0,
+        "z": 1.0
+      },
+
+      "type": "MainSquad",
+      "_type_comment": "敵の種類。MainSquadは雑魚敵フェーズ本隊として扱う。",
+
+      "tentacle": {
+        "_comment": "触手モデルの設定。",
+
+        "enabled": true,
+        "_enabled_comment": "触手を使用するかどうか。",
+
+        "model": "tentacle.obj",
+        "_model_comment": "触手に使用するモデル名。",
+
+        "localPosition": {
+          "_comment": "敵本体から見た触手の相対位置。",
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+
+        "localRotation": {
+          "_comment": "敵本体から見た触手の相対回転。",
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+
+        "localScale": {
+          "_comment": "触手の相対スケール。",
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        }
+      },
+
+      "formation": {
+        "_comment": "雑魚敵本隊が円形隊列として動くための設定。",
+
+        "moveSpeed": 0.08,
+        "_moveSpeed_comment": "各敵が円形隊列上の目標位置へ追従する速度。"
+      }
     }
   }
 }

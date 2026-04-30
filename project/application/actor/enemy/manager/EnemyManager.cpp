@@ -302,9 +302,9 @@ void EnemyManager::UpdateMainSquadBattle_(float dt) {
 	}
 
 	//=========================================================
-	// 本隊全滅でボス戦へ移行
+	// 目標撃破数達成でボス戦へ移行
 	//=========================================================
-	if (CountAliveMainSquad_() <= 0) {
+	if (maxEnemyCount_ > 0 && mainSquadDefeatedCount_ >= maxEnemyCount_) {
 		NotifyPlayerBeforeClearEnemies_();
 		enemies_.clear();
 
@@ -602,12 +602,20 @@ void EnemyManager::SpawnMainSquad_() {
 
 	for (int i = 0; i < kMainSquadEnemyCount_; ++i) {
 
+		// EnemyFactory を使って、MainSquadタイプの敵を生成
 		EnemyFactory::MainSquadDesc desc_;
-		desc_.model_ = params_.model_;
-		desc_.hp_ = params_.hp_;
-		desc_.scale_ = { 1.0f, 1.0f, 1.0f };
-		desc_.formationMoveSpeed_ = mainSquadMoveSpeed_;
+		desc_.model_ = params_.model_; // モデルは全員同じ
+		desc_.hp_ = params_.hp_; // HPも全員同じ
+		desc_.scale_ = params_.scale_; // スケールも全員同じ
+		desc_.type_ = params_.type_; // タイプも全員同じ
+		desc_.formationMoveSpeed_ = params_.formationMoveSpeed_; // フォーメーション移動速度も全員同じ
+		desc_.useTentacle_ = params_.useTentacle_; // 触手の有無も全員同じ
+		desc_.tentacleModel_ = params_.tentacleModel_; // 触手モデルも全員同じ
+		desc_.tentacleLocalPosition_ = params_.tentacleLocalPosition_; // 触手ローカル位置も全員同じ
+		desc_.tentacleLocalRotation_ = params_.tentacleLocalRotation_; // 
+		desc_.tentacleLocalScale_ = params_.tentacleLocalScale_; // 触手ローカルスケールも全員同じ
 
+		// EnemyFactory を使って敵を生成
 		auto e_ = EnemyFactory::CreateMainSquadEnemy(
 			TKM::Object3dCommon::GetInstance(),
 			dx_,
@@ -988,9 +996,12 @@ void EnemyManager::ApplyMainSquadOrbitTargets_() {
 		pos_.x += std::cos(ang_) * mainSquadOrbitRadius_;
 		pos_.y += std::sin(ang_) * mainSquadOrbitRadius_;
 
+		// フォーメーション移動速度は全員同じなので、EnemyFactoryのパラメータから取ってくる
+		const auto& params_ = encounterConfig_.GetMainEnemyParams();
+		// 敵の行動を移動に切り替えて、ターゲットを更新
 		e->SetBehavior(EnemyBehavior::MoveToTarget);
-		e->SetFormationMoveSpeed(mainSquadMoveSpeed_);
-		e->SetFormationTarget(pos_);
+		e->SetFormationMoveSpeed(params_.formationMoveSpeed_); // フォーメーション移動速度
+		e->SetFormationTarget(pos_); // 新しいターゲット位置
 
 		++aliveIndex_;
 	}
