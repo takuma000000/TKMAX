@@ -19,7 +19,7 @@
 
     "enemyParams": {
       "model": "jerryfish.obj",
-      "hp": 1,
+      "hp":1,
       "startY": 20.0,
       "targetForwardZ": 3.0,
       "apexY": 30.0,

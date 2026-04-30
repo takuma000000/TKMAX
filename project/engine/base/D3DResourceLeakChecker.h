@@ -7,6 +7,9 @@
 namespace TKM {
 	class D3DResourceLeakChecker {
 	public:
+		/// <summary>
+		/// D3DResourceLeakCheckerのデストラクタ。DirectXリソースのリークを検出するための処理を行います。
+		/// </summary>
 		~D3DResourceLeakChecker();
 	};
 }

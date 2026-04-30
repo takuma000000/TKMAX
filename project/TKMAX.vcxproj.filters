@@ -218,6 +218,7 @@
     <ClCompile Include="application\state\BossEntranceStates.cpp" />
     <ClCompile Include="application\actor\player\PlayerShotManager.cpp" />
     <ClCompile Include="application\actor\player\PlayerShotConfig.cpp" />
+    <ClCompile Include="application\actor\enemy\EnemyFactory.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -477,6 +478,7 @@
     <ClInclude Include="application\state\BossEntranceStates.h" />
     <ClInclude Include="application\actor\player\PlayerShotManager.h" />
     <ClInclude Include="application\actor\player\PlayerShotConfig.h" />
+    <ClInclude Include="application\actor\enemy\EnemyFactory.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

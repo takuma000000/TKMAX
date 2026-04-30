@@ -4,6 +4,7 @@
 #include "manager/BossManager.h"
 #include "BarrierCommon.h"
 #include "AudioManager.h"
+#include "EnemyFactory.h"
 #include <cmath>
 
 #ifdef USE_IMGUI
@@ -600,27 +601,20 @@ void EnemyManager::SpawnMainSquad_() {
 	const auto& params_ = encounterConfig_.GetMainEnemyParams();
 
 	for (int i = 0; i < kMainSquadEnemyCount_; ++i) {
-		auto e_ = std::make_unique<Enemy>();
-		e_->Initialize(TKM::Object3dCommon::GetInstance(), dx_);
-		e_->SetCamera(camera_);
-		e_->SetParentScene(parent_);
 
-		e_->SetModel(params_.model_);
-		e_->SetHP(params_.hp_);
-		e_->SetScale({ 1.0f, 1.0f, 1.0f });
-		e_->SetType(EnemyType::MainSquad);
+		EnemyFactory::MainSquadDesc desc_;
+		desc_.model_ = params_.model_;
+		desc_.hp_ = params_.hp_;
+		desc_.scale_ = { 1.0f, 1.0f, 1.0f };
+		desc_.formationMoveSpeed_ = mainSquadMoveSpeed_;
 
-		if (params_.model_ == "jerryfish.obj") {
-			e_->SetTentacleModel("tentacle.obj");
-			e_->SetTentacleLocal(
-				{ 0.0f, 0.0f, 0.0f },
-				{ 0.0f, 0.0f, 0.0f },
-				{ 1.0f, 1.0f, 1.0f }
-			);
-		}
-
-		e_->SetBehavior(EnemyBehavior::MoveToTarget);
-		e_->SetFormationMoveSpeed(mainSquadMoveSpeed_);
+		auto e_ = EnemyFactory::CreateMainSquadEnemy(
+			TKM::Object3dCommon::GetInstance(),
+			dx_,
+			camera_,
+			parent_,
+			desc_
+		);
 
 		const float step_ = 6.28318530718f / static_cast<float>(kMainSquadEnemyCount_);
 		const float ang_ = mainSquadOrbitAngle_ + step_ * static_cast<float>(i);
