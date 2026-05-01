@@ -18,15 +18,15 @@ public:
 	/// MainSquadEnemyを生成するための設定をまとめた構造体
 	struct MainSquadDesc {
 		std::string model_;                                    // モデルファイル名
-		int hp_ = 1;                                           // HP
-		Vector3 scale_ = { 1.0f, 1.0f, 1.0f };                 // スケール
-		float formationMoveSpeed_ = 0.0f;                      // 編隊移動速度
-		EnemyType type_ = EnemyType::MainSquad;                // 敵の種類
+		int hp_;                                           // HP
+		Vector3 scale_;                 // スケール
+		float formationFollowSpeed_; // 円形隊列上の目標位置へ追従する速度
+		EnemyType type_;                // 敵の種類
 		bool useTentacle_ = false;                             // 触手を使用するかどうか
 		std::string tentacleModel_;                            // 触手のモデルファイル名（useTentacle_ が true の場合に使用）
-		Vector3 tentacleLocalPosition_ = { 0.0f, 0.0f, 0.0f }; // 触手のローカル位置（useTentacle_ が true の場合に使用）
-		Vector3 tentacleLocalRotation_ = { 0.0f, 0.0f, 0.0f }; // 触手のローカル回転（オイラー角）（useTentacle_ が true の場合に使用）
-		Vector3 tentacleLocalScale_ = { 1.0f, 1.0f, 1.0f };    // 触手のローカルスケール（useTentacle_ が true の場合に使用）
+		Vector3 tentacleLocalPosition_; // 触手のローカル位置（useTentacle_ が true の場合に使用）
+		Vector3 tentacleLocalRotation_; // 触手のローカル回転（オイラー角）（useTentacle_ が true の場合に使用）
+		Vector3 tentacleLocalScale_;    // 触手のローカルスケール（useTentacle_ が true の場合に使用）
 	};
 
 	/// <summary>

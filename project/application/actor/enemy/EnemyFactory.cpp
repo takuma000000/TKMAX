@@ -34,7 +34,7 @@ std::unique_ptr<Enemy> EnemyFactory::CreateMainSquadEnemy(
 
 	// 本隊は円形隊列の目標位置へ移動する
 	enemy->SetBehavior(EnemyBehavior::MoveToTarget);
-	enemy->SetFormationMoveSpeed(desc.formationMoveSpeed_);
+	enemy->SetFormationMoveSpeed(desc.formationFollowSpeed_);
 
 	return enemy;
 }

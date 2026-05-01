@@ -246,8 +246,21 @@ bool EnemyEncounterConfig::LoadJson(const char* path) {
 			if (e.contains("formation")) {
 				auto& f = e["formation"];
 
-				if (f.contains("moveSpeed")) {
-					mainEnemyParams_.formationMoveSpeed_ = f["moveSpeed"].get<float>();
+				if (f.contains("count")) {
+					mainEnemyParams_.formationCount_ = f["count"].get<int>();
+				}
+				if (f.contains("center")) {
+					mainEnemyParams_.formationCenter_ =
+						ParseVector3(f["center"], mainEnemyParams_.formationCenter_);
+				}
+				if (f.contains("orbitRadius")) {
+					mainEnemyParams_.formationOrbitRadius_ = f["orbitRadius"].get<float>();
+				}
+				if (f.contains("orbitAngularSpeed")) {
+					mainEnemyParams_.formationOrbitAngularSpeed_ = f["orbitAngularSpeed"].get<float>();
+				}
+				if (f.contains("followSpeed")) {
+					mainEnemyParams_.formationFollowSpeed_ = f["followSpeed"].get<float>();
 				}
 			}
 		}

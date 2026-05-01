@@ -64,8 +64,24 @@
       "formation": {
         "_comment": "雑魚敵本隊が円形隊列として動くための設定。",
 
-        "moveSpeed": 0.08,
-        "_moveSpeed_comment": "各敵が円形隊列上の目標位置へ追従する速度。"
+        "count": 10,
+        "_count_comment": "円形隊列を構成する本隊敵の数。",
+
+        "center": {
+          "_comment": "円形隊列の中心位置。",
+          "x": 0.0,
+          "y": -3.0,
+          "z": 80.0
+        },
+
+        "orbitRadius": 18.0,
+        "_orbitRadius_comment": "円形隊列の半径。",
+
+        "orbitAngularSpeed": 0.75,
+        "_orbitAngularSpeed_comment": "円形隊列そのものが回転する速度。",
+
+        "followSpeed": 0.08,
+        "_followSpeed_comment": "各敵が円形隊列上の目標位置へ追従する速度。"
       }
     }
   }

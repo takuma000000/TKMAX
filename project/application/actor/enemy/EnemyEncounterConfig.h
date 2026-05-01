@@ -81,19 +81,22 @@ private:
 public:
 	// Enemy Params ==========================================
 	struct MainEnemyParams {
-		std::string model_;                                    // 敵本体のモデル名
-		int hp_ = 1;                                           // 敵のHP
-		Vector3 scale_ = { 1.0f, 1.0f, 1.0f };                 // 敵本体の表示スケール
+		std::string model_;                     // 敵本体のモデル名
+		int hp_;                                // 敵のHP
+		Vector3 scale_;                         // 敵本体の表示スケール
+		EnemyType type_; // 敵の種類
 
-		EnemyType type_ = EnemyType::MainSquad;                // 敵の種類
+		bool useTentacle_ = false;              // 触手を使用するか
+		std::string tentacleModel_;             // 触手モデル名
+		Vector3 tentacleLocalPosition_;         // 触手ローカル位置
+		Vector3 tentacleLocalRotation_;         // 触手ローカル回転
+		Vector3 tentacleLocalScale_;            // 触手ローカルスケール
 
-		bool useTentacle_ = false;                             // 触手を使用するか
-		std::string tentacleModel_;                            // 触手モデル名
-		Vector3 tentacleLocalPosition_ = { 0.0f, 0.0f, 0.0f }; // 触手ローカル位置
-		Vector3 tentacleLocalRotation_ = { 0.0f, 0.0f, 0.0f }; // 触手ローカル回転
-		Vector3 tentacleLocalScale_ = { 1.0f, 1.0f, 1.0f };    // 触手ローカルスケール
-
-		float formationMoveSpeed_ = 0.08f;                     // 円形隊列への追従速度
+		int formationCount_;                    // 円形隊列を構成する敵数
+		Vector3 formationCenter_;               // 円形隊列の中心位置
+		float formationOrbitRadius_;            // 円形隊列の半径
+		float formationOrbitAngularSpeed_;      // 円形隊列そのものが回転する速度
+		float formationFollowSpeed_;            // 円形隊列上の目標位置へ追従する速度
 	};
 	// =======================================================
 

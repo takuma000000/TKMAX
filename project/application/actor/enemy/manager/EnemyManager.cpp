@@ -600,7 +600,9 @@ void EnemyManager::SpawnMainSquad_() {
 
 	const auto& params_ = encounterConfig_.GetMainEnemyParams();
 
-	for (int i = 0; i < kMainSquadEnemyCount_; ++i) {
+	const int enemyCount_ = std::max(1, params_.formationCount_);
+
+	for (int i = 0; i < enemyCount_; ++i) {
 
 		// EnemyFactory を使って、MainSquadタイプの敵を生成
 		EnemyFactory::MainSquadDesc desc_;
@@ -608,7 +610,7 @@ void EnemyManager::SpawnMainSquad_() {
 		desc_.hp_ = params_.hp_; // HPも全員同じ
 		desc_.scale_ = params_.scale_; // スケールも全員同じ
 		desc_.type_ = params_.type_; // タイプも全員同じ
-		desc_.formationMoveSpeed_ = params_.formationMoveSpeed_; // フォーメーション移動速度も全員同じ
+		desc_.formationFollowSpeed_ = params_.formationFollowSpeed_;// フォーメーション移動速度も全員同じ
 		desc_.useTentacle_ = params_.useTentacle_; // 触手の有無も全員同じ
 		desc_.tentacleModel_ = params_.tentacleModel_; // 触手モデルも全員同じ
 		desc_.tentacleLocalPosition_ = params_.tentacleLocalPosition_; // 触手ローカル位置も全員同じ
@@ -624,12 +626,12 @@ void EnemyManager::SpawnMainSquad_() {
 			desc_
 		);
 
-		const float step_ = 6.28318530718f / static_cast<float>(kMainSquadEnemyCount_);
+		const float step_ = 6.28318530718f / static_cast<float>(enemyCount_);
 		const float ang_ = mainSquadOrbitAngle_ + step_ * static_cast<float>(i);
 
-		Vector3 pos_ = mainSquadCenter_;
-		pos_.x += std::cos(ang_) * mainSquadOrbitRadius_;
-		pos_.y += std::sin(ang_) * mainSquadOrbitRadius_;
+		Vector3 pos_ = params_.formationCenter_;
+		pos_.x += std::cos(ang_) * params_.formationOrbitRadius_;
+		pos_.y += std::sin(ang_) * params_.formationOrbitRadius_;
 
 		e_->SetPosition(pos_);
 		e_->SetFormationTarget(pos_);
@@ -895,7 +897,8 @@ void EnemyManager::CheckEnemyBulletPlayerCollision_(float dt) {
 // 特殊コア位置取得
 //=============================================================
 Vector3 EnemyManager::GetSpecialCorePosition_() const {
-	return mainSquadCenter_ + specialCoreOffset_;
+	const auto& params_ = encounterConfig_.GetMainEnemyParams();
+	return params_.formationCenter_ + specialCoreOffset_;
 }
 
 //=============================================================
@@ -977,7 +980,9 @@ void EnemyManager::BeginMainSquadBattle_() {
 // 本隊円運動ターゲット反映
 //=============================================================
 void EnemyManager::ApplyMainSquadOrbitTargets_() {
-	const float step_ = 6.28318530718f / static_cast<float>(kMainSquadEnemyCount_);
+	const auto& params_ = encounterConfig_.GetMainEnemyParams();
+	const int enemyCount_ = std::max(1, params_.formationCount_);
+	const float step_ = 6.28318530718f / static_cast<float>(enemyCount_);
 
 	int aliveIndex_ = 0;
 	for (auto& e : enemies_) {
@@ -992,15 +997,13 @@ void EnemyManager::ApplyMainSquadOrbitTargets_() {
 
 		const float ang_ = mainSquadOrbitAngle_ + step_ * static_cast<float>(aliveIndex_);
 
-		Vector3 pos_ = mainSquadCenter_;
-		pos_.x += std::cos(ang_) * mainSquadOrbitRadius_;
-		pos_.y += std::sin(ang_) * mainSquadOrbitRadius_;
+		Vector3 pos_ = params_.formationCenter_;
+		pos_.x += std::cos(ang_) * params_.formationOrbitRadius_;
+		pos_.y += std::sin(ang_) * params_.formationOrbitRadius_;
 
-		// フォーメーション移動速度は全員同じなので、EnemyFactoryのパラメータから取ってくる
-		const auto& params_ = encounterConfig_.GetMainEnemyParams();
 		// 敵の行動を移動に切り替えて、ターゲットを更新
 		e->SetBehavior(EnemyBehavior::MoveToTarget);
-		e->SetFormationMoveSpeed(params_.formationMoveSpeed_); // フォーメーション移動速度
+		e->SetFormationMoveSpeed(params_.formationFollowSpeed_); // フォーメーション移動速度を設定
 		e->SetFormationTarget(pos_); // 新しいターゲット位置
 
 		++aliveIndex_;
@@ -1011,7 +1014,10 @@ void EnemyManager::ApplyMainSquadOrbitTargets_() {
 // 本隊円運動更新
 //=============================================================
 void EnemyManager::UpdateMainSquadOrbit_(float dt) {
-	mainSquadOrbitAngle_ -= mainSquadOrbitAngularSpeed_ * dt;
+	// 本隊円運動の角度更新
+	const auto& params_ = encounterConfig_.GetMainEnemyParams();
+	mainSquadOrbitAngle_ -= params_.formationOrbitAngularSpeed_ * dt; // 反時計回りに回すためマイナス方向へ更新
+	// 本隊円運動のターゲットを更新
 	ApplyMainSquadOrbitTargets_();
 }
 

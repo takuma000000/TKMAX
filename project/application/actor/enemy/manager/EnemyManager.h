@@ -397,11 +397,7 @@ private:
 	//======================================================================
 	// 本隊の配置・移動設定
 	//======================================================================
-	static constexpr int kMainSquadEnemyCount_ = 10;        // Wave1本隊の敵数
-	float mainSquadOrbitRadius_ = 18.0f;                   // 円隊列の半径
-	float mainSquadOrbitAngularSpeed_ = 0.75f;             // 円隊列の回転速度（rad/sec）
 	float mainSquadOrbitAngle_ = 0.0f;                     // 現在の円回転角
-	Vector3 mainSquadCenter_ = { 0.0f, -3.0f, 80.0f }; // 円隊列の中心座標
 
 	//======================================================================
 	// 特殊攻撃コア・通常射撃
