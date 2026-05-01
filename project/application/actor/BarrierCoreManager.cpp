@@ -81,34 +81,55 @@ void BarrierCoreManager::Spawn(const Vector3& center) {
 	// 既存のコアを一度消してから再生成する
 	Clear();
 
-	// バリア外周より少し外側にコアを配置するための半径
-	const float radius_ = kBarrierOuterRadius_ + kCoreOuterMargin_;
+	//=========================================================
+	// コア数チェック
+	// JSON側の count が0以下の場合は生成しない。
+	//=========================================================
+	if (config_.count_ <= 0) {
+		return;
+	}
 
-	// コアを円周上に等間隔配置するための角度幅
-	const float stepDeg_ = 360.0f / static_cast<float>(kCoreCount_);
+	//=========================================================
+	// 配置半径計算
+	// バリア外周半径 + 外側余白で、コアをバリアの外側に配置する。
+	//=========================================================
+	const float radius_ =
+		config_.placement_.barrierOuterRadius_ +
+		config_.placement_.outerMargin_;
 
-	// 指定個数分のコアを円形に配置する
-	for (int i = 0; i < kCoreCount_; ++i) {
-		// 開始角度から等間隔で角度を決める
-		const float angleDeg_ = kCoreRingStartAngleDeg_ + stepDeg_ * static_cast<float>(i);
+	//=========================================================
+	// 角度幅計算
+	// 360度をコア数で割って、円周上に等間隔で配置する。
+	//=========================================================
+	const float stepDeg_ = 360.0f / static_cast<float>(config_.count_);
 
-		// 三角関数用にラジアンへ変換する
+	//=========================================================
+	// コア生成
+	// JSONの count 分だけ円形に並べて生成する。
+	//=========================================================
+	for (int i = 0; i < config_.count_; ++i) {
+		// 開始角度 + 等間隔角度で、現在のコアの角度を決める
+		const float angleDeg_ =
+			config_.placement_.startAngleDeg_ +
+			stepDeg_ * static_cast<float>(i);
+
+		// std::sin / std::cos 用に度数法からラジアンへ変換する
 		const float angleRad_ = angleDeg_ * 3.1415926535f / 180.0f;
 
 		// 中心位置を基準に配置位置を作る
-		Vector3 pos = center;
+		Vector3 pos_ = center;
 
 		// X方向へ円周配置する
-		pos.x += std::cos(angleRad_) * radius_;
+		pos_.x += std::cos(angleRad_) * radius_;
 
 		// Y方向へ円周配置する
-		pos.y += std::sin(angleRad_) * radius_;
+		pos_.y += std::sin(angleRad_) * radius_;
 
-		// Z方向だけ固定オフセットを加える
-		pos.z += kCoreZOffset_;
+		// Z方向はJSONの固定オフセット分だけずらす
+		pos_.z += config_.placement_.zOffset_;
 
 		// 計算した位置にコアを1つ生成する
-		SpawnOne_(pos);
+		SpawnOne_(pos_);
 	}
 
 	// 生成後、プレイヤー側のターゲットコアを同期する
@@ -237,6 +258,25 @@ void BarrierCoreManager::SetPlayer(Player* player) {
 	SyncPlayerTarget_();
 }
 
+//=============================================================
+// 設定適用
+//=============================================================
+void BarrierCoreManager::SetConfig(const BarrierConfig::Core& config) {
+	// JSONから読み込んだコア設定を保持する
+	config_ = config;
+
+	// 既に生成済みのコアがある場合は、そのコアにも即反映する
+	for (auto& core : cores_) {
+		// nullptrは無視する
+		if (!core) {
+			continue;
+		}
+
+		// 既存コアへJSON設定を反映する
+		core->ApplyConfig(config_);
+	}
+}
+
 void BarrierCoreManager::SpawnOne_(const Vector3& pos) {
 	// 初期化に必要な共通情報が無ければ生成しない
 	if (!common_ || !dxCommon_) {
@@ -249,20 +289,18 @@ void BarrierCoreManager::SpawnOne_(const Vector3& pos) {
 	// コアを初期化する
 	core_->Initialize(common_, dxCommon_);
 
+	//=========================================================
+	// JSON設定適用
+	// モデル、HP、表示スケール、当たり判定、死亡演出設定をまとめて反映する。
+	// ここで固定値を直接入れないことで、コア設定をJSON側で調整できるようにする。
+	//=========================================================
+	core_->ApplyConfig(config_);
+
 	// カメラを設定する
 	core_->SetCamera(camera_);
 
 	// 親シーンを設定する
 	core_->SetParentScene(parent_);
-
-	// 見た目のスケールを設定する
-	core_->SetScale(kCoreScale_);
-
-	// 当たり判定サイズを設定する
-	core_->SetColliderScale(kCoreColliderScale_);
-
-	// HPを設定する
-	core_->SetHP(kCoreHP_);
 
 	// 配置位置を設定する
 	core_->SetPosition(pos);

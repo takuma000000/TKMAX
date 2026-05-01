@@ -92,6 +92,11 @@ public:
 	/// </summary>
 	/// <param name="player">プレイヤーオブジェクト</param>
 	void SetPlayer(Player* player);
+	/// <summary>
+	/// バリアコア生成に使うJSON設定を適用します。
+	/// </summary>
+	/// <param name="config">バリアコアの生成数、配置、HP、スケールなどの設定</param>
+	void SetConfig(const BarrierConfig::Core& config);
 	// ========================================
 
 private:
@@ -139,4 +144,8 @@ private:
 	static constexpr float kCoreOuterMargin_ = 6.0f;     // バリア外周からのオフセット
 	static constexpr float kCoreRingStartAngleDeg_ = -90.0f; // 配置開始角度（上から）
 	static constexpr float kCoreZOffset_ = -13.0f;       // Z方向のオフセット
+	//=============================================================
+	// 外部設定
+	//=============================================================
+	BarrierConfig::Core config_; // JSONから読み込んだバリアコア設定
 };

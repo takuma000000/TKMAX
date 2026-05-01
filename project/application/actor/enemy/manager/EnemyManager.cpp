@@ -30,6 +30,11 @@ void EnemyManager::Initialize(TKM::DirectXCommon* dx, TKM::Camera* camera, TKM::
 	//=========================================================
 	const bool loaded_ = encounterConfig_.Load("./resources/data/enemy_encounter.json");
 	assert(loaded_ && "enemy_encounter.json の読込に失敗しました");
+	//=========================================================
+	// バリア設定読み込み
+	//=========================================================
+	const bool barrierLoaded_ = barrierConfig_.Load("./resources/data/barrier_config.json");
+	assert(barrierLoaded_ && "barrier_config.json の読込に失敗しました");
 }
 
 //=============================================================
@@ -731,6 +736,13 @@ void EnemyManager::SpawnBarrierCores_() {
 	barrierCoreManager_->SetParentScene(parent_);
 	barrierCoreManager_->SetPlayer(player_);
 
+	//=========================================================
+	// バリアコア設定適用
+	// JSONから読み込んだコア数、配置、HP、スケールなどを
+	// BarrierCoreManagerへ渡してから生成する。
+	//=========================================================
+	barrierCoreManager_->SetConfig(barrierConfig_.GetCore());
+
 	if (player_) {
 		player_->SetBarrierCoreManager(barrierCoreManager_.get());
 	}
@@ -1056,9 +1068,29 @@ void EnemyManager::InitializeBarrier_() {
 	barrier_->SetCamera(camera_);
 	barrier_->SetPlayer(player_);
 	barrier_->Initialize(common_, dx_);
-	barrier_->SetCenter(GetSpecialCorePosition_() + barrierOffset_);
-	barrier_->SetRadius(1.0f);
-	barrier_->SetShapeScale(barrierSize_);
+	barrier_->ApplyConfig(barrierConfig_.GetBarrier()); // JSONから読み込んだバリア設定を適用
+	//=========================================================
+	// JSON設定取得
+	// バリアの初期位置・サイズは barrier_config.json に従う
+	//=========================================================
+	const auto& barrierDesc_ = barrierConfig_.GetBarrier();
+
+	//=========================================================
+	// バリア中心設定
+	// 初期化時も followCore の設定に従って位置を決める
+	//=========================================================
+	if (barrierDesc_.followCore_) {
+		barrier_->SetCenter(GetSpecialCorePosition_() + barrierDesc_.offset_);
+	} else {
+		barrier_->SetCenter(GetBarrierCenter());
+	}
+
+	//=========================================================
+	// バリアサイズ設定
+	// 半径・形状スケールをJSONから反映
+	//=========================================================
+	barrier_->SetRadius(barrierDesc_.radius_);
+	barrier_->SetShapeScale(barrierDesc_.shapeScale_);
 	barrier_->SetVisible(false);
 	barrier_->SetActive(false);
 }
@@ -1071,12 +1103,26 @@ void EnemyManager::UpdateBarrier_() {
 		return;
 	}
 
-	if (barrierFollowCore_) {
-		barrier_->SetCenter(GetSpecialCorePosition_() + barrierOffset_);
+	//=========================================================
+	// JSON設定取得
+	// バリアの追従・オフセット・サイズは barrier_config.json から取得する。
+	//=========================================================
+	const auto& barrierDesc_ = barrierConfig_.GetBarrier();
+
+	//=========================================================
+	// バリア中心更新
+	// followCore が true の場合だけ特殊コア位置へ追従させる。
+	//=========================================================
+	if (barrierDesc_.followCore_) {
+		barrier_->SetCenter(GetSpecialCorePosition_() + barrierDesc_.offset_);
 	}
 
-	barrier_->SetRadius(1.0f);
-	barrier_->SetShapeScale(barrierSize_);
+	//=========================================================
+	// バリアサイズ更新
+	// 半径と形状スケールをJSON設定から反映する。
+	//=========================================================
+	barrier_->SetRadius(barrierDesc_.radius_);
+	barrier_->SetShapeScale(barrierDesc_.shapeScale_);
 }
 
 //=============================================================
@@ -1174,9 +1220,6 @@ void EnemyManager::ImGuiDebug() {
 	// バリア調整
 	//=========================================================
 	if (ImGui::CollapsingHeader("バリア")) {
-		ImGui::Checkbox("中心追従", &barrierFollowCore_);
-		ImGui::DragFloat3("バリアオフセット", &barrierOffset_.x, 0.1f);
-		ImGui::DragFloat3("バリアサイズXYZ", &barrierSize_.x, 0.1f, 0.1f, 200.0f);
 
 		if (barrier_) {
 			ImGui::Separator();

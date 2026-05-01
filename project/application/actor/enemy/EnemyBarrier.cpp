@@ -237,6 +237,53 @@ void EnemyBarrier::Draw(TKM::DirectXCommon* dxCommon) {
 	model->DrawWithoutMaterialOverride();
 }
 
+//=============================================================
+// 設定適用
+//=============================================================
+void EnemyBarrier::ApplyConfig(const BarrierConfig::Barrier& config) {
+	//=========================================================
+	// バリア本体設定
+	// JSONで管理している半径・形状スケール・色を反映する。
+	//=========================================================
+	radius_ = config.radius_;
+	shapeScale_ = config.shapeScale_;
+	color_ = config.color_;
+
+	//=========================================================
+	// 破壊演出設定
+	// バリアが割れて消えるまでの時間をJSONから反映する。
+	//=========================================================
+	breakDuration_ = config.breakDuration_;
+
+	//=========================================================
+	// シェーダー設定
+	// 見た目に関わる値はコード固定にせず、JSONのshader項目から反映する。
+	//=========================================================
+	shaderFresnelPower_ = config.shader_.fresnelPower_;
+	shaderBaseStrength_ = config.shader_.baseStrength_;
+	shaderRimStrength_ = config.shader_.rimStrength_;
+	shaderAlphaBase_ = config.shader_.alphaBase_;
+	shaderAlphaRim_ = config.shader_.alphaRim_;
+
+	shaderTint_ = config.shader_.tint_;
+
+	shaderHexScale_ = config.shader_.hexScale_;
+	shaderHexLineWidth_ = config.shader_.hexLineWidth_;
+	shaderHexGlowStrength_ = config.shader_.hexGlowStrength_;
+	shaderHexAlpha_ = config.shader_.hexAlpha_;
+
+	shaderBreakEdgeWidth_ = config.shader_.breakEdgeWidth_;
+	shaderBreakGlowStrength_ = config.shader_.breakGlowStrength_;
+	shaderBreakNoiseScale_ = config.shader_.breakNoiseScale_;
+	shaderBreakOrigin_ = config.shader_.breakOrigin_;
+
+	//=========================================================
+	// 見た目反映
+	// 反映後すぐ描画・シェーダー定数バッファへ流す。
+	//=========================================================
+	UpdateVisual_();
+}
+
 void EnemyBarrier::SetCamera(TKM::Camera* camera) {
 	// カメラ参照を保持する
 	camera_ = camera;
@@ -350,15 +397,6 @@ void EnemyBarrier::StartBreak() {
 
 	// 破壊演出中は表示を維持する
 	visible_ = true;
-
-	// 破壊演出用のエッジ幅を設定する
-	shaderBreakEdgeWidth_ = 0.035f;
-
-	// 破壊演出用の発光強度を設定する
-	shaderBreakGlowStrength_ = 3.3f;
-
-	// 破壊ノイズの細かさを設定する
-	shaderBreakNoiseScale_ = 16.0f;
 
 	// プレイヤー側へ現在の無効状態を同期する
 	SyncToPlayer();

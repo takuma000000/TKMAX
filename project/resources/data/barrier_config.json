@@ -1,0 +1,159 @@
+{
+  "_comment": "バリア戦用設定。バリア本体・バリアコア・シェーダー・破壊演出をまとめて管理する。",
+
+  "barrier": {
+    "_comment": "バリア本体の基本挙動・見た目・破壊演出の設定",
+
+    "followCore": true,
+    "_followCore_comment": "true: 特殊コア位置に追従 / false: 固定位置",
+
+    "offset": {
+      "_comment": "バリア中心位置のオフセット（コア位置からのズレ）",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+
+    "radius": 1.0,
+    "_radius_comment": "バリアの基本半径（当たり判定ベース）",
+
+    "shapeScale": {
+      "_comment": "バリアの見た目スケール（楕円化用）",
+      "x": 23.0,
+      "y": 23.0,
+      "z": 11.0
+    },
+
+    "color": {
+      "_comment": "Object3D側の基本カラー（基本は黒でOK）",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+
+    "breakDuration": 2.0,
+    "_breakDuration_comment": "バリア破壊演出にかかる時間（秒）",
+
+    "shader": {
+      "_comment": "バリアシェーダー用の見た目設定（全部見た目に直結）",
+
+      "fresnelPower": 2.2,
+      "_fresnelPower_comment": "縁の強調（高いほど輪郭が強く光る）",
+
+      "baseStrength": 0.02,
+      "_baseStrength_comment": "バリア面全体の発光強度",
+
+      "rimStrength": 1.0,
+      "_rimStrength_comment": "縁の発光強度",
+
+      "alphaBase": 0.08,
+      "_alphaBase_comment": "バリア全体の透明度",
+
+      "alphaRim": 0.35,
+      "_alphaRim_comment": "縁部分の透明度",
+
+      "tint": {
+        "_comment": "バリアの色味（ピンク寄りなら今の値）",
+        "x": 1.0,
+        "y": 0.72,
+        "z": 0.95
+      },
+
+      "hexScale": 8.0,
+      "_hexScale_comment": "六角形模様の密度（大きいほど細かくなる）",
+
+      "hexLineWidth": 0.03,
+      "_hexLineWidth_comment": "六角形の線の太さ",
+
+      "hexGlowStrength": 2.4,
+      "_hexGlowStrength_comment": "六角形の発光強度",
+
+      "hexAlpha": 0.85,
+      "_hexAlpha_comment": "六角形の透明度",
+
+      "breakEdgeWidth": 0.08,
+      "_breakEdgeWidth_comment": "破壊時の割れ目の太さ",
+
+      "breakGlowStrength": 2.8,
+      "_breakGlowStrength_comment": "割れ目の発光強度",
+
+      "breakNoiseScale": 14.0,
+      "_breakNoiseScale_comment": "割れ方の細かさ（高いほど細かく割れる）",
+
+      "breakOrigin": {
+        "_comment": "破壊の開始位置（基本は中心でOK）",
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    }
+  },
+
+  "core": {
+    "_comment": "バリア解除に必要なコアの設定",
+
+    "model": "barrierCore.obj",
+    "_model_comment": "使用するコアモデル",
+
+    "count": 5,
+    "_count_comment": "配置するコア数（これを破壊したらバリア解除）",
+
+    "hp": 3,
+    "_hp_comment": "コア1個あたりのHP",
+
+    "scale": {
+      "_comment": "コアの見た目スケール",
+      "x": 1.8,
+      "y": 1.8,
+      "z": 1.8
+    },
+
+    "colliderScale": {
+      "_comment": "当たり判定サイズ（見た目より少し大きめ推奨）",
+      "x": 3.1,
+      "y": 3.1,
+      "z": 3.1
+    },
+
+    "placement": {
+      "_comment": "コアの円配置設定",
+
+      "barrierOuterRadius": 18.0,
+      "_barrierOuterRadius_comment": "バリアの外周基準半径",
+
+      "outerMargin": 6.0,
+      "_outerMargin_comment": "バリアからどれだけ外に出すか",
+
+      "startAngleDeg": -90.0,
+      "_startAngleDeg_comment": "最初の配置角度（回転位置調整用）",
+
+      "zOffset": -13.0,
+      "_zOffset_comment": "奥行き方向の固定オフセット"
+    },
+
+    "death": {
+      "_comment": "コア破壊時の演出設定",
+
+      "duration": 0.8,
+      "_duration_comment": "消滅までの時間",
+
+      "hitDirSpeed": 2.5,
+      "_hitDirSpeed_comment": "被弾方向へ吹っ飛ぶ強さ",
+
+      "upVelocity": {
+        "_comment": "上方向への浮き上がり速度",
+        "x": 0.0,
+        "y": 1.2,
+        "z": 0.0
+      },
+
+      "rotateSpeed": {
+        "_comment": "回転速度（見た目用）",
+        "x": 0.0,
+        "y": 2.0,
+        "z": 0.0
+      }
+    }
+  }
+}

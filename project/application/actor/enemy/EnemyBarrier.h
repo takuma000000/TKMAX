@@ -7,6 +7,7 @@
 #include "Object3dCommon.h"
 #include "MyMath.h"
 #include "BarrierCommon.h"
+#include "BarrierConfig.h"
 
 class Player;
 
@@ -37,6 +38,12 @@ public:
 	/// </summary>
 	/// <param name="dxCommon">DirectX 共通管理クラス</param>
 	void Draw(TKM::DirectXCommon* dxCommon);
+
+	/// <summary>
+	/// JSONから読み込んだバリア本体設定を適用します。
+	/// </summary>
+	/// <param name="config">バリア本体・破壊演出・シェーダー設定</param>
+	void ApplyConfig(const BarrierConfig::Barrier& config);
 
 	// Setter============================================
 	/// <summary>

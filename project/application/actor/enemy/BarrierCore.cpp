@@ -16,20 +16,16 @@ void BarrierCore::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dx
 	//=========================================================
 	object_ = std::make_unique<TKM::Object3d>();
 	object_->Initialize(common, dxCommon);
-	object_->SetModel("barrierCore.obj"); // バリアコア用モデル設定
 
 	// カメラが設定済みなら反映
 	if (camera_) {
 		object_->SetCamera(camera_);
 	}
 
-	//=========================================================
-	// 初期スケール・当たり判定サイズ
-	//=========================================================
-	baseScale_ = { 0.8f, 0.8f, 0.8f };
-	object_->SetScale(baseScale_);
-
-	colliderScale_ = { 1.71f, 1.71f, 1.71f };
+	// 設定適用
+	if (config_) {
+		ApplyConfig(*config_);
+	}
 }
 
 //=============================================================
@@ -367,11 +363,20 @@ void BarrierCore::StartDeathReaction(const Vector3& hitDir) {
 
 	//=========================================================
 	// 死亡演出パラメータ設定
-	// 被弾方向へ少し飛ばしつつ、上にもふわっと上がる
+	// JSONで読み込んだ死亡演出設定を使う。
+	// 被弾方向への押し出し速度と、上方向への浮き上がり速度を合成する。
 	//=========================================================
-	deathDuration_ = 0.8f;
-	deathVelocity_ = dir_ * 2.5f + Vector3{ 0.0f, 1.2f, 0.0f };
-	deathRotateSpeed_ = { 0.0f, 2.0f, 0.0f };
+	if (config_) {
+		deathDuration_ = config_->death_.duration_;
+		deathVelocity_ = dir_ * config_->death_.hitDirSpeed_ + config_->death_.upVelocity_;
+		deathRotateSpeed_ = config_->death_.rotateSpeed_;
+	} else {
+		// JSON設定がまだ適用されていない場合の保険。
+		// 既存の挙動と同じ値を入れておく。
+		deathDuration_ = 0.8f;
+		deathVelocity_ = dir_ * 2.5f + Vector3{ 0.0f, 1.2f, 0.0f };
+		deathRotateSpeed_ = { 0.0f, 2.0f, 0.0f };
+	}
 }
 
 //=============================================================
@@ -382,4 +387,62 @@ void BarrierCore::SyncTransform() {
 		return;
 	}
 	object_->Update(); // 行列と定数バッファのみ更新
+}
+
+//=============================================================
+// 設定適用
+//=============================================================
+void BarrierCore::ApplyConfig(const BarrierConfig::Core& config) {
+
+	//=========================================================
+	// 設定参照保持
+	// 死亡リアクション開始時にも同じ設定を参照するため、
+	// 渡された設定のアドレスを保持しておく。
+	//=========================================================
+	config_ = &config;
+
+	//=========================================================
+	// Object3d未生成対策
+	// Initialize前に呼ばれた場合は、参照だけ保持して処理を抜ける。
+	// Initialize内で object_ が生成された後、再度 ApplyConfig が呼ばれる。
+	//=========================================================
+	if (!object_) {
+		return;
+	}
+
+	//=========================================================
+	// モデル設定
+	// JSONの model で指定されたモデルを使用する。
+	//=========================================================
+	object_->SetModel(config.model_);
+
+	//=========================================================
+	// 表示スケール設定
+	// JSONの scale を基準スケールとして保存し、Object3dにも反映する。
+	// 死亡時の縮小演出もこの baseScale_ を基準に行う。
+	//=========================================================
+	baseScale_ = config.scale_;
+	object_->SetScale(baseScale_);
+
+	//=========================================================
+	// 当たり判定サイズ設定
+	// JSONの colliderScale を当たり判定用サイズとして使う。
+	//=========================================================
+	colliderScale_ = config.colliderScale_;
+
+	//=========================================================
+	// HP設定
+	// 現在HPと最大HPをJSONの hp で揃える。
+	//=========================================================
+	hp_ = config.hp_;
+	maxHP_ = config.hp_;
+
+	//=========================================================
+	// 死亡演出初期値
+	// 実際の被弾方向は StartDeathReaction で決まるため、
+	// ここでは時間・上昇速度・回転速度の初期値だけ反映する。
+	//=========================================================
+	deathDuration_ = config.death_.duration_;
+	deathVelocity_ = config.death_.upVelocity_;
+	deathRotateSpeed_ = config.death_.rotateSpeed_;
 }

@@ -15,6 +15,7 @@
 #include "EnemyBarrier.h"
 #include "BarrierCoreManager.h"
 #include "EnemyEncounterConfig.h"
+#include "BarrierConfig.h"
 
 //=============================================================
 // EnemyManagerクラス
@@ -370,7 +371,8 @@ private:
 	//======================================================================
 	// 基本参照・設定データ
 	//======================================================================
-	EnemyEncounterConfig encounterConfig_;
+	EnemyEncounterConfig encounterConfig_; // 敵の出現パターンや行動設定を管理するクラス
+	BarrierConfig barrierConfig_; // バリア本体・バリアコア用のJSON設定
 
 	//======================================================================
 	// 敵・敵弾管理
@@ -421,9 +423,6 @@ private:
 	//======================================================================
 	bool barrierBroken_ = false;                 // バリア破壊済みかどうか
 	std::unique_ptr<EnemyBarrier> barrier_ = nullptr; // バリア本体
-	Vector3 barrierOffset_ = { 0.0f, 0.0f, 0.0f };    // 隊列中心から見たバリア位置オフセット
-	Vector3 barrierSize_ = { 23.0f, 23.0f, 11.0f };   // バリアサイズ
-	bool barrierFollowCore_ = true;                   // バリアを中心対象へ追従させるか
 
 	//======================================================================
 	// バリアコア

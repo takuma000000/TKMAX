@@ -9,6 +9,7 @@
 #include "AABB.h"
 #include "MyMath.h"
 #include "reticle/Reticle.h"
+#include "BarrierConfig.h"
 
 //==================================================
 // BarrierCoreクラス
@@ -65,6 +66,12 @@ public:
 	/// モデルの変換情報を同期します。
 	/// </summary>
 	void SyncTransform();
+
+	/// <summary>
+	/// BarrierConfig::Core の内容を現在のステータスや見た目に適用します。
+	/// </summary>
+	/// <param name="config"></param>
+	void ApplyConfig(const BarrierConfig::Core& config);
 
 	// Getter==================================
 	/// <summary>
@@ -139,6 +146,7 @@ private:
 	TKM::BaseScene* parent_ = nullptr;
 	Reticle* reticle_ = nullptr;
 	std::function<Vector3()> playerGetter_;
+	const BarrierConfig::Core* config_ = nullptr;
 	//======================================================================
 	// ステータス
 	//======================================================================
