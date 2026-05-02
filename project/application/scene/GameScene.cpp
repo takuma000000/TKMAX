@@ -300,9 +300,6 @@ void GameScene::ImGuiDebug() {
 
 	/// ──────────────── ポストエフェクトデバッグ ───────────────
 	postFx_->ImGuiDebug();
-
-	/// ──────────────── パフォーマンス情報デバッグ ───────────────
-	ImGuiDebugInfo();
 #endif
 }
 

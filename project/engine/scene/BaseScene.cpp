@@ -565,6 +565,22 @@ namespace TKM {
 		PostInitialize();
 	}
 
+	void BaseScene::FrameEnd() {
+		// パフォーマンス情報更新
+		UpdatePerformanceInfo();
+
+		// メモリ使用量更新
+		UpdateMemory();
+
+#ifdef USE_IMGUI
+		// シーン遷移UI
+		ImGuiSceneChanger();
+
+		// FPSやCPUなどの共通情報表示
+		ImGuiDebugInfo();
+#endif
+	}
+
 	void BaseScene::PreInitialize() {
 		// デフォルトでは何もしない
 	}

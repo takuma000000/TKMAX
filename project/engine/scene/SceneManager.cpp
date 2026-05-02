@@ -17,6 +17,7 @@ namespace TKM {
 
 		if (scene_) { // シーンが存在する場合のみ更新
 			scene_->Update(); // シーンの更新
+			scene_->FrameEnd(); // シーンのフレーム終了処理
 		}
 	}
 

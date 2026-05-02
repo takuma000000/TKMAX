@@ -272,9 +272,6 @@ void TitleScene::Update() {
 	/// ──────────────── ImGuiデバッグ表示 ───────────────
 	ImGui::Begin("タイトルシーン デバッグ");
 
-	/// ──────────────── パフォーマンス情報 ───────────────
-	ImGuiDebugInfo();
-
 	/// ──────────────── タイトル敵情報 ───────────────
 	if (ImGui::CollapsingHeader("タイトル敵情報", ImGuiTreeNodeFlags_DefaultOpen)) {
 

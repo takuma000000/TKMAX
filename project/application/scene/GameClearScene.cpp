@@ -587,9 +587,6 @@ void GameClearScene::ImGuiDebug() {
 	}
 
 	ImGui::End();
-
-	/// ──────────────── パフォーマンス情報デバッグ ───────────────
-	ImGuiDebugInfo();
 #endif
 }
 
