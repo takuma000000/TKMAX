@@ -7,7 +7,7 @@
 
 namespace TKM {
 
-	void UIController::Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, BaseScene* parentScene, float screenW, float screenH) {
+	void UIController::Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, BaseScene* parentScene, float screenW, float screenH, Player* player) {
 		// 外部から受け取った描画・シーン情報を保存する
 		spriteCommon_ = spriteCommon;
 		dxCommon_ = dxCommon;
@@ -29,6 +29,15 @@ namespace TKM {
 		// イントロ中に表示するスキップガイドUIを生成して初期化する
 		skipGuideUI_ = std::make_unique<SkipGuideUI>();
 		skipGuideUI_->Initialize(spriteCommon_, dxCommon_, screenW_, screenH_);
+
+		// PlayerのHUD状態変化をHUDに通知するコールバック関数として登録する
+		if (player) {
+			player->AddHudObserver([this](const Player::HudState& state) { // PlayerからHUD状態の通知を受け取ったときの処理
+				hudState_ = state; // 受け取ったHUD状態を保存する
+				playerHudUI_->OnHudStateChanged(state); // プレイヤーHUDに状態変化を通知する
+
+				});
+		}
 	}
 
 	void UIController::SetHudAlpha(float a) {
@@ -68,7 +77,7 @@ namespace TKM {
 		playerHudUI_->UpdateLayout(screenW_, screenH_);
 	}
 
-	void UIController::Update(float dt, Player* player) {
+	void UIController::Update(float dt) {
 		// イントロ中はスキップガイドだけを有効状態で更新する
 		if (introSkipUiActive_) {
 			skipGuideUI_->Update(dt, true);
@@ -77,13 +86,13 @@ namespace TKM {
 			if (gameplayHudVisible_) {
 
 				// RBとLBの残弾なし状態を取得する（playerがnullptrの場合はfalse扱い）
-				const bool rbNoAmmo = player && player->GetRbAmmo() <= 0;
-				const bool lbNoAmmo = player && player->GetLbAmmo() <= 0;
+				const bool rbNoAmmo = hudState_.rbAmmo_ <= 0;
+				const bool lbNoAmmo = hudState_.lbAmmo_ <= 0;
 				// 右側の操作ガイドUIを更新する
 				operationGuideUI_->Update(dt, rbNoAmmo, lbNoAmmo);
 
 				// プレイヤーHUDを更新する
-				playerHudUI_->Update(dt, player);
+				playerHudUI_->Update(dt);
 			}
 
 			// イントロ中でない場合は、スキップUIを非アクティブ状態で更新して通常状態へ戻す

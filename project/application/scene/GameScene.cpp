@@ -19,9 +19,9 @@ void GameScene::Initialize() {
 	/// ──────────────── 各種初期化処理 ───────────────
 	AudioCatalog::LoadGameAudios();
 	TextureCatalog::LoadTextureCatalogs();
-	InitializeSprite();
 	ModelCatalog::LoadModelCatalogs(dxCommon_);
 	InitializeObjects();
+	InitializeSprite();
 	InitializeCamera();
 
 	/// ──────────────── ライトの初期化 ───────────────
@@ -244,7 +244,7 @@ void GameScene::InitializeSprite() {
 	const float w = static_cast<float>(WindowsAPI::GetClientWidth());
 	const float h = static_cast<float>(WindowsAPI::GetClientHeight());
 
-	ui_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, this, w, h);
+	ui_->Initialize(TKM::SpriteCommon::GetInstance(), dxCommon_, this, w, h, player_.get());
 
 	/// ──────────────── ポーズメニューの初期化 ───────────────
 	pause_ = std::make_unique<TKM::PauseMenuController>();
@@ -489,7 +489,7 @@ void GameScene::UpdateGameplaySystems(float rawDeltaTime, float scaledDeltaTime)
 	ui_->SetGameplayHudVisible(!isBeforeGameStart);
 
 	/// ──────────────── UI更新 ───────────────
-	ui_->Update(scaledDeltaTime, player_.get());
+	ui_->Update(scaledDeltaTime);
 
 	/// ──────────────── ボスマネージャ更新 ───────────────
 	if (!bossEntranceActive || bossEntranceSpawned) {

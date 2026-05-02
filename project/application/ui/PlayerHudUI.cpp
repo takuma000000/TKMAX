@@ -234,7 +234,12 @@ namespace TKM {
 		ApplyHudPositions_();
 	}
 
-	void PlayerHudUI::Update(float dt, Player* player) {
+	void PlayerHudUI::OnHudStateChanged(const Player::HudState& state) {
+		// Playerから通知されたHUD表示用の状態を保存する
+		hudState_ = state;
+	}
+
+	void PlayerHudUI::Update(float dt) {
 		Input* in = Input::GetInstance();
 
 		// 現在のゲームパッド接続状態を取得する
@@ -250,20 +255,20 @@ namespace TKM {
 			? in->PushButton(XINPUT_GAMEPAD_LEFT_SHOULDER)
 			: in->PushKey(DIK_L);
 
-		// プレイヤーの弾数情報をもとにRBゲージを更新する
+		// Playerから通知されたRB弾数情報をもとにRBゲージを更新する
 		rbGaugeUI_->Update(
 			dt,
-			player->GetRbAmmo(),
-			player->GetRbAmmoMax(),
-			player->IsRbRefilling(),
+			hudState_.rbAmmo_,
+			hudState_.rbAmmoMax_,
+			hudState_.rbRefilling_,
 			rbDown
 		);
 
-		// プレイヤーのLB弾数情報をもとにLBゲージを更新する
+		// Playerから通知されたLB弾数情報をもとにLBゲージを更新する
 		lbGaugeUI_->Update(
 			dt,
-			player->GetLbAmmo(),
-			player->GetLbAmmoMax(),
+			hudState_.lbAmmo_,
+			hudState_.lbAmmoMax_,
 			lbDown
 		);
 
@@ -287,12 +292,17 @@ namespace TKM {
 			shakeT_RBGaugeIcon_ = 0.0f;
 		}
 
-		// 現在HPの割合を取得して、0.0f～1.0fに収める
-		hpTargetRate_ = player->GetHPRate();
+		// Playerから通知されたHP情報をもとに割合を計算する
+		hpTargetRate_ = 0.0f;
+		if (hudState_.maxHp_ > 0) {
+			hpTargetRate_ =
+				static_cast<float>(hudState_.currentHp_) /
+				static_cast<float>(hudState_.maxHp_);
+		}
 		hpTargetRate_ = std::clamp(hpTargetRate_, 0.0f, 1.0f);
 
 		// 現在HPを取得する
-		int curHp = player->GetHP();
+		int curHp = hudState_.currentHp_;
 
 		// 初回だけ、前回HPとアニメーション率を現在値で初期化する
 		if (prevHp_ < 0) {
@@ -325,52 +335,65 @@ namespace TKM {
 				hpTweenActive_ = false;
 			}
 		} else {
-			// Tween中でない場合は、即座に現在HP割合を反映する
 			hpAnimRate_ = hpTargetRate_;
 		}
 
-		// HP割合に応じて塗りスプライトの高さを変える
-		Vector2 fillSize = hpVertSize_;
-		fillSize.y *= hpAnimRate_;
-		hpFill_->SetSize(fillSize);
-
-		// HPダメージシェイクを更新する
-		if (hpShakeT_ > 0.0f) {
-			hpShakeT_ -= dt;
-
-			// 残り時間が負にならないようにする
-			if (hpShakeT_ < 0.0f) {
-				hpShakeT_ = 0.0f;
-			}
-
-			// ランダムな揺れオフセットを作る
-			float r1 = MyMath::Rand01() * 2.0f - 1.0f;
-			float r2 = MyMath::Rand01() * 2.0f - 1.0f;
-			Vector2 ofs{ r1 * hpShakeAmpPx_, r2 * hpShakeAmpPx_ };
-
-			// HPフレームと塗りを同じ量だけ揺らす
-			hpFrame_->SetPosition({ basePosHPFrame_.x + ofs.x, basePosHPFrame_.y + ofs.y });
-			hpFill_->SetPosition({ basePosHPFill_.x + ofs.x, basePosHPFill_.y + ofs.y });
-		} else {
-			// シェイクしていない場合は基準位置へ戻す
-			hpFrame_->SetPosition(basePosHPFrame_);
-			hpFill_->SetPosition(basePosHPFill_);
-		}
-
-		// HPヒットフラッシュ時間を更新する
+		// 被弾フラッシュ時間を減らす
 		if (hpHitFlashT_ > 0.0f) {
 			hpHitFlashT_ -= dt;
-
-			// 残り時間が負にならないようにする
 			if (hpHitFlashT_ < 0.0f) {
 				hpHitFlashT_ = 0.0f;
 			}
 		}
 
-		// HP塗りスプライトの内部更新を行う
+		// HPシェイク時間を減らす
+		if (hpShakeT_ > 0.0f) {
+			hpShakeT_ -= dt;
+			if (hpShakeT_ < 0.0f) {
+				hpShakeT_ = 0.0f;
+			}
+		}
+
+		// HPゲージの高さを反映する
+		hpFill_->SetSize({
+			hpVertSize_.x,
+			hpVertSize_.y * hpAnimRate_
+			});
+
+		// HPゲージ色を反映する
+		Vector4 hpColor = colHPFill_;
+		if (hpHitFlashT_ > 0.0f) {
+			hpColor = { 1.0f, 0.25f, 0.25f, colHPFill_.w };
+		}
+		hpFill_->SetColor(hpColor);
+
+		// HPフレーム・アイコン色を反映する
+		hpFrame_->SetColor(colHPFrame_);
+		hpIcon_->SetColor(colHPIcon_);
+
+		// HP被弾時だけ小刻みに揺らす
+		if (hpShakeT_ > 0.0f) {
+			float r1 = MyMath::Rand01() * 2.0f - 1.0f;
+			float r2 = MyMath::Rand01() * 2.0f - 1.0f;
+
+			hpFrame_->SetPosition({
+				basePosHPFrame_.x + r1 * hpShakePower_,
+				basePosHPFrame_.y + r2 * hpShakePower_
+				});
+
+			hpFill_->SetPosition({
+				basePosHPFill_.x + r1 * hpShakePower_,
+				basePosHPFill_.y + r2 * hpShakePower_
+				});
+		} else {
+			hpFrame_->SetPosition(basePosHPFrame_);
+			hpFill_->SetPosition(basePosHPFill_);
+		}
+
+		// HP塗りスプライトを更新する
 		hpFill_->Update();
 
-		// ImGui調整項目を表示する
+		// ImGui
 		DrawImGui();
 	}
 

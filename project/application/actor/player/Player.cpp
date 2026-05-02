@@ -263,15 +263,16 @@ void Player::Update(float dt) {
 		// 回避処理
 		HandleDodge(dt);
 
-		// ショットマネージャーがあれば射撃更新
-		if (shotManager_) {
-			shotManager_->Update(dt, shootingEnabled_);
-		}
+		// ショット処理
+		shotManager_->Update(dt, shootingEnabled_);
+		// RB/LB弾数が変化していたらHUDへ通知する
+		NotifyHudState_();
+
 	} else {
-		// 操作不可時はロック状態だけ解除しておく
-		if (shotManager_) {
-			shotManager_->ClearLockState();
-		}
+		// コントロール無効時はショットを全て消す
+		shotManager_->ClearLockState();
+		// 射撃停止などで弾状態が変わった場合に備えてHUDへ通知する
+		NotifyHudState_();
 	}
 
 #ifdef USE_IMGUI
@@ -414,6 +415,60 @@ void Player::ImGuiDebug() {
 #endif
 }
 
+void Player::AddHudObserver(const HudObserver& observer) {
+	// HUD状態変更時に呼び出す通知先を登録する
+	hudObservers_.push_back(observer);
+
+	// 登録直後に現在状態を一度通知して、初期表示を正しくする
+	NotifyHudState_();
+}
+
+bool Player::IsHudStateChanged_(const HudState& state) const {
+	// 前回の状態がないなら常に変化とみなす
+	if (!hasLastHudState_) {
+		return true;
+	}
+
+	// 前回の状態と比較してどれか一つでも違うものがあれば変化とみなす
+	return
+		state.currentHp_ != lastHudState_.currentHp_ ||
+		state.maxHp_ != lastHudState_.maxHp_ ||
+		state.rbAmmo_ != lastHudState_.rbAmmo_ ||
+		state.rbAmmoMax_ != lastHudState_.rbAmmoMax_ ||
+		state.rbRefilling_ != lastHudState_.rbRefilling_ ||
+		state.lbAmmo_ != lastHudState_.lbAmmo_ ||
+		state.lbAmmoMax_ != lastHudState_.lbAmmoMax_;
+}
+
+void Player::NotifyHudState_() {
+	// 現在の状態を構造体にまとめる
+	HudState state{};
+	state.currentHp_ = hp_; // 現在HP
+	state.maxHp_ = maxHp_; // 最大HP
+	// RB弾の残弾数、最大残弾数、回復中かどうかを取得して構造体にセットする
+	state.rbAmmo_ = GetRbAmmo(); // RB弾の残弾数
+	state.rbAmmoMax_ = GetRbAmmoMax(); // RB弾の最大残弾数
+	state.rbRefilling_ = IsRbRefilling(); // RB弾が回復中かどうか
+	// LB弾の残弾数、最大残弾数を取得して構造体にセットする
+	state.lbAmmo_ = GetLbAmmo(); // LB弾の残弾数
+	state.lbAmmoMax_ = GetLbAmmoMax(); // LB弾の最大残弾数
+
+	// 状態に変化がなければ通知しない
+	if (!IsHudStateChanged_(state)) {
+		return;
+	}
+
+	lastHudState_ = state; // 状態を保存する
+	hasLastHudState_ = true; // 状態があることを示すフラグを立てる
+
+	// 登録されている通知先すべてに現在の状態を渡して呼び出す
+	for (const auto& observer : hudObservers_) {
+		if (observer) { // 登録されている通知先すべてに現在の状態を渡して呼び出す
+			observer(state);
+		}
+	}
+}
+
 void Player::RemoveEnemyIfDead() {
 	// ショットマネージャー側で死亡済みターゲット参照を外す
 	shotManager_->RemoveDeadTargets();
@@ -435,9 +490,11 @@ void Player::Damage(int value) {
 
 	// HPを減らす
 	hp_ -= value;
-
 	// 0未満にならないよう補正する
 	if (hp_ < 0) hp_ = 0;
+
+	// HPが変化したのでHUDへ通知する
+	NotifyHudState_();
 
 	//=========================================================
 	// 被弾振動設定

@@ -16,6 +16,8 @@
 #include "HomingBullet.h"
 #include "PlayerShotManager.h"
 #include "PlayerShotConfig.h"
+#include <functional>
+#include <vector>
 
 class BarrierCore;
 class Enemy;
@@ -31,11 +33,28 @@ namespace TKM {
 //=============================================================
 class Player {
 public:
+	//=============================================================
 	// Wave1のバリアヒット情報構造体
+	//=============================================================
 	struct Wave1BarrierHit {
 		Vector3 worldPos_ = { 0.0f, 0.0f, 0.0f }; // ヒットしたワールド座標
 		float age_ = 0.0f; // ヒットしてからの経過時間
 		float life_ = 0.35f; // エフェクトの寿命（秒）
+	};
+
+	//=============================================================
+	// HUD状態通知（Observer）
+	//=============================================================
+	struct HudState {
+		int currentHp_ = 0;        // 現在HP
+		int maxHp_ = 1;            // 最大HP
+
+		int rbAmmo_ = 0;           // RB弾の残弾数
+		int rbAmmoMax_ = 1;        // RB弾の最大残弾数
+		bool rbRefilling_ = false; // RB弾が回復中かどうか
+
+		int lbAmmo_ = 0;           // LB弾の残弾数
+		int lbAmmoMax_ = 1;        // LB弾の最大残弾数
 	};
 
 	/// <summary>
@@ -64,6 +83,14 @@ public:
 	/// </summary>
 	void ImGuiDebug();
 
+	/// <summary>
+	/// HUDに表示するプレイヤー状態の構造体。
+	/// </summary>
+	using HudObserver = std::function<void(const HudState& state)>;
+	/// <summary>
+	/// HUDに表示するプレイヤー状態が変化したときに呼ばれる通知先を登録します。
+	/// </summary>
+	void AddHudObserver(const HudObserver& observer);
 	/// <summary>
 	/// 敵が死亡していたらターゲットを解除します。
 	/// </summary>
@@ -372,6 +399,16 @@ private:
 	/// </summary>
 	/// <param name="dt">前フレームからの経過時間（秒）</param>
 	void UpdateCameraFollowThirdPerson(float dt);
+	/// <summary>
+	/// HUD表示に必要な状態を通知します。
+	/// </summary>
+	void NotifyHudState_();
+	/// <summary>
+	/// HUD表示に必要な状態が前回通知から変化しているかどうかを判定します。
+	/// </summary>
+	/// <param name="state">現在のHUD状態</param>
+	/// <returns>状態が変化している場合 true、それ以外は false</returns>
+	bool IsHudStateChanged_(const HudState& state) const;
 	//======================================================================
 	// 参照ポインタ / 共通オブジェクト
 	//======================================================================
@@ -550,4 +587,10 @@ private:
 	// 弾の外部設定
 	//======================================================================
 	PlayerShotConfig shotConfig_; // プレイヤー弾設定(JSON読込結果)
+	//======================================================================
+	// HUD状態通知（Observer）
+	//======================================================================
+	std::vector<HudObserver> hudObservers_; // HUD状態通知の登録先リスト
+	HudState lastHudState_{}; // 最後に通知したHUD状態
+	bool hasLastHudState_ = false; // 最後に通知したHUD状態が有効かどうか
 };

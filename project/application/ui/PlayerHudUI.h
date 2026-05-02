@@ -31,7 +31,7 @@ namespace TKM {
 		/// <summary>
 		/// プレイヤーHUDを更新します。
 		/// </summary>
-		void Update(float dt, Player* player);
+		void Update(float dt);
 		/// <summary>
 		/// プレイヤーHUDを描画します。
 		/// </summary>
@@ -46,6 +46,11 @@ namespace TKM {
 		/// 画面サイズ変更時の再レイアウトを行います。
 		/// </summary>
 		void UpdateLayout(float screenW, float screenH);
+		/// <summary>
+		/// プレイヤーのHPが変化したときの処理を行います。
+		/// </summary>
+		/// <param name="state">HUDの状態情報</param>
+		void OnHudStateChanged(const Player::HudState& state);
 
 	private:
 		/// <summary>
@@ -91,6 +96,8 @@ namespace TKM {
 		std::unique_ptr<Sprite> hpFrame_; // HPゲージのフレーム
 		std::unique_ptr<Sprite> hpFill_; // HPゲージの塗り部分
 		std::unique_ptr<Sprite> hpIcon_; // HPゲージのアイコン
+		// HPシェイクの状態
+		float hpShakePower_ = 3.0f; // HPシェイクの強さ（ピクセル）
 		// テクスチャパス
 		Vector4 colHPFrame_{ 1.0f, 1.0f, 1.0f, 0.90f }; // HPゲージフレームの色
 		Vector4 colHPFill_{ 0.25f, 1.0f, 0.35f, 0.90f }; // HPゲージ塗りの色
@@ -138,6 +145,13 @@ namespace TKM {
 		// 入力状態
 		//=============================================================
 		bool isGamepadConnected_ = false; // ゲームパッドが接続されているかどうか
+
+		//=============================================================
+		// Playerから通知されたHUD表示状態
+		//=============================================================
+		Player::HudState hudState_{}; // Playerから通知されたHUD表示状態の最新値を保存する構造体
+		int currentHp_ = 0; // 現在HP
+		int maxHp_ = 1; // 最大HP
 	};
 
 } // namespace TKM

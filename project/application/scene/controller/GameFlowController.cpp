@@ -133,7 +133,7 @@ namespace TKM {
 
 		// UIがある場合はクリア中も更新する
 		if (ui) {
-			ui->Update(scaledDeltaTime, player);
+			ui->Update(scaledDeltaTime);
 		}
 
 		// クリアシーケンスが完了したらGameClearへの遷移要求を保留する

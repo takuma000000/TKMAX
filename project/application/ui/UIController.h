@@ -25,12 +25,13 @@ namespace TKM {
 			DirectXCommon* dxCommon,
 			BaseScene* parentScene,
 			float screenW,
-			float screenH
+			float screenH,
+			Player* player
 		);
 		/// <summary>
 		/// UI全体を更新します。
 		/// </summary>
-		void Update(float dt, Player* player);
+		void Update(float dt);
 		/// <summary>
 		/// UI全体を描画します。
 		/// </summary>
@@ -91,6 +92,10 @@ namespace TKM {
 		std::unique_ptr<OperationGuideUI> operationGuideUI_; // 右側の操作UI（ボタンアイコンと説明テキスト）
 		std::unique_ptr<PlayerHudUI> playerHudUI_; // プレイヤーのHPや残弾数などを表示するHUD
 		std::unique_ptr<SkipGuideUI> skipGuideUI_; // イントロのボススタートムービーをスキップするためのUI
+		//=============================================================
+		// Playerから通知されたHUD状態
+		//=============================================================
+		Player::HudState hudState_{};
 	};
 
 } // namespace TKM
