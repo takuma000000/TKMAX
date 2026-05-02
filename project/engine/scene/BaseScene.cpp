@@ -553,4 +553,23 @@ namespace TKM {
 		gpuUsagePercent_ = static_cast<float>(totalUsage);
 #endif
 	}
+
+	void BaseScene::Start() {
+		// シーン開始前の共通処理を行う
+		PreInitialize();
+
+		// 各シーン固有の初期化処理を行う
+		Initialize();
+
+		// シーン開始後の共通処理を行う
+		PostInitialize();
+	}
+
+	void BaseScene::PreInitialize() {
+		// デフォルトでは何もしない
+	}
+
+	void BaseScene::PostInitialize() {
+		// デフォルトでは何もしない
+	}
 }

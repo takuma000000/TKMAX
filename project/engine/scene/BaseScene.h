@@ -68,6 +68,12 @@ namespace TKM {
 		/// </summary>
 		virtual void DrawBack();
 
+		/// <summary>
+		/// シーン開始処理の共通フローを実行します。
+		/// Template Methodとして、開始前処理 → 各シーン初期化 → 開始後処理の順番を固定します。
+		/// </summary>
+		void Start();
+
 		//=============================================================
 		// ImGui
 		//=============================================================
@@ -198,5 +204,21 @@ namespace TKM {
 		/// GPUカウンタを解放します。
 		/// </summary>
 		void FinalizeGpuCounters_();
+
+		//=============================================================
+		// Template Method用フック
+		//=============================================================
+
+		/// <summary>
+		/// Initialize前に行う共通処理です。
+		/// 必要なシーンだけオーバーライドします。
+		/// </summary>
+		virtual void PreInitialize();
+
+		/// <summary>
+		/// Initialize後に行う共通処理です。
+		/// 必要なシーンだけオーバーライドします。
+		/// </summary>
+		virtual void PostInitialize();
 	};
 }

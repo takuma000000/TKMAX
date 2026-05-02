@@ -12,7 +12,7 @@ namespace TKM {
 			scene_ = std::move(nextScene_); // 次のシーンに切り替え
 
 			scene_->SetSceneManager(this); // シーンマネージャーをセット
-			scene_->Initialize(); // 新しいシーンの初期化
+			scene_->Start(); // 新しいシーンの初期化
 		}
 
 		if (scene_) { // シーンが存在する場合のみ更新
