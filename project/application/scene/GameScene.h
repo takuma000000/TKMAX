@@ -10,6 +10,7 @@
 #include "ActionGround.h"
 #include "ActionPlayerBulletManager.h"
 #include "ActionPlayerMagic.h"
+#include "ActionBack.h"
 
 //=============================================================
 // GameSceneクラス
@@ -42,6 +43,7 @@ private:
 	std::unique_ptr<ActionGround> ground_ = nullptr;
 	std::unique_ptr<ActionPlayerBulletManager> bulletManager_ = nullptr;
 	std::unique_ptr<ActionPlayerMagic> magic_ = nullptr;
+	std::unique_ptr<ActionBack> back_ = nullptr;
 
 	float scrollX_ = 0.0f;
 

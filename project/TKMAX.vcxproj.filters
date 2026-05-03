@@ -163,6 +163,7 @@
     <ClCompile Include="application\action\ActionPlayerBullet.cpp" />
     <ClCompile Include="application\action\ActionPlayerBulletManager.cpp" />
     <ClCompile Include="application\action\ActionPlayerMagic.cpp" />
+    <ClCompile Include="application\action\ActionBack.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -361,6 +362,7 @@
     <ClInclude Include="application\action\ActionPlayerBullet.h" />
     <ClInclude Include="application\action\ActionPlayerBulletManager.h" />
     <ClInclude Include="application\action\ActionPlayerMagic.h" />
+    <ClInclude Include="application\action\ActionBack.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

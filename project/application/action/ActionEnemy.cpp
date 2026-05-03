@@ -45,12 +45,55 @@ void ActionEnemy::Initialize(
 }
 
 void ActionEnemy::Update() {
-	if (isMagicLocked_) {
-		if (sprite_) {
-			sprite_->SetPosition(position_);
-			sprite_->SetSize({ kEnemyWidth_, kEnemyHeight_ });
-			sprite_->Update();
+	if (isMagicVanishing_) {
+		magicVanishTimer_ += kFrameTime_;
+
+		float t = magicVanishTimer_ / kMagicVanishDuration_;
+		if (t > 1.0f) {
+			t = 1.0f;
 		}
+
+		float scale = 1.0f;
+		Vector4 color = { 1, 1, 1, 1 };
+
+		//=============================================================
+		// 爆発演出
+		//=============================================================
+		if (t < 0.2f) {
+			// ① ちょい縮む（溜め）
+			scale = 1.0f - t * 0.5f;
+
+		} else if (t < 0.5f) {
+			// ② 一気に膨張
+			float explodeT = (t - 0.2f) / 0.3f;
+			scale = 0.9f + explodeT * 2.5f;
+
+			// フラッシュ（白飛び）
+			color = { 2.5f, 2.5f, 2.5f, 1.0f };
+
+		} else {
+			// ③ 余韻（少し暗くして消す）
+			float fadeT = (t - 0.5f) / 0.5f;
+			scale = 3.4f + fadeT * 0.5f;
+			color = { 1.0f, 0.4f, 0.1f, 1.0f - fadeT };
+		}
+
+		Vector2 drawSize = {
+			kEnemyWidth_ * scale,
+			kEnemyHeight_ * scale
+		};
+
+		sprite_->SetSize(drawSize);
+		sprite_->Update();
+
+		if (magicVanishTimer_ >= kMagicVanishDuration_) {
+			isDead_ = true;
+		}
+
+		return;
+	}
+
+	if (isMagicLocked_) {
 		return;
 	}
 
@@ -65,13 +108,6 @@ void ActionEnemy::Update() {
 		if (position_.y > kDeadBottomY_) {
 			isDead_ = true;
 		}
-
-		if (sprite_) {
-			sprite_->SetPosition(position_);
-			sprite_->SetSize({ kEnemyWidth_, kEnemyHeight_ });
-			sprite_->Update();
-		}
-
 		return;
 	}
 
@@ -86,11 +122,7 @@ void ActionEnemy::Update() {
 		direction_ = -1.0f;
 	}
 
-	if (sprite_) {
-		sprite_->SetPosition(position_);
-		sprite_->SetSize({ kEnemyWidth_, kEnemyHeight_ });
-		sprite_->Update();
-	}
+	sprite_->Update();
 }
 
 void ActionEnemy::Draw(float scrollX) {
@@ -98,9 +130,37 @@ void ActionEnemy::Draw(float scrollX) {
 		return;
 	}
 
+	if (isMagicVanishing_) {
+		Vector2 drawSize = sprite_->GetSize();
+
+		Vector2 center = {
+			position_.x + kEnemyWidth_ * 0.5f,
+			position_.y + kEnemyHeight_ * 0.5f
+		};
+
+		Vector2 drawPosition = {
+			center.x - drawSize.x * 0.5f - scrollX,
+			center.y - drawSize.y * 0.5f
+		};
+
+		sprite_->SetPosition(drawPosition);
+		sprite_->Draw();
+		return;
+	}
+
 	sprite_->SetPosition({ position_.x - scrollX, position_.y });
-	sprite_->Update();
+	sprite_->SetSize({ kEnemyWidth_, kEnemyHeight_ });
 	sprite_->Draw();
+}
+
+void ActionEnemy::KillByMagic() {
+	if (isDead_ || isDying_ || isMagicVanishing_) {
+		return;
+	}
+
+	isMagicLocked_ = false;
+	isMagicVanishing_ = true;
+	magicVanishTimer_ = 0.0f;
 }
 
 void ActionEnemy::TakeDamage(float hitDirection) {

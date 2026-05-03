@@ -6,6 +6,9 @@
 void GameScene::Initialize() {
 	TKM::TextureManager::GetInstance()->LoadTexture("./resources/texture/circle2.png");
 
+	back_ = std::make_unique<ActionBack>();
+	back_->Initialize(dxCommon_);
+
 	ground_ = std::make_unique<ActionGround>();
 	ground_->Initialize(dxCommon_);
 
@@ -72,6 +75,7 @@ void GameScene::Finalize() {
 	ground_.reset();
 	bulletManager_.reset();
 	magic_.reset();
+	back_.reset();
 }
 
 void GameScene::Update() {
@@ -101,6 +105,8 @@ void GameScene::Update() {
 
 	ground_->Update();
 
+	back_->Update();
+
 	lifeUI_->Update(player_->GetHP());
 
 	bool isTimeUp = timer_->IsTimeUp();
@@ -114,18 +120,24 @@ void GameScene::Update() {
 		//=============================================================
 		if (!enemy->IsDying() &&
 			!enemy->IsMagicLocked() &&
+			!enemy->IsMagicVanishing() &&
 			player_->GetAABB().IsCollidingWithAABB(enemy->GetAABB())) {
 			player_->TakeDamage();
 		}
 	}
 
-	scrollX_ = player_->GetPosition().x - kScreenWidth_ * 0.5f;
-	if (scrollX_ < 0.0f) {
-		scrollX_ = 0.0f;
-	}
-	float maxScrollX = kStageWidth_ - kScreenWidth_;
-	if (scrollX_ > maxScrollX) {
-		scrollX_ = maxScrollX;
+	if (!magic_->IsPlayerControlLocked()) {
+		scrollX_ = player_->GetPosition().x - kScreenWidth_ * 0.5f;
+
+		if (scrollX_ < 0.0f) {
+			scrollX_ = 0.0f;
+		}
+
+		float maxScrollX = kStageWidth_ - kScreenWidth_;
+
+		if (scrollX_ > maxScrollX) {
+			scrollX_ = maxScrollX;
+		}
 	}
 
 	if (isTimeUp || player_->IsDead()) {
@@ -148,6 +160,9 @@ void GameScene::Draw3D() {
 void GameScene::DrawSprite() {
 	TKM::SpriteCommon::GetInstance()->DrawSetCommon();
 
+	if (back_) {
+		back_->Draw(scrollX_);
+	}
 	if (ground_) {
 		ground_->Draw(scrollX_);
 	}

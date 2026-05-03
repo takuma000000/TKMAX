@@ -268,7 +268,7 @@ void ActionPlayerMagic::UpdateRain_() {
 void ActionPlayerMagic::FinishMagic_() {
 	if (targetEnemy_) {
 		targetEnemy_->SetMagicLocked(false);
-		targetEnemy_->TakeDamage(1.0f);
+		targetEnemy_->KillByMagic();
 	}
 
 	for (auto& arrow : arrows_) {

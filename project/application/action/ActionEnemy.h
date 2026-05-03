@@ -37,6 +37,9 @@ public:
 
 	void SetMagicLocked(bool locked) { isMagicLocked_ = locked; }
 
+	void KillByMagic();
+	bool IsMagicVanishing() const { return isMagicVanishing_; }
+
 	void TakeDamage(float hitDirection);
 	bool IsDead() const { return isDead_; }
 	bool IsDying() const { return isDying_; }
@@ -93,4 +96,10 @@ private:
 	static constexpr float kKnockbackGravity_ = 0.6f;
 	static constexpr float kDeadBottomY_ = 900.0f;
 	bool isMagicLocked_ = false;
+
+	bool isMagicVanishing_ = false;
+	float magicVanishTimer_ = 0.0f;
+
+	static constexpr float kMagicVanishDuration_ = 0.35f;
+	static constexpr float kFrameTime_ = 1.0f / 60.0f;
 };

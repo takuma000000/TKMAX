@@ -24,7 +24,7 @@ public:
 	void Draw(float scrollX);
 
 	bool IsPlayerControlLocked() const {
-		return phase_ == Phase::Charge;
+		return phase_ == Phase::Charge || phase_ == Phase::Rain;
 	}
 
 private:
