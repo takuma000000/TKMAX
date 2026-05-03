@@ -193,7 +193,6 @@
     <ClCompile Include="application\actor\player\LBGaugeUI.cpp" />
     <ClCompile Include="engine\3d\camera\manager\CameraManager.cpp" />
     <ClCompile Include="engine\state\StateMachine.cpp" />
-    <ClCompile Include="application\state\TitleFlowStates.cpp" />
     <ClCompile Include="application\state\BossStates.cpp" />
     <ClCompile Include="application\actor\BattleActorManagerBase.cpp" />
     <ClCompile Include="application\effect\ParticleSpawner.cpp" />
@@ -214,7 +213,6 @@
     <ClCompile Include="application\ui\SkipGuideUI.cpp" />
     <ClCompile Include="application\actor\BarrierCoreManager.cpp" />
     <ClCompile Include="application\catalog\AudioCatalog.cpp" />
-    <ClCompile Include="application\state\ClearComedyStates.cpp" />
     <ClCompile Include="application\state\BossEntranceStates.cpp" />
     <ClCompile Include="application\actor\player\PlayerShotManager.cpp" />
     <ClCompile Include="application\actor\player\PlayerShotConfig.cpp" />
@@ -450,7 +448,6 @@
     <ClInclude Include="engine\state\IStateContext.h" />
     <ClInclude Include="engine\state\IState.h" />
     <ClInclude Include="engine\state\StateMachine.h" />
-    <ClInclude Include="application\state\TitleFlowStates.h" />
     <ClInclude Include="application\state\BossStates.h" />
     <ClInclude Include="application\actor\BattleActorManagerBase.h" />
     <ClInclude Include="application\effect\ParticleSpawner.h" />
@@ -473,7 +470,6 @@
     <ClInclude Include="application\ui\SkipGuideUI.h" />
     <ClInclude Include="application\actor\BarrierCoreManager.h" />
     <ClInclude Include="application\catalog\AudioCatalog.h" />
-    <ClInclude Include="application\state\ClearComedyStates.h" />
     <ClInclude Include="application\state\BossEntranceStates.h" />
     <ClInclude Include="application\actor\player\PlayerShotManager.h" />
     <ClInclude Include="application\actor\player\PlayerShotConfig.h" />

@@ -126,7 +126,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\actor\enemy\EnemyBarrier.cpp" />
     <ClCompile Include="application\actor\BarrierCoreManager.cpp" />
     <ClCompile Include="application\catalog\AudioCatalog.cpp" />
-    <ClCompile Include="application\state\ClearComedyStates.cpp" />
     <ClCompile Include="application\state\BossEntranceStates.cpp" />
     <ClCompile Include="engine\3d\BarrierCommon.cpp" />
     <ClCompile Include="engine\3d\camera\manager\CameraManager.cpp" />
@@ -226,7 +225,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\catalog\TextureCatalog.cpp" />
     <ClCompile Include="application\catalog\ModelCatalog.cpp" />
     <ClCompile Include="engine\state\StateMachine.cpp" />
-    <ClCompile Include="application\state\TitleFlowStates.cpp" />
     <ClCompile Include="application\effect\ParticleSpawner.cpp" />
     <ClCompile Include="engine\effect\post\TrailRibbonRenderer.cpp" />
     <ClCompile Include="application\ui\OperationGuideUI.cpp" />
@@ -251,7 +249,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\actor\enemy\EnemyBarrier.h" />
     <ClInclude Include="application\actor\BarrierCoreManager.h" />
     <ClInclude Include="application\catalog\AudioCatalog.h" />
-    <ClInclude Include="application\state\ClearComedyStates.h" />
     <ClInclude Include="application\state\BossEntranceStates.h" />
     <ClInclude Include="engine\3d\BarrierCommon.h" />
     <ClInclude Include="engine\3d\camera\manager\CameraManager.h" />
@@ -357,7 +354,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\catalog\TextureCatalog.h" />
     <ClInclude Include="engine\func\math\Transform.h" />
     <ClInclude Include="engine\state\StateMachine.h" />
-    <ClInclude Include="application\state\TitleFlowStates.h" />
     <ClInclude Include="engine\effect\post\TrailRibbonRenderer.h" />
     <ClInclude Include="application\scene\controller\TitleShowdownController.h" />
     <ClInclude Include="application\ui\SkipGuideUI.h" />
