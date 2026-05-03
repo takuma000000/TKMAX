@@ -33,6 +33,10 @@ public:
 	void Update();
 	void Draw(float scrollX);
 
+	bool IsMagicLocked() const { return isMagicLocked_; }
+
+	void SetMagicLocked(bool locked) { isMagicLocked_ = locked; }
+
 	void TakeDamage(float hitDirection);
 	bool IsDead() const { return isDead_; }
 	bool IsDying() const { return isDying_; }
@@ -88,4 +92,5 @@ private:
 	static constexpr float kKnockbackSpeedY_ = -10.0f;
 	static constexpr float kKnockbackGravity_ = 0.6f;
 	static constexpr float kDeadBottomY_ = 900.0f;
+	bool isMagicLocked_ = false;
 };

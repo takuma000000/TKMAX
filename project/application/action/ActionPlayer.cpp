@@ -66,19 +66,24 @@ void ActionPlayer::Update() {
 
 	velocity_.x = 0.0f;
 
-	if (input->PushKey(DIK_A) || input->PushKey(DIK_LEFT)) {
-		velocity_.x = -moveSpeed_;
-		facingDirection_ = -1.0f;
-	}
+	//=============================================================
+	// 操作ロック中は移動・ジャンプ入力を受け付けない
+	//=============================================================
+	if (!isControlLocked_) {
+		if (input->PushKey(DIK_A) || input->PushKey(DIK_LEFT)) {
+			velocity_.x = -moveSpeed_;
+			facingDirection_ = -1.0f;
+		}
 
-	if (input->PushKey(DIK_D) || input->PushKey(DIK_RIGHT)) {
-		velocity_.x = moveSpeed_;
-		facingDirection_ = 1.0f;
-	}
+		if (input->PushKey(DIK_D) || input->PushKey(DIK_RIGHT)) {
+			velocity_.x = moveSpeed_;
+			facingDirection_ = 1.0f;
+		}
 
-	if ((input->TriggerKey(DIK_W) || input->TriggerKey(DIK_UP)) && isGrounded_) {
-		velocity_.y = jumpPower_;
-		isGrounded_ = false;
+		if ((input->TriggerKey(DIK_W) || input->TriggerKey(DIK_UP)) && isGrounded_) {
+			velocity_.y = jumpPower_;
+			isGrounded_ = false;
+		}
 	}
 
 	velocity_.y += gravity_;

@@ -58,6 +58,9 @@ void GameScene::Initialize() {
 
 	lifeUI_ = std::make_unique<ActionLifeUI>();
 	lifeUI_->Initialize(dxCommon_);
+
+	magic_ = std::make_unique<ActionPlayerMagic>();
+	magic_->Initialize(dxCommon_);
 }
 
 void GameScene::Finalize() {
@@ -68,11 +71,21 @@ void GameScene::Finalize() {
 	lifeUI_.reset();
 	ground_.reset();
 	bulletManager_.reset();
+	magic_.reset();
 }
 
 void GameScene::Update() {
 	TKM::Input::GetInstance()->Update();
 
+	magic_->Update(
+		player_->GetPosition(),
+		player_->GetSize(),
+		player_->GetFacingDirection(),
+		scrollX_,
+		kScreenWidth_,
+		enemies_
+	);
+	player_->SetControlLocked(magic_->IsPlayerControlLocked());
 	player_->Update();
 	bulletManager_->Update(
 		player_->GetPosition(),
@@ -95,11 +108,16 @@ void GameScene::Update() {
 	for (auto& enemy : enemies_) {
 		enemy->Update();
 
-		if (player_->GetAABB().IsCollidingWithAABB(enemy->GetAABB())) {
+		//=============================================================
+		// プレイヤーと敵の当たり判定
+		// （死亡中は無効にする）
+		//=============================================================
+		if (!enemy->IsDying() &&
+			!enemy->IsMagicLocked() &&
+			player_->GetAABB().IsCollidingWithAABB(enemy->GetAABB())) {
 			player_->TakeDamage();
 		}
 	}
-
 
 	scrollX_ = player_->GetPosition().x - kScreenWidth_ * 0.5f;
 	if (scrollX_ < 0.0f) {
@@ -141,6 +159,9 @@ void GameScene::DrawSprite() {
 	}
 	for (auto& enemy : enemies_) {
 		enemy->Draw(scrollX_);
+	}
+	if (magic_) {
+		magic_->Draw(scrollX_);
 	}
 	if (goal_) {
 		goal_->Draw(scrollX_);

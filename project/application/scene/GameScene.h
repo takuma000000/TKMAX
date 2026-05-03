@@ -9,6 +9,7 @@
 #include "ActionLifeUI.h"
 #include "ActionGround.h"
 #include "ActionPlayerBulletManager.h"
+#include "ActionPlayerMagic.h"
 
 //=============================================================
 // GameSceneクラス
@@ -40,6 +41,7 @@ private:
 	std::unique_ptr<ActionLifeUI> lifeUI_ = nullptr;
 	std::unique_ptr<ActionGround> ground_ = nullptr;
 	std::unique_ptr<ActionPlayerBulletManager> bulletManager_ = nullptr;
+	std::unique_ptr<ActionPlayerMagic> magic_ = nullptr;
 
 	float scrollX_ = 0.0f;
 

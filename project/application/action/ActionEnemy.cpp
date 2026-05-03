@@ -45,6 +45,15 @@ void ActionEnemy::Initialize(
 }
 
 void ActionEnemy::Update() {
+	if (isMagicLocked_) {
+		if (sprite_) {
+			sprite_->SetPosition(position_);
+			sprite_->SetSize({ kEnemyWidth_, kEnemyHeight_ });
+			sprite_->Update();
+		}
+		return;
+	}
+
 	position_.x += moveSpeed_ * direction_;
 
 	if (isDying_) {

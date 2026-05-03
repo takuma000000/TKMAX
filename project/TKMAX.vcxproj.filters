@@ -162,6 +162,7 @@
     <ClCompile Include="application\action\ActionGround.cpp" />
     <ClCompile Include="application\action\ActionPlayerBullet.cpp" />
     <ClCompile Include="application\action\ActionPlayerBulletManager.cpp" />
+    <ClCompile Include="application\action\ActionPlayerMagic.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -359,6 +360,7 @@
     <ClInclude Include="application\action\ActionGround.h" />
     <ClInclude Include="application\action\ActionPlayerBullet.h" />
     <ClInclude Include="application\action\ActionPlayerBulletManager.h" />
+    <ClInclude Include="application\action\ActionPlayerMagic.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

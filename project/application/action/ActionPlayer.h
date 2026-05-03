@@ -53,6 +53,10 @@ public:
 
 	float GetFacingDirection() const { return facingDirection_; }
 
+	void SetControlLocked(bool locked) {
+		isControlLocked_ = locked;
+	}
+
 private:
 	std::unique_ptr<TKM::Sprite> sprite_ = nullptr;
 
@@ -80,6 +84,8 @@ private:
 	static constexpr float kBlinkInterval_ = 0.1f; // 点滅間隔
 
 	float stageWidth_ = 1280.0f;
+
+	bool isControlLocked_ = false;
 
 	float facingDirection_ = 1.0f; // 1=右、-1=左
 };
