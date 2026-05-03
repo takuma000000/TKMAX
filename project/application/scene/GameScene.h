@@ -1,6 +1,7 @@
 #pragma once
 #include "BaseScene.h"
 #include <memory>
+#include <vector>
 #include "ActionPlayer.h"
 #include "ActionEnemy.h"
 #include "ActionGoal.h"
@@ -32,9 +33,16 @@ private:
 	TKM::SrvManager* srvManager_ = nullptr;
 
 	std::unique_ptr<ActionPlayer> player_ = nullptr;
-	std::unique_ptr<ActionEnemy> enemy_ = nullptr;
+	std::vector<std::unique_ptr<ActionEnemy>> enemies_;
 	std::unique_ptr<ActionGoal> goal_ = nullptr;
 	std::unique_ptr<ActionTimer> timer_ = nullptr;
 	std::unique_ptr<ActionLifeUI> lifeUI_ = nullptr;
 	std::unique_ptr<ActionGround> ground_ = nullptr;
+
+	float scrollX_ = 0.0f;
+
+	static constexpr float kScreenWidth_ = 1280.0f;
+	static constexpr float kGroundWidth_ = 1280.0f;
+	static constexpr int kGroundCount_ = 3;
+	static constexpr float kStageWidth_ = kGroundWidth_ * kGroundCount_;
 };

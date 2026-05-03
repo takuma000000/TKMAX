@@ -30,8 +30,10 @@ void ActionGoal::Update() {
 	sprite_->Update();
 }
 
-void ActionGoal::Draw() {
+void ActionGoal::Draw(float scrollX) {
 	if (sprite_) {
+		sprite_->SetPosition({ position_.x - scrollX, position_.y });
+		sprite_->Update();
 		sprite_->Draw();
 	}
 }

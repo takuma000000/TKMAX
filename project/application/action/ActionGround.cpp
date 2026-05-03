@@ -5,16 +5,6 @@
 void ActionGround::Initialize(TKM::DirectXCommon* dxCommon) {
 	TKM::TextureManager::GetInstance()->LoadTexture(texturePath_);
 
-	sprite_ = std::make_unique<TKM::Sprite>();
-
-	sprite_->Initialize(
-		TKM::SpriteCommon::GetInstance(),
-		dxCommon,
-		texturePath_
-	);
-
-	sprite_->SetAutoAdjustTextureSize(false);
-
 	const auto& meta = TKM::TextureManager::GetInstance()->GetMetadata(texturePath_);
 
 	Vector2 texSize = {
@@ -22,24 +12,50 @@ void ActionGround::Initialize(TKM::DirectXCommon* dxCommon) {
 		static_cast<float>(meta.height)
 	};
 
-	sprite_->SetTextureLeftTop({ 0.0f, 0.0f });
-	sprite_->SetTextureSize(texSize);
+	for (int i = 0; i < kGroundCount_; ++i) {
+		sprites_[i] = std::make_unique<TKM::Sprite>();
 
-	sprite_->SetPosition(position_);
-	sprite_->SetSize({ kGroundWidth_, kGroundHeight_ });
-	sprite_->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
-}
+		sprites_[i]->Initialize(
+			TKM::SpriteCommon::GetInstance(),
+			dxCommon,
+			texturePath_
+		);
 
-void ActionGround::Update() {
-	if (sprite_) {
-		sprite_->SetPosition(position_);
-		sprite_->SetSize({ kGroundWidth_, kGroundHeight_ });
-		sprite_->Update();
+		sprites_[i]->SetAutoAdjustTextureSize(false);
+		sprites_[i]->SetTextureLeftTop({ 0.0f, 0.0f });
+		sprites_[i]->SetTextureSize(texSize);
+
+		sprites_[i]->SetPosition({
+			position_.x + static_cast<float>(i) * kGroundWidth_,
+			position_.y
+			});
+
+		sprites_[i]->SetSize({ kGroundWidth_, kGroundHeight_ });
+		sprites_[i]->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
 	}
 }
 
-void ActionGround::Draw() {
-	if (sprite_) {
-		sprite_->Draw();
+void ActionGround::Update() {
+	for (auto& sprite : sprites_) {
+		if (sprite) {
+			sprite->Update();
+		}
+	}
+}
+
+void ActionGround::Draw(float scrollX) {
+	for (int i = 0; i < kGroundCount_; ++i) {
+		if (!sprites_[i]) {
+			continue;
+		}
+
+		Vector2 drawPosition = {
+			position_.x + static_cast<float>(i) * kGroundWidth_ - scrollX,
+			position_.y
+		};
+
+		sprites_[i]->SetPosition(drawPosition);
+		sprites_[i]->Update();
+		sprites_[i]->Draw();
 	}
 }

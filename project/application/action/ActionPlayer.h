@@ -13,7 +13,7 @@ class ActionPlayer {
 public:
 	void Initialize(TKM::DirectXCommon* dxCommon);
 	void Update();
-	void Draw();
+	void Draw(float scrollX);
 	void ImGuiDebug();
 
 	void TakeDamage();
@@ -47,6 +47,9 @@ public:
 	void SetGroundTopY(float groundTopY) {
 		groundY_ = groundTopY - kPlayerHeight_;
 	}
+	void SetStageWidth(float stageWidth) {
+		stageWidth_ = stageWidth;
+	}
 
 private:
 	std::unique_ptr<TKM::Sprite> sprite_ = nullptr;
@@ -73,4 +76,6 @@ private:
 	float damageCooldownTimer_ = 0.0f;
 
 	static constexpr float kBlinkInterval_ = 0.1f; // 点滅間隔
+
+	float stageWidth_ = 1280.0f;
 };

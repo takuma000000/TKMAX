@@ -12,14 +12,43 @@ void GameScene::Initialize() {
 	player_ = std::make_unique<ActionPlayer>();
 	player_->Initialize(dxCommon_);
 	player_->SetGroundTopY(ground_->GetTopY());
+	player_->SetStageWidth(kStageWidth_);
 
-	enemy_ = std::make_unique<ActionEnemy>();
-	enemy_->Initialize(dxCommon_);
-	enemy_->SetGroundTopY(ground_->GetTopY());
+	enemies_.clear();
+	enemies_.push_back(std::make_unique<ActionEnemy>());
+	enemies_.back()->Initialize(
+		dxCommon_,
+		{ 700.0f, 0.0f },
+		EnemyType::TypeA,
+		120.0f,
+		2.0f
+	);
+	enemies_.back()->SetGroundTopY(ground_->GetTopY());
+
+	enemies_.push_back(std::make_unique<ActionEnemy>());
+	enemies_.back()->Initialize(
+		dxCommon_,
+		{ 1500.0f, 0.0f },
+		EnemyType::TypeA,
+		160.0f,
+		1.5f
+	);
+	enemies_.back()->SetGroundTopY(ground_->GetTopY());
+
+	enemies_.push_back(std::make_unique<ActionEnemy>());
+	enemies_.back()->Initialize(
+		dxCommon_,
+		{ 2800.0f, 0.0f },
+		EnemyType::TypeA,
+		100.0f,
+		2.5f
+	);
+	enemies_.back()->SetGroundTopY(ground_->GetTopY());
 
 	goal_ = std::make_unique<ActionGoal>();
 	goal_->Initialize(dxCommon_);
 	goal_->SetGroundTopY(ground_->GetTopY());
+	goal_->SetPosition({ 3600.0f, goal_->GetPosition().y });
 
 	timer_ = std::make_unique<ActionTimer>();
 	timer_->Initialize(dxCommon_, 100);
@@ -30,7 +59,7 @@ void GameScene::Initialize() {
 
 void GameScene::Finalize() {
 	player_.reset();
-	enemy_.reset();
+	enemies_.clear();
 	goal_.reset();
 	timer_.reset();
 	lifeUI_.reset();
@@ -43,8 +72,6 @@ void GameScene::Update() {
 	player_->Update();
 	player_->ImGuiDebug();
 
-	enemy_->Update();
-
 	goal_->Update();
 
 	timer_->Update();
@@ -55,9 +82,22 @@ void GameScene::Update() {
 
 	bool isTimeUp = timer_->IsTimeUp();
 
-	bool isHitEnemy = player_->GetAABB().IsCollidingWithAABB(enemy_->GetAABB());
-	if (isHitEnemy) {
-		player_->TakeDamage();
+	for (auto& enemy : enemies_) {
+		enemy->Update();
+
+		if (player_->GetAABB().IsCollidingWithAABB(enemy->GetAABB())) {
+			player_->TakeDamage();
+		}
+	}
+
+
+	scrollX_ = player_->GetPosition().x - kScreenWidth_ * 0.5f;
+	if (scrollX_ < 0.0f) {
+		scrollX_ = 0.0f;
+	}
+	float maxScrollX = kStageWidth_ - kScreenWidth_;
+	if (scrollX_ > maxScrollX) {
+		scrollX_ = maxScrollX;
 	}
 
 	if (isTimeUp || player_->IsDead()) {
@@ -81,16 +121,16 @@ void GameScene::DrawSprite() {
 	TKM::SpriteCommon::GetInstance()->DrawSetCommon();
 
 	if (ground_) {
-		ground_->Draw();
+		ground_->Draw(scrollX_);
 	}
 	if (player_) {
-		player_->Draw();
+		player_->Draw(scrollX_);
 	}
-	if (enemy_) {
-		enemy_->Draw();
+	for (auto& enemy : enemies_) {
+		enemy->Draw(scrollX_);
 	}
 	if (goal_) {
-		goal_->Draw();
+		goal_->Draw(scrollX_);
 	}
 	if (timer_) {
 		timer_->Draw();

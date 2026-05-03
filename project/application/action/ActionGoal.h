@@ -13,7 +13,11 @@ class ActionGoal {
 public:
 	void Initialize(TKM::DirectXCommon* dxCommon);
 	void Update();
-	void Draw();
+	void Draw(float scrollX);
+
+	void SetPosition(const Vector2& position) {
+		position_ = position;
+	}
 
 	const Vector2& GetPosition() const { return position_; }
 	Vector2 GetSize() const { return { kGoalWidth_, kGoalHeight_ }; }

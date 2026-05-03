@@ -83,6 +83,17 @@ void ActionPlayer::Update() {
 	position_.x += velocity_.x;
 	position_.y += velocity_.y;
 
+	//=============================================================
+	// ステージ外へ出ないように制限
+	//=============================================================
+	if (position_.x < 0.0f) {
+		position_.x = 0.0f;
+	}
+
+	if (position_.x > stageWidth_ - kPlayerWidth_) {
+		position_.x = stageWidth_ - kPlayerWidth_;
+	}
+
 	if (position_.y >= groundY_) {
 		position_.y = groundY_;
 		velocity_.y = 0.0f;
@@ -94,10 +105,10 @@ void ActionPlayer::Update() {
 	sprite_->Update();
 }
 
-void ActionPlayer::Draw() {
-	if (sprite_) {
-		sprite_->Draw();
-	}
+void ActionPlayer::Draw(float scrollX) {
+	sprite_->SetPosition({ position_.x - scrollX, position_.y });
+	sprite_->Update();
+	sprite_->Draw();
 }
 
 void ActionPlayer::ImGuiDebug() {

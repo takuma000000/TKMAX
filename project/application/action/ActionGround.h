@@ -4,6 +4,7 @@
 #include "Sprite.h"
 #include "DirectXCommon.h"
 #include "MyMath.h"
+#include <array>
 
 //=============================================================
 // ActionGround
@@ -13,12 +14,14 @@ class ActionGround {
 public:
 	void Initialize(TKM::DirectXCommon* dxCommon);
 	void Update();
-	void Draw();
+	void Draw(float scrollX);
 
 	float GetTopY() const { return position_.y; }
 
 private:
-	std::unique_ptr<TKM::Sprite> sprite_ = nullptr;
+	static constexpr int kGroundCount_ = 3;
+
+	std::array<std::unique_ptr<TKM::Sprite>, kGroundCount_> sprites_;
 
 	const std::string texturePath_ = "./resources/texture/ground.png";
 
