@@ -2,7 +2,6 @@
 #include "BaseEffect.h"
 #include "MyMath.h"
 #include <AuraVolumeRenderer.h>
-#include "EnemyBullet.h"
 
 namespace TKM {
 	class DirectXCommon;

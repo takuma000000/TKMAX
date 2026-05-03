@@ -123,6 +123,15 @@ namespace TKM {
 
 	void Sprite::Update() {
 
+		//反映処理
+		transformSprite_.translate_ = { position_.x,position_.y,0.0f };
+		transformSprite_.rotate_ = { 0.0f,0.0f,rotation_ };
+		transformSprite_.scale_ = { size_.x,size_.y,1.0f };
+
+		if (autoAdjustTextureSize_) {
+			AdjustTextureSize();
+		}
+
 		float left = 0.0f - anchorPoint_.x; // アンカーポイントを考慮した左端座標
 		float right = 1.0f - anchorPoint_.x; // アンカーポイントを考慮した右端座標
 		float top = 0.0f - anchorPoint_.y; // アンカーポイントを考慮した上端座標
@@ -179,15 +188,6 @@ namespace TKM {
 
 		transformationMatrixData_->wvp = MyMath::Multiply(worldMatrixSprite, MyMath::Multiply(viewMatrixSprite, projectionMatrixSprite)); // WVP行列の計算
 		transformationMatrixData_->World = worldMatrixSprite; // ワールド行列の設定
-
-		//反映処理
-		transformSprite_.translate_ = { position_.x,position_.y,0.0f };
-		transformSprite_.rotate_ = { 0.0f,0.0f,rotation_ };
-		transformSprite_.scale_ = { size_.x,size_.y,1.0f };
-
-		if (autoAdjustTextureSize_) {
-			AdjustTextureSize();
-		}
 	}
 
 	void Sprite::Draw() {
