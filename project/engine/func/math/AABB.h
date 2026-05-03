@@ -89,6 +89,9 @@ public:
 		return true;
 	}
 
+	const Vector3& GetCenter() const { return center_; }
+	const Vector3& GetHalfSize() const { return halfSize_; }
+
 private:
 	//======================================================================
 	// AABB（軸平行境界ボックス）

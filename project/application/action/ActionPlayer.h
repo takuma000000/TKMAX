@@ -24,6 +24,11 @@ public:
 	bool CanTakeDamage() const { return damageCooldownTimer_ <= 0.0f; }
 
 	const Vector2& GetPosition() const { return position_; }
+
+	void SetPosition(const Vector2& position) {
+		position_ = position;
+	}
+
 	Vector2 GetSize() const { return { kPlayerWidth_, kPlayerHeight_ }; }
 
 	AABB GetAABB() const {
@@ -41,6 +46,27 @@ public:
 		);
 	}
 
+	const Vector2& GetVelocity() const { return velocity_; }
+
+	void LandOnTop(float groundTopY) {
+		position_.y = groundTopY - kPlayerHeight_;
+		velocity_.y = 0.0f;
+		isGrounded_ = true;
+		groundY_ = groundTopY - kPlayerHeight_;
+	}
+	void HitHead(float blockBottomY) {
+		position_.y = blockBottomY;
+		velocity_.y = 0.0f;
+	}
+	void PushOutLeft(float blockLeftX) {
+		position_.x = blockLeftX - kPlayerWidth_;
+		velocity_.x = 0.0f;
+	}
+	void PushOutRight(float blockRightX) {
+		position_.x = blockRightX;
+		velocity_.x = 0.0f;
+	}
+
 	bool IsDead() const { return hp_ <= 0; }
 	int GetHP() const { return hp_; }
 	int GetMaxHP() const { return kMaxHP_; }
@@ -55,6 +81,10 @@ public:
 
 	void SetControlLocked(bool locked) {
 		isControlLocked_ = locked;
+	}
+
+	void ResetGroundTopY(float groundTopY) {
+		groundY_ = groundTopY - kPlayerHeight_;
 	}
 
 private:

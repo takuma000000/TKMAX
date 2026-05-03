@@ -64,6 +64,24 @@ void GameScene::Initialize() {
 
 	magic_ = std::make_unique<ActionPlayerMagic>();
 	magic_->Initialize(dxCommon_);
+
+	blocks_.clear();
+
+	auto addBlock = [&](float x, float y) {
+		auto block = std::make_unique<ActionBlock>();
+		block->Initialize(dxCommon_, { x, y });
+		blocks_.push_back(std::move(block));
+		};
+
+	// 適当に配置
+	addBlock(500, 600);
+	addBlock(524, 600);
+	addBlock(548, 600);
+
+	addBlock(1000, 550);
+	addBlock(1024, 550);
+
+	addBlock(2000, 500);
 }
 
 void GameScene::Finalize() {
@@ -90,7 +108,19 @@ void GameScene::Update() {
 		enemies_
 	);
 	player_->SetControlLocked(magic_->IsPlayerControlLocked());
+
+	//=============================================================
+	// 地面を一旦通常地面に戻す
+	//=============================================================
+	player_->SetGroundTopY(ground_->GetTopY());
+
+	Vector2 prevPlayerPos = player_->GetPosition();
+
 	player_->Update();
+
+	ResolvePlayerBlockCollision(prevPlayerPos);
+
+
 	bulletManager_->Update(
 		player_->GetPosition(),
 		player_->GetSize(),
@@ -114,7 +144,7 @@ void GameScene::Update() {
 	for (auto& enemy : enemies_) {
 		enemy->Update();
 
-		//=============================================================
+		//=============================================================	
 		// プレイヤーと敵の当たり判定
 		// （死亡中は無効にする）
 		//=============================================================
@@ -166,6 +196,9 @@ void GameScene::DrawSprite() {
 	if (ground_) {
 		ground_->Draw(scrollX_);
 	}
+	for (auto& block : blocks_) {
+		block->Draw(scrollX_);
+	}
 	if (player_) {
 		player_->Draw(scrollX_);
 	}
@@ -190,4 +223,80 @@ void GameScene::DrawSprite() {
 }
 
 void GameScene::DrawBack() {
+}
+
+void GameScene::ResolvePlayerBlockCollision(const Vector2& prevPlayerPos) {
+	const Vector2 playerSize = player_->GetSize();
+	const Vector2 currentPlayerPos = player_->GetPosition();
+
+	AABB prevPlayerAABB(
+		{
+			prevPlayerPos.x + playerSize.x * 0.5f,
+			prevPlayerPos.y + playerSize.y * 0.5f,
+			0.0f
+		},
+		{
+			playerSize.x,
+			playerSize.y,
+			1.0f
+		}
+	);
+
+	for (auto& block : blocks_) {
+		AABB playerAABB = player_->GetAABB();
+		AABB blockAABB = block->GetAABB();
+
+		if (!playerAABB.IsCollidingWithAABB(blockAABB)) {
+			continue;
+		}
+
+		Vector3 pCenter = playerAABB.GetCenter();
+		Vector3 bCenter = blockAABB.GetCenter();
+
+		Vector3 pHalf = playerAABB.GetHalfSize();
+		Vector3 bHalf = blockAABB.GetHalfSize();
+
+		Vector3 prevCenter = prevPlayerAABB.GetCenter();
+		Vector3 prevHalf = prevPlayerAABB.GetHalfSize();
+
+		const float playerLeft = pCenter.x - pHalf.x;
+		const float playerRight = pCenter.x + pHalf.x;
+		const float playerTop = pCenter.y - pHalf.y;
+		const float playerBottom = pCenter.y + pHalf.y;
+
+		const float blockLeft = bCenter.x - bHalf.x;
+		const float blockRight = bCenter.x + bHalf.x;
+		const float blockTop = bCenter.y - bHalf.y;
+		const float blockBottom = bCenter.y + bHalf.y;
+
+		const float prevPlayerLeft = prevCenter.x - prevHalf.x;
+		const float prevPlayerRight = prevCenter.x + prevHalf.x;
+		const float prevPlayerTop = prevCenter.y - prevHalf.y;
+		const float prevPlayerBottom = prevCenter.y + prevHalf.y;
+
+		const bool wasAbove = prevPlayerBottom <= blockTop;
+		const bool wasBelow = prevPlayerTop >= blockBottom;
+		const bool wasLeft = prevPlayerRight <= blockLeft;
+		const bool wasRight = prevPlayerLeft >= blockRight;
+
+		if (wasAbove && playerBottom >= blockTop) {
+			player_->LandOnTop(blockTop);
+			continue;
+		}
+
+		if (wasBelow && playerTop <= blockBottom) {
+			player_->HitHead(blockBottom);
+			continue;
+		}
+
+		if (wasLeft && playerRight >= blockLeft) {
+			player_->PushOutLeft(blockLeft);
+			continue;
+		}
+
+		if (wasRight && playerLeft <= blockRight) {
+			player_->PushOutRight(blockRight);
+			continue;
+		}
+	}
 }

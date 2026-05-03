@@ -11,6 +11,7 @@
 #include "ActionPlayerBulletManager.h"
 #include "ActionPlayerMagic.h"
 #include "ActionBack.h"
+#include "ActionBlock.h"
 
 //=============================================================
 // GameSceneクラス
@@ -32,6 +33,8 @@ public:
 	void DrawBack() override;
 
 private:
+	void ResolvePlayerBlockCollision(const Vector2& prevPlayerPos);
+
 	TKM::DirectXCommon* dxCommon_ = nullptr;
 	TKM::SrvManager* srvManager_ = nullptr;
 
@@ -44,6 +47,7 @@ private:
 	std::unique_ptr<ActionPlayerBulletManager> bulletManager_ = nullptr;
 	std::unique_ptr<ActionPlayerMagic> magic_ = nullptr;
 	std::unique_ptr<ActionBack> back_ = nullptr;
+	std::vector<std::unique_ptr<ActionBlock>> blocks_;
 
 	float scrollX_ = 0.0f;
 
