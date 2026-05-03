@@ -68,10 +68,12 @@ void ActionPlayer::Update() {
 
 	if (input->PushKey(DIK_A) || input->PushKey(DIK_LEFT)) {
 		velocity_.x = -moveSpeed_;
+		facingDirection_ = -1.0f;
 	}
 
 	if (input->PushKey(DIK_D) || input->PushKey(DIK_RIGHT)) {
 		velocity_.x = moveSpeed_;
+		facingDirection_ = 1.0f;
 	}
 
 	if ((input->TriggerKey(DIK_W) || input->TriggerKey(DIK_UP)) && isGrounded_) {

@@ -113,6 +113,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="application\action\ActionPlayerBulletManager.cpp" />
+    <ClCompile Include="application\action\ActionPlayerBullet.cpp" />
     <ClCompile Include="application\action\ActionGround.cpp" />
     <ClCompile Include="application\action\ActionLifeUI.cpp" />
     <ClCompile Include="application\action\ActionTimer.cpp" />
@@ -198,6 +200,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\effect\post\NoiseEffect.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="application\action\ActionPlayerBulletManager.h" />
+    <ClInclude Include="application\action\ActionPlayerBullet.h" />
     <ClInclude Include="application\action\ActionGround.h" />
     <ClInclude Include="application\action\ActionLifeUI.h" />
     <ClInclude Include="application\action\ActionTimer.h" />

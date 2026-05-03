@@ -14,6 +14,9 @@ void GameScene::Initialize() {
 	player_->SetGroundTopY(ground_->GetTopY());
 	player_->SetStageWidth(kStageWidth_);
 
+	bulletManager_ = std::make_unique<ActionPlayerBulletManager>();
+	bulletManager_->Initialize(dxCommon_);
+
 	enemies_.clear();
 	enemies_.push_back(std::make_unique<ActionEnemy>());
 	enemies_.back()->Initialize(
@@ -64,12 +67,18 @@ void GameScene::Finalize() {
 	timer_.reset();
 	lifeUI_.reset();
 	ground_.reset();
+	bulletManager_.reset();
 }
 
 void GameScene::Update() {
 	TKM::Input::GetInstance()->Update();
 
 	player_->Update();
+	bulletManager_->Update(
+		player_->GetPosition(),
+		player_->GetSize(),
+		player_->GetFacingDirection()
+	);
 	player_->ImGuiDebug();
 
 	goal_->Update();
@@ -125,6 +134,9 @@ void GameScene::DrawSprite() {
 	}
 	if (player_) {
 		player_->Draw(scrollX_);
+	}
+	if (bulletManager_) {
+		bulletManager_->Draw(scrollX_);
 	}
 	for (auto& enemy : enemies_) {
 		enemy->Draw(scrollX_);

@@ -8,6 +8,7 @@
 #include "ActionTimer.h"
 #include "ActionLifeUI.h"
 #include "ActionGround.h"
+#include "ActionPlayerBulletManager.h"
 
 //=============================================================
 // GameSceneクラス
@@ -38,6 +39,7 @@ private:
 	std::unique_ptr<ActionTimer> timer_ = nullptr;
 	std::unique_ptr<ActionLifeUI> lifeUI_ = nullptr;
 	std::unique_ptr<ActionGround> ground_ = nullptr;
+	std::unique_ptr<ActionPlayerBulletManager> bulletManager_ = nullptr;
 
 	float scrollX_ = 0.0f;
 

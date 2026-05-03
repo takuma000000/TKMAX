@@ -51,6 +51,8 @@ public:
 		stageWidth_ = stageWidth;
 	}
 
+	float GetFacingDirection() const { return facingDirection_; }
+
 private:
 	std::unique_ptr<TKM::Sprite> sprite_ = nullptr;
 
@@ -78,4 +80,6 @@ private:
 	static constexpr float kBlinkInterval_ = 0.1f; // 点滅間隔
 
 	float stageWidth_ = 1280.0f;
+
+	float facingDirection_ = 1.0f; // 1=右、-1=左
 };
