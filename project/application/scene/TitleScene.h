@@ -1,36 +1,11 @@
 #pragma once
 #include "BaseScene.h"
 
-#include <memory>
-#include <cmath>
-#include <vector>
-#include "DirectXCommon.h"
-#include "srvManager.h"
-#include "Sprite.h"
-#include "SpriteCommon.h"
-#include "Object3d.h"
-#include "Object3dCommon.h"
-#include "CameraManager.h"
-#include "Input.h"
-#include "SceneManager.h"
-#include <SkyBox.h> 
-#include "WaterRippleEffect.h"
-#include "TitleMenuController.h"
-#include "Enemy.h"
-#include <random>
-#include "Player.h"
-#include "BossEnemy.h"
-#include "StateMachine.h"
-#include "GameOverScene.h"
-#include "GameScene.h"
-#include "GameClearScene.h"
-#include "TitleShowdownController.h"
-
 //=============================================================
 // TitleSceneクラス
 // タイトル画面を管理するシーンクラス。
 //=============================================================
-class TitleScene : public TKM::BaseScene, public TKM::IStateContext {
+class TitleScene : public TKM::BaseScene {
 public:
 	TitleScene(TKM::DirectXCommon* dxCommon, TKM::SrvManager* srvManager) : dxCommon_(dxCommon), srvManager_(srvManager) {}
 

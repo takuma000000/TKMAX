@@ -86,12 +86,6 @@
     <ClCompile Include="engine\scene\SceneManager.cpp">
       <Filter>engine\scene</Filter>
     </ClCompile>
-    <ClCompile Include="application\actor\boss\BossEnemy.cpp">
-      <Filter>application\boss</Filter>
-    </ClCompile>
-    <ClCompile Include="application\actor\enemy\Enemy.cpp">
-      <Filter>application\enemy</Filter>
-    </ClCompile>
     <ClCompile Include="application\scene\GameClearScene.cpp">
       <Filter>application\scene</Filter>
     </ClCompile>
@@ -100,12 +94,6 @@
     </ClCompile>
     <ClCompile Include="application\scene\TitleScene.cpp">
       <Filter>application\scene</Filter>
-    </ClCompile>
-    <ClCompile Include="application\actor\player\Player.cpp">
-      <Filter>application\player</Filter>
-    </ClCompile>
-    <ClCompile Include="application\actor\player\PlayerBullet.cpp">
-      <Filter>application\player</Filter>
     </ClCompile>
     <ClCompile Include="externals\imgui\imgui.cpp">
       <Filter>externals\imgui</Filter>
@@ -131,15 +119,6 @@
     <ClCompile Include="application\scene\GameOverScene.cpp">
       <Filter>application\scene</Filter>
     </ClCompile>
-    <ClCompile Include="application\actor\player\reticle\Reticle.cpp">
-      <Filter>application\player\reticle</Filter>
-    </ClCompile>
-    <ClCompile Include="application\actor\enemy\manager\EnemyManager.cpp">
-      <Filter>application\enemy\manager</Filter>
-    </ClCompile>
-    <ClCompile Include="application\actor\boss\manager\BossManager.cpp">
-      <Filter>application\boss\manager</Filter>
-    </ClCompile>
     <ClCompile Include="engine\effect\line\LineRenderer.cpp">
       <Filter>engine\effect\line</Filter>
     </ClCompile>
@@ -148,12 +127,6 @@
     </ClCompile>
     <ClCompile Include="engine\3d\camera\DebugCamera.cpp">
       <Filter>engine\3d\camera</Filter>
-    </ClCompile>
-    <ClCompile Include="application\actor\boss\BossController.cpp">
-      <Filter>application\boss</Filter>
-    </ClCompile>
-    <ClCompile Include="application\actor\enemy\BarrierCore.cpp">
-      <Filter>application\enemy</Filter>
     </ClCompile>
     <ClCompile Include="engine\effect\post\WaterRippleEffect.cpp">
       <Filter>engine\effect\post</Filter>
@@ -171,51 +144,16 @@
     <ClCompile Include="engine\effect\post\AuraVolumeRenderer.cpp" />
     <ClCompile Include="engine\func\common\TimeScaleController.cpp" />
     <ClCompile Include="engine\csv\CsvReader.cpp" />
-    <ClCompile Include="application\actor\enemy\EnemyEncounterConfig.cpp" />
     <ClCompile Include="engine\effect\post\FogVolume3D.cpp" />
     <ClCompile Include="engine\effect\post\SmokeVolume3D.cpp" />
     <ClCompile Include="engine\effect\post\LaserBeam3D.cpp" />
-    <ClCompile Include="application\actor\boss\BossHpBarUI.cpp" />
-    <ClCompile Include="application\actor\player\RBGaugeUI.cpp" />
-    <ClCompile Include="application\effect\IntroSequence.cpp" />
-    <ClCompile Include="application\effect\controller\FireworkController.cpp" />
-    <ClCompile Include="application\scene\controller\GameFlowController.cpp" />
-    <ClCompile Include="application\ui\UIController.cpp" />
-    <ClCompile Include="application\effect\controller\PostEffectController.cpp" />
-    <ClCompile Include="application\scene\controller\ClearSequenceController.cpp" />
-    <ClCompile Include="application\effect\ParticleGroupsCatalog.cpp" />
-    <ClCompile Include="application\scene\controller\PauseMenuController.cpp" />
-    <ClCompile Include="application\scene\controller\TitleMenuController.cpp" />
-    <ClCompile Include="application\scene\controller\GameResultMenuController.cpp" />
-    <ClCompile Include="application\actor\boss\BossBullet.cpp" />
-    <ClCompile Include="application\catalog\TextureCatalog.cpp" />
-    <ClCompile Include="application\catalog\ModelCatalog.cpp" />
-    <ClCompile Include="application\actor\player\LBGaugeUI.cpp" />
     <ClCompile Include="engine\3d\camera\manager\CameraManager.cpp" />
     <ClCompile Include="engine\state\StateMachine.cpp" />
-    <ClCompile Include="application\state\BossStates.cpp" />
-    <ClCompile Include="application\actor\BattleActorManagerBase.cpp" />
-    <ClCompile Include="application\effect\ParticleSpawner.cpp" />
     <ClCompile Include="engine\effect\post\TrailRibbonRenderer.cpp" />
-    <ClCompile Include="application\actor\player\HomingBullet.cpp" />
-    <ClCompile Include="application\ui\OperationGuideUI.cpp" />
-    <ClCompile Include="application\ui\PlayerHudUI.cpp" />
-    <ClCompile Include="application\state\IntroFlowStates.cpp" />
-    <ClCompile Include="application\effect\IntroStartBanner.cpp" />
-    <ClCompile Include="application\effect\IntroBossActor.cpp" />
-    <ClCompile Include="application\actor\boss\BossConfigLoader.cpp" />
-    <ClCompile Include="application\scene\controller\TitleShowdownController.cpp" />
-    <ClCompile Include="application\actor\boss\BossEntranceSequence.cpp" />
-    <ClCompile Include="application\actor\enemy\EnemyBullet.cpp" />
-    <ClCompile Include="application\actor\enemy\EnemyBarrier.cpp" />
     <ClCompile Include="engine\effect\post\NoiseEffect.cpp" />
     <ClCompile Include="engine\3d\BarrierCommon.cpp" />
-    <ClCompile Include="application\ui\SkipGuideUI.cpp" />
-    <ClCompile Include="application\actor\BarrierCoreManager.cpp" />
-    <ClCompile Include="application\catalog\AudioCatalog.cpp" />
-    <ClCompile Include="application\state\BossEntranceStates.cpp" />
-    <ClCompile Include="application\actor\player\PlayerShotManager.cpp" />
-    <ClCompile Include="application\actor\player\PlayerShotConfig.cpp" />
+    <ClCompile Include="application\effect\ParticleGroupsCatalog.cpp" />
+    <ClCompile Include="application\effect\ParticleSpawner.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -317,15 +255,6 @@
     <ClInclude Include="engine\scene\SceneManager.h">
       <Filter>engine\scene</Filter>
     </ClInclude>
-    <ClInclude Include="application\actor\boss\BossBullet.h">
-      <Filter>application\boss</Filter>
-    </ClInclude>
-    <ClInclude Include="application\actor\boss\BossEnemy.h">
-      <Filter>application\boss</Filter>
-    </ClInclude>
-    <ClInclude Include="application\actor\enemy\Enemy.h">
-      <Filter>application\enemy</Filter>
-    </ClInclude>
     <ClInclude Include="application\scene\GameClearScene.h">
       <Filter>application\scene</Filter>
     </ClInclude>
@@ -334,12 +263,6 @@
     </ClInclude>
     <ClInclude Include="application\scene\TitleScene.h">
       <Filter>application\scene</Filter>
-    </ClInclude>
-    <ClInclude Include="application\actor\player\Player.h">
-      <Filter>application\player</Filter>
-    </ClInclude>
-    <ClInclude Include="application\actor\player\PlayerBullet.h">
-      <Filter>application\player</Filter>
     </ClInclude>
     <ClInclude Include="externals\imgui\imgui.h">
       <Filter>externals\imgui</Filter>
@@ -374,15 +297,6 @@
     <ClInclude Include="engine\func\math\Vector2.h">
       <Filter>engine\func\math</Filter>
     </ClInclude>
-    <ClInclude Include="application\actor\player\reticle\Reticle.h">
-      <Filter>application\player\reticle</Filter>
-    </ClInclude>
-    <ClInclude Include="application\actor\enemy\manager\EnemyManager.h">
-      <Filter>application\enemy\manager</Filter>
-    </ClInclude>
-    <ClInclude Include="application\actor\boss\manager\BossManager.h">
-      <Filter>application\boss\manager</Filter>
-    </ClInclude>
     <ClInclude Include="engine\effect\line\LineRenderer.h">
       <Filter>engine\effect\line</Filter>
     </ClInclude>
@@ -391,15 +305,6 @@
     </ClInclude>
     <ClInclude Include="engine\3d\camera\DebugCamera.h">
       <Filter>engine\3d\camera</Filter>
-    </ClInclude>
-    <ClInclude Include="application\actor\boss\BossController.h">
-      <Filter>application\boss</Filter>
-    </ClInclude>
-    <ClInclude Include="application\actor\enemy\BarrierCore.h">
-      <Filter>application\enemy</Filter>
-    </ClInclude>
-    <ClInclude Include="application\effect\IrisUtil.h">
-      <Filter>application\effect</Filter>
     </ClInclude>
     <ClInclude Include="engine\3d\ModelTypes.h">
       <Filter>engine\3d</Filter>
@@ -423,56 +328,21 @@
     <ClInclude Include="engine\effect\post\AuraVolumeRenderer.h" />
     <ClInclude Include="engine\func\common\TimeScaleController.h" />
     <ClInclude Include="engine\csv\CsvReader.h" />
-    <ClInclude Include="application\actor\enemy\EnemyEncounterConfig.h" />
     <ClInclude Include="engine\effect\post\FogVolume3D.h" />
     <ClInclude Include="engine\effect\post\SmokeVolume3D.h" />
     <ClInclude Include="engine\effect\post\LaserBeam3D.h" />
-    <ClInclude Include="application\actor\boss\BossHpBarUI.h" />
-    <ClInclude Include="application\actor\player\RBGaugeUI.h" />
-    <ClInclude Include="application\effect\IntroSequence.h" />
-    <ClInclude Include="application\effect\controller\FireworkController.h" />
-    <ClInclude Include="application\scene\controller\GameFlowController.h" />
-    <ClInclude Include="application\ui\UIController.h" />
-    <ClInclude Include="application\effect\controller\PostEffectController.h" />
-    <ClInclude Include="application\scene\controller\ClearSequenceController.h" />
-    <ClInclude Include="application\effect\ParticleGroupsCatalog.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="application\scene\controller\PauseMenuController.h" />
-    <ClInclude Include="application\scene\controller\TitleMenuController.h" />
-    <ClInclude Include="application\scene\controller\GameResultMenuController.h" />
-    <ClInclude Include="application\catalog\TextureCatalog.h" />
-    <ClInclude Include="application\catalog\ModelCatalog.h" />
     <ClInclude Include="engine\func\math\Transform.h" />
-    <ClInclude Include="application\actor\player\LBGaugeUI.h" />
     <ClInclude Include="engine\3d\camera\manager\CameraManager.h" />
     <ClInclude Include="engine\state\IStateContext.h" />
     <ClInclude Include="engine\state\IState.h" />
     <ClInclude Include="engine\state\StateMachine.h" />
-    <ClInclude Include="application\state\BossStates.h" />
-    <ClInclude Include="application\actor\BattleActorManagerBase.h" />
-    <ClInclude Include="application\effect\ParticleSpawner.h" />
     <ClInclude Include="engine\effect\post\TrailRibbonRenderer.h" />
-    <ClInclude Include="application\actor\player\HomingBullet.h" />
-    <ClInclude Include="application\ui\OperationGuideUI.h" />
-    <ClInclude Include="application\ui\PlayerHudUI.h" />
-    <ClInclude Include="application\state\IntroFlowStates.h" />
-    <ClInclude Include="application\effect\IntroStartBanner.h" />
-    <ClInclude Include="application\effect\IntroBossActor.h" />
     <ClInclude Include="externals\nlohmann\json.hpp" />
-    <ClInclude Include="application\actor\boss\BossConfig.h" />
-    <ClInclude Include="application\actor\boss\BossConfigLoader.h" />
-    <ClInclude Include="application\scene\controller\TitleShowdownController.h" />
-    <ClInclude Include="application\actor\boss\BossEntranceSequence.h" />
-    <ClInclude Include="application\actor\enemy\EnemyBullet.h" />
-    <ClInclude Include="application\actor\enemy\EnemyBarrier.h" />
     <ClInclude Include="engine\effect\post\NoiseEffect.h" />
     <ClInclude Include="engine\3d\BarrierCommon.h" />
-    <ClInclude Include="application\ui\SkipGuideUI.h" />
-    <ClInclude Include="application\actor\BarrierCoreManager.h" />
-    <ClInclude Include="application\catalog\AudioCatalog.h" />
-    <ClInclude Include="application\state\BossEntranceStates.h" />
-    <ClInclude Include="application\actor\player\PlayerShotManager.h" />
-    <ClInclude Include="application\actor\player\PlayerShotConfig.h" />
+    <ClInclude Include="application\effect\ParticleGroupsCatalog.h" />
+    <ClInclude Include="application\effect\ParticleSpawner.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
