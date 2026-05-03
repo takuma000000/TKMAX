@@ -33,8 +33,9 @@ public:
 	void Update();
 	void Draw(float scrollX);
 
-	void TakeDamage();
+	void TakeDamage(float hitDirection);
 	bool IsDead() const { return isDead_; }
+	bool IsDying() const { return isDying_; }
 
 	const Vector2& GetPosition() const { return position_; }
 	Vector2 GetSize() const { return { kEnemyWidth_, kEnemyHeight_ }; }
@@ -79,4 +80,12 @@ private:
 	static constexpr float kEnemyHeight_ = 48.0f;
 
 	bool isDead_ = false;
+	bool isDying_ = false;
+
+	Vector2 knockbackVelocity_ = { 0.0f, 0.0f };
+
+	static constexpr float kKnockbackSpeedX_ = 8.0f;
+	static constexpr float kKnockbackSpeedY_ = -10.0f;
+	static constexpr float kKnockbackGravity_ = 0.6f;
+	static constexpr float kDeadBottomY_ = 900.0f;
 };

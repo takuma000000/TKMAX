@@ -19,6 +19,9 @@ public:
 
 	bool IsDead() const { return isDead_; }
 	AABB GetAABB() const;
+	float GetDirection() const {
+		return velocity_.x >= 0.0f ? 1.0f : -1.0f;
+	}
 
 private:
 	std::unique_ptr<TKM::Sprite> sprite_ = nullptr;

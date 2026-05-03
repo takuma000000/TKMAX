@@ -90,12 +90,12 @@ void ActionPlayerBulletManager::CheckHitEnemies_(std::vector<std::unique_ptr<Act
 		}
 
 		for (auto& enemy : enemies) {
-			if (!enemy || enemy->IsDead()) {
+			if (!enemy || enemy->IsDead() || enemy->IsDying()) {
 				continue;
 			}
 
 			if (bullet->GetAABB().IsCollidingWithAABB(enemy->GetAABB())) {
-				enemy->TakeDamage();
+				enemy->TakeDamage(bullet->GetDirection());
 				bullet->Kill();
 				break;
 			}

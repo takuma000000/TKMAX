@@ -47,14 +47,31 @@ void ActionEnemy::Initialize(
 void ActionEnemy::Update() {
 	position_.x += moveSpeed_ * direction_;
 
+	if (isDying_) {
+		position_.x += knockbackVelocity_.x;
+		position_.y += knockbackVelocity_.y;
+
+		knockbackVelocity_.y += kKnockbackGravity_;
+
+		if (position_.y > kDeadBottomY_) {
+			isDead_ = true;
+		}
+
+		if (sprite_) {
+			sprite_->SetPosition(position_);
+			sprite_->SetSize({ kEnemyWidth_, kEnemyHeight_ });
+			sprite_->Update();
+		}
+
+		return;
+	}
+
 	const float leftLimit = basePosition_.x - moveRange_;
 	const float rightLimit = basePosition_.x + moveRange_;
-
 	if (position_.x <= leftLimit) {
 		position_.x = leftLimit;
 		direction_ = 1.0f;
 	}
-
 	if (position_.x >= rightLimit) {
 		position_.x = rightLimit;
 		direction_ = -1.0f;
@@ -77,8 +94,17 @@ void ActionEnemy::Draw(float scrollX) {
 	sprite_->Draw();
 }
 
-void ActionEnemy::TakeDamage() {
-	isDead_ = true;
+void ActionEnemy::TakeDamage(float hitDirection) {
+	if (isDying_ || isDead_) {
+		return;
+	}
+
+	isDying_ = true;
+
+	knockbackVelocity_ = {
+		kKnockbackSpeedX_ * hitDirection,
+		kKnockbackSpeedY_
+	};
 }
 
 std::string ActionEnemy::GetTexturePathByType_(EnemyType type) {
