@@ -33,6 +33,9 @@ public:
 	void Update();
 	void Draw(float scrollX);
 
+	void TakeDamage();
+	bool IsDead() const { return isDead_; }
+
 	const Vector2& GetPosition() const { return position_; }
 	Vector2 GetSize() const { return { kEnemyWidth_, kEnemyHeight_ }; }
 
@@ -74,4 +77,6 @@ private:
 
 	static constexpr float kEnemyWidth_ = 48.0f;
 	static constexpr float kEnemyHeight_ = 48.0f;
+
+	bool isDead_ = false;
 };

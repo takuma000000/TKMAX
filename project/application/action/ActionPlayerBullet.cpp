@@ -62,6 +62,10 @@ void ActionPlayerBullet::Draw(float scrollX) {
 	sprite_->Draw();
 }
 
+void ActionPlayerBullet::Kill() {
+	isDead_ = true;
+}
+
 AABB ActionPlayerBullet::GetAABB() const {
 	return AABB(
 		{

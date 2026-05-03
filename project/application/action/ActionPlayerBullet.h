@@ -15,6 +15,8 @@ public:
 	void Update();
 	void Draw(float scrollX);
 
+	void Kill();
+
 	bool IsDead() const { return isDead_; }
 	AABB GetAABB() const;
 

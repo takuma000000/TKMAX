@@ -11,7 +11,8 @@ void ActionPlayerBulletManager::Initialize(TKM::DirectXCommon* dxCommon) {
 void ActionPlayerBulletManager::Update(
 	const Vector2& playerPosition,
 	const Vector2& playerSize,
-	float facingDirection) {
+	float facingDirection,
+	std::vector<std::unique_ptr<ActionEnemy>>& enemies) {
 
 	if (shotCooldownTimer_ > 0.0f) {
 		shotCooldownTimer_ -= kFrameTime_;
@@ -32,6 +33,19 @@ void ActionPlayerBulletManager::Update(
 			bullet->Update();
 		}
 	}
+
+	CheckHitEnemies_(enemies);
+
+	enemies.erase(
+		std::remove_if(
+			enemies.begin(),
+			enemies.end(),
+			[](const std::unique_ptr<ActionEnemy>& enemy) {
+				return !enemy || enemy->IsDead();
+			}
+		),
+		enemies.end()
+	);
 
 	bullets_.erase(
 		std::remove_if(
@@ -67,4 +81,24 @@ void ActionPlayerBulletManager::Shoot_(
 	bullet->Initialize(dxCommon_, bulletPosition, facingDirection);
 
 	bullets_.push_back(std::move(bullet));
+}
+
+void ActionPlayerBulletManager::CheckHitEnemies_(std::vector<std::unique_ptr<ActionEnemy>>& enemies) {
+	for (auto& bullet : bullets_) {
+		if (!bullet || bullet->IsDead()) {
+			continue;
+		}
+
+		for (auto& enemy : enemies) {
+			if (!enemy || enemy->IsDead()) {
+				continue;
+			}
+
+			if (bullet->GetAABB().IsCollidingWithAABB(enemy->GetAABB())) {
+				enemy->TakeDamage();
+				bullet->Kill();
+				break;
+			}
+		}
+	}
 }

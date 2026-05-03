@@ -77,7 +77,8 @@ void GameScene::Update() {
 	bulletManager_->Update(
 		player_->GetPosition(),
 		player_->GetSize(),
-		player_->GetFacingDirection()
+		player_->GetFacingDirection(),
+		enemies_
 	);
 	player_->ImGuiDebug();
 

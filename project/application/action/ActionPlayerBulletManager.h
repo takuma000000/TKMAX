@@ -4,6 +4,7 @@
 #include "DirectXCommon.h"
 #include "MyMath.h"
 #include "ActionPlayerBullet.h"
+#include "ActionEnemy.h"
 
 //=============================================================
 // ActionPlayerBulletManager
@@ -12,7 +13,12 @@
 class ActionPlayerBulletManager {
 public:
 	void Initialize(TKM::DirectXCommon* dxCommon);
-	void Update(const Vector2& playerPosition, const Vector2& playerSize, float facingDirection);
+	void Update(
+		const Vector2& playerPosition,
+		const Vector2& playerSize,
+		float facingDirection,
+		std::vector<std::unique_ptr<ActionEnemy>>& enemies
+	);
 	void Draw(float scrollX);
 
 private:
@@ -27,4 +33,6 @@ private:
 	static constexpr float kFrameTime_ = 1.0f / 60.0f;
 
 	float shotCooldownTimer_ = 0.0f;
+
+	void CheckHitEnemies_(std::vector<std::unique_ptr<ActionEnemy>>& enemies);
 };

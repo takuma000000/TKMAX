@@ -77,6 +77,10 @@ void ActionEnemy::Draw(float scrollX) {
 	sprite_->Draw();
 }
 
+void ActionEnemy::TakeDamage() {
+	isDead_ = true;
+}
+
 std::string ActionEnemy::GetTexturePathByType_(EnemyType type) {
 	switch (type) {
 	case EnemyType::TypeA:
