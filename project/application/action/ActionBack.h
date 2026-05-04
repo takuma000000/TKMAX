@@ -24,7 +24,7 @@ private:
 
 	static constexpr float kParallaxRate_ = 0.25f;
 
-	const std::string texturePath_ = "./resources/texture/back.png";
+	const std::string texturePath_ = "./resources/texture/back.jpg";
 
 	std::array<std::unique_ptr<TKM::Sprite>, kBackCount_> sprites_;
 };
