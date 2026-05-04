@@ -1,5 +1,6 @@
 #pragma once
 #include "BaseScene.h"
+#include "Sprite.h"
 
 //=============================================================
 // GameClearSceneクラス
@@ -27,4 +28,5 @@ private:
 	//======================================================================
 	TKM::DirectXCommon* dxCommon_ = nullptr;
 	TKM::SrvManager* srvManager_ = nullptr;
+	std::unique_ptr<TKM::Sprite> clearSprite_ = nullptr;
 };

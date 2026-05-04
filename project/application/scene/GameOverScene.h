@@ -1,5 +1,6 @@
 #pragma once
 #include "BaseScene.h"
+#include "Sprite.h"
 
 //=============================================================
 // GameOverScene
@@ -25,4 +26,5 @@ private:
 	//======================================================================
 	TKM::DirectXCommon* dxCommon_ = nullptr;
 	TKM::SrvManager* srvManager_ = nullptr;
+	std::unique_ptr<TKM::Sprite> overSprite_ = nullptr;
 };
