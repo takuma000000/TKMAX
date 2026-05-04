@@ -1,5 +1,6 @@
 #pragma once
 #include "BaseScene.h"
+#include "Sprite.h"
 
 //=============================================================
 // TitleSceneクラス
@@ -24,4 +25,5 @@ private:
 	TKM::DirectXCommon* dxCommon_ = nullptr;
 	TKM::SrvManager* srvManager_ = nullptr;
 	TKM::Camera* camera_ = nullptr; // 今フレームのアクティブカメラ（CameraManagerから取得）
+	std::unique_ptr<TKM::Sprite> backSprite_ = nullptr;
 };
