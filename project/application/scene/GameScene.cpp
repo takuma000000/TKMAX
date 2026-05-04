@@ -5,6 +5,7 @@
 
 void GameScene::Initialize() {
 	TKM::TextureManager::GetInstance()->LoadTexture("./resources/texture/circle2.png");
+	TKM::TextureManager::GetInstance()->LoadTexture("./resources/texture/gradationLine.png");
 
 	back_ = std::make_unique<ActionBack>();
 	back_->Initialize(dxCommon_);

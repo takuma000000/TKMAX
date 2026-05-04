@@ -34,7 +34,7 @@ void ActionPlayerMagic::Initialize(TKM::DirectXCommon* dxCommon) {
 
 		CreateSprite_(
 			arrow.sprite,
-			"./resources/texture/circle2.png",
+			"./resources/texture/gradationLine.png",
 			{ kArrowWidth_, kArrowHeight_ },
 			{ 0.7f, 0.9f, 1.0f, 0.0f }
 		);

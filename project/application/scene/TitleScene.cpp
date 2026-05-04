@@ -26,8 +26,13 @@ void TitleScene::Initialize() {
 		(float)meta.height
 	};
 
-	backSprite_->SetTextureLeftTop({ 0,0 });
-	backSprite_->SetTextureSize(texSize);
+	const float kUvInset_ = 0.5f;
+
+	backSprite_->SetTextureLeftTop({ kUvInset_, kUvInset_ });
+	backSprite_->SetTextureSize({
+		texSize.x - kUvInset_ * 2.0f,
+		texSize.y - kUvInset_ * 2.0f
+		});
 	backSprite_->SetPosition({ 0.0f, 0.0f });
 	backSprite_->SetSize({ 1280.0f, 720.0f });
 }

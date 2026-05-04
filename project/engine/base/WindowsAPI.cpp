@@ -68,7 +68,7 @@ namespace TKM {
 
 		hwnd_ = CreateWindow(
 			wc_.lpszClassName,
-			L"クララン",
+			L"Attack! Attack!",
 			WS_OVERLAPPEDWINDOW,
 			CW_USEDEFAULT,
 			CW_USEDEFAULT,

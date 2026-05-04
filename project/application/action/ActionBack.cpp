@@ -22,8 +22,13 @@ void ActionBack::Initialize(TKM::DirectXCommon* dxCommon) {
 		);
 
 		sprites_[i]->SetAutoAdjustTextureSize(false);
-		sprites_[i]->SetTextureLeftTop({ 0.0f, 0.0f });
-		sprites_[i]->SetTextureSize(texSize);
+		const float kUvInset_ = 0.5f;
+
+		sprites_[i]->SetTextureLeftTop({ kUvInset_, kUvInset_ });
+		sprites_[i]->SetTextureSize({
+			texSize.x - kUvInset_ * 2.0f,
+			texSize.y - kUvInset_ * 2.0f
+			});
 
 		sprites_[i]->SetPosition({
 			static_cast<float>(i) * kBackWidth_,
@@ -52,7 +57,7 @@ void ActionBack::Draw(float scrollX) {
 		}
 
 		Vector2 drawPosition = {
-			static_cast<float>(i) * kBackWidth_ - backScrollX,
+		static_cast<float>(i)* (kBackWidth_ - 1.0f) - backScrollX,
 			0.0f
 		};
 

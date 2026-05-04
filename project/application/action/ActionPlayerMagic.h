@@ -94,5 +94,5 @@ private:
 	static constexpr float kPortalHeight_ = 28.0f;
 
 	static constexpr float kArrowWidth_ = 10.0f;
-	static constexpr float kArrowHeight_ = 56.0f;
+	static constexpr float kArrowHeight_ = 150.0f;
 };
