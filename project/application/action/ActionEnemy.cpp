@@ -45,84 +45,21 @@ void ActionEnemy::Initialize(
 }
 
 void ActionEnemy::Update() {
-	if (isMagicVanishing_) {
-		magicVanishTimer_ += kFrameTime_;
-
-		float t = magicVanishTimer_ / kMagicVanishDuration_;
-		if (t > 1.0f) {
-			t = 1.0f;
-		}
-
-		float scale = 1.0f;
-		Vector4 color = { 1, 1, 1, 1 };
-
-		//=============================================================
-		// 爆発演出
-		//=============================================================
-		if (t < 0.2f) {
-			// ① ちょい縮む（溜め）
-			scale = 1.0f - t * 0.5f;
-
-		} else if (t < 0.5f) {
-			// ② 一気に膨張
-			float explodeT = (t - 0.2f) / 0.3f;
-			scale = 0.9f + explodeT * 2.5f;
-
-			// フラッシュ（白飛び）
-			color = { 2.5f, 2.5f, 2.5f, 1.0f };
-
-		} else {
-			// ③ 余韻（少し暗くして消す）
-			float fadeT = (t - 0.5f) / 0.5f;
-			scale = 3.4f + fadeT * 0.5f;
-			color = { 1.0f, 0.4f, 0.1f, 1.0f - fadeT };
-		}
-
-		Vector2 drawSize = {
-			kEnemyWidth_ * scale,
-			kEnemyHeight_ * scale
-		};
-
-		sprite_->SetSize(drawSize);
-		sprite_->Update();
-
-		if (magicVanishTimer_ >= kMagicVanishDuration_) {
-			isDead_ = true;
-		}
-
+	switch (deathType_) {
+	case EnemyDeathType::Knockback:
+		UpdateKnockbackDeath_();
 		return;
-	}
 
-	if (isMagicLocked_) {
+	case EnemyDeathType::MagicExplosion:
+		UpdateMagicExplosionDeath_();
 		return;
+
+	case EnemyDeathType::None:
+	default:
+		break;
 	}
 
-	position_.x += moveSpeed_ * direction_;
-
-	if (isDying_) {
-		position_.x += knockbackVelocity_.x;
-		position_.y += knockbackVelocity_.y;
-
-		knockbackVelocity_.y += kKnockbackGravity_;
-
-		if (position_.y > kDeadBottomY_) {
-			isDead_ = true;
-		}
-		return;
-	}
-
-	const float leftLimit = basePosition_.x - moveRange_;
-	const float rightLimit = basePosition_.x + moveRange_;
-	if (position_.x <= leftLimit) {
-		position_.x = leftLimit;
-		direction_ = 1.0f;
-	}
-	if (position_.x >= rightLimit) {
-		position_.x = rightLimit;
-		direction_ = -1.0f;
-	}
-
-	sprite_->Update();
+	UpdateNormal_();
 }
 
 void ActionEnemy::Draw(float scrollX) {
@@ -130,7 +67,7 @@ void ActionEnemy::Draw(float scrollX) {
 		return;
 	}
 
-	if (isMagicVanishing_) {
+	if (deathType_ == EnemyDeathType::MagicExplosion) {
 		Vector2 drawSize = sprite_->GetSize();
 
 		Vector2 center = {
@@ -144,36 +81,15 @@ void ActionEnemy::Draw(float scrollX) {
 		};
 
 		sprite_->SetPosition(drawPosition);
+		sprite_->Update();
 		sprite_->Draw();
 		return;
 	}
 
 	sprite_->SetPosition({ position_.x - scrollX, position_.y });
 	sprite_->SetSize({ kEnemyWidth_, kEnemyHeight_ });
+	sprite_->Update();
 	sprite_->Draw();
-}
-
-void ActionEnemy::KillByMagic() {
-	if (isDead_ || isDying_ || isMagicVanishing_) {
-		return;
-	}
-
-	isMagicLocked_ = false;
-	isMagicVanishing_ = true;
-	magicVanishTimer_ = 0.0f;
-}
-
-void ActionEnemy::TakeDamage(float hitDirection) {
-	if (isDying_ || isDead_) {
-		return;
-	}
-
-	isDying_ = true;
-
-	knockbackVelocity_ = {
-		kKnockbackSpeedX_ * hitDirection,
-		kKnockbackSpeedY_
-	};
 }
 
 std::string ActionEnemy::GetTexturePathByType_(EnemyType type) {
@@ -190,4 +106,112 @@ std::string ActionEnemy::GetTexturePathByType_(EnemyType type) {
 	default:
 		return "./resources/texture/circle2.png";
 	}
+}
+
+void ActionEnemy::UpdateNormal_() {
+	if (isMagicLocked_) {
+		sprite_->SetPosition(position_);
+		sprite_->Update();
+		return;
+	}
+
+	position_.x += moveSpeed_ * direction_;
+
+	const float leftLimit = basePosition_.x - moveRange_;
+	const float rightLimit = basePosition_.x + moveRange_;
+
+	if (position_.x <= leftLimit) {
+		position_.x = leftLimit;
+		direction_ = 1.0f;
+	}
+
+	if (position_.x >= rightLimit) {
+		position_.x = rightLimit;
+		direction_ = -1.0f;
+	}
+
+	sprite_->SetPosition(position_);
+	sprite_->SetSize({ kEnemyWidth_, kEnemyHeight_ });
+	sprite_->SetColor({ 1.0f, 0.2f, 0.2f, 1.0f });
+	sprite_->Update();
+}
+
+void ActionEnemy::UpdateKnockbackDeath_() {
+	position_.x += knockbackVelocity_.x;
+	position_.y += knockbackVelocity_.y;
+
+	knockbackVelocity_.y += kKnockbackGravity_;
+
+	if (position_.y > kDeadBottomY_) {
+		isDead_ = true;
+	}
+
+	sprite_->SetPosition(position_);
+	sprite_->SetSize({ kEnemyWidth_, kEnemyHeight_ });
+	sprite_->SetColor({ 1.0f, 0.2f, 0.2f, 1.0f });
+	sprite_->Update();
+}
+
+void ActionEnemy::UpdateMagicExplosionDeath_() {
+	deathTimer_ += kFrameTime_;
+
+	float t = deathTimer_ / kMagicVanishDuration_;
+
+	if (t > 1.0f) {
+		t = 1.0f;
+	}
+
+	float scale = 1.0f;
+	Vector4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+	if (t < 0.2f) {
+		scale = 1.0f - t * 0.5f;
+
+	} else if (t < 0.5f) {
+		float explodeT = (t - 0.2f) / 0.3f;
+		scale = 0.9f + explodeT * 2.5f;
+		color = { 2.5f, 2.5f, 2.5f, 1.0f };
+
+	} else {
+		float fadeT = (t - 0.5f) / 0.5f;
+		scale = 3.4f + fadeT * 0.5f;
+		color = { 1.0f, 0.4f, 0.1f, 1.0f - fadeT };
+	}
+
+	Vector2 drawSize = {
+		kEnemyWidth_ * scale,
+		kEnemyHeight_ * scale
+	};
+
+	sprite_->SetSize(drawSize);
+	sprite_->SetColor(color);
+	sprite_->Update();
+
+	if (deathTimer_ >= kMagicVanishDuration_) {
+		isDead_ = true;
+	}
+}
+
+void ActionEnemy::StartKnockbackDeath(float hitDirection) {
+	if (isDead_ || deathType_ != EnemyDeathType::None) {
+		return;
+	}
+
+	isMagicLocked_ = false;
+	deathType_ = EnemyDeathType::Knockback;
+
+	knockbackVelocity_ = {
+		kKnockbackSpeedX_ * hitDirection,
+		kKnockbackSpeedY_
+	};
+}
+
+void ActionEnemy::StartMagicExplosionDeath() {
+	if (isDead_ || deathType_ != EnemyDeathType::None) {
+		return;
+	}
+
+	isMagicLocked_ = false;
+	deathType_ = EnemyDeathType::MagicExplosion;
+	deathTimer_ = 0.0f;
 }

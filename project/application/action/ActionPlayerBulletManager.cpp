@@ -95,7 +95,7 @@ void ActionPlayerBulletManager::CheckHitEnemies_(std::vector<std::unique_ptr<Act
 			}
 
 			if (bullet->GetAABB().IsCollidingWithAABB(enemy->GetAABB())) {
-				enemy->TakeDamage(bullet->GetDirection());
+				enemy->StartKnockbackDeath(bullet->GetDirection());
 				bullet->Kill();
 				break;
 			}

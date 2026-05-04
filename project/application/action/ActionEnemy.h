@@ -15,6 +15,16 @@ enum class EnemyType {
 	TypeB, // 後で追加する敵
 	TypeC  // 後で追加する敵
 };
+//=============================================================
+// 敵の死亡タイプ
+// 敵が死ぬときの演出の種類
+// 例えば、ノックバックで吹き飛ぶ、魔法の爆発で消えるなど
+//=============================================================
+enum class EnemyDeathType {
+	None,
+	Knockback,
+	MagicExplosion
+};
 
 //=============================================================
 // ActionEnemy
@@ -37,12 +47,7 @@ public:
 
 	void SetMagicLocked(bool locked) { isMagicLocked_ = locked; }
 
-	void KillByMagic();
-	bool IsMagicVanishing() const { return isMagicVanishing_; }
-
-	void TakeDamage(float hitDirection);
 	bool IsDead() const { return isDead_; }
-	bool IsDying() const { return isDying_; }
 
 	const Vector2& GetPosition() const { return position_; }
 	Vector2 GetSize() const { return { kEnemyWidth_, kEnemyHeight_ }; }
@@ -67,8 +72,18 @@ public:
 		basePosition_.y = position_.y;
 	}
 
+	void StartKnockbackDeath(float hitDirection);
+	void StartMagicExplosionDeath();
+
+	bool IsDying() const { return deathType_ != EnemyDeathType::None; }
+	bool IsMagicVanishing() const { return deathType_ == EnemyDeathType::MagicExplosion; }
+
 private:
 	std::string GetTexturePathByType_(EnemyType type);
+
+	void UpdateNormal_();
+	void UpdateKnockbackDeath_();
+	void UpdateMagicExplosionDeath_();
 
 private:
 	std::unique_ptr<TKM::Sprite> sprite_ = nullptr;
@@ -87,7 +102,6 @@ private:
 	static constexpr float kEnemyHeight_ = 48.0f;
 
 	bool isDead_ = false;
-	bool isDying_ = false;
 
 	Vector2 knockbackVelocity_ = { 0.0f, 0.0f };
 
@@ -97,9 +111,9 @@ private:
 	static constexpr float kDeadBottomY_ = 900.0f;
 	bool isMagicLocked_ = false;
 
-	bool isMagicVanishing_ = false;
-	float magicVanishTimer_ = 0.0f;
-
 	static constexpr float kMagicVanishDuration_ = 0.35f;
 	static constexpr float kFrameTime_ = 1.0f / 60.0f;
+
+	EnemyDeathType deathType_ = EnemyDeathType::None;
+	float deathTimer_ = 0.0f;
 };
