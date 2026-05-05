@@ -44,6 +44,6 @@ private:
 
 	Vector2 position_ = { 900.0f, 500.0f };
 
-	static constexpr float kGoalWidth_ = 48.0f;
-	static constexpr float kGoalHeight_ = 48.0f;
+	static constexpr float kGoalWidth_ = 64.0f;
+	static constexpr float kGoalHeight_ = 64.0f;
 };

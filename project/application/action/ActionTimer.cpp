@@ -81,7 +81,7 @@ void ActionTimer::CreateDigitSprites_(TKM::DirectXCommon* dxCommon) {
 
 			sprite->SetTextureSize(texSize);
 			sprite->SetSize({ kDigitWidth_, kDigitHeight_ });
-			sprite->SetColor({ 1.0f, 1.0f, 1.0f, 0.0f });
+			sprite->SetColor({ 0.0f, 0.0f, 0.0f, 1.0f });
 
 			digitSprites_[digitIndex][number] = std::move(sprite);
 		}
@@ -114,7 +114,7 @@ void ActionTimer::UpdateDigitSprites_() {
 			sprite->SetSize({ kDigitWidth_, kDigitHeight_ });
 
 			if (digitIndex < timeText.size() && number == timeText[digitIndex] - '0') {
-				sprite->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
+				sprite->SetColor({ 0.0f, 0.0f, 0.0f, 1.0f });
 			} else {
 				sprite->SetColor({ 1.0f, 1.0f, 1.0f, 0.0f });
 			}

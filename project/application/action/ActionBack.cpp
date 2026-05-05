@@ -29,7 +29,7 @@ void ActionBack::Initialize(TKM::DirectXCommon* dxCommon) {
 			texSize.x - kUvInset_ * 2.0f,
 			texSize.y - kUvInset_ * 2.0f
 			});
-
+		
 		sprites_[i]->SetPosition({
 			static_cast<float>(i) * kBackWidth_,
 			0.0f

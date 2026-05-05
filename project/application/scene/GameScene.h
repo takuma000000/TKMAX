@@ -55,4 +55,6 @@ private:
 	static constexpr float kGroundWidth_ = 1280.0f;
 	static constexpr int kGroundCount_ = 3;
 	static constexpr float kStageWidth_ = kGroundWidth_ * kGroundCount_;
+
+	float dt_ = 1.0f / 60.0f;
 };

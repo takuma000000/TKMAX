@@ -5,6 +5,7 @@
 
 void GameScene::Initialize() {
 	TKM::TextureManager::GetInstance()->LoadTexture("./resources/texture/circle2.png");
+	TKM::TextureManager::GetInstance()->LoadTexture("./resources/texture/goal.png");
 	TKM::TextureManager::GetInstance()->LoadTexture("./resources/texture/gradationLine.png");
 
 	back_ = std::make_unique<ActionBack>();
@@ -75,9 +76,9 @@ void GameScene::Initialize() {
 		};
 
 	// 適当に配置
-	addBlock(500, 600);
-	addBlock(524, 600);
-	addBlock(548, 600);
+	addBlock(500, 610);
+	addBlock(524, 610);
+	addBlock(548, 610);
 
 	addBlock(1000, 550);
 	addBlock(1024, 550);
