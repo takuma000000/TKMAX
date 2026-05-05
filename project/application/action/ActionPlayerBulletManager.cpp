@@ -24,7 +24,7 @@ void ActionPlayerBulletManager::Update(
 
 	auto* input = TKM::Input::GetInstance();
 
-	if (input->TriggerKey(DIK_SPACE) && shotCooldownTimer_ <= 0.0f) {
+	if (input->TriggerKey(DIK_J) && shotCooldownTimer_ <= 0.0f) {
 		Shoot_(playerPosition, playerSize, facingDirection);
 	}
 
