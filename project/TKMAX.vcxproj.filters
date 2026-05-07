@@ -104,7 +104,7 @@
     <ClCompile Include="application\actor\player\Player.cpp">
       <Filter>application\player</Filter>
     </ClCompile>
-    <ClCompile Include="application\actor\player\PlayerBullet.cpp">
+    <ClCompile Include="application\actor\player\shot\PlayerBullet.cpp">
       <Filter>application\player</Filter>
     </ClCompile>
     <ClCompile Include="externals\imgui\imgui.cpp">
@@ -152,7 +152,7 @@
     <ClCompile Include="application\actor\boss\BossController.cpp">
       <Filter>application\boss</Filter>
     </ClCompile>
-    <ClCompile Include="application\actor\enemy\BarrierCore.cpp">
+    <ClCompile Include="application\actor\barrier\BarrierCore.cpp">
       <Filter>application\enemy</Filter>
     </ClCompile>
     <ClCompile Include="engine\effect\post\WaterRippleEffect.cpp">
@@ -175,7 +175,7 @@
     <ClCompile Include="engine\effect\post\FogVolume3D.cpp" />
     <ClCompile Include="engine\effect\post\SmokeVolume3D.cpp" />
     <ClCompile Include="engine\effect\post\LaserBeam3D.cpp" />
-    <ClCompile Include="application\actor\boss\BossHpBarUI.cpp" />
+    <ClCompile Include="application\ui\BossHpBarUI.cpp" />
     <ClCompile Include="application\ui\RBGaugeUI.cpp" />
     <ClCompile Include="application\effect\IntroSequence.cpp" />
     <ClCompile Include="application\effect\controller\FireworkController.cpp" />
@@ -198,7 +198,7 @@
     <ClCompile Include="application\actor\BattleActorManagerBase.cpp" />
     <ClCompile Include="application\effect\ParticleSpawner.cpp" />
     <ClCompile Include="engine\effect\post\TrailRibbonRenderer.cpp" />
-    <ClCompile Include="application\actor\player\HomingBullet.cpp" />
+    <ClCompile Include="application\actor\player\shot\HomingBullet.cpp" />
     <ClCompile Include="application\ui\OperationGuideUI.cpp" />
     <ClCompile Include="application\ui\PlayerHudUI.cpp" />
     <ClCompile Include="application\state\IntroFlowStates.cpp" />
@@ -212,14 +212,14 @@
     <ClCompile Include="engine\effect\post\NoiseEffect.cpp" />
     <ClCompile Include="engine\3d\BarrierCommon.cpp" />
     <ClCompile Include="application\ui\SkipGuideUI.cpp" />
-    <ClCompile Include="application\actor\BarrierCoreManager.cpp" />
+    <ClCompile Include="application\actor\barrier\BarrierCoreManager.cpp" />
     <ClCompile Include="application\catalog\AudioCatalog.cpp" />
     <ClCompile Include="application\state\ClearComedyStates.cpp" />
     <ClCompile Include="application\state\BossEntranceStates.cpp" />
-    <ClCompile Include="application\actor\player\PlayerShotManager.cpp" />
-    <ClCompile Include="application\actor\player\PlayerShotConfig.cpp" />
+    <ClCompile Include="application\actor\player\shot\PlayerShotManager.cpp" />
+    <ClCompile Include="application\actor\player\shot\PlayerShotConfig.cpp" />
     <ClCompile Include="application\actor\enemy\EnemyFactory.cpp" />
-    <ClCompile Include="application\actor\enemy\BarrierConfig.cpp" />
+    <ClCompile Include="application\actor\barrier\BarrierConfig.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -342,7 +342,7 @@
     <ClInclude Include="application\actor\player\Player.h">
       <Filter>application\player</Filter>
     </ClInclude>
-    <ClInclude Include="application\actor\player\PlayerBullet.h">
+    <ClInclude Include="application\actor\player\shot\PlayerBullet.h">
       <Filter>application\player</Filter>
     </ClInclude>
     <ClInclude Include="externals\imgui\imgui.h">
@@ -399,7 +399,7 @@
     <ClInclude Include="application\actor\boss\BossController.h">
       <Filter>application\boss</Filter>
     </ClInclude>
-    <ClInclude Include="application\actor\enemy\BarrierCore.h">
+    <ClInclude Include="application\actor\barrier\BarrierCore.h">
       <Filter>application\enemy</Filter>
     </ClInclude>
     <ClInclude Include="application\effect\IrisUtil.h">
@@ -431,7 +431,7 @@
     <ClInclude Include="engine\effect\post\FogVolume3D.h" />
     <ClInclude Include="engine\effect\post\SmokeVolume3D.h" />
     <ClInclude Include="engine\effect\post\LaserBeam3D.h" />
-    <ClInclude Include="application\actor\boss\BossHpBarUI.h" />
+    <ClInclude Include="application\ui\BossHpBarUI.h" />
     <ClInclude Include="application\ui\RBGaugeUI.h" />
     <ClInclude Include="application\effect\IntroSequence.h" />
     <ClInclude Include="application\effect\controller\FireworkController.h" />
@@ -457,7 +457,7 @@
     <ClInclude Include="application\actor\BattleActorManagerBase.h" />
     <ClInclude Include="application\effect\ParticleSpawner.h" />
     <ClInclude Include="engine\effect\post\TrailRibbonRenderer.h" />
-    <ClInclude Include="application\actor\player\HomingBullet.h" />
+    <ClInclude Include="application\actor\player\shot\HomingBullet.h" />
     <ClInclude Include="application\ui\OperationGuideUI.h" />
     <ClInclude Include="application\ui\PlayerHudUI.h" />
     <ClInclude Include="application\state\IntroFlowStates.h" />
@@ -473,14 +473,14 @@
     <ClInclude Include="engine\effect\post\NoiseEffect.h" />
     <ClInclude Include="engine\3d\BarrierCommon.h" />
     <ClInclude Include="application\ui\SkipGuideUI.h" />
-    <ClInclude Include="application\actor\BarrierCoreManager.h" />
+    <ClInclude Include="application\actor\barrier\BarrierCoreManager.h" />
     <ClInclude Include="application\catalog\AudioCatalog.h" />
     <ClInclude Include="application\state\ClearComedyStates.h" />
     <ClInclude Include="application\state\BossEntranceStates.h" />
-    <ClInclude Include="application\actor\player\PlayerShotManager.h" />
-    <ClInclude Include="application\actor\player\PlayerShotConfig.h" />
+    <ClInclude Include="application\actor\player\shot\PlayerShotManager.h" />
+    <ClInclude Include="application\actor\player\shot\PlayerShotConfig.h" />
     <ClInclude Include="application\actor\enemy\EnemyFactory.h" />
-    <ClInclude Include="application\actor\enemy\BarrierConfig.h" />
+    <ClInclude Include="application\actor\barrier\BarrierConfig.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
