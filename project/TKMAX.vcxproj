@@ -179,13 +179,13 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\effect\line\LineRenderer.cpp" />
     <ClCompile Include="engine\effect\post\FogEffect.cpp" />
     <ClCompile Include="engine\effect\post\LaserBeam3D.cpp" />
-    <ClCompile Include="application\actor\player\RBGaugeUI.cpp" />
+    <ClCompile Include="application\ui\RBGaugeUI.cpp" />
     <ClCompile Include="engine\effect\post\FogVolume3D.cpp" />
     <ClCompile Include="application\effect\IntroSequence.cpp" />
     <ClCompile Include="application\effect\controller\FireworkController.cpp" />
     <ClCompile Include="application\scene\controller\GameFlowController.cpp" />
     <ClCompile Include="application\scene\controller\GameResultMenuController.cpp" />
-    <ClCompile Include="application\actor\player\LBGaugeUI.cpp" />
+    <ClCompile Include="application\ui\LBGaugeUI.cpp" />
     <ClCompile Include="application\actor\player\HomingBullet.cpp" />
     <ClCompile Include="application\state\IntroFlowStates.cpp" />
     <ClCompile Include="application\effect\IntroStartBanner.cpp" />
@@ -332,7 +332,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\effect\post\FogVolume3D.h" />
     <ClInclude Include="engine\effect\post\SmokeVolume3D.h" />
     <ClInclude Include="engine\effect\post\LaserBeam3D.h" />
-    <ClInclude Include="application\actor\player\RBGaugeUI.h" />
+    <ClInclude Include="application\ui\RBGaugeUI.h" />
     <ClInclude Include="application\effect\IntroSequence.h" />
     <ClInclude Include="application\effect\controller\FireworkController.h" />
     <ClInclude Include="application\scene\controller\GameFlowController.h" />
@@ -342,7 +342,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\scene\controller\PauseMenuController.h" />
     <ClInclude Include="application\scene\controller\GameResultMenuController.h" />
     <ClInclude Include="application\catalog\ModelCatalog.h" />
-    <ClInclude Include="application\actor\player\LBGaugeUI.h" />
+    <ClInclude Include="application\ui\LBGaugeUI.h" />
     <ClInclude Include="engine\state\IState.h" />
     <ClInclude Include="engine\state\IStateContext.h" />
     <ClInclude Include="application\effect\ParticleSpawner.h" />
