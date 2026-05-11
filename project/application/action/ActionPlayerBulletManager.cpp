@@ -12,7 +12,10 @@ void ActionPlayerBulletManager::Update(
 	const Vector2& playerPosition,
 	const Vector2& playerSize,
 	float facingDirection,
-	std::vector<std::unique_ptr<ActionEnemy>>& enemies) {
+	std::vector<std::unique_ptr<ActionEnemy>>& enemies,
+	const std::vector<std::unique_ptr<ActionBlock>>& blocks,
+	float scrollX,
+	float screenWidth) {
 
 	if (shotCooldownTimer_ > 0.0f) {
 		shotCooldownTimer_ -= kFrameTime_;
@@ -26,6 +29,7 @@ void ActionPlayerBulletManager::Update(
 
 	if (input->TriggerKey(DIK_J) && shotCooldownTimer_ <= 0.0f) {
 		Shoot_(playerPosition, playerSize, facingDirection);
+		shotCooldownTimer_ = kShotCooldownSec_;
 	}
 
 	for (auto& bullet : bullets_) {
@@ -34,6 +38,13 @@ void ActionPlayerBulletManager::Update(
 		}
 	}
 
+	// 画面外に出た弾を先に消す
+	KillOutOfScreen_(scrollX, screenWidth);
+
+	// ブロックに当たった弾を消す
+	CheckHitBlocks_(blocks);
+
+	// 敵に当たった弾を処理
 	CheckHitEnemies_(enemies);
 
 	enemies.erase(
@@ -99,6 +110,48 @@ void ActionPlayerBulletManager::CheckHitEnemies_(std::vector<std::unique_ptr<Act
 				bullet->Kill();
 				break;
 			}
+		}
+	}
+}
+
+void ActionPlayerBulletManager::CheckHitBlocks_(const std::vector<std::unique_ptr<ActionBlock>>& blocks) {
+	for (auto& bullet : bullets_) {
+		if (!bullet || bullet->IsDead()) {
+			continue;
+		}
+
+		for (auto& block : blocks) {
+			if (!block) {
+				continue;
+			}
+
+			if (bullet->GetAABB().IsCollidingWithAABB(block->GetAABB())) {
+				bullet->Kill();
+				break;
+			}
+		}
+	}
+}
+
+void ActionPlayerBulletManager::KillOutOfScreen_(float scrollX, float screenWidth) {
+	const float screenLeft = scrollX;
+	const float screenRight = scrollX + screenWidth;
+
+	for (auto& bullet : bullets_) {
+		if (!bullet || bullet->IsDead()) {
+			continue;
+		}
+
+		AABB bulletAABB = bullet->GetAABB();
+
+		Vector3 center = bulletAABB.GetCenter();
+		Vector3 half = bulletAABB.GetHalfSize();
+
+		const float bulletLeft = center.x - half.x;
+		const float bulletRight = center.x + half.x;
+
+		if (bulletRight < screenLeft || bulletLeft > screenRight) {
+			bullet->Kill();
 		}
 	}
 }

@@ -5,6 +5,7 @@
 #include "MyMath.h"
 #include "ActionPlayerBullet.h"
 #include "ActionEnemy.h"
+#include "ActionBlock.h"
 
 //=============================================================
 // ActionPlayerBulletManager
@@ -17,14 +18,18 @@ public:
 		const Vector2& playerPosition,
 		const Vector2& playerSize,
 		float facingDirection,
-		std::vector<std::unique_ptr<ActionEnemy>>& enemies
+		std::vector<std::unique_ptr<ActionEnemy>>& enemies,
+		const std::vector<std::unique_ptr<ActionBlock>>& blocks,
+		float scrollX,
+		float screenWidth
 	);
 	void Draw(float scrollX);
 
 private:
 	void Shoot_(const Vector2& playerPosition, const Vector2& playerSize, float facingDirection);
+	void CheckHitBlocks_(const std::vector<std::unique_ptr<ActionBlock>>& blocks);
+	void KillOutOfScreen_(float scrollX, float screenWidth);
 
-private:
 	TKM::DirectXCommon* dxCommon_ = nullptr;
 
 	std::vector<std::unique_ptr<ActionPlayerBullet>> bullets_;

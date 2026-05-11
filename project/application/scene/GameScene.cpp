@@ -122,13 +122,16 @@ void GameScene::Update() {
 
 	ResolvePlayerBlockCollision(prevPlayerPos);
 
-
 	bulletManager_->Update(
 		player_->GetPosition(),
 		player_->GetSize(),
 		player_->GetFacingDirection(),
-		enemies_
+		enemies_,
+		blocks_,
+		scrollX_,
+		kScreenWidth_
 	);
+
 	player_->ImGuiDebug();
 
 	goal_->Update();
