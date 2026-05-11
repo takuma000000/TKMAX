@@ -42,7 +42,6 @@ void ActionEnemy::Initialize(
 	sprite_->SetTextureSize(texSize);
 	sprite_->SetPosition(position_);
 	sprite_->SetSize({ kEnemyWidth_, kEnemyHeight_ });
-	sprite_->SetColor({ 1.0f, 0.2f, 0.2f, 1.0f });
 
 	dropTexturePath_ = "./resources/texture/circle2.png";
 
@@ -134,7 +133,6 @@ void ActionEnemy::Draw(float scrollX) {
 
 		dropSprite_->SetPosition({ drop.position.x - scrollX, drop.position.y });
 		dropSprite_->SetSize({ kDropSize_, kDropSize_ });
-		dropSprite_->SetColor({ 1.0f, 0.8f, 0.2f, 1.0f });
 		dropSprite_->Update();
 		dropSprite_->Draw();
 	}
@@ -143,7 +141,7 @@ void ActionEnemy::Draw(float scrollX) {
 std::string ActionEnemy::GetTexturePathByType_(EnemyType type) {
 	switch (type) {
 	case EnemyType::TypeA:
-		return "./resources/texture/circle2.png";
+		return "./resources/texture/enemy_typeA.png";
 
 	case EnemyType::TypeB:
 		return "./resources/texture/circle2.png";
@@ -185,7 +183,6 @@ void ActionEnemy::UpdateNormal_() {
 
 	sprite_->SetPosition(position_);
 	sprite_->SetSize({ kEnemyWidth_, kEnemyHeight_ });
-	sprite_->SetColor({ 1.0f, 0.2f, 0.2f, 1.0f });
 	sprite_->Update();
 }
 
@@ -201,7 +198,6 @@ void ActionEnemy::UpdateKnockbackDeath_() {
 
 	sprite_->SetPosition(position_);
 	sprite_->SetSize({ kEnemyWidth_, kEnemyHeight_ });
-	sprite_->SetColor({ 1.0f, 0.2f, 0.2f, 1.0f });
 	sprite_->Update();
 }
 
