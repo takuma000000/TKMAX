@@ -80,18 +80,19 @@ void ActionEnemy::Update() {
 	switch (deathType_) {
 	case EnemyDeathType::Knockback:
 		UpdateKnockbackDeath_();
-		return;
+		break;
 
 	case EnemyDeathType::MagicExplosion:
 		UpdateMagicExplosionDeath_();
-		return;
+		break;
 
 	case EnemyDeathType::None:
 	default:
+		UpdateNormal_();
 		break;
 	}
 
-	UpdateNormal_();
+	UpdateDropObjects_();
 }
 
 void ActionEnemy::Draw(float scrollX) {
@@ -115,13 +116,12 @@ void ActionEnemy::Draw(float scrollX) {
 		sprite_->SetPosition(drawPosition);
 		sprite_->Update();
 		sprite_->Draw();
-		return;
+	} else {
+		sprite_->SetPosition({ position_.x - scrollX, position_.y });
+		sprite_->SetSize({ kEnemyWidth_, kEnemyHeight_ });
+		sprite_->Update();
+		sprite_->Draw();
 	}
-
-	sprite_->SetPosition({ position_.x - scrollX, position_.y });
-	sprite_->SetSize({ kEnemyWidth_, kEnemyHeight_ });
-	sprite_->Update();
-	sprite_->Draw();
 
 	for (auto& drop : dropObjects_) {
 		if (!drop.isActive) {
@@ -305,8 +305,6 @@ void ActionEnemy::UpdateTypeB_() {
 		dropTimer_ = 0.0f;
 		SpawnDropObject_();
 	}
-
-	UpdateDropObjects_();
 
 	sprite_->SetPosition(position_);
 	sprite_->SetSize({ kEnemyWidth_, kEnemyHeight_ });
