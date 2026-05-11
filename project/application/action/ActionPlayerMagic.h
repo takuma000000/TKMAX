@@ -63,6 +63,8 @@ private:
 		const Vector4& color
 	);
 
+	bool HasTargetEnemy_(const std::vector<std::unique_ptr<ActionEnemy>>& enemies) const;
+
 private:
 	TKM::DirectXCommon* dxCommon_ = nullptr;
 

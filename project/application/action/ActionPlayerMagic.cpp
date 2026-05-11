@@ -69,7 +69,7 @@ void ActionPlayerMagic::Update(
 		return;
 	}
 
-	if (!targetEnemy_ || targetEnemy_->IsDead()) {
+	if (!HasTargetEnemy_(enemies) || !targetEnemy_ || targetEnemy_->IsDead()) {
 		phase_ = Phase::Idle;
 		targetEnemy_ = nullptr;
 		return;
@@ -210,6 +210,11 @@ void ActionPlayerMagic::UpdateCharge_() {
 	phase_ = Phase::Rain;
 	timer_ = 0.0f;
 
+	if (!targetEnemy_) {
+		phase_ = Phase::Idle;
+		return;
+	}
+
 	const Vector2& targetPos = targetEnemy_->GetPosition();
 	Vector2 targetSize = targetEnemy_->GetSize();
 
@@ -312,4 +317,18 @@ void ActionPlayerMagic::CreateSprite_(
 	sprite->SetTextureSize(texSize);
 	sprite->SetSize(size);
 	sprite->SetColor(color);
+}
+
+bool ActionPlayerMagic::HasTargetEnemy_(const std::vector<std::unique_ptr<ActionEnemy>>& enemies) const {
+	if (!targetEnemy_) {
+		return false;
+	}
+
+	for (const auto& enemy : enemies) {
+		if (enemy && enemy.get() == targetEnemy_) {
+			return true;
+		}
+	}
+
+	return false;
 }

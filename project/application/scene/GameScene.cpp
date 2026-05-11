@@ -220,7 +220,6 @@ void GameScene::Update() {
 
 		if (!enemy->IsDead()) {
 			isAllEnemyDead = false;
-			break;
 		}
 	}
 
