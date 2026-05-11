@@ -39,11 +39,18 @@ public:
 	void SetGroundTopY(float groundTopY) {
 		position_.y = groundTopY - kGoalHeight_;
 	}
+
+	void SetOpen(bool isOpen) {
+		isOpen_ = isOpen;
+	}
 private:
-	std::unique_ptr<TKM::Sprite> sprite_ = nullptr;
+	std::unique_ptr<TKM::Sprite> goalSprite_ = nullptr;
+	std::unique_ptr<TKM::Sprite> closedSprite_ = nullptr;
 
 	Vector2 position_ = { 900.0f, 500.0f };
 
 	static constexpr float kGoalWidth_ = 64.0f;
 	static constexpr float kGoalHeight_ = 64.0f;
+
+	bool isOpen_ = false;
 };

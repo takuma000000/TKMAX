@@ -1,6 +1,7 @@
 #include "ActionEnemy.h"
 #include "SpriteCommon.h"
 #include "TextureManager.h"
+#include <cmath>
 
 void ActionEnemy::Initialize(
 	TKM::DirectXCommon* dxCommon,
@@ -42,6 +43,37 @@ void ActionEnemy::Initialize(
 	sprite_->SetPosition(position_);
 	sprite_->SetSize({ kEnemyWidth_, kEnemyHeight_ });
 	sprite_->SetColor({ 1.0f, 0.2f, 0.2f, 1.0f });
+
+	dropTexturePath_ = "./resources/texture/circle2.png";
+
+	TKM::TextureManager::GetInstance()->LoadTexture(dropTexturePath_);
+
+	dropSprite_ = std::make_unique<TKM::Sprite>();
+
+	dropSprite_->Initialize(
+		TKM::SpriteCommon::GetInstance(),
+		dxCommon,
+		dropTexturePath_
+	);
+
+	dropSprite_->SetAutoAdjustTextureSize(false);
+
+	const auto& dropMeta = TKM::TextureManager::GetInstance()->GetMetadata(dropTexturePath_);
+
+	Vector2 dropTexSize = {
+		static_cast<float>(dropMeta.width),
+		static_cast<float>(dropMeta.height)
+	};
+
+	dropSprite_->SetTextureLeftTop({ 0.0f, 0.0f });
+	dropSprite_->SetTextureSize(dropTexSize);
+	dropSprite_->SetSize({ kDropSize_, kDropSize_ });
+	dropSprite_->SetColor({ 1.0f, 0.8f, 0.2f, 1.0f });
+
+	dropObjects_.resize(kDropMax_);
+	floatTimer_ = 0.0f;
+	dropTimer_ = 0.0f;
+	dropIndex_ = 0;
 }
 
 void ActionEnemy::Update() {
@@ -90,6 +122,22 @@ void ActionEnemy::Draw(float scrollX) {
 	sprite_->SetSize({ kEnemyWidth_, kEnemyHeight_ });
 	sprite_->Update();
 	sprite_->Draw();
+
+	for (auto& drop : dropObjects_) {
+		if (!drop.isActive) {
+			continue;
+		}
+
+		if (!dropSprite_) {
+			continue;
+		}
+
+		dropSprite_->SetPosition({ drop.position.x - scrollX, drop.position.y });
+		dropSprite_->SetSize({ kDropSize_, kDropSize_ });
+		dropSprite_->SetColor({ 1.0f, 0.8f, 0.2f, 1.0f });
+		dropSprite_->Update();
+		dropSprite_->Draw();
+	}
 }
 
 std::string ActionEnemy::GetTexturePathByType_(EnemyType type) {
@@ -98,7 +146,7 @@ std::string ActionEnemy::GetTexturePathByType_(EnemyType type) {
 		return "./resources/texture/circle2.png";
 
 	case EnemyType::TypeB:
-		return "./resources/texture/enemy_b.png";
+		return "./resources/texture/circle2.png";
 
 	case EnemyType::TypeC:
 		return "./resources/texture/enemy_c.png";
@@ -109,6 +157,11 @@ std::string ActionEnemy::GetTexturePathByType_(EnemyType type) {
 }
 
 void ActionEnemy::UpdateNormal_() {
+	if (type_ == EnemyType::TypeB) {
+		UpdateTypeB_();
+		return;
+	}
+
 	if (isMagicLocked_) {
 		sprite_->SetPosition(position_);
 		sprite_->Update();
@@ -192,6 +245,11 @@ void ActionEnemy::UpdateMagicExplosionDeath_() {
 	}
 }
 
+void ActionEnemy::SetActionOffset(float actionOffset) {
+	floatTimer_ = actionOffset;
+	dropTimer_ = actionOffset;
+}
+
 void ActionEnemy::StartKnockbackDeath(float hitDirection) {
 	if (isDead_ || deathType_ != EnemyDeathType::None) {
 		return;
@@ -214,4 +272,120 @@ void ActionEnemy::StartMagicExplosionDeath() {
 	isMagicLocked_ = false;
 	deathType_ = EnemyDeathType::MagicExplosion;
 	deathTimer_ = 0.0f;
+}
+
+void ActionEnemy::UpdateTypeB_() {
+	if (isMagicLocked_) {
+		sprite_->SetPosition(position_);
+		sprite_->Update();
+		return;
+	}
+
+	floatTimer_ += kTypeBFloatSpeed_;
+	dropTimer_ += kFrameTime_;
+
+	position_.x += moveSpeed_ * direction_;
+
+	const float leftLimit = basePosition_.x - moveRange_;
+	const float rightLimit = basePosition_.x + moveRange_;
+
+	if (position_.x <= leftLimit) {
+		position_.x = leftLimit;
+		direction_ = 1.0f;
+	}
+
+	if (position_.x >= rightLimit) {
+		position_.x = rightLimit;
+		direction_ = -1.0f;
+	}
+
+	position_.y = basePosition_.y + std::sin(floatTimer_) * kTypeBFloatRange_;
+
+	if (dropTimer_ >= kDropInterval_) {
+		dropTimer_ = 0.0f;
+		SpawnDropObject_();
+	}
+
+	UpdateDropObjects_();
+
+	sprite_->SetPosition(position_);
+	sprite_->SetSize({ kEnemyWidth_, kEnemyHeight_ });
+	sprite_->SetColor({ 0.3f, 0.6f, 1.0f, 1.0f });
+	sprite_->Update();
+}
+
+void ActionEnemy::SpawnDropObject_() {
+	for (auto& drop : dropObjects_) {
+		if (drop.isActive) {
+			continue;
+		}
+
+		const float directions[] = {
+			-1.0f,
+			1.0f
+		};
+
+		const float throwDirection = directions[dropIndex_ % 2];
+		dropIndex_++;
+
+		drop.position = {
+			position_.x + kEnemyWidth_ * 0.5f - kDropSize_ * 0.5f,
+			position_.y + kEnemyHeight_ * 0.5f
+		};
+
+		drop.velocity = {
+			kDropThrowSpeedX_ * throwDirection,
+			kDropThrowSpeedY_
+		};
+
+		drop.isActive = true;
+		return;
+	}
+}
+
+void ActionEnemy::UpdateDropObjects_() {
+	for (auto& drop : dropObjects_) {
+		if (!drop.isActive) {
+			continue;
+		}
+
+		drop.position.x += drop.velocity.x;
+		drop.position.y += drop.velocity.y;
+
+		drop.velocity.y += kDropGravity_;
+
+		if (drop.position.y > kDropBottomY_) {
+			drop.isActive = false;
+		}
+	}
+}
+
+AABB ActionEnemy::GetDropObjectAABB_(const DropObject& drop) const {
+	return AABB(
+		{
+			drop.position.x + kDropSize_ * 0.5f,
+			drop.position.y + kDropSize_ * 0.5f,
+			0.0f
+		},
+		{
+			kDropSize_,
+			kDropSize_,
+			1.0f
+		}
+	);
+}
+
+bool ActionEnemy::IsHitAttack(const AABB& playerAABB) {
+	for (auto& drop : dropObjects_) {
+		if (!drop.isActive) {
+			continue;
+		}
+
+		if (playerAABB.IsCollidingWithAABB(GetDropObjectAABB_(drop))) {
+			drop.isActive = false;
+			return true;
+		}
+	}
+
+	return false;
 }

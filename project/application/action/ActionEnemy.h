@@ -5,6 +5,7 @@
 #include "DirectXCommon.h"
 #include "MyMath.h"
 #include "AABB.h"
+#include <vector>
 
 //=============================================================
 // 敵の種類
@@ -49,6 +50,8 @@ public:
 
 	bool IsDead() const { return isDead_; }
 
+	bool IsHitAttack(const AABB& playerAABB);
+
 	const Vector2& GetPosition() const { return position_; }
 	Vector2 GetSize() const { return { kEnemyWidth_, kEnemyHeight_ }; }
 
@@ -72,6 +75,8 @@ public:
 		basePosition_.y = position_.y;
 	}
 
+	void SetActionOffset(float actionOffset);
+
 	void StartKnockbackDeath(float hitDirection);
 	void StartMagicExplosionDeath();
 
@@ -85,8 +90,9 @@ private:
 	void UpdateKnockbackDeath_();
 	void UpdateMagicExplosionDeath_();
 
-private:
 	std::unique_ptr<TKM::Sprite> sprite_ = nullptr;
+	std::unique_ptr<TKM::Sprite> dropSprite_ = nullptr;
+	std::string dropTexturePath_;
 
 	Vector2 position_ = { 0.0f, 0.0f };
 	Vector2 basePosition_ = { 0.0f, 0.0f };
@@ -116,4 +122,34 @@ private:
 
 	EnemyDeathType deathType_ = EnemyDeathType::None;
 	float deathTimer_ = 0.0f;
+
+	struct DropObject {
+		Vector2 position = { 0.0f, 0.0f };
+		Vector2 velocity = { 0.0f, 0.0f };
+		bool isActive = false;
+	};
+
+	void UpdateTypeB_();
+	void UpdateDropObjects_();
+	void SpawnDropObject_();
+
+	AABB GetDropObjectAABB_(const DropObject& drop) const;
+
+	std::vector<DropObject> dropObjects_;
+
+	float floatTimer_ = 0.0f;
+	float dropTimer_ = 0.0f;
+	int dropIndex_ = 0;
+
+	static constexpr float kTypeBFloatRange_ = 12.0f;
+	static constexpr float kTypeBFloatSpeed_ = 0.05f;
+
+	static constexpr float kDropInterval_ = 1.2f;
+	static constexpr float kDropSize_ = 32.0f;
+	static constexpr float kDropGravity_ = 0.45f;
+	static constexpr float kDropThrowSpeedX_ = 3.5f;
+	static constexpr float kDropThrowSpeedY_ = -2.5f;
+	static constexpr float kDropBottomY_ = 900.0f;
+	static constexpr int kDropMax_ = 8;
+	static constexpr float kDropRange_ = 160.0f;
 };

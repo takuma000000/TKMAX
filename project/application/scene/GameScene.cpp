@@ -3,6 +3,69 @@
 #include "SceneManager.h"
 #include "TextureManager.h"
 
+namespace {
+	struct EnemySpawnData {
+		EnemyType type;
+		Vector2 position;
+		float moveRange;
+		float moveSpeed;
+		bool useGroundTop;
+		float actionOffset;
+	};
+
+	constexpr EnemySpawnData kEnemySpawns[] = {
+		// 序盤：地上敵で基本の回避
+		{
+			EnemyType::TypeA,
+			{ 700.0f, 0.0f },
+			120.0f,
+			2.0f,
+			true,
+			0.0f
+		},
+
+		// 中盤：空中から落下物を投げる敵
+		{
+			EnemyType::TypeB,
+			{ 1500.0f, 320.0f },
+			80.0f,
+			0.8f,
+			false,
+			0.35f
+		},
+
+		// 中盤：別タイミングのTypeB
+		{
+			EnemyType::TypeB,
+			{ 1800.0f, 300.0f },
+			80.0f,
+			0.8f,
+			false,
+			1.1f
+		},
+
+		// 終盤：ゴール前の地上敵
+		{
+			EnemyType::TypeA,
+			{ 2500.0f, 0.0f },
+			140.0f,
+			2.2f,
+			true,
+			0.6f
+		},
+
+		// 終盤：空中敵で最後にプレッシャー
+		{
+			EnemyType::TypeB,
+			{ 3000.0f, 300.0f },
+			100.0f,
+			1.0f,
+			false,
+			1.8f
+		}
+	};
+}
+
 void GameScene::Initialize() {
 	TKM::TextureManager::GetInstance()->LoadTexture("./resources/texture/circle2.png");
 	TKM::TextureManager::GetInstance()->LoadTexture("./resources/texture/goal.png");
@@ -23,35 +86,26 @@ void GameScene::Initialize() {
 	bulletManager_->Initialize(dxCommon_);
 
 	enemies_.clear();
-	enemies_.push_back(std::make_unique<ActionEnemy>());
-	enemies_.back()->Initialize(
-		dxCommon_,
-		{ 700.0f, 0.0f },
-		EnemyType::TypeA,
-		120.0f,
-		2.0f
-	);
-	enemies_.back()->SetGroundTopY(ground_->GetTopY());
 
-	enemies_.push_back(std::make_unique<ActionEnemy>());
-	enemies_.back()->Initialize(
-		dxCommon_,
-		{ 1500.0f, 0.0f },
-		EnemyType::TypeA,
-		160.0f,
-		1.5f
-	);
-	enemies_.back()->SetGroundTopY(ground_->GetTopY());
+	for (const auto& spawn : kEnemySpawns) {
+		auto enemy = std::make_unique<ActionEnemy>();
 
-	enemies_.push_back(std::make_unique<ActionEnemy>());
-	enemies_.back()->Initialize(
-		dxCommon_,
-		{ 2800.0f, 0.0f },
-		EnemyType::TypeA,
-		100.0f,
-		2.5f
-	);
-	enemies_.back()->SetGroundTopY(ground_->GetTopY());
+		enemy->Initialize(
+			dxCommon_,
+			spawn.position,
+			spawn.type,
+			spawn.moveRange,
+			spawn.moveSpeed
+		);
+
+		enemy->SetActionOffset(spawn.actionOffset);
+
+		if (spawn.useGroundTop) {
+			enemy->SetGroundTopY(ground_->GetTopY());
+		}
+
+		enemies_.push_back(std::move(enemy));
+	}
 
 	goal_ = std::make_unique<ActionGoal>();
 	goal_->Initialize(dxCommon_);
@@ -134,8 +188,6 @@ void GameScene::Update() {
 
 	player_->ImGuiDebug();
 
-	goal_->Update();
-
 	timer_->Update();
 
 	ground_->Update();
@@ -145,6 +197,7 @@ void GameScene::Update() {
 	lifeUI_->Update(player_->GetHP());
 
 	bool isTimeUp = timer_->IsTimeUp();
+	bool isAllEnemyDead = true;
 
 	for (auto& enemy : enemies_) {
 		enemy->Update();
@@ -159,7 +212,20 @@ void GameScene::Update() {
 			player_->GetAABB().IsCollidingWithAABB(enemy->GetAABB())) {
 			player_->TakeDamage();
 		}
+
+		if (!enemy->IsDying() &&
+			enemy->IsHitAttack(player_->GetAABB())) {
+			player_->TakeDamage();
+		}
+
+		if (!enemy->IsDead()) {
+			isAllEnemyDead = false;
+			break;
+		}
 	}
+
+	goal_->SetOpen(isAllEnemyDead);
+	goal_->Update();
 
 	if (!magic_->IsPlayerControlLocked()) {
 		scrollX_ = player_->GetPosition().x - kScreenWidth_ * 0.5f;
@@ -180,7 +246,8 @@ void GameScene::Update() {
 		return;
 	}
 
-	if (player_->GetAABB().IsCollidingWithAABB(goal_->GetAABB())) {
+	if (isAllEnemyDead &&
+		player_->GetAABB().IsCollidingWithAABB(goal_->GetAABB())) {
 		sceneManager_->ChangeScene("CLEAR");
 	}
 }
