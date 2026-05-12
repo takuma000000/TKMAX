@@ -71,6 +71,7 @@ void GameScene::Initialize() {
 	TKM::TextureManager::GetInstance()->LoadTexture("./resources/texture/goal.png");
 	TKM::TextureManager::GetInstance()->LoadTexture("./resources/texture/gradationLine.png");
 	TKM::TextureManager::GetInstance()->LoadTexture("./resources/texture/enemy_typeA.png");
+	TKM::TextureManager::GetInstance()->LoadTexture("./resources/texture/player.png");
 
 	back_ = std::make_unique<ActionBack>();
 	back_->Initialize(dxCommon_);

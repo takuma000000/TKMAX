@@ -12,12 +12,12 @@ void ActionPlayer::Initialize(TKM::DirectXCommon* dxCommon) {
 	sprite_->Initialize(
 		TKM::SpriteCommon::GetInstance(),
 		dxCommon,
-		"./resources/texture/circle2.png"
+		"./resources/texture/player.png"
 	);
 
 	sprite_->SetAutoAdjustTextureSize(false);
 
-	const auto& meta = TKM::TextureManager::GetInstance()->GetMetadata("./resources/texture/circle2.png");
+	const auto& meta = TKM::TextureManager::GetInstance()->GetMetadata("./resources/texture/player.png");
 
 	Vector2 texSize = {
 		(float)meta.width,
