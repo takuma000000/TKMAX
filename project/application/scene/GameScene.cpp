@@ -175,9 +175,6 @@ void GameScene::Finalize() {
 }
 
 void GameScene::Update() {
-	if (isParticleReady_) {
-		TKM::ParticleManager::GetInstance()->Update(dt_);
-	}
 
 
 	TKM::Input::GetInstance()->Update();
@@ -275,6 +272,10 @@ void GameScene::Update() {
 	if (isAllEnemyDead &&
 		player_->GetAABB().IsCollidingWithAABB(goal_->GetAABB())) {
 		sceneManager_->ChangeScene("CLEAR");
+	}
+
+	if (isParticleReady_) {
+		TKM::ParticleManager::GetInstance()->Update(dt_);
 	}
 }
 

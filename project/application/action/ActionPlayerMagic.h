@@ -81,6 +81,7 @@ private:
 	Vector2 portalPosition_ = {};
 
 	float timer_ = 0.0f;
+	float scrollX_ = 0.0f;
 
 	static constexpr float kFrameTime_ = 1.0f / 60.0f;
 

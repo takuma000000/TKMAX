@@ -51,6 +51,8 @@ void ActionPlayerMagic::Update(
 	float screenWidth,
 	std::vector<std::unique_ptr<ActionEnemy>>& enemies
 ) {
+	scrollX_ = scrollX;
+
 	if (phase_ == Phase::Idle) {
 		if (TKM::Input::GetInstance()->TriggerKey(DIK_K)) {
 			ActionEnemy* target = FindTargetEnemy_(
@@ -273,7 +275,7 @@ void ActionPlayerMagic::UpdateRain_() {
 void ActionPlayerMagic::FinishMagic_() {
 	if (targetEnemy_) {
 		targetEnemy_->SetMagicLocked(false);
-		targetEnemy_->StartMagicExplosionDeath();
+		targetEnemy_->StartMagicExplosionDeath(scrollX_);
 	}
 
 	for (auto& arrow : arrows_) {

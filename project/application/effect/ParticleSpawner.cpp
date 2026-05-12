@@ -687,7 +687,7 @@ namespace TKM {
 
 			// 少しだけ大きめだけど、そこまでド派手じゃない
 			float sc = std::uniform_real_distribution<float>(0.9f, 1.4f)(rng);
-			p.transform_.scale_ = { sc, sc, sc };
+			p.transform_.scale_ = { 3.0f, 3.0f, 3.0f };
 
 			// 動かない（その場で光って消える）
 			p.velocity_ = { 0.0f, 0.0f, 0.0f };

@@ -78,7 +78,7 @@ public:
 	void SetActionOffset(float actionOffset);
 
 	void StartKnockbackDeath(float hitDirection);
-	void StartMagicExplosionDeath();
+	void StartMagicExplosionDeath(float scrollX);
 
 	bool IsDying() const { return deathType_ != EnemyDeathType::None; }
 	bool IsMagicVanishing() const { return deathType_ == EnemyDeathType::MagicExplosion; }
