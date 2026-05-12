@@ -1,7 +1,6 @@
 #include "ActionEnemy.h"
 #include "SpriteCommon.h"
 #include "TextureManager.h"
-#include "ParticleManager.h"
 #include <cmath>
 #include <algorithm>
 #include <random>
@@ -297,11 +296,6 @@ void ActionEnemy::StartMagicExplosionDeath(float scrollX) {
 		-(position_.y * 0.01f) + 3.6f - kEnemyHeight_ * 0.005f,
 		0.0f
 	};
-
-	TKM::ParticleManager* particleManager = TKM::ParticleManager::GetInstance();
-	particleManager->Emit("enemyDeath_core", deathCenter, 18);
-	particleManager->Emit("enemyDeath_shard", deathCenter, 48);
-	particleManager->Emit("enemyDeath_smoke", deathCenter, 20);
 }
 
 void ActionEnemy::UpdateTypeB_() {

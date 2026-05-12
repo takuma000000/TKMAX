@@ -3,8 +3,6 @@
 #include "SceneManager.h"
 #include "TextureManager.h"
 #include "Object3dCommon.h"
-#include "ParticleManager.h"
-#include "ParticleGroupsCatalog.h"
 
 namespace {
 	struct EnemySpawnData {
@@ -99,16 +97,6 @@ namespace {
 
 void GameScene::Initialize() {
 
-	isParticleReady_ = false;
-
-	TKM::Camera* defaultCamera = TKM::Object3dCommon::GetInstance()->GetDefaultCamera();
-	if (defaultCamera) {
-		TKM::ParticleManager* particleManager = TKM::ParticleManager::GetInstance();
-		particleManager->Initialize(dxCommon_, srvManager_, defaultCamera);
-		TKM::ParticleGroupsCatalog::RegisterScene(particleManager);
-		isParticleReady_ = true;
-	}
-
 	TKM::TextureManager::GetInstance()->LoadTexture("./resources/texture/circle2.png");
 	TKM::TextureManager::GetInstance()->LoadTexture("./resources/texture/goal.png");
 	TKM::TextureManager::GetInstance()->LoadTexture("./resources/texture/gradationLine.png");
@@ -195,11 +183,6 @@ void GameScene::Finalize() {
 	bulletManager_.reset();
 	magic_.reset();
 	back_.reset();
-
-	if (isParticleReady_) {
-		TKM::ParticleManager::GetInstance()->ClearAllGroups();
-		isParticleReady_ = false;
-	}
 }
 
 void GameScene::Update() {
@@ -305,10 +288,6 @@ void GameScene::Update() {
 		player_->GetAABB().IsCollidingWithAABB(goal_->GetAABB())) {
 		sceneManager_->ChangeScene("CLEAR");
 	}
-
-	if (isParticleReady_) {
-		TKM::ParticleManager::GetInstance()->Update(dt_);
-	}
 }
 
 void GameScene::Draw() {
@@ -316,11 +295,7 @@ void GameScene::Draw() {
 	Draw3D();
 }
 
-void GameScene::Draw3D() {
-	if (isParticleReady_) {
-		TKM::ParticleManager::GetInstance()->Draw();
-	}
-}
+void GameScene::Draw3D() {}
 
 void GameScene::DrawSprite() {
 	TKM::SpriteCommon::GetInstance()->DrawSetCommon();

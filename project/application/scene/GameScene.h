@@ -58,6 +58,4 @@ private:
 	static constexpr float kStageWidth_ = kGroundWidth_ * kGroundCount_;
 
 	float dt_ = 1.0f / 60.0f;
-
-	bool isParticleReady_ = false;
 };
