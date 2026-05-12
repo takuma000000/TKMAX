@@ -131,12 +131,24 @@ void ActionEnemy::Draw(float scrollX) {
 
 	for (size_t i = 0; i < dropObjects_.size(); ++i) {
 		auto& drop = dropObjects_[i];
-		if (!drop.isActive || !dropSprites_[i]) {
+		if ((!drop.isActive && !drop.isVanishing) || !dropSprites_[i]) {
 			continue;
 		}
 
-		dropSprites_[i]->SetPosition({ drop.position.x - scrollX, drop.position.y });
-		dropSprites_[i]->SetSize({ kDropSize_, kDropSize_ });
+		float vanishRate = 0.0f;
+		if (drop.isVanishing) {
+			vanishRate = std::clamp(drop.vanishTimer / kTypeCBulletVanishDuration_, 0.0f, 1.0f);
+		}
+
+		const float scale = 1.0f + vanishRate * 0.6f;
+		const float drawSize = kDropSize_ * scale;
+		const float offset = (drawSize - kDropSize_) * 0.5f;
+
+		dropSprites_[i]->SetPosition({ drop.position.x - scrollX - offset, drop.position.y - offset });
+		dropSprites_[i]->SetSize({ drawSize, drawSize });
+
+		const float alpha = drop.isVanishing ? (1.0f - vanishRate) : 1.0f;
+		dropSprites_[i]->SetColor({ 1.0f, 0.8f, 0.2f, alpha });
 		dropSprites_[i]->Update();
 		dropSprites_[i]->Draw();
 	}
@@ -451,6 +463,13 @@ void ActionEnemy::SpawnTypeCBullet_() {
 
 void ActionEnemy::UpdateDropObjects_() {
 	for (auto& drop : dropObjects_) {
+		if (drop.isVanishing) {
+			drop.vanishTimer += kFrameTime_;
+			if (drop.vanishTimer >= kTypeCBulletVanishDuration_) {
+				drop.isVanishing = false;
+			}
+		}
+
 		if (!drop.isActive) {
 			continue;
 		}
@@ -463,8 +482,7 @@ void ActionEnemy::UpdateDropObjects_() {
 
 		if (type_ == EnemyType::TypeC) {
 			if (drop.lifeTimer >= kTypeCBulletLifetime_) {
-				drop.isActive = false;
-				continue;
+				StartDropVanish_(drop);
 			}
 
 			Vector2 bulletCenter = {
@@ -492,7 +510,7 @@ void ActionEnemy::UpdateDropObjects_() {
 		}
 
 		if (drop.position.y > kDropBottomY_) {
-			drop.isActive = false;
+			StartDropVanish_(drop);
 		}
 	}
 }
@@ -519,10 +537,21 @@ bool ActionEnemy::IsHitAttack(const AABB& playerAABB) {
 		}
 
 		if (playerAABB.IsCollidingWithAABB(GetDropObjectAABB_(drop))) {
-			drop.isActive = false;
+			StartDropVanish_(drop);
 			return true;
 		}
 	}
 
 	return false;
+}
+
+void ActionEnemy::StartDropVanish_(DropObject& drop) {
+	if (drop.isVanishing) {
+		return;
+	}
+
+	drop.isActive = false;
+	drop.isVanishing = true;
+	drop.vanishTimer = 0.0f;
+	drop.velocity = { 0.0f, 0.0f };
 }

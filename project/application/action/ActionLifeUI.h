@@ -17,7 +17,7 @@ public:
 	void Draw();
 
 private:
-	static constexpr int kMaxLife_ = 3;
+	static constexpr int kMaxLife_ = 5;
 
 	static constexpr float kLifeWidth_ = 40.0f;
 	static constexpr float kLifeHeight_ = 40.0f;

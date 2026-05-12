@@ -103,7 +103,7 @@ private:
 	static constexpr float kPlayerWidth_ = 48.0f;
 	static constexpr float kPlayerHeight_ = 48.0f;
 
-	static constexpr int kMaxHP_ = 3;
+	static constexpr int kMaxHP_ = 5;
 	int hp_ = kMaxHP_;
 
 	static constexpr float kDamageCooldownSec_ = 2.0f;

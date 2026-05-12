@@ -136,6 +136,8 @@ private:
 		Vector2 velocity = { 0.0f, 0.0f };
 		float lifeTimer = 0.0f;
 		bool isActive = false;
+		float vanishTimer = 0.0f;
+		bool isVanishing = false;
 	};
 
 	void UpdateTypeB_();
@@ -143,6 +145,8 @@ private:
 	void UpdateDropObjects_();
 	void SpawnDropObject_();
 	void SpawnTypeCBullet_();
+
+	void StartDropVanish_(DropObject& drop);
 
 	AABB GetDropObjectAABB_(const DropObject& drop) const;
 
@@ -172,6 +176,7 @@ private:
 	static constexpr float kTypeCBulletInterval_ = 1.6f;
 	static constexpr float kTypeCBulletSpeed_ = 4.2f;
 	static constexpr float kTypeCBulletLifetime_ = 2.5f;
+	static constexpr float kTypeCBulletVanishDuration_ = 0.25f;
 	Vector2 targetPosition_ = { 0.0f, 0.0f };
 
 	float screenLeft_ = 0.0f;
