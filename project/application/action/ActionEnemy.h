@@ -7,6 +7,7 @@
 #include "AABB.h"
 #include <vector>
 #include <random>
+#include <cmath>
 
 //=============================================================
 // 敵の種類
@@ -87,6 +88,8 @@ public:
 	void SetPosition(const Vector2& position) { position_ = position; }
 	void ReverseDirection() { direction_ *= -1.0f; }
 
+	void SetTargetPosition(const Vector2& targetPosition) { targetPosition_ = targetPosition; }
+
 private:
 	std::string GetTexturePathByType_(EnemyType type);
 
@@ -134,8 +137,10 @@ private:
 	};
 
 	void UpdateTypeB_();
+	void UpdateTypeC_();
 	void UpdateDropObjects_();
 	void SpawnDropObject_();
+	void SpawnTypeCBullet_();
 
 	AABB GetDropObjectAABB_(const DropObject& drop) const;
 
@@ -161,4 +166,8 @@ private:
 	float typeARandomInterval_ = 0.0f;
 	float baseMoveSpeed_ = 2.0f;
 	std::mt19937 randomEngine_;
+
+	static constexpr float kTypeCBulletInterval_ = 1.6f;
+	static constexpr float kTypeCBulletSpeed_ = 4.2f;
+	Vector2 targetPosition_ = { 0.0f, 0.0f };
 };

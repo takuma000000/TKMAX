@@ -167,6 +167,11 @@ void ActionEnemy::UpdateNormal_() {
 		return;
 	}
 
+	if (type_ == EnemyType::TypeC) {
+		UpdateTypeC_();
+		return;
+	}
+
 	if (isMagicLocked_) {
 		sprite_->SetPosition(position_);
 		sprite_->Update();
@@ -339,6 +344,40 @@ void ActionEnemy::UpdateTypeB_() {
 	sprite_->Update();
 }
 
+void ActionEnemy::UpdateTypeC_() {
+	if (isMagicLocked_) {
+		sprite_->SetPosition(position_);
+		sprite_->Update();
+		return;
+	}
+
+	dropTimer_ += kFrameTime_;
+	position_.x += moveSpeed_ * direction_;
+
+	const float leftLimit = basePosition_.x - moveRange_;
+	const float rightLimit = basePosition_.x + moveRange_;
+
+	if (position_.x <= leftLimit) {
+		position_.x = leftLimit;
+		direction_ = 1.0f;
+	}
+
+	if (position_.x >= rightLimit) {
+		position_.x = rightLimit;
+		direction_ = -1.0f;
+	}
+
+	if (dropTimer_ >= kTypeCBulletInterval_) {
+		dropTimer_ = 0.0f;
+		SpawnTypeCBullet_();
+	}
+
+	sprite_->SetPosition(position_);
+	sprite_->SetSize({ kEnemyWidth_, kEnemyHeight_ });
+	sprite_->SetColor({ 1.0f, 0.45f, 0.45f, 1.0f });
+	sprite_->Update();
+}
+
 void ActionEnemy::SpawnDropObject_() {
 	for (auto& drop : dropObjects_) {
 		if (drop.isActive) {
@@ -368,6 +407,50 @@ void ActionEnemy::SpawnDropObject_() {
 	}
 }
 
+void ActionEnemy::SpawnTypeCBullet_() {
+	for (auto& drop : dropObjects_) {
+		if (drop.isActive) {
+			continue;
+		}
+
+		drop.position = {
+			position_.x + kEnemyWidth_ * 0.5f - kDropSize_ * 0.5f,
+			position_.y + kEnemyHeight_ * 0.35f
+		};
+
+		Vector2 sourceCenter = {
+			drop.position.x + kDropSize_ * 0.5f,
+			drop.position.y + kDropSize_ * 0.5f
+		};
+
+		Vector2 targetCenter = {
+			targetPosition_.x + kEnemyWidth_ * 0.5f,
+			targetPosition_.y + kEnemyHeight_ * 0.5f
+		};
+
+		Vector2 toTarget = {
+			targetCenter.x - sourceCenter.x,
+			targetCenter.y - sourceCenter.y
+		};
+
+		float length = std::sqrt(toTarget.x * toTarget.x + toTarget.y * toTarget.y);
+		if (length > 0.001f) {
+			toTarget.x /= length;
+			toTarget.y /= length;
+		} else {
+			toTarget = { -1.0f, 0.0f };
+		}
+
+		drop.velocity = {
+			toTarget.x * kTypeCBulletSpeed_,
+			toTarget.y * kTypeCBulletSpeed_
+		};
+
+		drop.isActive = true;
+		return;
+	}
+}
+
 void ActionEnemy::UpdateDropObjects_() {
 	for (auto& drop : dropObjects_) {
 		if (!drop.isActive) {
@@ -378,6 +461,31 @@ void ActionEnemy::UpdateDropObjects_() {
 		drop.position.y += drop.velocity.y;
 
 		drop.velocity.y += kDropGravity_;
+
+		if (type_ == EnemyType::TypeC) {
+			Vector2 bulletCenter = {
+				drop.position.x + kDropSize_ * 0.5f,
+				drop.position.y + kDropSize_ * 0.5f
+			};
+
+			Vector2 targetCenter = {
+				targetPosition_.x + kEnemyWidth_ * 0.5f,
+				targetPosition_.y + kEnemyHeight_ * 0.5f
+			};
+
+			Vector2 toTarget = {
+				targetCenter.x - bulletCenter.x,
+				targetCenter.y - bulletCenter.y
+			};
+
+			float length = std::sqrt(toTarget.x * toTarget.x + toTarget.y * toTarget.y);
+			if (length > 0.001f) {
+				toTarget.x /= length;
+				toTarget.y /= length;
+				drop.velocity.x = toTarget.x * kTypeCBulletSpeed_;
+				drop.velocity.y = toTarget.y * kTypeCBulletSpeed_;
+			}
+		}
 
 		if (drop.position.y > kDropBottomY_) {
 			drop.isActive = false;

@@ -65,6 +65,34 @@ namespace {
 			1.0f,
 			false,
 			1.8f
+		},
+
+		// TypeC：地上で追従弾を撃つ敵を3体配置
+		{
+			EnemyType::TypeC,
+			{ 1100.0f, 0.0f },
+			90.0f,
+			1.4f,
+			true,
+			0.2f
+		},
+
+		{
+			EnemyType::TypeC,
+			{ 2100.0f, 0.0f },
+			120.0f,
+			1.6f,
+			true,
+			0.9f
+		},
+
+		{
+			EnemyType::TypeC,
+			{ 3200.0f, 0.0f },
+			100.0f,
+			1.5f,
+			true,
+			1.4f
 		}
 	};
 }
@@ -225,6 +253,7 @@ void GameScene::Update() {
 
 	for (auto& enemy : enemies_) {
 		const Vector2 prevEnemyPos = enemy->GetPosition();
+		enemy->SetTargetPosition(player_->GetPosition());
 		enemy->Update();
 		ResolveEnemyBlockCollision(*enemy, prevEnemyPos);
 
