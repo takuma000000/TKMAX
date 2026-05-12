@@ -402,6 +402,7 @@ void ActionEnemy::SpawnDropObject_() {
 			kDropThrowSpeedY_
 		};
 
+		drop.lifeTimer = 0.0f;
 		drop.isActive = true;
 		return;
 	}
@@ -446,6 +447,7 @@ void ActionEnemy::SpawnTypeCBullet_() {
 			toTarget.y * kTypeCBulletSpeed_
 		};
 
+		drop.lifeTimer = 0.0f;
 		drop.isActive = true;
 		return;
 	}
@@ -463,6 +465,11 @@ void ActionEnemy::UpdateDropObjects_() {
 		drop.velocity.y += kDropGravity_;
 
 		if (type_ == EnemyType::TypeC) {
+			if (drop.lifeTimer >= kTypeCBulletLifetime_) {
+				drop.isActive = false;
+				continue;
+			}
+
 			Vector2 bulletCenter = {
 				drop.position.x + kDropSize_ * 0.5f,
 				drop.position.y + kDropSize_ * 0.5f

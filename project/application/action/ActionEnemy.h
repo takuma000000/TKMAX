@@ -133,6 +133,7 @@ private:
 	struct DropObject {
 		Vector2 position = { 0.0f, 0.0f };
 		Vector2 velocity = { 0.0f, 0.0f };
+		float lifeTimer = 0.0f;
 		bool isActive = false;
 	};
 
@@ -169,5 +170,6 @@ private:
 
 	static constexpr float kTypeCBulletInterval_ = 1.6f;
 	static constexpr float kTypeCBulletSpeed_ = 4.2f;
+	static constexpr float kTypeCBulletLifetime_ = 2.0f;
 	Vector2 targetPosition_ = { 0.0f, 0.0f };
 };
