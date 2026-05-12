@@ -34,6 +34,7 @@ public:
 
 private:
 	void ResolvePlayerBlockCollision(const Vector2& prevPlayerPos);
+	void ResolveEnemyBlockCollision(ActionEnemy& enemy, const Vector2& prevEnemyPos);
 
 	TKM::DirectXCommon* dxCommon_ = nullptr;
 	TKM::SrvManager* srvManager_ = nullptr;

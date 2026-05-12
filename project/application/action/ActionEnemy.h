@@ -6,6 +6,7 @@
 #include "MyMath.h"
 #include "AABB.h"
 #include <vector>
+#include <random>
 
 //=============================================================
 // 敵の種類
@@ -83,6 +84,9 @@ public:
 	bool IsDying() const { return deathType_ != EnemyDeathType::None; }
 	bool IsMagicVanishing() const { return deathType_ == EnemyDeathType::MagicExplosion; }
 
+	void SetPosition(const Vector2& position) { position_ = position; }
+	void ReverseDirection() { direction_ *= -1.0f; }
+
 private:
 	std::string GetTexturePathByType_(EnemyType type);
 
@@ -152,4 +156,9 @@ private:
 	static constexpr float kDropBottomY_ = 900.0f;
 	static constexpr int kDropMax_ = 8;
 	static constexpr float kDropRange_ = 160.0f;
+
+	float typeARandomTimer_ = 0.0f;
+	float typeARandomInterval_ = 0.0f;
+	float baseMoveSpeed_ = 2.0f;
+	std::mt19937 randomEngine_;
 };

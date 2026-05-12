@@ -85,7 +85,7 @@ void GameScene::Initialize() {
 	TKM::TextureManager::GetInstance()->LoadTexture("./resources/texture/goal.png");
 	TKM::TextureManager::GetInstance()->LoadTexture("./resources/texture/gradationLine.png");
 	TKM::TextureManager::GetInstance()->LoadTexture("./resources/texture/enemy_typeA.png");
-	TKM::TextureManager::GetInstance()->LoadTexture("./resources/texture/player.png");
+	TKM::TextureManager::GetInstance()->LoadTexture("./resources/texture/enemy_typeB.png");
 
 	back_ = std::make_unique<ActionBack>();
 	back_->Initialize(dxCommon_);
@@ -224,7 +224,9 @@ void GameScene::Update() {
 	bool isAllEnemyDead = true;
 
 	for (auto& enemy : enemies_) {
+		const Vector2 prevEnemyPos = enemy->GetPosition();
 		enemy->Update();
+		ResolveEnemyBlockCollision(*enemy, prevEnemyPos);
 
 		//=============================================================	
 		// プレイヤーと敵の当たり判定
@@ -400,6 +402,66 @@ void GameScene::ResolvePlayerBlockCollision(const Vector2& prevPlayerPos) {
 		if (wasRight && playerLeft <= blockRight) {
 			player_->PushOutRight(blockRight);
 			continue;
+		}
+	}
+}
+
+void GameScene::ResolveEnemyBlockCollision(ActionEnemy& enemy, const Vector2& prevEnemyPos) {
+	if (enemy.IsDead() || enemy.IsDying()) {
+		return;
+	}
+
+	AABB enemyAABB = enemy.GetAABB();
+	const Vector2 enemySize = enemy.GetSize();
+	AABB prevEnemyAABB(
+		{
+			prevEnemyPos.x + enemySize.x * 0.5f,
+			prevEnemyPos.y + enemySize.y * 0.5f,
+			0.0f
+		},
+		{
+			enemySize.x,
+			enemySize.y,
+			1.0f
+		}
+	);
+
+	for (auto& block : blocks_) {
+		AABB blockAABB = block->GetAABB();
+		if (!enemyAABB.IsCollidingWithAABB(blockAABB)) {
+			continue;
+		}
+
+		const Vector3 eCenter = enemyAABB.GetCenter();
+		const Vector3 bCenter = blockAABB.GetCenter();
+		const Vector3 eHalf = enemyAABB.GetHalfSize();
+		const Vector3 bHalf = blockAABB.GetHalfSize();
+
+		const Vector3 prevCenter = prevEnemyAABB.GetCenter();
+		const Vector3 prevHalf = prevEnemyAABB.GetHalfSize();
+
+		const float enemyLeft = eCenter.x - eHalf.x;
+		const float enemyRight = eCenter.x + eHalf.x;
+		const float blockLeft = bCenter.x - bHalf.x;
+		const float blockRight = bCenter.x + bHalf.x;
+
+		const float prevEnemyLeft = prevCenter.x - prevHalf.x;
+		const float prevEnemyRight = prevCenter.x + prevHalf.x;
+
+		if (prevEnemyRight <= blockLeft && enemyRight >= blockLeft) {
+			Vector2 corrected = enemy.GetPosition();
+			corrected.x = blockLeft - enemySize.x;
+			enemy.SetPosition(corrected);
+			enemy.ReverseDirection();
+			break;
+		}
+
+		if (prevEnemyLeft >= blockRight && enemyLeft <= blockRight) {
+			Vector2 corrected = enemy.GetPosition();
+			corrected.x = blockRight;
+			enemy.SetPosition(corrected);
+			enemy.ReverseDirection();
+			break;
 		}
 	}
 }

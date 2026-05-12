@@ -3,6 +3,8 @@
 #include "TextureManager.h"
 #include "ParticleManager.h"
 #include <cmath>
+#include <algorithm>
+#include <random>
 
 void ActionEnemy::Initialize(
 	TKM::DirectXCommon* dxCommon,
@@ -15,8 +17,12 @@ void ActionEnemy::Initialize(
 	basePosition_ = position;
 	type_ = type;
 	moveRange_ = moveRange;
+	baseMoveSpeed_ = moveSpeed;
 	moveSpeed_ = moveSpeed;
 	direction_ = 1.0f;
+	randomEngine_.seed(std::random_device{}());
+	typeARandomTimer_ = 0.0f;
+	typeARandomInterval_ = 0.0f;
 
 	texturePath_ = GetTexturePathByType_(type_);
 
@@ -145,10 +151,10 @@ std::string ActionEnemy::GetTexturePathByType_(EnemyType type) {
 		return "./resources/texture/enemy_typeA.png";
 
 	case EnemyType::TypeB:
-		return "./resources/texture/circle2.png";
+		return "./resources/texture/enemy_typeB.png";
 
 	case EnemyType::TypeC:
-		return "./resources/texture/enemy_c.png";
+		return "./resources/texture/circle2.png";
 
 	default:
 		return "./resources/texture/circle2.png";
@@ -165,6 +171,19 @@ void ActionEnemy::UpdateNormal_() {
 		sprite_->SetPosition(position_);
 		sprite_->Update();
 		return;
+	}
+
+	typeARandomTimer_ += kFrameTime_;
+	if (typeARandomTimer_ >= typeARandomInterval_) {
+		typeARandomTimer_ = 0.0f;
+		std::uniform_real_distribution<float> intervalDist(0.25f, 0.9f);
+		std::uniform_real_distribution<float> speedScaleDist(0.65f, 1.5f);
+		std::bernoulli_distribution flipDist(0.35);
+		typeARandomInterval_ = intervalDist(randomEngine_);
+		if (flipDist(randomEngine_)) {
+			direction_ *= -1.0f;
+		}
+		moveSpeed_ = std::clamp(baseMoveSpeed_ * speedScaleDist(randomEngine_), 0.8f, 4.0f);
 	}
 
 	position_.x += moveSpeed_ * direction_;
@@ -250,7 +269,7 @@ void ActionEnemy::SetActionOffset(float actionOffset) {
 void ActionEnemy::StartKnockbackDeath(float hitDirection) {
 	if (isDead_ || deathType_ != EnemyDeathType::None) {
 		return;
-	}
+	}	
 
 	isMagicLocked_ = false;
 	deathType_ = EnemyDeathType::Knockback;
@@ -271,9 +290,9 @@ void ActionEnemy::StartMagicExplosionDeath(float scrollX) {
 	deathTimer_ = 0.0f;
 
 	const Vector3 deathCenter = {
-	(position_.x - scrollX) - 640.0f + kEnemyWidth_ * 0.5f,
-	-(position_.y - 360.0f + kEnemyHeight_ * 0.5f),
-	0.0f
+		(position_.x - scrollX) * 0.01f - 6.4f + kEnemyWidth_ * 0.005f,
+		-(position_.y * 0.01f) + 3.6f - kEnemyHeight_ * 0.005f,
+		0.0f
 	};
 
 	TKM::ParticleManager* particleManager = TKM::ParticleManager::GetInstance();
