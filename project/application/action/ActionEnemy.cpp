@@ -1,6 +1,7 @@
 #include "ActionEnemy.h"
 #include "SpriteCommon.h"
 #include "TextureManager.h"
+#include "ParticleManager.h"
 #include <cmath>
 
 void ActionEnemy::Initialize(
@@ -268,6 +269,20 @@ void ActionEnemy::StartMagicExplosionDeath() {
 	isMagicLocked_ = false;
 	deathType_ = EnemyDeathType::MagicExplosion;
 	deathTimer_ = 0.0f;
+
+	TKM::ParticleManager::Transform deathTransform{};
+	deathTransform.translate_ = {
+		position_.x + kEnemyWidth_ * 0.5f,
+		position_.y + kEnemyHeight_ * 0.5f,
+		0.0f
+	};
+	deathTransform.rotate_ = { 0.0f, 0.0f, 0.0f };
+	deathTransform.scale_ = { 1.0f, 1.0f, 1.0f };
+
+	TKM::ParticleManager* particleManager = TKM::ParticleManager::GetInstance();
+	particleManager->EmitWithTransform("enemyDeath_core", deathTransform, { 1.0f, 1.0f, 1.0f, 1.0f }, 18);
+	particleManager->EmitWithTransform("enemyDeath_shard", deathTransform, { 1.0f, 1.0f, 1.0f, 1.0f }, 48);
+	particleManager->EmitWithTransform("enemyDeath_smoke", deathTransform, { 1.0f, 1.0f, 1.0f, 1.0f }, 20);
 }
 
 void ActionEnemy::UpdateTypeB_() {
