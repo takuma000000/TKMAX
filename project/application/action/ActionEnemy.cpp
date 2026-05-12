@@ -54,16 +54,6 @@ void ActionEnemy::Initialize(
 
 	TKM::TextureManager::GetInstance()->LoadTexture(dropTexturePath_);
 
-	dropSprite_ = std::make_unique<TKM::Sprite>();
-
-	dropSprite_->Initialize(
-		TKM::SpriteCommon::GetInstance(),
-		dxCommon,
-		dropTexturePath_
-	);
-
-	dropSprite_->SetAutoAdjustTextureSize(false);
-
 	const auto& dropMeta = TKM::TextureManager::GetInstance()->GetMetadata(dropTexturePath_);
 
 	Vector2 dropTexSize = {
@@ -71,12 +61,23 @@ void ActionEnemy::Initialize(
 		static_cast<float>(dropMeta.height)
 	};
 
-	dropSprite_->SetTextureLeftTop({ 0.0f, 0.0f });
-	dropSprite_->SetTextureSize(dropTexSize);
-	dropSprite_->SetSize({ kDropSize_, kDropSize_ });
-	dropSprite_->SetColor({ 1.0f, 0.8f, 0.2f, 1.0f });
-
 	dropObjects_.resize(kDropMax_);
+
+	dropSprites_.resize(kDropMax_);
+	for (int i = 0; i < kDropMax_; ++i) {
+		dropSprites_[i] = std::make_unique<TKM::Sprite>();
+		dropSprites_[i]->Initialize(
+			TKM::SpriteCommon::GetInstance(),
+			dxCommon,
+			dropTexturePath_
+		);
+		dropSprites_[i]->SetAutoAdjustTextureSize(false);
+		dropSprites_[i]->SetTextureLeftTop({ 0.0f, 0.0f });
+		dropSprites_[i]->SetTextureSize(dropTexSize);
+		dropSprites_[i]->SetSize({ kDropSize_, kDropSize_ });
+		dropSprites_[i]->SetColor({ 1.0f, 0.8f, 0.2f, 1.0f });
+	}
+
 	floatTimer_ = 0.0f;
 	dropTimer_ = 0.0f;
 	dropIndex_ = 0;
@@ -129,19 +130,16 @@ void ActionEnemy::Draw(float scrollX) {
 		sprite_->Draw();
 	}
 
-	for (auto& drop : dropObjects_) {
-		if (!drop.isActive) {
+	for (size_t i = 0; i < dropObjects_.size(); ++i) {
+		auto& drop = dropObjects_[i];
+		if (!drop.isActive || !dropSprites_[i]) {
 			continue;
 		}
 
-		if (!dropSprite_) {
-			continue;
-		}
-
-		dropSprite_->SetPosition({ drop.position.x - scrollX, drop.position.y });
-		dropSprite_->SetSize({ kDropSize_, kDropSize_ });
-		dropSprite_->Update();
-		dropSprite_->Draw();
+		dropSprites_[i]->SetPosition({ drop.position.x - scrollX, drop.position.y });
+		dropSprites_[i]->SetSize({ kDropSize_, kDropSize_ });
+		dropSprites_[i]->Update();
+		dropSprites_[i]->Draw();
 	}
 }
 

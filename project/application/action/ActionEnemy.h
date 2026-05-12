@@ -99,7 +99,7 @@ private:
 	void UpdateMagicExplosionDeath_();
 
 	std::unique_ptr<TKM::Sprite> sprite_ = nullptr;
-	std::unique_ptr<TKM::Sprite> dropSprite_ = nullptr;
+	std::vector<std::unique_ptr<TKM::Sprite>> dropSprites_;
 	std::string dropTexturePath_;
 
 	Vector2 position_ = { 0.0f, 0.0f };
@@ -171,7 +171,7 @@ private:
 
 	static constexpr float kTypeCBulletInterval_ = 1.6f;
 	static constexpr float kTypeCBulletSpeed_ = 4.2f;
-	static constexpr float kTypeCBulletLifetime_ = 4.0f;
+	static constexpr float kTypeCBulletLifetime_ = 2.5f;
 	Vector2 targetPosition_ = { 0.0f, 0.0f };
 
 	float screenLeft_ = 0.0f;
