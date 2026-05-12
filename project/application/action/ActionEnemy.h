@@ -89,6 +89,7 @@ public:
 	void ReverseDirection() { direction_ *= -1.0f; }
 
 	void SetTargetPosition(const Vector2& targetPosition) { targetPosition_ = targetPosition; }
+	void SetScreenRange(float screenLeft, float screenWidth) { screenLeft_ = screenLeft; screenWidth_ = screenWidth; }
 
 private:
 	std::string GetTexturePathByType_(EnemyType type);
@@ -170,6 +171,9 @@ private:
 
 	static constexpr float kTypeCBulletInterval_ = 1.6f;
 	static constexpr float kTypeCBulletSpeed_ = 4.2f;
-	static constexpr float kTypeCBulletLifetime_ = 2.0f;
+	static constexpr float kTypeCBulletLifetime_ = 4.0f;
 	Vector2 targetPosition_ = { 0.0f, 0.0f };
+
+	float screenLeft_ = 0.0f;
+	float screenWidth_ = 1280.0f;
 };

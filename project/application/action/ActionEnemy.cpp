@@ -367,7 +367,11 @@ void ActionEnemy::UpdateTypeC_() {
 		direction_ = -1.0f;
 	}
 
-	if (dropTimer_ >= kTypeCBulletInterval_) {
+	const float enemyLeft = position_.x;
+	const float enemyRight = position_.x + kEnemyWidth_;
+	const float screenRight = screenLeft_ + screenWidth_;
+	const bool isOnScreen = !(enemyRight < screenLeft_ || enemyLeft > screenRight);
+	if (isOnScreen && dropTimer_ >= kTypeCBulletInterval_) {
 		dropTimer_ = 0.0f;
 		SpawnTypeCBullet_();
 	}
@@ -461,6 +465,7 @@ void ActionEnemy::UpdateDropObjects_() {
 
 		drop.position.x += drop.velocity.x;
 		drop.position.y += drop.velocity.y;
+		drop.lifeTimer += kFrameTime_;
 
 		drop.velocity.y += kDropGravity_;
 

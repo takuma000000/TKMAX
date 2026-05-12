@@ -254,6 +254,7 @@ void GameScene::Update() {
 	for (auto& enemy : enemies_) {
 		const Vector2 prevEnemyPos = enemy->GetPosition();
 		enemy->SetTargetPosition(player_->GetPosition());
+		enemy->SetScreenRange(scrollX_, kScreenWidth_);
 		enemy->Update();
 		ResolveEnemyBlockCollision(*enemy, prevEnemyPos);
 
