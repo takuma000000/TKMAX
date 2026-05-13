@@ -249,14 +249,14 @@ void GameScene::Update() {
 	bool isAllEnemyDead = true;
 
 	for (auto& enemy : enemies_) {
-		const bool wasDead = enemy->IsDead();
+		const bool wasDying = enemy->IsDying();
 		const Vector2 prevEnemyPos = enemy->GetPosition();
 		enemy->SetTargetPosition(player_->GetPosition());
 		enemy->SetScreenRange(scrollX_, kScreenWidth_);
 		enemy->Update();
 		ResolveEnemyBlockCollision(*enemy, prevEnemyPos);
 
-		if (!wasDead && enemy->IsDead() && waterRippleEffect_) {
+		if (!wasDying && enemy->IsDying() && waterRippleEffect_) {
 			const Vector2 enemyPosition = enemy->GetPosition();
 			const Vector2 enemySize = enemy->GetSize();
 			const float screenX = (enemyPosition.x + enemySize.x * 0.5f) - scrollX_;

@@ -74,6 +74,7 @@ void ActionEnemy::Initialize(
 		);
 		dropSprites_[i]->SetAutoAdjustTextureSize(false);
 		dropSprites_[i]->SetTextureLeftTop({ 0.0f, 0.0f });
+		dropSprites_[i]->SetAnchorPoint({ 0.5f, 0.5f });
 		dropSprites_[i]->SetTextureSize(dropTexSize);
 		dropSprites_[i]->SetSize({ kDropSize_, kDropSize_ });
 		dropSprites_[i]->SetColor({ 1.0f, 0.8f, 0.2f, 1.0f });
@@ -144,9 +145,10 @@ void ActionEnemy::Draw(float scrollX) {
 
 		const float scale = 1.0f + vanishRate * 0.6f;
 		const float drawSize = kDropSize_ * scale;
-		const float offset = (drawSize - kDropSize_) * 0.5f;
-
-		dropSprites_[i]->SetPosition({ drop.position.x - scrollX - offset, drop.position.y - offset });
+		dropSprites_[i]->SetPosition({
+			drop.position.x + kDropSize_ * 0.5f - scrollX,
+			drop.position.y + kDropSize_ * 0.5f
+			});
 		dropSprites_[i]->SetSize({ drawSize, drawSize });
 		dropSprites_[i]->SetRotation(drop.rotation);
 
@@ -286,7 +288,7 @@ void ActionEnemy::SetActionOffset(float actionOffset) {
 void ActionEnemy::StartKnockbackDeath(float hitDirection) {
 	if (isDead_ || deathType_ != EnemyDeathType::None) {
 		return;
-	}	
+	}
 
 	isMagicLocked_ = false;
 	deathType_ = EnemyDeathType::Knockback;

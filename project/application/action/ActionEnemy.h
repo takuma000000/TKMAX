@@ -178,7 +178,7 @@ private:
 	float baseMoveSpeed_ = 2.0f;
 	std::mt19937 randomEngine_;
 
-	static constexpr float kTypeCBulletInterval_ = 1.6f;
+	static constexpr float kTypeCBulletInterval_ = 2.0f;
 	static constexpr float kTypeCBulletSpeed_ = 4.2f;
 	static constexpr float kTypeCBulletLifetime_ = 2.5f;
 	static constexpr float kTypeCBulletVanishDuration_ = 0.25f;
