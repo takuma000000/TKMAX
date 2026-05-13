@@ -99,7 +99,7 @@ void GameScene::Initialize() {
 
 	TKM::TextureManager::GetInstance()->LoadTexture("./resources/texture/circle2.png");
 	TKM::TextureManager::GetInstance()->LoadTexture("./resources/texture/goal.png");
-	TKM::TextureManager::GetInstance()->LoadTexture("./resources/texture/gradationLine.png");
+	TKM::TextureManager::GetInstance()->LoadTexture("./resources/texture/magic_attack.png");
 	TKM::TextureManager::GetInstance()->LoadTexture("./resources/texture/enemy_typeA.png");
 	TKM::TextureManager::GetInstance()->LoadTexture("./resources/texture/enemy_typeB.png");
 

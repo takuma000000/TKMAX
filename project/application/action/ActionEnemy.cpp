@@ -163,7 +163,7 @@ std::string ActionEnemy::GetTexturePathByType_(EnemyType type) {
 		return "./resources/texture/enemy_typeB.png";
 
 	case EnemyType::TypeC:
-		return "./resources/texture/circle2.png";
+		return "./resources/texture/enemy_typeC.png";
 
 	default:
 		return "./resources/texture/circle2.png";
