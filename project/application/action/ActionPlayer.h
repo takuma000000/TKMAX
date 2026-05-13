@@ -3,6 +3,7 @@
 #include "Sprite.h"
 #include "DirectXCommon.h"
 #include "MyMath.h"
+#include <vector>
 #include "AABB.h"
 
 //=============================================================
@@ -88,7 +89,19 @@ public:
 	}
 
 private:
+	struct RunDust {
+		Vector2 position = { 0.0f, 0.0f };
+		Vector2 velocity = { 0.0f, 0.0f };
+		float life = 0.0f;
+		float maxLife = 0.0f;
+		float size = 0.0f;
+		float alpha = 0.0f;
+		bool isActive = false;
+	};
+
 	std::unique_ptr<TKM::Sprite> sprite_ = nullptr;
+	std::vector<std::unique_ptr<TKM::Sprite>> runDustSprites_;
+	std::vector<RunDust> runDusts_;
 
 	Vector2 position_ = { 300.0f, 400.0f };
 	Vector2 velocity_ = { 0.0f, 0.0f };
@@ -118,4 +131,12 @@ private:
 	bool isControlLocked_ = false;
 
 	float facingDirection_ = 1.0f; // 1=右、-1=左
+
+	float runDustSpawnTimer_ = 0.0f;
+	static constexpr int kRunDustCount_ = 12;
+	static constexpr float kRunDustSpawnInterval_ = 0.05f;
+	static constexpr float kRunDustLifetime_ = 0.35f;
+
+	void UpdateRunDust_();
+	void SpawnRunDust_();
 };
