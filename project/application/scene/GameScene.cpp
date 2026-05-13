@@ -3,6 +3,7 @@
 #include "SceneManager.h"
 #include "TextureManager.h"
 #include "Object3dCommon.h"
+#include <algorithm>
 
 namespace {
 	struct EnemySpawnData {
@@ -152,6 +153,10 @@ void GameScene::Initialize() {
 	magic_ = std::make_unique<ActionPlayerMagic>();
 	magic_->Initialize(dxCommon_);
 
+	waterRippleEffect_ = std::make_unique<TKM::WaterRippleEffect>();
+	waterRippleEffect_->Initialize(dxCommon_);
+	dxCommon_->SetWaterRippleEffect(waterRippleEffect_.get());
+
 	blocks_.clear();
 
 	auto addBlock = [&](float x, float y) {
@@ -182,6 +187,11 @@ void GameScene::Finalize() {
 	bulletManager_.reset();
 	magic_.reset();
 	back_.reset();
+
+	if (dxCommon_) {
+		dxCommon_->SetWaterRippleEffect(nullptr);
+	}
+	waterRippleEffect_.reset();
 }
 
 void GameScene::Update() {
@@ -228,17 +238,39 @@ void GameScene::Update() {
 
 	back_->Update();
 
+	if (waterRippleEffect_) {
+		waterRippleEffect_->Update(dt_);
+	}
+
+
 	lifeUI_->Update(player_->GetHP());
 
 	bool isTimeUp = timer_->IsTimeUp();
 	bool isAllEnemyDead = true;
 
 	for (auto& enemy : enemies_) {
+		const bool wasDead = enemy->IsDead();
 		const Vector2 prevEnemyPos = enemy->GetPosition();
 		enemy->SetTargetPosition(player_->GetPosition());
 		enemy->SetScreenRange(scrollX_, kScreenWidth_);
 		enemy->Update();
 		ResolveEnemyBlockCollision(*enemy, prevEnemyPos);
+
+		if (!wasDead && enemy->IsDead() && waterRippleEffect_) {
+			const Vector2 enemyPosition = enemy->GetPosition();
+			const Vector2 enemySize = enemy->GetSize();
+			const float screenX = (enemyPosition.x + enemySize.x * 0.5f) - scrollX_;
+			const float screenY = enemyPosition.y + enemySize.y * 0.5f;
+			const float uvX = std::clamp(screenX / kScreenWidth_, 0.0f, 1.0f);
+			const float uvY = std::clamp(screenY / kScreenHeight_, 0.0f, 1.0f);
+			TKM::WaterRippleEffect::RippleDesc desc{};
+			desc.duration_ = 0.45f;
+			desc.radiusMax_ = 0.42f;
+			desc.amplitude_ = 0.03f;
+			desc.frequency_ = 55.0f;
+			desc.width_ = 48.0f;
+			waterRippleEffect_->Trigger({ uvX, uvY }, desc);
+		}
 
 		//=============================================================	
 		// プレイヤーと敵の当たり判定

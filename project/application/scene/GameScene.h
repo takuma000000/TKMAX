@@ -12,6 +12,7 @@
 #include "ActionPlayerMagic.h"
 #include "ActionBack.h"
 #include "ActionBlock.h"
+#include "WaterRippleEffect.h"
 
 //=============================================================
 // GameSceneクラス
@@ -50,9 +51,12 @@ private:
 	std::unique_ptr<ActionBack> back_ = nullptr;
 	std::vector<std::unique_ptr<ActionBlock>> blocks_;
 
+	std::unique_ptr<TKM::WaterRippleEffect> waterRippleEffect_ = nullptr;
+
 	float scrollX_ = 0.0f;
 
 	static constexpr float kScreenWidth_ = 1280.0f;
+	static constexpr float kScreenHeight_ = 720.0f;
 	static constexpr float kGroundWidth_ = 1280.0f;
 	static constexpr int kGroundCount_ = 3;
 	static constexpr float kStageWidth_ = kGroundWidth_ * kGroundCount_;
