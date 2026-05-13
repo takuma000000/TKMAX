@@ -6,6 +6,7 @@
 #include "ActionPlayerBullet.h"
 #include "ActionEnemy.h"
 #include "ActionBlock.h"
+#include "Sprite.h"
 
 //=============================================================
 // ActionPlayerBulletManager
@@ -28,7 +29,10 @@ public:
 private:
 	void Shoot_(const Vector2& playerPosition, const Vector2& playerSize, float facingDirection);
 	void CheckHitBlocks_(const std::vector<std::unique_ptr<ActionBlock>>& blocks);
+	void CheckHitEnemyBullets_(std::vector<std::unique_ptr<ActionEnemy>>& enemies);
 	void KillOutOfScreen_(float scrollX, float screenWidth);
+	void UpdateClashEffects_();
+	void SpawnClashEffect_(const Vector2& worldCenter);
 
 	TKM::DirectXCommon* dxCommon_ = nullptr;
 
@@ -40,4 +44,13 @@ private:
 	float shotCooldownTimer_ = 0.0f;
 
 	void CheckHitEnemies_(std::vector<std::unique_ptr<ActionEnemy>>& enemies);
+
+	struct ClashEffect {
+		Vector2 worldCenter = { 0.0f, 0.0f };
+		float timer = 0.0f;
+	};
+	std::vector<ClashEffect> clashEffects_;
+	std::unique_ptr<TKM::Sprite> clashEffectSprite_ = nullptr;
+	static constexpr float kClashEffectDuration_ = 0.18f;
+	static constexpr float kClashEffectBaseSize_ = 20.0f;
 };

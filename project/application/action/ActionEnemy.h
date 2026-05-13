@@ -89,6 +89,9 @@ public:
 	void ReverseDirection() { direction_ *= -1.0f; }
 
 	void SetTargetPosition(const Vector2& targetPosition) { targetPosition_ = targetPosition; }
+
+	bool TryHitDropObject(const AABB& hitAABB, Vector2* hitPosition = nullptr);
+
 	void SetScreenRange(float screenLeft, float screenWidth) { screenLeft_ = screenLeft; screenWidth_ = screenWidth; }
 
 private:

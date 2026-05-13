@@ -555,3 +555,25 @@ void ActionEnemy::StartDropVanish_(DropObject& drop) {
 	drop.vanishTimer = 0.0f;
 	drop.velocity = { 0.0f, 0.0f };
 }
+
+bool ActionEnemy::TryHitDropObject(const AABB& hitAABB, Vector2* hitPosition) {
+	for (auto& drop : dropObjects_) {
+		if (!drop.isActive) {
+			continue;
+		}
+
+		if (!hitAABB.IsCollidingWithAABB(GetDropObjectAABB_(drop))) {
+			continue;
+		}
+
+		if (hitPosition) {
+			hitPosition->x = drop.position.x + kDropSize_ * 0.5f;
+			hitPosition->y = drop.position.y + kDropSize_ * 0.5f;
+		}
+
+		StartDropVanish_(drop);
+		return true;
+	}
+
+	return false;
+}
