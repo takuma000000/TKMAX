@@ -100,8 +100,7 @@ void GameScene::Initialize() {
 	TKM::TextureManager::GetInstance()->LoadTexture("./resources/texture/circle2.png");
 	TKM::TextureManager::GetInstance()->LoadTexture("./resources/texture/goal.png");
 	TKM::TextureManager::GetInstance()->LoadTexture("./resources/texture/magic_attack.png");
-	TKM::TextureManager::GetInstance()->LoadTexture("./resources/texture/enemy_typeA.png");
-	TKM::TextureManager::GetInstance()->LoadTexture("./resources/texture/enemy_typeB.png");
+	TKM::TextureManager::GetInstance()->LoadTexture("./resources/texture/typeC_Bullet.png");
 
 	back_ = std::make_unique<ActionBack>();
 	back_->Initialize(dxCommon_);

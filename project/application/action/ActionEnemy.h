@@ -141,6 +141,8 @@ private:
 		bool isActive = false;
 		float vanishTimer = 0.0f;
 		bool isVanishing = false;
+		float rotation = 0.0f;
+		float spinSpeed = 0.0f;
 	};
 
 	void UpdateTypeB_();
@@ -180,6 +182,7 @@ private:
 	static constexpr float kTypeCBulletSpeed_ = 4.2f;
 	static constexpr float kTypeCBulletLifetime_ = 2.5f;
 	static constexpr float kTypeCBulletVanishDuration_ = 0.25f;
+	static constexpr float kTypeCBulletSpinSpeed_ = 0.24f;
 	Vector2 targetPosition_ = { 0.0f, 0.0f };
 
 	float screenLeft_ = 0.0f;

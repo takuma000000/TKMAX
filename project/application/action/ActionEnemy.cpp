@@ -49,7 +49,9 @@ void ActionEnemy::Initialize(
 	sprite_->SetPosition(position_);
 	sprite_->SetSize({ kEnemyWidth_, kEnemyHeight_ });
 
-	dropTexturePath_ = "./resources/texture/circle2.png";
+	dropTexturePath_ = (type_ == EnemyType::TypeC)
+		? "./resources/texture/typeC_Bullet.png"
+		: "./resources/texture/circle2.png";
 
 	TKM::TextureManager::GetInstance()->LoadTexture(dropTexturePath_);
 
@@ -146,6 +148,7 @@ void ActionEnemy::Draw(float scrollX) {
 
 		dropSprites_[i]->SetPosition({ drop.position.x - scrollX - offset, drop.position.y - offset });
 		dropSprites_[i]->SetSize({ drawSize, drawSize });
+		dropSprites_[i]->SetRotation(drop.rotation);
 
 		const float alpha = drop.isVanishing ? (1.0f - vanishRate) : 1.0f;
 		dropSprites_[i]->SetColor({ 1.0f, 0.8f, 0.2f, alpha });
@@ -410,6 +413,8 @@ void ActionEnemy::SpawnDropObject_() {
 			kDropThrowSpeedY_
 		};
 
+		drop.rotation = 0.0f;
+		drop.spinSpeed = 0.0f;
 		drop.lifeTimer = 0.0f;
 		drop.isActive = true;
 		return;
@@ -455,6 +460,9 @@ void ActionEnemy::SpawnTypeCBullet_() {
 			toTarget.y * kTypeCBulletSpeed_
 		};
 
+		drop.rotation = std::atan2(drop.velocity.y, drop.velocity.x);
+		const float spinDirection = (drop.velocity.x >= 0.0f) ? 1.0f : -1.0f;
+		drop.spinSpeed = kTypeCBulletSpinSpeed_ * spinDirection;
 		drop.lifeTimer = 0.0f;
 		drop.isActive = true;
 		return;
@@ -506,8 +514,12 @@ void ActionEnemy::UpdateDropObjects_() {
 				toTarget.y /= length;
 				drop.velocity.x = toTarget.x * kTypeCBulletSpeed_;
 				drop.velocity.y = toTarget.y * kTypeCBulletSpeed_;
+				drop.rotation = std::atan2(drop.velocity.y, drop.velocity.x);
+				const float spinDirection = (drop.velocity.x >= 0.0f) ? 1.0f : -1.0f;
+				drop.spinSpeed = kTypeCBulletSpinSpeed_ * spinDirection;
 			}
 		}
+		drop.rotation += drop.spinSpeed;
 
 		if (drop.position.y > kDropBottomY_) {
 			StartDropVanish_(drop);
