@@ -9,6 +9,7 @@
 #include "VignettingEffect.h"
 #include "FogEffect.h"
 #include "AuraEffect.h"
+#include "MotionBlurEffect.h"
 #include "WaterRippleEffect.h"
 #include "FogVolume3D.h"
 #include "SmokeVolume3D.h"
@@ -92,14 +93,11 @@ namespace TKM {
 		std::unique_ptr<TKM::FogEffect> fog_ = nullptr; // 画面霧
 		std::unique_ptr<TKM::AuraEffect> aura_ = nullptr; // オーラ
 		std::unique_ptr<TKM::WaterRippleEffect> waterRipple_ = nullptr; // 水面波紋
+		std::unique_ptr<TKM::MotionBlurEffect> motionBlur_ = nullptr; // モーションブラー
 		//==============================
 		// Volume Effect（3D / World Space）
 		//==============================
 		std::unique_ptr<TKM::FogVolume3D> fogVolume3D_ = nullptr; // 立体霧
 		std::unique_ptr<TKM::SmokeVolume3D> smokeVolume3D_ = nullptr; // 立体煙
-		// ==============================
-		// ImGui 用表示切替
-		// ==============================
-		bool showSmoke_ = true; // ImGui用：煙ボリュームの表示ON/OFF
 	};
 }

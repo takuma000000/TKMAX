@@ -127,6 +127,19 @@ namespace TKM {
 
 		// DirectX共通情報を渡して初期化する
 		smokeVolume3D_->Initialize(dxCommon_);
+
+		//=========================================================
+		// MotionBlurEffect 初期化
+		//=========================================================
+
+		// モーションブラーエフェクトを生成する
+		motionBlur_ = std::make_unique<TKM::MotionBlurEffect>();
+
+		// DirectX共通情報を渡して初期化する
+		motionBlur_->Initialize(dxCommon_);
+
+		// DirectXCommon側へモーションブラーを登録する
+		dxCommon_->SetMotionBlurEffect(motionBlur_.get());
 	}
 
 	void PostEffectController::Finalize() {
@@ -146,6 +159,9 @@ namespace TKM {
 
 			// 水面波紋参照を解除する
 			dxCommon_->SetWaterRippleEffect(nullptr);
+
+			// モーションブラー参照を解除する
+			dxCommon_->SetMotionBlurEffect(nullptr);
 		}
 	}
 
@@ -171,6 +187,9 @@ namespace TKM {
 
 		// 空間スモークを更新する
 		smokeVolume3D_->Update(dt);
+
+		// モーションブラーを更新する
+		motionBlur_->Update(dt);
 	}
 
 	void PostEffectController::OnCameraUpdated(TKM::Camera* activeCamera) {
@@ -247,15 +266,10 @@ namespace TKM {
 #ifdef USE_IMGUI
 		// ポストエフェクト用ImGuiウィンドウを開く
 		if (ImGui::Begin("ポストエフェクト")) {
-			// 煙ボリュームの表示切り替え
-			ImGui::Checkbox("煙ボリュームを表示", &showSmoke_);
-
-			// 表示ONならSmokeVolume3D側のデバッグUIも表示する
-			if (showSmoke_) {
-				if (smokeVolume3D_) {
-					smokeVolume3D_->ImGuiDebug();
-				}
-			}
+			// 放射ブラーのImGuiデバッグ表示
+			smokeVolume3D_->ImGuiDebug();
+			// モーションブラーのImGuiデバッグ表示
+			motionBlur_->ImGuiDebug();
 		}
 
 		// ImGuiウィンドウを閉じる

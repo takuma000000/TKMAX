@@ -220,6 +220,7 @@
     <ClCompile Include="application\actor\player\shot\PlayerShotConfig.cpp" />
     <ClCompile Include="application\actor\enemy\EnemyFactory.cpp" />
     <ClCompile Include="application\actor\barrier\BarrierConfig.cpp" />
+    <ClCompile Include="engine\effect\post\MotionBlurEffect.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -481,6 +482,7 @@
     <ClInclude Include="application\actor\player\shot\PlayerShotConfig.h" />
     <ClInclude Include="application\actor\enemy\EnemyFactory.h" />
     <ClInclude Include="application\actor\barrier\BarrierConfig.h" />
+    <ClInclude Include="engine\effect\post\MotionBlurEffect.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
@@ -584,6 +586,7 @@
     <FxCompile Include="resources\shaders\TrailRibbon.PS.hlsl" />
     <FxCompile Include="resources\shaders\Noise.PS.hlsl" />
     <FxCompile Include="resources\shaders\Barrier.PS.hlsl" />
+    <FxCompile Include="resources\shaders\MotionBlur.PS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="TKMAX.rc" />

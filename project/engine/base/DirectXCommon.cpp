@@ -16,6 +16,7 @@
 #include "FogEffect.h"
 #include "AuraEffect.h"
 #include "NoiseEffect.h"
+#include "MotionBlurEffect.h"
 
 #define ALIGN256(size) ((size + 255) & ~255)
 
@@ -182,6 +183,25 @@ namespace TKM {
 		srvManager_->CreateSRVforTexture2D(
 			postEffectSrvIndex_,
 			postEffectTextureResource_.Get(),
+			DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
+			1);
+
+		// 3枚目：前フレーム保存用 PreviousFrameTexture
+		previousFrameTextureResource_ =
+			CreateRenderTextureResource(
+				device_,
+				WindowsAPI::GetClientWidth(),
+				WindowsAPI::GetClientHeight(),
+				DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
+				kRenderTargetClearValue);
+
+		previousFrameTextureResource_->SetName(L"PreviousFrameTexture");
+
+		// PreviousFrameTexture 用 SRV
+		previousFrameSrvIndex_ = srvManager_->Allocate();
+		srvManager_->CreateSRVforTexture2D(
+			previousFrameSrvIndex_,
+			previousFrameTextureResource_.Get(),
 			DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
 			1);
 	}
@@ -1459,6 +1479,113 @@ namespace TKM {
 		laserBeamInitialized_ = true;
 	}
 
+	void DirectXCommon::InitializeMotionBlurPipeline() {
+		if (motionBlurInitialized_) { return; }
+
+		Microsoft::WRL::ComPtr<IDxcBlob> vsBlob =
+			CompileShader(L"resources/shaders/CopyImage.VS.hlsl", L"vs_6_0");
+
+		Microsoft::WRL::ComPtr<IDxcBlob> psBlob =
+			CompileShader(L"resources/shaders/MotionBlur.PS.hlsl", L"ps_6_0");
+
+		// t0 : 今フレーム
+		CD3DX12_DESCRIPTOR_RANGE currentRange{};
+		currentRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+
+		// t1 : 前フレーム
+		CD3DX12_DESCRIPTOR_RANGE previousRange{};
+		previousRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
+
+		CD3DX12_ROOT_PARAMETER rootParams[3]{};
+		rootParams[0].InitAsDescriptorTable(1, &currentRange, D3D12_SHADER_VISIBILITY_PIXEL);
+		rootParams[1].InitAsDescriptorTable(1, &previousRange, D3D12_SHADER_VISIBILITY_PIXEL);
+		rootParams[2].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_PIXEL);
+
+		D3D12_STATIC_SAMPLER_DESC sampler{};
+		sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+		sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+		sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+		sampler.MaxLOD = D3D12_FLOAT32_MAX;
+		sampler.MinLOD = 0.0f;
+		sampler.MipLODBias = 0.0f;
+		sampler.MaxAnisotropy = 1;
+		sampler.ShaderRegister = 0;
+		sampler.RegisterSpace = 0;
+		sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+		CD3DX12_ROOT_SIGNATURE_DESC rsDesc{};
+		rsDesc.Init(
+			3,
+			rootParams,
+			1,
+			&sampler,
+			D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
+		);
+
+		Microsoft::WRL::ComPtr<ID3DBlob> rsBlob;
+		Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
+
+		HRESULT hr = D3D12SerializeRootSignature(
+			&rsDesc,
+			D3D_ROOT_SIGNATURE_VERSION_1,
+			&rsBlob,
+			&errorBlob
+		);
+		assert(SUCCEEDED(hr));
+
+		hr = device_->CreateRootSignature(
+			0,
+			rsBlob->GetBufferPointer(),
+			rsBlob->GetBufferSize(),
+			IID_PPV_ARGS(&motionBlurRootSignature_)
+		);
+		assert(SUCCEEDED(hr));
+
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
+		psoDesc.pRootSignature = motionBlurRootSignature_.Get();
+		psoDesc.VS = { vsBlob->GetBufferPointer(), vsBlob->GetBufferSize() };
+		psoDesc.PS = { psBlob->GetBufferPointer(), psBlob->GetBufferSize() };
+
+		psoDesc.InputLayout = { nullptr, 0 };
+		psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+		psoDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
+
+		psoDesc.NumRenderTargets = 1;
+		psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+		psoDesc.SampleDesc.Count = 1;
+
+		psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+		psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+
+		D3D12_DEPTH_STENCIL_DESC dsDesc{};
+		dsDesc.DepthEnable = FALSE;
+		dsDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+		dsDesc.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+		dsDesc.StencilEnable = FALSE;
+
+		psoDesc.DepthStencilState = dsDesc;
+		psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
+		hr = device_->CreateGraphicsPipelineState(
+			&psoDesc,
+			IID_PPV_ARGS(&motionBlurPipelineState_)
+		);
+		assert(SUCCEEDED(hr));
+
+		motionBlurConstantBuffer_ = CreateBufferResource(sizeof(MotionBlurCB));
+		motionBlurConstantBuffer_->Map(0, nullptr, &motionBlurMappedData_);
+
+		auto* cb = reinterpret_cast<MotionBlurCB*>(motionBlurMappedData_);
+		cb->strength = 0.12f;
+		cb->padding[0] = 0.0f;
+		cb->padding[1] = 0.0f;
+		cb->padding[2] = 0.0f;
+
+		motionBlurInitialized_ = true;
+	}
+
 	void DirectXCommon::ApplyWaterRipple(
 		ID3D12Resource* inputTex,
 		uint32_t        inputSrvIndex,
@@ -1747,6 +1874,118 @@ namespace TKM {
 		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 		commandList_->ResourceBarrier(1, &barrier);
+	}
+
+	void DirectXCommon::ApplyMotionBlur(
+		ID3D12Resource* inputTex,
+		uint32_t        inputSrvIndex,
+		ID3D12Resource* outputTex,
+		D3D12_CPU_DESCRIPTOR_HANDLE outputRtv) {
+
+		if (!motionBlurInitialized_ || !inputTex || !outputTex || !previousFrameTextureResource_) {
+			return;
+		}
+
+		// まだ前フレームが無い初回は、何もせずコピーだけ後で行う
+		if (!previousFrameReady_) {
+			return;
+		}
+
+		D3D12_RESOURCE_BARRIER barriers[2]{};
+
+		// 今フレーム RT → PS
+		barriers[0].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barriers[0].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barriers[0].Transition.pResource = inputTex;
+		barriers[0].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+		barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+
+		// 前フレーム RT → PS
+		barriers[1].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barriers[1].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barriers[1].Transition.pResource = previousFrameTextureResource_.Get();
+		barriers[1].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+		barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+
+		commandList_->ResourceBarrier(2, barriers);
+
+		commandList_->OMSetRenderTargets(1, &outputRtv, false, nullptr);
+
+		commandList_->SetGraphicsRootSignature(motionBlurRootSignature_.Get());
+		commandList_->SetPipelineState(motionBlurPipelineState_.Get());
+		commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+		if (srvManager_) {
+			ID3D12DescriptorHeap* heaps[] = { srvManager_->GetSrvDescriptorHeap().Get() };
+			commandList_->SetDescriptorHeaps(1, heaps);
+
+			// RootParameter0 : t0 今フレーム
+			srvManager_->SetGraphicsRootDescriptorTable(0, inputSrvIndex);
+
+			// RootParameter1 : t1 前フレーム
+			srvManager_->SetGraphicsRootDescriptorTable(1, previousFrameSrvIndex_);
+		}
+
+		if (motionBlurConstantBuffer_) {
+			commandList_->SetGraphicsRootConstantBufferView(
+				2,
+				motionBlurConstantBuffer_->GetGPUVirtualAddress()
+			);
+		}
+
+		commandList_->DrawInstanced(3, 1, 0, 0);
+
+		// 今フレーム PS → RT
+		barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+		barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+
+		// 前フレーム PS → RT
+		barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+		barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+
+		commandList_->ResourceBarrier(2, barriers);
+	}
+
+	void DirectXCommon::CopyCurrentFrameToPreviousFrame(ID3D12Resource* inputTex) {
+		if (!inputTex || !previousFrameTextureResource_) {
+			return;
+		}
+
+		D3D12_RESOURCE_BARRIER barriers[2]{};
+
+		// コピー元 RT → COPY_SOURCE
+		barriers[0].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barriers[0].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barriers[0].Transition.pResource = inputTex;
+		barriers[0].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+		barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_SOURCE;
+
+		// コピー先 RT → COPY_DEST
+		barriers[1].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barriers[1].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barriers[1].Transition.pResource = previousFrameTextureResource_.Get();
+		barriers[1].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+		barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
+
+		commandList_->ResourceBarrier(2, barriers);
+
+		commandList_->CopyResource(previousFrameTextureResource_.Get(), inputTex);
+
+		// コピー元 COPY_SOURCE → RT
+		barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_SOURCE;
+		barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+
+		// コピー先 COPY_DEST → RT
+		barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+		barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+
+		commandList_->ResourceBarrier(2, barriers);
+
+		previousFrameReady_ = true;
 	}
 
 	void DirectXCommon::DrawAuraVolume(
@@ -2072,8 +2311,17 @@ namespace TKM {
 			std::swap(srcSrv, dstSrv);
 		}
 
+		// 7. MotionBlur
+		if (motionBlurEffect_ && motionBlurEffect_->IsActive()) {
+			ApplyMotionBlur(srcTex, srcSrv, dstTex, getRtvFor(dstTex));
+			std::swap(srcTex, dstTex);
+			std::swap(srcSrv, dstSrv);
+		}
+
 		// 最後は srcTex を Swapchain へ
 		DrawTextureToSwapchain(srcTex, srcSrv);
+		// 今フレームの最終結果を次フレーム用に保存
+		CopyCurrentFrameToPreviousFrame(srcTex);
 	}
 
 
@@ -2572,6 +2820,16 @@ namespace TKM {
 		cb->RGBShift = rgbShift;
 		cb->Flash = flash;
 		cb->Resolution = resolution;
+	}
+
+	void DirectXCommon::SetMotionBlurParam(float strength) {
+		if (!motionBlurMappedData_) { return; }
+
+		auto* cb = reinterpret_cast<MotionBlurCB*>(motionBlurMappedData_);
+		cb->strength = strength;
+		cb->padding[0] = 0.0f;
+		cb->padding[1] = 0.0f;
+		cb->padding[2] = 0.0f;
 	}
 
 	void DirectXCommon::InitializeFixFPS() {

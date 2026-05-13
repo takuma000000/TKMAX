@@ -238,6 +238,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\ui\SkipGuideUI.cpp" />
     <ClCompile Include="application\actor\player\shot\PlayerShotManager.cpp" />
     <ClCompile Include="application\actor\player\shot\PlayerShotConfig.cpp" />
+    <ClCompile Include="engine\effect\post\MotionBlurEffect.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\actor\enemy\manager\EnemyManager.h" />
@@ -356,6 +357,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\effect\post\NoiseEffect.h" />
     <ClInclude Include="application\actor\player\shot\PlayerShotManager.h" />
     <ClInclude Include="application\actor\player\shot\PlayerShotConfig.h" />
+    <ClInclude Include="engine\effect\post\MotionBlurEffect.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="application\scene\controller\TitleMenuController.h" />
     <ClInclude Include="application\catalog\TextureCatalog.h" />
@@ -375,6 +377,12 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="resources\shaders\MotionBlur.PS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="resources\shaders\Barrier.PS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>

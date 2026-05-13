@@ -8,7 +8,7 @@
 #include <chrono>
 #include "WindowsAPI.h"
 #include "SrvManager.h"
-#include "DirectXTex.h"//DirectX
+#include "DirectXTex.h"
 #include "MyMath.h"
 #include "SystemIncludes.h"
 
@@ -20,6 +20,7 @@ namespace TKM {
 	class FogEffect;
 	class AuraEffect;
 	class NoiseEffect;
+	class MotionBlurEffect;
 }
 
 //=============================================================
@@ -167,7 +168,7 @@ namespace TKM {
 			float RiseSpeed;
 			float _padX[3];
 		};
-		
+
 		// BeamCB構造体（レーザービーム用）
 		struct LaserBeamCB {
 			Matrix4x4 ViewProj;
@@ -213,6 +214,11 @@ namespace TKM {
 			Vector2 Resolution;
 			float   _pad0;
 			float   _pad1;
+		};
+		// MotionBlurCB構造体
+		struct MotionBlurCB {
+			float strength;   // モーションブラーの強さ
+			float padding[3]; // 16バイトアライメントのためのパディング
 		};
 
 		// -------------------- 初期化 --------------------
@@ -424,6 +430,10 @@ namespace TKM {
 		/// </summary>
 		void InitializeLaserBeamPipeline();
 		/// <summary>
+		/// Noise パイプラインの初期化
+		/// </summary>
+		void InitializeMotionBlurPipeline();
+		/// <summary>
 		/// ポストエフェクトチェーン用：Aura適用
 		/// </summary>
 		/// <param name="inputTex"></param>
@@ -435,6 +445,24 @@ namespace TKM {
 			uint32_t        inputSrvIndex,
 			ID3D12Resource* outputTex,
 			D3D12_CPU_DESCRIPTOR_HANDLE outputRtv);
+		/// <summary>
+		/// ポストエフェクトチェーン用：MotionBlur適用
+		/// </summary>
+		/// <param name="inputTex"></param>
+		/// <param name="inputSrvIndex"></param>
+		/// <param name="outputTex"></param>
+		/// <param name="outputRtv"></param>
+		void ApplyMotionBlur(
+			ID3D12Resource* inputTex,
+			uint32_t        inputSrvIndex,
+			ID3D12Resource* outputTex,
+			D3D12_CPU_DESCRIPTOR_HANDLE outputRtv
+		);
+		/// <summary>
+		/// 前フレームのテクスチャに、現在のフレームの内容をコピーする関数
+		/// </summary>
+		/// <param name="inputTex"></param>
+		void CopyCurrentFrameToPreviousFrame(ID3D12Resource* inputTex);
 		/// <summary>
 		/// オーラボリュームの描画
 		/// </summary>
@@ -817,6 +845,16 @@ namespace TKM {
 			float rgbShift,
 			float flash,
 			const Vector2& resolution);
+		/// <summary>
+		/// MotionBlurEffect をセット（必要なら）
+		/// </summary>
+		/// <param name="strength"></param>
+		void SetMotionBlurParam(float strength);
+		/// <summary>
+		/// MotionBlurEffect をセット（必要なら）
+		/// </summary>
+		/// <param name="effect"></param>
+		void SetMotionBlurEffect(TKM::MotionBlurEffect* effect) { motionBlurEffect_ = effect; }
 		// ========================================================================
 	private:
 		//======================================================================
@@ -963,6 +1001,17 @@ namespace TKM {
 		TKM::NoiseEffect* noiseEffect_ = nullptr;
 		Microsoft::WRL::ComPtr<ID3D12Resource> noiseConstantBuffer_;
 		void* noiseMappedData_ = nullptr;
+
+		// MotionBlur 用 PSO
+		TKM::MotionBlurEffect* motionBlurEffect_ = nullptr;
+		Microsoft::WRL::ComPtr<ID3D12Resource> previousFrameTextureResource_ = nullptr;
+		uint32_t previousFrameSrvIndex_ = 0;
+		Microsoft::WRL::ComPtr<ID3D12RootSignature> motionBlurRootSignature_ = nullptr;
+		Microsoft::WRL::ComPtr<ID3D12PipelineState> motionBlurPipelineState_ = nullptr;
+		Microsoft::WRL::ComPtr<ID3D12Resource> motionBlurConstantBuffer_ = nullptr;
+		void* motionBlurMappedData_ = nullptr;
+		bool motionBlurInitialized_ = false;
+		bool previousFrameReady_ = false;
 
 		// LaserBeamVolume 用 PSO
 		bool laserBeamInitialized_ = false;
