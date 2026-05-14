@@ -228,4 +228,13 @@ namespace TKM {
 			phase_ == Phase::BossPanic ||
 			phase_ == Phase::BossEscape;
 	}
+
+	bool IntroSequence::IsBossIntroPlaying() const {
+		return phase_ == Phase::BossPreSpawn ||
+			phase_ == Phase::BossAppear ||
+			phase_ == Phase::BossPause ||
+			phase_ == Phase::BossNoticeHop ||
+			phase_ == Phase::BossPanic ||
+			phase_ == Phase::BossEscape;
+	}
 } // namespace TKM

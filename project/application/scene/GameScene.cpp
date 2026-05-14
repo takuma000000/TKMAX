@@ -455,6 +455,12 @@ void GameScene::UpdateGameplaySystems(float rawDeltaTime, float scaledDeltaTime)
 	player_->SetControlEnabled(!locked && !player_->IsDead());
 	player_->SetShootingEnabled(!locked && !player_->IsDead());
 
+	/// ──────────────── ゲーム開始演出中はレティクル非表示 ───────────────
+	const bool isGameplayLocked =
+		(flow_ && flow_->IsGameplayLocked());
+	// ゲーム開始演出が終わるまではレティクルを表示しない
+	player_->SetReticleVisible(!isGameplayLocked);
+
 	/// ──────────────── ボス登場演出更新 ───────────────
 	if (bossEntranceSeq_ && bossEntranceSeq_->IsActive()) {
 		bossEntranceSeq_->Update(rawDeltaTime, bossManager_.get());

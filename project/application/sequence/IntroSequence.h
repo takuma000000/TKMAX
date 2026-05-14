@@ -81,6 +81,11 @@ namespace TKM {
 		/// </summary>
 		/// <returns>空が赤くなっているフェーズの場合 true、それ以外は false</returns>
 		bool IsBossSkyRedPhase() const;
+		/// <summary>
+		/// ボス開幕ムービー中かどうかを取得します。
+		/// </summary>
+		/// <returns>ボス開幕ムービー中の場合 true</returns>
+		bool IsBossIntroPlaying() const;
 
 		// Getter=====================================
 		/// <summary>
@@ -109,7 +114,6 @@ namespace TKM {
 		/// <returns></returns>
 		const StateMachine& GetStateMachine() const { return flowSM_; }
 		// ===========================================
-
 		// Setter=====================================
 		/// <summary>
 		/// PostEffectControllerのポインタをセットします。
