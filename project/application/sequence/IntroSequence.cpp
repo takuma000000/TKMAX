@@ -74,33 +74,6 @@ namespace TKM {
 		flowSM_.Update(kFixedDt_);
 
 		//=========================================================
-		// スキップ入力処理
-		//=========================================================
-		if (CanSkipBossIntro()) {
-
-			const bool isSkipPressed =
-				Input::GetInstance()->PushKey(DIK_SPACE) ||
-				Input::GetInstance()->PushButton(XINPUT_GAMEPAD_A);
-
-			// 押し続けている間カウント
-			if (isSkipPressed) {
-				skipHoldTimer_ += kFixedDt_;
-
-				// 一定時間押したらスキップ発動
-				if (skipHoldTimer_ >= kSkipHoldSec_) {
-					SkipBossIntroToShowStart();
-					skipHoldTimer_ = 0.0f;
-				}
-			} else {
-				// 離したらリセット
-				skipHoldTimer_ = 0.0f;
-			}
-		} else {
-			// スキップ不可フェーズならリセット
-			skipHoldTimer_ = 0.0f;
-		}
-
-		//=========================================================
 		// ボスカメラへブレンド（遷移中）
 		//=========================================================
 		if (camBlendToBossActive_) {

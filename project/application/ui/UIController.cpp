@@ -77,6 +77,15 @@ namespace TKM {
 		playerHudUI_->UpdateLayout(screenW_, screenH_);
 	}
 
+	bool UIController::IsIntroSkipCompleted() const {
+		// イントロスキップUIが存在しない場合はスキップ成立とみなさない
+		if (!skipGuideUI_) {
+			return false;
+		}
+
+		return skipGuideUI_->IsSkipCompleted(); // イントロスキップUIのスキップ成立フラグを返す
+	}
+
 	void UIController::Update(float dt) {
 		// イントロ中はスキップガイドだけを有効状態で更新する
 		if (introSkipUiActive_) {

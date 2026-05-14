@@ -513,6 +513,14 @@ void GameScene::UpdateGameplaySystems(float rawDeltaTime, float scaledDeltaTime)
 	/// ──────────────── UI更新 ───────────────
 	ui_->Update(scaledDeltaTime);
 
+	// スキップゲージが最大まで溜まったら開幕演出をスキップする
+	if (ui_->IsIntroSkipCompleted()) {
+		// 開幕演出スキップのフラグを立てる
+		if (flow_ && flow_->GetIntro()) {
+			flow_->GetIntro()->SkipBossIntroToShowStart(); // 開幕演出スキップの要求をFlowに伝える
+		}
+	}
+
 	/// ──────────────── ボスマネージャ更新 ───────────────
 	if (!bossEntranceActive || bossEntranceSpawned) {
 		// ボス登場演出中でも、生成後はボス側の更新を許可する

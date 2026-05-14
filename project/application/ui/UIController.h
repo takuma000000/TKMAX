@@ -45,6 +45,10 @@ namespace TKM {
 		/// 画面サイズ変更時に再レイアウトします。
 		/// </summary>
 		void UpdateLayout(float screenW, float screenH);
+		/// <summary>
+		/// イントロスキップが成立したかを取得します。
+		/// </summary>
+		bool IsIntroSkipCompleted() const;
 
 		// Setter========================================
 		/// <summary>

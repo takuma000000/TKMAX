@@ -38,6 +38,17 @@ namespace TKM {
 
 		// 初期位置を反映する
 		sprite_->SetPosition(basePos_);
+
+		// ゲージ用スプライトを生成する
+		gaugeSprite_ = std::make_unique<Sprite>();
+		gaugeSprite_->Initialize(spriteCommon, dxCommon, "./resources/texture/skip_gauge.png");
+
+		// 左から伸ばすため、アンカーポイントを左中央にする
+		gaugeSprite_->SetAnchorPoint({ 0.0f, 0.5f });
+
+		// 初期状態では横幅0で非表示にする
+		gaugeSprite_->SetSize({ 0.0f, gaugeMaxSize_.y });
+		gaugeSprite_->SetColor(gaugeColor_);
 	}
 
 	void SkipGuideUI::Update(float dt, bool canSkip) {
@@ -46,27 +57,40 @@ namespace TKM {
 			return;
 		}
 
+		// ImGuiなどでオフセットが変わっても追従できるように、毎フレーム右下基準位置を再計算する
+		basePos_ = {
+			screenW_ + offset_.x,
+			screenH_ + offset_.y
+		};
+
 		// スキップ不可の間は、見た目とホールド時間を通常状態へ戻す
 		if (!canSkip) {
 			holdTimer_ = 0.0f;
+			skipCompleted_ = false;
 
-			// 通常スケールへ戻す
+			// skip.png本体は色もサイズも変えない
 			sprite_->SetSize({
 				baseSize_.x * normalScale_,
 				baseSize_.y * normalScale_
 				});
 
-			// 通常色へ戻す
 			sprite_->SetColor(normalColor_);
-
-			// 右下基準位置を再計算して反映する
-			basePos_ = {
-				screenW_ + offset_.x,
-				screenH_ + offset_.y
-			};
-
 			sprite_->SetPosition(basePos_);
 			sprite_->Update();
+
+			// ゲージは横幅0で非表示にする
+			if (gaugeSprite_) {
+				const Vector2 gaugePos = {
+					basePos_.x + gaugeOffset_.x,
+					basePos_.y + gaugeOffset_.y
+				};
+
+				gaugeSprite_->SetPosition(gaugePos);
+				gaugeSprite_->SetSize({ 0.0f, gaugeMaxSize_.y });
+				gaugeSprite_->SetColor(gaugeColor_);
+				gaugeSprite_->Update();
+			}
+
 			return;
 		}
 
@@ -91,32 +115,35 @@ namespace TKM {
 		// ホールド進行率を0.0f～1.0fで扱う
 		const float t = holdTimer_ / kHoldTime_;
 
-		// ホールド進行率に応じて、通常スケールから押下スケールへ補間する
-		const float scale = normalScale_ + (pressScale_ - normalScale_) * t;
+		// ゲージが最大まで溜まったらスキップ成立
+		skipCompleted_ = t >= 1.0f;
+
+		// skip.png本体は色もサイズも変えない
 		sprite_->SetSize({
-			baseSize_.x * scale,
-			baseSize_.y * scale
+			baseSize_.x * normalScale_,
+			baseSize_.y * normalScale_
 			});
 
-		// ホールド進行率に応じて、通常色から押下色へ補間する
-		Vector4 col = {
-			normalColor_.x + (pressColor_.x - normalColor_.x) * t,
-			normalColor_.y + (pressColor_.y - normalColor_.y) * t,
-			normalColor_.z + (pressColor_.z - normalColor_.z) * t,
-			normalColor_.w + (pressColor_.w - normalColor_.w) * t
-		};
-
-		sprite_->SetColor(col);
-
-		// ImGuiなどでオフセットが変わっても追従できるように、毎フレーム右下基準位置を再計算する
-		basePos_ = {
-			screenW_ + offset_.x,
-			screenH_ + offset_.y
-		};
-
-		// 位置と内部状態を更新する
+		sprite_->SetColor(normalColor_);
 		sprite_->SetPosition(basePos_);
 		sprite_->Update();
+
+		// ゲージの左端位置を計算する
+		if (gaugeSprite_) {
+			const Vector2 gaugePos = {
+				basePos_.x + gaugeOffset_.x,
+				basePos_.y + gaugeOffset_.y
+			};
+
+			// ゲージを左から伸ばす
+			gaugeSprite_->SetPosition(gaugePos);
+			gaugeSprite_->SetSize({
+				gaugeMaxSize_.x * t,
+				gaugeMaxSize_.y
+				});
+			gaugeSprite_->SetColor(gaugeColor_);
+			gaugeSprite_->Update();
+		}
 	}
 
 	void SkipGuideUI::Draw(float alpha) {
@@ -125,16 +152,27 @@ namespace TKM {
 			return;
 		}
 
-		// 現在色を取得し、HUD全体アルファを一時的に掛ける
+		// ゲージを先に描画する
+		if (gaugeSprite_) {
+			Vector4 gaugeCol = gaugeSprite_->GetColor();
+			const float originalGaugeAlpha = gaugeCol.w;
+
+			gaugeCol.w = originalGaugeAlpha * alpha;
+			gaugeSprite_->SetColor(gaugeCol);
+			gaugeSprite_->Draw();
+
+			gaugeCol.w = originalGaugeAlpha;
+			gaugeSprite_->SetColor(gaugeCol);
+		}
+
+		// skip.png本体を前面に描画する
 		Vector4 col = sprite_->GetColor();
 		const float originalAlpha = col.w;
-		col.w = originalAlpha * alpha;
 
-		// アルファ適用後の色で描画する
+		col.w = originalAlpha * alpha;
 		sprite_->SetColor(col);
 		sprite_->Draw();
 
-		// 描画後は元のアルファへ戻して、次フレーム以降へ影響を残さない
 		col.w = originalAlpha;
 		sprite_->SetColor(col);
 	}
@@ -155,12 +193,16 @@ namespace TKM {
 
 		// 通常時と押下時の色を調整する
 		ImGui::ColorEdit4("通常色", &normalColor_.x);
-		ImGui::ColorEdit4("押下色", &pressColor_.x);
 
 		// 現在のホールド進行状況を確認する
 		ImGui::Text("HoldTimer: %.2f / %.2f", holdTimer_, kHoldTime_);
 
 		ImGui::TreePop();
+
+		ImGui::DragFloat2("ゲージ左端オフセット", &gaugeOffset_.x, 1.0f, -500.0f, 500.0f);
+		ImGui::DragFloat2("ゲージ最大サイズ", &gaugeMaxSize_.x, 1.0f, 0.0f, 500.0f);
+		ImGui::ColorEdit4("ゲージ色", &gaugeColor_.x);
+		ImGui::Text("SkipCompleted: %s", skipCompleted_ ? "true" : "false");
 #endif
 	}
 

@@ -37,6 +37,7 @@ void TextureCatalog::LoadTextureCatalogs() {
 		"gray.jpg",
 		"gauge_green.jpg",
 		"player_hp.jpg",
+		"skip_gauge.png",
 		"player_hp_frame.jpg",
 		"player_hp.png",
 		"start_title.png",

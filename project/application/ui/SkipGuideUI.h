@@ -45,12 +45,18 @@ namespace TKM {
 		/// </summary>
 		void DrawImGui();
 
+		/// <summary>
+		/// スキップゲージが最大まで溜まったかを取得します。
+		/// </summary>
+		bool IsSkipCompleted() const { return skipCompleted_; }
+
 	private:
 		//=============================================================
 		// スプライト
 		//=============================================================
 
 		std::unique_ptr<Sprite> sprite_ = nullptr; // UIスプライト
+		std::unique_ptr<Sprite> gaugeSprite_ = nullptr; // スキップゲージ用スプライト
 
 		//=============================================================
 		// 配置
@@ -66,23 +72,30 @@ namespace TKM {
 
 		float holdTimer_ = 0.0f;               // 長押し時間
 		static constexpr float kHoldTime_ = 2.0f; // 必要長押し時間
+		bool skipCompleted_ = false; // スキップ成立フラグ
 
 		//=============================================================
 		// 見た目
 		//=============================================================
 
-		float normalScale_ = 0.90f;            // 通常時スケール
-		float pressScale_ = 1.10f;             // 押下時スケール
+		float normalScale_ = 0.30f;            // 通常時スケール
+		float pressScale_ = 0.33f;             // 押下時スケール
 
-		Vector4 normalColor_{ 1.0f, 1.0f, 1.0f, 0.60f }; // 通常色
-		Vector4 pressColor_{ 1.0f, 1.0f, 0.0f, 1.00f };  // 押下時色
-
+		Vector4 normalColor_{ 1.0f, 1.0f, 1.0f, 1.0f }; // 通常色
 		//=============================================================
 		// 画面サイズ
 		//=============================================================
 
 		float screenW_ = 0.0f;                 // 画面幅
 		float screenH_ = 0.0f;                 // 画面高さ
+
+		//=============================================================
+		// ゲージ
+		//=============================================================
+
+		Vector2 gaugeOffset_{ -130.0f, -0.8f };      // skip.png中心から見たゲージ左端位置
+		Vector2 gaugeMaxSize_{ 270.0f, 50.0f };      // ゲージ最大サイズ
+		Vector4 gaugeColor_{ 1.0f, 1.0f, 1.0f, 1.0f }; // ゲージ色
 	};
 
 }
