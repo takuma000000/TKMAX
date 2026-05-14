@@ -104,6 +104,24 @@ void GameScene::Update() {
 	/// ──────────────── ゲーム進行フロー更新 ───────────────
 	UpdateFlow();
 
+	/// ──────────────── START表示が消えた瞬間にプレイヤー前進演出を開始 ────────────────
+	// 前フレームのSTART表示状態と現在の状態を比較して、START表示が消えた瞬間を検出する
+	const bool startVisibleNow =
+		flow_ &&
+		flow_->GetIntro() &&
+		flow_->GetIntro()->IsStartVisible();
+	// START表示が消えた瞬間にプレイヤーの前進演出を開始する
+	if (!playerIntroMoveStarted_ &&
+		wasStartVisibleLastFrame_ &&
+		!startVisibleNow) {
+
+		// カメラがZ=-30なので、画面側はマイナスZ
+		player_->StartIntroForwardMove(-40.0f, 1.8f);
+		playerIntroMoveStarted_ = true; // このフラグが立ったら以降はこの処理を行わない
+	}
+	// フレーム更新の最後に現在のSTART表示状態を保存しておく
+	wasStartVisibleLastFrame_ = startVisibleNow;
+
 	/// ──────────────── 空の色変更 ───────────────
 	if (skybox_) {
 		const bool introBossRed =

@@ -189,6 +189,16 @@ public:
 	/// <param name="leftMotor">左モーター強度（0〜65535）</param>
 	/// <param name="rightMotor">右モーター強度（0〜65535）</param>
 	void StartRumble(float sec, WORD leftMotor, WORD rightMotor);
+	/// <summary>
+	/// ゲーム開始時の前進演出を開始します。
+	/// </summary>
+	/// <param name="startOffsetZ">現在位置からどれだけ手前に置くか</param>
+	/// <param name="durationSec">前進にかける時間</param>
+	void StartIntroForwardMove(float startOffsetZ, float durationSec);
+	/// <summary>
+	/// ゲーム開始時の前進演出中かどうか。
+	/// </summary>
+	bool IsIntroForwardMoving() const { return introForwardActive_; }
 
 	// Getter===================================
 	/// <summary>
@@ -593,4 +603,17 @@ private:
 	std::vector<HudObserver> hudObservers_; // HUD状態通知の登録先リスト
 	HudState lastHudState_{}; // 最後に通知したHUD状態
 	bool hasLastHudState_ = false; // 最後に通知したHUD状態が有効かどうか
+	//======================================================================
+	// ゲーム開始時の前進演出
+	//======================================================================
+	bool introForwardActive_ = false;              // 前進演出中か
+	float introForwardT_ = 0.0f;                   // 前進演出の経過時間
+	float introForwardDuration_ = 0.6f;            // 前進演出時間
+	Vector3 introForwardStartPos_ = { 0,0,0 };     // 開始位置
+	Vector3 introForwardTargetPos_ = { 0,0,0 };    // 到達位置
+
+	/// <summary>
+	/// ゲーム開始時の前進演出を更新します。
+	/// </summary>
+	void UpdateIntroForwardMove_(float dt);
 };

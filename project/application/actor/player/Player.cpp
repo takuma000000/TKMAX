@@ -234,11 +234,16 @@ void Player::Update(float dt) {
 		if (sameAttackLockT_ < 0.0f) { sameAttackLockT_ = 0.0f; }
 	}
 
+	//=========================================================
+	// ゲーム開始時の前進演出更新
+	//=========================================================
+	UpdateIntroForwardMove_(dt);
+
 	// レティクルがあれば更新する
 	if (reticle_) reticle_->Update(dt);
 
 	//=========================================================
-	// Wave1バリアヒット履歴更新
+	// バリアヒット履歴更新
 	//=========================================================
 	for (auto it = wave1BarrierHits_.begin(); it != wave1BarrierHits_.end();) {
 		// 各ヒット情報の経過時間を進める
@@ -256,7 +261,7 @@ void Player::Update(float dt) {
 	//=========================================================
 	// ゲームプレイ処理
 	//=========================================================
-	if (controlEnabled_ && !isDead_) {
+	if (controlEnabled_ && !isDead_ && !introForwardActive_) {
 		// 通常移動処理
 		HandleGamePadMove();
 
@@ -1253,6 +1258,61 @@ void Player::StartRumble(float sec, WORD leftMotor, WORD rightMotor) {
 
 	// 実際に振動を設定する
 	TKM::Input::GetInstance()->SetVibration(rumbleLeft_, rumbleRight_);
+}
+
+void Player::StartIntroForwardMove(float startOffsetZ, float durationSec) {
+	if (!object_) { return; }
+
+	// Z方向だけオフセットした位置を目標位置とする
+	introForwardTargetPos_ = object_->GetTranslate();
+	// 目標位置からさらにZ方向へオフセットした位置を開始位置とする
+	introForwardStartPos_ = introForwardTargetPos_;
+	introForwardStartPos_.z += startOffsetZ;
+
+	// 開始位置に移動させる
+	Vector3 pos = object_->GetTranslate();
+	pos.z = introForwardStartPos_.z; // XとYは今のまま、Zだけ開始位置にする
+	object_->SetTranslate(pos); // 開始位置に移動させる
+
+	introForwardDuration_ = durationSec; // 移動にかける時間
+
+	// 時間が0以下なら最低限の時間を設定する（0だと割り算で困るし、あまりに短いと見た目も良くない）
+	if (introForwardDuration_ <= 0.0f) {
+		introForwardDuration_ = 0.01f;
+	}
+
+	introForwardT_ = 0.0f; // 移動開始からの経過時間
+	introForwardActive_ = true; // 移動開始
+}
+
+void Player::UpdateIntroForwardMove_(float dt) {
+	if (!introForwardActive_) { return; }
+
+	// 経過時間を進める
+	introForwardT_ += dt;
+
+	// 補間率を0..1の範囲で計算する
+	float t = introForwardT_ / introForwardDuration_;
+	t = std::clamp(t, 0.0f, 1.0f);
+
+	float easedT = 1.0f - std::pow(1.0f - t, 3.0f); // イーズアウトキューブで緩やかに開始する補間率
+
+	Vector3 pos = object_->GetTranslate(); // 現在位置を取得
+
+	// XとYは今のまま、Zだけ補間する
+	pos.z = MyMath::Lerp(introForwardStartPos_.z, introForwardTargetPos_.z, easedT);
+
+	object_->SetTranslate(pos); // 位置を更新
+
+	// 終了判定
+	if (t >= 1.0f) {
+		// 念のため目標位置に揃える
+		pos = object_->GetTranslate();
+		pos.z = introForwardTargetPos_.z;
+		object_->SetTranslate(pos);
+
+		introForwardActive_ = false; // 移動終了
+	}
 }
 
 void Player::UpdateRumble(float dt) {
