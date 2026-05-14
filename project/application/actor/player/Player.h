@@ -611,7 +611,6 @@ private:
 	float introForwardDuration_ = 0.6f;            // 前進演出時間
 	Vector3 introForwardStartPos_ = { 0,0,0 };     // 開始位置
 	Vector3 introForwardTargetPos_ = { 0,0,0 };    // 到達位置
-
 	/// <summary>
 	/// ゲーム開始時の前進演出を更新します。
 	/// </summary>

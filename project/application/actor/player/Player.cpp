@@ -239,8 +239,10 @@ void Player::Update(float dt) {
 	//=========================================================
 	UpdateIntroForwardMove_(dt);
 
-	// レティクルがあれば更新する
-	if (reticle_) reticle_->Update(dt);
+	// 前進演出が終わるまではレティクルを完全に更新しない
+	if (reticle_ && !introForwardActive_) {
+		reticle_->Update(dt);
+	}
 
 	//=========================================================
 	// バリアヒット履歴更新
@@ -1283,6 +1285,7 @@ void Player::StartIntroForwardMove(float startOffsetZ, float durationSec) {
 
 	introForwardT_ = 0.0f; // 移動開始からの経過時間
 	introForwardActive_ = true; // 移動開始
+	reticle_->SetInputEnabled(false); // レティクルの入力を無効化しておく
 }
 
 void Player::UpdateIntroForwardMove_(float dt) {
@@ -1309,9 +1312,10 @@ void Player::UpdateIntroForwardMove_(float dt) {
 		// 念のため目標位置に揃える
 		pos = object_->GetTranslate();
 		pos.z = introForwardTargetPos_.z;
-		object_->SetTranslate(pos);
+		object_->SetTranslate(pos); // 位置を更新
 
 		introForwardActive_ = false; // 移動終了
+		reticle_->SetInputEnabled(true); // 前進終了後にレティクル入力を戻す
 	}
 }
 
