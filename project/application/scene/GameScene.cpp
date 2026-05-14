@@ -64,6 +64,7 @@ void GameScene::Initialize() {
 	/// ──────────────── ポストエフェクトの初期化 ───────────────
 	postFx_ = std::make_unique<TKM::PostEffectController>();
 	postFx_->Initialize(dxCommon_, player_.get(), bossManager_.get());
+	flow_->GetIntro()->SetPostEffectController(postFx_.get()); // イントロの演出にもポストエフェクトを渡す
 
 	/// ──────────────── ゲームフローの初期化 ───────────────
 	clearSeq_ = std::make_unique<TKM::ClearSequenceController>();

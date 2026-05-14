@@ -1882,34 +1882,22 @@ namespace TKM {
 		ID3D12Resource* outputTex,
 		D3D12_CPU_DESCRIPTOR_HANDLE outputRtv) {
 
-		if (!motionBlurInitialized_ || !inputTex || !outputTex || !previousFrameTextureResource_) {
+		if (!motionBlurInitialized_ ||
+			!inputTex ||
+			!outputTex ||
+			!previousFrameReady_) {
 			return;
 		}
 
-		// まだ前フレームが無い初回は、何もせずコピーだけ後で行う
-		if (!previousFrameReady_) {
-			return;
-		}
-
-		D3D12_RESOURCE_BARRIER barriers[2]{};
-
-		// 今フレーム RT → PS
-		barriers[0].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		barriers[0].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barriers[0].Transition.pResource = inputTex;
-		barriers[0].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-		barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-		barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-
-		// 前フレーム RT → PS
-		barriers[1].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		barriers[1].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barriers[1].Transition.pResource = previousFrameTextureResource_.Get();
-		barriers[1].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-		barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-		barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-
-		commandList_->ResourceBarrier(2, barriers);
+		// 今フレームだけ RT → PS にする
+		D3D12_RESOURCE_BARRIER barrier{};
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrier.Transition.pResource = inputTex;
+		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+		commandList_->ResourceBarrier(1, &barrier);
 
 		commandList_->OMSetRenderTargets(1, &outputRtv, false, nullptr);
 
@@ -1921,10 +1909,10 @@ namespace TKM {
 			ID3D12DescriptorHeap* heaps[] = { srvManager_->GetSrvDescriptorHeap().Get() };
 			commandList_->SetDescriptorHeaps(1, heaps);
 
-			// RootParameter0 : t0 今フレーム
+			// t0 : 今フレーム
 			srvManager_->SetGraphicsRootDescriptorTable(0, inputSrvIndex);
 
-			// RootParameter1 : t1 前フレーム
+			// t1 : 前フレーム
 			srvManager_->SetGraphicsRootDescriptorTable(1, previousFrameSrvIndex_);
 		}
 
@@ -1937,15 +1925,10 @@ namespace TKM {
 
 		commandList_->DrawInstanced(3, 1, 0, 0);
 
-		// 今フレーム PS → RT
-		barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-		barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-
-		// 前フレーム PS → RT
-		barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-		barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-
-		commandList_->ResourceBarrier(2, barriers);
+		// 今フレームだけ PS → RT に戻す
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		commandList_->ResourceBarrier(1, &barrier);
 	}
 
 	void DirectXCommon::CopyCurrentFrameToPreviousFrame(ID3D12Resource* inputTex) {
@@ -1963,12 +1946,12 @@ namespace TKM {
 		barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 		barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_SOURCE;
 
-		// コピー先 RT → COPY_DEST
+		// コピー先 現在状態 → COPY_DEST
 		barriers[1].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 		barriers[1].Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 		barriers[1].Transition.pResource = previousFrameTextureResource_.Get();
 		barriers[1].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-		barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		barriers[1].Transition.StateBefore = previousFrameState_;
 		barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
 
 		commandList_->ResourceBarrier(2, barriers);
@@ -1979,12 +1962,13 @@ namespace TKM {
 		barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_SOURCE;
 		barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 
-		// コピー先 COPY_DEST → RT
+		// コピー先 COPY_DEST → PS
 		barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
-		barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 
 		commandList_->ResourceBarrier(2, barriers);
 
+		previousFrameState_ = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 		previousFrameReady_ = true;
 	}
 

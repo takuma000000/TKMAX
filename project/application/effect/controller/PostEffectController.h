@@ -61,6 +61,17 @@ namespace TKM {
 		void OnCameraUpdated(TKM::Camera* activeCamera);
 
 		/// <summary>
+		/// モーションブラーの手動制御を開始します。引数で強度と持続時間を指定できます。
+		/// </summary>
+		/// <param name="strength">モーションブラーの強度</param>
+		/// <param name="duration">モーションブラーの持続時間</param>
+		void StartMotionBlurBurst(float strength = 0.45f, float duration = 0.18f);
+		/// <summary>
+		/// モーションブラーの手動制御を停止します。これにより、通常のモーションブラー制御に戻ります。
+		/// </summary>
+		void StopMotionBlur();
+
+		/// <summary>
 		/// 放射ブラーの手動制御を解除します。
 		/// </summary>
 		void ClearRadialBlurManual();

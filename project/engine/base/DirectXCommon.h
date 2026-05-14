@@ -1012,6 +1012,7 @@ namespace TKM {
 		void* motionBlurMappedData_ = nullptr;
 		bool motionBlurInitialized_ = false;
 		bool previousFrameReady_ = false;
+		D3D12_RESOURCE_STATES previousFrameState_ = D3D12_RESOURCE_STATE_RENDER_TARGET;
 
 		// LaserBeamVolume 用 PSO
 		bool laserBeamInitialized_ = false;

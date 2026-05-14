@@ -219,6 +219,18 @@ namespace TKM {
 		}
 	}
 
+	void PostEffectController::StartMotionBlurBurst(float strength, float duration) {
+		if (motionBlur_) {
+			motionBlur_->StartBurst(strength, duration);
+		}
+	}
+
+	void PostEffectController::StopMotionBlur() {
+		if (motionBlur_) {
+			motionBlur_->Stop();
+		}
+	}
+
 	void PostEffectController::ClearRadialBlurManual() {
 		// 放射ブラーが存在する場合だけ手動制御を解除する
 		if (radialBlur_) {

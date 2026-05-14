@@ -35,6 +35,17 @@ namespace TKM {
 		/// </summary>
 		void ImGuiDebug();
 
+		/// <summary>
+		/// モーションブラーのバーストを開始します。一定時間だけ強いモーションブラーをかけることができます。
+		/// </summary>
+		/// <param name="strength">バーストの強度</param>
+		/// <param name="duration">バーストの持続時間</param>
+		void StartBurst(float strength, float duration);
+		/// <summary>
+		/// モーションブラーのバーストを停止します。バーストが終了し、強度が0になります。
+		/// </summary>
+		void Stop();
+
 		bool IsActive() const { return active_; }
 
 		// Getter====================================
@@ -61,7 +72,12 @@ namespace TKM {
 		//==========================================
 		// フィールド
 		//==========================================
-		bool active_ = true; // モーションブラーの有効/無効
-		float strength_ = 0.12f; // モーションブラーの強度 (0.0f〜0.95f程度。あまり高くしすぎると画面が真っ黒になる)
+		bool active_ = false; // モーションブラーの有効/無効
+		float strength_ = 0.0f; // モーションブラーの強度 (0.0f〜0.95f程度。あまり高くしすぎると画面が真っ黒になる)
+
+		bool burstActive_ = false; // バースト中かどうか
+		float burstTimer_ = 0.0f; // バーストの経過時間
+		float burstDuration_ = 0.0f; // バーストの持続時間
+		float burstStartStrength_ = 0.0f; // バースト開始時の強度
 	};
 }

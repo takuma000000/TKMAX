@@ -2,6 +2,7 @@
 #include "IntroSequence.h"
 #include "ParticleManager.h"
 #include "AudioManager.h"
+#include "PostEffectController.h"
 #include <algorithm>
 
 namespace {
@@ -449,6 +450,13 @@ namespace TKM {
 
 		// START表示が終わったらイントロ完了
 		if (s.startBanner_.IsFinished()) {
+
+			// STARTバナー終了時に一瞬だけモーションブラーをかける
+			if (s.postEffect_) {
+				s.postEffect_->StartMotionBlurBurst(0.9f, 3.0f);
+			}
+
+			// イントロの現在フェーズを完了に設定する
 			s.phase_ = IntroSequence::Phase::Done;
 
 			// 敵初期化リクエストが必要なら外側へ通知する
@@ -458,7 +466,7 @@ namespace TKM {
 
 			// プレイヤー操作ロックを解除する
 			s.gameplayLocked_ = false;
-
+			// イントロ完了状態へ進む
 			s.flowSM_.Change(std::make_unique<IntroDoneState>());
 		}
 	}

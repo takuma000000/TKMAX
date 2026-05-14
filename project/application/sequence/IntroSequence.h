@@ -14,6 +14,8 @@
 
 namespace TKM {
 
+	class PostEffectController;
+
 	//=============================================================
 	// IntroSequenceクラス
 	// ・ゲーム開始時のイントロ演出を管理するクラス。
@@ -106,6 +108,16 @@ namespace TKM {
 		/// </summary>
 		/// <returns></returns>
 		const StateMachine& GetStateMachine() const { return flowSM_; }
+		// ===========================================
+
+		// Setter=====================================
+		/// <summary>
+		/// PostEffectControllerのポインタをセットします。
+		/// </summary>
+		/// <param name="postEffect">PostEffectControllerのポインタ</param>
+		void SetPostEffectController(TKM::PostEffectController* postEffect) {
+			postEffect_ = postEffect;
+		}
 		// ===========================================
 
 	private:
@@ -201,6 +213,11 @@ namespace TKM {
 		//======================================================================
 		float skipHoldTimer_ = 0.0f;              // 長押し時間
 		static constexpr float kSkipHoldSec_ = 2.0f; // スキップ判定時間
+
+		//======================================================================
+		// イントロ全体で使用するエフェクトコントローラー
+		//======================================================================
+		TKM::PostEffectController* postEffect_ = nullptr;
 
 		//======================================================================
 		// StateMachine
