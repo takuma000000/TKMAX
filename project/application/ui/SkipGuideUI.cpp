@@ -48,10 +48,10 @@ namespace TKM {
 		gaugeSprite_->SetAutoAdjustTextureSize(false);
 
 		const auto& gaugeMeta = TextureManager::GetInstance()->GetMetadata("./resources/texture/skip_gauge.png");
-		Vector2 gaugeTexSize = { (float)gaugeMeta.width, (float)gaugeMeta.height };
+		gaugeTexSize_ = { (float)gaugeMeta.width, (float)gaugeMeta.height };
 
 		gaugeSprite_->SetTextureLeftTop({ 0.0f, 0.0f });
-		gaugeSprite_->SetTextureSize(gaugeTexSize);
+		gaugeSprite_->SetTextureSize(gaugeTexSize_);
 
 		gaugeSprite_->SetAnchorPoint({ 0.0f, 0.5f });
 		gaugeSprite_->SetSize({ 0.0f, gaugeMaxSize_.y });
@@ -159,12 +159,25 @@ namespace TKM {
 				basePos_.y + gaugeOffset_.y
 			};
 
-			// ゲージを左から伸ばす
+			// ゲージを左から切り取りながら表示する
+			const float gaugeWidth = gaugeMaxSize_.x * t;
+			const float gaugeTextureWidth = gaugeTexSize_.x * t;
+
 			gaugeSprite_->SetPosition(gaugePos);
+
+			// 画像の使用範囲も左から伸ばす
+			gaugeSprite_->SetTextureLeftTop({ 0.0f, 0.0f });
+			gaugeSprite_->SetTextureSize({
+				gaugeTextureWidth,
+				gaugeTexSize_.y
+				});
+
+			// 表示サイズは横だけ伸ばして、縦は固定
 			gaugeSprite_->SetSize({
-				gaugeMaxSize_.x * t,
+				gaugeWidth,
 				gaugeMaxSize_.y
 				});
+
 			gaugeSprite_->SetColor(gaugeColor_);
 			gaugeSprite_->Update();
 		}
