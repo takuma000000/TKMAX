@@ -19,16 +19,19 @@ namespace TKM {
 		// スキップ案内用スプライトを生成する
 		sprite_ = std::make_unique<Sprite>();
 		sprite_->Initialize(spriteCommon, dxCommon, "./resources/texture/skip.png");
+		sprite_->SetAutoAdjustTextureSize(false);
 
-		// 拡大縮小時に中心を基準にする
-		sprite_->SetAnchorPoint({ 0.5f,0.5f });
-
-		// テクスチャサイズを取得して、元サイズとして保存する
 		const auto& meta = TextureManager::GetInstance()->GetMetadata("./resources/texture/skip.png");
 		baseSize_ = { (float)meta.width, (float)meta.height };
 
-		// 初期状態では元サイズで表示する
-		sprite_->SetSize(baseSize_);
+		sprite_->SetTextureLeftTop({ 0.0f, 0.0f });
+		sprite_->SetTextureSize(baseSize_);
+
+		sprite_->SetAnchorPoint({ 0.5f, 0.5f });
+		sprite_->SetSize({
+			baseSize_.x * normalScale_,
+			baseSize_.y * normalScale_
+			});
 
 		// 右下基準の配置位置を計算する
 		basePos_ = {
@@ -42,9 +45,16 @@ namespace TKM {
 		// ゲージ用スプライトを生成する
 		gaugeSprite_ = std::make_unique<Sprite>();
 		gaugeSprite_->Initialize(spriteCommon, dxCommon, "./resources/texture/skip_gauge.png");
-		// 左から伸ばすため、アンカーポイントを左中央にする
-		gaugeSprite_->SetAnchorPoint({ 0.0f, 0.5f });
+		gaugeSprite_->SetAutoAdjustTextureSize(false);
 
+		const auto& gaugeMeta = TextureManager::GetInstance()->GetMetadata("./resources/texture/skip_gauge.png");
+		Vector2 gaugeTexSize = { (float)gaugeMeta.width, (float)gaugeMeta.height };
+
+		gaugeSprite_->SetTextureLeftTop({ 0.0f, 0.0f });
+		gaugeSprite_->SetTextureSize(gaugeTexSize);
+
+		gaugeSprite_->SetAnchorPoint({ 0.0f, 0.5f });
+		gaugeSprite_->SetSize({ 0.0f, gaugeMaxSize_.y });
 		gaugeSprite_->SetColor(gaugeColor_);
 		// ゲージの発光を設定する
 		gaugeSprite_->SetGlowParams(
@@ -80,7 +90,6 @@ namespace TKM {
 				baseSize_.y * normalScale_
 				});
 
-			sprite_->SetColor(normalColor_);
 			sprite_->SetPosition(basePos_);
 			sprite_->Update();
 
@@ -139,7 +148,7 @@ namespace TKM {
 			baseSize_.y * normalScale_
 			});
 
-		sprite_->SetColor(normalColor_);
+
 		sprite_->SetPosition(basePos_);
 		sprite_->Update();
 
@@ -204,10 +213,6 @@ namespace TKM {
 
 		// 通常時と押下時のサイズを調整する
 		ImGui::DragFloat("通常スケール", &normalScale_, 0.01f, 0.1f, 3.0f);
-		ImGui::DragFloat("押下スケール", &pressScale_, 0.01f, 0.1f, 3.0f);
-
-		// 通常時と押下時の色を調整する
-		ImGui::ColorEdit4("通常色", &normalColor_.x);
 
 		// 現在のホールド進行状況を確認する
 		ImGui::Text("HoldTimer: %.2f / %.2f", holdTimer_, kHoldTime_);
