@@ -92,10 +92,16 @@ namespace TKM {
 		//=============================================================
 		// ゲージ
 		//=============================================================
-
-		Vector2 gaugeOffset_{ -130.0f, -0.8f };      // skip.png中心から見たゲージ左端位置
-		Vector2 gaugeMaxSize_{ 270.0f, 50.0f };      // ゲージ最大サイズ
-		Vector4 gaugeColor_{ 1.0f, 1.0f, 1.0f, 1.0f }; // ゲージ色
+		// ゲージの配置は、UIスプライトからの相対位置で指定する
+		Vector2 gaugeOffset_{ -130.0f, -0.8f }; // UIスプライトの左端から少し右にずらす
+		Vector2 gaugeMaxSize_{ 260.0f, 45.0f }; // ゲージの最大サイズ
+		// 少し透明にする
+		Vector4 gaugeColor_{ 1.0f, 1.0f, 1.0f, 1.0f }; // ゲージの色
+		// ゲージ発光
+		Vector4 gaugeGlowColor_{ 0.6f, 1.0f, 0.0f, 1.0f }; // 黄緑寄りネオン
+		float gaugeGlowIntensity_ = 8.0f;   // 発光強さ
+		float gaugeGlowWidth_ = 12.0f;      // 発光幅
+		float gaugeGlowThreshold_ = 0.01f;  // かなり光らせる
+		float gaugeGlowSoftness_ = 6.0f;    // にじみ強め
 	};
-
 }

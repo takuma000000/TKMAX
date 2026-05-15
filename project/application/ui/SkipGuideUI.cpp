@@ -42,13 +42,19 @@ namespace TKM {
 		// ゲージ用スプライトを生成する
 		gaugeSprite_ = std::make_unique<Sprite>();
 		gaugeSprite_->Initialize(spriteCommon, dxCommon, "./resources/texture/skip_gauge.png");
-
 		// 左から伸ばすため、アンカーポイントを左中央にする
 		gaugeSprite_->SetAnchorPoint({ 0.0f, 0.5f });
 
-		// 初期状態では横幅0で非表示にする
-		gaugeSprite_->SetSize({ 0.0f, gaugeMaxSize_.y });
 		gaugeSprite_->SetColor(gaugeColor_);
+		// ゲージの発光を設定する
+		gaugeSprite_->SetGlowParams(
+			true,
+			gaugeGlowColor_,
+			gaugeGlowIntensity_,
+			gaugeGlowWidth_,
+			gaugeGlowThreshold_,
+			gaugeGlowSoftness_
+		);
 	}
 
 	void SkipGuideUI::Update(float dt, bool canSkip) {
@@ -88,6 +94,15 @@ namespace TKM {
 				gaugeSprite_->SetPosition(gaugePos);
 				gaugeSprite_->SetSize({ 0.0f, gaugeMaxSize_.y });
 				gaugeSprite_->SetColor(gaugeColor_);
+				// ゲージの発光を設定する
+				gaugeSprite_->SetGlowParams(
+					true,
+					gaugeGlowColor_,
+					gaugeGlowIntensity_,
+					gaugeGlowWidth_,
+					gaugeGlowThreshold_,
+					gaugeGlowSoftness_
+				);
 				gaugeSprite_->Update();
 			}
 

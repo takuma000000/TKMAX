@@ -22,15 +22,6 @@ struct PixelShaderOutput
     float4 color : SV_TARGET0;
 };
 
-//struct DirectionalLight
-//{
-//    float4 color;
-//    float3 direction;
-//    float intensity;
-//};
-
-//ConstantBuffer<DirectionalLight> gDirectionalLight : register(b1);
-
 PixelShaderOutput main(VertexShaderOutput input)
 {
     PixelShaderOutput output;
@@ -77,7 +68,14 @@ PixelShaderOutput main(VertexShaderOutput input)
         float glowAlpha = edge * glowIntensity * gMaterial.glowColor.a;
         float3 glowRgb = gMaterial.glowColor.rgb * glowAlpha;
 
-        // ベースの上に加算気味で乗せる
+        //=========================================================
+        // 本体自体も発光させる
+        //=========================================================
+        // テクスチャ本体のアルファを使って、本体全体を光らせる
+        float bodyGlow = aC * glowIntensity;
+        // 本体発光
+        finalColor.rgb += gMaterial.glowColor.rgb * bodyGlow;
+        // 輪郭発光
         finalColor.rgb += glowRgb;
 
         // アルファは元の輪郭を壊しすぎないよう少しだけ補強
