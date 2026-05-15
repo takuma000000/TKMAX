@@ -40,9 +40,6 @@ namespace TKM {
 		// RenderTexture 用の RTV/SRV を作成（ここで rtvHandles[2] が有効になる）
 		dxCommon_->CreateRenderTextureRTV();
 
-		// RenderTexture 用の RTV/SRV を作成
-		dxCommon_->CreateRenderTextureRTV();
-
 		// CopyImage 用パイプラインを初期化
 		dxCommon_->InitializeCopyImagePipeline();
 
