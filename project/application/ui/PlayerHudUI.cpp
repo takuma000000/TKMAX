@@ -131,8 +131,9 @@ namespace TKM {
 			// 下は細く、上は太くする
 			const float segmentW = MyMath::Lerp(hpSegmentMinW_, hpSegmentMaxW_, t);
 
-			// セグメントのXオフセット（中心基準）。必要ならここで左右に振ることもできる
-			const float offsetX = 0.0f;
+			// セグメントの中心Xは、全体の基準位置から幅の半分と揺れオフセットを加える
+			const float offsetX =
+				(segmentW - hpSegmentMaxW_) * 0.5f;
 
 			// セグメントの中心Y
 			const float centerY =
@@ -466,18 +467,32 @@ namespace TKM {
 			const float segmentW = MyMath::Lerp(hpSegmentMinW_, hpSegmentMaxW_, t);
 			const float segmentStart = static_cast<float>(i) / static_cast<float>(segmentCount);
 			const float segmentEnd = static_cast<float>(i + 1) / static_cast<float>(segmentCount);
-			// 現在のHPアニメーション率がセグメントのどこにあるかを0～1で求める
-			float localRate = (hpAnimRate_ - segmentStart) / (segmentEnd - segmentStart);
-			localRate = std::clamp(localRate, 0.0f, 1.0f);
-			// セグメントの描画サイズを設定する
+			// HPがこのセグメントまで残っているかを判定する
+			const bool isFilled = hpAnimRate_ >= segmentEnd;
+			// セグメントは途中で縮めず、表示するなら1ブロック丸ごと表示する
 			hpFillSegments_[i]->SetSize({
 				segmentW,
-				segmentH * localRate
+				segmentH
 				});
 
-			// HPゲージの塗り色を設定する。HPが0のセグメントは完全に透明にする
+			// セグメントの色を決める
 			Vector4 fillColor = colHPFill_;
-			fillColor.w *= localRate > 0.0f ? 1.0f : 0.0f;
+			// 残りHPが2以下なら、HPが残っているブロックだけ赤く点滅させる
+			if (hudState_.currentHp_ <= 2) {
+
+				// 0.0 ～ 1.0 を往復する値を作る
+				float pulse =
+					(static_cast<float>(std::sin(ImGui::GetTime() * 6.0)) + 1.0f) * 0.5f;
+
+				// 通常色 → 赤色 を補間
+				fillColor = MyMath::Vector4Lerp(
+					colHPFill_,
+					{ 1.0f, 0.0f, 0.0f, colHPFill_.w },
+					pulse
+				);
+			}
+			// HPが残っていないセグメントは最後に透明にする
+			fillColor.w *= isFilled ? 1.0f : 0.0f;
 			// 被弾フラッシュ中は赤みを強くする
 			if (hpHitFlashT_ > 0.0f) {
 				fillColor = { 1.0f, 0.25f, 0.25f, fillColor.w };

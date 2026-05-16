@@ -158,7 +158,7 @@ namespace TKM {
 		float hpShakeAmpPx_ = 4.0f; // シェイクの強さ（ピクセル）
 		// HP減少アニメーションのイージング演出の状態
 		bool hpTweenActive_ = false; // 進行中かどうか
-		float hpDrainEaseSec_ = 0.18f; // 演出の継続時間
+		float hpDrainEaseSec_ = 1.3f; // 演出の継続時間
 		Ease::Type hpDrainEaseType_ = Ease::Type::OutElastic; // 演出のイージングの種類
 		Ease::Tween hpTween_; // 演出用のイージングオブジェクト
 		//=============================================================
