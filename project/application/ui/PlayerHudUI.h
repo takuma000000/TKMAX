@@ -115,8 +115,8 @@ namespace TKM {
 		// HPアイコン
 		Vector2 hpIconTexSize_{}; // テクスチャサイズ
 		Vector2 hpIconDrawSize_{}; // 描画サイズ
-		Vector2 hpIconOffset_{ -1.0f, -4.0f }; // 準位置からのオフセット
-		float hpIconScale_ = 0.055f; // 画サイズ = テクスチャサイズ * この値
+		Vector2 hpIconOffset_{ -15.0f, -4.0f }; // 準位置からのオフセット
+		float hpIconScale_ = 0.058f; // 画サイズ = テクスチャサイズ * この値
 		// 基準位置（画面サイズ変更時に再計算して保存）
 		Vector2 basePosHPFrame_{}; // HPゲージフレームの基準位置
 		Vector2 basePosHPFill_{}; // HPゲージ塗りの基準位置

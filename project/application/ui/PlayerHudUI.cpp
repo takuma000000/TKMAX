@@ -560,6 +560,10 @@ namespace TKM {
 			segment->Draw();
 		}
 
+		// HPアイコンを描画する
+		hpIcon_->SetColor(mulAlpha(colHPIcon_));
+		hpIcon_->Draw();
+
 		// HPヒットフラッシュの割合を求める
 		float t = 0.0f;
 		if (hpHitFlashSec_ > 0.0f) {
