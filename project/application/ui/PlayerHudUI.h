@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "Sprite.h"
 #include "SpriteCommon.h"
@@ -57,6 +58,10 @@ namespace TKM {
 		/// 左下HUDの位置をまとめて再計算して適用します。
 		/// </summary>
 		void ApplyHudPositions_();
+		/// <summary>
+		/// HPセグメントゲージの位置を反映します。
+		/// </summary>
+		void ApplyHpSegmentPositions_(const Vector2& shakeOffset = { 0.0f, 0.0f });
 
 		//=============================================================
 		// 共通参照
@@ -96,6 +101,7 @@ namespace TKM {
 		std::unique_ptr<Sprite> hpFrame_; // HPゲージのフレーム
 		std::unique_ptr<Sprite> hpFill_; // HPゲージの塗り部分
 		std::unique_ptr<Sprite> hpIcon_; // HPゲージのアイコン
+		std::vector<std::unique_ptr<Sprite>> hpOuterFrameSegments_; // HPゲージ外側フレーム用セグメント
 		// HPシェイクの状態
 		float hpShakePower_ = 3.0f; // HPシェイクの強さ（ピクセル）
 		// テクスチャパス
@@ -114,6 +120,20 @@ namespace TKM {
 		// 基準位置（画面サイズ変更時に再計算して保存）
 		Vector2 basePosHPFrame_{}; // HPゲージフレームの基準位置
 		Vector2 basePosHPFill_{}; // HPゲージ塗りの基準位置
+		// HPゲージセグメント
+		std::vector<std::unique_ptr<Sprite>> hpBackSegments_; // HPゲージの背景セグメント
+		std::vector<std::unique_ptr<Sprite>> hpFillSegments_; // HPゲージの塗りセグメント
+		// HPゲージセグメントの配置
+		int hpSegmentCount_ = 28; // HPゲージの分割数
+		float hpSegmentGap_ = 3.5f; // セグメント同士の隙間
+		float hpSegmentMinW_ = 13.0f; // 下側の細さ
+		float hpSegmentMaxW_ = 42.0f; // 上側の太さ
+		float hpSegmentSkewX_ = 0.0f; // 縦一列に揃えるため、Xずらしは使わない
+		// HPゲージセグメントの色
+		Vector4 colHPBackSegment_{ 0.18f, 0.18f, 0.18f, 0.75f }; // HP背景セグメント色
+		// HPゲージセグメントの色
+		Vector4 colHPOuterFrame_{ 0.08f, 0.08f, 0.8f, 0.75f }; // 外側フレーム色
+		Vector2 hpOuterFramePad_{ 18.0f, 20.0f }; // 外側フレームの余白
 		//=============================================================
 		// 左下HUDの配置調整
 		//=============================================================

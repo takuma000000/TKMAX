@@ -517,7 +517,9 @@ void GameScene::UpdateGameplaySystems(float rawDeltaTime, float scaledDeltaTime)
 	if (ui_->IsIntroSkipCompleted()) {
 		// 開幕演出スキップのフラグを立てる
 		if (flow_ && flow_->GetIntro()) {
-			flow_->GetIntro()->SkipBossIntroToShowStart(); // 開幕演出スキップの要求をFlowに伝える
+			flow_->GetIntro()->SkipBossIntroToShowStart(
+				TKM::CameraManager::GetInstance()->GetMainCamera() // 開幕演出スキップの要求をFlowに伝える
+			);
 		}
 	}
 

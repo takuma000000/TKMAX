@@ -170,7 +170,7 @@ namespace TKM {
 			phase_ == Phase::BossEscape;
 	}
 
-	void IntroSequence::SkipBossIntroToShowStart() {
+	void IntroSequence::SkipBossIntroToShowStart(Camera* camera) {
 		// スキップ不可なら何もしない
 		if (!CanSkipBossIntro()) {
 			return;
@@ -183,9 +183,19 @@ namespace TKM {
 		camBlendToBossActive_ = false;
 		camBlendBackActive_ = false;
 
-		// カメラを元に戻す
-		if (currentCamera_) {
-			currentCamera_->SetRotate(camSavedRot_);
+		// カメラを通常プレイ用の向きへ補間で戻す
+		if (camera) {
+			camReturnStartRot_ = camera->GetRotate(); // 現在のカメラ回転を戻り開始回転にセット
+
+			camBlendToBossActive_ = false; // ボスカメラへのブレンドは停止
+			camBlendBackActive_ = true; // カメラを戻すブレンドを開始
+			// 0 → 1の補間で、現在のカメラ回転 → 元のカメラ回転へ補間するTweenをセット
+			camBlendBackTween_.Reset(
+				0.0f,
+				1.0f,
+				camBlendBackSec_,
+				Ease::Type::InOutSine
+			);
 		}
 
 		// スタート表示フェーズへ遷移

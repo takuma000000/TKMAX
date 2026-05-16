@@ -82,7 +82,6 @@ namespace TKM {
 		// HPフレームの基準位置を保存して反映する
 		basePosHPFrame_ = hpPos;
 		hpFrame_->SetPosition(basePosHPFrame_);
-
 		// HP塗りは下端基準なので、フレーム位置から半分上へずらす
 		basePosHPFill_ = {
 			hpPos.x,
@@ -99,6 +98,75 @@ namespace TKM {
 
 		// HPアイコンの位置を反映する
 		hpIcon_->SetPosition(iconPos);
+	}
+
+	void PlayerHudUI::ApplyHpSegmentPositions_(const Vector2& shakeOffset) {
+		// セグメント用スプライトが全て揃っているか確認する
+		if (hpOuterFrameSegments_.empty() ||
+			hpBackSegments_.empty() ||
+			hpFillSegments_.empty()) {
+			return;
+		}
+
+		// セグメントが無い場合は何もしない
+		if (hpBackSegments_.empty() || hpFillSegments_.empty()) { return; }
+
+		// 分割数を安全な値にする
+		const int segmentCount = std::max(1, hpSegmentCount_);
+
+		// ゲージ全体の高さから、1セグメントの高さを計算する
+		const float totalGap = hpSegmentGap_ * static_cast<float>(segmentCount - 1);
+		const float segmentH = (hpVertSize_.y - totalGap) / static_cast<float>(segmentCount);
+
+		// HPゲージの下端位置を基準にする
+		const float bottomY = basePosHPFill_.y;
+
+		for (int i = 0; i < segmentCount; ++i) {
+			// 下が0、上が1になる割合
+			const float t =
+				(segmentCount <= 1)
+				? 0.0f
+				: static_cast<float>(i) / static_cast<float>(segmentCount - 1);
+
+			// 下は細く、上は太くする
+			const float segmentW = MyMath::Lerp(hpSegmentMinW_, hpSegmentMaxW_, t);
+
+			// セグメントのXオフセット（中心基準）。必要ならここで左右に振ることもできる
+			const float offsetX = 0.0f;
+
+			// セグメントの中心Y
+			const float centerY =
+				bottomY
+				- segmentH * 0.5f
+				- static_cast<float>(i) * (segmentH + hpSegmentGap_);
+
+			// 外枠セグメントは中心基準で、塗りセグメントより少し大きくする
+			hpOuterFrameSegments_[i]->SetPosition({
+				basePosHPFrame_.x + offsetX + shakeOffset.x,
+				centerY + shakeOffset.y
+				});
+			// 外枠は塗りより少し大きくして、隙間を埋める
+			hpOuterFrameSegments_[i]->SetSize({
+				segmentW + hpOuterFramePad_.x,
+				segmentH + hpSegmentGap_ + hpOuterFramePad_.y * 0.05f
+				});
+
+			// 背景セグメントは中心基準
+			hpBackSegments_[i]->SetPosition({
+				basePosHPFrame_.x + offsetX + shakeOffset.x,
+				centerY + shakeOffset.y
+				});
+			// 背景はセグメントサイズぴったり
+			hpBackSegments_[i]->SetSize({
+				segmentW,
+				segmentH
+				});
+			// 塗りセグメントは下端基準
+			hpFillSegments_[i]->SetPosition({
+				basePosHPFrame_.x + offsetX + shakeOffset.x,
+				centerY + segmentH * 0.5f + shakeOffset.y
+				});
+		}
 	}
 
 	void PlayerHudUI::Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, BaseScene* parentScene, float screenW, float screenH) {
@@ -203,6 +271,33 @@ namespace TKM {
 		};
 		hpIcon_->SetSize(hpIconDrawSize_);
 
+		// HPセグメントを生成する
+		hpOuterFrameSegments_.clear();
+		hpBackSegments_.clear();
+		hpFillSegments_.clear();
+		// セグメント数分ループして、背景と塗りのスプライトを生成する
+		for (int i = 0; i < hpSegmentCount_; ++i) {
+			// セグメント用のスプライトを生成して初期化する
+			auto outer = std::make_unique<Sprite>();
+			outer->Initialize(spriteCommon_, dxCommon_, hpFillTex);
+			outer->SetAutoAdjustTextureSize(false);
+			outer->SetAnchorPoint({ 0.5f, 0.5f });
+			// 外枠セグメントは背景と同じ色で描画する
+			auto back = std::make_unique<Sprite>();
+			back->Initialize(spriteCommon_, dxCommon_, hpFillTex);
+			back->SetAutoAdjustTextureSize(false);
+			back->SetAnchorPoint({ 0.5f, 0.5f });
+			// 塗りセグメントはHP塗りと同じ色で描画する
+			auto fill = std::make_unique<Sprite>();
+			fill->Initialize(spriteCommon_, dxCommon_, hpFillTex);
+			fill->SetAutoAdjustTextureSize(false);
+			fill->SetAnchorPoint({ 0.5f, 1.0f });
+			// テクスチャは全て同じものを使用する
+			hpOuterFrameSegments_.push_back(std::move(outer));
+			hpBackSegments_.push_back(std::move(back));
+			hpFillSegments_.push_back(std::move(fill));
+		}
+
 		// 画面サイズをもとにHUD全体の位置を決める
 		UpdateLayout(screenW_, screenH_);
 	}
@@ -215,7 +310,6 @@ namespace TKM {
 		// HPゲージの描画サイズを再反映する
 		hpFill_->SetSize(hpVertSize_);
 		hpFrame_->SetSize({ hpVertSize_.x + hpFramePad_, hpVertSize_.y + hpFramePad_ });
-
 		// HPアイコンの描画サイズを再計算する
 		hpIconDrawSize_ = {
 			hpIconTexSize_.x * hpIconScale_,
@@ -329,6 +423,9 @@ namespace TKM {
 		if (hpTweenActive_) {
 			hpAnimRate_ = hpTween_.Update(dt);
 
+			// 安全のため0～1にクランプする
+			hpAnimRate_ = std::clamp(hpAnimRate_, 0.0f, 1.0f);
+
 			// Tweenが終わったら目標値に固定する
 			if (hpTween_.Finished()) {
 				hpAnimRate_ = hpTargetRate_;
@@ -354,11 +451,46 @@ namespace TKM {
 			}
 		}
 
-		// HPゲージの高さを反映する
-		hpFill_->SetSize({
-			hpVertSize_.x,
-			hpVertSize_.y * hpAnimRate_
-			});
+		// HPセグメントの塗り量を反映する
+		const int segmentCount = std::max(1, hpSegmentCount_);
+		const float totalGap = hpSegmentGap_ * static_cast<float>(segmentCount - 1);
+		const float segmentH = (hpVertSize_.y - totalGap) / static_cast<float>(segmentCount);
+		// シェイクオフセットを計算する
+		for (int i = 0; i < segmentCount; ++i) {
+			// 下が0、上が1になる割合
+			const float t =
+				(segmentCount <= 1)
+				? 0.0f
+				: static_cast<float>(i) / static_cast<float>(segmentCount - 1);
+			// 下は細く、上は太くする
+			const float segmentW = MyMath::Lerp(hpSegmentMinW_, hpSegmentMaxW_, t);
+			const float segmentStart = static_cast<float>(i) / static_cast<float>(segmentCount);
+			const float segmentEnd = static_cast<float>(i + 1) / static_cast<float>(segmentCount);
+			// 現在のHPアニメーション率がセグメントのどこにあるかを0～1で求める
+			float localRate = (hpAnimRate_ - segmentStart) / (segmentEnd - segmentStart);
+			localRate = std::clamp(localRate, 0.0f, 1.0f);
+			// セグメントの描画サイズを設定する
+			hpFillSegments_[i]->SetSize({
+				segmentW,
+				segmentH * localRate
+				});
+
+			// HPゲージの塗り色を設定する。HPが0のセグメントは完全に透明にする
+			Vector4 fillColor = colHPFill_;
+			fillColor.w *= localRate > 0.0f ? 1.0f : 0.0f;
+			// 被弾フラッシュ中は赤みを強くする
+			if (hpHitFlashT_ > 0.0f) {
+				fillColor = { 1.0f, 0.25f, 0.25f, fillColor.w };
+			}
+
+			// セグメントの色を反映する
+			hpOuterFrameSegments_[i]->SetColor(colHPOuterFrame_);
+			hpBackSegments_[i]->SetColor(colHPBackSegment_);
+			hpFillSegments_[i]->SetColor(fillColor);
+			hpOuterFrameSegments_[i]->Update();
+			hpBackSegments_[i]->Update();
+			hpFillSegments_[i]->Update();
+		}
 
 		// HPゲージ色を反映する
 		Vector4 hpColor = colHPFill_;
@@ -376,28 +508,21 @@ namespace TKM {
 			float r1 = MyMath::Rand01() * 2.0f - 1.0f;
 			float r2 = MyMath::Rand01() * 2.0f - 1.0f;
 
-			hpFrame_->SetPosition({
-				basePosHPFrame_.x + r1 * hpShakePower_,
-				basePosHPFrame_.y + r2 * hpShakePower_
-				});
-
-			hpFill_->SetPosition({
-				basePosHPFill_.x + r1 * hpShakePower_,
-				basePosHPFill_.y + r2 * hpShakePower_
+			ApplyHpSegmentPositions_({
+				r1 * hpShakePower_,
+				r2 * hpShakePower_
 				});
 		} else {
-			hpFrame_->SetPosition(basePosHPFrame_);
-			hpFill_->SetPosition(basePosHPFill_);
+			// シェイクしていないときは基準位置に戻す
+			ApplyHpSegmentPositions_();
 		}
-
-		// HP塗りスプライトを更新する
-		hpFill_->Update();
 
 		// ImGui
 		DrawImGui();
 	}
 
 	void PlayerHudUI::Draw(float hudAlpha) {
+
 		// HUD全体のアルファを各UI色へ掛ける
 		auto mulAlpha = [&](const Vector4& c) {
 			Vector4 out = c;
@@ -405,13 +530,20 @@ namespace TKM {
 			return out;
 			};
 
-		// HPフレームを描画する
-		hpFrame_->SetColor(mulAlpha(colHPFrame_));
-		hpFrame_->Draw();
+		for (auto& segment : hpOuterFrameSegments_) {
+			segment->SetColor(mulAlpha(colHPOuterFrame_));
+			segment->Draw();
+		}
 
-		// HPアイコンを描画する
-		hpIcon_->SetColor(mulAlpha(colHPIcon_));
-		hpIcon_->Draw();
+		// HP背景セグメントを描画する
+		for (auto& segment : hpBackSegments_) {
+			segment->SetColor(mulAlpha(colHPBackSegment_));
+			segment->Draw();
+		}
+		// HP塗りセグメントを描画する
+		for (auto& segment : hpFillSegments_) {
+			segment->Draw();
+		}
 
 		// HPヒットフラッシュの割合を求める
 		float t = 0.0f;
@@ -430,10 +562,6 @@ namespace TKM {
 
 		// 通常色から赤色へ補間して、ダメージ感を出す
 		Vector4 drawCol = MyMath::Vector4Lerp(colHPFill_, flashCol, t);
-
-		// HP塗りを描画する
-		hpFill_->SetColor(mulAlpha(drawCol));
-		hpFill_->Draw();
 
 		// RBゲージアイコンを描画する
 		rbGaugeIcon_->SetColor(mulAlpha(colRBGaugeIcon_));

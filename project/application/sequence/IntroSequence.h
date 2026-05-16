@@ -57,9 +57,10 @@ namespace TKM {
 		/// <returns>スキップ可能なら true</returns>
 		bool CanSkipBossIntro() const;
 		/// <summary>
-		/// はじめのボス演出をスキップして「ゲームスタート」表示へ進めます。
+		/// はじめのボス演出をスキップして「ゲームスタート」表示に直接移行させます。
 		/// </summary>
-		void SkipBossIntroToShowStart();
+		/// <param name="camera">カメラのポインタ</param>
+		void SkipBossIntroToShowStart(Camera* camera);
 
 		/// <summary>
 		/// ゲームプレイがロックされているかを取得します。
