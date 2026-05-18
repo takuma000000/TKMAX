@@ -170,6 +170,57 @@ namespace TKM {
 		}
 	}
 
+	void PlayerHudUI::ApplyConfig_() {
+		// HUD設定ファイルを読み込む
+		config_.Load("./resources/data/playerHudConfig.json");
+
+		// テクスチャ設定
+		rbGaugeIconTex_ = config_.GetTexture().rbGaugeIconTex_;
+
+		// RBゲージアイコン設定
+		rbGaugeIconScale_ = config_.GetRBGaugeIcon().scale_;
+		rbGaugeIconOffset_ = config_.GetRBGaugeIcon().offset_;
+		rbGaugeIconPadX_ = config_.GetRBGaugeIcon().padX_;
+		colRBGaugeIcon_ = config_.GetRBGaugeIcon().color_;
+		shakeAmpPx_ = config_.GetRBGaugeIcon().shakeAmpPx_;
+
+		// LBゲージ設定
+		lbGaugeSpacingY_ = config_.GetLBGauge().spacingY_;
+		lbGaugeOffset_ = config_.GetLBGauge().offset_;
+
+		// HPゲージ設定
+		hpShakePower_ = config_.GetHPGauge().shakePower_;
+		colHPFrame_ = config_.GetHPGauge().frameColor_;
+		colHPFill_ = config_.GetHPGauge().fillColor_;
+		colHPIcon_ = config_.GetHPGauge().iconColor_;
+		hpVertSize_ = config_.GetHPGauge().size_;
+		hpVertOffset_ = config_.GetHPGauge().offset_;
+		hpFramePad_ = config_.GetHPGauge().framePad_;
+		hpIconOffset_ = config_.GetHPGauge().iconOffset_;
+		hpIconScale_ = config_.GetHPGauge().iconScale_;
+		hpSegmentCount_ = config_.GetHPGauge().segmentCount_;
+		hpSegmentGap_ = config_.GetHPGauge().segmentGap_;
+		hpSegmentMinW_ = config_.GetHPGauge().segmentMinW_;
+		hpSegmentMaxW_ = config_.GetHPGauge().segmentMaxW_;
+		hpSegmentSkewX_ = config_.GetHPGauge().segmentSkewX_;
+		colHPBackSegment_ = config_.GetHPGauge().backSegmentColor_;
+		colHPOuterFrame_ = config_.GetHPGauge().outerFrameColor_;
+		hpOuterFramePad_ = config_.GetHPGauge().outerFramePad_;
+
+		// 左下HUD配置設定
+		ammoUiRaiseY_ = config_.GetLayout().ammoUiRaiseY_;
+		hudLeftMargin_ = config_.GetLayout().hudLeftMargin_;
+		hudReserveLeftW_ = config_.GetLayout().hudReserveLeftW_;
+		hudReserveGap_ = config_.GetLayout().hudReserveGap_;
+		hudBottomMargin_ = config_.GetLayout().hudBottomMargin_;
+
+		// HP演出設定
+		hpHitFlashSec_ = config_.GetHpEffect().hitFlashSec_;
+		hpShakeSec_ = config_.GetHpEffect().shakeSec_;
+		hpShakeAmpPx_ = config_.GetHpEffect().shakeAmpPx_;
+		hpDrainEaseSec_ = config_.GetHpEffect().drainEaseSec_;
+	}
+
 	void PlayerHudUI::Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, BaseScene* parentScene, float screenW, float screenH) {
 		// 外部から受け取った描画・シーン情報を保存する
 		spriteCommon_ = spriteCommon;
@@ -177,6 +228,9 @@ namespace TKM {
 		parentScene_ = parentScene;
 		screenW_ = screenW;
 		screenH_ = screenH;
+
+		// 外部設定を読み込んで反映する
+		ApplyConfig_();
 
 		// 現在のゲームパッド接続状態を取得する
 		isGamepadConnected_ = Input::GetInstance()->IsGamepadConnected();
@@ -223,10 +277,10 @@ namespace TKM {
 		hpFill_ = std::make_unique<Sprite>();
 		hpIcon_ = std::make_unique<Sprite>();
 
-		// HPゲージ用のテクスチャパス
-		const std::string hpFrameTex = "./resources/texture/player_hp_frame.jpg";
-		const std::string hpFillTex = "./resources/texture/player_hp.jpg";
-		const std::string hpIconTex = "./resources/texture/player_hp.png";
+		// HPゲージ用テクスチャパスを設定ファイルから取得する
+		const std::string hpFrameTex = config_.GetTexture().hpFrameTex_;
+		const std::string hpFillTex = config_.GetTexture().hpFillTex_;
+		const std::string hpIconTex = config_.GetTexture().hpIconTex_;
 
 		// HPゲージ用スプライトを初期化する
 		hpFrame_->Initialize(spriteCommon_, dxCommon_, hpFrameTex);
