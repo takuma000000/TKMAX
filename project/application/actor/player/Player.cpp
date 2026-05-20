@@ -456,6 +456,7 @@ void Player::NotifyHudState_() {
 	state.rbAmmo_ = GetRbAmmo(); // RB弾の残弾数
 	state.rbAmmoMax_ = GetRbAmmoMax(); // RB弾の最大残弾数
 	state.rbRefilling_ = IsRbRefilling(); // RB弾が回復中かどうか
+	state.rbRefillingFromEmpty_ = IsRbRefillingFromEmpty(); // RB弾が0発から回復中かどうか
 	// LB弾の残弾数、最大残弾数を取得して構造体にセットする
 	state.lbAmmo_ = GetLbAmmo(); // LB弾の残弾数
 	state.lbAmmoMax_ = GetLbAmmoMax(); // LB弾の最大残弾数
@@ -914,6 +915,10 @@ const std::list<std::unique_ptr<PlayerBullet>>& Player::GetBullets() const {
 bool Player::IsRbRefilling() const {
 	// RB回復状態を返す
 	return shotManager_ ? shotManager_->IsRbRefilling() : false;
+}
+
+bool Player::IsRbRefillingFromEmpty() const {
+	return shotManager_ ? shotManager_->IsRbRefillingFromEmpty() : false;
 }
 
 int Player::GetRbAmmo() const {

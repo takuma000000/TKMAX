@@ -94,8 +94,11 @@ namespace TKM {
 			// ゲーム開始後だけ通常HUDを更新する
 			if (gameplayHudVisible_) {
 
-				// RBとLBの残弾なし状態を取得する（playerがnullptrの場合はfalse扱い）
-				const bool rbNoAmmo = hudState_.rbAmmo_ <= 0;
+				// Playerから通知されたHUD状態をもとに、残弾なし状態を判定する
+				const bool rbNoAmmo =
+					hudState_.rbAmmo_ <= 0 ||
+					hudState_.rbRefillingFromEmpty_;
+				// LBは回復中の概念がないので、単純に残弾数が0以下なら残弾なしとする
 				const bool lbNoAmmo = hudState_.lbAmmo_ <= 0;
 				// 右側の操作ガイドUIを更新する
 				operationGuideUI_->Update(dt, rbNoAmmo, lbNoAmmo);

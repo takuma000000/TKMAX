@@ -78,6 +78,11 @@ public:
 	/// </summary>
 	/// <returns>RBのリフィル中であればtrue、それ以外はfalse</returns>
 	bool IsRbRefilling() const { return rbRefilling_; }
+	/// <summary>
+	/// RBのリフィルが空状態から開始されたかどうかを取得します。
+	/// </summary>
+	/// <returns>RBのリフィルが空状態から開始された場合はtrue、それ以外はfalse</returns>
+	bool IsRbRefillingFromEmpty() const { return rbRefilling_ && rbRefillStartedFromEmpty_; }
 
 	// Getter========================================
 	/// <summary>
