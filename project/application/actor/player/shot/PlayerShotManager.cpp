@@ -337,9 +337,10 @@ void PlayerShotManager::HandleShooting_(float dt) {
 			}
 		}
 
-		// 条件を満たしたらRB回復開始
+		// 回復条件を満たしていて、回復中でなければ回復を開始する
 		if (!rbRefilling_ && (idleReady || emptyReady)) {
 			rbRefilling_ = true;
+			rbRefillStartedFromEmpty_ = empty;
 			rbRefillValue_ = empty ? 0.0f : float(rbAmmo_);
 		}
 
@@ -357,9 +358,10 @@ void PlayerShotManager::HandleShooting_(float dt) {
 			// 最大まで回復したら回復状態を終了する
 			if (rbAmmo_ >= std::max(1, rb.ammoMax_)) {
 				rbAmmo_ = std::max(1, rb.ammoMax_);
-				rbRefilling_ = false;
-				rbEmptyTimer_ = 0.0f;
-				rbNoFireTimer_ = 0.0f;
+				rbRefilling_ = false; // 回復完了したら回復状態を解除する
+				rbRefillStartedFromEmpty_ = false; // 回復開始状態フラグをリセットする
+				rbEmptyTimer_ = 0.0f; // 弾切れ待機タイマーをリセットする
+				rbNoFireTimer_ = 0.0f; // 未発射待機タイマーをリセットする
 			}
 		}
 	}
@@ -429,9 +431,23 @@ void PlayerShotManager::RBShoot_() {
 		return;
 	}
 
-	// 弾切れ、または回復中なら発射しない
-	if (rbAmmo_ <= 0 || rbRefilling_) {
+	// 残弾0なら発射しない
+	if (rbAmmo_ <= 0) {
 		return;
+	}
+
+	// 0発から始まった回復中なら、残弾が増えていても発射しない
+	if (rbRefilling_ && rbRefillStartedFromEmpty_) {
+		return;
+	}
+
+	// 残弾ありから始まった回復中に撃ったら回復を中断する
+	if (rbRefilling_) {
+		rbRefilling_ = false;
+		rbRefillStartedFromEmpty_ = false;
+		rbRefillValue_ = float(rbAmmo_);
+		rbNoFireTimer_ = 0.0f;
+		rbEmptyTimer_ = 0.0f;
 	}
 
 	// 発射元オブジェクトが無ければ発射しない

@@ -240,6 +240,8 @@ private:
 	float rbRefillValue_ = 0.0f;  // 回復中の内部値（小数で管理）
 	bool rbRefilling_ = false;    // 回復中フラグ
 
+	bool rbRefillStartedFromEmpty_ = false; // 0発から始まった回復かどうか
+
 	float rbNoFireTimer_ = 0.0f;  // 最後に撃ってからの経過時間（アイドル回復判定用）
 
 	static constexpr float kRbShotCooldownSec_ = 0.25f; // 1発ごとの発射間隔

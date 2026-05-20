@@ -398,6 +398,12 @@ namespace TKM {
 		const bool rbDown = isGamepadConnected_
 			? in->PushButton(XINPUT_GAMEPAD_RIGHT_SHOULDER)
 			: in->PushKey(DIK_K);
+		// RB射撃中として扱うか
+		// 残弾0、または回復中ならRBを押していても射撃中扱いにしない
+		const bool rbShooting =
+			rbDown &&
+			hudState_.rbAmmo_ > 0 &&
+			!hudState_.rbRefilling_;
 
 		// LB/Lの押下状態を取得する
 		const bool lbDown = isGamepadConnected_
@@ -410,7 +416,7 @@ namespace TKM {
 			hudState_.rbAmmo_,
 			hudState_.rbAmmoMax_,
 			hudState_.rbRefilling_,
-			rbDown
+			rbShooting
 		);
 
 		// Playerから通知されたLB弾数情報をもとにLBゲージを更新する
@@ -426,8 +432,8 @@ namespace TKM {
 		hpFrame_->Update();
 		hpIcon_->Update();
 
-		// RBゲージアイコンはRB入力中だけ小刻みに揺らす
-		if (rbDown) {
+		// RBゲージアイコンはRB射撃中だけ小刻みに揺らす
+		if (rbShooting) {
 			float r1 = MyMath::Rand01() * 2.0f - 1.0f;
 			float r2 = MyMath::Rand01() * 2.0f - 1.0f;
 
