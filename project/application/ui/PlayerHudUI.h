@@ -170,6 +170,7 @@ namespace TKM {
 		float hpDrainEaseSec_; // 演出の継続時間
 		Ease::Type hpDrainEaseType_ = Ease::Type::OutElastic; // 演出のイージングの種類
 		Ease::Tween hpTween_; // 演出用のイージングオブジェクト
+		float hpPulseTime_ = 0.0f; // HP点滅演出用時間
 		//=============================================================
 		// 入力状態
 		//=============================================================

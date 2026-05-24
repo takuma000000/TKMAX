@@ -391,6 +391,9 @@ namespace TKM {
 	void PlayerHudUI::Update(float dt) {
 		Input* in = Input::GetInstance();
 
+		// HP点滅演出用時間を進める
+		hpPulseTime_ += dt;
+
 		// 現在のゲームパッド接続状態を取得する
 		isGamepadConnected_ = in->IsGamepadConnected();
 
@@ -540,9 +543,9 @@ namespace TKM {
 			// 残りHPが2以下なら、HPが残っているブロックだけ赤く点滅させる
 			if (hudState_.currentHp_ <= 2) {
 
-				// 0.0 ～ 1.0 を往復する値を作る
+				// 点滅の割合を0～1で求める
 				float pulse =
-					(static_cast<float>(std::sin(ImGui::GetTime() * 6.0)) + 1.0f) * 0.5f;
+					(std::sin(hpPulseTime_ * 6.0f) + 1.0f) * 0.5f;
 
 				// 通常色 → 赤色 を補間
 				fillColor = MyMath::Vector4Lerp(
