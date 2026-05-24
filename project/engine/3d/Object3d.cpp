@@ -111,15 +111,24 @@ namespace TKM {
 		// 環境マップ用定数バッファをセット
 		dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(8, environment_->GetGPUVirtualAddress());
 
-		// ここで model_ のテクスチャを適用する
+		// モデルを描画
 		if (model_) {
+			// マルチマテリアルでない場合は、モデル全体で1つのテクスチャを使用する
 			if (!model_->IsMultiMaterial()) {
 				dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(
-					2,
-					TextureManager::GetInstance()->GetSrvHandleGPU(model_->GetTexturePath())
+					2, // テクスチャ用のルートパラメータのインデックス
+					TextureManager::GetInstance()->GetSrvHandleGPU(model_->GetTexturePath()) // モデルのテクスチャをセット
 				);
 			}
-			model_->Draw();
+
+			// マテリアルの色を反映させるかどうかで描画方法を切り替える
+			if (useObjectColor_) {
+				// マテリアルの色を反映させない場合は、モデルの描画関数を呼び出す（マテリアルの色を無視して描画）
+				model_->DrawWithoutMaterialOverride();
+			} else { // マテリアルの色を反映させる場合は、モデルの描画関数を呼び出す
+				// モデルの描画関数を呼び出す（マテリアルの色を反映して描画）
+				model_->Draw();
+			}
 		}
 	}
 

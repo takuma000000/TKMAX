@@ -246,6 +246,11 @@ namespace TKM {
 		/// </summary>
 		void SetParent(const TKM::Object3d* parent) { parent_ = parent; }
 
+		/// <summary>
+		/// Object3d側の色をモデル描画に使うか設定します。
+		/// </summary>
+		void SetUseObjectColor(bool use) { useObjectColor_ = use; }
+
 	private:
 		//=============================================================
 		// 共通参照
@@ -367,5 +372,11 @@ namespace TKM {
 
 		const TKM::Object3d* parent_ = nullptr; // 親オブジェクト
 		Matrix4x4 worldMatrix_{};               // ワールド行列
+
+		//=============================================================
+		// 色
+		//=============================================================
+
+		bool useObjectColor_ = false; // モデルの色の代わりにObject3d側の色を使うか
 	};
 }

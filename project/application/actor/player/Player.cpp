@@ -59,6 +59,12 @@ void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommo
 	flipperAnimT_ = 0.0f;
 
 	//=========================================================
+	// 回避残像初期化
+	//=========================================================
+
+	InitializeDodgeAfterImages_(); // 回避残像を初期化する
+
+	//=========================================================
 	// レティクル生成
 	//=========================================================
 
@@ -270,6 +276,9 @@ void Player::Update(float dt) {
 		// 回避処理
 		HandleDodge(dt);
 
+		// 回避残像を更新する
+		UpdateDodgeAfterImages_(dt);
+
 		// ショット処理
 		shotManager_->Update(dt, shootingEnabled_);
 		// RB/LB弾数が変化していたらHUDへ通知する
@@ -280,6 +289,8 @@ void Player::Update(float dt) {
 		shotManager_->ClearLockState();
 		// 射撃停止などで弾状態が変わった場合に備えてHUDへ通知する
 		NotifyHudState_();
+		// 回避残像を更新する
+		UpdateDodgeAfterImages_(dt);
 	}
 
 #ifdef USE_IMGUI
@@ -445,6 +456,133 @@ bool Player::IsHudStateChanged_(const HudState& state) const {
 		state.rbRefilling_ != lastHudState_.rbRefilling_ ||
 		state.lbAmmo_ != lastHudState_.lbAmmo_ ||
 		state.lbAmmoMax_ != lastHudState_.lbAmmoMax_;
+}
+
+void Player::InitializeDodgeAfterImages_() {
+	// 回避残像用の配列を初期化する
+	for (auto& image : dodgeAfterImages_) {
+		// 残像用の本体を生成する
+		image.body_ = std::make_unique<TKM::Object3d>();
+		image.body_->Initialize(common_, dxCommon_);
+		image.body_->SetModel("turtle.obj");
+		image.body_->SetColor({ 0.05f, 0.05f, 0.05f, 0.0f }); // 最初は透明にしておく
+		image.body_->SetUseObjectColor(true); // モデルの色を無視してObjectの色を使うようにする
+
+		// 残像用のヒレを生成する
+		image.flipper_ = std::make_unique<TKM::Object3d>();
+		image.flipper_->Initialize(common_, dxCommon_);
+		image.flipper_->SetModel("turtle_flipper.obj");
+		image.flipper_->SetParent(image.body_.get());
+		image.flipper_->SetColor({ 0.05f, 0.05f, 0.05f, 0.0f }); // 最初は透明にしておく
+		image.flipper_->SetUseObjectColor(true); // モデルの色を無視してObjectの色を使うようにする
+
+		// カメラ参照があれば渡す
+		if (camera_) {
+			image.body_->SetCamera(camera_);
+			image.flipper_->SetCamera(camera_);
+		}
+
+		image.active_ = false; // 最初は非アクティブにしておく
+	}
+}
+
+void Player::UpdateDodgeAfterImages_(float dt) {
+	// 回避中なら残像を一定間隔で追加する
+	if (isDodging_) {
+		dodgeAfterImageSpawnT_ += dt;
+		// 一定間隔ごとに残像を追加する
+		if (dodgeAfterImageSpawnT_ >= kDodgeAfterImageInterval_) {
+			dodgeAfterImageSpawnT_ = 0.0f;
+			AddDodgeAfterImage_();
+		}
+	} else {
+		dodgeAfterImageSpawnT_ = 0.0f; // 回避していないときはスポーンタイマーをリセットする
+	}
+
+	// 全ての残像を更新する
+	for (auto& image : dodgeAfterImages_) {
+		// 非アクティブな残像はスキップする
+		if (!image.active_) {
+			continue;
+		}
+
+		image.age_ += dt; // 経過時間を進める
+
+		// 寿命を超えた残像は非アクティブにしてスキップする
+		if (image.age_ >= image.life_) {
+			image.active_ = false;
+			continue;
+		}
+
+		float rate = image.age_ / image.life_; // 経過時間の割合（0.0～1.0）
+		float alpha = 0.35f * (1.0f - rate);   // 残像の透明度（最初は0.35、最後は0.0に向かって減る）
+
+		Vector4 shadowColor = { 0.04f, 0.04f, 0.04f, alpha }; // 残像の色（黒に近いグレーで透明度を変える）
+
+		// 残像の本体とヒレに色を設定する
+		image.body_->SetTranslate(image.pos_);
+		image.body_->SetRotate(image.rot_);
+		image.body_->SetScale(image.scale_);
+		image.body_->SetColor(shadowColor);
+
+		// ヒレは本体の子なので位置や回転は自動で追従するが、色は個別に設定する必要がある
+		image.flipper_->SetColor(shadowColor);
+
+		// 本体とヒレの行列などを更新する
+		image.body_->Update();
+		image.flipper_->Update();
+	}
+}
+
+void Player::AddDodgeAfterImage_() {
+	if (!object_) {
+		return;
+	}
+
+	auto& image = dodgeAfterImages_[dodgeAfterImageWriteIndex_]; // 書き込み位置の残像を取得する
+
+	// 現在のプレイヤーの位置や回転、拡縮を残像にコピーして初期化する
+	image.pos_ = object_->GetTranslate();
+	image.rot_ = object_->GetRotate();
+	image.scale_ = object_->GetScale();
+	image.age_ = 0.0f;
+	image.life_ = kDodgeAfterImageLife_;
+	image.active_ = true;
+
+	// 残像の本体とヒレに位置や回転、拡縮を設定する（色はUpdateDodgeAfterImages_で設定する）
+	image.body_->SetTranslate(image.pos_);
+	image.body_->SetRotate(image.rot_);
+	image.body_->SetScale(image.scale_);
+	image.body_->SetColor({ 0.04f, 0.04f, 0.04f, 0.35f }); // 最初は少し見えるようにしておく
+
+	image.flipper_->SetColor({ 0.04f, 0.04f, 0.04f, 0.35f }); // 最初は少し見えるようにしておく
+
+	// 本体とヒレの行列などを更新する
+	image.body_->Update();
+	image.flipper_->Update();
+
+	dodgeAfterImageWriteIndex_++; // 次の書き込み位置へ進める
+
+	// 書き込み位置が配列の最大数を超えたら先頭に戻る（古い残像が上書きされる）
+	if (dodgeAfterImageWriteIndex_ >= kDodgeAfterImageMax_) {
+		dodgeAfterImageWriteIndex_ = 0;
+	}
+}
+
+void Player::DrawDodgeAfterImages_(TKM::DirectXCommon* dxCommon) {
+	// 全ての残像を描画する
+	for (auto& image : dodgeAfterImages_) {
+		if (!image.active_) {
+			continue;
+		}
+
+		image.body_->Draw(dxCommon); // 残像の本体を描画する
+
+		// ヒレは本体の子なので本体と一緒に描画されるが、念のため個別に描画する
+		if (image.flipper_) {
+			image.flipper_->Draw(dxCommon);
+		}
+	}
 }
 
 void Player::NotifyHudState_() {
@@ -690,6 +828,10 @@ bool Player::TryDamageFromAttack(int damage, int attackId) {
 }
 
 void Player::Draw(TKM::DirectXCommon* dxCommon) {
+
+	// 回避残像を本体より先に描画する
+	DrawDodgeAfterImages_(dxCommon);
+
 	//=========================================================
 	// 無敵点滅中の本体描画制御
 	//=========================================================
@@ -724,6 +866,13 @@ void Player::SetCamera(TKM::Camera* camera) {
 
 	// ヒレへカメラを渡す
 	if (flipper_) { flipper_->SetCamera(camera); }
+
+	// 回避残像にもカメラを渡す
+	for (auto& image : dodgeAfterImages_) {
+		// 本体とヒレ両方にカメラを渡す
+		if (image.body_) { image.body_->SetCamera(camera); }
+		if (image.flipper_) { image.flipper_->SetCamera(camera); }
+	}
 
 	// ショットマネージャーへもカメラを渡す
 	shotManager_->SetCamera(camera);
