@@ -28,7 +28,7 @@ namespace TKM {
 		/// </summary>
 		/// <param name="strength"></param>
 		/// <param name="duration"></param>
-		void BulrStartShock(float strength = 1.0f, float duration = 0.35f);
+		void BlurStartShock(float strength = 1.0f, float duration = 0.35f);
 
 		/// <summary>
 		/// 放射ブラーの有効・無効

@@ -617,7 +617,7 @@ void Player::StartBossDeathCameraZoom() {
 	// ラジアルブラー開始
 	//=========================================================
 	if (radialBlur_) {
-		radialBlur_->BulrStartShock(2.0f, kBlurTime);
+		radialBlur_->BlurStartShock(2.0f, kBlurTime);
 	}
 }
 

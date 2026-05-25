@@ -57,7 +57,7 @@ namespace TKM {
 			&heapProperties,//Heapの設定
 			D3D12_HEAP_FLAG_NONE,//Heapの特殊な設定。特になし
 			&resourceDesc,//Resourceの設定
-			D3D12_RESOURCE_STATE_DEPTH_WRITE,//深度地を書き込む状態にしておく
+			D3D12_RESOURCE_STATE_DEPTH_WRITE,//深度値を書き込む状態にしておく
 			&depthClearValue,//Clear最適値
 			IID_PPV_ARGS(&resource)//作成するResourceポインタへのポインタ
 		);
@@ -2420,7 +2420,7 @@ namespace TKM {
 		HRESULT hr = device_->CreateCommittedResource(
 			&heapProperties,//Heapの設定
 			D3D12_HEAP_FLAG_NONE,//Heapの特殊な設定。特になし
-			&resourceDesc,//Resouceの設定
+			&resourceDesc,//Resourceの設定
 			D3D12_RESOURCE_STATE_COPY_DEST,//初回のResourceState。	Textureは基本読むだけ
 			nullptr,//Clear最適値。使わないのでnullptr
 			IID_PPV_ARGS(&resource)//作成するResourceポインタへのポインタ
@@ -2454,9 +2454,9 @@ namespace TKM {
 
 		rtvHeap_ = this->CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 4, false); // RTV用のヒープを作成
 
-#pragma region SwapChainからResourceを引っ張てくる
+#pragma region SwapChainからResourceを引っ張ってくる
 
-		//SwapChainからResourceを引っ張てくる
+		//SwapChainからResourceを引っ張ってくる
 		hr = swapChain_->GetBuffer(0, IID_PPV_ARGS(&swapChainResources_[0]));
 		//うまく取得できなければ起動できない
 		assert(SUCCEEDED(hr));

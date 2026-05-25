@@ -13,7 +13,7 @@ namespace TKM {
 		}
 	}
 
-	void RadialBlurEffect::BulrStartShock(float strength, float duration) {
+	void RadialBlurEffect::BlurStartShock(float strength, float duration) {
 		active_ = true; // エフェクトを有効にする
 		timer_ = 0.0f; // タイマーをリセット
 		maxStrength_ = strength; // エフェクトの最大強度を設定
