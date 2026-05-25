@@ -5,9 +5,6 @@
 #include <limits>
 #include "RadialBlurEffect.h"
 #include "BarrierCore.h"
-#include "AudioManager.h"
-#include "PlayerShotManager.h"
-#include "PlayerShotConfig.h"
 
 #ifdef USE_IMGUI
 #include "imgui.h"
