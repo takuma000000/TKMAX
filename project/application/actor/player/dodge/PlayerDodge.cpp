@@ -69,10 +69,25 @@ void PlayerDodge::UpdateDodge_(
 	const Vector3& moveMax,
 	float bankAngle
 ) {
-	auto* input = TKM::Input::GetInstance(); // 入力管理クラスのインスタンスを取得
+	auto* input = TKM::Input::GetInstance();
 
-	// 回避入力があれば回避を開始する
-	if (!isDodging_ && (input->PushButton(XINPUT_GAMEPAD_X) || input->TriggerKey(DIK_J))) {
+	//=========================================================
+	// 回避クールタイム更新
+	//=========================================================
+	// 回避クールタイムタイマーが0より大きければ経過時間を減算する
+	if (dodgeCooldownTimer_ > 0.0f) {
+		dodgeCooldownTimer_ -= dt;
+		// クールタイムタイマーが0未満にならないようにする
+		if (dodgeCooldownTimer_ < 0.0f) {
+			dodgeCooldownTimer_ = 0.0f;
+		}
+	}
+
+	// 回避入力があって、回避クールタイムが0で、回避中でなければ回避を開始する
+	if (!isDodging_ &&
+		dodgeCooldownTimer_ <= 0.0f &&
+		(input->PushButton(XINPUT_GAMEPAD_X) || input->TriggerKey(DIK_J))) {
+		// 回避を開始する
 		StartDodge_(ownerObject);
 	}
 	// 回避中でなければ回避移動を更新しない
@@ -128,6 +143,8 @@ void PlayerDodge::UpdateDodge_(
 	// 回避移動と回避回転の両方が終了していたら回避状態を終了する
 	if (uMove >= 1.0f && uSpin >= 1.0f) {
 		isDodging_ = false; // 回避状態を終了する
+		// 回避クールタイム開始
+		dodgeCooldownTimer_ = kDodgeCooldown_;
 
 		// 回避終了後の回転を設定する。回避開始時の回転にバンク角を加算した回転にする。
 		Vector3 r = ownerObject->GetRotate();

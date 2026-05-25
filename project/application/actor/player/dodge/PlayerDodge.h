@@ -145,7 +145,8 @@ private:
 	float dodgeSpinWRoll_ = 0.0f;     // ロール比率
 	float dodgeSpinWPitch_ = 0.0f;    // ピッチ比率
 
-	static constexpr float kDodgeTime_ = 0.18f;     // 回避時間
+	static constexpr float kDodgeTime_ = 0.18f;    // 回避時間
+	static constexpr float kDodgeCooldown_ = 2.5f; // 回避クールタイム
 
 	//=============================================================
 	// 回避状態
