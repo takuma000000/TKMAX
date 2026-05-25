@@ -67,6 +67,15 @@ void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommo
 	health_->Initialize(5);
 
 	//=========================================================
+	// 撃墜管理生成
+	//=========================================================
+
+	// 撃墜管理クラスを生成する
+	death_ = std::make_unique<PlayerDeath>();
+	// 撃墜管理を初期化する
+	death_->Initialize();
+
+	//=========================================================
 	// レティクル生成
 	//=========================================================
 
@@ -214,7 +223,7 @@ void Player::Update(float dt) {
 	//=========================================================
 	// ゲームプレイ処理
 	//=========================================================
-	if (controlEnabled_ && !isDead_ && !introForwardActive_) {
+	if (controlEnabled_ && !IsDead() && !introForwardActive_) {
 		// 通常移動処理
 		if (!dodge_->IsDodging()) {
 			HandleGamePadMove();
@@ -306,7 +315,7 @@ void Player::Update(float dt) {
 	UpdateFlipperAnim_(dt);
 
 	// 生きている間だけ浮遊とカメラ追従を更新する
-	if (!isDead_) {
+	if (!IsDead()) {
 		UpdateFloatBob_(dt);
 		HandleFollowCamera();
 	}
@@ -495,98 +504,47 @@ void Player::Damage(int value) {
 }
 
 void Player::Death() {
-	// HPが残っているなら死亡処理しない
+	// HPが残っているなら撃墜処理しない
 	if (!health_ || !health_->IsDead()) {
 		return;
 	}
+	// 撃墜管理が無ければ処理しない
+	if (!death_) {
+		return;
+	}
+
+	// 撃墜を開始する
+	death_->Start();
 
 	//=========================================================
 	// 死亡開始時に一度だけ行う処理
 	//=========================================================
-	if (!deathStartHandled_) {
-		// 開始済みフラグを立てる
-		deathStartHandled_ = true;
 
-		// 死亡状態にする
-		isDead_ = true;
-
+	// 撃墜開始要求があるなら
+	if (death_->IsStartRequested()) {
 		// 操作を止める
 		SetControlEnabled(false);
-
 		// 射撃を止める
 		SetShootingEnabled(false);
-
 		// レティクルを隠す
 		SetReticleVisible(false);
-
 		// ロック状態を解除する
 		shotManager_->ClearLockState();
-
-		// 後方へ弾かれつつ落下する初速を与える
-		deathBackwardDir_ = { 0.0f, 0.0f, -1.0f };
-		deathVelocity_ = { 0.0f, -kDeathFallStartSpeed_, -kDeathBackwardSpeed_ * 0.8f };
-
-		// 左右どちらに崩れるかをランダムで決める
-		float rollSign = (rand() % 2 == 0) ? -1.0f : 1.0f;
-
-		// 初期角速度を設定する
-		deathAngularVelocity_.x = 0.012f;
-		deathAngularVelocity_.y = 0.0f;
-		deathAngularVelocity_.z = 0.020f * rollSign;
-
 		// 軽くカメラシェイクする
 		StartCameraShake(20);
+		// 撃墜開始要求を消費する
+		death_->ConsumeStartRequest();
 	}
 
-	//=========================================================
-	// 落下・吹き飛び更新
-	//=========================================================
-
-	// 下方向へ重力加速させる
-	deathVelocity_.y -= kDeathGravity_;
-
-	// 落下速度の下限を設ける
-	if (deathVelocity_.y < -kDeathFallMaxSpeed_) {
-		deathVelocity_.y = -kDeathFallMaxSpeed_;
-	}
-
-	// 後方への勢いは少しずつ減衰させる
-	deathVelocity_.z *= kDeathBackwardDamping_;
-
-	//=========================================================
-	// 位置更新
-	//=========================================================
-	Vector3 pos = object_->GetTranslate();
-	pos += deathVelocity_;
-	object_->SetTranslate(pos);
-
-	//=========================================================
-	// 姿勢更新
-	//=========================================================
-	Vector3 newRot = object_->GetRotate();
-	newRot.x += deathAngularVelocity_.x;
-	newRot.z += deathAngularVelocity_.z;
-
-	// 前後回転の最大値を制限する
-	if (newRot.x > kDeathMaxPitch_) {
-		newRot.x = kDeathMaxPitch_;
-	}
-
-	// 左右ロールの最大値を制限する
-	newRot.z = std::clamp(newRot.z, -kDeathMaxRoll_, kDeathMaxRoll_);
-	object_->SetRotate(newRot);
-
-	// 角速度は徐々に減衰させる
-	deathAngularVelocity_ *= kDeathRotateDamping_;
+	// 撃墜演出を更新する
+	death_->Update(object_.get());
 }
 
 void Player::UpdateVisualOnly(float dt) {
 	// クリア演出用にヒレアニメだけ更新する
 	UpdateFlipperAnim_(dt);
-
 	// 本体行列だけ更新する
 	if (object_) { object_->Update(); }
-
 	// ヒレ行列だけ更新する
 	if (flipper_) { flipper_->Update(); }
 }
@@ -599,10 +557,8 @@ void Player::StartBossDeathCameraZoom() {
 
 	// ズーム先の目標倍率
 	const float kTargetZoom = 0.35f;
-
 	// ズーム時間
 	const float kZoomTime = 1.2f;
-
 	// ブラー継続時間
 	const float kBlurTime = 4.795f;
 

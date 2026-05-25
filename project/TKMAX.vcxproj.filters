@@ -224,6 +224,7 @@
     <ClCompile Include="application\ui\config\PlayerHudConfig.cpp" />
     <ClCompile Include="application\actor\player\dodge\PlayerDodge.cpp" />
     <ClCompile Include="application\actor\player\health\PlayerHealth.cpp" />
+    <ClCompile Include="application\actor\player\death\PlayerDeath.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -489,6 +490,7 @@
     <ClInclude Include="application\ui\config\PlayerHudConfig.h" />
     <ClInclude Include="application\actor\player\dodge\PlayerDodge.h" />
     <ClInclude Include="application\actor\player\health\PlayerHealth.h" />
+    <ClInclude Include="application\actor\player\death\PlayerDeath.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

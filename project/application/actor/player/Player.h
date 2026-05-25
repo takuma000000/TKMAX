@@ -21,6 +21,7 @@
 #include <array>
 #include "PlayerDodge.h"
 #include "PlayerHealth.h"
+#include "PlayerDeath.h"
 
 class BarrierCore;
 class Enemy;
@@ -113,7 +114,7 @@ public:
 	/// プレイヤーが即死ダメージを受けたときの処理。
 	/// </summary>
 	/// <returns></returns>
-	bool IsDead() const { return isDead_; }
+	bool IsDead() const { return death_ ? death_->IsDead() : false; }
 	/// <summary>
 	/// プレイヤーがダメージを受けたときの処理を行います。
 	/// </summary>
@@ -427,6 +428,7 @@ private:
 	std::unique_ptr<TKM::Object3d> flipper_; // プレイヤーの左右フリップ用オブジェクト
 	std::unique_ptr<PlayerDodge> dodge_; // 回避行動管理クラス
 	std::unique_ptr<PlayerHealth> health_; // HP、無敵、被弾状態管理クラス
+	std::unique_ptr<PlayerDeath> death_; // 撃墜演出管理クラス
 	//======================================================================
 	// カメラシェイク・バンク・移動範囲
 	//======================================================================
@@ -453,24 +455,6 @@ private:
 	bool reticleVisible_ = true;  // trueならレティクル描画
 	bool shootingEnabled_ = true; // trueなら射撃可能、falseなら射撃禁止
 	bool rumbleEnabled_ = true; // true=振動OK / false=振動禁止
-	//======================================================================
-	// 撃墜管理
-	//======================================================================
-	bool   isDead_ = false;                    // 死亡状態か
-	bool   deathStartHandled_ = false;         // 死亡開始時の一度きり処理用
-
-	Vector3 deathVelocity_ = { 0.0f, 0.0f, 0.0f };     // 故障落下中の速度
-	Vector3 deathAngularVelocity_ = { 0.0f, 0.0f, 0.0f }; // 故障落下中の角速度
-
-	static constexpr float kDeathBackwardSpeed_ = 0.55f;   // 弱める
-	static constexpr float kDeathFallStartSpeed_ = 0.01f;  // かなり弱く
-	static constexpr float kDeathGravity_ = 0.006f;        // 超重要：めっちゃ弱く
-	static constexpr float kDeathFallMaxSpeed_ = 0.25f;    // 落下速度を制限
-	static constexpr float kDeathBackwardDamping_ = 0.992f; // 空気抵抗：かなり残す
-	static constexpr float kDeathRotateDamping_ = 0.992f;   // 回転の慣性もゆっくり抜ける 
-	static constexpr float kDeathMaxPitch_ = 1.20f;         // ピッチ（上下回転）の最大値（ラジアン）
-	static constexpr float kDeathMaxRoll_ = 0.80f;          // ロール（左右回転）の最大値（ラジアン）
-	Vector3 deathBackwardDir_ = { 0.0f, 0.0f, 0.0f };       // 後ろ反動の方向
 	//======================================================================
 	// 時ズーム（カメラ演出）
 	//======================================================================
@@ -501,7 +485,6 @@ private:
 	//======================================================================
 	// 自機当たり判定 (AABB)
 	//======================================================================
-	// --- 自機当たり判定(AABB) ---
 	Vector3 colliderScale_ = { 3.13f, 1.88f, 6.0f }; // 当たり判定用スケール
 	//======================================================================
 	// 振動（Rumble）
