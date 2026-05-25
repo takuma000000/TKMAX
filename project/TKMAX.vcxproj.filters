@@ -222,6 +222,7 @@
     <ClCompile Include="application\actor\barrier\BarrierConfig.cpp" />
     <ClCompile Include="engine\effect\post\MotionBlurEffect.cpp" />
     <ClCompile Include="application\ui\config\PlayerHudConfig.cpp" />
+    <ClCompile Include="application\actor\player\dodge\PlayerDodge.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -485,6 +486,7 @@
     <ClInclude Include="application\actor\barrier\BarrierConfig.h" />
     <ClInclude Include="engine\effect\post\MotionBlurEffect.h" />
     <ClInclude Include="application\ui\config\PlayerHudConfig.h" />
+    <ClInclude Include="application\actor\player\dodge\PlayerDodge.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

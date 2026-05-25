@@ -19,6 +19,7 @@
 #include <functional>
 #include <vector>
 #include <array>
+#include "PlayerDodge.h"
 
 class BarrierCore;
 class Enemy;
@@ -404,15 +405,6 @@ private:
 	/// </summary>
 	void HandleFollowCamera();
 	/// <summary>
-	/// 回避行動の処理を行います。
-	/// </summary>
-	/// <param name="dt">前フレームからの経過時間（秒）</param>
-	void HandleDodge(float dt);
-	/// <summary>
-	/// 回避行動を開始します。
-	/// </summary>
-	void StartDodge();
-	/// <summary>
 	/// カメラの三人称視点追従処理を行います。
 	/// </summary>
 	/// <param name="dt">前フレームからの経過時間（秒）</param>
@@ -427,22 +419,6 @@ private:
 	/// <param name="state">現在のHUD状態</param>
 	/// <returns>状態が変化している場合 true、それ以外は false</returns>
 	bool IsHudStateChanged_(const HudState& state) const;
-	/// <summary>
-	/// 回避残像を初期化します。
-	/// </summary>
-	void InitializeDodgeAfterImages_();
-	/// <summary>
-	/// 回避残像を更新します。
-	/// </summary>
-	void UpdateDodgeAfterImages_(float dt);
-	/// <summary>
-	/// 現在のプレイヤー姿勢を回避残像として記録します。
-	/// </summary>
-	void AddDodgeAfterImage_();
-	/// <summary>
-	/// 回避残像を描画します。
-	/// </summary>
-	void DrawDodgeAfterImages_(TKM::DirectXCommon* dxCommon);
 	//======================================================================
 	// 参照ポインタ / 共通オブジェクト
 	//======================================================================
@@ -451,10 +427,10 @@ private:
 	TKM::DirectXCommon* dxCommon_ = nullptr;
 	std::unique_ptr<PlayerShotManager> shotManager_ = nullptr;
 	TKM::RadialBlurEffect* radialBlur_ = nullptr;
-
 	TKM::BaseScene* parentScene_ = nullptr;
 	std::unique_ptr<TKM::Object3d> object_; // プレイヤー本体の3Dオブジェクト
 	std::unique_ptr<TKM::Object3d> flipper_; // プレイヤーの左右フリップ用オブジェクト
+	std::unique_ptr<PlayerDodge> dodge_; // 回避行動管理クラス
 	//======================================================================
 	// カメラシェイク・バンク・移動範囲
 	//======================================================================
@@ -562,22 +538,6 @@ private:
 	/// </summary>
 	/// <param name="dt">前フレームからの経過時間（秒）</param>
 	void UpdateRumble(float dt);
-	// ======================================================================
-	// 回避行動
-	// ======================================================================
-	bool  isDodging_ = false; // 回避行動中かどうか
-	float dodgeT_ = 0.0f; // 回避行動の経過時間
-	float dodgeDuration_ = 0.35f; // 回避行動の継続時間
-	float dodgeDistance_ = 14.0f; // 回避行動の移動距離
-	float dodgeSpinDuration_ = 0.42f; // 回避行動のスピン（回転）継続時間
-	float dodgeSpinTurns_ = 1.0f; // 回避行動のスピン回転数（例: 1.0なら1回転）
-	Vector3 dodgeStartPos_ = { 0,0,0 }; // 回避開始位置
-	Vector3 dodgeDir_ = { 0,0,0 }; // 回避方向（正規化済み）
-	float dodgeSpinRollSign_ = 1.0f; // Z回転の向き（右なら右回り等）
-	float dodgeSpinPitchSign_ = 1.0f; // X回転の向き（上なら後ろ回り等）
-	float dodgeSpinWRoll_ = 0.0f; // ロール比率(0..1)
-	float dodgeSpinWPitch_ = 0.0f; // ピッチ比率(0..1)
-	Vector3 dodgeBaseRot_ = { 0,0,0 }; // 回避開始時の回転（戻す用）
 	//======================================================================
 	// ひれパタパタ（常時アニメ）
 	//======================================================================
@@ -639,31 +599,4 @@ private:
 	/// ゲーム開始時の前進演出を更新します。
 	/// </summary>
 	void UpdateIntroForwardMove_(float dt);
-	//======================================================================
-	// 回避残像
-	//======================================================================
-	// 回避残像の情報を格納する構造体
-	struct DodgeAfterImage {
-		std::unique_ptr<TKM::Object3d> body_;    // 残像用の本体
-		std::unique_ptr<TKM::Object3d> flipper_; // 残像用のヒレ
-
-		Vector3 pos_ = { 0.0f, 0.0f, 0.0f };     // 残像の位置
-		Vector3 rot_ = { 0.0f, 0.0f, 0.0f };     // 残像の回転（オイラー角、度数法）
-		Vector3 scale_ = { 1.0f, 1.0f, 1.0f };   // 残像のスケール
-
-		float age_ = 0.0f;                       // 残像の経過時間
-		float life_ = 0.0f;                      // 残像の寿命（これを超えると消える）
-		bool active_ = false;                    // 残像が有効かどうか
-	};
-	// 回避残像のパラメータ
-	static constexpr int kDodgeAfterImageMax_ = 4;             // 回避残像の最大数
-	static constexpr float kDodgeAfterImageLife_ = 0.22f;      // 回避残像の寿命（秒）
-	static constexpr float kDodgeAfterImageInterval_ = 0.035f; // 回避残像の生成間隔（秒）
-	// 回避残像のプール
-	std::array<DodgeAfterImage, kDodgeAfterImageMax_> dodgeAfterImages_;
-	float dodgeAfterImageSpawnT_ = 0.0f; // 回避残像の生成タイマー
-	int dodgeAfterImageWriteIndex_ = 0; // 回避残像の書き込みインデックス（次に生成する残像の位置）
-	// 回避残像の初期化フラグとアクティブフラグ
-	bool dodgeAfterImagesInitialized_ = false; // 回避残像が初期化されているかどうか
-	bool hasActiveDodgeAfterImage_ = false; // アクティブな回避残像が存在するかどうか
 };

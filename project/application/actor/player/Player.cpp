@@ -59,10 +59,12 @@ void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommo
 	flipperAnimT_ = 0.0f;
 
 	//=========================================================
-	// 回避残像初期化
+	// 回避システム生成
 	//=========================================================
 
-	InitializeDodgeAfterImages_(); // 回避残像を初期化する
+	// 回避システムを生成する
+	dodge_ = std::make_unique<PlayerDodge>();
+	dodge_->Initialize(common_, dxCommon_, camera_);
 
 	//=========================================================
 	// レティクル生成
@@ -271,13 +273,23 @@ void Player::Update(float dt) {
 	//=========================================================
 	if (controlEnabled_ && !isDead_ && !introForwardActive_) {
 		// 通常移動処理
-		HandleGamePadMove();
+		if (!dodge_->IsDodging()) {
+			HandleGamePadMove();
+		}
 
-		// 回避処理
-		HandleDodge(dt);
+		//=========================================================
+		// 回避更新
+		//=========================================================
 
-		// 回避残像を更新する
-		UpdateDodgeAfterImages_(dt);
+		// 回避システムを更新する
+		dodge_->Update(
+			dt,
+			object_.get(),
+			true, // コントロール有効
+			moveMin_,
+			moveMax_,
+			bankAngle_
+		);
 
 		// ショット処理
 		shotManager_->Update(dt, shootingEnabled_);
@@ -289,8 +301,16 @@ void Player::Update(float dt) {
 		shotManager_->ClearLockState();
 		// 射撃停止などで弾状態が変わった場合に備えてHUDへ通知する
 		NotifyHudState_();
-		// 回避残像を更新する
-		UpdateDodgeAfterImages_(dt);
+		// 回避システムを更新する（コントロール無効で移動もさせない）
+		dodge_->Update(
+			dt,
+			object_.get(),
+			false, // コントロール無効
+			moveMin_,
+			moveMax_,
+			bankAngle_
+		);
+
 	}
 
 #ifdef USE_IMGUI
@@ -456,133 +476,6 @@ bool Player::IsHudStateChanged_(const HudState& state) const {
 		state.rbRefilling_ != lastHudState_.rbRefilling_ ||
 		state.lbAmmo_ != lastHudState_.lbAmmo_ ||
 		state.lbAmmoMax_ != lastHudState_.lbAmmoMax_;
-}
-
-void Player::InitializeDodgeAfterImages_() {
-	// 回避残像用の配列を初期化する
-	for (auto& image : dodgeAfterImages_) {
-		// 残像用の本体を生成する
-		image.body_ = std::make_unique<TKM::Object3d>();
-		image.body_->Initialize(common_, dxCommon_);
-		image.body_->SetModel("turtle.obj");
-		image.body_->SetColor({ 0.05f, 0.05f, 0.05f, 0.0f }); // 最初は透明にしておく
-		image.body_->SetUseObjectColor(true); // モデルの色を無視してObjectの色を使うようにする
-
-		// 残像用のヒレを生成する
-		image.flipper_ = std::make_unique<TKM::Object3d>();
-		image.flipper_->Initialize(common_, dxCommon_);
-		image.flipper_->SetModel("turtle_flipper.obj");
-		image.flipper_->SetParent(image.body_.get());
-		image.flipper_->SetColor({ 0.05f, 0.05f, 0.05f, 0.0f }); // 最初は透明にしておく
-		image.flipper_->SetUseObjectColor(true); // モデルの色を無視してObjectの色を使うようにする
-
-		// カメラ参照があれば渡す
-		if (camera_) {
-			image.body_->SetCamera(camera_);
-			image.flipper_->SetCamera(camera_);
-		}
-
-		image.active_ = false; // 最初は非アクティブにしておく
-	}
-}
-
-void Player::UpdateDodgeAfterImages_(float dt) {
-	// 回避中なら残像を一定間隔で追加する
-	if (isDodging_) {
-		dodgeAfterImageSpawnT_ += dt;
-		// 一定間隔ごとに残像を追加する
-		if (dodgeAfterImageSpawnT_ >= kDodgeAfterImageInterval_) {
-			dodgeAfterImageSpawnT_ = 0.0f;
-			AddDodgeAfterImage_();
-		}
-	} else {
-		dodgeAfterImageSpawnT_ = 0.0f; // 回避していないときはスポーンタイマーをリセットする
-	}
-
-	// 全ての残像を更新する
-	for (auto& image : dodgeAfterImages_) {
-		// 非アクティブな残像はスキップする
-		if (!image.active_) {
-			continue;
-		}
-
-		image.age_ += dt; // 経過時間を進める
-
-		// 寿命を超えた残像は非アクティブにしてスキップする
-		if (image.age_ >= image.life_) {
-			image.active_ = false;
-			continue;
-		}
-
-		float rate = image.age_ / image.life_; // 経過時間の割合（0.0～1.0）
-		float alpha = 0.35f * (1.0f - rate);   // 残像の透明度（最初は0.35、最後は0.0に向かって減る）
-
-		Vector4 shadowColor = { 0.04f, 0.04f, 0.04f, alpha }; // 残像の色（黒に近いグレーで透明度を変える）
-
-		// 残像の本体とヒレに色を設定する
-		image.body_->SetTranslate(image.pos_);
-		image.body_->SetRotate(image.rot_);
-		image.body_->SetScale(image.scale_);
-		image.body_->SetColor(shadowColor);
-
-		// ヒレは本体の子なので位置や回転は自動で追従するが、色は個別に設定する必要がある
-		image.flipper_->SetColor(shadowColor);
-
-		// 本体とヒレの行列などを更新する
-		image.body_->Update();
-		image.flipper_->Update();
-	}
-}
-
-void Player::AddDodgeAfterImage_() {
-	if (!object_) {
-		return;
-	}
-
-	auto& image = dodgeAfterImages_[dodgeAfterImageWriteIndex_]; // 書き込み位置の残像を取得する
-
-	// 現在のプレイヤーの位置や回転、拡縮を残像にコピーして初期化する
-	image.pos_ = object_->GetTranslate();
-	image.rot_ = object_->GetRotate();
-	image.scale_ = object_->GetScale();
-	image.age_ = 0.0f;
-	image.life_ = kDodgeAfterImageLife_;
-	image.active_ = true;
-
-	// 残像の本体とヒレに位置や回転、拡縮を設定する（色はUpdateDodgeAfterImages_で設定する）
-	image.body_->SetTranslate(image.pos_);
-	image.body_->SetRotate(image.rot_);
-	image.body_->SetScale(image.scale_);
-	image.body_->SetColor({ 0.04f, 0.04f, 0.04f, 0.35f }); // 最初は少し見えるようにしておく
-
-	image.flipper_->SetColor({ 0.04f, 0.04f, 0.04f, 0.35f }); // 最初は少し見えるようにしておく
-
-	// 本体とヒレの行列などを更新する
-	image.body_->Update();
-	image.flipper_->Update();
-
-	dodgeAfterImageWriteIndex_++; // 次の書き込み位置へ進める
-
-	// 書き込み位置が配列の最大数を超えたら先頭に戻る（古い残像が上書きされる）
-	if (dodgeAfterImageWriteIndex_ >= kDodgeAfterImageMax_) {
-		dodgeAfterImageWriteIndex_ = 0;
-	}
-}
-
-void Player::DrawDodgeAfterImages_(TKM::DirectXCommon* dxCommon) {
-	// 全ての残像を描画する
-	for (auto& image : dodgeAfterImages_) {
-		if (!image.active_) {
-			continue;
-		}
-
-		image.body_->Draw(dxCommon); // 残像の本体を描画する
-
-		// ヒレは本体の子なので本体と一緒に描画されるが、念のため個別に描画する
-		if (image.flipper_) {
-			image.flipper_->Draw(dxCommon);
-		}
-	}
 }
 
 void Player::NotifyHudState_() {
@@ -829,8 +722,8 @@ bool Player::TryDamageFromAttack(int damage, int attackId) {
 
 void Player::Draw(TKM::DirectXCommon* dxCommon) {
 
-	// 回避残像を本体より先に描画する
-	DrawDodgeAfterImages_(dxCommon);
+	// 回避残像を描画する
+	dodge_->Draw(dxCommon);
 
 	//=========================================================
 	// 無敵点滅中の本体描画制御
@@ -868,11 +761,7 @@ void Player::SetCamera(TKM::Camera* camera) {
 	if (flipper_) { flipper_->SetCamera(camera); }
 
 	// 回避残像にもカメラを渡す
-	for (auto& image : dodgeAfterImages_) {
-		// 本体とヒレ両方にカメラを渡す
-		if (image.body_) { image.body_->SetCamera(camera); }
-		if (image.flipper_) { image.flipper_->SetCamera(camera); }
-	}
+	if (dodge_) { dodge_->SetCamera(camera); }
 
 	// ショットマネージャーへもカメラを渡す
 	shotManager_->SetCamera(camera);
@@ -1111,9 +1000,6 @@ void Player::SetRotate(const Vector3& rotRad) {
 void Player::HandleGamePadMove() {
 	// 本体未生成なら何もしない
 	if (!object_) return;
-
-	// 回避中は通常移動しない
-	if (isDodging_) return;
 
 	// 現在位置を取得する
 	Vector3 pos = object_->GetTranslate();
@@ -1563,206 +1449,4 @@ void Player::UpdateFloatBob_(float dt) {
 
 	// 位置を反映する
 	object_->SetTranslate(pos);
-}
-
-void Player::StartDodge() {
-	// 本体が無ければ開始しない
-	if (!object_) return;
-
-	// すでに回避中なら開始しない
-	if (isDodging_) return;
-
-	auto* in = TKM::Input::GetInstance();
-
-	//=========================================================
-	// ゲームパッド方向入力取得
-	//=========================================================
-	float rx = static_cast<float>(in->GetLeftStickX());
-	float ry = static_cast<float>(in->GetLeftStickY());
-
-	const float dz = 6000.0f;
-	if (std::fabs(rx) < dz) { rx = 0.0f; }
-	if (std::fabs(ry) < dz) { ry = 0.0f; }
-
-	const float norm = 32767.0f;
-	rx /= norm;
-	ry /= norm;
-
-	//=========================================================
-	// キーボード方向入力取得
-	//=========================================================
-	float keyX = 0.0f;
-	float keyY = 0.0f;
-
-	if (in->PushKey(DIK_A) || in->PushKey(DIK_LEFT)) { keyX -= 1.0f; }
-	if (in->PushKey(DIK_D) || in->PushKey(DIK_RIGHT)) { keyX += 1.0f; }
-	if (in->PushKey(DIK_W) || in->PushKey(DIK_UP)) { keyY += 1.0f; }
-	if (in->PushKey(DIK_S) || in->PushKey(DIK_DOWN)) { keyY -= 1.0f; }
-
-	// 斜め入力を正規化する
-	if (std::fabs(keyX) > 0.0001f || std::fabs(keyY) > 0.0001f) {
-		float keyLen = std::sqrt(keyX * keyX + keyY * keyY);
-		if (keyLen > 0.0001f) {
-			keyX /= keyLen;
-			keyY /= keyLen;
-		}
-	}
-
-	//=========================================================
-	// パッドとキーボード入力を合成
-	//=========================================================
-	float moveX = rx;
-	float moveY = ry;
-
-	// キーボード入力があればそちらを優先する
-	if (std::fabs(keyX) > 0.0001f || std::fabs(keyY) > 0.0001f) {
-		moveX = keyX;
-		moveY = keyY;
-	}
-
-	//=========================================================
-	// カメラ基準のワールド方向へ変換
-	//=========================================================
-	Vector3 camRight = { 1,0,0 };
-	Vector3 camUp = { 0,1,0 };
-	if (camera_) {
-		const auto& W = camera_->GetWorldMatrix();
-		camRight = MyMath::Normalize({ W.m[0][0], W.m[0][1], W.m[0][2] });
-		camUp = MyMath::Normalize({ W.m[1][0], W.m[1][1], W.m[1][2] });
-	}
-
-	// カメラ基準で回避方向を作る
-	Vector3 dir = camRight * moveX + camUp * moveY;
-	dir.z = 0.0f;
-
-	// 入力方向が無ければ回避しない
-	if (MyMath::Length(dir) < 0.001f) {
-		return;
-	}
-
-	// 方向を正規化する
-	dir = MyMath::Normalize(dir);
-
-	//=========================================================
-	// 回避開始状態を設定
-	//=========================================================
-	isDodging_ = true;
-	dodgeT_ = 0.0f;
-	dodgeStartPos_ = object_->GetTranslate();
-	dodgeDir_ = dir;
-
-	// 回避SEを鳴らす
-	TKM::AudioManager::GetInstance()->PlaySound("avoid", 0.1f);
-
-	// 回避開始時の回転を保存する
-	dodgeBaseRot_ = object_->GetRotate();
-
-	{
-		// 横方向成分の絶対値
-		const float ax = std::fabs(dodgeDir_.x);
-
-		// 縦方向成分の絶対値
-		const float ay = std::fabs(dodgeDir_.y);
-
-		// 左右回避か上下回避か判定する
-		const bool horizontal = (ax >= ay);
-
-		if (horizontal) {
-			// 左右回避ならロール回転を使う
-			dodgeSpinWRoll_ = 1.0f;
-			dodgeSpinWPitch_ = 0.0f;
-
-			// 左右方向でロール符号を決める
-			dodgeSpinRollSign_ = (dodgeDir_.x >= 0.0f) ? -1.0f : +1.0f;
-			dodgeSpinPitchSign_ = +1.0f;
-		} else {
-			// 上下回避ならピッチ回転を使う
-			dodgeSpinWRoll_ = 0.0f;
-			dodgeSpinWPitch_ = 1.0f;
-
-			// 上下方向でピッチ符号を決める
-			dodgeSpinPitchSign_ = (dodgeDir_.y >= 0.0f) ? +1.0f : -1.0f;
-			dodgeSpinRollSign_ = +1.0f;
-		}
-	}
-}
-
-void Player::HandleDodge(float dt) {
-	auto* in = TKM::Input::GetInstance();
-
-	// 回避中でなく、回避入力が入ったら開始する
-	if (!isDodging_ && (in->PushButton(XINPUT_GAMEPAD_X) || in->TriggerKey(DIK_J))) {
-		StartDodge();
-	}
-
-	// 回避中でなければ以降は何もしない
-	if (!isDodging_) return;
-
-	// 回避経過時間を進める
-	dodgeT_ += dt;
-
-	//=========================================================
-	// 進行率計算
-	//=========================================================
-	float uMove = dodgeT_ / std::max(0.001f, dodgeDuration_);
-	if (uMove > 1.0f) uMove = 1.0f;
-
-	float uSpin = dodgeT_ / std::max(0.001f, dodgeSpinDuration_);
-	if (uSpin > 1.0f) uSpin = 1.0f;
-
-	// 移動イーズ値
-	float eMove = 0.5f - 0.5f * std::cos(MyMath::GetPI() * uMove);
-
-	// 回転イーズ値
-	float eSpin = 0.5f - 0.5f * std::cos(MyMath::GetPI() * uSpin);
-
-	//=========================================================
-	// 位置更新
-	//=========================================================
-	{
-		// 開始位置から回避方向へ進める
-		Vector3 pos = dodgeStartPos_ + dodgeDir_ * (dodgeDistance_ * eMove);
-
-		// 範囲外へ出ないようにクランプする
-		pos.x = std::clamp(pos.x, moveMin_.x, moveMax_.x);
-		pos.y = std::clamp(pos.y, moveMin_.y, moveMax_.y);
-		pos.z = 0.0f;
-
-		// 位置を反映する
-		object_->SetTranslate(pos);
-	}
-
-	//=========================================================
-	// 回転更新
-	//=========================================================
-	{
-		// 回転の進み量を計算する
-		float spin = (MyMath::GetPI() * 2.0f) * dodgeSpinTurns_ * eSpin;
-
-		// 現在回転を取得する
-		Vector3 rot = object_->GetRotate();
-
-		// 上下回避時はX回転を使う
-		rot.x = dodgeBaseRot_.x + dodgeSpinPitchSign_ * spin * dodgeSpinWPitch_;
-
-		// 左右回避時はZ回転を使う
-		rot.z = bankAngle_ + dodgeSpinRollSign_ * spin * dodgeSpinWRoll_;
-
-		// 回転を反映する
-		object_->SetRotate(rot);
-	}
-
-	//=========================================================
-	// 回避終了処理
-	//=========================================================
-	if (uMove >= 1.0f && uSpin >= 1.0f) {
-		// 回避終了
-		isDodging_ = false;
-
-		// 最終姿勢を通常状態へ戻す
-		Vector3 r = object_->GetRotate();
-		r.x = dodgeBaseRot_.x;
-		r.z = bankAngle_;
-		object_->SetRotate(r);
-	}
 }
