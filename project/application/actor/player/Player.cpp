@@ -16,10 +16,8 @@
 void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommon) {
 	// Object3d共通への参照を保持する
 	common_ = common;
-
 	// DirectX共通への参照を保持する
 	dxCommon_ = dxCommon;
-
 	// トレイル描画システムを初期化する
 	TKM::TrailRibbonRenderer::GetInstance()->Initialize(dxCommon_);
 
@@ -29,10 +27,8 @@ void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommo
 
 	// プレイヤー本体の3Dオブジェクトを生成する
 	object_ = std::make_unique<TKM::Object3d>();
-
 	// 本体の描画に必要な情報を渡して初期化する
 	object_->Initialize(common_, dxCommon_);
-
 	// 本体モデルを設定する
 	object_->SetModel("turtle.obj");
 
@@ -42,19 +38,14 @@ void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommo
 
 	// ヒレ用3Dオブジェクトを生成する
 	flipper_ = std::make_unique<TKM::Object3d>();
-
 	// ヒレの描画に必要な情報を渡して初期化する
 	flipper_->Initialize(common_, dxCommon_);
-
 	// ヒレモデルを設定する
 	flipper_->SetModel("turtle_flipper.obj");
-
 	// ヒレを本体の子にして追従させる
 	flipper_->SetParent(object_.get());
-
 	// ヒレ回転の基準姿勢を保存する
 	flipperBaseRot_ = flipper_->GetRotate();
-
 	// ヒレアニメ用タイマーを初期化する
 	flipperAnimT_ = 0.0f;
 
@@ -67,24 +58,29 @@ void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommo
 	dodge_->Initialize(common_, dxCommon_, camera_);
 
 	//=========================================================
+	// HP管理生成
+	//=========================================================
+
+	// HP管理クラスを生成する
+	health_ = std::make_unique<PlayerHealth>();
+	// HP管理を初期化する
+	health_->Initialize(5);
+
+	//=========================================================
 	// レティクル生成
 	//=========================================================
 
 	// レティクルを生成する
 	reticle_ = std::make_unique<Reticle>();
-
 	// レティクルを初期化する
 	reticle_->Initialize(common_, dxCommon_, "reticle_big.obj");
-
 	// プレイヤーの位置とヨー角をレティクルへ渡すコールバックを登録する
 	reticle_->BindOwner(
 		[this]() { return object_->GetTranslate(); },
 		[this]() { return object_->GetRotate().y; }
 	);
-
 	// レティクルの移動範囲を設定する
 	reticle_->SetMoveRange(moveMin_, moveMax_);
-
 	// レティクル中心取得処理を一度呼んでおく
 	reticle_->GetCenterWorldPos();
 
@@ -94,25 +90,18 @@ void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommo
 
 	// ショットマネージャーを生成する
 	shotManager_ = std::make_unique<PlayerShotManager>();
-
 	// プレイヤー参照と描画情報を渡して初期化する
 	shotManager_->Initialize(this, common_, dxCommon_);
-
 	// ショット設定JSONを読み込む
 	const bool loaded = shotConfig_.Load("./resources/data/playerShotConfig.json");
-
 	// 読み込み失敗時は停止する
 	assert(loaded && "playerShotConfig.json の読込に失敗しました");
-
 	// 読み込んだ設定をショットマネージャーへ渡す
 	shotManager_->SetConfig(&shotConfig_);
-
 	// 自機オブジェクト参照を渡す
 	shotManager_->SetOwnerObject(object_.get());
-
 	// レティクル参照を渡す
 	shotManager_->SetReticle(reticle_.get());
-
 	// カメラ参照を渡す
 	shotManager_->SetCamera(camera_);
 
@@ -193,54 +182,8 @@ void Player::Update(float dt) {
 	// コントローラー振動を更新する
 	UpdateRumble(dt);
 
-	//=========================================================
-	// 無敵時間更新
-	//=========================================================
-	if (isInvincible_) {
-		// 無敵経過時間を進める
-		invincibleT_ += dt;
-
-		// 点滅用タイマーを進める
-		blinkT_ += dt;
-
-		// 一定間隔ごとに表示/非表示を切り替える
-		if (blinkT_ >= kBlinkInterval_) {
-			blinkT_ = 0.0f;
-			invincibleVisible_ = !invincibleVisible_;
-		}
-
-		// 無敵時間が終わったら通常状態へ戻す
-		if (invincibleT_ >= kInvincibleSec_) {
-			isInvincible_ = false;
-			invincibleT_ = 0.0f;
-			blinkT_ = 0.0f;
-			invincibleVisible_ = true;
-		}
-	}
-
-	//=========================================================
-	// 被弾フラッシュタイマー更新
-	//=========================================================
-	if (hitFlashTimer_ > 0.0f) {
-		// タイマーを減らす
-		hitFlashTimer_ -= dt;
-
-		// 0未満にならないようにする
-		if (hitFlashTimer_ < 0.0f) {
-			hitFlashTimer_ = 0.0f;
-		}
-	}
-
-	//=========================================================
-	// 同一攻撃IDロックタイマー更新
-	//=========================================================
-	if (sameAttackLockT_ > 0.0f) {
-		// ロック時間を減らす
-		sameAttackLockT_ -= dt;
-
-		// 0未満にならないようにする
-		if (sameAttackLockT_ < 0.0f) { sameAttackLockT_ = 0.0f; }
-	}
+	// HP管理を更新する
+	health_->Update(dt);
 
 	//=========================================================
 	// ゲーム開始時の前進演出更新
@@ -329,7 +272,7 @@ void Player::Update(float dt) {
 
 		// 被弾フラッシュ中は赤、それ以外は緑で表示する
 		TKM::LineRenderer::Color col =
-			(hitFlashTimer_ > 0.0f)
+			(health_ && health_->IsHitFlashActive())
 			? TKM::LineRenderer::Color{ 1.0f, 0.0f, 0.0f, 1.0f }
 		: TKM::LineRenderer::Color{ 0.0f, 1.0f, 0.0f, 1.0f };
 
@@ -344,7 +287,7 @@ void Player::Update(float dt) {
 	//=========================================================
 	// ジェット煙更新
 	//=========================================================
-	if (enableJetSmoke_ && hp_ > 0) {
+	if (enableJetSmoke_ && health_ && !health_->IsDead()) {
 		// 機体後方に煙の発生位置を置く
 		Vector3 jetPos = object_->GetTranslate();
 		jetPos.z -= kJetSmokeOffsetZ_;
@@ -407,9 +350,6 @@ void Player::ImGuiDebug() {
 	// バリアヒット数表示
 	ImGui::Text("ヒット数: %d", static_cast<int>(wave1BarrierHits_.size()));
 
-	// 直前に受けた攻撃ID表示
-	ImGui::Text("直前に当たった攻撃ID: %d", lastHitAttackId_);
-
 	// 位置編集
 	if (ImGui::DragFloat3("位置", &pos.x, 0.01f)) {
 		object_->SetTranslate(pos);
@@ -436,7 +376,12 @@ void Player::ImGuiDebug() {
 	ImGui::Separator();
 
 	// HPリセットボタン
-	if (ImGui::Button("HPリセット")) { hp_ = 5; }
+	if (ImGui::Button("HPリセット")) {
+		// HPを最大値に戻す
+		health_->Reset();
+		NotifyHudState_(); // HUDへ状態変更を通知する
+
+	}
 
 	ImGui::SeparatorText("カメラシェイク");
 
@@ -481,8 +426,8 @@ bool Player::IsHudStateChanged_(const HudState& state) const {
 void Player::NotifyHudState_() {
 	// 現在の状態を構造体にまとめる
 	HudState state{};
-	state.currentHp_ = hp_; // 現在HP
-	state.maxHp_ = maxHp_; // 最大HP
+	state.currentHp_ = GetHP(); // 現在HP
+	state.maxHp_ = GetMaxHP(); // 最大HP
 	// RB弾の残弾数、最大残弾数、回復中かどうかを取得して構造体にセットする
 	state.rbAmmo_ = GetRbAmmo(); // RB弾の残弾数
 	state.rbAmmoMax_ = GetRbAmmoMax(); // RB弾の最大残弾数
@@ -524,14 +469,10 @@ void Player::OnEnemyDestroyed(Enemy* e) {
 }
 
 void Player::Damage(int value) {
-	// 無敵中ならダメージを受けない
-	if (isInvincible_) { return; }
-
-	// HPを減らす
-	hp_ -= value;
-	// 0未満にならないよう補正する
-	if (hp_ < 0) hp_ = 0;
-
+	// HP管理側でダメージを処理する
+	if (!health_ || !health_->Damage(value)) {
+		return;
+	}
 	// HPが変化したのでHUDへ通知する
 	NotifyHudState_();
 
@@ -541,39 +482,21 @@ void Player::Damage(int value) {
 
 	// 1段目の重い振動を開始する
 	StartRumble(0.10f, 52000, 18000);
-
 	// 2段目振動を予約する
 	rumble2Pending_ = true;
-
 	// 2段目開始までの遅延
 	rumble2DelayT_ = 0.07f;
-
 	// 2段目の継続時間
 	rumble2Sec_ = 0.08f;
-
 	// 2段目左モーター強度
 	rumble2Left_ = 0;
-
 	// 2段目右モーター強度
 	rumble2Right_ = 42000;
-
-	//=========================================================
-	// 被弾フラッシュ開始
-	//=========================================================
-	hitFlashTimer_ = 0.15f;
-
-	//=========================================================
-	// 無敵開始
-	//=========================================================
-	isInvincible_ = true;
-	invincibleT_ = 0.0f;
-	blinkT_ = 0.0f;
-	invincibleVisible_ = true;
 }
 
 void Player::Death() {
 	// HPが残っているなら死亡処理しない
-	if (hp_ > 0) {
+	if (!health_ || !health_->IsDead()) {
 		return;
 	}
 
@@ -699,24 +622,31 @@ void Player::StartBossDeathCameraZoom() {
 }
 
 bool Player::TryDamageFromAttack(int damage, int attackId) {
-	// 無敵中なら受けない
-	if (isInvincible_) {
+	// HP管理側で攻撃ID付きダメージを処理する
+	if (!health_ || !health_->TryDamageFromAttack(damage, attackId)) {
 		return false;
 	}
 
-	// ロック時間中に同じ攻撃IDなら無視する
-	if (sameAttackLockT_ > 0.0f && attackId == lastHitAttackId_) {
-		return false;
-	}
+	// HPが変化したのでHUDへ通知する
+	NotifyHudState_();
 
-	// ダメージを通す
-	Damage(damage);
+	//=========================================================
+	// 被弾振動設定
+	//=========================================================
 
-	// 今回の攻撃IDを記録する
-	lastHitAttackId_ = attackId;
+	// 1段目の重い振動を開始する
+	StartRumble(0.10f, 52000, 18000);
+	// 2段目振動を予約する
+	rumble2Pending_ = true;
+	// 2段目開始までの遅延
+	rumble2DelayT_ = 0.07f;
+	// 2段目の継続時間
+	rumble2Sec_ = 0.08f;
+	// 2段目左モーター強度
+	rumble2Left_ = 0;
+	// 2段目右モーター強度
+	rumble2Right_ = 42000;
 
-	// 短時間だけ同一攻撃ロックをかける
-	sameAttackLockT_ = 0.20f;
 	return true;
 }
 
@@ -728,7 +658,7 @@ void Player::Draw(TKM::DirectXCommon* dxCommon) {
 	//=========================================================
 	// 無敵点滅中の本体描画制御
 	//=========================================================
-	if (isInvincible_ && !invincibleVisible_) {
+	if (health_ && health_->IsInvincible() && !health_->IsVisible()) {
 		// 点滅の非表示タイミングなので描かない
 	} else {
 		// 本体を描画する
@@ -745,6 +675,15 @@ void Player::Draw(TKM::DirectXCommon* dxCommon) {
 
 	// 弾を描画する
 	shotManager_->DrawBullets(dxCommon);
+}
+
+void Player::SetHP(int hp) {
+	// HP管理側へHPを設定する
+	health_->SetHP(hp);
+
+
+	// HPが変化したのでHUDへ通知する
+	NotifyHudState_();
 }
 
 void Player::SetCamera(TKM::Camera* camera) {

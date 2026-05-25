@@ -65,7 +65,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\2d;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\func\common;$(ProjectDir)engine\func\math;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\effect\post;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir)engine\effect\light;$(ProjectDir)engine\audio;$(ProjectDir)engine\effect\particle;$(ProjectDir)engine\effect\line;$(ProjectDir)application\scene;$(ProjectDir)engine\imgui;$(ProjectDir)application\actor\player;$(ProjectDir)application\actor\enemy;$(ProjectDir)application\actor\boss;$(ProjectDir)application\effect;$(ProjectDir)engine\csv;$(ProjectDir)application\controller;$(ProjectDir)application\ui;$(ProjectDir)application\effect\controller;$(ProjectDir)application\scene\controller;$(ProjectDir)application\catalog;$(ProjectDir)engine\3d\camera;$(ProjectDir)engine\3d\camera\manager;$(ProjectDir)engine\state;$(ProjectDir)application\state;$(ProjectDir)application\actor;$(ProjectDir)externals\nlohmann;$(ProjectDir)application\actor\player\shot;$(ProjectDir)application\actor\barrier;$(ProjectDir)application\sequence;$(ProjectDir)application\ui\config;$(ProjectDir)application\actor\player\dodge</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\2d;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\func\common;$(ProjectDir)engine\func\math;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\effect\post;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir)engine\effect\light;$(ProjectDir)engine\audio;$(ProjectDir)engine\effect\particle;$(ProjectDir)engine\effect\line;$(ProjectDir)application\scene;$(ProjectDir)engine\imgui;$(ProjectDir)application\actor\player;$(ProjectDir)application\actor\enemy;$(ProjectDir)application\actor\boss;$(ProjectDir)application\effect;$(ProjectDir)engine\csv;$(ProjectDir)application\controller;$(ProjectDir)application\ui;$(ProjectDir)application\effect\controller;$(ProjectDir)application\scene\controller;$(ProjectDir)application\catalog;$(ProjectDir)engine\3d\camera;$(ProjectDir)engine\3d\camera\manager;$(ProjectDir)engine\state;$(ProjectDir)application\state;$(ProjectDir)application\actor;$(ProjectDir)externals\nlohmann;$(ProjectDir)application\actor\player\shot;$(ProjectDir)application\actor\barrier;$(ProjectDir)application\sequence;$(ProjectDir)application\ui\config;$(ProjectDir)application\actor\player\dodge;$(ProjectDir)application\actor\player\health</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -94,7 +94,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\2d;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\func\common;$(ProjectDir)engine\func\math;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\effect\post;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir)engine\effect\light;$(ProjectDir)engine\audio;$(ProjectDir)engine\effect\particle;$(ProjectDir)engine\effect\line;$(ProjectDir)application\scene;$(ProjectDir)engine\imgui;$(ProjectDir)application\actor\player;$(ProjectDir)application\actor\enemy;$(ProjectDir)application\actor\boss;$(ProjectDir)application\effect;$(ProjectDir)engine\csv;$(ProjectDir)application\controller;$(ProjectDir)application\ui;$(ProjectDir)application\effect\controller;$(ProjectDir)application\scene\controller;$(ProjectDir)application\catalog;$(ProjectDir)engine\3d\camera;$(ProjectDir)engine\3d\camera\manager;$(ProjectDir)engine\state;$(ProjectDir)application\state;$(ProjectDir)application\actor;$(ProjectDir)externals\nlohmann;$(ProjectDir)application\actor\player\shot;$(ProjectDir)application\actor\barrier;$(ProjectDir)application\sequence;$(ProjectDir)application\ui\config;$(ProjectDir)application\actor\player\dodge</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\2d;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\func\common;$(ProjectDir)engine\func\math;$(ProjectDir)engine\io;$(ProjectDir)engine\scene;$(ProjectDir)engine\effect\post;$(ProjectDir)externals\imgui;$(ProjectDir)externals\DirectXTex;$(ProjectDir)engine\effect\light;$(ProjectDir)engine\audio;$(ProjectDir)engine\effect\particle;$(ProjectDir)engine\effect\line;$(ProjectDir)application\scene;$(ProjectDir)engine\imgui;$(ProjectDir)application\actor\player;$(ProjectDir)application\actor\enemy;$(ProjectDir)application\actor\boss;$(ProjectDir)application\effect;$(ProjectDir)engine\csv;$(ProjectDir)application\controller;$(ProjectDir)application\ui;$(ProjectDir)application\effect\controller;$(ProjectDir)application\scene\controller;$(ProjectDir)application\catalog;$(ProjectDir)engine\3d\camera;$(ProjectDir)engine\3d\camera\manager;$(ProjectDir)engine\state;$(ProjectDir)application\state;$(ProjectDir)application\actor;$(ProjectDir)externals\nlohmann;$(ProjectDir)application\actor\player\shot;$(ProjectDir)application\actor\barrier;$(ProjectDir)application\sequence;$(ProjectDir)application\ui\config;$(ProjectDir)application\actor\player\dodge;$(ProjectDir)application\actor\player\health</AdditionalIncludeDirectories>
       <Optimization>MinSpace</Optimization>
     </ClCompile>
     <Link>
@@ -204,7 +204,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\base\WindowsAPI.cpp" />
     <ClCompile Include="engine\scene\MyGame.cpp" />
     <ClCompile Include="engine\effect\particle\ParticleManager.cpp" />
-    <ClCompile Include="engine\effect\particle\ParticlerEmitter.cpp" />
+    <ClCompile Include="engine\effect\particle\ParticleEmitter.cpp" />
     <ClCompile Include="engine\base\SrvManager.cpp" />
     <ClCompile Include="engine\scene\SceneFactory.cpp" />
     <ClCompile Include="engine\scene\SceneManager.cpp" />
@@ -241,6 +241,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\effect\post\MotionBlurEffect.cpp" />
     <ClCompile Include="application\ui\config\PlayerHudConfig.cpp" />
     <ClCompile Include="application\actor\player\dodge\PlayerDodge.cpp" />
+    <ClCompile Include="application\actor\player\health\PlayerHealth.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\actor\enemy\manager\EnemyManager.h" />
@@ -308,7 +309,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\imgui\ImGuiManager.h" />
     <ClInclude Include="engine\scene\MyGame.h" />
     <ClInclude Include="engine\effect\particle\ParticleManager.h" />
-    <ClInclude Include="engine\effect\particle\ParticlerEmitter.h" />
+    <ClInclude Include="engine\effect\particle\ParticleEmitter.h" />
     <ClInclude Include="engine\base\SrvManager.h" />
     <ClInclude Include="application\scene\GameScene.h" />
     <ClInclude Include="engine\scene\SceneFactory.h" />
@@ -362,6 +363,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\effect\post\MotionBlurEffect.h" />
     <ClInclude Include="application\ui\config\PlayerHudConfig.h" />
     <ClInclude Include="application\actor\player\dodge\PlayerDodge.h" />
+    <ClInclude Include="application\actor\player\health\PlayerHealth.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="application\scene\controller\TitleMenuController.h" />
     <ClInclude Include="application\catalog\TextureCatalog.h" />

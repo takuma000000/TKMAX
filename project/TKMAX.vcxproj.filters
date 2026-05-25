@@ -53,7 +53,7 @@
     <ClCompile Include="engine\effect\light\DirectionalLight.cpp">
       <Filter>engine\effect\light</Filter>
     </ClCompile>
-    <ClCompile Include="engine\effect\particle\ParticlerEmitter.cpp">
+    <ClCompile Include="engine\effect\particle\ParticleEmitter.cpp">
       <Filter>engine\effect\particle</Filter>
     </ClCompile>
     <ClCompile Include="engine\effect\particle\ParticleManager.cpp">
@@ -223,6 +223,7 @@
     <ClCompile Include="engine\effect\post\MotionBlurEffect.cpp" />
     <ClCompile Include="application\ui\config\PlayerHudConfig.cpp" />
     <ClCompile Include="application\actor\player\dodge\PlayerDodge.cpp" />
+    <ClCompile Include="application\actor\player\health\PlayerHealth.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
@@ -276,7 +277,7 @@
     <ClInclude Include="engine\effect\light\DirectionalLight.h">
       <Filter>engine\effect\light</Filter>
     </ClInclude>
-    <ClInclude Include="engine\effect\particle\ParticlerEmitter.h">
+    <ClInclude Include="engine\effect\particle\ParticleEmitter.h">
       <Filter>engine\effect\particle</Filter>
     </ClInclude>
     <ClInclude Include="engine\effect\particle\ParticleManager.h">
@@ -487,6 +488,7 @@
     <ClInclude Include="engine\effect\post\MotionBlurEffect.h" />
     <ClInclude Include="application\ui\config\PlayerHudConfig.h" />
     <ClInclude Include="application\actor\player\dodge\PlayerDodge.h" />
+    <ClInclude Include="application\actor\player\health\PlayerHealth.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

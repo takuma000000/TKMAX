@@ -8,7 +8,7 @@
 #include "Input.h"
 #include <algorithm>
 #include <list>
-#include <ParticlerEmitter.h>
+#include <ParticleEmitter.h>
 #include "Easing.h"
 #include "reticle/Reticle.h"
 #include "LineRenderer.h"
@@ -20,6 +20,7 @@
 #include <vector>
 #include <array>
 #include "PlayerDodge.h"
+#include "PlayerHealth.h"
 
 class BarrierCore;
 class Enemy;
@@ -226,23 +227,17 @@ public:
 	/// プレイヤーのHPを取得します。
 	/// </summary>
 	/// <returns></returns>
-	int GetHP() const { return hp_; }
+	int GetHP() const { return health_ ? health_->GetHP() : 0; }
 	/// <summary>
 	/// プレイヤーの最大HPを取得します。
 	/// </summary>
 	/// <returns></returns>
-	int GetMaxHP() const { return maxHp_; }
+	int GetMaxHP() const { return health_ ? health_->GetMaxHP() : 1; }
 	/// <summary>
 	/// プレイヤーのHP割合(0.0f〜1.0f)を取得します。
 	/// </summary>
 	/// <returns></returns>
-	float GetHPRate() const {
-		if (maxHp_ <= 0) { return 0.0f; }
-		float r = (float)hp_ / (float)maxHp_;
-		if (r < 0.0f) r = 0.0f;
-		if (r > 1.0f) r = 1.0f;
-		return r;
-	}
+	float GetHPRate() const { return health_ ? health_->GetHPRate() : 0.0f; }
 	/// <summary>
 	/// レティクルを取得します。
 	/// </summary>
@@ -304,7 +299,7 @@ public:
 	/// プレイヤーの HP を設定します。
 	/// </summary>
 	/// <param name="hp">設定する HP</param>
-	void SetHP(int hp) { hp_ = hp; }
+	void SetHP(int hp);
 	/// <summary>
 	/// 使用するカメラを設定します。
 	/// プレイヤー本体およびレティクルにも同じカメラを適用します。
@@ -431,6 +426,7 @@ private:
 	std::unique_ptr<TKM::Object3d> object_; // プレイヤー本体の3Dオブジェクト
 	std::unique_ptr<TKM::Object3d> flipper_; // プレイヤーの左右フリップ用オブジェクト
 	std::unique_ptr<PlayerDodge> dodge_; // 回避行動管理クラス
+	std::unique_ptr<PlayerHealth> health_; // HP、無敵、被弾状態管理クラス
 	//======================================================================
 	// カメラシェイク・バンク・移動範囲
 	//======================================================================
@@ -453,8 +449,6 @@ private:
 	//======================================================================
 	// プレイヤー状態 / 制御フラグ
 	//======================================================================
-	int  maxHp_ = 5; // 最大HP
-	int  hp_ = 5;    // 初期HP
 	bool controlEnabled_ = true;  // trueなら通常操作、falseなら入力系を全部無視
 	bool reticleVisible_ = true;  // trueならレティクル描画
 	bool shootingEnabled_ = true; // trueなら射撃可能、falseなら射撃禁止
@@ -509,19 +503,6 @@ private:
 	//======================================================================
 	// --- 自機当たり判定(AABB) ---
 	Vector3 colliderScale_ = { 3.13f, 1.88f, 6.0f }; // 当たり判定用スケール
-	float   hitFlashTimer_ = 0.0f;                 // 被弾フラッシュ用タイマー
-	// --- 無敵 & 点滅 ---
-	bool  isInvincible_ = false;   // 無敵中か
-	float invincibleT_ = 0.0f;     // 無敵経過秒
-	float blinkT_ = 0.0f;          // 点滅用タイマー
-	bool  invincibleVisible_ = true; // 点滅表示フラグ
-	static constexpr float kInvincibleSec_ = 2.0f;     // 無敵時間
-	static constexpr float kBlinkInterval_ = 0.08f;    // 点滅間隔（秒）
-	//======================================================================
-	// 被弾管理（同一攻撃IDの連続ヒット防止）
-	//======================================================================
-	int   lastHitAttackId_ = -1;     // 最後に当たった攻撃ID
-	float sameAttackLockT_ = 0.0f;   // 同一攻撃IDロック残り時間（秒）
 	//======================================================================
 	// 振動（Rumble）
 	//======================================================================

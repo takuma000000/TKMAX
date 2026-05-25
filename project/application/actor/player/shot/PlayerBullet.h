@@ -9,7 +9,7 @@
 #include <memory>
 #include "Object3d.h"
 #include "MyMath.h"
-#include <ParticlerEmitter.h>
+#include <ParticleEmitter.h>
 #include <vector>
 
 class Player;

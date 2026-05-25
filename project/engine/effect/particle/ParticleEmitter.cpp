@@ -1,4 +1,4 @@
-#include "ParticlerEmitter.h"
+#include "ParticleEmitter.h"
 
 void ParticleEmitter::Initialize(std::string name, Vector3 pos){
 	this->name_ = name;
