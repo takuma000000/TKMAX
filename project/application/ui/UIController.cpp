@@ -14,6 +14,7 @@ namespace TKM {
 		parentScene_ = parentScene;
 		screenW_ = screenW;
 		screenH_ = screenH;
+		player_ = player;
 
 		// HUD全体の透明度を完全不透明で初期化する
 		hudAlpha_ = 1.0f;
@@ -100,8 +101,10 @@ namespace TKM {
 					hudState_.rbRefillingFromEmpty_;
 				// LBは回復中の概念がないので、単純に残弾数が0以下なら残弾なしとする
 				const bool lbNoAmmo = hudState_.lbAmmo_ <= 0;
+				// 回避クールタイム中かどうかを取得する
+				const bool xCooldown = player_ && player_->IsDodgeCooldown();
 				// 右側の操作ガイドUIを更新する
-				operationGuideUI_->Update(dt, rbNoAmmo, lbNoAmmo);
+				operationGuideUI_->Update(dt, rbNoAmmo, lbNoAmmo, xCooldown);
 
 				// プレイヤーHUDを更新する
 				playerHudUI_->Update(dt);

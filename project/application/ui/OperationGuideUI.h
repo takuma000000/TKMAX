@@ -33,7 +33,13 @@ namespace TKM {
 		/// <param name="dt">前フレームからの経過時間（秒）</param>
 		/// <param name="rbNoAmmo">RBの残弾なし状態</param>
 		/// <param name="lbNoAmmo">LBの残弾なし状態</param>
-		void Update(float dt, bool rbNoAmmo, bool lbNoAmmo);
+		/// <param name="xCooldown">X回避のクールタイム状態</param>
+		void Update(
+			float dt,
+			bool rbNoAmmo,
+			bool lbNoAmmo,
+			bool xCooldown
+		);
 		/// <summary>
 		/// 右側の操作UIを描画します。
 		/// </summary>
@@ -100,8 +106,9 @@ namespace TKM {
 		std::unique_ptr<Sprite> uiRB_; // RBアイコン
 		std::unique_ptr<Sprite> uiX_; // Xアイコン
 		std::unique_ptr<Sprite> uiLS_; // LSアイコン
-		std::unique_ptr<Sprite> rbNoAmmoCross_; // RBアイコン用の残弾なし赤バツ
-		std::unique_ptr<Sprite> lbNoAmmoCross_; // LBアイコン用の残弾なし赤バツ
+		std::unique_ptr<Sprite> rbNoAmmoCross_;  // RBアイコン用の残弾なし赤バツ
+		std::unique_ptr<Sprite> lbNoAmmoCross_;  // LBアイコン用の残弾なし赤バツ
+		std::unique_ptr<Sprite> xCooldownCross_; // X回避クールタイム用赤バツ
 		//=============================================================
 		// テクスチャパス
 		//=============================================================
@@ -192,6 +199,9 @@ namespace TKM {
 		bool lbNoAmmo_ = false; // LB残弾なし状態
 		bool prevRbNoAmmo_ = false; // 前フレームのRB残弾なし状態
 		bool prevLbNoAmmo_ = false; // 前フレームのLB残弾なし状態
+		bool xCooldown_ = false; // X回避クールタイム中
+		bool prevXCooldown_ = false; // 前フレームのX回避クールタイム状態
+		float xCrossPopT_ = 1.0f; // X赤バツ出現演出タイマー
 		float rbCrossPopT_ = 1.0f; // RB赤バツ出現演出タイマー
 		float lbCrossPopT_ = 1.0f; // LB赤バツ出現演出タイマー
 		static constexpr float kCrossPopSec_ = 0.18f; // 赤バツ出現演出時間

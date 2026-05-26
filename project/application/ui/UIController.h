@@ -82,6 +82,7 @@ namespace TKM {
 		SpriteCommon* spriteCommon_ = nullptr;
 		DirectXCommon* dxCommon_ = nullptr;
 		BaseScene* parentScene_ = nullptr;
+		Player* player_ = nullptr;
 		float screenW_ = 0.0f; // 画面幅
 		float screenH_ = 0.0f; // 画面高さ
 		//=============================================================

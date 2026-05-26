@@ -79,6 +79,10 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	bool IsDodging() const { return isDodging_; }
+	/// <summary>
+	/// 回避クールタイム中かどうか。
+	/// </summary>
+	bool IsCooldown() const { return dodgeCooldownTimer_ > 0.0f; }
 
 private:
 

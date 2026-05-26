@@ -837,6 +837,10 @@ void Player::SetShootingEnabled(bool enabled) {
 	shotManager_->SetShootingEnabled(enabled);
 }
 
+bool Player::IsDodgeCooldown() const {
+	return dodge_ ? dodge_->IsCooldown() : false;
+}
+
 const std::list<std::unique_ptr<PlayerBullet>>& Player::GetBullets() const {
 	// ショットマネージャーが管理する弾リストを返す
 	return shotManager_->GetBullets();

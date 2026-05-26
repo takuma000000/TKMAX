@@ -210,6 +210,10 @@ public:
 	/// ゲーム開始時の前進演出中かどうか。
 	/// </summary>
 	bool IsIntroForwardMoving() const { return introForwardActive_; }
+	/// <summary>
+	/// 回避クールタイム中かどうか。
+	/// </summary>
+	bool IsDodgeCooldown() const;
 
 	// Getter===================================
 	/// <summary>

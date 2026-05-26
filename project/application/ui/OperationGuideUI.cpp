@@ -225,10 +225,13 @@ namespace TKM {
 		// 残弾なし表示用の赤バツを生成する
 		rbNoAmmoCross_ = CreateSprite_("./resources/texture/cross.png", { 0.5f, 0.5f }, &noAmmoCrossTexSize_);
 		lbNoAmmoCross_ = CreateSprite_("./resources/texture/cross.png", { 0.5f, 0.5f }, nullptr);
+		xCooldownCross_ = CreateSprite_("./resources/texture/cross.png", { 0.5f, 0.5f }, nullptr);
 
 		// 赤バツの描画サイズを設定する
 		rbNoAmmoCross_->SetSize(noAmmoCrossDrawSize_);
 		lbNoAmmoCross_->SetSize(noAmmoCrossDrawSize_);
+		xCooldownCross_->SetSize(noAmmoCrossDrawSize_);
+		xCooldownCross_->SetSize(noAmmoCrossDrawSize_);
 
 		// テクスチャサイズから描画サイズを計算する
 		ApplyGuideSizes_();
@@ -262,7 +265,12 @@ namespace TKM {
 		ApplyGuidePositions_();
 	}
 
-	void OperationGuideUI::Update(float dt, bool rbNoAmmo, bool lbNoAmmo) {
+	void OperationGuideUI::Update(
+		float dt,
+		bool rbNoAmmo,
+		bool lbNoAmmo,
+		bool xCooldown
+	) {
 		Input* in = Input::GetInstance();
 
 		// 残弾なしになった瞬間だけ、赤バツ出現演出を最初から再生する
@@ -277,6 +285,12 @@ namespace TKM {
 		// 残弾なし状態を保存する
 		rbNoAmmo_ = rbNoAmmo;
 		lbNoAmmo_ = lbNoAmmo;
+		xCooldown_ = xCooldown;
+
+		// クールタイムになった瞬間だけ演出開始
+		if (xCooldown_ && !prevXCooldown_) {
+			xCrossPopT_ = 0.0f;
+		}
 
 		// 現在のゲームパッド接続状態を取得する
 		isGamepadConnected_ = in->IsGamepadConnected();
@@ -355,13 +369,13 @@ namespace TKM {
 		// 入力状態に応じて各UIの色を切り替える
 		colRB_ = (rbDown && !rbNoAmmo_) ? onCol_ : idleCol_;
 		colLB_ = (lbDown && !lbNoAmmo_) ? onCol_ : idleCol_;
-		colX_ = xDown ? onCol_ : idleCol_;
+		colX_ = (xDown && !xCooldown_) ? onCol_ : idleCol_;
 		colLS_ = lsMoving ? onCol_ : idleCol_;
 
 		// 入力状態に応じてアルファを切り替える
 		colRB_.w = (rbDown && !rbNoAmmo_) ? rightUiActiveAlpha_ : rightUiIdleAlpha_;
 		colLB_.w = (lbDown && !lbNoAmmo_) ? rightUiActiveAlpha_ : rightUiIdleAlpha_;
-		colX_.w = xDown ? rightUiActiveAlpha_ : rightUiIdleAlpha_;
+		colX_.w = (xDown && !xCooldown_) ? rightUiActiveAlpha_ : rightUiIdleAlpha_;
 		colLS_.w = lsMoving ? rightUiActiveAlpha_ : rightUiIdleAlpha_;
 
 		// 各スプライトの内部更新を行う
@@ -451,6 +465,8 @@ namespace TKM {
 		const float lbEase = Ease::Eval(Ease::Type::OutBack, lbCrossPopT_);
 		const float rbScale = MyMath::Lerp(kCrossStartScale_, kCrossEndScale_, rbEase);
 		const float lbScale = MyMath::Lerp(kCrossStartScale_, kCrossEndScale_, lbEase);
+		const float xEase = Ease::Eval(Ease::Type::OutBack, xCrossPopT_);
+		const float xScale = MyMath::Lerp(kCrossStartScale_, kCrossEndScale_, xEase);
 		// 赤バツのサイズを反映する
 		rbNoAmmoCross_->SetSize({ kCrossBaseSize_ * rbScale, kCrossBaseSize_ * rbScale });
 		lbNoAmmoCross_->SetSize({ kCrossBaseSize_ * lbScale, kCrossBaseSize_ * lbScale });
@@ -463,12 +479,18 @@ namespace TKM {
 			basePosLB_.x - lbDrawSize_.x * 0.5f,
 			basePosLB_.y - lbDrawSize_.y * 0.5f
 			});
+		xCooldownCross_->SetPosition({
+			basePosX_.x - xDrawSize_.x * 0.5f,
+			basePosX_.y - xDrawSize_.y * 0.5f
+			});
 		// 赤バツスプライトを更新する
 		rbNoAmmoCross_->Update();
 		lbNoAmmoCross_->Update();
+		xCooldownCross_->Update();
 		// 次フレーム用に残弾なし状態を保存する
 		prevRbNoAmmo_ = rbNoAmmo_;
 		prevLbNoAmmo_ = lbNoAmmo_;
+		prevXCooldown_ = xCooldown_;
 
 		// ImGui調整項目を表示する
 		DrawImGui();
@@ -498,6 +520,9 @@ namespace TKM {
 		}
 		if (lbNoAmmo_ && lbNoAmmoCross_) {
 			lbNoAmmoCross_->Draw();
+		}
+		if (xCooldown_ && xCooldownCross_) {
+			xCooldownCross_->Draw();
 		}
 
 		// LSはゲームパッド接続時のみ表示する
