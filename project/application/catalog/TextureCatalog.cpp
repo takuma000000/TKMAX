@@ -46,6 +46,7 @@ void TextureCatalog::LoadTextureCatalogs() {
 		"clear.png",
 		"cross.png",
 		"flower.png",
+		"back_pause.png",
 		"uvChecker.dds",
 		"title_kuraran.dds",
 	};

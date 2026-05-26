@@ -86,10 +86,21 @@ namespace TKM {
 		curtain_->SetPosition({ 0.0f, 0.0f });
 
 		// 画面全体を覆うサイズにする
-		curtain_->SetSize({ screenW_, screenH_ });
+		curtain_->SetSize({ 1280.0f, 720.0f });
+
+		{
+			// テクスチャのメタ情報を取得する
+			const auto& md = TextureManager::GetInstance()->GetMetadata(desc_.curtainTex);
+
+			// テクスチャ左上を原点にする
+			curtain_->SetTextureLeftTop({ 0.0f, 0.0f });
+
+			// テクスチャ全体を使用する
+			curtain_->SetTextureSize({ (float)md.width, (float)md.height });
+		}
 
 		// 初期状態では透明にする
-		curtain_->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
+		curtain_->SetColor({ 0.8f, 0.8f, 1.0f, 1.0f });
 
 		//=========================================================
 		// 項目生成
@@ -130,29 +141,8 @@ namespace TKM {
 		}
 
 		//=========================================================
-		// カーソル生成
+		// 初期レイアウト反映
 		//=========================================================
-
-		// カーソル用スプライトを生成する
-		cursor_ = std::make_unique<Sprite>();
-
-		// カーソルテクスチャで初期化する
-		cursor_->Initialize(spriteCommon_, dxCommon_, desc_.cursorTex);
-
-		// 親シーンを設定して描画順を合わせる
-		cursor_->SetParentScene(parentScene_);
-
-		// 項目左側に置くため左上基準にする
-		cursor_->SetAnchorPoint({ 0.0f, 0.0f });
-
-		// サイズはコード側で指定するため自動調整を切る
-		cursor_->SetAutoAdjustTextureSize(false);
-
-		// カーソルサイズを固定する
-		cursor_->SetSize({ 28.0f, 28.0f });
-
-		// 初期カーソル色を設定する
-		cursor_->SetColor({ 1.0f, 1.0f, 1.0f, 0.9f });
 
 		// 画面サイズに合わせて初期レイアウトを反映する
 		UpdateLayout(screenW_, screenH_);
@@ -179,7 +169,7 @@ namespace TKM {
 
 		// 暗幕がある場合は画面全体を覆うサイズへ更新する
 		if (curtain_) {
-			curtain_->SetSize({ screenW_, screenH_ });
+			curtain_->SetSize({ 1280.0f, 720.0f });
 		}
 
 		// 各項目を基準位置から縦に並べる
@@ -328,7 +318,7 @@ namespace TKM {
 			};
 
 		// 暗幕の最大透明度
-		constexpr float kTargetCurtainAlpha = 0.60f;
+		constexpr float kTargetCurtainAlpha = 0.7f;
 
 		// 開く速度
 		constexpr float kOpenSpeed = 8.0f;
@@ -558,39 +548,6 @@ namespace TKM {
 			items_[i]->Update();
 		}
 
-		//=========================================================
-		// カーソル更新
-		//=========================================================
-
-		if (cursor_) {
-			// 選択項目の出現遅延に合わせる
-			const float delay = 0.08f * (float)index_;
-
-			// 選択項目の出現率を計算する
-			float itemT = clamp01((uiOpen - delay) / 0.70f);
-
-			// 出現率をなめらかにする
-			itemT = smoothStep01(itemT);
-
-			// 選択項目の左側にカーソルを配置する
-			Vector2 pos = {
-				baseItemPos_.x - 120.0f,
-				baseItemPos_.y + itemSpacingY_ * (float)index_ + (1.0f - itemT) * 10.0f
-			};
-
-			// カーソル位置を反映する
-			cursor_->SetPosition(pos);
-
-			// カーソルサイズを固定する
-			cursor_->SetSize({ 28.0f, 28.0f });
-
-			// 出現率に応じた透明度で表示する
-			cursor_->SetColor({ 1.0f, 1.0f, 1.0f, 0.9f * itemT });
-
-			// カーソルを更新する
-			cursor_->Update();
-		}
-
 		// このフレームではコマンドなし
 		return Command::None;
 	}
@@ -606,8 +563,5 @@ namespace TKM {
 		for (int i = 0; i < (int)Item::Count; ++i) {
 			if (items_[i]) items_[i]->Draw();
 		}
-
-		// カーソルを描画する
-		if (cursor_) cursor_->Draw();
 	}
 } // namespace TKM
