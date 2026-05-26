@@ -89,26 +89,7 @@ namespace TKM {
 		curtain_->SetSize({ screenW_, screenH_ });
 
 		// 初期状態では透明にする
-		curtain_->SetColor({ 0.0f, 0.0f, 0.0f, 0.0f });
-
-		//=========================================================
-		// パネル生成
-		//=========================================================
-
-		// メニュー背景パネルを生成する
-		panel_ = std::make_unique<Sprite>();
-
-		// パネルテクスチャで初期化する
-		panel_->Initialize(spriteCommon_, dxCommon_, desc_.panelTex);
-
-		// 親シーンを設定して描画順を合わせる
-		panel_->SetParentScene(parentScene_);
-
-		// 左上基準で位置補正しやすくする
-		panel_->SetAnchorPoint({ 0.0f, 0.0f });
-
-		// サイズはコード側で指定するため自動調整を切る
-		panel_->SetAutoAdjustTextureSize(false);
+		curtain_->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
 
 		//=========================================================
 		// 項目生成
@@ -131,7 +112,7 @@ namespace TKM {
 			items_[i]->SetAutoAdjustTextureSize(false);
 
 			// 初期サイズを設定する
-			items_[i]->SetSize({ 220.0f, 100.0f });
+			items_[i]->SetSize({ 220.0f, 85.0f });
 
 			{
 				// テクスチャのメタ情報を取得する
@@ -194,18 +175,11 @@ namespace TKM {
 		baseItemPos_ = { panelPos_.x + panelSize_.x * 0.5f, panelPos_.y + 94.0f };
 
 		// 項目同士の縦間隔を設定する
-		itemSpacingY_ = 70.0f;
+		itemSpacingY_ = 82.0f;
 
 		// 暗幕がある場合は画面全体を覆うサイズへ更新する
 		if (curtain_) {
 			curtain_->SetSize({ screenW_, screenH_ });
-		}
-
-		// パネルがある場合は位置・サイズ・色を更新する
-		if (panel_) {
-			panel_->SetPosition(panelPos_);
-			panel_->SetSize(panelSize_);
-			panel_->SetColor({ 0.08f, 0.08f, 0.10f, 0.75f });
 		}
 
 		// 各項目を基準位置から縦に並べる
@@ -354,7 +328,7 @@ namespace TKM {
 			};
 
 		// 暗幕の最大透明度
-		constexpr float kTargetCurtainAlpha = 0.55f;
+		constexpr float kTargetCurtainAlpha = 0.60f;
 
 		// 開く速度
 		constexpr float kOpenSpeed = 8.0f;
@@ -514,46 +488,10 @@ namespace TKM {
 		//=========================================================
 		if (curtain_) {
 			// 現在の暗幕透明度を反映する
-			curtain_->SetColor({ 0.0f, 0.0f, 0.0f, curtainAlpha_ });
+			curtain_->SetColor({ 1.0f, 1.0f, 1.0f, curtainAlpha_ });
 
 			// 暗幕を更新する
 			curtain_->Update();
-		}
-
-		//=========================================================
-		// パネル更新
-		//=========================================================
-		if (panel_) {
-			// UI出現率をなめらかにする
-			const float t = smoothStep01(uiOpen);
-
-			// 開き途中は少し下から出るようにする
-			const float slideY = (1.0f - t) * 18.0f;
-
-			// 小さいポップ拡縮を作る
-			const float pi = 3.14159265f;
-			float pop = std::sin(t * pi);
-			float scale = 0.92f + 0.08f * t + 0.02f * pop;
-
-			// 拡縮後のパネルサイズを計算する
-			Vector2 baseSize = panelSize_;
-			Vector2 newSize = { baseSize.x * scale, baseSize.y * scale };
-
-			// 中心固定で拡縮させるため、左上位置を補正する
-			Vector2 baseCenter = { panelPos_.x + baseSize.x * 0.5f, panelPos_.y + baseSize.y * 0.5f };
-			Vector2 newPos = { baseCenter.x - newSize.x * 0.5f, baseCenter.y - newSize.y * 0.5f + slideY };
-
-			// パネル位置を反映する
-			panel_->SetPosition(newPos);
-
-			// パネルサイズを反映する
-			panel_->SetSize(newSize);
-
-			// パネル透明度を出現率に合わせる
-			panel_->SetColor({ 0.08f, 0.08f, 0.10f, 0.75f * t });
-
-			// パネルを更新する
-			panel_->Update();
 		}
 
 		//=========================================================
@@ -601,8 +539,10 @@ namespace TKM {
 			// 項目色を反映する
 			items_[i]->SetColor(col);
 
-			// 選択中なら少し大きい基準サイズにする
-			Vector2 baseSize = selected ? Vector2{ 240.0f, 48.0f } : Vector2{ 220.0f, 44.0f };
+			// 選択中は大きめ、未選択は少し小さめの基本サイズを作る
+			Vector2 baseSize = selected ?
+				Vector2{ 220.0f, 85.0f } :
+				Vector2{ 200.0f, 77.0f };
 
 			// 選択中なら脈動倍率を反映する
 			Vector2 size = selected ? Vector2{ baseSize.x * pulse, baseSize.y * pulse } : baseSize;
@@ -634,7 +574,7 @@ namespace TKM {
 
 			// 選択項目の左側にカーソルを配置する
 			Vector2 pos = {
-				baseItemPos_.x - 150.0f,
+				baseItemPos_.x - 120.0f,
 				baseItemPos_.y + itemSpacingY_ * (float)index_ + (1.0f - itemT) * 10.0f
 			};
 
@@ -661,9 +601,6 @@ namespace TKM {
 
 		// 暗幕を描画する
 		if (curtain_) curtain_->Draw();
-
-		// パネルを描画する
-		if (panel_) panel_->Draw();
 
 		// 各項目を描画する
 		for (int i = 0; i < (int)Item::Count; ++i) {

@@ -27,8 +27,7 @@ namespace TKM {
 		};
 		// 設定構造体
 		struct Desc {
-			std::string curtainTex = "./resources/texture/gradationLine.png"; // 暗幕
-			std::string panelTex = "./resources/texture/gradationLine.png"; // パネル
+			std::string curtainTex = "./resources/texture/blue.dds"; // 暗幕
 			std::array<std::string, 3> itemTex = { // 項目テクスチャ（上から Resume, Restart, ReturnToTitle）
 				"./resources/texture/resume_pause.png", // Resume
 				"./resources/texture/restart_pause.png", // Restart
@@ -167,7 +166,6 @@ namespace TKM {
 		// 仮スプライト（後でリソース差し替え）
 		//==============================
 		std::unique_ptr<Sprite> curtain_;     // 暗幕
-		std::unique_ptr<Sprite> panel_;       // パネル
 		std::array<std::unique_ptr<Sprite>, (int)Item::Count> items_; // 項目（仮）
 		std::unique_ptr<Sprite> cursor_;      // カーソル（仮）
 		//==============================
