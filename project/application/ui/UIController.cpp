@@ -25,7 +25,7 @@ namespace TKM {
 
 		// プレイヤーのHP・弾数などを表示するHUDを生成して初期化する
 		playerHudUI_ = std::make_unique<PlayerHudUI>();
-		playerHudUI_->Initialize(spriteCommon_, dxCommon_, parentScene_, screenW_, screenH_);
+		playerHudUI_->Initialize(spriteCommon_, dxCommon_, parentScene_, screenW_, screenH_, player_);
 
 		// イントロ中に表示するスキップガイドUIを生成して初期化する
 		skipGuideUI_ = std::make_unique<SkipGuideUI>();

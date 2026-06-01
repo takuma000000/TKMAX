@@ -221,13 +221,14 @@ namespace TKM {
 		hpDrainEaseSec_ = config_.GetHpEffect().drainEaseSec_;
 	}
 
-	void PlayerHudUI::Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, BaseScene* parentScene, float screenW, float screenH) {
+	void PlayerHudUI::Initialize(SpriteCommon* spriteCommon, DirectXCommon* dxCommon, BaseScene* parentScene, float screenW, float screenH, Player* player) {
 		// 外部から受け取った描画・シーン情報を保存する
 		spriteCommon_ = spriteCommon;
 		dxCommon_ = dxCommon;
 		parentScene_ = parentScene;
 		screenW_ = screenW;
 		screenH_ = screenH;
+		player_ = player;
 
 		// 外部設定を読み込んで反映する
 		ApplyConfig_();
@@ -244,6 +245,10 @@ namespace TKM {
 		lbGaugeUI_ = std::make_unique<LBGaugeUI>();
 		LBGaugeUI::Desc lbDesc{};
 		lbGaugeUI_->Initialize(spriteCommon_, dxCommon_, parentScene_, lbDesc);
+
+		// 回避クールタイムUIを生成して初期化する
+		dodgeUI_ = std::make_unique<DodgeUI>();
+		dodgeUI_->Initialize(spriteCommon_, dxCommon_);
 
 		// RBゲージアイコンを生成して初期化する
 		rbGaugeIcon_ = std::make_unique<Sprite>();
@@ -585,7 +590,7 @@ namespace TKM {
 		if (hpShakeT_ > 0.0f) {
 			float r1 = MyMath::Rand01() * 2.0f - 1.0f;
 			float r2 = MyMath::Rand01() * 2.0f - 1.0f;
-
+			// シェイクの強さは時間経過とともに減らす
 			ApplyHpSegmentPositions_({
 				r1 * hpShakePower_,
 				r2 * hpShakePower_
@@ -594,6 +599,9 @@ namespace TKM {
 			// シェイクしていないときは基準位置に戻す
 			ApplyHpSegmentPositions_();
 		}
+
+		// 回避クールタイムUIを更新する
+		dodgeUI_->Update(player_, screenW_, screenH_);
 
 		// ImGui
 		DrawImGui();
@@ -652,6 +660,9 @@ namespace TKM {
 		// RB/LBゲージを描画する
 		rbGaugeUI_->Draw();
 		lbGaugeUI_->Draw();
+
+		// 回避クールタイムUIを描画する
+		dodgeUI_->Draw(hudAlpha);
 	}
 
 	void PlayerHudUI::DrawImGui() {

@@ -214,6 +214,10 @@ public:
 	/// 回避クールタイム中かどうか。
 	/// </summary>
 	bool IsDodgeCooldown() const;
+	/// <summary>
+	/// 回避クールタイムゲージを表示するか。
+	/// </summary>
+	bool IsDodgeCooldownGaugeVisible() const;
 
 	// Getter===================================
 	/// <summary>
@@ -293,6 +297,14 @@ public:
 	const std::vector<Wave1BarrierHit>& GetWave1BarrierHits() const {
 		return wave1BarrierHits_;
 	}
+	/// <summary>
+	/// 回避クールタイムゲージの進行率を取得します。
+	/// </summary>
+	float GetDodgeCooldownGaugeRate() const;
+	/// <summary>
+	/// プレイヤー足元ゲージ用のスクリーン座標を取得します。
+	/// </summary>
+	Vector2 GetDodgeCooldownGaugeScreenPos(float screenW, float screenH) const;
 	// =========================================
 	// Setter===================================
 	/// <summary>

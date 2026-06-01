@@ -11,6 +11,7 @@
 #include "Player.h"
 #include "Easing.h"
 #include "PlayerHudConfig.h"
+#include "DodgeUI.h"
 
 namespace TKM {
 
@@ -28,7 +29,8 @@ namespace TKM {
 			DirectXCommon* dxCommon,
 			BaseScene* parentScene,
 			float screenW,
-			float screenH
+			float screenH,
+			Player* player
 		);
 		/// <summary>
 		/// プレイヤーHUDを更新します。
@@ -74,6 +76,7 @@ namespace TKM {
 		SpriteCommon* spriteCommon_ = nullptr;
 		DirectXCommon* dxCommon_ = nullptr;
 		BaseScene* parentScene_ = nullptr;
+		Player* player_ = nullptr;
 		float screenW_ = 0.0f; // 画面幅
 		float screenH_ = 0.0f; // 画面高さ
 		//=============================================================
@@ -85,6 +88,7 @@ namespace TKM {
 		//=============================================================
 		std::unique_ptr<RBGaugeUI> rbGaugeUI_; // RBゲージUI
 		std::unique_ptr<LBGaugeUI> lbGaugeUI_; // LBゲージUI
+		std::unique_ptr<DodgeUI> dodgeUI_;     // 回避クールタイムゲージUI
 		//=============================================================
 		// RBゲージアイコン
 		//=============================================================

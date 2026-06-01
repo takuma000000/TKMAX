@@ -630,10 +630,51 @@ void Player::Draw(TKM::DirectXCommon* dxCommon) {
 	shotManager_->DrawBullets(dxCommon);
 }
 
+float Player::GetDodgeCooldownGaugeRate() const {
+	return dodge_ ? dodge_->GetCooldownGaugeRate() : 1.0f;
+}
+
+Vector2 Player::GetDodgeCooldownGaugeScreenPos(float screenW, float screenH) const {
+	// 本体またはカメラがなければ画面中央を返す
+	if (!object_ || !camera_) {
+		return { screenW * 0.5f, screenH * 0.5f };
+	}
+
+	// プレイヤーの足元にしたいワールド座標
+	Vector3 worldPos = object_->GetTranslate();
+
+	// モデルの少し下に出す
+	constexpr float kGaugeWorldOffsetY = -0.9f;
+	worldPos.y += kGaugeWorldOffsetY;
+
+	// ワールド座標をスクリーン座標へ変換
+	const Matrix4x4 viewProjectionMatrix =
+		camera_->GetViewMatrix() * camera_->GetProjectionMatrix();
+
+	// ビューポート行列を作る
+	const Matrix4x4 viewportMatrix =
+		MyMath::MakeViewportMatrix(
+			0.0f,    // ビューポート左上X
+			0.0f,    // ビューポート左上Y
+			screenW, // ビューポート幅
+			screenH, // ビューポート高さ
+			0.0f,    // ニアクリップ距離
+			1.0f     // ファークリップ距離
+		);
+
+	// ワールド座標をスクリーン座標へ変換する
+	Vector3 screenPos =
+		MyMath::Transform(
+			MyMath::Transform(worldPos, viewProjectionMatrix), // ワールド→スクリーン変換	
+			viewportMatrix
+		);
+
+	return { screenPos.x, screenPos.y }; // 
+}
+
 void Player::SetHP(int hp) {
 	// HP管理側へHPを設定する
 	health_->SetHP(hp);
-
 
 	// HPが変化したのでHUDへ通知する
 	NotifyHudState_();
@@ -839,6 +880,10 @@ void Player::SetShootingEnabled(bool enabled) {
 
 bool Player::IsDodgeCooldown() const {
 	return dodge_ ? dodge_->IsCooldown() : false;
+}
+
+bool Player::IsDodgeCooldownGaugeVisible() const {
+	return dodge_ ? dodge_->IsCooldownGaugeVisible() : false;
 }
 
 const std::list<std::unique_ptr<PlayerBullet>>& Player::GetBullets() const {

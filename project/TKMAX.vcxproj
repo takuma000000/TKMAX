@@ -130,6 +130,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\state\BossEntranceStates.cpp" />
     <ClCompile Include="application\actor\enemy\EnemyFactory.cpp" />
     <ClCompile Include="application\actor\barrier\BarrierConfig.cpp" />
+    <ClCompile Include="application\ui\DodgeUI.cpp" />
     <ClCompile Include="engine\3d\BarrierCommon.cpp" />
     <ClCompile Include="engine\3d\camera\manager\CameraManager.cpp" />
     <ClCompile Include="engine\csv\CsvReader.cpp" />
@@ -262,6 +263,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\state\BossEntranceStates.h" />
     <ClInclude Include="application\actor\enemy\EnemyFactory.h" />
     <ClInclude Include="application\actor\barrier\BarrierConfig.h" />
+    <ClInclude Include="application\ui\DodgeUI.h" />
     <ClInclude Include="engine\3d\BarrierCommon.h" />
     <ClInclude Include="engine\3d\camera\manager\CameraManager.h" />
     <ClInclude Include="engine\csv\CsvReader.h" />

@@ -83,6 +83,19 @@ public:
 	/// 回避クールタイム中かどうか。
 	/// </summary>
 	bool IsCooldown() const { return dodgeCooldownTimer_ > 0.0f; }
+	/// <summary>
+	/// 回避ゲージを表示するかどうか。
+	/// 回避中、またはクールタイム中なら true。
+	/// </summary>
+	bool IsCooldownGaugeVisible() const { return isDodging_ || dodgeCooldownTimer_ > 0.0f; }
+
+	// Getter===========================================
+	/// <summary>
+	/// 回避再使用までの進行率を取得します。
+	/// 0.0f が空、1.0f が満タン。
+	/// </summary>
+	float GetCooldownGaugeRate() const;
+	// =================================================
 
 private:
 
@@ -150,7 +163,7 @@ private:
 	float dodgeSpinWPitch_ = 0.0f;    // ピッチ比率
 
 	static constexpr float kDodgeTime_ = 0.18f;    // 回避時間
-	static constexpr float kDodgeCooldown_ = 2.5f; // 回避クールタイム
+	static constexpr float kDodgeCooldown_ = 1.0f; // 回避クールタイム
 
 	//=============================================================
 	// 回避状態

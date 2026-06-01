@@ -32,9 +32,9 @@ struct FormatChunk {
 
 // 音声データ
 struct SoundData {
-	WAVEFORMATEX wfex_;       // 波形フォーマット
-	std::vector<BYTE> buffer_;// 音声データ
-	unsigned int bufferSize_; // バッファサイズ
+	WAVEFORMATEX wfex_;        // 波形フォーマット
+	std::vector<BYTE> buffer_; // 音声データ
+	unsigned int bufferSize_;  // バッファサイズ
 };
 
 namespace TKM {

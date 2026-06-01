@@ -62,6 +62,22 @@ void PlayerDodge::Update(
 	UpdateGhost_(dt, ownerObject);
 }
 
+float PlayerDodge::GetCooldownGaugeRate() const {
+	// 回避中はまだ空として扱う
+	if (isDodging_) {
+		return 0.0f;
+	}
+	// クールタイムが終わっているなら満タン
+	if (dodgeCooldownTimer_ <= 0.0f) {
+		return 1.0f;
+	}
+
+	// 残り時間から、ゲージの溜まり具合を計算する
+	float rate = 1.0f - (dodgeCooldownTimer_ / kDodgeCooldown_);
+
+	return MyMath::Clamp01(rate); // 0.0f～1.0fの範囲にクランプして返す
+}
+
 void PlayerDodge::UpdateDodge_(
 	float dt,
 	TKM::Object3d* ownerObject,
