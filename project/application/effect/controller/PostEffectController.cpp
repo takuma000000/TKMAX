@@ -197,8 +197,12 @@ namespace TKM {
 
 		// 現在値取得
 		float currentStrength = motionBlur_->GetStrength();
+		// 回避開始時は即最大値へ
+		if (player_ && player_->IsDodging() && currentStrength <= 0.01f) {
+			currentStrength = targetStrength; // 回避開始時は即最大値へ
+		}
 		// なめらか補間
-		constexpr float kBlurEaseSpeed = 10.0f;
+		constexpr float kBlurEaseSpeed = 5.0f;
 		// 現在の強度から目標の強度へ、なめらかに補間していく
 		currentStrength +=
 			(targetStrength - currentStrength) *
