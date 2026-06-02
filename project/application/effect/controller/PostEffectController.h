@@ -75,6 +75,11 @@ namespace TKM {
 		/// 放射ブラーの手動制御を解除します。
 		/// </summary>
 		void ClearRadialBlurManual();
+		/// <summary>
+		/// プレイヤーが回避行動を取っているかどうかを判定します。
+		/// </summary>
+		/// <returns>回避行動中ならtrue、そうでなければfalse</returns>
+		bool IsPlayerDodging() const;
 
 		// Setters========================================
 		/// <summary>

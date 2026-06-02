@@ -188,6 +188,32 @@ namespace TKM {
 		// 空間スモークを更新する
 		smokeVolume3D_->Update(dt);
 
+		// モーションブラーの目標強度を決める
+		float targetStrength = 0.0f;
+		// プレイヤーが回避行動を取っている場合は強めのモーションブラーをかける
+		if (player_ && player_->IsDodging()) {
+			targetStrength = 0.85f;
+		}
+
+		// 現在値取得
+		float currentStrength = motionBlur_->GetStrength();
+		// なめらか補間
+		constexpr float kBlurEaseSpeed = 10.0f;
+		// 現在の強度から目標の強度へ、なめらかに補間していく
+		currentStrength +=
+			(targetStrength - currentStrength) *
+			kBlurEaseSpeed *
+			dt;
+
+		// ほぼ0なら切る
+		if (currentStrength < 0.01f) {
+			currentStrength = 0.0f;
+			motionBlur_->SetActive(false);
+		} else {
+			motionBlur_->SetActive(true);
+		}
+		// 補間後の強度をモーションブラーへ渡す
+		motionBlur_->SetStrength(currentStrength);
 		// モーションブラーを更新する
 		motionBlur_->Update(dt);
 	}
@@ -236,6 +262,15 @@ namespace TKM {
 		if (radialBlur_) {
 			radialBlur_->ClearManualBlur();
 		}
+	}
+
+	bool PostEffectController::IsPlayerDodging() const {
+		// プレイヤーが存在しない場合は回避行動を取っていないとみなす
+		if (!player_) {
+			return false;
+		}
+
+		return player_->IsDodging(); // プレイヤーの回避行動状態を返す
 	}
 
 	void PostEffectController::DrawVolumes(TKM::Camera* activeCamera) {

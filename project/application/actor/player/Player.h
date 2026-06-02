@@ -29,6 +29,7 @@ class BarrierCoreManager;
 
 namespace TKM {
 	class RadialBlurEffect;
+	class MotionBlurEffect;
 }
 
 //=============================================================
@@ -218,6 +219,12 @@ public:
 	/// 回避クールタイムゲージを表示するか。
 	/// </summary>
 	bool IsDodgeCooldownGaugeVisible() const;
+	/// <summary>
+	/// 回避中かどうか。
+	/// </summary>
+	bool IsDodging() const {
+		return dodge_ ? dodge_->IsDodging() : false;
+	}
 
 	// Getter===================================
 	/// <summary>

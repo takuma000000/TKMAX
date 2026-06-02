@@ -183,8 +183,6 @@ private:
 	//=============================================================
 
 	std::array<Ghost, kGhostMax_> ghosts_; // 残像配列
-
 	float ghostSpawnTimer_ = 0.0f; // 残像生成タイマー
-
 	int ghostWriteIndex_ = 0; // 次回書き込み位置
 };
