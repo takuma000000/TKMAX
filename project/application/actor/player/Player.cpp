@@ -52,6 +52,7 @@ void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommo
 
 	// 回避システムを生成する
 	dodge_ = std::make_unique<PlayerDodge>();
+	// 回避システムを初期化する
 	dodge_->Initialize(common_, dxCommon_, camera_);
 
 	//=========================================================
