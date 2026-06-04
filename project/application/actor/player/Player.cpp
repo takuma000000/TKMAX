@@ -198,7 +198,7 @@ void Player::Update(float dt) {
 	UpdateIntroForwardMove_(dt);
 
 	// 前進演出が終わるまではレティクルを完全に更新しない
-	if (reticle_ && !introForwardActive_) {
+	if (reticle_ && !introForwardActive_ && !health_->IsDead()) {
 		reticle_->Update(dt);
 	}
 
@@ -623,7 +623,7 @@ void Player::Draw(TKM::DirectXCommon* dxCommon) {
 	}
 
 	// レティクル表示フラグが立っていれば描画する
-	if (reticle_ && reticleVisible_) {
+	if (reticle_ && reticleVisible_ && !health_->IsDead()) {
 		reticle_->Draw(dxCommon);
 	}
 
