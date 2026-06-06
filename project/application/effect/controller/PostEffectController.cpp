@@ -140,6 +140,19 @@ namespace TKM {
 
 		// DirectXCommon側へモーションブラーを登録する
 		dxCommon_->SetMotionBlurEffect(motionBlur_.get());
+
+		//=========================================================
+		// SpeedLineEffect 初期化
+		//=========================================================
+
+		// 集中線エフェクトを生成する
+		speedLine_ = std::make_unique<TKM::SpeedLineEffect>();
+
+		// DirectX共通情報を渡して初期化する
+		speedLine_->Initialize(dxCommon_);
+
+		// DirectXCommon側へ集中線を登録する
+		dxCommon_->SetSpeedLineEffect(speedLine_.get());
 	}
 
 	void PostEffectController::Finalize() {
@@ -162,6 +175,9 @@ namespace TKM {
 
 			// モーションブラー参照を解除する
 			dxCommon_->SetMotionBlurEffect(nullptr);
+
+			// 集中線参照を解除する
+			dxCommon_->SetSpeedLineEffect(nullptr);
 		}
 	}
 
@@ -191,9 +207,9 @@ namespace TKM {
 		// モーションブラーの目標強度を決める
 		float targetStrength = 0.0f;
 		// プレイヤーが回避行動を取っている場合は強めのモーションブラーをかける
-		if (player_ && player_->IsDodging()) {
-			targetStrength = 0.85f;
-		}
+		//if (player_ && player_->IsDodging()) {
+		//	targetStrength = 0.85f;
+		//}
 
 		// 現在値取得
 		float currentStrength = motionBlur_->GetStrength();
@@ -220,6 +236,36 @@ namespace TKM {
 		motionBlur_->SetStrength(currentStrength);
 		// モーションブラーを更新する
 		motionBlur_->Update(dt);
+
+
+		// プレイヤーから集中線発生リクエストがあれば、集中線を発生させる
+		if (player_ && player_->ConsumeHomingSpeedLineRequest()) {
+			// 集中線発生リクエストがあったので、集中線を発生させる
+			speedLineTimer_ = kSpeedLineDuration_;
+
+			// ラジアルブラー発火
+			radialBlur_->BlurStartShock(0.35f, kSpeedLineDuration_);
+		}
+
+		// タイマー更新
+		if (speedLineTimer_ > 0.0f) {
+			speedLineTimer_ -= dt;
+			// 念のため0未満にならないようにする
+			if (speedLineTimer_ < 0.0f) {
+				speedLineTimer_ = 0.0f;
+			}
+		}
+
+		// タイマーが0より大きい間は集中線をアクティブにする
+		const bool active = speedLineTimer_ > 0.0f;
+
+		// 中央集中線なので方向は固定でOK
+		speedLine_->SetActive(active);
+		speedLine_->SetDirection(Vector2{ 1.0f, 0.0f }); // 右方向に線が流れるように設定
+
+		// 集中線を更新する
+		speedLine_->Update(dt);
+
 	}
 
 	void PostEffectController::OnCameraUpdated(TKM::Camera* activeCamera) {

@@ -205,11 +205,14 @@ GameResultMenuController::Command GameResultMenuController::Update(float dt) {
 		// 色を反映する
 		items_[i]->SetColor(col);
 
-		// 選択中なら少し大きい基準サイズにする
-		Vector2 baseSize = selected ? Vector2{ 240.0f, 48.0f } : Vector2{ 220.0f, 44.0f };
-
-		// 選択中ならパルス拡縮を反映する
-		Vector2 size = selected ? Vector2{ baseSize.x * pulse, baseSize.y * pulse } : baseSize;
+		// 選択中は少し大きく、未選択は基本サイズで表示する
+		Vector2 baseSize = selected ?
+			Vector2{ 220.0f, 85.0f } :
+			Vector2{ 200.0f, 77.0f };
+		// パルス倍率を反映したサイズを計算する
+		Vector2 size = selected ?
+			Vector2{ baseSize.x * pulse, baseSize.y * pulse } :
+			baseSize;
 
 		// 位置を反映する
 		items_[i]->SetPosition(pos);
@@ -272,7 +275,7 @@ void GameResultMenuController::UpdateLayout(float screenW, float screenH) {
 	baseItemPos_ = { panelPos_.x + panelSize_.x * 0.5f, panelPos_.y + 60.0f + 22.0f };
 
 	// 項目同士の縦間隔を設定する
-	itemSpacingY_ = 64.0f;
+	itemSpacingY_ = 82.0f;
 }
 
 bool GameResultMenuController::TriggerPadUp_() {

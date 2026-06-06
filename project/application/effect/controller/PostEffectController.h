@@ -13,6 +13,7 @@
 #include "WaterRippleEffect.h"
 #include "FogVolume3D.h"
 #include "SmokeVolume3D.h"
+#include "SpeedLineEffect.h"
 #include "Camera.h"
 #include "MyMath.h"
 
@@ -110,10 +111,19 @@ namespace TKM {
 		std::unique_ptr<TKM::AuraEffect> aura_ = nullptr; // オーラ
 		std::unique_ptr<TKM::WaterRippleEffect> waterRipple_ = nullptr; // 水面波紋
 		std::unique_ptr<TKM::MotionBlurEffect> motionBlur_ = nullptr; // モーションブラー
+		std::unique_ptr<TKM::SpeedLineEffect> speedLine_ = nullptr; // 集中線 / スピードライン
 		//==============================
 		// Volume Effect（3D / World Space）
 		//==============================
 		std::unique_ptr<TKM::FogVolume3D> fogVolume3D_ = nullptr; // 立体霧
 		std::unique_ptr<TKM::SmokeVolume3D> smokeVolume3D_ = nullptr; // 立体煙
+
+		//==============================
+		// 各エフェクト設定
+		//==============================
+
+		// 集中線
+		float speedLineTimer_ = 0.0f;                       // 集中線のタイマー
+		static constexpr float kSpeedLineDuration_ = 0.18f; // 集中線の持続時間（秒）
 	};
 }

@@ -887,6 +887,21 @@ bool Player::IsDodgeCooldownGaugeVisible() const {
 	return dodge_ ? dodge_->IsCooldownGaugeVisible() : false;
 }
 
+void Player::RequestHomingSpeedLine() {
+	// 追尾速度線要求フラグを立てる
+	homingSpeedLineRequested_ = true;
+}
+
+bool Player::ConsumeHomingSpeedLineRequest() {
+	// 要求が無ければ false を返す
+	if (!homingSpeedLineRequested_) {
+		return false;
+	}
+	// 要求があるので true を返す
+	homingSpeedLineRequested_ = false;
+	return true;
+}
+
 const std::list<std::unique_ptr<PlayerBullet>>& Player::GetBullets() const {
 	// ショットマネージャーが管理する弾リストを返す
 	return shotManager_->GetBullets();

@@ -226,6 +226,15 @@ public:
 		return dodge_ ? dodge_->IsDodging() : false;
 	}
 
+	/// <summary>
+	/// ホーミング弾発射時の集中線をリクエストします。
+	/// </summary>
+	void RequestHomingSpeedLine();
+	/// <summary>
+	/// ホーミング弾発射時の集中線リクエストを消費します。
+	/// </summary>
+	bool ConsumeHomingSpeedLineRequest();
+
 	// Getter===================================
 	/// <summary>
 	/// プレイヤーの弾リストを取得します。
@@ -312,6 +321,12 @@ public:
 	/// プレイヤー足元ゲージ用のスクリーン座標を取得します。
 	/// </summary>
 	Vector2 GetDodgeCooldownGaugeScreenPos(float screenW, float screenH) const;
+	/// <summary>
+	/// 回避方向を取得します。
+	/// </summary>
+	Vector3 GetDodgeDirection() const {
+		return dodge_ ? dodge_->GetDodgeDirection() : Vector3{ 0.0f, 0.0f, 0.0f };
+	}
 	// =========================================
 	// Setter===================================
 	/// <summary>
@@ -467,7 +482,7 @@ private:
 	Vector3 moveMin_ = { -100.0f, -60.0f, 0.0f }; // 移動範囲（Zは固定）
 	Vector3 moveMax_ = { 100.0f,  60.0f, 0.0f }; // 移動範囲（Zは固定）
 	//======================================================================
-	// 入力ラッチ / ジェット煙 / デバッグフラグ
+	// 煙
 	//======================================================================
 	ParticleEmitter jetEmitter_; // ジェット煙エミッタ
 	bool enableJetSmoke_ = true; // デフォルトON
@@ -586,4 +601,8 @@ private:
 	/// ゲーム開始時の前進演出を更新します。
 	/// </summary>
 	void UpdateIntroForwardMove_(float dt);
+	//======================================================================
+	// ホーミング弾発射時の集中線
+	//======================================================================
+	bool homingSpeedLineRequested_ = false;
 };

@@ -692,6 +692,11 @@ void PlayerShotManager::LBShoot_() {
 		// ホーミング弾リストへ追加する
 		homingBullets_.push_back(std::move(bullet));
 
+		// ホーミング弾発射時の集中線をリクエストする
+		if (owner_) {
+			owner_->RequestHomingSpeedLine();
+		}
+
 		// 無限LBでないなら弾数を1減らす
 		if (!debugUnlimitedLB_) {
 			lbAmmo_ = std::max(0, lbAmmo_ - 1);

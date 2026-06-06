@@ -95,6 +95,10 @@ public:
 	/// 0.0f が空、1.0f が満タン。
 	/// </summary>
 	float GetCooldownGaugeRate() const;
+	/// <summary>
+	/// 回避方向を取得します。
+	/// </summary>
+	const Vector3& GetDodgeDirection() const { return dodgeDirection_; }
 	// =================================================
 
 private:

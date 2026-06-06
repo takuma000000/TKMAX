@@ -21,6 +21,7 @@ namespace TKM {
 	class AuraEffect;
 	class NoiseEffect;
 	class MotionBlurEffect;
+	class SpeedLineEffect;
 }
 
 //=============================================================
@@ -219,6 +220,17 @@ namespace TKM {
 		struct MotionBlurCB {
 			float strength;   // モーションブラーの強さ
 			float padding[3]; // 16バイトアライメントのためのパディング
+		};
+		// SpeedLineCB構造体
+		struct SpeedLineCB {
+			Vector2 direction; // スピード線の方向 (正規化されたUV)
+			float intensity;   // スピード線の強さ (0.0f で見えない、1.0f で最大)
+			float time;        // 経過時間
+
+			float density;     // スピード線の密度
+			float speed;       // スピード線の移動速度
+			float width;       // スピード線の幅
+			float padding;     // 16バイトアライメントのためのパディング
 		};
 
 		// -------------------- 初期化 --------------------
@@ -434,6 +446,10 @@ namespace TKM {
 		/// </summary>
 		void InitializeMotionBlurPipeline();
 		/// <summary>
+		/// SpeedLine パイプラインの初期化
+		/// </summary>
+		void InitializeSpeedLinePipeline();
+		/// <summary>
 		/// ポストエフェクトチェーン用：Aura適用
 		/// </summary>
 		/// <param name="inputTex"></param>
@@ -455,6 +471,19 @@ namespace TKM {
 		void ApplyMotionBlur(
 			ID3D12Resource* inputTex,
 			uint32_t        inputSrvIndex,
+			ID3D12Resource* outputTex,
+			D3D12_CPU_DESCRIPTOR_HANDLE outputRtv
+		);
+		/// <summary>
+		/// ポストエフェクトチェーン用：SpeedLine適用
+		/// </summary>
+		/// <param name="inputTex"></param>
+		/// <param name="inputSrvIndex"></param>
+		/// <param name="outputTex"></param>
+		/// <param name="outputRtv"></param>
+		void ApplySpeedLine(
+			ID3D12Resource* inputTex,
+			uint32_t inputSrvIndex,
 			ID3D12Resource* outputTex,
 			D3D12_CPU_DESCRIPTOR_HANDLE outputRtv
 		);
@@ -855,6 +884,22 @@ namespace TKM {
 		/// </summary>
 		/// <param name="effect"></param>
 		void SetMotionBlurEffect(TKM::MotionBlurEffect* effect) { motionBlurEffect_ = effect; }
+		/// <summary>
+		/// SpeedLineEffect をセット（必要なら）
+		/// </summary>
+		/// <param name="effect"></param>
+		void SetSpeedLineEffect(TKM::SpeedLineEffect* effect);
+		/// <summary>
+		/// SpeedLine 用 パラメータセット
+		/// </summary>
+		void SetSpeedLineParam(
+			const Vector2& direction,
+			float intensity,
+			float time,
+			float density,
+			float speed,
+			float width
+		);
 		// ========================================================================
 	private:
 		//======================================================================
@@ -1013,6 +1058,14 @@ namespace TKM {
 		bool motionBlurInitialized_ = false;
 		bool previousFrameReady_ = false;
 		D3D12_RESOURCE_STATES previousFrameState_ = D3D12_RESOURCE_STATE_RENDER_TARGET;
+
+		// SpeedLine 用 PSO
+		TKM::SpeedLineEffect* speedLineEffect_ = nullptr;
+		Microsoft::WRL::ComPtr<ID3D12RootSignature> speedLineRootSignature_ = nullptr;
+		Microsoft::WRL::ComPtr<ID3D12PipelineState> speedLinePipelineState_ = nullptr;
+		Microsoft::WRL::ComPtr<ID3D12Resource> speedLineConstantBuffer_ = nullptr;
+		void* speedLineMappedData_ = nullptr;
+		bool speedLineInitialized_ = false;
 
 		// LaserBeamVolume 用 PSO
 		bool laserBeamInitialized_ = false;
