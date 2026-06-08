@@ -156,11 +156,6 @@ namespace TKM {
 					// 現在更新中のグループ名を取得する
 					const std::string& g = particleGroupIterator->first;
 
-					// LTリボンは線として繋がって見せたいので、透明化させない
-					if (g == "trail_lt_ribbon") {
-						alpha = 1.0f;
-					}
-
 					// 基本アルファをGPU用カラーに反映する
 					particleGroup->instancingData_[particleGroupIterator->second.kNumInstance_].color_.w = alpha;
 

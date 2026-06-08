@@ -425,5 +425,24 @@ namespace TKM {
 
 		// 炎柱上部のグロー
 		pm->CreateParticleGroup("clearStageFire_top", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
+
+		//=========================================================
+		// プレイヤー専用パーティクル
+		//=========================================================
+
+		// ジェット煙パーティクル
+		pm->CreateParticleGroup("jetSmoke", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
+
+		// LT弾の軌跡パーティクル
+		pm->CreateParticleGroup("trail_lt", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
+
+		// LB弾のキラキラ演出パーティクル
+		pm->CreateParticleGroup("trail_lb_glitter", "./resources/texture/firework_star.png", ParticleManager::ParticleType::NORMAL);
+
+		// LB弾の稲光メイン演出パーティクル
+		pm->CreateParticleGroup("trail_lb_bolt_main", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
+
+		// LB弾の稲光コア演出パーティクル
+		pm->CreateParticleGroup("trail_lb_bolt_core", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
 	}
 }

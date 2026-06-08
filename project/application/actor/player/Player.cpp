@@ -113,49 +113,6 @@ void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommo
 	shotManager_->SetCamera(camera_);
 
 	//=========================================================
-	// パーティクルグループ作成
-	//=========================================================
-
-	// ジェット煙パーティクルを作成する
-	TKM::ParticleManager::GetInstance()->CreateParticleGroup(
-		"jetSmoke", "./resources/texture/circle.png", TKM::ParticleManager::ParticleType::NORMAL);
-	// 被弾スパークパーティクルを作成する
-	TKM::ParticleManager::GetInstance()->CreateParticleGroup(
-		"damageSpark", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL);
-	// RB弾の軌跡パーティクルを作成する
-	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_rb", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL);
-	// LB弾の軌跡パーティクルを作成する
-	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lb", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL);
-	// RT弾の軌跡パーティクルを作成する
-	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_rt", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL);
-	// LT弾の軌跡パーティクルを作成する
-	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lt", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL);
-	// LT弾リボン軌跡パーティクルを作成する
-	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lt_ribbon", "./resources/texture/firework_star.png", TKM::ParticleManager::ParticleType::RIBBON);
-	// LT弾キラキラパーティクルを作成する
-	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lt_sparkle", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL);
-	// LT弾リングパーティクルを作成する
-	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lt_ring", "./resources/texture/gradationLine.png", TKM::ParticleManager::ParticleType::RING);
-
-	// LB弾のキラキラ演出パーティクルを作成する
-	TKM::ParticleManager::GetInstance()->CreateParticleGroup(
-		"trail_lb_glitter",
-		"./resources/texture/firework_star.png",
-		TKM::ParticleManager::ParticleType::NORMAL);
-
-	// LB弾の稲光メイン演出パーティクルを作成する
-	TKM::ParticleManager::GetInstance()->CreateParticleGroup(
-		"trail_lb_bolt_main",
-		"./resources/texture/gradationLine.png",
-		TKM::ParticleManager::ParticleType::NORMAL);
-
-	// LB弾の稲光コア演出パーティクルを作成する
-	TKM::ParticleManager::GetInstance()->CreateParticleGroup(
-		"trail_lb_bolt_core",
-		"./resources/texture/gradationLine.png",
-		TKM::ParticleManager::ParticleType::NORMAL);
-
-	//=========================================================
 	// ジェット煙エミッタ初期化
 	//=========================================================
 

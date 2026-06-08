@@ -17,7 +17,6 @@ void TextureCatalog::LoadTextureCatalogs() {
 		"kloofendal_48d_partly_cloudy_puresky_1k.dds",
 		"Ground.png",
 		"start.png",
-		"damageSpark.png",
 		"firework_star.png",
 		"RB_ui.png",
 		"LB_ui.png",

@@ -160,74 +160,6 @@ namespace TKM {
 				float a = frand(0.10f, 0.22f);
 				p.color_ = { rCol, gCol, bCol, a };
 			}
-		} else if (groupName == "trail_rb") {
-			// RB：青いスパーク（クールで安定）
-			std::uniform_real_distribution<float> velX(-0.03f, 0.03f);
-			std::uniform_real_distribution<float> velY(-0.03f, 0.03f);
-			std::uniform_real_distribution<float> velZ(-2.0f, -0.6f);
-			p.velocity_ = { velX(rng), velY(rng), velZ(rng) };
-
-			float sc = std::uniform_real_distribution<float>(0.10f, 0.22f)(rng);
-			p.transform_.scale_ = { sc, sc, sc };
-			p.lifeTime_ = std::uniform_real_distribution<float>(0.20f, 0.35f)(rng);
-			p.currentTime_ = 0.0f;
-
-			// 青～水色
-			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
-			Vector3 col = { 0.2f + 0.1f * t, 0.5f + 0.3f * t, 1.0f };
-			p.color_ = { 0.1f, 0.3f, 1.0f, 1.0f };  // 鮮やかな青（R10%, G30%, B100%）
-		} else if (groupName == "trail_lb") {
-			// LB：黄〜金色の尾（エネルギー感）
-			std::uniform_real_distribution<float> velX(-0.02f, 0.02f);
-			std::uniform_real_distribution<float> velY(-0.02f, 0.02f);
-			std::uniform_real_distribution<float> velZ(-2.2f, -0.8f);
-			p.velocity_ = { velX(rng), velY(rng), velZ(rng) };
-
-			float sc = std::uniform_real_distribution<float>(0.12f, 0.26f)(rng);
-			p.transform_.scale_ = { sc, sc, sc };
-			p.lifeTime_ = std::uniform_real_distribution<float>(0.25f, 0.45f)(rng);
-			p.currentTime_ = 0.0f;
-
-			// 明るい黄～金色
-			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
-			Vector3 col = { 1.0f, 0.8f + 0.2f * t, 0.1f + 0.2f * t };
-			p.color_ = { 1.0f, 0.9f, 0.1f, 1.0f };  // ほぼ純黄色（R100%, G90%, B10%）
-		} else if (groupName == "trail_rt") {
-			// RT：赤い尾（情熱・攻撃的）
-			std::uniform_real_distribution<float> velX(-0.015f, 0.015f);
-			std::uniform_real_distribution<float> velY(-0.015f, 0.015f);
-			std::uniform_real_distribution<float> velZ(-2.8f, -1.2f);
-			p.velocity_ = { velX(rng), velY(rng), velZ(rng) };
-
-			float sc = std::uniform_real_distribution<float>(0.20f, 0.40f)(rng);
-			p.transform_.scale_ = { sc, sc, sc };
-			p.lifeTime_ = std::uniform_real_distribution<float>(0.35f, 0.60f)(rng);
-			p.currentTime_ = 0.0f;
-
-			// 純赤～オレンジ寄り
-			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
-			Vector3 col = { 1.0f, 0.2f + 0.3f * t, 0.1f };
-			p.color_ = { 1.0f, 0.05f, 0.05f, 1.0f };  // 強い赤（R100%, G5%, B5%）
-		} else if (groupName == "damageSpark") { //── 故障スパーク ──
-			// 放射状に高速で飛ぶ、短命、明るくチカチカ
-			std::uniform_real_distribution<float> dir(-1.0f, 1.0f);
-			Vector3 v = { dir(rng), dir(rng) * 0.6f, dir(rng) };
-			Vector3 n = (MyMath::Length(v) > 0.001f) ? MyMath::Normalize(v) : Vector3{ 0,0,1 };
-			float spd = std::uniform_real_distribution<float>(1.2f, 2.4f)(rng);
-			p.velocity_ = n * spd;
-
-			float sc = std::uniform_real_distribution<float>(0.08f, 0.18f)(rng);
-			p.transform_.scale_ = { sc, sc, sc };
-
-			p.lifeTime_ = std::uniform_real_distribution<float>(0.18f, 0.35f)(rng);
-			p.currentTime_ = 0.0f;
-
-			// 強い黄～白（火花）
-			float t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
-			float r = 1.0f;
-			float g = 0.85f + 0.15f * t;
-			float b = 0.1f + 0.2f * (1.0f - t);
-			p.color_ = { r, g, b, 1.0f };
 		} else if (groupName == "crashFlame") {
 			// 基本は上向き。横に少し拡散して“躍る”感じ
 			std::uniform_real_distribution<float> velX(-0.06f, 0.06f);
@@ -1537,48 +1469,6 @@ namespace TKM {
 			p.velocity_ = { 0.0f, 0.0f, 0.0f };
 			p.lifeTime_ = 0.18f;
 			p.color_ = { 1.0f, 1.0f, 1.0f, 1.0f };
-		} else if (groupName == "trail_lt_ribbon") {
-			// =========================================
-			// LT メルヘン弾道：Ribbon（本線）
-			// ・細長い光のストリーク
-			// ・弾の移動区間に沿って高密度に置く前提
-			// =========================================
-			p.transform_.translate_ = center;
-
-			auto frand = [&](float a, float b) {
-				return std::uniform_real_distribution<float>(a, b)(rng);
-				};
-
-			// ほぼ静止でOK（位置は弾側で線に沿って配置する）
-			p.velocity_ = { 0.0f, 0.0f, 0.0f };
-
-			// カメラ正対の板に「ねじれ」だけ付ける（メルヘン感）
-			p.transform_.rotate_ = { 0.0f, 0.0f, frand(0.0f, 6.2831853f) };
-
-			// 太く＆長く（目玉技）
-			float thick = frand(0.35f, 0.75f);
-			float len = frand(6.0f, 12.0f);
-			p.transform_.scale_ = { thick, thick, len };
-
-			// 残像長め（道筋が残る）
-			p.lifeTime_ = frand(0.28f, 0.55f);
-			p.currentTime_ = 0.0f;
-
-			// 飽和パステル（白を使わない）
-			float kind = frand(0.0f, 1.0f);
-			if (kind < 0.25f) {
-				// ネオンシアン
-				p.color_ = { frand(0.05f, 0.25f), frand(1.05f, 1.35f), frand(1.10f, 1.45f), frand(0.75f, 0.95f) };
-			} else if (kind < 0.50f) {
-				// マゼンタ
-				p.color_ = { frand(1.10f, 1.45f), frand(0.10f, 0.35f), frand(1.00f, 1.35f), frand(0.75f, 0.95f) };
-			} else if (kind < 0.75f) {
-				// バイオレット
-				p.color_ = { frand(0.65f, 1.05f), frand(0.15f, 0.35f), frand(1.15f, 1.55f), frand(0.70f, 0.92f) };
-			} else {
-				// ライム/ミント（アクセント）
-				p.color_ = { frand(0.55f, 0.85f), frand(1.10f, 1.50f), frand(0.10f, 0.35f), frand(0.65f, 0.90f) };
-			}
 		} else if (groupName == "trail_lb_glitter") {
 			auto frand = [&rng](float a, float b) {
 				return std::uniform_real_distribution<float>(a, b)(rng);
