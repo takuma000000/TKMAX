@@ -53,15 +53,8 @@ public:
 	struct HudState {
 		int currentHp_ = 0;                 // 現在HP
 		int maxHp_ = 1;                     // 最大HP
-
-		int rbAmmo_ = 0;                    // RB弾の残弾数
-		int rbAmmoMax_ = 1;                 // RB弾の最大残弾数
-		bool rbRefilling_ = false;          // RB弾が回復中かどうか
-
 		int lbAmmo_ = 0;                    // LB弾の残弾数
 		int lbAmmoMax_ = 1;                 // LB弾の最大残弾数
-
-		bool rbRefillingFromEmpty_ = false; // RB弾が0発から回復中かどうか
 	};
 
 	/// <summary>
@@ -134,15 +127,6 @@ public:
 	/// 撃墜演出フェーズの更新。
 	/// </summary>
 	void StartBossDeathCameraZoom();
-	/// <summary>
-	/// RB弾が回復中かどうか。
-	/// </summary>
-	bool IsRbRefilling() const;
-	/// <summary>
-	/// RB弾が空の状態から回復中かどうか。
-	/// </summary>
-	/// <returns></returns>
-	bool IsRbRefillingFromEmpty() const;
 	/// <summary>
 	/// LB弾が回復中かどうか。
 	/// </summary>
@@ -283,14 +267,6 @@ public:
 	/// </summary>
 	/// <returns></returns>
 	Vector3 GetColliderScale() const { return colliderScale_; }
-	/// <summary>
-	/// RB弾の残数を取得します。
-	/// </summary>
-	int GetRbAmmo() const;
-	/// <summary>
-	/// RB弾の最大数を取得します。
-	/// </summary>
-	int GetRbAmmoMax() const;
 	/// <summary>
 	/// LB弾の残数を取得します。
 	/// </summary>

@@ -94,18 +94,15 @@ namespace TKM {
 		} else {
 			// ゲーム開始後だけ通常HUDを更新する
 			if (gameplayHudVisible_) {
-
-				// Playerから通知されたHUD状態をもとに、残弾なし状態を判定する
-				const bool rbNoAmmo =
-					hudState_.rbAmmo_ <= 0 ||
-					hudState_.rbRefillingFromEmpty_;
-				// LBは回復中の概念がないので、単純に残弾数が0以下なら残弾なしとする
+				// HUD状態から、右側操作UIの状態を更新するための情報を作る
+				const bool rbNoAmmo = false;
+				// LBの残弾なし状態は、LB弾が0以下のときとする
 				const bool lbNoAmmo = hudState_.lbAmmo_ <= 0;
-				// 回避クールタイム中かどうかを取得する
+				// X回避のクールタイム状態は、Playerオブジェクトから直接取得する
 				const bool xCooldown = player_ && player_->IsDodgeCooldown();
-				// 右側の操作ガイドUIを更新する
-				operationGuideUI_->Update(dt, rbNoAmmo, lbNoAmmo, xCooldown);
 
+				// 右側操作UIを更新する
+				operationGuideUI_->Update(dt, rbNoAmmo, lbNoAmmo, xCooldown);
 				// プレイヤーHUDを更新する
 				playerHudUI_->Update(dt);
 			}

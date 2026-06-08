@@ -10,66 +10,21 @@
 namespace TKM {
 
 	void PlayerHudUI::ApplyHudPositions_() {
-		// 左下のHP用予約領域を避けて、弾ゲージの左端X座標を決める
+		// LBゲージは左下の予約領域内に配置する。左端のX座標を計算する
 		float leftEdgeX = hudLeftMargin_ + hudReserveLeftW_ + hudReserveGap_;
 
-		// RBゲージを配置する
-		if (rbGaugeUI_) {
-			auto rbDesc = rbGaugeUI_->GetDesc();
-
-			// RBゲージの中心座標を計算する
-			Vector2 rbCenter{
-				leftEdgeX + rbDesc.size_.x * 0.5f,
-				screenH_ - hudBottomMargin_ - ammoUiRaiseY_
+		// LBゲージの基準位置を計算して保存する
+		if (lbGaugeUI_) {
+			auto lbDesc = lbGaugeUI_->GetDesc(); // LBゲージの現在の描画情報を取得する
+			// LBゲージの中心座標を、左端からゲージ幅の半分とオフセットを加えた位置にする
+			Vector2 lbCenter{
+				leftEdgeX + lbDesc.size_.x * 0.5f + lbGaugeOffset_.x,
+				screenH_ - hudBottomMargin_ - ammoUiRaiseY_ + lbDesc.size_.y + lbGaugeSpacingY_ + lbGaugeOffset_.y
 			};
-
-			// RBゲージの中心座標を反映する
-			rbDesc.center_ = rbCenter;
-			rbGaugeUI_->SetDesc(rbDesc);
-
-			// LBゲージはRBゲージの下に配置する
-			if (lbGaugeUI_) {
-				auto lbDesc = lbGaugeUI_->GetDesc();
-
-				// LBゲージのサイズはRBゲージと揃える
-				lbDesc.size_ = rbDesc.size_;
-
-				// RBゲージの下に、間隔と微調整オフセットを加えて配置する
-				lbDesc.center_ = {
-					rbCenter.x + lbGaugeOffset_.x,
-					rbCenter.y + rbDesc.size_.y + lbGaugeSpacingY_ + lbGaugeOffset_.y
-				};
-
-				// LBゲージは弾数に合わせて5分割表示にする
-				lbDesc.segments_ = 5;
-
-				// LBゲージの設定を反映する
-				lbGaugeUI_->SetDesc(lbDesc);
-			}
-
-			// RBゲージアイコンをRBゲージの右端に配置する
-			if (rbGaugeIcon_) {
-				// アイコンの描画サイズを取得する
-				float iconW = rbGaugeIconDrawSize_.x;
-				float iconH = rbGaugeIconDrawSize_.y;
-
-				// RBゲージの右端X座標を求める
-				float gaugeRightX = rbCenter.x + rbDesc.size_.x * 0.5f;
-
-				// アイコンのアンカーが右下なので、幅と高さを考慮して位置を決める
-				Vector2 iconPos{
-					gaugeRightX + rbGaugeIconPadX_ + iconW,
-					rbCenter.y + iconH * 0.5f
-				};
-
-				// ImGui調整用のオフセットを加える
-				iconPos.x += rbGaugeIconOffset_.x;
-				iconPos.y += rbGaugeIconOffset_.y;
-
-				// 基準位置を保存して、スプライトに反映する
-				basePosRBGaugeIcon_ = iconPos;
-				rbGaugeIcon_->SetPosition(basePosRBGaugeIcon_);
-			}
+			// LBゲージの描画情報を更新して反映する
+			lbDesc.center_ = lbCenter;
+			lbDesc.segments_ = 5;
+			lbGaugeUI_->SetDesc(lbDesc); // LBゲージの描画情報を更新して反映する
 		}
 
 		// HPゲージは左下の予約領域内に配置する
@@ -174,16 +129,6 @@ namespace TKM {
 		// HUD設定ファイルを読み込む
 		config_.Load("./resources/data/playerHudConfig.json");
 
-		// テクスチャ設定
-		rbGaugeIconTex_ = config_.GetTexture().rbGaugeIconTex_;
-
-		// RBゲージアイコン設定
-		rbGaugeIconScale_ = config_.GetRBGaugeIcon().scale_;
-		rbGaugeIconOffset_ = config_.GetRBGaugeIcon().offset_;
-		rbGaugeIconPadX_ = config_.GetRBGaugeIcon().padX_;
-		colRBGaugeIcon_ = config_.GetRBGaugeIcon().color_;
-		shakeAmpPx_ = config_.GetRBGaugeIcon().shakeAmpPx_;
-
 		// LBゲージ設定
 		lbGaugeSpacingY_ = config_.GetLBGauge().spacingY_;
 		lbGaugeOffset_ = config_.GetLBGauge().offset_;
@@ -236,11 +181,6 @@ namespace TKM {
 		// 現在のゲームパッド接続状態を取得する
 		isGamepadConnected_ = Input::GetInstance()->IsGamepadConnected();
 
-		// RBゲージUIを生成して初期化する
-		rbGaugeUI_ = std::make_unique<RBGaugeUI>();
-		RBGaugeUI::Desc rbDesc{};
-		rbGaugeUI_->Initialize(spriteCommon_, dxCommon_, parentScene_, rbDesc);
-
 		// LBゲージUIを生成して初期化する
 		lbGaugeUI_ = std::make_unique<LBGaugeUI>();
 		LBGaugeUI::Desc lbDesc{};
@@ -249,33 +189,6 @@ namespace TKM {
 		// 回避クールタイムUIを生成して初期化する
 		dodgeUI_ = std::make_unique<DodgeUI>();
 		dodgeUI_->Initialize(spriteCommon_, dxCommon_);
-
-		// RBゲージアイコンを生成して初期化する
-		rbGaugeIcon_ = std::make_unique<Sprite>();
-		rbGaugeIcon_->Initialize(spriteCommon_, dxCommon_, rbGaugeIconTex_);
-		rbGaugeIcon_->SetAutoAdjustTextureSize(false);
-		rbGaugeIcon_->SetAnchorPoint({ 1.0f, 1.0f });
-
-		{
-			// RBゲージアイコンのテクスチャサイズを取得する
-			const auto& meta = TextureManager::GetInstance()->GetMetadata(rbGaugeIconTex_);
-
-			// テクスチャサイズを保存する
-			rbGaugeIconTexSize_ = { (float)meta.width, (float)meta.height };
-
-			// 画像全体を使用する
-			rbGaugeIcon_->SetTextureLeftTop({ 0.0f, 0.0f });
-			rbGaugeIcon_->SetTextureSize(rbGaugeIconTexSize_);
-
-			// テクスチャサイズとスケールから描画サイズを計算する
-			rbGaugeIconDrawSize_ = {
-				rbGaugeIconTexSize_.x * rbGaugeIconScale_,
-				rbGaugeIconTexSize_.y * rbGaugeIconScale_
-			};
-
-			// 描画サイズを反映する
-			rbGaugeIcon_->SetSize(rbGaugeIconDrawSize_);
-		}
 
 		// HPゲージ用スプライトを生成する
 		hpFrame_ = std::make_unique<Sprite>();
@@ -377,13 +290,6 @@ namespace TKM {
 		};
 		hpIcon_->SetSize(hpIconDrawSize_);
 
-		// RBゲージアイコンの描画サイズを再計算する
-		rbGaugeIconDrawSize_ = {
-			rbGaugeIconTexSize_.x * rbGaugeIconScale_,
-			rbGaugeIconTexSize_.y * rbGaugeIconScale_
-		};
-		rbGaugeIcon_->SetSize(rbGaugeIconDrawSize_);
-
 		// HUDの配置を再計算して反映する
 		ApplyHudPositions_();
 	}
@@ -406,26 +312,12 @@ namespace TKM {
 		const bool rbDown = isGamepadConnected_
 			? in->PushButton(XINPUT_GAMEPAD_RIGHT_SHOULDER)
 			: in->PushKey(DIK_K);
-		// RB射撃中として扱うか
-		// 残弾0、または回復中ならRBを押していても射撃中扱いにしない
-		const bool rbShooting =
-			rbDown &&
-			hudState_.rbAmmo_ > 0 &&
-			!hudState_.rbRefilling_;
-
+		// Playerから通知されたRB弾数情報をもとにRBゲージを更新する
+		const bool rbShooting = rbDown;
 		// LB/Lの押下状態を取得する
 		const bool lbDown = isGamepadConnected_
 			? in->PushButton(XINPUT_GAMEPAD_LEFT_SHOULDER)
 			: in->PushKey(DIK_L);
-
-		// Playerから通知されたRB弾数情報をもとにRBゲージを更新する
-		rbGaugeUI_->Update(
-			dt,
-			hudState_.rbAmmo_,
-			hudState_.rbAmmoMax_,
-			hudState_.rbRefilling_,
-			rbShooting
-		);
 
 		// Playerから通知されたLB弾数情報をもとにLBゲージを更新する
 		lbGaugeUI_->Update(
@@ -435,25 +327,8 @@ namespace TKM {
 			lbDown
 		);
 
-		// 各スプライトの内部更新を行う
-		rbGaugeIcon_->Update();
 		hpFrame_->Update();
 		hpIcon_->Update();
-
-		// RBゲージアイコンはRB射撃中だけ小刻みに揺らす
-		if (rbShooting) {
-			float r1 = MyMath::Rand01() * 2.0f - 1.0f;
-			float r2 = MyMath::Rand01() * 2.0f - 1.0f;
-
-			rbGaugeIcon_->SetPosition({
-				basePosRBGaugeIcon_.x + r1 * shakeAmpPx_,
-				basePosRBGaugeIcon_.y + r2 * shakeAmpPx_
-				});
-		} else {
-			// 入力していない場合は基準位置に戻す
-			rbGaugeIcon_->SetPosition(basePosRBGaugeIcon_);
-			shakeT_RBGaugeIcon_ = 0.0f;
-		}
 
 		// Playerから通知されたHP情報をもとに割合を計算する
 		hpTargetRate_ = 0.0f;
@@ -653,14 +528,8 @@ namespace TKM {
 		// 通常色から赤色へ補間して、ダメージ感を出す
 		Vector4 drawCol = MyMath::Vector4Lerp(colHPFill_, flashCol, t);
 
-		// RBゲージアイコンを描画する
-		rbGaugeIcon_->SetColor(mulAlpha(colRBGaugeIcon_));
-		rbGaugeIcon_->Draw();
-
-		// RB/LBゲージを描画する
-		rbGaugeUI_->Draw();
+		// HP塗りを描画する
 		lbGaugeUI_->Draw();
-
 		// 回避クールタイムUIを描画する
 		dodgeUI_->Draw(hudAlpha);
 	}
@@ -669,15 +538,6 @@ namespace TKM {
 #ifdef USE_IMGUI
 		if (ImGui::TreeNode("プレイヤーHUD")) {
 			bool changed = false;
-
-			if (ImGui::TreeNode("RBゲージアイコン")) {
-				// RBゲージ横のアイコンサイズと配置を調整する
-				changed |= ImGui::DragFloat("サイズ##rbGaugeIcon", &rbGaugeIconScale_, 0.001f, 0.01f, 2.0f);
-				changed |= ImGui::DragFloat("右端余白(px)##rbGaugeIconPad", &rbGaugeIconPadX_, 0.5f, 0.0f, 200.0f);
-				changed |= ImGui::DragFloat2("微調整オフセット##rbGaugeIcon", &rbGaugeIconOffset_.x, 0.5f, -1500.0f, 300.0f);
-
-				ImGui::TreePop();
-			}
 
 			if (ImGui::TreeNode("LBゲージ（残弾5分割）")) {
 				// LBゲージの配置を調整する

@@ -20,28 +20,6 @@ void PlayerShotManager::Initialize(Player* owner, TKM::Object3dCommon* common, T
 	dxCommon_ = dxCommon;
 
 	//=========================================================
-	// RB弾状態初期化
-	//=========================================================
-
-	// RB弾数を初期化する
-	rbAmmo_ = 0;
-
-	// RB弾切れ後の待機タイマーを初期化する
-	rbEmptyTimer_ = 0.0f;
-
-	// RB弾回復中フラグを初期化する
-	rbRefilling_ = false;
-
-	// RB弾回復中の小数値を初期化する
-	rbRefillValue_ = 0.0f;
-
-	// RB未発射時間タイマーを初期化する
-	rbNoFireTimer_ = 0.0f;
-
-	// RB発射クールダウンタイマーを初期化する
-	rbShotCooldownTimer_ = 0.0f;
-
-	//=========================================================
 	// LB弾状態初期化
 	//=========================================================
 
@@ -184,18 +162,6 @@ void PlayerShotManager::SetShootingEnabled(bool enabled) {
 		// RB発射クールダウンをリセットする
 		rbShotCooldownTimer_ = 0.0f;
 
-		// RB回復状態を解除する
-		rbRefilling_ = false;
-
-		// RB回復値を現在弾数に合わせる
-		rbRefillValue_ = float(rbAmmo_);
-
-		// RB弾切れ待機タイマーをリセットする
-		rbEmptyTimer_ = 0.0f;
-
-		// RB未発射タイマーをリセットする
-		rbNoFireTimer_ = 0.0f;
-
 		// LB未発射タイマーをリセットする
 		lbNoFireTimer_ = 0.0f;
 	}
@@ -275,27 +241,10 @@ void PlayerShotManager::SetConfig(const PlayerShotConfig* config) {
 	// 設定が無ければ停止する
 	assert(config_ && "PlayerShotConfig が未設定です");
 
-	// RB弾数を設定値の最大値で初期化する
-	rbAmmo_ = std::max(0, config_->GetRB().ammoMax_);
-
 	// LB弾数を設定値の最大値で初期化する
 	lbAmmo_ = std::max(0, config_->GetLB().ammoMax_);
-
-	// RB回復値を現在弾数に合わせる
-	rbRefillValue_ = float(rbAmmo_);
-
-	// RB弾切れ待機タイマーをリセットする
-	rbEmptyTimer_ = 0.0f;
-
-	// RB未発射タイマーをリセットする
-	rbNoFireTimer_ = 0.0f;
-
 	// LB未発射タイマーをリセットする
 	lbNoFireTimer_ = 0.0f;
-
-	// RB回復状態を解除する
-	rbRefilling_ = false;
-
 	// RB発射クールダウンをリセットする
 	rbShotCooldownTimer_ = 0.0f;
 }
@@ -304,67 +253,8 @@ void PlayerShotManager::HandleShooting_(float dt) {
 	// 設定が無ければ停止する
 	assert(config_ && "PlayerShotConfig が未設定です");
 
-	// RB設定を取得する
-	const PlayerShotConfig::RBConfig& rb = config_->GetRB();
-
 	// LB設定を取得する
 	const PlayerShotConfig::LBConfig& lb = config_->GetLB();
-
-	//=========================================================
-	// RB弾リチャージ更新
-	//=========================================================
-	{
-		// 回復中でない間だけ未発射時間を進める
-		if (!rbRefilling_) {
-			rbNoFireTimer_ += dt;
-		}
-
-		// 弾切れかどうか
-		const bool empty = (rbAmmo_ <= 0);
-
-		// 弾が残っている状態で、未発射時間が回復待ち時間を超えたか
-		const bool idleReady = (!empty && rbNoFireTimer_ >= rb.refillWaitSec_);
-
-		// 弾切れ状態で、弾切れ待ち時間が回復待ち時間を超えたか
-		const bool emptyReady = (empty && (rbEmptyTimer_ >= rb.refillWaitSec_));
-
-		// 回復中でない場合、弾切れタイマーを更新する
-		if (!rbRefilling_) {
-			if (empty) {
-				rbEmptyTimer_ += dt;
-			} else {
-				rbEmptyTimer_ = 0.0f;
-			}
-		}
-
-		// 回復条件を満たしていて、回復中でなければ回復を開始する
-		if (!rbRefilling_ && (idleReady || emptyReady)) {
-			rbRefilling_ = true;
-			rbRefillStartedFromEmpty_ = empty;
-			rbRefillValue_ = empty ? 0.0f : float(rbAmmo_);
-		}
-
-		// RB回復中なら弾数を少しずつ増やす
-		if (rbRefilling_) {
-			// 1秒あたりの回復量を計算する
-			const float speed = float(std::max(1, rb.ammoMax_)) / std::max(0.001f, rb.refillSec_);
-
-			// 小数で回復を進める
-			rbRefillValue_ += speed * dt;
-
-			// 表示・使用用の整数弾数へ反映する
-			rbAmmo_ = std::clamp(int(rbRefillValue_), 0, std::max(1, rb.ammoMax_));
-
-			// 最大まで回復したら回復状態を終了する
-			if (rbAmmo_ >= std::max(1, rb.ammoMax_)) {
-				rbAmmo_ = std::max(1, rb.ammoMax_);
-				rbRefilling_ = false; // 回復完了したら回復状態を解除する
-				rbRefillStartedFromEmpty_ = false; // 回復開始状態フラグをリセットする
-				rbEmptyTimer_ = 0.0f; // 弾切れ待機タイマーをリセットする
-				rbNoFireTimer_ = 0.0f; // 未発射待機タイマーをリセットする
-			}
-		}
-	}
 
 	//=========================================================
 	// LB弾 自動満タン回復
@@ -388,10 +278,8 @@ void PlayerShotManager::HandleShooting_(float dt) {
 	//=========================================================
 	// RB弾クールダウン更新
 	//=========================================================
-	if (rbShotCooldownTimer_ > 0.0f) {
-		// クールダウンを減らす
+	if (rbShotCooldownTimer_ > 0.0f) { // クールダウン中ならクールダウンを減らす
 		rbShotCooldownTimer_ -= dt;
-
 		// 0未満にならないようにする
 		if (rbShotCooldownTimer_ < 0.0f) {
 			rbShotCooldownTimer_ = 0.0f;
@@ -400,7 +288,6 @@ void PlayerShotManager::HandleShooting_(float dt) {
 
 	// RB弾発射処理
 	RBShoot_();
-
 	// LB弾発射処理
 	LBShoot_();
 }
@@ -429,25 +316,6 @@ void PlayerShotManager::RBShoot_() {
 	// クールダウン中なら発射しない
 	if (rbShotCooldownTimer_ > 0.0f) {
 		return;
-	}
-
-	// 残弾0なら発射しない
-	if (rbAmmo_ <= 0) {
-		return;
-	}
-
-	// 0発から始まった回復中なら、残弾が増えていても発射しない
-	if (rbRefilling_ && rbRefillStartedFromEmpty_) {
-		return;
-	}
-
-	// 残弾ありから始まった回復中に撃ったら回復を中断する
-	if (rbRefilling_) {
-		rbRefilling_ = false;
-		rbRefillStartedFromEmpty_ = false;
-		rbRefillValue_ = float(rbAmmo_);
-		rbNoFireTimer_ = 0.0f;
-		rbEmptyTimer_ = 0.0f;
 	}
 
 	// 発射元オブジェクトが無ければ発射しない
@@ -570,12 +438,6 @@ void PlayerShotManager::RBShoot_() {
 
 	// 発射クールダウンを開始する
 	rbShotCooldownTimer_ = rb.shotCooldownSec_;
-
-	// RB弾数を1減らす
-	rbAmmo_ = std::max(0, rbAmmo_ - 1);
-
-	// 未発射時間をリセットする
-	rbNoFireTimer_ = 0.0f;
 }
 
 void PlayerShotManager::LBShoot_() {

@@ -360,9 +360,6 @@ bool Player::IsHudStateChanged_(const HudState& state) const {
 	return
 		state.currentHp_ != lastHudState_.currentHp_ ||
 		state.maxHp_ != lastHudState_.maxHp_ ||
-		state.rbAmmo_ != lastHudState_.rbAmmo_ ||
-		state.rbAmmoMax_ != lastHudState_.rbAmmoMax_ ||
-		state.rbRefilling_ != lastHudState_.rbRefilling_ ||
 		state.lbAmmo_ != lastHudState_.lbAmmo_ ||
 		state.lbAmmoMax_ != lastHudState_.lbAmmoMax_;
 }
@@ -372,11 +369,6 @@ void Player::NotifyHudState_() {
 	HudState state{};
 	state.currentHp_ = GetHP(); // 現在HP
 	state.maxHp_ = GetMaxHP(); // 最大HP
-	// RB弾の残弾数、最大残弾数、回復中かどうかを取得して構造体にセットする
-	state.rbAmmo_ = GetRbAmmo(); // RB弾の残弾数
-	state.rbAmmoMax_ = GetRbAmmoMax(); // RB弾の最大残弾数
-	state.rbRefilling_ = IsRbRefilling(); // RB弾が回復中かどうか
-	state.rbRefillingFromEmpty_ = IsRbRefillingFromEmpty(); // RB弾が0発から回復中かどうか
 	// LB弾の残弾数、最大残弾数を取得して構造体にセットする
 	state.lbAmmo_ = GetLbAmmo(); // LB弾の残弾数
 	state.lbAmmoMax_ = GetLbAmmoMax(); // LB弾の最大残弾数
@@ -836,25 +828,6 @@ bool Player::ConsumeHomingSpeedLineRequest() {
 const std::list<std::unique_ptr<PlayerBullet>>& Player::GetBullets() const {
 	// ショットマネージャーが管理する弾リストを返す
 	return shotManager_->GetBullets();
-}
-
-bool Player::IsRbRefilling() const {
-	// RB回復状態を返す
-	return shotManager_ ? shotManager_->IsRbRefilling() : false;
-}
-
-bool Player::IsRbRefillingFromEmpty() const {
-	return shotManager_ ? shotManager_->IsRbRefillingFromEmpty() : false;
-}
-
-int Player::GetRbAmmo() const {
-	// 現在RB弾数を返す
-	return shotManager_ ? shotManager_->GetRbAmmo() : 0;
-}
-
-int Player::GetRbAmmoMax() const {
-	// 最大RB弾数を返す
-	return shotManager_ ? shotManager_->GetRbAmmoMax() : 0;
 }
 
 int Player::GetLbAmmo() const {

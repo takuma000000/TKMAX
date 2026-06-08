@@ -6,7 +6,6 @@
 #include "Sprite.h"
 #include "SpriteCommon.h"
 #include "MyMath.h"
-#include "RBGaugeUI.h"
 #include "LBGaugeUI.h"
 #include "Player.h"
 #include "Easing.h"
@@ -86,23 +85,8 @@ namespace TKM {
 		//=============================================================
 		// 残弾UI
 		//=============================================================
-		std::unique_ptr<RBGaugeUI> rbGaugeUI_; // RBゲージUI
 		std::unique_ptr<LBGaugeUI> lbGaugeUI_; // LBゲージUI
 		std::unique_ptr<DodgeUI> dodgeUI_;     // 回避クールタイムゲージUI
-		//=============================================================
-		// RBゲージアイコン
-		//=============================================================
-		std::unique_ptr<Sprite> rbGaugeIcon_; // RBゲージアイコン
-		std::string rbGaugeIconTex_{}; // RBゲージアイコンのテクスチャパス
-		Vector2 rbGaugeIconTexSize_{}; // テクスチャサイズ
-		Vector2 rbGaugeIconDrawSize_{}; // 描画サイズ
-		float rbGaugeIconScale_ = 0.0f; // 描画サイズ = テクスチャサイズ * この値
-		Vector2 rbGaugeIconOffset_{}; // アイコンの基準位置からのオフセット
-		float rbGaugeIconPadX_ = 0.0f; // アイコンとゲージの間隔
-		Vector4 colRBGaugeIcon_{}; // アイコンの色
-		Vector2 basePosRBGaugeIcon_{}; // アイコンの基準位置（画面サイズ変更時に再計算して保存）
-		float shakeAmpPx_ = 0.0f; // アイコンの揺れの強さ（ピクセル）
-		float shakeT_RBGaugeIcon_ = 0.0f; // アイコンの揺れの経過時間
 		//=============================================================
 		// LBゲージ配置
 		//=============================================================

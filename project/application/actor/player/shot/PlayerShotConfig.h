@@ -9,9 +9,6 @@ class PlayerShotConfig {
 public:
 	struct RBConfig {
 		float bulletSpeed_ = 10.0f;       // RB弾の速度
-		int ammoMax_ = 500;               // RB弾の最大弾数
-		float refillWaitSec_ = 1.0f;      // RB弾が回復開始するまでの待機時間
-		float refillSec_ = 2.0f;          // RB弾が満タンになるまでの時間
 		float shotCooldownSec_ = 0.08f;   // RB弾の発射間隔
 	};
 

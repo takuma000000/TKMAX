@@ -74,30 +74,12 @@ bool PlayerShotConfig::LoadJson(const char* path) {
 	// RB弾設定読み込み
 	//=========================================================
 	if (root.contains("rb")) {
-		// rb設定オブジェクトを取得する
 		auto& rb = root["rb"];
 
-		// RB弾の速度を読み込む
 		if (rb.contains("bulletSpeed")) {
 			rb_.bulletSpeed_ = rb["bulletSpeed"].get<float>();
 		}
 
-		// RB弾の最大弾数を読み込む
-		if (rb.contains("ammoMax")) {
-			rb_.ammoMax_ = rb["ammoMax"].get<int>();
-		}
-
-		// RB弾の回復開始までの待ち時間を読み込む
-		if (rb.contains("refillWaitSec")) {
-			rb_.refillWaitSec_ = rb["refillWaitSec"].get<float>();
-		}
-
-		// RB弾の回復にかかる時間を読み込む
-		if (rb.contains("refillSec")) {
-			rb_.refillSec_ = rb["refillSec"].get<float>();
-		}
-
-		// RB弾の発射間隔を読み込む
 		if (rb.contains("shotCooldownSec")) {
 			rb_.shotCooldownSec_ = rb["shotCooldownSec"].get<float>();
 		}

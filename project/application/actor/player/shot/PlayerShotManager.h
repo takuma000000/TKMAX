@@ -73,17 +73,6 @@ public:
 	/// <param name="config">プレイヤーショット設定</param>
 	void SetConfig(const PlayerShotConfig* config);
 
-	/// <summary>
-	/// RBのリフィル中かどうかを取得します。
-	/// </summary>
-	/// <returns>RBのリフィル中であればtrue、それ以外はfalse</returns>
-	bool IsRbRefilling() const { return rbRefilling_; }
-	/// <summary>
-	/// RBのリフィルが空状態から開始されたかどうかを取得します。
-	/// </summary>
-	/// <returns>RBのリフィルが空状態から開始された場合はtrue、それ以外はfalse</returns>
-	bool IsRbRefillingFromEmpty() const { return rbRefilling_ && rbRefillStartedFromEmpty_; }
-
 	// Getter========================================
 	/// <summary>
 	/// 現在存在するプレイヤーの弾のリストを取得します。
@@ -100,22 +89,10 @@ public:
 		return homingBullets_;
 	}
 	/// <summary>
-	/// RBの現在の弾数を取得します。
-	/// </summary>
-	/// <returns>RBの現在の弾数</returns>
-	int GetRbAmmo() const { return rbAmmo_; }
-	/// <summary>
 	/// LBの現在の弾数を取得します。
 	/// </summary>
 	/// <returns>LBの現在の弾数</returns>
 	int GetLbAmmo() const { return lbAmmo_; }
-	/// <summary>
-	/// RBの最大弾数を取得します。
-	/// </summary>
-	/// <returns>RBの最大弾数</returns>
-	int GetRbAmmoMax() const {
-		return config_ ? config_->GetRB().ammoMax_ : 0;
-	}
 	/// <summary>
 	/// LBの最大弾数を取得します。
 	/// </summary>
@@ -224,7 +201,7 @@ private:
 	bool rtHeld_ = false; // RT押しっぱなし判定（離した瞬間発射用）
 	bool ltHeld_ = false; // LB押しっぱなし判定（連射防止ラッチ）
 
-	bool canUseSpecial_ = false;      // RT必殺技が使えるか
+	bool canUseSpecial_ = false;         // RT必殺技が使えるか
 	bool debugUnlimitedSpecial_ = false; // デバッグ：RT無限使用
 	bool debugUnlimitedLB_ = false;      // デバッグ：LB無限弾
 
@@ -236,21 +213,8 @@ private:
 	//======================================================================
 	// RB弾管理（通常連射弾）
 	//======================================================================
-	int rbAmmo_ = 0;                     // RB弾の現在弾数
-
-	static constexpr float kRbEmptyWaitSec_ = 3.0f; // 弾切れ後、回復開始までの待機時間
-	static constexpr float kRbRefillSec_ = 0.60f;   // 満タンまでの回復時間
-
-	float rbEmptyTimer_ = 0.0f;   // 弾切れ状態の経過時間
-	float rbRefillValue_ = 0.0f;  // 回復中の内部値（小数で管理）
-	bool rbRefilling_ = false;    // 回復中フラグ
-
-	bool rbRefillStartedFromEmpty_ = false; // 0発から始まった回復かどうか
-
-	float rbNoFireTimer_ = 0.0f;  // 最後に撃ってからの経過時間（アイドル回復判定用）
-
 	static constexpr float kRbShotCooldownSec_ = 0.25f; // 1発ごとの発射間隔
-	float rbShotCooldownTimer_ = 0.0f;                 // クールダウン残り時間
+	float rbShotCooldownTimer_ = 0.0f;                  // クールダウン残り時間
 
 	//======================================================================
 	// LB弾管理（ホーミング弾）
@@ -259,7 +223,6 @@ private:
 
 	static constexpr float kLbRefillWaitSec_ = 3.0f; // 最後に撃ってから満タン回復までの待機時間
 	float lbNoFireTimer_ = 0.0f;                    // 最後に撃ってからの経過時間
-
 
 	const PlayerShotConfig* config_ = nullptr; // プレイヤー弾設定(JSON)
 };

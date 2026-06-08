@@ -180,7 +180,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\effect\line\LineRenderer.cpp" />
     <ClCompile Include="engine\effect\post\FogEffect.cpp" />
     <ClCompile Include="engine\effect\post\LaserBeam3D.cpp" />
-    <ClCompile Include="application\ui\RBGaugeUI.cpp" />
     <ClCompile Include="engine\effect\post\FogVolume3D.cpp" />
     <ClCompile Include="application\sequence\IntroSequence.cpp" />
     <ClCompile Include="application\effect\controller\FireworkController.cpp" />
@@ -340,7 +339,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\effect\post\FogVolume3D.h" />
     <ClInclude Include="engine\effect\post\SmokeVolume3D.h" />
     <ClInclude Include="engine\effect\post\LaserBeam3D.h" />
-    <ClInclude Include="application\ui\RBGaugeUI.h" />
     <ClInclude Include="application\sequence\IntroSequence.h" />
     <ClInclude Include="application\effect\controller\FireworkController.h" />
     <ClInclude Include="application\scene\controller\GameFlowController.h" />

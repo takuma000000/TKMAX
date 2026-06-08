@@ -1,9 +1,6 @@
 {
   "rb": {
-    "bulletSpeed": 10.0,     
-    "ammoMax": 20,           
-    "refillWaitSec": 1.0,     
-    "refillSec": 3.0,        
+    "bulletSpeed": 10.0,           
     "shotCooldownSec": 0.25   
   },
 
