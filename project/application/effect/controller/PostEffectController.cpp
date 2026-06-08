@@ -207,9 +207,9 @@ namespace TKM {
 		// モーションブラーの目標強度を決める
 		float targetStrength = 0.0f;
 		// プレイヤーが回避行動を取っている場合は強めのモーションブラーをかける
-		//if (player_ && player_->IsDodging()) {
-		//	targetStrength = 0.85f;
-		//}
+		if (player_ && player_->IsDodging()) {
+			targetStrength = 0.85f;
+		}
 
 		// 現在値取得
 		float currentStrength = motionBlur_->GetStrength();
@@ -236,7 +236,6 @@ namespace TKM {
 		motionBlur_->SetStrength(currentStrength);
 		// モーションブラーを更新する
 		motionBlur_->Update(dt);
-
 
 		// プレイヤーから集中線発生リクエストがあれば、集中線を発生させる
 		if (player_ && player_->ConsumeHomingSpeedLineRequest()) {

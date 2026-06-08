@@ -119,29 +119,21 @@ void Player::Initialize(TKM::Object3dCommon* common, TKM::DirectXCommon* dxCommo
 	// ジェット煙パーティクルを作成する
 	TKM::ParticleManager::GetInstance()->CreateParticleGroup(
 		"jetSmoke", "./resources/texture/circle.png", TKM::ParticleManager::ParticleType::NORMAL);
-
 	// 被弾スパークパーティクルを作成する
 	TKM::ParticleManager::GetInstance()->CreateParticleGroup(
 		"damageSpark", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL);
-
 	// RB弾の軌跡パーティクルを作成する
 	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_rb", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL);
-
 	// LB弾の軌跡パーティクルを作成する
 	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lb", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL);
-
 	// RT弾の軌跡パーティクルを作成する
 	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_rt", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL);
-
 	// LT弾の軌跡パーティクルを作成する
 	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lt", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL);
-
 	// LT弾リボン軌跡パーティクルを作成する
 	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lt_ribbon", "./resources/texture/firework_star.png", TKM::ParticleManager::ParticleType::RIBBON);
-
 	// LT弾キラキラパーティクルを作成する
 	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lt_sparkle", "./resources/texture/circle2.png", TKM::ParticleManager::ParticleType::NORMAL);
-
 	// LT弾リングパーティクルを作成する
 	TKM::ParticleManager::GetInstance()->CreateParticleGroup("trail_lt_ring", "./resources/texture/gradationLine.png", TKM::ParticleManager::ParticleType::RING);
 
@@ -270,7 +262,6 @@ void Player::Update(float dt) {
 	{
 		// 現在位置を取得する
 		Vector3 center = object_->GetTranslate();
-
 		// 当たり判定サイズを取得する
 		Vector3 size = colliderScale_;
 
@@ -308,10 +299,8 @@ void Player::Update(float dt) {
 
 	// 死亡済みターゲット参照を整理する
 	RemoveEnemyIfDead();
-
 	// ヒレアニメを更新する
 	UpdateFlipperAnim_(dt);
-
 	// 生きている間だけ浮遊とカメラ追従を更新する
 	if (!IsDead()) {
 		UpdateFloatBob_(dt);
@@ -326,7 +315,6 @@ void Player::Update(float dt) {
 
 	// プレイヤー本体の行列などを更新する
 	object_->Update();
-
 	// ヒレの行列などを更新する
 	flipper_->Update();
 }
@@ -350,10 +338,8 @@ void Player::ImGuiDebug() {
 	// プレイヤー本体デバッグUI
 	//=========================================================
 	ImGui::Begin("プレイヤー");
-
 	// バリア状態表示
 	ImGui::Text("バリア状態: %s", wave1BarrierActive_ ? "ON" : "OFF");
-
 	// バリアヒット数表示
 	ImGui::Text("ヒット数: %d", static_cast<int>(wave1BarrierHits_.size()));
 
@@ -361,12 +347,10 @@ void Player::ImGuiDebug() {
 	if (ImGui::DragFloat3("位置", &pos.x, 0.01f)) {
 		object_->SetTranslate(pos);
 	}
-
 	// 回転編集
 	if (ImGui::DragFloat3("回転", &rot.x, 0.01f)) {
 		object_->SetRotate(rot);
 	}
-
 	// 拡縮編集
 	if (ImGui::DragFloat3("拡縮cale", &scale.x, 0.01f)) {
 		object_->SetScale(scale);
@@ -387,17 +371,13 @@ void Player::ImGuiDebug() {
 		// HPを最大値に戻す
 		health_->Reset();
 		NotifyHudState_(); // HUDへ状態変更を通知する
-
 	}
 
 	ImGui::SeparatorText("カメラシェイク");
-
 	// シェイク基本強度調整
 	ImGui::SliderFloat("強度のベース", &shakeBaseStrength_, 0.0f, 5.0f);
-
 	// ズーム時追加強度調整
 	ImGui::SliderFloat("ズーム強調", &shakeZoomBoost_, 0.0f, 15.0f);
-
 	// 現在のシェイク倍率表示
 	ImGui::Text("現在の増幅量 : %.2f", shakeBaseStrength_ + (1.0f - camZoom_) * shakeZoomBoost_);
 
@@ -564,8 +544,8 @@ void Player::StartBossDeathCameraZoom() {
 	// ズームトゥイーン開始
 	//=========================================================
 	bossZoomActive_ = true;
-	bossZoomTween_.Reset(1.0f, kTargetZoom, kZoomTime, Ease::Type::OutCubic);
-	bossZoom_ = 1.0f;
+	bossZoomTween_.Reset(1.0f, kTargetZoom, kZoomTime, Ease::Type::OutCubic); // 現在の倍率1.0から目標倍率kTargetZoomへ、kZoomTime秒かけてイージングしながら変化させるトゥイーンをセットする
+	bossZoom_ = 1.0f; // ズーム倍率を初期化する
 
 	//=========================================================
 	// ラジアルブラー開始
@@ -687,13 +667,10 @@ void Player::SetCamera(TKM::Camera* camera) {
 
 	// 本体へカメラを渡す
 	if (object_) { object_->SetCamera(camera); }
-
 	// レティクルへカメラを渡す
 	if (reticle_) { reticle_->SetCamera(camera); }
-
 	// ヒレへカメラを渡す
 	if (flipper_) { flipper_->SetCamera(camera); }
-
 	// 回避残像にもカメラを渡す
 	if (dodge_) { dodge_->SetCamera(camera); }
 
@@ -786,7 +763,6 @@ void Player::SetYaw(float yawRad) {
 
 	// 現在回転を取得する
 	Vector3 r = object_->GetRotate();
-
 	// ヨーだけ更新する
 	r.y = yawRad;
 
@@ -797,10 +773,8 @@ void Player::SetYaw(float yawRad) {
 void Player::SetWave1BarrierInfo(bool active, const Vector3& center, const Vector3& size) {
 	// バリア有効状態を更新する
 	wave1BarrierActive_ = active;
-
 	// バリア中心位置を更新する
 	wave1BarrierCenter_ = center;
-
 	// バリアサイズを更新する
 	wave1BarrierSize_ = size;
 
@@ -832,8 +806,8 @@ void Player::AddWave1BarrierHit(const Vector3& worldPos) {
 	//=========================================================
 	Wave1BarrierHit hit_;
 	hit_.worldPos_ = worldPos;
-	hit_.age_ = 0.0f;
-	hit_.life_ = 0.35f;
+	hit_.age_ = 0.0f;   // 経過時間は0からスタート
+	hit_.life_ = 0.35f; // ヒットの寿命は0.35秒
 
 	// 履歴へ追加する
 	wave1BarrierHits_.push_back(hit_);
@@ -960,17 +934,14 @@ void Player::HandleGamePadMove() {
 
 	// 現在位置を取得する
 	Vector3 pos = object_->GetTranslate();
-
 	// 新しい位置の初期値は現在位置
 	Vector3 newPos = pos;
-
 	// このフレームで移動したかどうか
 	bool movingThisFrame = false;
 
 	if (reticle_) {
 		// 目標位置を現在位置で初期化する
 		Vector3 target = pos;
-
 		// レティクル中心ワールド座標を取得する
 		Vector3 aim = reticle_->GetCenterWorldPos();
 
@@ -981,10 +952,8 @@ void Player::HandleGamePadMove() {
 
 		// 目標との差分を求める
 		Vector3 diff = { target.x - pos.x, target.y - pos.y, 0.0f };
-
 		// 距離の二乗を求める
 		float dist2 = diff.x * diff.x + diff.y * diff.y;
-
 		// これ以下なら追いついたとみなす
 		const float stopDist = 0.02f;
 
@@ -994,10 +963,8 @@ void Player::HandleGamePadMove() {
 
 			// X方向を補間する
 			newPos.x = MyMath::Lerp(pos.x, target.x, follow);
-
 			// Y方向を補間する
 			newPos.y = MyMath::Lerp(pos.y, target.y, follow);
-
 			// Z は常に固定
 			newPos.z = 0.0f;
 
@@ -1016,25 +983,21 @@ void Player::HandleGamePadMove() {
 	//=========================================================
 	// バンク・ピッチ更新
 	//=========================================================
-	float vx = newPos.x - pos.x;
-	float vy = newPos.y - pos.y;
+	float vx = newPos.x - pos.x; // このフレームのX方向移動量
+	float vy = newPos.y - pos.y; // このフレームのY方向移動量
 
+	// 移動しているときは移動方向へ傾ける。止まっているときは元へ戻す。
 	if (movingThisFrame) {
 		// 左右傾き強度
 		const float kBankStrength_ = 0.8f;
-
 		// 上下傾き強度
 		const float kPitchStrength_ = 0.45f;
-
 		// 追従バネ強度
 		const float kSpring_ = 0.25f;
-
 		// 減衰
 		const float kDamping_ = 0.45f;
-
 		// 目標バンク角を計算する
 		float targetBank = -vx * kBankStrength_;
-
 		// 目標ピッチ角を計算する
 		float targetPitch = -vy * kPitchStrength_;
 
@@ -1048,7 +1011,6 @@ void Player::HandleGamePadMove() {
 	} else {
 		// バンク戻し用バネ強度
 		const float kResetSpring_ = 0.25f;
-
 		// バンク戻し用減衰
 		const float kResetDamping_ = 0.5f;
 
@@ -1078,6 +1040,7 @@ void Player::HandleGamePadMove() {
 	//=========================================================
 	object_->SetTranslate(newPos);
 
+	// 現在の回転を取得する
 	Vector3 rot = object_->GetRotate();
 	rot.x = pitchAngle_;
 	rot.z = bankAngle_;
@@ -1098,13 +1061,10 @@ void Player::UpdateCameraFollowThirdPerson(float dt) {
 
 	// プレイヤー位置を取得する
 	Vector3 playerPos = object_->GetTranslate();
-
 	// カメラ回転を取得する
 	Vector3 camRot = camera_->GetRotate();
-
 	// 基本距離
 	const float baseDistance = 40.0f;
-
 	// 基本高さ
 	const float baseHeight = 4.0f;
 
@@ -1150,13 +1110,10 @@ void Player::UpdateCameraFollowThirdPerson(float dt) {
 
 	// 両ズームを掛け合わせた最終ズーム係数
 	float zoom = camZoom_ * bossZoom_;
-
 	// ズームに応じた実距離
 	float distance = baseDistance / zoom;
-
 	// カメラ高さ
 	float height = baseHeight;
-
 	// 現在のヨー角
 	float angleY = camRot.y;
 
@@ -1192,7 +1149,9 @@ void Player::UpdateCameraFollowThirdPerson(float dt) {
 	//=========================================================
 	// カメラ位置反映
 	//=========================================================
+	// プレイヤー位置 + 後方オフセット + カメラシェイクオフセット をカメラ位置とする
 	Vector3 cameraPos = playerPos + offset + cameraShakeOffset_;
+	// カメラ位置を反映する
 	camera_->SetTranslate(cameraPos);
 }
 
@@ -1202,13 +1161,10 @@ void Player::ZoomCamera() {
 
 	// 寄る時間
 	const float kInTime = 0.12f;
-
 	// 戻る時間
 	const float kOutTime = 0.25f;
-
 	// 1回押しあたりのホールド時間
 	const float kHoldUnit = 1.5f;
-
 	// ホールド上限
 	const float kHoldMax = 1.2f;
 
@@ -1222,10 +1178,10 @@ void Player::ZoomCamera() {
 
 	// 現在がINフェーズかを判定する
 	const bool isInPhase = (ltZoomTween_.end < ltZoomTween_.start);
-
 	// 現在トゥイーンが終了しているか
 	const bool finished = ltZoomTween_.Finished();
 
+	// INフェーズ中に再入力された場合はホールド時間をリセットする
 	if (isInPhase) {
 		if (!finished) {
 			// まだ寄っている途中なら何もしない
@@ -1248,10 +1204,8 @@ void Player::StartRumble(float sec, WORD leftMotor, WORD rightMotor) {
 
 	// 時間は長い方を残す
 	rumbleT_ = std::max(rumbleT_, sec);
-
 	// 左モーターは強い方を残す
 	rumbleLeft_ = std::max(rumbleLeft_, leftMotor);
-
 	// 右モーターは強い方を残す
 	rumbleRight_ = std::max(rumbleRight_, rightMotor);
 
@@ -1359,22 +1313,18 @@ void Player::UpdateFlipperAnim_(float dt) {
 
 	// フラップ周波数から角速度を作る
 	float w = 2.0f * MyMath::GetPI() * flipperFlapHz_;
-
 	// サイン波を作る
 	float s = std::sinf(flipperAnimT_ * w);
 
 	// 上下フラップ量
 	float flap = s * flipperFlapAmp_;
-
 	// 横揺れ量
 	float sway = std::sinf(flipperAnimT_ * (w * 0.55f) + 1.2f) * flipperYawSwayAmp_;
-
 	// 基準回転から開始する
 	Vector3 r = flipperBaseRot_;
 
 	// Xを上下フラップに使う
 	r.x += flap;
-
 	// Yを横揺れに使う
 	r.y += sway;
 
@@ -1385,7 +1335,6 @@ void Player::UpdateFlipperAnim_(float dt) {
 void Player::UpdateFloatBob_(float dt) {
 	// 浮遊演出無効なら何もしない
 	if (!enableFloatBob_) { return; }
-
 	// 本体が無ければ何もしない
 	if (!object_) { return; }
 
@@ -1394,16 +1343,12 @@ void Player::UpdateFloatBob_(float dt) {
 
 	// サイン波の角速度を計算する
 	float w = 2.0f * MyMath::GetPI() * floatHz_;
-
 	// -1..+1 のサイン波
 	float s = std::sinf(floatT_ * w);
-
 	// 現在位置を取得する
 	Vector3 pos = object_->GetTranslate();
-
 	// Y方向へだけ揺らす
 	pos.y += s * floatAmp_;
-
 	// 位置を反映する
 	object_->SetTranslate(pos);
 }
