@@ -26,6 +26,7 @@ void TextureCatalog::LoadTextureCatalogs() {
 		"J_ui.png",
 		"LS_ui.png",
 		"resume_pause.png",
+		"resume_boss.png",
 		"restart_pause.png",
 		"title_pause.png",
 		"gauge_fill_grad.png",

@@ -136,6 +136,8 @@ void GameOverScene::Initialize() {
 		static_cast<float>(WindowsAPI::GetClientWidth()),
 		static_cast<float>(WindowsAPI::GetClientHeight())
 	);
+	// ボス戦中に死亡した場合だけ「ボス戦からやり直す」を表示する
+	overMenu_->SetBossRetryVisible(diedInBossBattle_);
 
 	/// ──────────────── ノイズエフェクト初期化 ───────────────
 	noiseEffect_ = std::make_unique<TKM::NoiseEffect>();
@@ -358,12 +360,17 @@ void GameOverScene::Update() {
 		const auto cmd = overMenu_->Update(dt_);
 
 		if (cmd == GameResultMenuController::Command::Restart) {
-			// リスタート要求を保存し、アイリス閉じ後にGameSceneへ遷移する
+			// はじめから再開
 			nextAction_ = NextAction::Restart;
 			irisClosing_ = true;
 			irisCloseTween_.Reset(0.0f, irisMaxScale_, kIrisDuration_, Ease::Type::InBack);
+		} else if (cmd == GameResultMenuController::Command::RestartFromBoss) {
+			// ボス戦から再開
+			nextAction_ = NextAction::RestartFromBoss;
+			irisClosing_ = true;
+			irisCloseTween_.Reset(0.0f, irisMaxScale_, kIrisDuration_, Ease::Type::InBack);
 		} else if (cmd == GameResultMenuController::Command::ReturnToTitle) {
-			// タイトルへ戻る要求を保存し、アイリス閉じ後にTitleSceneへ遷移する
+			// タイトルへ戻る
 			nextAction_ = NextAction::ReturnToTitle;
 			irisClosing_ = true;
 			irisCloseTween_.Reset(0.0f, irisMaxScale_, kIrisDuration_, Ease::Type::InBack);
@@ -376,10 +383,16 @@ void GameOverScene::Update() {
 
 		if (irisCloseTween_.Finished()) {
 			if (nextAction_ == NextAction::Restart) {
+				// はじめから再開
 				sceneManager_->SetNextScene(std::make_unique<GameScene>(dxCommon_, srvManager_));
 				return;
 			}
-
+			if (nextAction_ == NextAction::RestartFromBoss) {
+				// ボス戦から再開
+				sceneManager_->SetNextScene(std::make_unique<GameScene>(dxCommon_, srvManager_, true));
+				return;
+			}
+			// タイトルへ戻る
 			sceneManager_->SetNextScene(std::make_unique<TitleScene>(dxCommon_, srvManager_));
 			return;
 		}

@@ -69,9 +69,38 @@ void GameScene::Initialize() {
 	/// ──────────────── ゲームフローの初期化 ───────────────
 	clearSeq_ = std::make_unique<TKM::ClearSequenceController>();
 	clearSeq_->Initialize(player_.get(), bossManager_.get(), flow_.get(), dxCommon_, skybox_.get(), fireworkController_.get(), postFx_->GetSmokeVolume());
-
 	// クリア演出側からシーン遷移要求を返せるようにFlowへ紐づける
 	flow_->BindClearSequence(clearSeq_.get());
+
+	/// ──────────────── ゲーム開始時の状態設定 ───────────────
+	if (startFromBoss_) {
+		// ボス戦から再開する場合、開幕イントロを完全に終了扱いにする
+		if (flow_ && flow_->GetIntro()) {
+			flow_->GetIntro()->ForceComplete();
+		}
+
+		// 敵はもう初期化済み扱いにする
+		enemiesInitialized_ = true;
+		requestInitEnemies_ = false;
+
+		// START表示後の前進演出も発生しないようにする
+		wasStartVisibleLastFrame_ = false;
+		playerIntroMoveStarted_ = true;
+
+		// ゲーム開始BGMを鳴らさないようにする
+		gameStartedBGMPlayed_ = true;
+
+		// 雑魚戦フェーズを終わらせて、ボス戦準備状態へ進める
+		if (enemyManager_) {
+			enemyManager_->FinishSmallEnemyPhase();
+		}
+
+		// ボス戦から再開する場合は、即本戦開始ではなくボス登場演出から始める
+		if (bossEntranceSeq_ && bossManager_) {
+			player_->SetShootingEnabled(false);
+			bossEntranceSeq_->Start(bossManager_->GetSpawnPos());
+		}
+	}
 }
 
 void GameScene::Finalize() {
@@ -287,12 +316,24 @@ void GameScene::InitializeObjects() {
 // *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 void GameScene::InitializeCamera() {
 	/// ──────────────── カメラ初期値 ───────────────
-	const Vector3 mainRot = { 0.12f,-1.2f,0.0f };
-	const Vector3 mainPos = { 0.0f,0.0f,-30.0f };
-	const Vector3 debugTarget = { 0.0f, 0.0f, 0.0f };
+	Vector3 mainRot = { 0.12f, -1.2f, 0.0f };
+	Vector3 mainPos = { 0.0f, 0.0f, -30.0f };
+	Vector3 debugTarget = { 0.0f, 0.0f, 0.0f };
+
+	// ボス戦から再開する場合は、通常開幕カメラではなくボス戦用のカメラ状態にする
+	if (startFromBoss_) {
+		mainRot = { 0.05f, 0.0f, 0.0f };
+		mainPos = { 0.0f, 0.0f, -30.0f };
+		debugTarget = { 0.0f, 0.0f, 42.0f };
+	}
 
 	/// ──────────────── カメラマネージャー初期化 ───────────────
 	TKM::CameraManager::GetInstance()->Initialize(mainRot, mainPos, debugTarget);
+
+	// 行列を即更新して、1フレームだけ古いカメラになるのを防ぐ
+	if (TKM::CameraManager::GetInstance()->GetMainCamera()) {
+		TKM::CameraManager::GetInstance()->GetMainCamera()->Update();
+	}
 
 	/// ──────────────── プレイヤーへ通常カメラを適用 ───────────────
 	player_->SetCamera(TKM::CameraManager::GetInstance()->GetMainCamera());
@@ -556,7 +597,14 @@ void GameScene::UpdateTransitionsAndSceneChange(float rawDeltaTime) {
 
 	/// ──────────────── ゲームオーバーへ遷移 ───────────────
 	if (req == TKM::GameFlowController::TransitionRequest::ToGameOver) {
-		sceneManager_->SetNextScene(std::make_unique<GameOverScene>(dxCommon_, srvManager_));
+		// ボス戦中に死亡したかを確認する
+		const bool diedInBossBattle =
+			bossManager_ && bossManager_->IsBattleActive();
+
+		// GameOverSceneへ、ボス戦中に死亡したかを渡す
+		sceneManager_->SetNextScene(
+			std::make_unique<GameOverScene>(dxCommon_, srvManager_, diedInBossBattle)
+		);
 		return;
 	}
 

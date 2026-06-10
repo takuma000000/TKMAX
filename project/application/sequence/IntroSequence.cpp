@@ -203,6 +203,31 @@ namespace TKM {
 		flowSM_.Change(std::make_unique<IntroShowStartState>());
 	}
 
+	void IntroSequence::ForceComplete() {
+		// イントロ用ボスを消す
+		introBossActor_.Reset();
+
+		// カメラブレンド系を止める
+		camBlendToBossActive_ = false;
+		camBlendBackActive_ = false;
+
+		// アイリス表示を止める
+		irisOpening_ = false;
+
+		// 開幕エフェクト予約を止める
+		emitOpenBurst_ = false;
+		emitFireworkPending_ = false;
+
+		// イントロを完了フェーズにする
+		phase_ = Phase::Done;
+
+		// ゲームプレイロックを解除する
+		gameplayLocked_ = false;
+
+		// ステートマシンも完了状態にする
+		flowSM_.Change(std::make_unique<IntroDoneState>());
+	}
+
 	bool IntroSequence::IsBossSkyRedPhase() const {
 		// ボス演出中は空を赤くするフェーズ判定
 		return phase_ == Phase::BossAppear ||

@@ -164,12 +164,27 @@ GameResultMenuController::Command GameResultMenuController::Update(float dt) {
 			}
 		}
 
-		// Restart項目ならリスタートコマンドを返す
-		if (index_ == (int)Item::Restart) {
+		// ボス再戦ボタンを表示していない場合は2択
+		if (!showBossRetry_) {
+			// 0番目は「はじめから」
+			if (index_ == 0) {
+				return Command::Restart;
+			}
+
+			// 1番目は「タイトルへ」
+			return Command::ReturnToTitle;
+		}
+		// ボス再戦ボタンを表示している場合は3択
+		if (index_ == 0) {
+			// 0番目は「はじめから」
 			return Command::Restart;
 		}
+		if (index_ == 1) {
+			// 1番目は「ボス戦からやり直す」
+			return Command::RestartFromBoss;
+		}
 
-		// それ以外はタイトルへ戻るコマンドを返す
+		// 2番目は「タイトルへ」
 		return Command::ReturnToTitle;
 	}
 
@@ -186,21 +201,44 @@ GameResultMenuController::Command GameResultMenuController::Update(float dt) {
 	//=========================================================
 	// 項目スプライト更新
 	//=========================================================
+	// 全項目を確認する
 	for (int i = 0; i < (int)Item::Count; ++i) {
 		// 項目スプライトが無ければ飛ばす
 		if (!items_[i]) { continue; }
 
+		// ボス戦からリスタートを非表示にする場合
+		if (!showBossRetry_ && i == (int)Item::RestartFromBoss) {
+			// 完全透明にして見えないようにする
+			items_[i]->SetColor({ 1.0f, 1.0f, 1.0f, 0.0f });
+
+			// 更新だけはしておく
+			items_[i]->Update();
+
+			// この項目は以降の処理をしない
+			continue;
+		}
+
+		// 実際に画面上で何番目に表示するか
+		int drawIndex = i;
+
+		// ボス再戦なしの場合、タイトル項目は2番目ではなく1番目に詰める
+		if (!showBossRetry_ && i == (int)Item::ReturnToTitle) {
+			drawIndex = 1;
+		}
+
 		// 現在選択中かどうか
-		bool selected = (i == index_);
+		bool selected = (drawIndex == index_);
 
 		// 項目の表示位置を計算する
 		Vector2 pos = {
 			baseItemPos_.x,
-			baseItemPos_.y + itemSpacingY_ * (float)i
+			baseItemPos_.y + itemSpacingY_ * (float)drawIndex
 		};
 
 		// 選択中なら明るく、未選択なら少し暗くする
-		Vector4 col = selected ? Vector4{ 1.0f, 1.0f, 1.0f, 0.92f } : Vector4{ 1.0f, 1.0f, 1.0f, 0.62f };
+		Vector4 col = selected ?
+			Vector4{ 1.0f, 1.0f, 1.0f, 0.92f } :
+			Vector4{ 1.0f, 1.0f, 1.0f, 0.62f };
 
 		// 色を反映する
 		items_[i]->SetColor(col);
@@ -209,6 +247,7 @@ GameResultMenuController::Command GameResultMenuController::Update(float dt) {
 		Vector2 baseSize = selected ?
 			Vector2{ 220.0f, 85.0f } :
 			Vector2{ 200.0f, 77.0f };
+
 		// パルス倍率を反映したサイズを計算する
 		Vector2 size = selected ?
 			Vector2{ baseSize.x * pulse, baseSize.y * pulse } :
@@ -251,11 +290,21 @@ GameResultMenuController::Command GameResultMenuController::Update(float dt) {
 void GameResultMenuController::Draw() {
 	// メニュー項目を描画する
 	for (int i = 0; i < (int)Item::Count; ++i) {
-		if (items_[i]) items_[i]->Draw();
+		// ボス戦からリスタート非表示中は描画しない
+		if (!showBossRetry_ && i == (int)Item::RestartFromBoss) {
+			continue;
+		}
+
+		// 項目があれば描画する
+		if (items_[i]) {
+			items_[i]->Draw();
+		}
 	}
 
 	// カーソルを描画する
-	if (cursor_) cursor_->Draw();
+	if (cursor_) {
+		cursor_->Draw();
+	}
 }
 
 void GameResultMenuController::UpdateLayout(float screenW, float screenH) {
@@ -265,17 +314,39 @@ void GameResultMenuController::UpdateLayout(float screenW, float screenH) {
 	// 画面高さを更新する
 	screenH_ = screenH;
 
-	// パネルサイズを設定する
-	panelSize_ = { 340.0f, 200.0f };
-
-	// 右下に余白40で配置する
-	panelPos_ = { screenW_ - panelSize_.x - 40.0f, screenH_ - panelSize_.y - 40.0f };
-
-	// 項目群の基準位置を設定する
-	baseItemPos_ = { panelPos_.x + panelSize_.x * 0.5f, panelPos_.y + 60.0f + 22.0f };
+	// ボス再戦ボタンがある場合は3択、ない場合は2択
+	const int visibleCount = showBossRetry_ ? 3 : 2;
 
 	// 項目同士の縦間隔を設定する
 	itemSpacingY_ = 82.0f;
+
+	// 項目数に応じてパネルの高さを変える
+	panelSize_ = {
+		340.0f,
+		visibleCount == 3 ? 250.0f : 200.0f
+	};
+
+	// 右下に余白40で配置する
+	panelPos_ = {
+		screenW_ - panelSize_.x - 40.0f,
+		screenH_ - panelSize_.y - 13.0f
+	};
+
+	// 項目全体の高さを計算する
+	const float totalItemsHeight = itemSpacingY_ * (float)(visibleCount - 1);
+
+	// パネル中央を基準にして、項目群全体が中央に来るようにする
+	baseItemPos_ = {
+		panelPos_.x + panelSize_.x * 0.5f,
+		panelPos_.y + panelSize_.y * 0.5f - totalItemsHeight * 0.5f
+	};
+}
+
+void GameResultMenuController::SetBossRetryVisible(bool visible) {
+	showBossRetry_ = visible;
+	// ボス戦からリスタートの項目が非表示の場合、選択できないようにする
+	index_ = 0;
+	UpdateLayout(screenW_, screenH_); // レイアウトを更新して項目の位置を再計算する
 }
 
 bool GameResultMenuController::TriggerPadUp_() {
@@ -341,10 +412,9 @@ bool GameResultMenuController::TriggerA_() {
 }
 
 void GameResultMenuController::MoveIndex_(int delta) {
-	// 項目数を取得する
-	const int count = (int)Item::Count;
-
-	// 範囲外に出たらループするように選択番号を更新する
+	// 選択項目数を数える（ボス戦からリスタートの項目が非表示なら2つ、表示なら3つ）
+	int count = showBossRetry_ ? 3 : 2;
+	// インデックスを移動させる（範囲外になったら反対側に回るようにする）
 	index_ = (index_ + delta + count) % count;
 
 	// カーソル移動SEを再生する

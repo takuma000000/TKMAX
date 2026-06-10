@@ -22,7 +22,11 @@
 //=============================================================
 class GameScene : public TKM::BaseScene {
 public:
-	GameScene(TKM::DirectXCommon* dxCommon, TKM::SrvManager* srvManager) : dxCommon_(dxCommon), srvManager_(srvManager) {}
+	GameScene(TKM::DirectXCommon* dxCommon, TKM::SrvManager* srvManager, bool startFromBoss = false)
+		: dxCommon_(dxCommon),
+		srvManager_(srvManager),
+		startFromBoss_(startFromBoss) {}
+
 	~GameScene() = default;
 
 	/// <summary>
@@ -148,6 +152,10 @@ private:
 	//======================================================================
 	bool wasStartVisibleLastFrame_ = false;      // 前フレームでSTART表示中だったか
 	bool playerIntroMoveStarted_ = false;        // 前進演出を開始済みか
+	//======================================================================
+	// デバッグ用フラグ
+	//======================================================================
+	bool startFromBoss_ = false; // trueならゲーム開始時にボス戦から始める
 	//======================================================================
 	// 内部処理
 	//======================================================================

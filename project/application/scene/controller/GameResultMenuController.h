@@ -16,15 +16,17 @@
 class GameResultMenuController {
 public:
 	enum class Command {
-		None,
-		Restart,
-		ReturnToTitle,
+		None,            // コマンドなし
+		Restart,         // リスタート
+		RestartFromBoss, // ボス戦からリスタート
+		ReturnToTitle,   // タイトルに戻る
 	};
 
 	struct Desc {
-		std::array<std::string, 2> itemTex = { //
-			"./resources/texture/restart_pause.png",       // リスタート
-			"./resources/texture/title_pause.png",     // タイトルに戻る
+		std::array<std::string, 3> itemTex = { //
+			"./resources/texture/restart_pause.png", // リスタート
+			"./resources/texture/resume_boss.png",   // ボス戦からリスタート
+			"./resources/texture/title_pause.png",   // タイトルに戻る
 		};
 		std::string cursorTex = "./resources/texture/circle2.png"; // カーソル
 	};
@@ -63,11 +65,20 @@ public:
 	/// <param name="screenH">画面高さ（ピクセル）</param>
 	void UpdateLayout(float screenW, float screenH);
 
+	// Setter=====================================
+	/// <summary>
+	/// ボス戦からリスタートの項目の表示・非表示を設定します。
+	/// </summary>
+	/// <param name="visible">表示する場合は true、非表示にする場合は false</param>
+	void SetBossRetryVisible(bool visible);
+	// ===========================================
+
 private:
 	enum class Item { // コマンドと対応させる
-		Restart = 0, // リスタート
-		ReturnToTitle, // タイトルに戻る
-		Count // 項目数
+		Restart = 0,     // リスタート
+		RestartFromBoss, // ボス戦からリスタート
+		ReturnToTitle,   // タイトルに戻る
+		Count            // 項目数
 	};
 
 	/// <summary>
@@ -109,7 +120,8 @@ private:
 	//======================================================================
 	// 状態
 	//======================================================================
-	int index_ = 0; // 選択中の項目インデックス
+	int index_ = 0;              // 選択中の項目インデックス
+	bool showBossRetry_ = false; // ボス戦からリスタートの項目を表示するかどうか
 	//======================================================================
 	// 入力（トリガー判定用）
 	//======================================================================

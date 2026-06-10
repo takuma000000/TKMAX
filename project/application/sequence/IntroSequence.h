@@ -61,6 +61,11 @@ namespace TKM {
 		/// </summary>
 		/// <param name="camera">カメラのポインタ</param>
 		void SkipBossIntroToShowStart(Camera* camera);
+		/// <summary>
+		/// イントロを即完了状態にします。
+		/// ボス戦から再開する時など、開幕演出を完全に飛ばしたい場合に使います。
+		/// </summary>
+		void ForceComplete();
 
 		/// <summary>
 		/// ゲームプレイがロックされているかを取得します。

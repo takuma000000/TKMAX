@@ -26,9 +26,10 @@
 //=============================================================
 class GameOverScene : public TKM::BaseScene {
 public:
-	GameOverScene(TKM::DirectXCommon* dxCommon, TKM::SrvManager* srvManager)
-		: dxCommon_(dxCommon), srvManager_(srvManager) {
-	}
+	GameOverScene(TKM::DirectXCommon* dxCommon, TKM::SrvManager* srvManager, bool diedInBossBattle = false)
+		: dxCommon_(dxCommon),
+		srvManager_(srvManager),
+		diedInBossBattle_(diedInBossBattle) {}
 	/// <summary>
 	/// </summary>シーンを初期化します。
 	/// </summary>
@@ -106,9 +107,9 @@ private:
 	// フェードイン（0→1）とスケール（0.8→1.0）
 	Ease::Tween overAlphaTween_; // Alphaは単純に InOutQuad, 1.2s
 	Ease::Tween overScaleTween_; // どちらも InOutBack, 1.2s
-	bool overActive_ = false;   // アニメ進行フラグ
-	float overAlpha_ = 0.0f;    // 現アルファ
-	float overScale_ = 1.0f;    // 現スケール
+	bool overActive_ = false;    // アニメ進行フラグ
+	float overAlpha_ = 0.0f;     // 現アルファ
+	float overScale_ = 1.0f;     // 現スケール
 	// --- 演出用（Update内 static を排除してカプセル化） ---
 	float overGlowTimer_ = 0.0f; // 「GAME OVER」表示のグローエフェクト用タイマー
 	//======================================================================
@@ -119,8 +120,8 @@ private:
 	// ゲームオーバーメニュー / 次アクション
 	//======================================================================
 	// --- ゲームオーバーメニュー ---
-	std::unique_ptr<GameResultMenuController> overMenu_; // ゲームオーバーメニューコントローラー
-	enum class NextAction { None, Restart, ReturnToTitle }; // 次のアクション（何もなし / リスタート / タイトルへ）
+	std::unique_ptr<GameResultMenuController> overMenu_;                     // ゲームオーバーメニューコントローラー
+	enum class NextAction { None, Restart, ReturnToTitle, RestartFromBoss }; // 次のアクション（何もなければ None）
 	NextAction nextAction_ = NextAction::None; // --- タイトルへ戻るためのフェードアウト ---
 	//======================================================================
 	// ノイズエフェクト
@@ -135,4 +136,8 @@ private:
 	// 決定時の波紋エフェクト
 	//======================================================================
 	std::unique_ptr<TKM::WaterRippleEffect> rippleEffect_ = nullptr; // 決定時の波紋
+	//======================================================================
+	// ポス状態確認
+	//======================================================================
+	bool diedInBossBattle_ = false; // ボス戦中に死亡したか
 };
