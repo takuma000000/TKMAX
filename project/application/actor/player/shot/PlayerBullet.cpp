@@ -360,7 +360,7 @@ void PlayerBullet::Update() {
 			bool isLTBullet = (trailGroup_ == "trail_lt");
 
 			// 通常ダメージか一撃必殺ダメージを決める
-			int  damage = isSpecialAttack_ ? 100 : 1;
+			int damage = damage_;
 
 			// このダメージで敵が死ぬかを先に判定しておく
 			bool willDie = (enemy_ && enemy_->GetHP() <= damage);
@@ -449,7 +449,7 @@ void PlayerBullet::Update() {
 			bool isLTBullet = (trailGroup_ == "trail_lt");
 
 			// 通常ダメージか一撃必殺ダメージを決める
-			int  damage = isSpecialAttack_ ? 100 : 1;
+			int damage = damage_;
 
 			// このダメージでコアが死ぬかを先に判定しておく
 			bool willDie = (core->GetHP() <= damage);
@@ -632,6 +632,11 @@ void PlayerBullet::SetUseTrail(bool use) {
 void PlayerBullet::SetBarrierCoreManager(BarrierCoreManager* manager) {
 	// バリアコアマネージャー参照を設定する
 	barrierCoreManager_ = manager;
+}
+
+void PlayerBullet::SetDamage(int damage) {
+	// ダメージ値を設定する
+	damage_ = damage;
 }
 
 void PlayerBullet::StartSpawnBezier(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3, float duration, const Vector3& velocityAfter) {

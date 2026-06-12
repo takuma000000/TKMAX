@@ -140,6 +140,11 @@ public:
 	/// </summary>
 	/// <param name="manager">バリアコアマネージャー（nullptr 可）</param>
 	void SetBarrierCoreManager(BarrierCoreManager* manager);
+	/// <summary>
+	/// 弾のダメージ量を設定します。
+	/// </summary>
+	/// <param name="damage">ダメージ量</param>
+	void SetDamage(int damage);
 	// =========================================
 
 private:
@@ -192,10 +197,11 @@ private:
 	std::string     trailGroup_ = "bulletTrail"; // デフォルトのパーティクルグループ名
 	bool useTrail_ = true; // トレイルを使うかどうか
 	//======================================================================
-	// 共通パラメータ（マジックナンバー解消）
+	// 共通パラメータ
 	//======================================================================
 	static constexpr float kDefaultScale_ = 1.3f;  // 弾の見た目サイズ
 	static constexpr float kDespawnZ_ = 150.0f; // 消えるZ位置
+	int damage_ = 20; // ダメージ量
 	//======================================================================
 	// その他の定数
 	//======================================================================

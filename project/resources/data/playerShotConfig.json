@@ -1,16 +1,17 @@
 {
   "rb": {
-    "bulletSpeed": 10.0,           
-    "shotCooldownSec": 0.25   
+    "bulletSpeed": 10.0,
+    "shotCooldownSec": 0.25,
+    "damage": 20
   },
 
   "lb": {
-    "ammoMax": 5,             
-    "refillWaitSec": 3.0,    
-
-    "arcHeight": 18.0,        
-    "arcDuration": 0.55,      
-
-    "forwardOffsetZ": 28.0
+    "ammoMax": 5,
+    "refillWaitSec": 3.0,
+    "arcHeight": 18.0,
+    "arcDuration": 0.55,
+    "forwardOffsetZ": 28.0,
+    "damage": 50,
+    "coreDamage": 10
   }
 }

@@ -82,7 +82,6 @@ public:
 	const Enemy* GetEnemy() const { return enemy_; }
 	// =========================================
 	// Setter===================================
-	
 	/// <summary>
 	/// ホーミング弾の位置を設定します。
 	/// </summary>
@@ -108,6 +107,12 @@ public:
 	/// </summary>
 	/// <param name="core"></param>
 	void SetCore(BarrierCore* core);
+	/// <summary>
+	/// ホーミング弾のダメージ量を設定します。
+	/// </summary>
+	/// <param name="enemyDamage">敵に与えるダメージ量</param>
+	/// <param name="coreDamage">コアに与えるダメージ量</param>
+	void SetDamage(int enemyDamage, int coreDamage);
 	// =========================================
 
 private:
@@ -164,8 +169,8 @@ private:
 	static constexpr float kLifeTime_ = 3.0f; // 一定時間経過で消える
 	static constexpr float kTrailStep_ = 0.15f; // トレイルの点を追加する距離の閾値
 	static constexpr size_t kTrailHardCap_ = 64; // トレイルの最大点数（これ以上は古い点から削除される）
-	static constexpr int kEnemyDamage_ = 50; // 敵へのダメージ量
-	static constexpr int kCoreDamage_ = 10; // コアへのダメージは小さめ
+	int enemyDamage_ = 50; // 敵に与えるダメージ量
+	int coreDamage_ = 10;  // 敵とコアに与えるダメージ量
 	//==============================================
 	// タイマー
 	//==============================================

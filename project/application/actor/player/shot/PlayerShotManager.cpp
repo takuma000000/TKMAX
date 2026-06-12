@@ -379,6 +379,9 @@ void PlayerShotManager::RBShoot_() {
 	// バリアコアマネージャー参照を渡す
 	bullet->SetBarrierCoreManager(barrierCoreManager_);
 
+	// ダメージを設定する
+	bullet->SetDamage(rb.damage_);
+
 	//=========================================================
 	// レイ上のターゲット敵検索
 	//=========================================================
@@ -550,6 +553,9 @@ void PlayerShotManager::LBShoot_() {
 
 		// 山なり弾道を開始する
 		bullet->StartArc(start, c1, c2, end, 0.4f);
+
+		// ダメージを設定する
+		bullet->SetDamage(lb.damage_, lb.coreDamage_);
 
 		// ホーミング弾リストへ追加する
 		homingBullets_.push_back(std::move(bullet));

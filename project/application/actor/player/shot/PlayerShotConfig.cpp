@@ -75,13 +75,19 @@ bool PlayerShotConfig::LoadJson(const char* path) {
 	//=========================================================
 	if (root.contains("rb")) {
 		auto& rb = root["rb"];
-
+		// RB弾の速度を読み込む
 		if (rb.contains("bulletSpeed")) {
 			rb_.bulletSpeed_ = rb["bulletSpeed"].get<float>();
 		}
 
+		// RB弾の発射間隔を読み込む
 		if (rb.contains("shotCooldownSec")) {
 			rb_.shotCooldownSec_ = rb["shotCooldownSec"].get<float>();
+		}
+
+		// RB弾のダメージを読み込む
+		if (rb.contains("damage")) {
+			rb_.damage_ = rb["damage"].get<int>();
 		}
 	}
 
@@ -115,6 +121,16 @@ bool PlayerShotConfig::LoadJson(const char* path) {
 		// LB弾の前方オフセット距離を読み込む
 		if (lb.contains("forwardOffsetZ")) {
 			lb_.forwardOffsetZ_ = lb["forwardOffsetZ"].get<float>();
+		}
+
+		// LB弾の敵ダメージを読み込む
+		if (lb.contains("damage")) {
+			lb_.damage_ = lb["damage"].get<int>();
+		}
+
+		// LB弾のコアダメージを読み込む
+		if (lb.contains("coreDamage")) {
+			lb_.coreDamage_ = lb["coreDamage"].get<int>();
 		}
 	}
 

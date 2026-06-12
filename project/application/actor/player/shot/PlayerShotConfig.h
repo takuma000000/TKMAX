@@ -9,7 +9,8 @@ class PlayerShotConfig {
 public:
 	struct RBConfig {
 		float bulletSpeed_ = 10.0f;       // RB弾の速度
-		float shotCooldownSec_ = 0.08f;   // RB弾の発射間隔
+		float shotCooldownSec_ = 0.25f;   // RB弾の発射間隔
+		int damage_ = 20;                 // 通常弾のダメージ
 	};
 
 	struct LBConfig {
@@ -18,6 +19,8 @@ public:
 		float arcHeight_ = 18.0f;         // LB弾の山なり高さ
 		float arcDuration_ = 0.55f;       // LB弾の飛翔時間
 		float forwardOffsetZ_ = 28.0f;    // ターゲットが無い時の前方終点距離
+		int damage_ = 50;                 // ホーミング弾の敵ダメージ
+		int coreDamage_ = 10;             // ホーミング弾のコアダメージ
 	};
 
 	/// <summary>

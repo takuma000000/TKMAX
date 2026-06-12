@@ -108,6 +108,12 @@ void HomingBullet::SetCore(BarrierCore* core) {
 	core_ = core;
 }
 
+void HomingBullet::SetDamage(int enemyDamage, int coreDamage) {
+	// 敵に与えるダメージ量を設定する
+	enemyDamage_ = enemyDamage;
+	coreDamage_ = coreDamage;
+}
+
 void HomingBullet::StartArc(
 	const Vector3& start,
 	const Vector3& control1,
@@ -489,7 +495,7 @@ void HomingBullet::Update() {
 				pm->Emit("lt_nova_crack", hitPos, 80);
 
 				// 敵へダメージを与える
-				enemy_->OnHitWithDamage(kEnemyDamage_);
+				enemy_->OnHitWithDamage(enemyDamage_);
 
 				// プレイヤーがいれば強めのカメラシェイクをかける
 				if (player_) {
@@ -524,7 +530,7 @@ void HomingBullet::Update() {
 				pm->Emit("lt_nova_crack", hitPos, 80);
 
 				// コアへダメージを与える
-				core_->OnHitWithDamage(kCoreDamage_);
+				core_->OnHitWithDamage(coreDamage_);
 
 				// プレイヤーがいれば強めのカメラシェイクをかける
 				if (player_) {
