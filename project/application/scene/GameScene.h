@@ -3,6 +3,8 @@
 #include <memory>
 #include <vector>
 
+#include "Player.h"
+
 //=============================================================
 // GameSceneクラス
 // ゲーム本編を管理するシーンクラス。
@@ -26,4 +28,6 @@ private:
 	
 	TKM::DirectXCommon* dxCommon_ = nullptr;
 	TKM::SrvManager* srvManager_ = nullptr;
+
+	std::unique_ptr<Player> player_;
 };

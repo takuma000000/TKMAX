@@ -190,6 +190,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\state\StateMachine.cpp" />
     <ClCompile Include="engine\effect\post\TrailRibbonRenderer.cpp" />
     <ClCompile Include="engine\effect\post\NoiseEffect.cpp" />
+    <ClCompile Include="application\actor\Player.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\effect\ParticleGroupsCatalog.h" />
@@ -263,6 +264,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\state\IStateContext.h" />
     <ClInclude Include="externals\nlohmann\json.hpp" />
     <ClInclude Include="engine\effect\post\NoiseEffect.h" />
+    <ClInclude Include="application\actor\Player.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="engine\func\math\Transform.h" />
     <ClInclude Include="engine\state\StateMachine.h" />
