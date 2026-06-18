@@ -5,6 +5,7 @@
 
 #include "Player.h"
 #include "Road.h"
+#include "HintLog.h"
 
 //=============================================================
 // GameSceneクラス
@@ -29,6 +30,8 @@ private:
 	
 	TKM::DirectXCommon* dxCommon_ = nullptr;
 	TKM::SrvManager* srvManager_ = nullptr;
+
+	HintLog hintLog_;
 
 	std::unique_ptr<Player> player_;
 	std::vector<std::unique_ptr<Road>> roads_;

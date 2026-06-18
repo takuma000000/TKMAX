@@ -63,6 +63,8 @@ void GameScene::Update() {
 	if (hitRoadIndex_ >= 0 && TKM::Input::GetInstance()->TriggerKey(DIK_E)) {
 		selectedRoadIndex_ = hitRoadIndex_;
 		isSelectedCorrect_ = roads_[hitRoadIndex_]->IsCorrect();
+
+		hintLog_.AddSelectLog(selectedRoadIndex_, isSelectedCorrect_);
 	}
 
 	for (auto& road : roads_) {
@@ -96,6 +98,17 @@ void GameScene::Update() {
 	} else {
 		ImGui::Text("まだ選択していません");
 	}
+
+	ImGui::Separator();
+
+	ImGui::Text("失敗回数 : %d", hintLog_.GetMissCount());
+	ImGui::Text("成功回数 : %d", hintLog_.GetCorrectCount());
+	ImGui::Text("総回数 : %d", hintLog_.GetTotalSelectCount());
+
+	ImGui::Separator();
+
+	std::string json = hintLog_.MakeJson();
+	ImGui::TextWrapped("%s", json.c_str());
 
 	ImGui::End();
 #endif
