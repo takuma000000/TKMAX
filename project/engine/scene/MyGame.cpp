@@ -21,7 +21,7 @@ namespace TKM {
 
 		//最初のシーンを設定
 		sceneManager_->SetNextScene(
-			std::unique_ptr<TKM::BaseScene>(sceneFactory_->CreateScene("TITLE"))
+			std::unique_ptr<TKM::BaseScene>(sceneFactory_->CreateScene("GAME"))
 		);
 
 		assert(dxCommon_.get() != nullptr && "DirectXCommon is nullptr in MyGame::Initialize");

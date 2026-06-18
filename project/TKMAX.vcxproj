@@ -113,17 +113,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="application\action\ActionBlock.cpp" />
-    <ClCompile Include="application\action\ActionBack.cpp" />
-    <ClCompile Include="application\action\ActionPlayerMagic.cpp" />
-    <ClCompile Include="application\action\ActionPlayerBulletManager.cpp" />
-    <ClCompile Include="application\action\ActionPlayerBullet.cpp" />
-    <ClCompile Include="application\action\ActionGround.cpp" />
-    <ClCompile Include="application\action\ActionLifeUI.cpp" />
-    <ClCompile Include="application\action\ActionTimer.cpp" />
-    <ClCompile Include="application\action\ActionGoal.cpp" />
-    <ClCompile Include="application\action\ActionEnemy.cpp" />
-    <ClCompile Include="application\action\ActionPlayer.cpp" />
     <ClCompile Include="application\effect\ParticleGroupsCatalog.cpp" />
     <ClCompile Include="application\effect\ParticleSpawner.cpp" />
     <ClCompile Include="engine\3d\BarrierCommon.cpp" />
@@ -203,17 +192,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\effect\post\NoiseEffect.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="application\action\ActionBlock.h" />
-    <ClInclude Include="application\action\ActionBack.h" />
-    <ClInclude Include="application\action\ActionPlayerMagic.h" />
-    <ClInclude Include="application\action\ActionPlayerBulletManager.h" />
-    <ClInclude Include="application\action\ActionPlayerBullet.h" />
-    <ClInclude Include="application\action\ActionGround.h" />
-    <ClInclude Include="application\action\ActionLifeUI.h" />
-    <ClInclude Include="application\action\ActionTimer.h" />
-    <ClInclude Include="application\action\ActionGoal.h" />
-    <ClInclude Include="application\action\ActionEnemy.h" />
-    <ClInclude Include="application\action\ActionPlayer.h" />
     <ClInclude Include="application\effect\ParticleGroupsCatalog.h" />
     <ClInclude Include="application\effect\ParticleSpawner.h" />
     <ClInclude Include="engine\3d\BarrierCommon.h" />
