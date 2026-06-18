@@ -191,6 +191,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\effect\post\TrailRibbonRenderer.cpp" />
     <ClCompile Include="engine\effect\post\NoiseEffect.cpp" />
     <ClCompile Include="application\actor\Player.cpp" />
+    <ClCompile Include="application\actor\Road.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="application\effect\ParticleGroupsCatalog.h" />
@@ -269,6 +270,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\func\math\Transform.h" />
     <ClInclude Include="engine\state\StateMachine.h" />
     <ClInclude Include="engine\effect\post\TrailRibbonRenderer.h" />
+    <ClInclude Include="application\actor\Road.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

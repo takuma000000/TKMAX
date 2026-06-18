@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "Player.h"
+#include "Road.h"
 
 //=============================================================
 // GameSceneクラス
@@ -30,4 +31,17 @@ private:
 	TKM::SrvManager* srvManager_ = nullptr;
 
 	std::unique_ptr<Player> player_;
+	std::vector<std::unique_ptr<Road>> roads_;
+
+	int selectedRoadIndex_ = -1;
+	bool isSelectedCorrect_ = false;
+
+	int hitRoadIndex_ = -1;
+
+	bool CheckAABB(
+		const Vector2& posA,
+		const Vector2& sizeA,
+		const Vector2& posB,
+		const Vector2& sizeB
+	);
 };

@@ -3,7 +3,7 @@
 #include "SpriteCommon.h"
 
 void Player::Initialize(TKM::DirectXCommon* dxCommon) {
-	const std::string playerTex = "./resources/texture/circle2.png";
+	const std::string playerTex = "./resources/texture/enemy_typeB.png";
 
 	sprite_ = std::make_unique<TKM::Sprite>();
 
