@@ -444,5 +444,18 @@ namespace TKM {
 
 		// LB弾の稲光コア演出パーティクル
 		pm->CreateParticleGroup("trail_lb_bolt_core", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::NORMAL);
+
+		//=========================================================
+		// 深海の審判：空間歪みポータル
+		//=========================================================
+
+		// ポータル外周リング
+		pm->CreateParticleGroup("judgement_portal_ring", "./resources/texture/gradationLine.png", ParticleManager::ParticleType::RING);
+		// ポータル中心の暗いコア
+		pm->CreateParticleGroup("judgement_portal_core", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
+		// 中心へ吸い込まれる粒
+		pm->CreateParticleGroup("judgement_portal_inward", "./resources/texture/circle.png", ParticleManager::ParticleType::NORMAL);
+		// レーザー直前のフラッシュ
+		pm->CreateParticleGroup("judgement_portal_flash", "./resources/texture/circle2.png", ParticleManager::ParticleType::NORMAL);
 	}
 }

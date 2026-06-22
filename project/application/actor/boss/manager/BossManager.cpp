@@ -224,14 +224,20 @@ void BossManager::Update(float dt) {
 
 		// Judgementに入った瞬間だけ初期化
 		if (!judgementActivePrev_) {
-			judgementLaserIntervalTimer_ = 0.3f;
 			ClearJudgementLasers_();
+
+			// ポータルだけ見せる「間」
+			judgementStartDelayTimer_ = 1.2f;
 		}
-		// 予備動作中はレーザー攻撃を更新
-		UpdateJudgementLasers_(dt);
-		// レーザー攻撃の当たり判定を行う
-		CheckJudgementLaserHit_();
-	} else { // 予備動作が終了したらポータル演出を停止し、レーザー攻撃も消去
+
+		// 最初は攻撃せず、ポータルだけ見せる
+		if (judgementStartDelayTimer_ > 0.0f) {
+			judgementStartDelayTimer_ -= dt;
+		} else { // ポータルを出してしばらくしたらレーザー攻撃開始
+			UpdateJudgementLasers_(dt);
+			CheckJudgementLaserHit_();
+		}
+	} else { // ジャッジメント予備動作でない場合はポータル演出を停止し、レーザー攻撃も停止
 		StopJudgementPortals_();
 		ClearJudgementLasers_();
 	}
@@ -620,12 +626,37 @@ void BossManager::UpdateJudgementLasers_(float dt) {
 
 	// 一定間隔でレーザー発射
 	judgementLaserIntervalTimer_ -= dt;
-	// タイマーが0以下になったらレーザーを発射してタイマーをリセット
 	if (judgementLaserIntervalTimer_ <= 0.0f) {
-		FireJudgementLasers_(); // レーザー発射
 
-		// 次の発射までの間隔
-		judgementLaserIntervalTimer_ = 0.22f;
+		// まずは1本ずつ撃つ
+		if (judgementLaserTotalFireCount_ < kJudgementLaserSingleFireCount_) {
+			FireJudgementLasers_();
+
+			++judgementLaserTotalFireCount_;
+
+			judgementLaserIntervalTimer_ = 0.22f;
+			return;
+		}
+
+		// 12発撃ち終わった直後に、最後の溜めを開始
+		if (!judgementFinalBurstFired_ && judgementFinalChargeTimer_ <= 0.0f) {
+			judgementFinalChargeTimer_ = kJudgementFinalChargeTime_;
+			return;
+		}
+	}
+
+	// 最後の溜め中
+	if (!judgementFinalBurstFired_ && judgementFinalChargeTimer_ > 0.0f) {
+		judgementFinalChargeTimer_ -= dt;
+
+		if (judgementFinalChargeTimer_ <= 0.0f) {
+			FireJudgementFinalBurst_();
+
+			judgementFinalBurstFired_ = true;
+
+			// 最後の余韻
+			judgementLaserIntervalTimer_ = 1.0f;
+		}
 	}
 }
 
@@ -682,6 +713,10 @@ void BossManager::ClearJudgementLasers_() {
 	// レーザー発射の間隔タイマーもリセット
 	judgementLaserIntervalTimer_ = 0.0f;
 	judgementLaserFireIndex_ = 0;
+	judgementLaserTotalFireCount_ = 0;
+	judgementFinalBurstFired_ = false;
+	judgementStartDelayTimer_ = 0.0f;
+	judgementFinalChargeTimer_ = 0.0f;
 }
 
 void BossManager::DrawJudgementLasers_() {
@@ -714,6 +749,25 @@ void BossManager::DrawJudgementLasers_() {
 				{ 1.0f, 0.1f, 0.2f, 1.0f }
 			);
 		}
+	}
+}
+
+void BossManager::FireJudgementFinalBurst_() {
+	if (!player_) {
+		return;
+	}
+	// プレイヤーのワールド座標を取得
+	const Vector3 playerPos = player_->GetWorldPosition();
+	// 全ての有効なポータルからプレイヤーに向かってレーザーを発射
+	for (int i = 0; i < 6; ++i) {
+		if (!judgementPortals_[i].active_) {
+			continue;
+		}
+		// 最後のバーストはレーザーを長めに表示する
+		judgementLasers_[i].start_ = judgementPortals_[i].pos_;
+		judgementLasers_[i].end_ = playerPos;
+		judgementLasers_[i].timer_ = 0.35f; // 最後だけ長め
+		judgementLasers_[i].active_ = true;
 	}
 }
 

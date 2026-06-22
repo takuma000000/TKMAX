@@ -245,6 +245,14 @@ private:
 	float judgementLaserIntervalTimer_ = 0.0f; // 判定レーザーの発射間隔タイマー
 	int judgementLaserFireIndex_ = 0; // 次に撃つポータル番号
 
+	int judgementLaserTotalFireCount_ = 0; // 発射した判定レーザーの総数（撃破シーケンス全体で何発撃ったか）
+	static constexpr int kJudgementLaserSingleFireCount_ = 12; // 撃破シーケンス全体で撃つ判定レーザーの総数
+	bool judgementFinalBurstFired_ = false; // 撃破シーケンスの最後の一斉発射を撃ったかどうか
+	float judgementStartDelayTimer_ = 0.0f; // 撃破シーケンス開始から判定レーザー発射までの遅延タイマー
+
+	float judgementFinalChargeTimer_ = 0.0f; // 撃破シーケンスの最後の一斉発射のためのチャージタイマー
+	static constexpr float kJudgementFinalChargeTime_ = 0.8f; // 撃破シーケンスの最後の一斉発射のためのチャージ時間（秒）
+
 	/// <summary>
 	/// 撃破シーケンス用の判定レーザーを更新します。レーザーの発射タイミングや持続時間を管理し、必要に応じてレーザーを発射したり消したりします。
 	/// </summary>
@@ -261,6 +269,10 @@ private:
 	/// 撃破シーケンス用の判定レーザーを描画します。発射中のレーザーがあれば、ボスからプレイヤーに向かって線を描画します。
 	/// </summary>
 	void DrawJudgementLasers_();
+	/// <summary>
+	/// 撃破シーケンス用の判定レーザーの最後の一斉発射を行います。ボスからプレイヤーに向かって、6つのレーザーを同時に発射する演出を行います。
+	/// </summary>
+	void FireJudgementFinalBurst_();
 
 	// ジャッジメントレーザーの当たり判定用ID（プレイヤーの攻撃と重複しないようにするため）
 	int judgementAttackId_ = 10000;
