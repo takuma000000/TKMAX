@@ -211,6 +211,15 @@ void BossManager::Update(float dt) {
 	}
 
 	//=========================================================
+	// ジャッジメント予備動作のポータル演出開始/停止
+	//=========================================================
+	if (bossController_->GetState() == BossController::State::JudgementWindup) {
+		StartJudgementPortals_(); // この状態の間はポータル演出を表示する
+	} else {
+		StopJudgementPortals_(); // この状態以外ではポータル演出を消す
+	}
+
+	//=========================================================
 	// 触手チャージ演出反映
 	//=========================================================
 	if (boss_ && bossController_) {
@@ -352,6 +361,23 @@ void BossManager::Draw(TKM::DirectXCommon* dxCommon) {
 		UpdateBossBullets();
 		return;
 	}
+
+#ifdef _DEBUG
+	for (const auto& portal : judgementPortals_) {
+		if (!portal.active_) {
+			continue;
+		}
+		// ジャッジメント予備動作のポータル位置にデバッグ用のワイヤーフレームAABBを描画
+		auto* lr = TKM::LineRenderer::GetInstance();
+		if (lr) {
+			lr->AddAABB(
+				portal.pos_, // 中心位置
+				{ 4.0f, 4.0f, 4.0f }, // サイズ
+				{ 0.2f, 0.6f, 1.0f, 1.0f } // 色 (半透明の水色)
+			);
+		}
+	}
+#endif
 
 	//=========================================================
 	// ボス本体描画
@@ -519,6 +545,40 @@ void BossManager::SetWaterRippleEffect(TKM::WaterRippleEffect* r) {
 
 void BossManager::SetCamera(TKM::Camera* camera) {
 	BattleActorManagerBase::SetCamera(camera);
+}
+
+//=============================================================
+// 審判のポータル生成/停止
+//=============================================================
+void BossManager::StartJudgementPortals_() {
+	if (!boss_) {
+		return;
+	}
+
+	const Vector3 bossPos = boss_->GetWorldPosition(); // ボスのワールド座標
+
+	// ボスからもっと離して、上下の間隔も広げる
+	const Vector3 offsets[6] = {
+		{ -18.0f,  7.0f, 0.0f },
+		{ -22.0f,  0.0f, 0.0f },
+		{ -18.0f, -7.0f, 0.0f },
+
+		{  18.0f,  7.0f, 0.0f },
+		{  22.0f,  0.0f, 0.0f },
+		{  18.0f, -7.0f, 0.0f },
+	};
+
+	// 6つのポータルをボスの左右に配置して有効化
+	for (int i = 0; i < 6; ++i) {
+		judgementPortals_[i].pos_ = bossPos + offsets[i];
+		judgementPortals_[i].active_ = true;
+	}
+}
+void BossManager::StopJudgementPortals_() {
+	// 全てのポータルを無効化
+	for (auto& portal : judgementPortals_) {
+		portal.active_ = false; // 無効化
+	}
 }
 
 //=============================================================

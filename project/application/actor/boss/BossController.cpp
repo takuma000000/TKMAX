@@ -201,6 +201,7 @@ void BossController::ImGuiDebug(Enemy& boss) {
 	"登場",
 	"旋回",
 	"復帰",
+	"審判溜め",
 	};
 
 	int si = static_cast<int>(state_);
@@ -339,6 +340,7 @@ void BossController::ChangeState(State s) {
 	case State::Enter: sm_.Change(std::make_unique<BossEnterState>()); break;
 	case State::Orbit: sm_.Change(std::make_unique<BossOrbitState>()); break;
 	case State::Recover: sm_.Change(std::make_unique<BossRecoverState>()); break;
+	case State::JudgementWindup: sm_.Change(std::make_unique<BossJudgementWindupState>()); break;
 	}
 }
 

@@ -91,6 +91,18 @@ void BossOrbitState::Update(TKM::IStateContext& ctx, float dt) {
 	// 一定時間は軌道移動だけを行い、攻撃選択へ進まない
 	if (c.timer_ < c.config_->orbit_.duration_) { return; }
 
+
+
+
+
+	// 必殺技テスト
+	c.ChangeState(BossController::State::JudgementWindup);
+	return;
+
+
+
+
+
 	// -----------------------------
 	// ミサイル or スラッシュ
 	// -----------------------------
@@ -437,6 +449,31 @@ void BossRecoverState::Update(TKM::IStateContext& ctx, float dt) {
 
 	// Recover時間が過ぎ、攻撃処理も終わっていればOrbitへ戻る
 	if (c.timer_ >= c.config_->recover_.duration_ && !missileBusy_ && !slashBusy_) {
+		c.ChangeState(BossController::State::Orbit);
+	}
+}
+
+//=====================================================
+// JudgementWindup
+//=====================================================
+void BossJudgementWindupState::Enter(TKM::IStateContext& ctx) {
+	auto& c = AsBoss_(ctx);
+
+	c.timer_ = 0.0f;
+	c.state_ = BossController::State::JudgementWindup;
+}
+
+void BossJudgementWindupState::Update(TKM::IStateContext& ctx, float dt) {
+	auto& c = AsBoss_(ctx);
+	Vector3& pos = c.posWork_;
+
+	// 中央奥ちょい上
+	Vector3 target_{ 0.0f, 12.0f, 100.0f };
+
+	pos = BossController::SmoothDamp(pos, target_, 0.10f, dt); // かなりゆっくりと移動させる
+
+	// ひとまず2秒溜めたら通常軌道へ戻す
+	if (c.timer_ >= 2.0f) {
 		c.ChangeState(BossController::State::Orbit);
 	}
 }

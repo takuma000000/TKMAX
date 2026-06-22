@@ -18,6 +18,7 @@ public:
 		Enter, // ボス登場
 		Orbit, // プレイヤーを中心に回りながら攻撃
 		Recover, // ダメージ受けて回復
+		JudgementWindup,
 	};
 
 	/// <summary>
@@ -121,6 +122,10 @@ public:
 	/// チャージの進行度(0..1)（触手揺れ強度用）
 	/// </summary>
 	float GetCharge01() const;
+	/// <summary>
+	/// 現在の状態を取得します。
+	/// </summary>
+	State GetState() const { return state_; }
 	// =========================================
 	// Setter===================================
 	/// <summary>
@@ -253,6 +258,7 @@ private:
 	friend class BossEnterState;
 	friend class BossOrbitState;
 	friend class BossRecoverState;
+	friend class BossJudgementWindupState;
 	// StateMachine
 	TKM::StateMachine sm_; // 状態遷移マシン
 	Enemy* boss_ = nullptr; // Update中だけ有効

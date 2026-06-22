@@ -16,6 +16,7 @@
 #include "BossHpBarUI.h"
 #include "BattleActorManagerBase.h"
 #include "BossConfig.h"
+#include <array>
 
 //=============================================================
 // BossManagerクラス
@@ -204,6 +205,27 @@ private:
 	// 設定
 	//==============================
 	BossConfig bossConfig_;
+
+	//==============================
+	// 撃破シーケンス用の判定ポータル
+	// 撃破シーケンス中、ボスが特定の位置に来たときに攻撃を止めたりエフェクトを出したりするための判定用ポータル。
+	// 6つ用意して、撃破シーケンスの進行に合わせて順番に有効化していきます。
+	//==============================
+	// 判定ポータル構造体
+	struct JudgementPortal {
+		Vector3 pos_;
+		bool active_ = false;
+	};
+	// 判定ポータルリスト
+	std::array<JudgementPortal, 6> judgementPortals_{};
+	/// <summary>
+	/// 撃破シーケンス用の判定ポータルを更新します。ボスがポータルの位置に来たら、次のシーケンスに進めるためのフラグを立てたり、攻撃を止めたりします。
+	/// </summary>
+	void StartJudgementPortals_();
+	/// <summary>
+	/// 撃破シーケンス用の判定ポータルを停止します。シーケンスが進んで次の段階に入ったら、前の段階のポータルはもう必要ないので無効化します。
+	/// </summary>
+	void StopJudgementPortals_();
 
 protected:
 	/// <summary>
