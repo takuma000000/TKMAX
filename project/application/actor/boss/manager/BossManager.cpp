@@ -213,11 +213,30 @@ void BossManager::Update(float dt) {
 	//=========================================================
 	// ジャッジメント予備動作のポータル演出開始/停止
 	//=========================================================
-	if (bossController_->GetState() == BossController::State::JudgementWindup) {
-		StartJudgementPortals_(); // この状態の間はポータル演出を表示する
-	} else {
-		StopJudgementPortals_(); // この状態以外ではポータル演出を消す
+	// ジャッジメント予備動作中かどうかを判定
+	const bool judgementActive =
+		bossController_ &&
+		bossController_->GetState() == BossController::State::JudgementWindup;
+
+	// ジャッジメント予備動作中ならポータル演出を開始し、レーザー攻撃を更新
+	if (judgementActive) {
+		StartJudgementPortals_();
+
+		// Judgementに入った瞬間だけ初期化
+		if (!judgementActivePrev_) {
+			judgementLaserIntervalTimer_ = 0.3f;
+			ClearJudgementLasers_();
+		}
+		// 予備動作中はレーザー攻撃を更新
+		UpdateJudgementLasers_(dt);
+		// レーザー攻撃の当たり判定を行う
+		CheckJudgementLaserHit_();
+	} else { // 予備動作が終了したらポータル演出を停止し、レーザー攻撃も消去
+		StopJudgementPortals_();
+		ClearJudgementLasers_();
 	}
+
+	judgementActivePrev_ = judgementActive; // 前フレームの予備動作状態を保持
 
 	//=========================================================
 	// 触手チャージ演出反映
@@ -377,6 +396,9 @@ void BossManager::Draw(TKM::DirectXCommon* dxCommon) {
 			);
 		}
 	}
+
+	// ジャッジメントレーザーのデバッグ描画
+	DrawJudgementLasers_();
 #endif
 
 	//=========================================================
@@ -578,6 +600,201 @@ void BossManager::StopJudgementPortals_() {
 	// 全てのポータルを無効化
 	for (auto& portal : judgementPortals_) {
 		portal.active_ = false; // 無効化
+	}
+}
+
+void BossManager::UpdateJudgementLasers_(float dt) {
+	// レーザー表示時間を減らす
+	for (auto& laser : judgementLasers_) {
+		if (!laser.active_) {
+			continue;
+		}
+
+		laser.timer_ -= dt; // 表示時間を減らす
+
+		// タイマーが0以下になったらレーザーを消す
+		if (laser.timer_ <= 0.0f) {
+			laser.active_ = false;
+		}
+	}
+
+	// 一定間隔でレーザー発射
+	judgementLaserIntervalTimer_ -= dt;
+	// タイマーが0以下になったらレーザーを発射してタイマーをリセット
+	if (judgementLaserIntervalTimer_ <= 0.0f) {
+		FireJudgementLasers_(); // レーザー発射
+
+		// 次の発射までの間隔
+		judgementLaserIntervalTimer_ = 0.22f;
+	}
+}
+
+void BossManager::FireJudgementLasers_() {
+	if (!player_) {
+		return;
+	}
+	// プレイヤーのワールド座標を取得
+	const Vector3 playerPos = player_->GetWorldPosition();
+
+	// かっこよく交差する順番
+	const int fireOrder[6] = {
+		0, // 左上
+		5, // 右下
+		3, // 右上
+		2, // 左下
+		1, // 左中
+		4, // 右中
+	};
+
+	// 現在の発射順番インデックスを取得
+	int orderIndex = judgementLaserFireIndex_;
+
+	// インデックスが範囲外にならないように補正
+	if (orderIndex < 0) {
+		orderIndex = 0;
+	}
+	if (orderIndex >= 6) {
+		orderIndex = 0;
+	}
+
+	const int portalIndex = fireOrder[orderIndex]; // 発射するポータルのインデックスを取得
+
+	// ポータルが有効な場合のみレーザーを発射
+	if (judgementPortals_[portalIndex].active_) {
+		judgementLasers_[portalIndex].start_ = judgementPortals_[portalIndex].pos_;
+		judgementLasers_[portalIndex].end_ = playerPos;
+		judgementLasers_[portalIndex].timer_ = 0.18f;
+		judgementLasers_[portalIndex].active_ = true;
+	}
+	// 次の発射順番インデックスを進める
+	++judgementLaserFireIndex_;
+	if (judgementLaserFireIndex_ >= 6) {
+		judgementLaserFireIndex_ = 0;
+	}
+}
+
+void BossManager::ClearJudgementLasers_() {
+	// 全てのレーザーを無効化してタイマーをリセット
+	for (auto& laser : judgementLasers_) {
+		laser.active_ = false;
+		laser.timer_ = 0.0f;
+	}
+	// レーザー発射の間隔タイマーもリセット
+	judgementLaserIntervalTimer_ = 0.0f;
+	judgementLaserFireIndex_ = 0;
+}
+
+void BossManager::DrawJudgementLasers_() {
+	auto* lr = TKM::LineRenderer::GetInstance();
+	if (!lr) {
+		return;
+	}
+	// 有効なレーザーを描画
+	for (const auto& laser : judgementLasers_) {
+		if (!laser.active_) {
+			continue;
+		}
+		// レーザーを複数のAABBで分割して描画する
+		const int segmentCount = 8;
+		Vector3 diff = laser.end_ - laser.start_;
+		// 各セグメントの位置を計算してAABBを追加
+		for (int i = 0; i <= segmentCount; ++i) {
+			float t = static_cast<float>(i) / static_cast<float>(segmentCount); // 0.0～1.0 の補間値
+
+			// 線形補間でレーザー上の位置を計算
+			Vector3 p = {
+				laser.start_.x + diff.x * t,
+				laser.start_.y + diff.y * t,
+				laser.start_.z + diff.z * t
+			};
+			// AABBのサイズはレーザーの太さに合わせる
+			lr->AddAABB(
+				p,
+				{ 3.0f, 3.0f, 3.0f },
+				{ 1.0f, 0.1f, 0.2f, 1.0f }
+			);
+		}
+	}
+}
+
+bool BossManager::HitTestLaserToPlayer_(
+	const Vector3& laserStart,
+	const Vector3& laserEnd,
+	const Vector3& playerPos,
+	const Vector3& playerSize,
+	float laserRadius
+) {
+	// レーザーを線分、プレイヤーをAABBと見なして、線分とAABBの距離がレーザーの半径以下かどうかで当たり判定を行う
+	Vector3 ab = laserEnd - laserStart;
+	Vector3 ap = playerPos - laserStart;
+	// abの長さの2乗を計算（距離の比較に使用）
+	float abLenSq =
+		ab.x * ab.x +
+		ab.y * ab.y +
+		ab.z * ab.z;
+	// abが極端に短い場合は、レーザーを点と見なしてプレイヤーとの距離で判定する
+	if (abLenSq <= 0.0001f) {
+		return false;
+	}
+	// 線分上の最も近い点を求めるためのパラメータtを計算
+	float t =
+		(ap.x * ab.x + ap.y * ab.y + ap.z * ab.z) / abLenSq;
+	// tが0未満ならレーザー開始点、1より大きければレーザー終了点が最も近い点になるので、tを0～1の範囲にクランプする
+	if (t < 0.0f) t = 0.0f;
+	if (t > 1.0f) t = 1.0f;
+	// 線分上の最も近い点を計算
+	Vector3 closest = {
+		laserStart.x + ab.x * t,
+		laserStart.y + ab.y * t,
+		laserStart.z + ab.z * t
+	};
+
+	// プレイヤー中心と最も近い点の距離の2乗を計算
+	Vector3 diff = playerPos - closest;
+	// 距離の2乗を計算（平方根を取らずに比較できるようにする）
+	float distSq =
+		diff.x * diff.x +
+		diff.y * diff.y +
+		diff.z * diff.z;
+
+	// プレイヤーの当たり判定サイズをざっくり半径化
+	float playerRadius =
+		std::max(playerSize.x, std::max(playerSize.y, playerSize.z)) * 0.5f;
+	// レーザーの当たり判定半径とプレイヤーの半径を足した値が、距離の2乗と比較される
+	float hitRadius = playerRadius + laserRadius;
+
+	return distSq <= hitRadius * hitRadius; // 距離の2乗とヒット半径の2乗を比較して当たり判定を行う
+}
+
+void BossManager::CheckJudgementLaserHit_() {
+	if (!player_) {
+		return;
+	}
+
+	// 回避中はこの必殺技を避けられる
+	if (player_->IsDodging()) {
+		return;
+	}
+	// プレイヤーの位置とサイズを取得
+	Vector3 playerPos = player_->GetPosition();
+	Vector3 playerSize = player_->GetColliderScale();
+
+	// 有効なレーザー全てに対して当たり判定を行う
+	for (const auto& laser : judgementLasers_) {
+		if (!laser.active_) {
+			continue;
+		}
+		// レーザーとプレイヤーの当たり判定
+		if (HitTestLaserToPlayer_(
+			laser.start_,
+			laser.end_,
+			playerPos,
+			playerSize,
+			2.0f
+		)) {
+			player_->TryDamageFromAttack(1, judgementAttackId_); // ダメージ量は仮で1、攻撃IDはジャッジメント専用のIDを使用
+			return;
+		}
 	}
 }
 

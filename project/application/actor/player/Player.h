@@ -303,6 +303,10 @@ public:
 	Vector3 GetDodgeDirection() const {
 		return dodge_ ? dodge_->GetDodgeDirection() : Vector3{ 0.0f, 0.0f, 0.0f };
 	}
+	/// <summary>
+	/// プレイヤーのワールド座標を取得します。
+	/// </summary>
+	const Vector3& GetWorldPosition() const;
 	// =========================================
 	// Setter===================================
 	/// <summary>

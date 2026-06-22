@@ -599,7 +599,11 @@ Vector2 Player::GetDodgeCooldownGaugeScreenPos(float screenW, float screenH) con
 			viewportMatrix
 		);
 
-	return { screenPos.x, screenPos.y }; // 
+	return { screenPos.x, screenPos.y }; // スクリーン座標を返す
+}
+
+const Vector3& Player::GetWorldPosition() const {
+	return object_->GetTranslate(); // 本体のワールド座標を返す
 }
 
 void Player::SetHP(int hp) {

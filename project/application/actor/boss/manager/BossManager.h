@@ -227,6 +227,64 @@ private:
 	/// </summary>
 	void StopJudgementPortals_();
 
+	//==============================
+	// レーザー光線
+	// 撃破シーケンスの演出で、ボスからプレイヤーに向かってレーザーを発射する演出があります。
+	// レーザーは、ボスの位置からプレイヤーの位置に向かって伸びる線で表現されます。
+	//==============================
+	struct JudgementLaser {
+		Vector3 start_;
+		Vector3 end_;
+		float timer_ = 0.0f;
+		bool active_ = false;
+	};
+
+	std::array<JudgementLaser, 6> judgementLasers_{}; // 判定レーザーリスト
+
+	bool judgementActivePrev_ = false; // 前フレームの判定レーザー発射中フラグ
+	float judgementLaserIntervalTimer_ = 0.0f; // 判定レーザーの発射間隔タイマー
+	int judgementLaserFireIndex_ = 0; // 次に撃つポータル番号
+
+	/// <summary>
+	/// 撃破シーケンス用の判定レーザーを更新します。レーザーの発射タイミングや持続時間を管理し、必要に応じてレーザーを発射したり消したりします。
+	/// </summary>
+	void UpdateJudgementLasers_(float dt);
+	/// <summary>
+	/// 撃破シーケンス用の判定レーザーを発射します。ボスからプレイヤーに向かってレーザーを伸ばす演出を開始します。
+	/// </summary>
+	void FireJudgementLasers_();
+	/// <summary>
+	/// 撃破シーケンス用の判定レーザーを消します。レーザーの演出が終わったら、レーザーを消して次の段階に進める準備をします。
+	/// </summary>
+	void ClearJudgementLasers_();
+	/// <summary>
+	/// 撃破シーケンス用の判定レーザーを描画します。発射中のレーザーがあれば、ボスからプレイヤーに向かって線を描画します。
+	/// </summary>
+	void DrawJudgementLasers_();
+
+	// ジャッジメントレーザーの当たり判定用ID（プレイヤーの攻撃と重複しないようにするため）
+	int judgementAttackId_ = 10000;
+	/// <summary>
+	/// 撃破シーケンス用の判定レーザーの当たり判定を行います。レーザーがプレイヤーに当たっているかどうかを判定し、当たっていればプレイヤーにダメージを与えます。
+	/// </summary>
+	void CheckJudgementLaserHit_();
+	/// <summary>
+	/// レーザーとプレイヤーの当たり判定を行います。レーザーがプレイヤーの位置とサイズを考慮して当たっているかどうかを判定します。
+	/// </summary>
+	/// <param name="laserStart">レーザーの開始位置（ワールド座標）</param>
+	/// <param name="laserEnd">レーザーの終了位置（ワールド座標）</param>
+	/// <param name="playerPos">プレイヤーの位置（ワールド座標）</param>	
+	/// <param name="playerSize">プレイヤーのサイズ（幅・高さ・奥行き）</param>
+	/// <param name="laserRadius">レーザーの当たり判定半径</param>
+	/// <returns>レーザーがプレイヤーに当たっているかどうか</returns>
+	bool HitTestLaserToPlayer_(
+		const Vector3& laserStart,
+		const Vector3& laserEnd,
+		const Vector3& playerPos,
+		const Vector3& playerSize,
+		float laserRadius
+	);
+
 protected:
 	/// <summary>
 	/// カメラが変更されたときの処理。BossManagerはカメラを参照して描画や当たり判定を行うため、カメラが変更されたときに必要な処理をここに実装します。
