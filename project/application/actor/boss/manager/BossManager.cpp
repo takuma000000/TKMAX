@@ -220,24 +220,42 @@ void BossManager::Update(float dt) {
 
 	// ジャッジメント予備動作中ならポータル演出を開始し、レーザー攻撃を更新
 	if (judgementActive) {
-		StartJudgementPortals_();
 
-		// Judgementに入った瞬間だけ初期化
 		if (!judgementActivePrev_) {
 			ClearJudgementLasers_();
 
-			// ポータルだけ見せる「間」
-			judgementStartDelayTimer_ = 1.2f;
+			judgementPortalVisible_ = false;
+
+			// ボスが中央奥に移動し切るまでの待ち
+			judgementStartDelayTimer_ = 1.4f;
+
+			// ポータルが出てからレーザー発射までの溜め
+			judgementPortalChargeTimer_ = 1.8f;
 		}
 
-		// 最初は攻撃せず、ポータルだけ見せる
+		// 1. ボス移動中：何も出さない
 		if (judgementStartDelayTimer_ > 0.0f) {
 			judgementStartDelayTimer_ -= dt;
-		} else { // ポータルを出してしばらくしたらレーザー攻撃開始
-			UpdateJudgementLasers_(dt);
-			CheckJudgementLaserHit_();
+		} else {
+			// 2. ボス到着後：ポータルを出し続ける
+			judgementPortalVisible_ = true;
+
+			// ポータルの位置を更新
+			StartJudgementPortals_();
+
+			// 発射前の溜め中だけパーティクルを出す
+			if (judgementPortalChargeTimer_ > 0.0f) {
+				EmitJudgementPortalFx_(); // パーティクルを出す
+
+				judgementPortalChargeTimer_ -= dt;
+			} else {
+				// 発射が始まったらポータル粒子は出さない
+				UpdateJudgementLasers_(dt);
+				CheckJudgementLaserHit_();
+			}
 		}
-	} else { // ジャッジメント予備動作でない場合はポータル演出を停止し、レーザー攻撃も停止
+
+	} else {
 		StopJudgementPortals_();
 		ClearJudgementLasers_();
 	}
@@ -717,6 +735,8 @@ void BossManager::ClearJudgementLasers_() {
 	judgementFinalBurstFired_ = false;
 	judgementStartDelayTimer_ = 0.0f;
 	judgementFinalChargeTimer_ = 0.0f;
+	judgementPortalVisible_ = false;
+	judgementPortalChargeTimer_ = 0.0f;
 }
 
 void BossManager::DrawJudgementLasers_() {
@@ -768,6 +788,25 @@ void BossManager::FireJudgementFinalBurst_() {
 		judgementLasers_[i].end_ = playerPos;
 		judgementLasers_[i].timer_ = 0.35f; // 最後だけ長め
 		judgementLasers_[i].active_ = true;
+	}
+}
+
+void BossManager::EmitJudgementPortalFx_() {
+	// ポータルが有効な場合のみエフェクトを発生させる
+	auto* pm = TKM::ParticleManager::GetInstance();
+	if (!pm) {
+		return;
+	}
+	// 有効なポータル全てにエフェクトを発生させる
+	for (const auto& portal : judgementPortals_) {
+		if (!portal.active_) {
+			continue;
+		}
+
+		// ポータルの位置にエフェクトを発生させる
+		pm->Emit("judgement_portal_ring", portal.pos_, 1);
+		pm->Emit("judgement_portal_core", portal.pos_, 1);
+		pm->Emit("judgement_portal_inward", portal.pos_, 4);
 	}
 }
 

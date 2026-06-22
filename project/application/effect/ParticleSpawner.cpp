@@ -2894,6 +2894,80 @@ namespace TKM {
 			p.currentTime_ = 0.0f;
 
 			p.color_ = { 1.0f, 0.92f, 0.65f, 1.0f };
+		} else if (groupName == "judgement_portal_ring") {
+			auto frand = [&rng](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			p.transform_.translate_ = center;
+
+			float sc = frand(4.0f, 6.5f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+
+			p.lifeTime_ = frand(0.22f, 0.36f);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { 0.15f, 0.75f, 1.20f, 1.0f };
+		} else if (groupName == "judgement_portal_core") {
+			auto frand = [&rng](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			p.transform_.translate_ = center;
+
+			float sc = frand(2.0f, 3.2f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+
+			p.lifeTime_ = frand(0.12f, 0.22f);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { 0.05f, 0.10f, 0.22f, 0.85f };
+		} else if (groupName == "judgement_portal_inward") {
+			auto frand = [&rng](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			float angle = frand(0.0f, 6.2831853f);
+			float radius = frand(4.0f, 8.0f);
+
+			Vector3 offset{
+				std::cos(angle) * radius,
+				std::sin(angle) * radius,
+				frand(-1.0f, 1.0f)
+			};
+
+			p.transform_.translate_ = center + offset;
+
+			Vector3 dir = MyMath::Normalize(center - p.transform_.translate_);
+			p.velocity_ = dir * frand(10.0f, 18.0f);
+
+			float sc = frand(0.35f, 0.75f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.lifeTime_ = frand(0.25f, 0.45f);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { 0.25f, 0.85f, 1.25f, 1.0f };
+		} else if (groupName == "judgement_portal_flash") {
+			auto frand = [&rng](float a, float b) {
+				return std::uniform_real_distribution<float>(a, b)(rng);
+				};
+
+			p.transform_.translate_ = center;
+
+			float sc = frand(4.5f, 7.0f);
+			p.transform_.scale_ = { sc, sc, sc };
+
+			p.velocity_ = { 0.0f, 0.0f, 0.0f };
+
+			p.lifeTime_ = frand(0.08f, 0.14f);
+			p.currentTime_ = 0.0f;
+
+			p.color_ = { 0.8f, 0.95f, 1.4f, 1.0f };
 		} else { // 上記意外
 			// ── 既存：ヒット/汎用（上にふわっと・暖色系） ──
 			std::uniform_real_distribution<float> velX(-0.15f, 0.15f);

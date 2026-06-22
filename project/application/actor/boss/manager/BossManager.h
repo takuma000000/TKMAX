@@ -253,6 +253,10 @@ private:
 	float judgementFinalChargeTimer_ = 0.0f; // 撃破シーケンスの最後の一斉発射のためのチャージタイマー
 	static constexpr float kJudgementFinalChargeTime_ = 0.8f; // 撃破シーケンスの最後の一斉発射のためのチャージ時間（秒）
 
+	bool judgementPortalVisible_ = false; // 撃破シーケンスの判定ポータルを描画するかどうかのフラグ（デバッグ用）
+
+	float judgementPortalChargeTimer_ = 0.0f; // 撃破シーケンスの判定ポータルのチャージタイマー（ポータルが点滅する演出用）
+
 	/// <summary>
 	/// 撃破シーケンス用の判定レーザーを更新します。レーザーの発射タイミングや持続時間を管理し、必要に応じてレーザーを発射したり消したりします。
 	/// </summary>
@@ -273,6 +277,10 @@ private:
 	/// 撃破シーケンス用の判定レーザーの最後の一斉発射を行います。ボスからプレイヤーに向かって、6つのレーザーを同時に発射する演出を行います。
 	/// </summary>
 	void FireJudgementFinalBurst_();
+	/// <summary>
+	/// 撃破シーケンス用の判定レーザーの最後の一斉発射のためのエフェクトを発生させます。レーザーを発射する前に、ボスからプレイヤーに向かってエフェクトを表示します。
+	/// </summary>
+	void EmitJudgementPortalFx_();
 
 	// ジャッジメントレーザーの当たり判定用ID（プレイヤーの攻撃と重複しないようにするため）
 	int judgementAttackId_ = 10000;
