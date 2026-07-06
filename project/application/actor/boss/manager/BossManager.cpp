@@ -114,6 +114,12 @@ void BossManager::Initialize(TKM::DirectXCommon* dxCommon, TKM::Camera* camera, 
 	TKM::BossHpBarUI::Desc d{};   // デフォルト設定
 	hpUI_->Initialize(TKM::SpriteCommon::GetInstance(), dx_, parent_, d);
 	hpUI_->SetVisible(false);     // 開始時は非表示
+
+	//=========================================================
+	// 撃破シーケンス状態初期化
+	//=========================================================
+	judgementBgRenderer_ = std::make_unique<TKM::JudgementBackgroundRenderer>();
+	judgementBgRenderer_->Initialize(dx_);
 }
 
 //=============================================================
@@ -352,6 +358,12 @@ void BossManager::Update(float dt) {
 	}
 
 	//=========================================================
+	// ジャッジメント背景描画更新
+	//=========================================================
+	judgementBgRenderer_->SetActive(judgementActive); // ジャッジメント予備動作中のみ描画
+	judgementBgRenderer_->Update(dt);
+
+	//=========================================================
 	// ボス本体更新
 	//=========================================================
 	boss_->Update(dt);
@@ -392,6 +404,16 @@ void BossManager::Update(float dt) {
 // 描画
 //=============================================================
 void BossManager::Draw(TKM::DirectXCommon* dxCommon) {
+
+	//　背景描画はジャッジメント予備動作中のみ行う
+	if (judgementBgRenderer_ && boss_ && camera_) {
+		Vector3 bgCenter = boss_->GetWorldPosition() + Vector3{ 0.0f, 0.0f, 35.0f }; // ボスの奥に背景を配置
+		judgementBgRenderer_->Draw(dxCommon, *camera_, bgCenter); // ジャッジメント背景描画
+	}
+
+	// 専用RendererがRootSignature/PSOを変えたので、Object3d用に戻す
+	TKM::Object3dCommon::GetInstance()->DrawSetCommon();
+
 	// ボスがいない場合は弾更新だけ行って終了
 	if (!boss_) {
 		UpdateBossBullets();

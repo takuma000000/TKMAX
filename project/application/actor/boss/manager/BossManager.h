@@ -17,6 +17,7 @@
 #include "BattleActorManagerBase.h"
 #include "BossConfig.h"
 #include <array>
+#include "JudgementBackgroundRenderer.h"
 
 //=============================================================
 // BossManagerクラス
@@ -205,6 +206,11 @@ private:
 	// 設定
 	//==============================
 	BossConfig bossConfig_;
+
+	//==============================
+	// 撃破シーケンス用の判定背景レンダラー
+	//==============================
+	std::unique_ptr<TKM::JudgementBackgroundRenderer> judgementBgRenderer_;
 
 	//==============================
 	// 撃破シーケンス用の判定ポータル
