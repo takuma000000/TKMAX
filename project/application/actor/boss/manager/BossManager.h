@@ -227,19 +227,26 @@ private:
 	/// </summary>
 	void StopJudgementPortals_();
 
-	//==============================
-	// レーザー光線
-	// 撃破シーケンスの演出で、ボスからプレイヤーに向かってレーザーを発射する演出があります。
-	// レーザーは、ボスの位置からプレイヤーの位置に向かって伸びる線で表現されます。
-	//==============================
+	// =============================
+	// 撃破シーケンス用の判定レーザー
+	// =============================
 	struct JudgementLaser {
 		Vector3 start_;
-		Vector3 end_;
-		float timer_ = 0.0f;
-		bool active_ = false;
+		Vector3 end_;      // 現在伸びている先端
+		Vector3 target_;   // 発射時に固定した到達地点
+
+		float travelTimer_ = 0.0f; // レーザーが伸びる時間の経過タイマー
+		float travelTime_ = 0.55f; // レーザーが伸びる時間（秒）
+		float keepTimer_ = 0.12f;  // レーザーが伸びきった後に保持する時間の経過タイマー
+
+		bool active_ = false;      // レーザーが発射中かどうか
 	};
 
 	std::array<JudgementLaser, 6> judgementLasers_{}; // 判定レーザーリスト
+
+	static constexpr float kJudgementLaserTravelTime_ = 0.55f;      // 判定レーザーが伸びる時間（秒）
+	static constexpr float kJudgementFinalLaserTravelTime_ = 0.75f; // 撃破シーケンスの最後の一斉発射の判定レーザーが伸びる時間（秒）
+	static constexpr float kJudgementLaserKeepTime_ = 0.12f;        // 判定レーザーが伸びきった後に保持する時間（秒）
 
 	bool judgementActivePrev_ = false; // 前フレームの判定レーザー発射中フラグ
 	float judgementLaserIntervalTimer_ = 0.0f; // 判定レーザーの発射間隔タイマー
@@ -251,7 +258,7 @@ private:
 	float judgementStartDelayTimer_ = 0.0f; // 撃破シーケンス開始から判定レーザー発射までの遅延タイマー
 
 	float judgementFinalChargeTimer_ = 0.0f; // 撃破シーケンスの最後の一斉発射のためのチャージタイマー
-	static constexpr float kJudgementFinalChargeTime_ = 0.8f; // 撃破シーケンスの最後の一斉発射のためのチャージ時間（秒）
+	static constexpr float kJudgementFinalChargeTime_ = 1.4f; // 撃破シーケンスの最後の一斉発射のためのチャージ時間（秒）
 
 	bool judgementPortalVisible_ = false; // 撃破シーケンスの判定ポータルを描画するかどうかのフラグ（デバッグ用）
 

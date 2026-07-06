@@ -628,17 +628,33 @@ void BossManager::StopJudgementPortals_() {
 }
 
 void BossManager::UpdateJudgementLasers_(float dt) {
-	// レーザー表示時間を減らす
+	// レーザーの移動と到達後の保持時間を更新
 	for (auto& laser : judgementLasers_) {
 		if (!laser.active_) {
 			continue;
 		}
 
-		laser.timer_ -= dt; // 表示時間を減らす
+		laser.travelTimer_ += dt;
 
-		// タイマーが0以下になったらレーザーを消す
-		if (laser.timer_ <= 0.0f) {
-			laser.active_ = false;
+		float t = laser.travelTimer_ / laser.travelTime_;
+		if (t > 1.0f) {
+			t = 1.0f;
+		}
+
+		Vector3 diff = laser.target_ - laser.start_;
+		laser.end_ = {
+			laser.start_.x + diff.x * t,
+			laser.start_.y + diff.y * t,
+			laser.start_.z + diff.z * t
+		};
+
+		// 到達後、少しだけ残して消す
+		if (t >= 1.0f) {
+			laser.keepTimer_ -= dt;
+
+			if (laser.keepTimer_ <= 0.0f) {
+				laser.active_ = false;
+			}
 		}
 	}
 
@@ -652,7 +668,7 @@ void BossManager::UpdateJudgementLasers_(float dt) {
 
 			++judgementLaserTotalFireCount_;
 
-			judgementLaserIntervalTimer_ = 0.22f;
+			judgementLaserIntervalTimer_ = 1.0f;
 			return;
 		}
 
@@ -710,10 +726,17 @@ void BossManager::FireJudgementLasers_() {
 
 	// ポータルが有効な場合のみレーザーを発射
 	if (judgementPortals_[portalIndex].active_) {
-		judgementLasers_[portalIndex].start_ = judgementPortals_[portalIndex].pos_;
-		judgementLasers_[portalIndex].end_ = playerPos;
-		judgementLasers_[portalIndex].timer_ = 0.18f;
-		judgementLasers_[portalIndex].active_ = true;
+		auto& laser = judgementLasers_[portalIndex];
+
+		laser.start_ = judgementPortals_[portalIndex].pos_;
+		laser.end_ = laser.start_;       // 最初は発射元だけ
+		laser.target_ = playerPos;       // 発射時点のPlayer位置を固定
+
+		laser.travelTimer_ = 0.0f;
+		laser.travelTime_ = kJudgementLaserTravelTime_;
+		laser.keepTimer_ = kJudgementLaserKeepTime_;
+
+		laser.active_ = true;
 	}
 	// 次の発射順番インデックスを進める
 	++judgementLaserFireIndex_;
@@ -725,8 +748,11 @@ void BossManager::FireJudgementLasers_() {
 void BossManager::ClearJudgementLasers_() {
 	// 全てのレーザーを無効化してタイマーをリセット
 	for (auto& laser : judgementLasers_) {
-		laser.active_ = false;
-		laser.timer_ = 0.0f;
+		laser.end_ = { 0.0f, 0.0f, 0.0f };
+		laser.target_ = { 0.0f, 0.0f, 0.0f };
+		laser.travelTimer_ = 0.0f;
+		laser.travelTime_ = kJudgementLaserTravelTime_;
+		laser.keepTimer_ = kJudgementLaserKeepTime_;
 	}
 	// レーザー発射の間隔タイマーもリセット
 	judgementLaserIntervalTimer_ = 0.0f;
@@ -784,10 +810,17 @@ void BossManager::FireJudgementFinalBurst_() {
 			continue;
 		}
 		// 最後のバーストはレーザーを長めに表示する
-		judgementLasers_[i].start_ = judgementPortals_[i].pos_;
-		judgementLasers_[i].end_ = playerPos;
-		judgementLasers_[i].timer_ = 0.35f; // 最後だけ長め
-		judgementLasers_[i].active_ = true;
+		auto& laser = judgementLasers_[i];
+
+		laser.start_ = judgementPortals_[i].pos_;
+		laser.end_ = laser.start_;
+		laser.target_ = playerPos;
+
+		laser.travelTimer_ = 0.0f;
+		laser.travelTime_ = kJudgementFinalLaserTravelTime_;
+		laser.keepTimer_ = kJudgementLaserKeepTime_;
+
+		laser.active_ = true;
 	}
 }
 

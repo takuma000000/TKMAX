@@ -473,7 +473,7 @@ void BossJudgementWindupState::Update(TKM::IStateContext& ctx, float dt) {
 	pos = BossController::SmoothDamp(pos, target_, 0.10f, dt); // かなりゆっくりと移動させる
 
 	// ひとまず2秒溜めたら通常軌道へ戻す
-	if (c.timer_ >= 10.0f) {
+	if (c.timer_ >= 18.0f) {
 		c.ChangeState(BossController::State::Orbit);
 	}
 }
