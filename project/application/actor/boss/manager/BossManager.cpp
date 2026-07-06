@@ -407,8 +407,11 @@ void BossManager::Draw(TKM::DirectXCommon* dxCommon) {
 
 	//　背景描画はジャッジメント予備動作中のみ行う
 	if (judgementBgRenderer_ && boss_ && camera_) {
-		Vector3 bgCenter = boss_->GetWorldPosition() + Vector3{ 0.0f, 0.0f, 35.0f }; // ボスの奥に背景を配置
-		judgementBgRenderer_->Draw(dxCommon, *camera_, bgCenter); // ジャッジメント背景描画
+		Vector3 bgCenter = boss_->GetWorldPosition() + Vector3{ 0.0f, 0.0f, 35.0f }; // 背景描画の中心位置はボスの奥に設定
+		// 初回使用時の固まり対策：本番前に透明描画で温める
+		judgementBgRenderer_->WarmUpDraw(dxCommon, *camera_, bgCenter);
+		// 本番描画
+		judgementBgRenderer_->Draw(dxCommon, *camera_, bgCenter);
 	}
 
 	// 専用RendererがRootSignature/PSOを変えたので、Object3d用に戻す

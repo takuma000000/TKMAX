@@ -32,6 +32,14 @@ namespace TKM {
 		/// <param name="center">判定背景の中心座標（ワールド座標）</param>
 		void Draw(DirectXCommon* dxCommon, const Camera& camera, const Vector3& center);
 
+		/// <summary>
+		/// 判定背景の描画を事前に行い、GPUのキャッシュを温めます。
+		/// </summary>
+		/// <param name="dxCommon">DirectX共通管理クラス</param>
+		/// <param name="camera">描画および判定に使用するカメラ</param>
+		/// <param name="center">判定背景の中心座標（ワールド座標）</param>
+		void WarmUpDraw(DirectXCommon* dxCommon, const Camera& camera, const Vector3& center);
+
 		// Setter============================================
 		/// <summary>
 		/// 判定背景のアクティブ状態を設定します。
@@ -98,5 +106,16 @@ namespace TKM {
 
 		Microsoft::WRL::ComPtr<ID3D12Resource> constBuffer_;
 		ConstBuffer* constMap_ = nullptr;
+
+		bool warmedUp_ = false; // GPUキャッシュを温めたかどうか
+
+		/// <summary>
+		/// 内部描画処理を行います。
+		/// </summary>
+		/// <param name="dxCommon">DirectX共通管理クラス</param>
+		/// <param name="camera">描画および判定に使用するカメラ</param>
+		/// <param name="center">判定背景の中心座標（ワールド座標）</param>
+		/// <param name="intensity">描画の強度（0.0f 〜 1.0f）</param>	
+		void DrawInternal_(DirectXCommon* dxCommon, const Camera& camera, const Vector3& center, float intensity);
 	};
 }

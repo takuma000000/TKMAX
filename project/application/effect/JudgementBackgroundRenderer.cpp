@@ -42,6 +42,23 @@ namespace TKM {
 			return;
 		}
 
+		DrawInternal_(dxCommon, camera, center, fade_);
+	}
+	void JudgementBackgroundRenderer::WarmUpDraw(DirectXCommon* dxCommon, const Camera& camera, const Vector3& center) {
+		if (warmedUp_) {
+			return;
+		}
+		if (!dxCommon || !pipelineState_ || !rootSignature_) {
+			return;
+		}
+
+		// intensity 0.0 なので画面には出ないが、
+		// PSO / RootSignature / Shader / VB / CB の初回使用だけ済ませる
+		DrawInternal_(dxCommon, camera, center, 0.0f);
+
+		warmedUp_ = true;
+	}
+	void JudgementBackgroundRenderer::DrawInternal_(DirectXCommon* dxCommon, const Camera& camera, const Vector3& center, float intensity) {
 		Matrix4x4 camWorld = camera.GetWorldMatrix();
 
 		Vector3 camRight = MyMath::Normalize({ camWorld.m[0][0], camWorld.m[0][1], camWorld.m[0][2] });
@@ -52,7 +69,7 @@ namespace TKM {
 		constMap_->centerWS = center;
 		constMap_->time = time_;
 		constMap_->camRight = camRight;
-		constMap_->intensity = fade_;
+		constMap_->intensity = intensity;
 		constMap_->camUp = camUp;
 		constMap_->width = width_;
 		constMap_->camFwd = camFwd;
