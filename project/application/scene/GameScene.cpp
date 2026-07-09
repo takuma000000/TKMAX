@@ -4,6 +4,8 @@
 #include "TextureManager.h"
 #include "Object3dCommon.h"
 #include <algorithm>
+#include "HintLogExporter.h"
+#include "HintPromptBuilder.h"
 
 #ifdef USE_IMGUI
 #include "imgui.h"
@@ -65,10 +67,11 @@ void GameScene::Update() {
 		isSelectedCorrect_ = roads_[hitRoadIndex_]->IsCorrect();
 
 		hintLog_.AddSelectLog(selectedRoadIndex_, isSelectedCorrect_);
-	}
 
-	for (auto& road : roads_) {
-		road->Update();
+		HintLogExporter::SaveJson(
+			hintLog_,
+			"./resources/data/hint_log.json"
+		);
 	}
 
 #ifdef USE_IMGUI
@@ -110,6 +113,13 @@ void GameScene::Update() {
 	std::string json = hintLog_.MakeJson();
 	ImGui::TextWrapped("%s", json.c_str());
 
+	ImGui::Separator();
+
+	if (ImGui::CollapsingHeader("AIプロンプト")) {
+		std::string prompt = HintPromptBuilder::BuildPrompt(hintLog_);
+		ImGui::TextWrapped("%s", prompt.c_str());
+	}
+
 	ImGui::End();
 #endif
 }
@@ -132,8 +142,7 @@ void GameScene::DrawSprite() {
 	player_->Draw();
 }
 
-void GameScene::DrawBack() {
-}
+void GameScene::DrawBack() {}
 
 bool GameScene::CheckAABB(
 	const Vector2& posA,

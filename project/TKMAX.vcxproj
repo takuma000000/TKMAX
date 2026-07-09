@@ -162,6 +162,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\effect\post\LaserBeam3D.cpp" />
     <ClCompile Include="engine\effect\post\FogVolume3D.cpp" />
     <ClCompile Include="application\actor\HintLog.cpp" />
+    <ClCompile Include="application\actor\HintLogExporter.cpp" />
+    <ClCompile Include="application\actor\HintPromptBuilder.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="engine\3d\Model.cpp" />
     <ClCompile Include="engine\3d\ModelCommon.cpp" />
@@ -268,6 +270,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\effect\post\NoiseEffect.h" />
     <ClInclude Include="application\actor\Player.h" />
     <ClInclude Include="application\actor\HintLog.h" />
+    <ClInclude Include="application\actor\HintLogExporter.h" />
+    <ClInclude Include="application\actor\HintPromptBuilder.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="engine\func\math\Transform.h" />
     <ClInclude Include="engine\state\StateMachine.h" />
