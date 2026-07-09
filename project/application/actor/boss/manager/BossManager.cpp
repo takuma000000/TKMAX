@@ -251,7 +251,7 @@ void BossManager::Update(float dt) {
 
 			// 発射前の溜め中だけパーティクルを出す
 			if (judgementPortalChargeTimer_ > 0.0f) {
-				EmitJudgementPortalFx_(); // パーティクルを出す
+				//EmitJudgementPortalFx_(); // パーティクルを出す
 
 				judgementPortalChargeTimer_ -= dt;
 			} else {
@@ -850,22 +850,22 @@ void BossManager::FireJudgementFinalBurst_() {
 }
 
 void BossManager::EmitJudgementPortalFx_() {
-	// ポータルが有効な場合のみエフェクトを発生させる
-	auto* pm = TKM::ParticleManager::GetInstance();
-	if (!pm) {
-		return;
-	}
-	// 有効なポータル全てにエフェクトを発生させる
-	for (const auto& portal : judgementPortals_) {
-		if (!portal.active_) {
-			continue;
-		}
+	//// ポータルが有効な場合のみエフェクトを発生させる
+	//auto* pm = TKM::ParticleManager::GetInstance();
+	//if (!pm) {
+	//	return;
+	//}
+	//// 有効なポータル全てにエフェクトを発生させる
+	//for (const auto& portal : judgementPortals_) {
+	//	if (!portal.active_) {
+	//		continue;
+	//	}
 
-		// ポータルの位置にエフェクトを発生させる
-		pm->Emit("judgement_portal_ring", portal.pos_, 1);
-		pm->Emit("judgement_portal_core", portal.pos_, 1);
-		pm->Emit("judgement_portal_inward", portal.pos_, 4);
-	}
+	//	// ポータルの位置にエフェクトを発生させる
+	//	pm->Emit("judgement_portal_ring", portal.pos_, 1);
+	//	pm->Emit("judgement_portal_core", portal.pos_, 1);
+	//	pm->Emit("judgement_portal_inward", portal.pos_, 4);
+	//}
 }
 
 bool BossManager::HitTestLaserToPlayer_(
