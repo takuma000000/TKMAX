@@ -120,6 +120,12 @@ void BossManager::Initialize(TKM::DirectXCommon* dxCommon, TKM::Camera* camera, 
 	//=========================================================
 	judgementBgRenderer_ = std::make_unique<TKM::JudgementBackgroundRenderer>();
 	judgementBgRenderer_->Initialize(dx_);
+
+	//=========================================================
+	// ジャッジメントポータル演出初期化
+	//=========================================================
+	judgementPortalRenderer_ = std::make_unique<TKM::JudgementPortalRenderer>();
+	judgementPortalRenderer_->Initialize(dx_);
 }
 
 //=============================================================
@@ -362,6 +368,10 @@ void BossManager::Update(float dt) {
 	//=========================================================
 	judgementBgRenderer_->SetActive(judgementActive); // ジャッジメント予備動作中のみ描画
 	judgementBgRenderer_->Update(dt);
+	//=========================================================
+	// ジャッジメントポータル描画更新
+	//=========================================================
+	judgementPortalRenderer_->Update(dt);
 
 	//=========================================================
 	// ボス本体更新
@@ -412,6 +422,34 @@ void BossManager::Draw(TKM::DirectXCommon* dxCommon) {
 		judgementBgRenderer_->WarmUpDraw(dxCommon, *camera_, bgCenter);
 		// 本番描画
 		judgementBgRenderer_->Draw(dxCommon, *camera_, bgCenter);
+	}
+
+	if (judgementPortalRenderer_ && camera_) {
+		float charge01 = 1.0f;
+
+		constexpr float kPortalChargeMax = 1.8f;
+
+		if (judgementPortalChargeTimer_ > 0.0f) {
+			charge01 = 1.0f - (judgementPortalChargeTimer_ / kPortalChargeMax);
+			if (charge01 < 0.0f) charge01 = 0.0f;
+			if (charge01 > 1.0f) charge01 = 1.0f;
+		}
+
+		for (int i = 0; i < static_cast<int>(judgementPortals_.size()); ++i) {
+			const auto& portal = judgementPortals_[i];
+
+			if (!portal.active_) {
+				continue;
+			}
+
+			judgementPortalRenderer_->Draw(
+				dxCommon,
+				*camera_,
+				portal.pos_,
+				charge01,
+				i
+			);
+		}
 	}
 
 	// 専用RendererがRootSignature/PSOを変えたので、Object3d用に戻す

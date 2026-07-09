@@ -18,6 +18,7 @@
 #include "BossConfig.h"
 #include <array>
 #include "JudgementBackgroundRenderer.h"
+#include "JudgementPortalRenderer.h"
 
 //=============================================================
 // BossManagerクラス
@@ -208,9 +209,13 @@ private:
 	BossConfig bossConfig_;
 
 	//==============================
-	// 撃破シーケンス用の判定背景レンダラー
+	// 判定背景レンダラー
 	//==============================
 	std::unique_ptr<TKM::JudgementBackgroundRenderer> judgementBgRenderer_;
+	//==============================
+	// 判定ポータルレンダラー
+	//==============================
+	std::unique_ptr<TKM::JudgementPortalRenderer> judgementPortalRenderer_;
 
 	//==============================
 	// 撃破シーケンス用の判定ポータル
