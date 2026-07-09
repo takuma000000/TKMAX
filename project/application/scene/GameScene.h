@@ -6,6 +6,7 @@
 #include "Player.h"
 #include "Road.h"
 #include "HintLog.h"
+#include "HintClient.h"
 
 //=============================================================
 // GameSceneクラス
@@ -32,6 +33,7 @@ private:
 	TKM::SrvManager* srvManager_ = nullptr;
 
 	HintLog hintLog_;
+	HintClient hintClient_;
 
 	std::unique_ptr<Player> player_;
 	std::vector<std::unique_ptr<Road>> roads_;

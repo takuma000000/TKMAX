@@ -72,6 +72,10 @@ void GameScene::Update() {
 			hintLog_,
 			"./resources/data/hint_log.json"
 		);
+
+		std::string json = hintLog_.MakeJson();
+
+		hintClient_.Send(json);
 	}
 
 #ifdef USE_IMGUI
@@ -119,6 +123,11 @@ void GameScene::Update() {
 		std::string prompt = HintPromptBuilder::BuildPrompt(hintLog_);
 		ImGui::TextWrapped("%s", prompt.c_str());
 	}
+
+	ImGui::Separator();
+
+	ImGui::Text("バックエンドからのヒント:");
+	ImGui::TextWrapped("%s", hintClient_.GetLatestHint().c_str());
 
 	ImGui::End();
 #endif
