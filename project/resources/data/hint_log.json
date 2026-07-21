@@ -1,10 +1,14 @@
 {
   "stageId":"five_road_001",
   "correctIndex":2,
-  "missCount":10,
-  "correctCount":3,
-  "totalSelectCount":13,
+  "missCount":7,
+  "correctCount":0,
+  "totalSelectCount":7,
   "logs":[
+    {
+      "roadIndex":0,
+      "isCorrect":false
+    },
     {
       "roadIndex":0,
       "isCorrect":false
@@ -14,23 +18,11 @@
       "isCorrect":false
     },
     {
-      "roadIndex":1,
+      "roadIndex":3,
       "isCorrect":false
     },
     {
-      "roadIndex":1,
-      "isCorrect":false
-    },
-    {
-      "roadIndex":1,
-      "isCorrect":false
-    },
-    {
-      "roadIndex":1,
-      "isCorrect":false
-    },
-    {
-      "roadIndex":1,
+      "roadIndex":4,
       "isCorrect":false
     },
     {
@@ -40,22 +32,6 @@
     {
       "roadIndex":3,
       "isCorrect":false
-    },
-    {
-      "roadIndex":3,
-      "isCorrect":false
-    },
-    {
-      "roadIndex":2,
-      "isCorrect":true
-    },
-    {
-      "roadIndex":2,
-      "isCorrect":true
-    },
-    {
-      "roadIndex":2,
-      "isCorrect":true
     }
   ]
 }

@@ -65,7 +65,12 @@ bool HintClient::Send(const std::string& json) {
 	);
 
 	if (!result) {
-		latestHint_ = "WinHttpSendRequest failed";
+		const DWORD errorCode = GetLastError();
+
+		latestHint_ =
+			"WinHttpSendRequest failed. ErrorCode: "
+			+ std::to_string(errorCode);
+
 		WinHttpCloseHandle(hRequest);
 		WinHttpCloseHandle(hConnect);
 		WinHttpCloseHandle(hSession);
