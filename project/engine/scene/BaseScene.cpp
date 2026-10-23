@@ -127,6 +127,10 @@ namespace TKM {
 
 	void BaseScene::ImGuiDebugInfo() {
 #ifdef USE_IMGUI
+
+		// 音量調節
+		ImGuiAudioControl();
+
 		ImGui::Begin("情報");
 
 		// =========================================================
@@ -284,9 +288,6 @@ namespace TKM {
 		}
 
 		ImGui::End();
-
-		// 音量調節
-		ImGuiAudioControl();
 #endif
 	}
 
