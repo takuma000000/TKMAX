@@ -156,6 +156,7 @@
     <ClCompile Include="application\catalog\AudioCatalog.cpp" />
     <ClCompile Include="engine\effect\post\MotionBlurEffect.cpp" />
     <ClCompile Include="engine\effect\post\SpeedLineEffect.cpp" />
+    <ClCompile Include="application\scene\TitleScene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\2d\Sprite.h">
