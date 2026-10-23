@@ -13,6 +13,10 @@ public:
 
 	~GameScene() = default;
 
+	const char* GetSceneName() const override {
+		return "GAME";
+	}
+
 	/// <summary>
 	/// ゲーム本編シーンを初期化します。
 	/// </summary>

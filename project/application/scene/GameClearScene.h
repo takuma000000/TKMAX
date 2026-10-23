@@ -18,6 +18,10 @@ public:
 
 	~GameClearScene() = default;
 
+	const char* GetSceneName() const override {
+		return "CLEAR";
+	}
+
 	/// <summary>
 	/// シーンを初期化します。
 	/// </summary>

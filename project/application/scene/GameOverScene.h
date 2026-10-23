@@ -18,6 +18,10 @@ public:
 
 	~GameOverScene() = default;
 
+	const char* GetSceneName() const override {
+		return "GAMEOVER";
+	}
+
 	/// <summary>
 	/// シーンを初期化します。
 	/// </summary>

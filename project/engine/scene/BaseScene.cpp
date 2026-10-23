@@ -63,6 +63,10 @@ namespace TKM {
 			sceneManager_->ChangeScene(sceneNames[currentSceneIndex]);
 		}
 
+		ImGui::Separator();
+
+		ImGui::Text("現在のシーン : %s", GetSceneName());
+
 		ImGui::End();
 #endif
 	}

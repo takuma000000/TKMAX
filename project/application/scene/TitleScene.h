@@ -18,6 +18,10 @@ public:
 
 	~TitleScene() = default;
 
+	const char* GetSceneName() const override {
+		return "TITLE";
+	}
+
 	/// <summary>
 	/// タイトルシーンを初期化します。
 	/// </summary>

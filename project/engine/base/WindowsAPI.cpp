@@ -68,7 +68,7 @@ namespace TKM {
 
 		hwnd_ = CreateWindow(
 			wc_.lpszClassName,
-			L"クララン",
+			L"4343_抗体で健康体",
 			WS_OVERLAPPEDWINDOW,
 			CW_USEDEFAULT,
 			CW_USEDEFAULT,

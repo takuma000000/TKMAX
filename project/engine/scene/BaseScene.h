@@ -89,6 +89,13 @@ namespace TKM {
 		/// </summary>
 		void ImGuiSceneChanger();
 
+		/// <summary>
+		/// 現在のシーン名を取得します。
+		/// </summary>
+		virtual const char* GetSceneName() const {
+			return "UNKNOWN";
+		}
+
 		//=============================================================
 		// Setter
 		//=============================================================
