@@ -281,8 +281,6 @@ namespace TKM {
 
 		ImGui::End();
 
-		// シーン遷移
-		ImGuiSceneChanger();
 		// 音量調節
 		ImGuiAudioControl();
 #endif

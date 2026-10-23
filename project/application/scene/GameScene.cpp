@@ -4,6 +4,7 @@
 #include "TextureCatalog.h"
 #include "ModelCatalog.h"
 #include "CameraManager.h"
+#include "ParticleManager.h"
 
 #ifdef USE_IMGUI
 #include "imgui.h"
@@ -24,6 +25,10 @@ void GameScene::Initialize() {
 	InitializeSprite();
 	InitializeCamera();
 
+	/// ──────────────── パーティクル初期化 ───────────────
+	auto* particleManager = TKM::ParticleManager::GetInstance();
+	particleManager->Initialize(dxCommon_, srvManager_, TKM::CameraManager::GetInstance()->GetMainCamera());
+
 	/// ──────────────── ライトの初期化 ───────────────
 	directionalLight_ = std::make_unique<DirectionalLight>();
 	directionalLight_->Initialize({ 1.0f, 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 0.0f }, 1.0f);
@@ -40,9 +45,17 @@ void GameScene::Finalize() {
 }
 
 void GameScene::Update() {
+	/// ──────────────── カメラ更新 ───────────────
+	UpdateActiveCamera();
+
+	/// ──────────────── ライト更新 ───────────────
+	directionalLight_->Update();
+
+	/// ──────────────── パーティクル更新 ───────────────
+	constexpr float deltaTime = 1.0f / 60.0f;
+	TKM::ParticleManager::GetInstance()->Update(deltaTime);
 
 #ifdef USE_IMGUI
-	/// ──────────────── デバッグ表示更新 ───────────────
 	ImGuiDebug();
 #endif
 }
@@ -57,9 +70,6 @@ void GameScene::Draw3D() {
 	/// ──────────────── 3Dオブジェクト描画 ───────────────
 	Object3dCommon::GetInstance()->DrawSetCommon();
 
-	/// ──────────────── ボリューム描画 ───────────────
-	TKM::Camera* activeCamera = TKM::CameraManager::GetInstance()->GetActiveCamera();
-
 	/// ──────────────── パーティクル描画 ───────────────
 	ParticleManager::GetInstance()->Draw();
 }
@@ -70,13 +80,12 @@ void GameScene::DrawSprite() {
 }
 
 TKM::Camera* GameScene::UpdateActiveCamera() {
-	/// ──────────────── アクティブカメラの決定 ───────────────
-	TKM::Camera* activeCamera = TKM::CameraManager::GetInstance()->Update();
-	if (!activeCamera) { return nullptr; }
+	auto* activeCamera =
+		TKM::CameraManager::GetInstance()->Update();
 
-
-	/// ──────────────── パーティクル・ポストエフェクトへカメラ反映 ───────────────
-	ParticleManager::GetInstance()->SetCamera(activeCamera);
+	if (activeCamera) {
+		TKM::ParticleManager::GetInstance()->SetCamera(activeCamera);
+	}
 
 	return activeCamera;
 }
