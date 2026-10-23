@@ -10,10 +10,7 @@ namespace {
 //=============================================================
 // 共通音声
 //=============================================================
-void AudioCatalog::LoadCommonAudios() {
-	LoadAudioIfNeeded_("cursor", "cursor.wav"); // カーソル
-	LoadAudioIfNeeded_("decision", "decision.wav"); // 決定
-}
+void AudioCatalog::LoadCommonAudios() {}
 
 //=============================================================
 // タイトル音声
@@ -22,7 +19,6 @@ void AudioCatalog::LoadTitleAudios() {
 	//////////////////////////////////////
 	LoadCommonAudios(); // 共通音声もロード
 	//////////////////////////////////////
-	LoadAudioIfNeeded_("title", "title.wav"); // タイトルBGM
 }
 
 //=============================================================
@@ -32,11 +28,6 @@ void AudioCatalog::LoadGameAudios() {
 	//////////////////////////////////////
 	LoadCommonAudios(); // 共通音声もロード
 	//////////////////////////////////////
-	LoadAudioIfNeeded_("pause", "pause.wav"); // ポーズ
-	LoadAudioIfNeeded_("playBGM", "playBGM.wav"); // ゲーム本編BGM
-	LoadAudioIfNeeded_("surprise", "surprise.wav"); // !マーク
-	LoadAudioIfNeeded_("avoid", "avoid.wav"); // 回避
-	LoadAudioIfNeeded_("bossPhaseBGM", "bossPhaseBGM.wav"); // ボスフェーズBGM
 }
 
 //=============================================================
@@ -46,7 +37,4 @@ void AudioCatalog::LoadResultAudios() {
 	//////////////////////////////////////
 	LoadCommonAudios(); // 共通音声もロード
 	//////////////////////////////////////
-	LoadAudioIfNeeded_("slip", "slip.wav"); // 滑る
-	LoadAudioIfNeeded_("comedy", "comedy.wav"); // コメディ
-	LoadAudioIfNeeded_("clear_display", "clear_display.wav"); // クリア表示
 }
